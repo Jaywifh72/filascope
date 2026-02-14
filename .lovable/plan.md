@@ -1,96 +1,109 @@
 
 
-# Admin Affiliate Hub -- Brand Programs Manager
+## Add ELEGOO Affiliate Program to the Affiliate Hub
 
-## Overview
-Create a new admin page at `/old-admin/affiliate-hub` that serves as the command center for managing all affiliate programs, discount codes, campaigns, and restrictions across brands and regions. Uses the new `affiliate_programs` schema (not the old `affiliate_configs`).
+This is a large but well-defined task covering schema changes, data inserts, and UI updates to support Impact.com-style redirect link programs alongside the existing URL parameter model.
 
-## File Structure
+---
 
-### New Files to Create
+### Phase 1: Database Schema Enhancement
 
-1. **`src/pages/AdminAffiliateHub.tsx`** -- Main page component
-   - Uses `AdminLayout` wrapper with `AdminPageHeader`
-   - Summary stats bar (6 metric cards)
-   - Two top-level tabs: "Brand Programs" and "Click Analytics" (placeholder)
-   - Brand Programs tab renders accordion list grouped by `brand_name`
+**Migration** -- Add new columns to three tables:
 
-2. **`src/hooks/useAffiliatePrograms.ts`** -- React Query hooks
-   - `useAffiliatePrograms()` -- fetches all programs with related data
-   - `useAffiliateProgramStats()` -- fetches summary counts
-   - `useAffiliateDiscountCodes(programId)` -- codes for a program
-   - `useAffiliateCampaigns(programId)` -- campaigns for a program
-   - `useAffiliateProgramRestrictions(programId)` -- restrictions
-   - `useAffiliateClickCount()` -- 30-day click count
-   - Mutation hooks: `useCreateProgram`, `useUpdateProgram`, `useCreateDiscountCode`, `useCreateCampaign`, `useCreateRestriction`, etc.
+**affiliate_programs:**
+- `impact_campaign_id` (text, nullable)
+- `impact_media_partner_id` (text, nullable)
+- `tracking_domain` (text, nullable)
+- `default_tracking_link` (text, nullable)
+- `link_generation_method` (text, default `'url_parameter'`)
 
-3. **`src/components/admin/affiliate-hub/BrandAccordionItem.tsx`**
-   - Accordion header: brand name, region count, status dots, code/campaign counts
-   - Inner content: horizontal Tabs per region_code, plus "+" tab for adding region
+**affiliate_discount_codes:**
+- `tracking_link` (text, nullable)
+- `scope` (text, default `'all_stores'`)
+- `coupon_source` (text, nullable)
 
-4. **`src/components/admin/affiliate-hub/ProgramOverviewCard.tsx`**
-   - Section 1: Status badge, two-column grid of program details
-   - Link template in monospace code block
-   - Status/program notes callouts
-   - "Edit Program" and "Test Link" buttons
+**affiliate_campaigns:**
+- `deal_scope` (text, nullable)
+- `target_audience` (text, nullable)
+- `region_specific` (text, nullable)
 
-5. **`src/components/admin/affiliate-hub/LinkGeneratorCard.tsx`**
-   - Section 2: Path input, "Generate Link" button, URL output with breakdown
-   - Quick copy buttons (Copy Link, Copy with UTM, Copy Homepage Link)
-   - Uses `buildAffiliateLinkLocal` from `src/utils/affiliateLinks.ts`
+Also make `tracking_parameter` and `tracking_value` nullable on `affiliate_programs` (Impact.com programs don't use them).
 
-6. **`src/components/admin/affiliate-hub/DiscountCodesCard.tsx`**
-   - Section 3: Table of codes with copy buttons, status badges, edit/deactivate
-   - "Add Discount Code" dialog with full form
-   - Posting restrictions warning callout
-   - Filter toggle for expired codes
+---
 
-7. **`src/components/admin/affiliate-hub/CampaignsCard.tsx`**
-   - Section 4: Campaign cards sorted by status (active, upcoming, ended)
-   - Type badges, date ranges, linked discount codes
-   - "Add Campaign" dialog
+### Phase 2: Data Inserts
 
-8. **`src/components/admin/affiliate-hub/RestrictionsCard.tsx`**
-   - Section 5: Compact restriction rows with icons by type
-   - Severity badges (red/yellow/blue)
-   - "Add Restriction" and "Copy All" buttons
+All via SQL insert statements (not migrations):
 
-9. **`src/components/admin/affiliate-hub/ProgramFormDialog.tsx`**
-   - Large dialog/sheet for creating or editing a program
-   - 6 organized form sections matching the spec
-   - Live link preview in tracking section
-   - Validation: brand_name, store_base_url, tracking_parameter, tracking_value required
+1. **6 ELEGOO program rows** -- one per region (US, CA, EU, UK, AU, JP) with shared Impact.com configuration and `link_generation_method='redirect_link'`
+2. **14 discount codes** -- all linked to the US program_id, with scope values (all_stores, resin_products, pla_filament, specific_product)
+3. **13 campaigns/deals** -- with deal_scope, target_audience, and region_specific metadata
+4. **10 restrictions** -- linked to the US program_id
 
-10. **`src/components/admin/affiliate-hub/AffiliateSummaryStats.tsx`**
-    - 6 stat cards: Total Programs, Active Programs, Pending Verification, Clicks (30d), Active Codes, Active Campaigns
+---
 
-## Files to Modify
+### Phase 3: TypeScript Type Updates
 
-1. **`src/App.tsx`**
-   - Add lazy import for `AdminAffiliateHub`
-   - Add route: `<Route path="/old-admin/affiliate-hub" element={<AdminAffiliateHub />} />`
+Update `src/types/affiliate.ts`:
+- Add to `AffiliateProgram`: `impact_campaign_id`, `impact_media_partner_id`, `tracking_domain`, `default_tracking_link`, `link_generation_method`
+- Add to `AffiliateDiscountCode`: `tracking_link`, `scope`, `coupon_source`
+- Add to `AffiliateCampaign`: `deal_scope`, `target_audience`, `region_specific`
 
-2. **`src/components/admin/AdminSidebar.tsx`**
-   - Add "Affiliate Hub" entry to the System nav group (or create a new "Affiliates" group)
-   - Uses a suitable icon (e.g., `Handshake` or `DollarSign`)
+---
 
-3. **`src/pages/AdminDashboard.tsx`**
-   - Add "Affiliate Hub" to quick actions grid
+### Phase 4: UI Updates
 
-## Data Flow
+#### 4a. Link Generator Card (`LinkGeneratorCard.tsx`)
+- Check `program.link_generation_method`
+- When `'redirect_link'`: Replace the path input with a prominent copyable default link, an informational notice about creating product-specific links via the network dashboard, and an "Open Dashboard" button linking to `portal_url`
+- When `'url_parameter'` (default): Keep current behavior
 
-- All queries use React Query (`@tanstack/react-query`) with keys like `["affiliate-programs"]`, `["affiliate-discount-codes", programId]`, etc.
-- Programs are fetched in a single query, then grouped client-side by `brand_name`
-- Related data (codes, campaigns, restrictions) fetched per-program on accordion expand (lazy loading)
-- All mutations invalidate parent query keys on success
-- Toast notifications via `sonner` for all CRUD operations
+#### 4b. Program Overview Card (`ProgramOverviewCard.tsx`)
+- When `link_generation_method='redirect_link'`, show additional info rows: Tracking Domain, Default Link (copyable), Campaign ID, Partner ID
+- Change "Deep Linking: No" to "Deep Linking: Via Dashboard" when method is redirect_link
 
-## Technical Notes
+#### 4c. Discount Codes Card (`DiscountCodesCard.tsx`)
+- Add a "Scope" column to the table with color-coded badges:
+  - `all_stores` = green "All Stores"
+  - `resin_products` = purple "Resin"
+  - `pla_filament` = blue "PLA"
+  - `specific_product` = orange "Product"
 
-- All Supabase queries go through the existing `supabase` client from `@/integrations/supabase/client`
-- Types from `src/types/affiliate.ts` are already defined and match the DB schema
-- The `buildAffiliateLinkLocal` utility from `src/utils/affiliateLinks.ts` is used for the link generator and test link features
-- No database changes needed -- all tables and RLS policies already exist
-- The old `/old-admin/affiliates` route remains untouched
-- Admin access is enforced by `AdminLayout` which checks `useAuth().isAdmin`
+#### 4d. Campaigns Card (`CampaignsCard.tsx`)
+- Show `deal_scope` as a badge next to campaign_type
+- Show `target_audience` if present
+- Show `region_specific` as a small badge (e.g., "EU only", "AU only")
+
+#### 4e. Cross-Region Data Fetching
+- Update `useAffiliateDiscountCodes`, `useAffiliateCampaigns`, and `useAffiliateProgramRestrictions` hooks to accept an optional `brandName` parameter
+- When `brandName` is provided, fetch by matching all program_ids for that brand (via a subquery or by first fetching program IDs, then filtering)
+- Update `BrandAccordionItem.tsx` to pass brand_name to these hooks so data appears on all regional tabs
+
+#### 4f. Edge Function Update (`generate-affiliate-link`)
+- Handle `link_generation_method='redirect_link'`: return the `default_tracking_link` directly (with subId params appended if available) instead of building from template placeholders
+
+#### 4g. Client-side link builder (`buildAffiliateLinkLocal`)
+- Handle redirect_link method: return `default_tracking_link` with UTM params appended (skip template replacement)
+
+---
+
+### Technical Details
+
+```text
+Files to create: None
+
+Files to modify:
+  - supabase migration (new)
+  - src/types/affiliate.ts
+  - src/utils/affiliateLinks.ts
+  - src/hooks/useAffiliatePrograms.ts
+  - src/components/admin/affiliate-hub/LinkGeneratorCard.tsx
+  - src/components/admin/affiliate-hub/ProgramOverviewCard.tsx
+  - src/components/admin/affiliate-hub/DiscountCodesCard.tsx
+  - src/components/admin/affiliate-hub/CampaignsCard.tsx
+  - src/components/admin/affiliate-hub/BrandAccordionItem.tsx
+  - supabase/functions/generate-affiliate-link/index.ts
+```
+
+The data inserts (programs, codes, campaigns, restrictions) will be done via the insert tool after the schema migration is applied. No existing Anycubic or Creality data will be touched.
 
