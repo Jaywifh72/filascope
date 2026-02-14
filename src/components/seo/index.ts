@@ -12,3 +12,4 @@ export { SoftwareApplicationSchema } from './SoftwareApplicationSchema';
 export { BrandOrganizationSchema } from './BrandOrganizationSchema';
 export { ArticleSchema } from './ArticleSchema';
 export { DefinedTermSetSchema } from './DefinedTermSetSchema';
+export { HreflangTags } from './HreflangTags';
