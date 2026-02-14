@@ -364,7 +364,7 @@ const AdminAffiliates = () => {
                 </p>
               </div>
             </div>
-            <Link to="/old-admin/affiliate-hub">
+            <Link to="/admin/affiliate-hub">
               <Button size="sm" variant="default">
                 Go to Affiliate Hub →
               </Button>

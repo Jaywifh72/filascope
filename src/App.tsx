@@ -205,6 +205,7 @@ const App = () => (
                   <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
                   <Route path="/collections/:username/:slug" element={<PublicCollection />} />
                   <Route path="/admin" element={<NewAdminPanel />} />
+                  <Route path="/admin/affiliate-hub" element={<AdminAffiliateHub />} />
                   <Route path="/admin/*" element={<AdminRedirect />} />
                   <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
                   <Route path="/old-admin/dashboard" element={<AdminDashboard />} />
@@ -246,7 +247,7 @@ const App = () => (
                   <Route path="/old-admin/price-freshness" element={<AdminPriceFreshness />} />
                   <Route path="/old-admin/price-import" element={<AdminPriceImport />} />
                   <Route path="/old-admin/stores" element={<AdminStores />} />
-                  <Route path="/old-admin/affiliate-hub" element={<AdminAffiliateHub />} />
+                  <Route path="/old-admin/affiliate-hub" element={<Navigate to="/admin/affiliate-hub" replace />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                   <Route path="/reference/cad" element={<ReferenceCAD />} />
