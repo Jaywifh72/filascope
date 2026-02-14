@@ -160,7 +160,7 @@ export function BuyingGuideTemplate({ config }: BuyingGuideTemplateProps) {
           {isLoading ? (
             <LoadingSkeleton />
           ) : config.layout === 'vs-comparison' && filaments ? (
-            <GuideVSComparison filaments={filaments} />
+            <GuideVSComparison filaments={filaments} materialA={config.vsMaterials?.[0]} materialB={config.vsMaterials?.[1]} />
           ) : filaments && filaments.length > 0 ? (
             <div className="space-y-4">
               {config.layout === 'ranked-list' && (
