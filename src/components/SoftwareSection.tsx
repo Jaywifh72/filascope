@@ -105,7 +105,11 @@ const SANITIZE_CONFIG = {
 
 // Helper to render and sanitize markdown-style release notes
 const renderReleaseNotes = (text: string): string => {
-  const html = text
+  // Phase 1: Strip all HTML from raw input to prevent XSS
+  const cleanText = DOMPurify.sanitize(text, { ALLOWED_TAGS: [] });
+  
+  // Phase 2: Apply markdown-to-HTML transformations on safe plain text
+  const html = cleanText
     .replace(/^### (.*$)/gm, '<h4 class="text-sm font-semibold mt-3 mb-1">$1</h4>')
     .replace(/^## (.*$)/gm, '<h3 class="text-base font-semibold mt-4 mb-2">$1</h3>')
     .replace(/^# (.*$)/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
@@ -117,6 +121,7 @@ const renderReleaseNotes = (text: string): string => {
     .replace(/\n\n/g, '<br/><br/>')
     .replace(/\n/g, '<br/>');
   
+  // Phase 3: Final sanitization of generated HTML
   return DOMPurify.sanitize(html, SANITIZE_CONFIG);
 };
 
