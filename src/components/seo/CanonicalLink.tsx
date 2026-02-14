@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
+import { useDocumentHead } from '@/hooks/useDocumentHead';
 
 const BASE_URL = 'https://filascope.com';
 
@@ -11,13 +11,9 @@ const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 const DETAIL_ROUTE_PREFIXES = ['/filament/', '/printer/', '/brand/', '/brands/', '/accessory/'];
 
 /**
- * Adds canonical link and og:url meta tags to every page.
+ * Sets canonical link and og:url for every non-detail page.
  * Uses the current pathname without query parameters or trailing slashes.
- * This prevents duplicate content issues from region/currency URL variations.
- * 
- * Safety: Skips rendering on detail pages (filament, printer, brand, accessory)
- * and UUID paths, deferring to page-specific SEO components which set their own
- * canonical, description, and OG tags.
+ * Skips detail pages and UUID paths, deferring to page-specific SEO components.
  */
 export function CanonicalLink() {
   const location = useLocation();
@@ -29,28 +25,22 @@ export function CanonicalLink() {
   
   // Skip on detail pages — their SEO components handle everything
   const isDetailPage = DETAIL_ROUTE_PREFIXES.some((p) => pathname.startsWith(p));
-  if (isDetailPage) {
-    return null;
-  }
+  const isUUID = UUID_PATTERN.test(pathname);
+  const skip = isDetailPage || isUUID;
 
-  // If the pathname contains a UUID, skip rendering canonical here.
-  if (UUID_PATTERN.test(pathname)) {
-    return null;
-  }
-  
   const canonicalUrl = `${BASE_URL}${pathname}`;
 
-  return (
-    <Helmet>
-      <link rel="canonical" href={canonicalUrl} />
-      <meta property="og:url" content={canonicalUrl} />
-      {/* Global defaults for non-detail pages */}
-      <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="FilaScope" />
-      <meta property="og:image" content="https://filascope.com/og-image.png" />
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:site" content="@FilaScope" />
-      <meta name="twitter:image" content="https://filascope.com/og-image.png" />
-    </Helmet>
-  );
+  // Always call the hook (rules of hooks) but pass undefined when skipping
+  useDocumentHead(skip ? {} : {
+    canonical: canonicalUrl,
+    ogUrl: canonicalUrl,
+    ogType: 'website',
+    ogSiteName: 'FilaScope',
+    ogImage: 'https://filascope.com/og-image.png',
+    twitterCard: 'summary_large_image',
+    twitterSite: '@FilaScope',
+    twitterImage: 'https://filascope.com/og-image.png',
+  });
+
+  return null;
 }

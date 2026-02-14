@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import DOMPurify from 'dompurify';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,10 +17,7 @@ import { ArticleSchema } from '@/components/seo/ArticleSchema';
 import { BreadcrumbSchema } from '@/components/seo/BreadcrumbSchema';
 import { FAQSchema } from '@/components/seo/FAQSchema';
 import { BUYING_GUIDE_CONFIGS } from './guideConfigs';
-
-interface BuyingGuideTemplateProps {
-  config: GuideConfig;
-}
+import { useDocumentHead } from '@/hooks/useDocumentHead';
 
 function getCategoryBadgeStyle(category: string) {
   switch (category) {
@@ -62,8 +58,26 @@ function LoadingSkeleton() {
   );
 }
 
-export function BuyingGuideTemplate({ config }: BuyingGuideTemplateProps) {
+export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
   const { data: filaments, isLoading } = useGuideFilaments(config.filters);
+
+  useDocumentHead({
+    title: config.seoTitle,
+    description: config.seoDescription,
+    canonical: `https://filascope.com/guides/${config.slug}`,
+    ogTitle: config.seoTitle,
+    ogDescription: config.seoDescription,
+    ogUrl: `https://filascope.com/guides/${config.slug}`,
+    ogType: 'article',
+    ogImage: 'https://filascope.com/og-image.png',
+    ogSiteName: 'FilaScope',
+    twitterCard: 'summary_large_image',
+    twitterSite: '@FilaScope',
+    twitterTitle: config.seoTitle,
+    twitterDescription: config.seoDescription,
+    twitterImage: 'https://filascope.com/og-image.png',
+    keywords: config.keywords.join(', '),
+  });
 
   const beforeSections = config.editorialSections.filter(s => s.position === 'before');
   const afterSections = config.editorialSections.filter(s => s.position === 'after');
@@ -80,21 +94,7 @@ export function BuyingGuideTemplate({ config }: BuyingGuideTemplateProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      {/* SEO */}
-      <Helmet>
-        <title>{config.seoTitle}</title>
-        <meta name="description" content={config.seoDescription} />
-        <meta name="keywords" content={config.keywords.join(', ')} />
-        <link rel="canonical" href={`https://filascope.com/guides/${config.slug}`} />
-        <meta property="og:title" content={config.seoTitle} />
-        <meta property="og:description" content={config.seoDescription} />
-        <meta property="og:url" content={`https://filascope.com/guides/${config.slug}`} />
-        <meta property="og:type" content="article" />
-        <meta property="og:image" content="https://filascope.com/og-image.png" />
-        <meta name="twitter:title" content={config.seoTitle} />
-        <meta name="twitter:description" content={config.seoDescription} />
-        <meta name="twitter:image" content="https://filascope.com/og-image.png" />
-      </Helmet>
+      {/* Structured Data (these use direct DOM injection, not Helmet) */}
       <ArticleSchema
         headline={config.title}
         description={config.seoDescription}

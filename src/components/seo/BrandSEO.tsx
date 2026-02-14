@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useDocumentHead } from '@/hooks/useDocumentHead';
 import { buildOgImageUrl } from '@/lib/ogImageUrl';
 
 interface BrandSEOProps {
@@ -53,37 +53,24 @@ export function BrandSEO({
     image: image || undefined,
   });
 
-  return (
-    <Helmet>
-      {/* Primary Meta Tags */}
-      <title>{seoTitle}</title>
-      <meta name="title" content={seoTitle} />
-      <meta name="description" content={seoDescription} />
-      <link rel="canonical" href={fullUrl} />
+  useDocumentHead({
+    title: seoTitle,
+    description: seoDescription,
+    canonical: fullUrl,
+    ogTitle: seoTitle,
+    ogDescription: seoDescription,
+    ogUrl: fullUrl,
+    ogType: 'website',
+    ogImage: ogImageUrl,
+    ogSiteName: 'FilaScope',
+    twitterCard: 'summary_large_image',
+    twitterSite: '@FilaScope',
+    twitterTitle: seoTitle,
+    twitterDescription: seoDescription,
+    twitterImage: ogImageUrl,
+    keywords: `${brandName} filament, ${brandName} PLA, ${brandName} PETG, ${materials.slice(0, 3).join(', ')}, 3D printing, filament reviews, filament prices`,
+    rating: rating && rating > 0 ? rating.toString() : undefined,
+  });
 
-      {/* Open Graph / Facebook */}
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content={fullUrl} />
-      <meta property="og:title" content={seoTitle} />
-      <meta property="og:description" content={seoDescription} />
-      <meta property="og:image" content={ogImageUrl} />
-      <meta property="og:site_name" content="FilaScope" />
-
-      {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:site" content="@FilaScope" />
-      <meta name="twitter:url" content={fullUrl} />
-      <meta name="twitter:title" content={seoTitle} />
-      <meta name="twitter:description" content={seoDescription} />
-      <meta name="twitter:image" content={ogImageUrl} />
-
-      {/* Brand-specific meta */}
-      <meta name="keywords" content={`${brandName} filament, ${brandName} PLA, ${brandName} PETG, ${materials.slice(0, 3).join(', ')}, 3D printing, filament reviews, filament prices`} />
-      
-      {/* Rating if available */}
-      {rating && rating > 0 && (
-        <meta name="rating" content={rating.toString()} />
-      )}
-    </Helmet>
-  );
+  return null;
 }
