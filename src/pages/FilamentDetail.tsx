@@ -764,6 +764,7 @@ const FilamentDetail = () => {
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
         material={displayFilament.material}
+        color={displayFilament.color_family}
         price={validationPricePerKg}
         availability={displayFilament.variant_available ?? true}
         transmissionDistance={displayFilament.transmission_distance}

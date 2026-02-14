@@ -9,6 +9,7 @@ interface ProductSEOProps {
   image?: string | null;
   brand?: string | null;
   material?: string | null;
+  color?: string | null;
   price?: number | null;
   currency?: CurrencyCode;
   availability?: boolean;
@@ -17,6 +18,55 @@ interface ProductSEOProps {
   region?: RegionCode;
   /** Product type for category meta */
   productType?: 'filament' | 'printer' | 'accessory';
+}
+
+/** Max title length for SEO (Google truncates at ~60) */
+const MAX_TITLE_LENGTH = 65;
+const SUFFIX = ' | FilaScope';
+
+/**
+ * Generate a clean, concise SEO title that fits within MAX_TITLE_LENGTH.
+ * Progressive shortening: drop "Filament", then truncate with "...".
+ */
+function generateSeoTitle(
+  title: string,
+  opts: { material?: string | null; color?: string | null; transmissionDistance?: number | null; productType?: string }
+): string {
+  const { material, color, transmissionDistance, productType } = opts;
+
+  // HueForge variant
+  if (transmissionDistance) {
+    const candidate = `${title} — TD ${transmissionDistance} HueForge${SUFFIX}`;
+    return candidate.length <= MAX_TITLE_LENGTH ? candidate : `${title.substring(0, MAX_TITLE_LENGTH - SUFFIX.length - 3)}...${SUFFIX}`;
+  }
+
+  // Build material tag (e.g. "PLA Filament" or just "PLA")
+  const matShort = material || (productType === 'printer' ? '' : 'Filament');
+
+  // Build core: "{title} {Color} — {Material} Filament | FilaScope"
+  const colorPart = color ? ` ${color}` : '';
+  const matFull = matShort ? ` — ${matShort} Filament` : '';
+  const matNoFilament = matShort ? ` — ${matShort}` : '';
+
+  // Try full version first
+  let candidate = `${title}${colorPart}${matFull}${SUFFIX}`;
+  if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
+
+  // Drop "Filament"
+  candidate = `${title}${colorPart}${matNoFilament}${SUFFIX}`;
+  if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
+
+  // Drop color
+  candidate = `${title}${matNoFilament}${SUFFIX}`;
+  if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
+
+  // Drop material
+  candidate = `${title}${SUFFIX}`;
+  if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
+
+  // Truncate title
+  const maxTitleChars = MAX_TITLE_LENGTH - SUFFIX.length - 3;
+  return `${title.substring(0, maxTitleChars)}...${SUFFIX}`;
 }
 
 const REGION_NAMES: Record<RegionCode, string> = {
@@ -36,6 +86,7 @@ export function ProductSEO({
   image,
   brand,
   material,
+  color,
   price,
   currency,
   availability = true,
@@ -50,18 +101,8 @@ export function ProductSEO({
   const activeCurrency = currency || (userCurrency as CurrencyCode);
   const regionName = REGION_NAMES[activeRegion] || activeRegion;
 
-  // Build SEO-optimized title with region targeting
-  let seoTitle: string;
-  
-  if (transmissionDistance) {
-    // HueForge targeting — avoid doubled brand name since title already has brand
-    seoTitle = `${title} — TD ${transmissionDistance} HueForge Filament | FilaScope`;
-  } else if (productType === 'printer') {
-    seoTitle = `Buy ${title} in ${regionName} | FilaScope`;
-  } else {
-    // Filament with region — title already includes brand + product line name
-    seoTitle = `Buy ${title.trim()} in ${regionName} | FilaScope`;
-  }
+  // Build clean, concise SEO title (≤65 chars, no "Buy" prefix)
+  const seoTitle = generateSeoTitle(title, { material, color, transmissionDistance, productType });
 
   // Use the description as-is — callers are responsible for building dynamic descriptions.
   // Only add HueForge note if transmission distance exists and isn't already mentioned.
