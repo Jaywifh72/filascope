@@ -1,60 +1,131 @@
 
 
-## Create HueForge TD Value Landing Page
+## Dynamic Open Graph Image Generation
 
-A new content-rich landing page at `/hueforge-td-database` targeting high-intent SEO keywords like "HueForge TD values", "filament TD database", and "transmissivity data for HueForge". This differs from the two existing tool pages (`/hueforge-filaments` and `/td-database`) by combining educational content with the data table for maximum search ranking potential.
+### Overview
+Create a backend function that generates branded PNG images on-the-fly for social media previews, then wire up all page-level SEO components and the prerender function to use dynamic OG image URLs instead of a static fallback.
 
----
+### Architecture
 
-### What Gets Built
+The system uses Supabase's recommended `og_edge` library (wraps Satori internally) which accepts JSX-like markup and returns a PNG `ImageResponse`. A single edge function handles all OG image types via query parameters.
 
-**New file: `src/pages/HueForgeTDDatabase.tsx`**
+```text
+Social Platform Request
+        |
+        v
+  /og-image?type=product&title=...&subtitle=...&price=...&color=...
+        |
+        v
+  Edge Function (og_edge)
+        |
+        v
+  1200x630 PNG response (cached 7 days)
+```
 
-A single-page component with these sections:
+### Implementation Steps
 
-1. **Hero** -- H1 "HueForge TD Value Database", dynamic subtitle with filament/brand counts, search bar, CTA linking to filters below
-2. **Educational Content (H2 sections)** -- "What is TD (Transmissivity Distance) in HueForge?" and "How to Use TD Values for Better Lithophanes" with 2-3 paragraphs each of original, keyword-rich text
-3. **Filterable Data Table** -- Reuses the query pattern from TDDatabase.tsx (filaments WHERE transmission_distance IS NOT NULL). Columns: color swatch, brand, product name, material, color family, TD value, price, link. Sortable by TD, brand, material. Filterable by material, color family, brand. Links each row to `/filament/{slug}`
-4. **Most Popular for HueForge** -- Top 10 filaments by lowest TD (most opaque, most commonly needed), displayed as cards above the full table
-5. **FAQ Section** -- 5 questions with Accordion UI. Covers: ideal TD values, best colors, finding TD values, PETG for HueForge, TD vs opacity
-6. **Schema Markup** -- FAQPage, Dataset, BreadcrumbList JSON-LD via existing SEO components
+#### 1. Create edge function `supabase/functions/og-image/index.tsx`
 
-**SEO metadata:**
-- Title: "HueForge TD Value Database -- Transmissivity Data | FilaScope" (55 chars)
-- Description: Dynamic with counts, under 160 chars
-- Canonical: `https://filascope.com/hueforge-td-database`
-- og:title and og:description synchronized
+- Uses `ImageResponse` from `https://deno.land/x/og_edge/mod.ts` and React from `https://esm.sh/react@18.2.0`
+- Accepts query params: `type` (product/brand/guide/default), `title`, `subtitle`, `price`, `color` (hex accent), `image` (product image URL)
+- Generates 1200x630px PNG with:
+  - Dark background (#0a0e17)
+  - FilaScope text logo top-left in white
+  - Title in large white text (max ~60 chars, truncated with ellipsis)
+  - Subtitle and price in teal accent (#00d4aa)
+  - Colored accent bar/gradient derived from the `color` param (e.g., filament color)
+  - Product image on the right side if provided (fetched via URL)
+- Returns with headers: `Content-Type: image/png`, `Cache-Control: public, max-age=604800` (7 days)
+- CORS headers for cross-origin access
+- Note: file extension is `.tsx` to support JSX syntax required by og_edge
 
----
+#### 2. Add config entry in `supabase/config.toml`
 
-### Routing and Internal Linking
+```toml
+[functions.og-image]
+verify_jwt = false
+```
 
-**`src/App.tsx`** -- Add lazy import and route for `/hueforge-td-database`
+Public access since crawlers/social platforms must fetch without auth.
 
-**`src/components/Navbar.tsx`** -- Add "HueForge TD Database" entry to the "Tools & Software" section of the Learn dropdown menu (line ~232)
+#### 3. Create helper utility `src/lib/ogImageUrl.ts`
 
-**Cross-linking from existing pages:**
-- `src/pages/HueForgeFinder.tsx` -- Add a link/button in the hero: "Browse Full TD Database"
-- `src/pages/TDDatabase.tsx` -- Add a link in the hero: "Learn about HueForge & TD Values"
+A small utility to build the OG image URL cleanly:
 
----
+```typescript
+const FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+
+export function buildOgImageUrl(params: {
+  type: 'product' | 'brand' | 'guide' | 'default';
+  title: string;
+  subtitle?: string;
+  price?: string;
+  color?: string;
+  image?: string;
+}): string {
+  const url = new URL(`${FUNCTIONS_URL}/og-image`);
+  url.searchParams.set('type', params.type);
+  url.searchParams.set('title', params.title);
+  if (params.subtitle) url.searchParams.set('subtitle', params.subtitle);
+  if (params.price) url.searchParams.set('price', params.price);
+  if (params.color) url.searchParams.set('color', params.color);
+  if (params.image) url.searchParams.set('image', params.image);
+  return url.toString();
+}
+```
+
+#### 4. Update `src/components/seo/ProductSEO.tsx`
+
+- Build a dynamic OG image URL using the helper:
+  ```
+  type=product, title={brand} {name}, subtitle={material}, price=From ${price}, color={colorHex}, image={featuredImage}
+  ```
+- Always set `og:image` to this dynamic URL (falling back to static product image if edge function URL would be too long)
+- `twitter:card` already set to `summary_large_image` -- no change needed
+
+#### 5. Update `src/components/seo/BrandSEO.tsx`
+
+- Build OG image URL:
+  ```
+  type=brand, title={brandName} Filaments, subtitle={productCount} products, image={logoUrl}
+  ```
+- Set `og:image` to dynamic URL instead of only showing when `image` prop exists
+
+#### 6. Update guide/learn page SEO (if applicable)
+
+- For guide pages that use Helmet directly, add:
+  ```
+  type=guide, title={guideTitle}
+  ```
+
+#### 7. Update `supabase/functions/prerender/index.ts`
+
+Update the `ogImage` field in each route handler to use the edge function URL instead of the static fallback:
+
+- `filamentPage`: Build OG URL with product details (title, brand, price, color, featured image)
+- `brandPage`: Build OG URL with brand name and product count
+- `guidePage`: Build OG URL with guide title
+- `printerPage`: Build OG URL with printer name, brand, price
+- Other pages: Keep static `/og-image.png` default
+
+The `buildHtml` function already uses `data.ogImage` with fallback to `/og-image.png`, so just setting the right value in each handler is sufficient.
 
 ### Technical Details
 
-- Data query: Same pattern as TDDatabase.tsx -- `supabase.from('filaments').select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, net_weight_g, product_handle, featured_image').not('transmission_distance', 'is', null)`
-- React Query key: `['hueforge-td-database']` (distinct from existing pages to avoid cache conflicts)
-- Uses existing UI components: Table, Card, Accordion, Badge, Input, Select, Button, Skeleton
-- Uses existing SEO components: FAQSchema, DatasetSchema, BreadcrumbSchema
-- CSV export button carried over from TDDatabase pattern
-- Table shows first 100 rows with "use filters" message for overflow
-- Price column uses `useCurrency` hook for regional formatting
+- **og_edge library**: Supabase's officially recommended approach. Uses Satori under the hood to convert React/JSX to SVG, then renders to PNG. No native dependencies needed.
+- **Font**: og_edge includes a default font. No custom font file needed for the initial implementation.
+- **Caching**: 7-day `Cache-Control` plus `CDN-Cache-Control` for edge caching. Social platforms cache images aggressively anyway.
+- **Image fetching**: When `image` param is provided, the function fetches the image bytes and embeds it in the rendered output. Includes a timeout to avoid slow responses.
+- **URL length safety**: OG image URLs are built with encoded query params. Titles are truncated to prevent excessively long URLs.
+- **File extension**: The edge function file will be `index.tsx` (not `.ts`) because og_edge requires JSX syntax. This is supported by Deno.
 
-### Files Modified
+### Files to Create
+- `supabase/functions/og-image/index.tsx` -- the image generation function
+- `src/lib/ogImageUrl.ts` -- client-side URL builder utility
 
-```
-New:    src/pages/HueForgeTDDatabase.tsx
-Edit:   src/App.tsx                    (add route + lazy import)
-Edit:   src/components/Navbar.tsx       (add Learn menu item)
-Edit:   src/pages/HueForgeFinder.tsx    (add cross-link)
-Edit:   src/pages/TDDatabase.tsx        (add cross-link)
-```
+### Files to Modify
+- `supabase/config.toml` -- add og-image function config
+- `src/components/seo/ProductSEO.tsx` -- use dynamic OG image
+- `src/components/seo/BrandSEO.tsx` -- use dynamic OG image
+- `supabase/functions/prerender/index.ts` -- use dynamic OG URLs in server-rendered HTML
+
