@@ -62,6 +62,18 @@ export function buildAffiliateLinkLocal(
     return url;
   }
 
+  // For Awin redirect programs, construct cread.php link with encoded destination
+  if (program.link_generation_method === "awin_redirect" && program.awin_merchant_id && program.awin_publisher_id) {
+    const destinationUrl = path
+      ? `${program.store_base_url}${path}`
+      : program.store_base_url;
+    let url = `https://www.awin1.com/cread.php?awinmid=${program.awin_merchant_id}&awinaffid=${program.awin_publisher_id}&ued=${encodeURIComponent(destinationUrl)}`;
+    if (program.source_value) {
+      url += `&clickref=${program.source_value}`;
+    }
+    return url;
+  }
+
   let url = program.link_template
     .replace("{store_url}", program.store_base_url)
     .replace("{path}", path)

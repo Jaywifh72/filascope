@@ -629,6 +629,8 @@ export type Database = {
           affiliate_id: string | null
           affiliate_network: string
           attribution_model: string | null
+          awin_merchant_id: string | null
+          awin_publisher_id: string | null
           brand_id: string | null
           brand_name: string
           cart_persistence_days: number | null
@@ -668,6 +670,8 @@ export type Database = {
           affiliate_id?: string | null
           affiliate_network: string
           attribution_model?: string | null
+          awin_merchant_id?: string | null
+          awin_publisher_id?: string | null
           brand_id?: string | null
           brand_name: string
           cart_persistence_days?: number | null
@@ -707,6 +711,8 @@ export type Database = {
           affiliate_id?: string | null
           affiliate_network?: string
           attribution_model?: string | null
+          awin_merchant_id?: string | null
+          awin_publisher_id?: string | null
           brand_id?: string | null
           brand_name?: string
           cart_persistence_days?: number | null

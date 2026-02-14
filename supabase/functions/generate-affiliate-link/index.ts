@@ -16,7 +16,7 @@ function buildAffiliateUrl(
   const sourceParameter = program.source_parameter as string | null;
   const sourceValue = program.source_value as string | null;
 
-  // For redirect_link programs, return the default tracking link directly
+  // For redirect_link programs (Impact.com), return the default tracking link directly
   if (linkGenerationMethod === "redirect_link" && defaultTrackingLink) {
     let url = defaultTrackingLink;
     const separator = url.includes("?") ? "&" : "?";
@@ -26,6 +26,22 @@ function buildAffiliateUrl(
     }
     if (utmCampaign) {
       url += `&utm_campaign=${encodeURIComponent(utmCampaign)}`;
+    }
+    return url;
+  }
+
+  // For Awin redirect programs, construct cread.php link with encoded destination
+  const awinMerchantId = program.awin_merchant_id as string | null;
+  const awinPublisherId = program.awin_publisher_id as string | null;
+  if (linkGenerationMethod === "awin_redirect" && awinMerchantId && awinPublisherId) {
+    const storeBaseUrl = program.store_base_url as string;
+    const destinationUrl = path ? `${storeBaseUrl}${path}` : storeBaseUrl;
+    let url = `https://www.awin1.com/cread.php?awinmid=${awinMerchantId}&awinaffid=${awinPublisherId}&ued=${encodeURIComponent(destinationUrl)}`;
+    if (sourceValue) {
+      url += `&clickref=${encodeURIComponent(sourceValue)}`;
+    }
+    if (utmCampaign) {
+      url += `&clickref2=${encodeURIComponent(utmCampaign)}`;
     }
     return url;
   }
