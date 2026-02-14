@@ -10,7 +10,7 @@ export default function BrandComparePage() {
           name="description" 
           content="Compare 3D printing filament brands side-by-side. Analyze product variety, pricing, material options, and ratings to find the best brand for your needs." 
         />
-        <link rel="canonical" href="https://filascope.com/brands/compare" />
+        
       </Helmet>
       <BrandComparisonView />
     </>

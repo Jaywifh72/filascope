@@ -142,7 +142,7 @@ export default function HueForgeFinder() {
         <meta property="og:title" content="HueForge Filament Finder — TD Values & Color Match | FilaScope" />
         <meta property="og:description" content={`Find the best filaments for HueForge by TD value and color. The world's largest transmissivity database for lithophane printing. Search ${filaments?.length || 300}+ filaments.`} />
         <meta name="keywords" content="HueForge, TD value, Transmission Distance, filament database, lithophane, multicolor printing, 3D printing filament" />
-        <link rel="canonical" href="https://filascope.com/hueforge-filaments" />
+        
       </Helmet>
       
       <BreadcrumbSchema items={[

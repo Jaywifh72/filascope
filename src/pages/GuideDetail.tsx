@@ -211,7 +211,7 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
         <meta property="og:title" content={`${guide.title} | FilaScope`} />
         <meta property="og:description" content={guideDescription} />
         <meta property="og:type" content="article" />
-        <link rel="canonical" href={`https://filascope.com/learn/${slug}`} />
+        
       </Helmet>
       <ArticleSchema
         headline={guide.title}

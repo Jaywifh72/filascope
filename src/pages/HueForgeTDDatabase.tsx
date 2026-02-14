@@ -213,7 +213,7 @@ export default function HueForgeTDDatabase() {
           name="keywords"
           content="HueForge TD values, filament TD database, transmissivity data, lithophane filament, HueForge transmissivity, best filament for HueForge"
         />
-        <link rel="canonical" href="https://filascope.com/hueforge-td-database" />
+        
       </Helmet>
 
       <BreadcrumbSchema
