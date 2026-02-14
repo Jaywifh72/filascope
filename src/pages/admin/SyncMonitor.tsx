@@ -316,10 +316,16 @@ export function SyncMonitorContent() {
     finally { setIsTriggering(false); }
   }, [user?.id]);
 
-  const syncSingleProduct = useCallback(async (filamentId: string) => {
+  const syncSingleProduct = useCallback(async (filamentId: string, productUrl?: string) => {
     try {
+      let url = productUrl;
+      if (!url) {
+        const { data } = await supabase.from('filaments').select('product_url').eq('id', filamentId).maybeSingle();
+        url = data?.product_url ?? undefined;
+      }
+      if (!url) { toast.error('No product URL available'); return; }
       const res = await supabase.functions.invoke('get-current-price', {
-        body: { filamentId },
+        body: { filamentId, productUrl: url },
       });
       if (res.error) toast.error(res.error.message);
       else toast.success('Price refresh triggered');
@@ -704,7 +710,7 @@ export function SyncMonitorContent() {
                           </TableCell>
                           <TableCell>
                             <Button variant="ghost" size="sm" className="h-6 text-xs"
-                              onClick={() => syncSingleProduct(p.id)}>
+                              onClick={() => syncSingleProduct(p.id, p.product_url)}>
                               <RefreshCw className="w-3 h-3 mr-1" /> Sync
                             </Button>
                           </TableCell>
