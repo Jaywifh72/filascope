@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
-import { Settings, ToggleLeft, ExternalLink } from "lucide-react";
+import { Settings, ToggleLeft, ExternalLink, Handshake } from "lucide-react";
 
 export default function NewAdminPanel() {
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -78,6 +78,27 @@ export default function NewAdminPanel() {
                 onCheckedChange={(checked) => setLightModePublic(checked)}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Links */}
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg">Quick Links</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Link
+              to="/admin/affiliate-hub"
+              className="flex items-center gap-3 p-4 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors"
+            >
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Handshake className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Affiliate Hub</p>
+                <p className="text-xs text-muted-foreground">Programs, discount codes, campaigns & click analytics</p>
+              </div>
+            </Link>
           </CardContent>
         </Card>
       </div>
