@@ -1,54 +1,64 @@
 
 
-## Fix Homepage SEO Issues
+## Create 5 New SEO Content Guide Pages
 
-### 1. H1 Missing Space Fix (HeroSection.tsx)
+### Approach
 
-The H1 uses two `display: block` `<span>` elements. While they render on separate lines visually, crawlers and assistive technology concatenate inner text as "FIND YOUR PERFECTFILAMENT." -- missing the space. Fix by adding a space character or changing the text.
+The existing guide system is fully template-driven. Adding new guides requires **only one file change**: adding config entries to `src/components/guides/guideConfigs.ts`. The routing (`/guides/:slug`), template rendering (`BuyingGuideTemplate`), and SEO schemas (Article + FAQ + Breadcrumb) are already wired up.
 
-**File**: `src/components/HeroSection.tsx` (lines 239-248)
-- Change to a single `<h1>` with proper spacing: "Find Your Perfect 3D Printing Filament"
-- Or keep the current uppercase design but add an explicit space: put a space character after "PERFECT" or before "FILAMENT"
+### What Gets Created
 
-**Approach**: Keep the visual design (two-line uppercase) but ensure concatenated text reads correctly. Add a trailing space to the first span's text content.
+| # | Slug | Title | Filter Strategy | Layout |
+|---|------|-------|-----------------|--------|
+| 1 | `best-filaments-for-hueforge-lithophanes` | Best Filaments for HueForge Lithophanes (2026) | `requireTD: true, sortBy: 'td', limit: 10` | ranked-list |
+| 2 | `pla-plus-vs-pla-pro` | PLA+ vs PLA Pro: Which Should You Choose? | `materials: ['PLA+', 'PLA Pro'], limit: 10` | vs-comparison |
+| 3 | `best-filament-for-bambu-lab-p1s` | Best Filaments for Bambu Lab P1S (2026) | `materials: ['PLA', 'PETG', 'ABS', 'TPU'], limit: 10` | ranked-list |
+| 4 | `silk-pla-comparison` | Best Silk PLA Filaments Compared | `material: 'Silk PLA', limit: 10` | ranked-list |
+| 5 | `asa-vs-abs-outdoor-printing` | ASA vs ABS: Which is Better for Outdoor Printing? | `materials: ['ASA', 'ABS'], limit: 10` | vs-comparison |
 
-### 2. Duplicate H2 Fix (Finder.tsx)
+### Content for Each Guide
 
-Two identical `<h2>Browse All Filaments</h2>` render on the homepage:
-- Line 982 in Finder.tsx (bridge section)  
-- Line 41 in ResultsHeader.tsx (catalog header)
+Each config entry includes:
+- `seoTitle` and `seoDescription` (optimized, under 65/160 chars respectively)
+- `editorialSections` with `position: 'before'` and `position: 'after'` containing the requested content sections as sanitized HTML
+- `faqs` array with 3 questions each (renders FAQ accordion + FAQPage JSON-LD schema)
+- `relatedSlugs` linking to other guides (renders "Related Guides" cards at the bottom)
+- `keywords` array for meta keywords tag
+- `publishedAt` and `updatedAt` set to `2026-02-14`
 
-**File**: `src/pages/Finder.tsx` (lines 980-987)
-- Change the bridge section H2 to a different heading, e.g., "Explore the Filament Catalog" or remove it entirely since ResultsHeader already provides the H2 with count information
+### What Already Works Automatically
 
-### 3. Title Priority (Already Working)
+Once configs are added, the template automatically provides:
+- Article JSON-LD schema with author/publisher (via `ArticleSchema`)
+- BreadcrumbList JSON-LD (Home > Guides > Guide Title)
+- FAQPage JSON-LD (when FAQs are present)
+- Quick Comparison Table at the top (for `ranked-list` layout)
+- VS Comparison view (for `vs-comparison` layout)
+- Product cards with scores, prices, and links to detail pages
+- Related Guides section at the bottom
+- Material Wizard CTA
+- OG tags (title, description, type)
 
-The Finder.tsx Helmet already sets `<title>FilaScope -- Compare 3D Printer Filaments, Specs & Prices</title>`. React Helmet overrides the index.html default title at runtime. This should already work for browser users visiting the SPA. If crawlers see the wrong title, it is because they are not executing JavaScript -- the prerender edge function handles that case separately.
-
-No code change needed for the title.
-
-### 4. Schemas (Already Working)
-
-`WebSiteSchema` and `OrganizationSchema` are already rendered in Finder.tsx (lines 952-953). These generate JSON-LD script tags via Helmet. They work for browser users. Crawlers that don't execute JS rely on the prerender function.
-
-No code change needed.
-
-### 5. Canonical (Already Working)
-
-The `CanonicalLink` component in App.tsx renders on every route including `/`, producing `https://filascope.com/`. 
-
-No code change needed.
-
----
-
-### Summary of Changes
+### File Changes
 
 | File | Change |
 |------|--------|
-| `src/components/HeroSection.tsx` | Add space after "PERFECT" in the H1 to fix concatenated text |
-| `src/pages/Finder.tsx` | Change or remove the duplicate "Browse All Filaments" H2 in the bridge section (lines 980-987) |
+| `src/components/guides/guideConfigs.ts` | Add 5 new entries to `BUYING_GUIDE_CONFIGS` with full editorial content, FAQs, filters, and metadata |
+
+### Cross-Linking Strategy
+
+- **HueForge Lithophanes** guide links to existing `hueforge-filaments` guide, TD database page, and beginner's guide
+- **PLA+ vs PLA Pro** links to `best-pla-filaments` and `beginners-guide`
+- **Bambu Lab P1S** links to `best-pla-filaments`, `best-petg-filaments`, and `best-abs-filaments`
+- **Silk PLA** links to `best-pla-filaments` and `pla-vs-petg`
+- **ASA vs ABS** links to `best-abs-filaments` and `best-petg-filaments`
+
+Existing guides' `relatedSlugs` arrays will also be updated where relevant to create bidirectional linking.
 
 ### Technical Notes
 
-- The title, schemas, and canonical issues the user sees on the live site are caused by the latest code not being published to production yet, not by bugs in the code. Once published, browser visitors will see all the correct metadata.
-- For crawlers that do not execute JavaScript, the prerender edge function must be routing correctly (separate concern from this fix).
+- The `useGuideFilaments` hook filters from the database using `ilike` material matching, so filters like `material: 'Silk PLA'` will match product titles/materials containing "Silk PLA"
+- For PLA+ vs PLA Pro, the `materials` filter uses OR logic (`materials: ['PLA+', 'PLA Pro']`) which matches filaments with either material type
+- The Bambu Lab P1S guide uses a broad multi-material filter since printer-specific compatibility data isn't directly queryable through the guide filter system -- editorial content handles the P1S-specific recommendations
+- No new components, routes, or database changes needed
+
