@@ -231,6 +231,7 @@ const Navbar = () => {
       icon: Wrench,
       items: [
         { to: '/reference/slicers', label: 'Slicer Directory', icon: Scissors },
+        { to: '/hueforge-td-database', label: 'HueForge TD Database', icon: Database },
       ]
     },
     

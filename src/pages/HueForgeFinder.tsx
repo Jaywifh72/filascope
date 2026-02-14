@@ -10,7 +10,8 @@ import {
   Search,
   ExternalLink,
   BookOpen,
-  Info
+  Info,
+  Database
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -185,6 +186,12 @@ export default function HueForgeFinder() {
           </div>
           
           <div className="flex justify-center gap-3">
+            <Button variant="outline" asChild>
+              <Link to="/hueforge-td-database">
+                <Database className="w-4 h-4 mr-2" />
+                Browse Full TD Database
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link to="/reference/methodology">
                 <BookOpen className="w-4 h-4 mr-2" />
