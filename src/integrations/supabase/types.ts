@@ -10389,6 +10389,33 @@ export type Database = {
           product_title: string
         }[]
       }
+      get_affiliate_clicks_by_day: {
+        Args: {
+          p_brand_names?: string[]
+          p_end_date: string
+          p_region_codes?: string[]
+          p_start_date: string
+        }
+        Returns: {
+          brand_name: string
+          click_count: number
+          click_date: string
+        }[]
+      }
+      get_affiliate_clicks_summary: {
+        Args: {
+          p_brand_names?: string[]
+          p_end_date: string
+          p_region_codes?: string[]
+          p_start_date: string
+        }
+        Returns: {
+          top_brand: string
+          top_source_page: string
+          total_clicks: number
+          unique_sessions: number
+        }[]
+      }
       get_best_listing: {
         Args: { _currency?: string; _filament_id: string; _region?: string }
         Returns: {
