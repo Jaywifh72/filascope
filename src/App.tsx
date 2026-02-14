@@ -90,6 +90,7 @@ const AdminRegionalExpansion = lazy(() => import("./pages/AdminRegionalExpansion
 const AdminPriceFreshness = lazy(() => import("./pages/AdminPriceFreshness"));
 const AdminPriceImport = lazy(() => import("./pages/AdminPriceImport"));
 const AdminStores = lazy(() => import("./pages/AdminStores"));
+const AdminAffiliateHub = lazy(() => import("./pages/AdminAffiliateHub"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -245,6 +246,7 @@ const App = () => (
                   <Route path="/old-admin/price-freshness" element={<AdminPriceFreshness />} />
                   <Route path="/old-admin/price-import" element={<AdminPriceImport />} />
                   <Route path="/old-admin/stores" element={<AdminStores />} />
+                  <Route path="/old-admin/affiliate-hub" element={<AdminAffiliateHub />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                   <Route path="/reference/cad" element={<ReferenceCAD />} />

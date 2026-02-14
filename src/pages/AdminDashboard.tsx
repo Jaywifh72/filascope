@@ -79,6 +79,7 @@ const AdminDashboard = () => {
     { to: "/admin/scheduler", icon: Calendar, title: "Scheduler", desc: "Automated tasks & cron jobs", color: "text-indigo-500" },
     { to: "/admin/users", icon: Users, title: "User Management", desc: "Manage accounts & roles", color: "text-primary" },
     { to: "/admin/docs", icon: FileText, title: "Documentation", desc: "Architecture & technical docs", color: "text-blue-500" },
+    { to: "/admin/affiliate-hub", icon: DollarSign, title: "Affiliate Hub", desc: "Programs, codes & campaigns", color: "text-teal-500" },
   ];
 
   return (
