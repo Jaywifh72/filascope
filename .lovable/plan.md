@@ -1,121 +1,113 @@
 
 
-## Security Scan Remediation Plan
+## Plan: Connect Affiliate Programs to Product Store Links
 
-This plan addresses all 33 findings from the security scan across three scanners: Supabase linter, Supabase Lovable analysis, and the agent security scanner.
-
----
-
-### Summary of Findings
-
-| Severity | Count | Actionable | Ignore/Already Handled |
-|----------|-------|------------|----------------------|
-| Error    | 2     | 1 fix, 1 ignore | 1 |
-| Warning  | 27    | 3 fixes, rest ignore | ~24 |
-| Info     | 4     | 0 fixes, all ignore | 4 |
+This plan bridges the gap between the affiliate program database (affiliate_programs table) and the actual product pages by fixing brand name matching, URL domain mapping, and ensuring all outbound link components use affiliate tracking.
 
 ---
 
-### Phase 1: Fix the XSS Risk in Release Notes Rendering
+### Phase 1: Database Changes
 
-**Finding**: `unsanitized_html_release_notes` (warn)
+**A. Create `brand_affiliate_aliases` table (migration)**
 
-The `renderReleaseNotes` function in `FirmwareSection.tsx` and `SoftwareSection.tsx` runs regex replacements BEFORE DOMPurify sanitization. While DOMPurify does run at the end, a safer approach is to escape dangerous characters first.
+A new lookup table mapping product vendor names to affiliate program brand names.
 
-**Fix**: Reverse the order -- sanitize the raw input with DOMPurify first (stripping any HTML tags from the raw text), THEN apply the markdown-to-HTML regex transformations, THEN run DOMPurify again on the final HTML output. This creates a two-pass sanitization:
+- Columns: `id` (uuid PK), `product_vendor_name` (text, unique), `affiliate_brand_name` (text), `created_at` (timestamptz)
+- RLS: SELECT open to all, ALL operations open to admins via `has_role()`
+- Seed with 8 initial mappings (eSun->eSUN, ELEGOO->Elegoo, etc.)
 
-```text
-1. DOMPurify.sanitize(rawText, {ALLOWED_TAGS: []})  -- strip all HTML from input
-2. Apply regex transformations (safe because input is now plain text)
-3. DOMPurify.sanitize(html, SANITIZE_CONFIG)         -- final sanitization
-```
+**B. Add `product_url_domains` column to `affiliate_programs` (migration)**
 
-Files: `src/components/FirmwareSection.tsx`, `src/components/SoftwareSection.tsx`
-
----
-
-### Phase 2: Database Migration -- Tighten RLS Policies
-
-**A. Restrict `user_roles` SELECT to own roles only (non-admin)**
-
-**Finding**: `User Role Assignments Visible to All Authenticated Users` (warn)
-
-Currently there are multiple overlapping SELECT policies. Replace them with two clean policies:
-- Users can view their own roles: `USING (auth.uid() = user_id)`
-- Admins can view all roles: `USING (has_role(auth.uid(), 'admin'))`
-
-Drop any duplicate/overlapping policies first.
-
-**B. Remove duplicate `user_browse_history` INSERT policies**
-
-**Finding**: `user_browse_history_inadequate_protection` (warn)
-
-There are two INSERT policies on this table that overlap. Consolidate into one clean policy:
-- `WITH CHECK ((user_id = auth.uid()) OR (user_id IS NULL AND session_id IS NOT NULL))`
-
-Drop the duplicate.
+- `ALTER TABLE affiliate_programs ADD COLUMN IF NOT EXISTS product_url_domains text[] DEFAULT NULL;`
+- UPDATE each brand with known domain arrays (e.g., eSUN gets `['esun3dstore.com', 'esun3d.com', 'www.esun3d.com']`)
 
 ---
 
-### Phase 3: Ignore Findings That Are Working as Intended
+### Phase 2: Update `useAffiliateLink` Hook
 
-The following findings will be marked as "ignored" with documented reasons, because they represent intentional design decisions or cannot be fixed through application code:
+**File**: `src/hooks/useAffiliateLink.ts`
 
-**Already ignored (no action needed):**
-- `SUPA_extension_in_public` -- infrastructure config
-- `SUPA_auth_leaked_password_protection` -- infrastructure config  
-- `SUPA_rls_policy_always_true` (trend_upvotes) -- intentional public voting
+1. **Add alias lookup query** -- Before querying `affiliate_programs`, first check `brand_affiliate_aliases` where `product_vendor_name ILIKE brandName`. If found, use `affiliate_brand_name` for the program lookup. Cache with 10-minute staleTime.
 
-**Will mark as ignored:**
+2. **Change `.eq()` to `.ilike()`** -- The `affiliate_programs` query changes from `.eq("brand_name", brandName!)` to `.ilike("brand_name", resolvedBrandName!)` for case-insensitive fallback matching.
 
-1. **`profiles_table_public_exposure`** (error) -- The profiles table already has strict RLS: only `auth.uid() = id` for SELECT, plus admin access. The `v_public_profiles` view correctly excludes email, shipping info, and all PII -- it only exposes display_name, avatar_url, bio, social_links, and visibility flags. Anonymous users have no direct SELECT grant on the profiles table. This finding is a false positive.
+3. **Update `buildLink` to handle domain mismatches** -- The current `buildLink` extracts the path from the product URL and combines it with the program's `store_base_url`. This needs smarter handling per link generation method:
+   - `url_parameter`: Extract path from source URL, combine with `store_base_url` + path + tracking params
+   - `awin_redirect`: Use the FULL original product URL as the `ued` parameter (Awin handles the redirect regardless of domain)
+   - `redirect_link`: Return `default_tracking_link` (no deep linking possible)
 
-2. **`safety_alert_subscriptions_email_phone`** (error) -- RLS already restricts to `auth.uid() = user_id` for all operations. Field-level encryption is not feasible through application code without breaking query functionality. The data is properly access-controlled.
+---
 
-3. **`User Activity and Session Data Publicly Insertable`** (warn) -- Intentional for anonymous analytics tracking. The INSERT policy correctly requires `user_id IS NULL AND session_id IS NOT NULL` for anon users.
+### Phase 3: Update `AffiliateProgram` TypeScript Type
 
-4. **`Safety Alert Subscription Data Contains Contact Information`** (warn) -- Already addressed above. RLS is properly scoped to user ownership.
+**File**: `src/types/affiliate.ts`
 
-5. **`Performance Metrics Allow Unrestricted Data Insertion`** (warn) -- Intentional analytics table. INSERT-only access for public. No sensitive data exposed. Rate limiting would require edge function middleware not available in RLS.
+Add `product_url_domains: string[] | null;` to the `AffiliateProgram` interface.
 
-6. **`Error Logs Accept Unvalidated Public Submissions`** (warn) -- Intentional client-side error logging. INSERT-only.
+---
 
-7. **`Affiliate Click Tracking Data Publicly Insertable`** (info) -- Intentional for affiliate tracking. Only admins can read.
+### Phase 4: Update Outbound Link Components
 
-8. **`Search Analytics Allow Unrestricted Query Logging`** (info) -- Intentional analytics. INSERT-only.
+After Phase 2 fixes, many components will automatically benefit since they already use `useAffiliateLink` or receive `affiliateUrl` from parent hooks. Here's the audit:
 
-9. **`Filter Analytics Accept Unvalidated Public Data`** (info) -- Intentional analytics. INSERT-only.
+**Already using `useAffiliateLink` (will auto-fix via alias + ilike):**
+- `FilamentPurchaseSidebar.tsx` -- uses `useAffiliateLink(vendor)` with `trackAndOpen`
+- `FilamentHeroPurchaseCard.tsx` -- uses `useAffiliateLink(vendor)` with `trackAndOpen`
+- `DealCard.tsx` -- uses `useAffiliateLink(deal.vendor)` with `trackAndOpen`
 
-10. **`Funnel Event Tracking Allows Unrestricted Data Insertion`** (info) -- Intentional analytics. INSERT-only.
+**Receiving `affiliateUrl` from parent (no change needed):**
+- `StickyBuyBar.tsx` -- receives pre-built `affiliateUrl` prop from `FilamentDetail.tsx`
+- `FilamentMobileBottomBar.tsx` -- receives pre-built `affiliateUrl` prop from `FilamentDetail.tsx`
+- `BestPricesSection.tsx` -- uses `candidates[].affiliateUrl` from `useFilamentDetailPricing`
+- `StorePricingDisplay.tsx` -- receives `affiliateUrl` prop from parent sidebar
 
-11. **`security_definer_functions`** (warn) -- All SECURITY DEFINER functions are trigger functions with proper `search_path = public`. They are necessary for automation (auto-assign roles, create collections, update like counts). Current implementation is secure.
+**Using legacy `useAffiliateLinks` (old system) -- no change, kept as fallback:**
+- `PurchaseSection.tsx` -- uses `getAffiliateUrl()` from legacy hook
+- `GroupedDealCard.tsx` -- uses `getAffiliateUrl()` from legacy hook
+- `RetailerCard.tsx` -- uses `getAffiliateUrl()` / `getAmazonUrl()` from legacy hook
+- `RetailerCompareGrid.tsx` -- uses legacy system
 
-12. **`edge_functions_no_auth`** (warn) -- Public-facing functions (generate-affiliate-link, get-current-price, sitemap-xml, sync-* jobs) are intentionally unauthenticated. Admin functions already have `verify_jwt = true`. 
+These legacy components will continue to work via the old `affiliate_configs` edge function. The new system takes priority wherever `useAffiliateLink` is used.
 
-13. **`verbose_edge_function_errors`** (info) -- The vast majority of edge functions are admin-only (verify_jwt = true). The public-facing functions (generate-affiliate-link, get-affiliate-url) already return generic error messages. The verbose errors in admin functions are acceptable for debugging.
+**Brand pages -- new integration needed:**
+- `BrandHeroSection.tsx` -- "Visit Website" button at line 204 links directly to `website` prop. Will add `useAffiliateLink(brandName)` and wrap the URL through `buildLink()` when `hasAffiliate` is true. Add a subtle "Affiliate Partner" badge.
+- `BrandAboutTab.tsx` -- Two "Visit Website" links (line 178 and line 270). Same treatment: wrap through `buildLink()` when affiliate program exists.
 
-14. **20 remaining `SUPA_rls_policy_always_true`** warnings -- These are all INSERT-only policies on analytics/tracking tables (ab_test_assignments, ab_test_conversions, affiliate_clicks, module_engagement_metrics, printer_analytics, revenue_attribution, etc.) or service-role management policies on internal tables (broken_product_urls, product_regional_prices, etc.). All intentional.
+---
+
+### Phase 5: Update `buildAffiliateLinkLocal` Utility
+
+**File**: `src/utils/affiliateLinks.ts`
+
+Update the `awin_redirect` branch to accept full product URLs (not just paths). When the `path` argument starts with `http`, use it as-is for the `ued` parameter instead of prepending `store_base_url`. This handles the case where `esun3dstore.com` product URLs are passed but the affiliate program's `store_base_url` is `esun3d.com`.
 
 ---
 
 ### Technical Details
 
 ```text
+Files to create:
+  - supabase migration (brand_affiliate_aliases table + product_url_domains column + seed data)
+
 Files to modify:
-  - src/components/FirmwareSection.tsx (renderReleaseNotes fix)
-  - src/components/SoftwareSection.tsx (renderReleaseNotes fix)
-  - supabase migration (new) -- consolidate user_roles and user_browse_history policies
+  - src/types/affiliate.ts (add product_url_domains field)
+  - src/hooks/useAffiliateLink.ts (alias lookup, ilike matching, smarter buildLink)
+  - src/utils/affiliateLinks.ts (handle full URLs in awin_redirect)
+  - src/components/brands/BrandHeroSection.tsx (affiliate-tracked "Visit Website")
+  - src/components/brands/tabs/BrandAboutTab.tsx (affiliate-tracked "Visit Website")
 
-Security findings to update via manage_security_finding tool:
-  - Delete: unsanitized_html_release_notes (after fix)
-  - Delete: user_browse_history_inadequate_protection (after fix)
-  - Ignore: profiles_table_public_exposure
-  - Ignore: safety_alert_subscriptions_email_phone
-  - Ignore: security_definer_functions
-  - Ignore: edge_functions_no_auth
-  - Ignore: verbose_edge_function_errors
-  - Update: remaining supabase_lov findings as appropriate
+Files unchanged (auto-benefit from hook fix):
+  - FilamentPurchaseSidebar.tsx
+  - FilamentHeroPurchaseCard.tsx  
+  - DealCard.tsx
+  - StickyBuyBar.tsx (receives URL from parent)
+  - FilamentMobileBottomBar.tsx (receives URL from parent)
+  - BestPricesSection.tsx (receives URL from parent)
+
+Files unchanged (legacy system, kept as fallback):
+  - PurchaseSection.tsx
+  - GroupedDealCard.tsx
+  - RetailerCard.tsx
+  - RetailerCompareGrid.tsx
 ```
-
-The net result will be zero unaddressed errors and zero unaddressed warnings -- every finding will either be fixed or documented with an ignore reason.
 
