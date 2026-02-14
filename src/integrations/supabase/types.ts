@@ -7123,6 +7123,98 @@ export type Database = {
           },
         ]
       }
+      scrape_errors: {
+        Row: {
+          brand_slug: string
+          created_at: string
+          error_message: string | null
+          error_type: string | null
+          filament_id: string | null
+          id: string
+          is_resolved: boolean
+          region: string | null
+          resolved_at: string | null
+          sync_run_id: string | null
+          url: string | null
+        }
+        Insert: {
+          brand_slug: string
+          created_at?: string
+          error_message?: string | null
+          error_type?: string | null
+          filament_id?: string | null
+          id?: string
+          is_resolved?: boolean
+          region?: string | null
+          resolved_at?: string | null
+          sync_run_id?: string | null
+          url?: string | null
+        }
+        Update: {
+          brand_slug?: string
+          created_at?: string
+          error_message?: string | null
+          error_type?: string | null
+          filament_id?: string | null
+          id?: string
+          is_resolved?: boolean
+          region?: string | null
+          resolved_at?: string | null
+          sync_run_id?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_errors_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "scrape_errors_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_errors_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_errors_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "scrape_errors_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "scrape_errors_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_errors_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrape_job_logs: {
         Row: {
           created_at: string | null
