@@ -38,7 +38,7 @@ import { isAMSCompatible } from "@/lib/amsCompatibility";
 import { useCompare } from "@/hooks/useCompare";
 import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import { BRAND_SPECIFIC_FUNCTIONS } from "@/lib/brand-sync-config";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import HeroSection from "@/components/HeroSection";
 import { WebSiteSchema, OrganizationSchema, ItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
@@ -942,27 +942,21 @@ const Finder = () => {
         { targetId: "filament-filters", label: "Skip to filters" },
         { targetId: "filament-results", label: "Skip to results" },
       ]} />
-      <Helmet>
-        <title>FilaScope — Compare 3D Printer Filaments, Specs & Prices</title>
-        <meta name="description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://filascope.com" />
-        <meta property="og:title" content="FilaScope — Compare 3D Printer Filaments, Specs & Prices" />
-        <meta property="og:description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
-        <meta property="og:site_name" content="FilaScope" />
-        <meta property="og:image" content="https://filascope.com/og-image.png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="FilaScope - 3D Printer Filament Database" />
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@FilaScope" />
-        <meta name="twitter:title" content="FilaScope — Compare 3D Printer Filaments, Specs & Prices" />
-        <meta name="twitter:description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
-        <meta name="twitter:image" content="https://filascope.com/og-image.png" />
-        <meta name="twitter:image:alt" content="FilaScope - 3D Printer Filament Database" />
-      </Helmet>
+      <DocumentHead
+        title="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
+        description={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`}
+        ogTitle="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
+        ogDescription={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`}
+        ogType="website"
+        ogUrl="https://filascope.com"
+        ogSiteName="FilaScope"
+        ogImage="https://filascope.com/og-image.png"
+        twitterCard="summary_large_image"
+        twitterSite="@FilaScope"
+        twitterTitle="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
+        twitterDescription={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`}
+        twitterImage="https://filascope.com/og-image.png"
+      />
       {/* JSON-LD Structured Data for Homepage */}
       <WebSiteSchema />
       <OrganizationSchema />

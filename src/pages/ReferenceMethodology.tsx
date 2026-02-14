@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
 import { 
   FileText, 
@@ -50,15 +50,11 @@ const methodologyFaqs = [
 export default function ReferenceMethodology() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      <Helmet>
-        <title>Data Methodology & Sources | FilaScope - How We Gather Filament TD Values</title>
-        <meta 
-          name="description" 
-          content="Learn how FilaScope gathers, verifies, and maintains the world's most comprehensive 3D printing filament database. Trusted sources for TD values, prices, and technical specifications." 
-        />
-        <meta name="keywords" content="filament database methodology, TD value testing, HueForge data source, 3D printing specifications, filament data verification" />
-        
-      </Helmet>
+      <DocumentHead
+        title="Data Methodology & Sources | FilaScope - How We Gather Filament TD Values"
+        description="Learn how FilaScope gathers, verifies, and maintains the world's most comprehensive 3D printing filament database. Trusted sources for TD values, prices, and technical specifications."
+        keywords="filament database methodology, TD value testing, HueForge data source, 3D printing specifications, filament data verification"
+      />
       
       <FAQSchema faqs={methodologyFaqs} />
 

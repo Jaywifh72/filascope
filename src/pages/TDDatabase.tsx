@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -177,15 +177,11 @@ export default function TDDatabase() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      <Helmet>
-        <title>TD Value Database - Transmission Distance for 3D Printing Filaments | FilaScope</title>
-        <meta 
-          name="description" 
-          content="Complete database of Transmission Distance (TD) values for 3D printing filaments. Essential data for HueForge, lithophanes, and multicolor printing. Export to CSV." 
-        />
-        <meta name="keywords" content="TD database, Transmission Distance, filament data, HueForge values, lithophane filament, 3D printing data" />
-        
-      </Helmet>
+      <DocumentHead
+        title="TD Value Database - Transmission Distance for 3D Printing Filaments | FilaScope"
+        description="Complete database of Transmission Distance (TD) values for 3D printing filaments. Essential data for HueForge, lithophanes, and multicolor printing. Export to CSV."
+        keywords="TD database, Transmission Distance, filament data, HueForge values, lithophane filament, 3D printing data"
+      />
       
       <DatasetSchema
         name="FilaScope TD Value Database"

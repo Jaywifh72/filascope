@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Link } from "react-router-dom";
 import { ArrowLeft, FolderGit2, Star, Table, FileText, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -162,10 +162,10 @@ const ReferenceRepos = () => {
 
   return (
     <FilterProvider>
-      <Helmet>
-        <title>3D Model Repositories — Find Printable Models | FilaScope</title>
-        <meta name="description" content="Discover the best 3D model repositories. Compare platforms for free printable models, community features, and file quality." />
-      </Helmet>
+      <DocumentHead
+        title="3D Model Repositories — Find Printable Models | FilaScope"
+        description="Discover the best 3D model repositories. Compare platforms for free printable models, community features, and file quality."
+      />
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}

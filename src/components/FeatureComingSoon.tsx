@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { ArrowLeft, Bell, Loader2, Rocket, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,13 +63,10 @@ export function FeatureComingSoon({
 
   return (
     <>
-      <Helmet>
-        <title>{featureName} — Coming Soon | FilaScope</title>
-        <meta
-          name="description"
-          content={`${featureName} is coming soon to FilaScope. ${description}`}
-        />
-      </Helmet>
+      <DocumentHead
+        title={`${featureName} — Coming Soon | FilaScope`}
+        description={`${featureName} is coming soon to FilaScope. ${description}`}
+      />
 
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
         <div className="max-w-xl w-full text-center space-y-8">

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { DocumentHead } from '@/components/seo/DocumentHead';
 import { BreadcrumbSchema, WebApplicationSchema } from '@/components/seo';
 import { Palette, Copy, Layers } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -62,12 +62,12 @@ export default function ColorFinder() {
 
   return (
     <>
-      <Helmet>
-        <title>Find Filaments by Color — Color Matching Tool | FilaScope</title>
-        <meta name="description" content="Match any color to real 3D printer filaments. Search by hex code, color name, or TD value. Perfect for HueForge lithophanes & color-matched prints." />
-        <meta property="og:title" content="Find Filaments by Color — Color Matching Tool | FilaScope" />
-        <meta property="og:description" content="Match any color to real 3D printer filaments. Search by hex code, color name, or TD value. Perfect for HueForge lithophanes & color-matched prints." />
-      </Helmet>
+      <DocumentHead
+        title="Find Filaments by Color — Color Matching Tool | FilaScope"
+        description="Match any color to real 3D printer filaments. Search by hex code, color name, or TD value. Perfect for HueForge lithophanes & color-matched prints."
+        ogTitle="Find Filaments by Color — Color Matching Tool | FilaScope"
+        ogDescription="Match any color to real 3D printer filaments. Search by hex code, color name, or TD value. Perfect for HueForge lithophanes & color-matched prints."
+      />
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
         { name: 'Color Finder', url: 'https://filascope.com/color-finder' },

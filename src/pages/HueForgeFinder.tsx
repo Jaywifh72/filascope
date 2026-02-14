@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -133,17 +133,13 @@ export default function HueForgeFinder() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      <Helmet>
-        <title>HueForge Filament Finder — TD Values & Color Match | FilaScope</title>
-        <meta 
-          name="description" 
-          content={`Find the best filaments for HueForge by TD value and color. The world's largest transmissivity database for lithophane printing. Search ${filaments?.length || 300}+ filaments.`}
-        />
-        <meta property="og:title" content="HueForge Filament Finder — TD Values & Color Match | FilaScope" />
-        <meta property="og:description" content={`Find the best filaments for HueForge by TD value and color. The world's largest transmissivity database for lithophane printing. Search ${filaments?.length || 300}+ filaments.`} />
-        <meta name="keywords" content="HueForge, TD value, Transmission Distance, filament database, lithophane, multicolor printing, 3D printing filament" />
-        
-      </Helmet>
+      <DocumentHead
+        title="HueForge Filament Finder — TD Values & Color Match | FilaScope"
+        description={`Find the best filaments for HueForge by TD value and color. The world's largest transmissivity database for lithophane printing. Search ${filaments?.length || 300}+ filaments.`}
+        ogTitle="HueForge Filament Finder — TD Values & Color Match | FilaScope"
+        ogDescription={`Find the best filaments for HueForge by TD value and color. The world's largest transmissivity database for lithophane printing. Search ${filaments?.length || 300}+ filaments.`}
+        keywords="HueForge, TD value, Transmission Distance, filament database, lithophane, multicolor printing, 3D printing filament"
+      />
       
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },

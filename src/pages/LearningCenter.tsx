@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { DocumentHead } from '@/components/seo/DocumentHead';
 import { BreadcrumbSchema } from '@/components/seo';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -332,12 +332,12 @@ export default function LearningCenter() {
 
   return (
     <>
-    <Helmet>
-      <title>3D Printing Guides & Tutorials — Learn | FilaScope</title>
-      <meta name="description" content="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever." />
-      <meta property="og:title" content="3D Printing Guides & Tutorials — Learn | FilaScope" />
-      <meta property="og:description" content="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever." />
-    </Helmet>
+    <DocumentHead
+      title="3D Printing Guides & Tutorials — Learn | FilaScope"
+      description="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever."
+      ogTitle="3D Printing Guides & Tutorials — Learn | FilaScope"
+      ogDescription="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever."
+    />
     <BreadcrumbSchema items={[
       { name: 'Home', url: 'https://filascope.com/' },
       { name: 'Learning Center', url: 'https://filascope.com/learn' },

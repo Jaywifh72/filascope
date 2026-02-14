@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1438,10 +1438,10 @@ const MaterialCompare = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Material Knowledge Base — Filament Reference & Comparison | FilaScope</title>
-        <meta name="description" content="Compare 3D printing material properties side by side. Explore strength, flexibility, temperature resistance, and printability across PLA, PETG, ABS, TPU, and more." />
-      </Helmet>
+      <DocumentHead
+        title="Material Knowledge Base — Filament Reference & Comparison | FilaScope"
+        description="Compare 3D printing material properties side by side. Explore strength, flexibility, temperature resistance, and printability across PLA, PETG, ABS, TPU, and more."
+      />
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}

@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePublicProfile } from "@/hooks/usePublicProfile";
@@ -36,9 +36,7 @@ const UserProfile = () => {
   if (isNotFound || !profile || (!isVisible && !isOwnProfile)) {
     return (
       <div className="min-h-screen bg-background">
-        <Helmet>
-          <title>Profile Not Found | FilaScope</title>
-        </Helmet>
+        <DocumentHead title="Profile Not Found | FilaScope" />
         <div className="container max-w-4xl py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">Profile Not Found</h1>
           <p className="text-muted-foreground">
@@ -56,12 +54,12 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta property="og:title" content={pageTitle} />
-        {profile.bio && <meta name="description" content={profile.bio} />}
-        {profile.bio && <meta property="og:description" content={profile.bio} />}
-      </Helmet>
+      <DocumentHead
+        title={pageTitle}
+        description={profile.bio || undefined}
+        ogTitle={pageTitle}
+        ogDescription={profile.bio || undefined}
+      />
 
       <div className="container max-w-4xl py-8 px-4 sm:px-6">
         <ProfileHeader

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from "react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -207,12 +207,12 @@ const Wizard = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Quick Match — Find Your Perfect Filament in 60 Seconds | FilaScope</title>
-        <meta name="description" content="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations." />
-        <meta property="og:title" content="Quick Match — Find Your Perfect Filament in 60 Seconds | FilaScope" />
-        <meta property="og:description" content="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations." />
-      </Helmet>
+      <DocumentHead
+        title="Quick Match — Find Your Perfect Filament in 60 Seconds | FilaScope"
+        description="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations."
+        ogTitle="Quick Match — Find Your Perfect Filament in 60 Seconds | FilaScope"
+        ogDescription="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations."
+      />
       <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}>
       <div className="max-w-2xl mx-auto w-full flex flex-col">
         <Card ref={wizardCardRef} className="p-4 sm:p-6 md:p-8 min-h-0 flex flex-col">

@@ -1,17 +1,13 @@
-import { Helmet } from 'react-helmet-async';
+import { DocumentHead } from '@/components/seo/DocumentHead';
 import { BrandComparisonView } from '@/components/brands/BrandCompare';
 
 export default function BrandComparePage() {
   return (
     <>
-      <Helmet>
-        <title>Compare Filament Brands — Side-by-Side Analysis | FilaScope</title>
-        <meta 
-          name="description" 
-          content="Compare 3D printing filament brands side-by-side. Analyze product variety, pricing, material options, and ratings to find the best brand for your needs." 
-        />
-        
-      </Helmet>
+      <DocumentHead
+        title="Compare Filament Brands — Side-by-Side Analysis | FilaScope"
+        description="Compare 3D printing filament brands side-by-side. Analyze product variety, pricing, material options, and ratings to find the best brand for your needs."
+      />
       <BrandComparisonView />
     </>
   );

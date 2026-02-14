@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { BreadcrumbSchema, ItemListSchema } from "@/components/seo";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
@@ -639,12 +639,12 @@ export default function Printers() {
 
   return (
     <>
-      <Helmet>
-        <title>3D Printer Database — Specs, Filament Compatibility | FilaScope</title>
-        <meta name="description" content={`Browse ${printers?.length || 118}+ 3D printers with detailed specs. Check filament compatibility, temperature ranges, build volumes & find the perfect printer for your materials.`} />
-        <meta property="og:title" content="3D Printer Database — Specs, Filament Compatibility | FilaScope" />
-        <meta property="og:description" content={`Browse ${printers?.length || 118}+ 3D printers with detailed specs. Check filament compatibility, temperature ranges, build volumes & find the perfect printer for your materials.`} />
-      </Helmet>
+      <DocumentHead
+        title="3D Printer Database — Specs, Filament Compatibility | FilaScope"
+        description={`Browse ${printers?.length || 118}+ 3D printers with detailed specs. Check filament compatibility, temperature ranges, build volumes & find the perfect printer for your materials.`}
+        ogTitle="3D Printer Database — Specs, Filament Compatibility | FilaScope"
+        ogDescription={`Browse ${printers?.length || 118}+ 3D printers with detailed specs. Check filament compatibility, temperature ranges, build volumes & find the perfect printer for your materials.`}
+      />
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
         { name: 'Printers', url: 'https://filascope.com/printers' },
