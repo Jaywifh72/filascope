@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { normalizeColorHex } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAffiliateLink } from '@/hooks/useAffiliateLink';
 
 interface QuickSummaryBarProps {
   colorHex: string | null | undefined;
@@ -11,6 +12,7 @@ interface QuickSummaryBarProps {
   formattedPrice: string | null;
   buyUrl: string | null | undefined;
   storeName: string | null | undefined;
+  vendor?: string | null;
   /** Ref to the hero section element to observe */
   heroRef: React.RefObject<HTMLDivElement>;
 }
@@ -22,10 +24,17 @@ export function QuickSummaryBar({
   formattedPrice,
   buyUrl,
   storeName,
+  vendor,
   heroRef,
 }: QuickSummaryBarProps) {
   const [visible, setVisible] = useState(false);
   const isMobile = useIsMobile();
+  const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(vendor);
+
+  const affiliateUrl = useMemo(
+    () => buyUrl ? (hasAffiliate ? buildLink(buyUrl) : buyUrl) : null,
+    [buyUrl, hasAffiliate, buildLink]
+  );
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -89,11 +98,17 @@ export function QuickSummaryBar({
         )}
 
         {/* Buy link - hidden on mobile */}
-        {buyUrl && storeName && !isMobile && (
+        {affiliateUrl && storeName && !isMobile && (
           <a
-            href={buyUrl}
+            href={affiliateUrl}
             target="_blank"
-            rel="noopener noreferrer"
+            rel={hasAffiliate ? "nofollow sponsored noopener noreferrer" : "noopener noreferrer"}
+            onClick={(e) => {
+              if (hasAffiliate && buyUrl) {
+                e.preventDefault();
+                trackAndOpen(buyUrl, { productName: storeName, sourcePage: window.location.pathname, sourceComponent: 'quick_summary_bar' });
+              }
+            }}
             className="ml-auto text-xs text-primary hover:text-primary/80 transition-colors duration-150 flex items-center gap-1 flex-shrink-0 whitespace-nowrap"
           >
             Buy at {storeName}

@@ -122,7 +122,7 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
 
         // For url_parameter and others: extract path and combine with store_base_url
         const urlObj = new URL(url);
-        const basePath = urlObj.pathname + urlObj.search;
+        const basePath = urlObj.pathname;
         return buildAffiliateLinkLocal(program, basePath);
       } catch {
         // If url isn't a valid URL, treat it as a path
