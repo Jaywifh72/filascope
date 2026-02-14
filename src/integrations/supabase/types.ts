@@ -4009,6 +4009,107 @@ export type Database = {
           },
         ]
       }
+      price_discrepancies: {
+        Row: {
+          auto_expire_at: string | null
+          currency: string
+          detected_at: string
+          filament_id: string
+          id: string
+          new_price: number
+          notes: string | null
+          old_price: number
+          price_change_percent: number
+          region: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_url: string | null
+          status: string
+        }
+        Insert: {
+          auto_expire_at?: string | null
+          currency?: string
+          detected_at?: string
+          filament_id: string
+          id?: string
+          new_price: number
+          notes?: string | null
+          old_price: number
+          price_change_percent: number
+          region?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_url?: string | null
+          status?: string
+        }
+        Update: {
+          auto_expire_at?: string | null
+          currency?: string
+          detected_at?: string
+          filament_id?: string
+          id?: string
+          new_price?: number
+          notes?: string | null
+          old_price?: number
+          price_change_percent?: number
+          region?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_url?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_discrepancies_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_discrepancies_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_discrepancies_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_discrepancies_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_discrepancies_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_discrepancies_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_discrepancies_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_extraction_logs: {
         Row: {
           brand_id: string | null
@@ -10425,6 +10526,7 @@ export type Database = {
       }
     }
     Functions: {
+      auto_expire_discrepancies: { Args: never; Returns: number }
       batch_upsert_filaments: {
         Args: { p_brand_id?: string; p_products: Json; p_vendor: string }
         Returns: Json

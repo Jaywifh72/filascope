@@ -1465,6 +1465,46 @@ async function updateFilamentStockStatus(
       return;
     }
     
+    // === DISCREPANCY DETECTION ===
+    if (priceDiffersSignificantly && price !== null && filament.variant_price !== null) {
+      const changePercent = ((price - filament.variant_price) / filament.variant_price) * 100;
+      const absChangePercent = Math.abs(changePercent);
+      
+      if (absChangePercent < 5) {
+        // Auto-approve: small change, update immediately
+        console.log(`Price change ${changePercent.toFixed(1)}% < 5%, auto-approving`);
+        await supabase.from('price_discrepancies').insert({
+          filament_id: filament.id,
+          old_price: filament.variant_price,
+          new_price: price,
+          price_change_percent: Math.round(changePercent * 100) / 100,
+          currency: 'USD',
+          region: 'US',
+          status: 'auto_approved',
+          source_url: productUrl,
+          reviewed_at: new Date().toISOString(),
+          notes: 'Auto-approved: change < 5%',
+        });
+      } else {
+        // Manual review required: significant change
+        const isUrgent = absChangePercent > 20;
+        console.log(`Price change ${changePercent.toFixed(1)}% requires manual review${isUrgent ? ' (URGENT)' : ''}`);
+        await supabase.from('price_discrepancies').insert({
+          filament_id: filament.id,
+          old_price: filament.variant_price,
+          new_price: price,
+          price_change_percent: Math.round(changePercent * 100) / 100,
+          currency: 'USD',
+          region: 'US',
+          status: 'manual_review',
+          source_url: productUrl,
+          notes: isUrgent ? 'URGENT: Price change > 20%' : 'Price change 5-20%, needs review',
+        });
+        // Don't auto-update the price for large changes
+        return;
+      }
+    }
+    
     // Build update object
     const updateData: Record<string, unknown> = {
       variant_available: available,
