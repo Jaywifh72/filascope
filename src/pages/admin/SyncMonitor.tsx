@@ -10,12 +10,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { downloadCSV } from '@/lib/csvExport';
-import { formatDistanceToNow, format, differenceInHours, differenceInDays } from 'date-fns';
+import { formatDistanceToNow, format, differenceInDays } from 'date-fns';
 import { BrandRegionMatrix } from '@/components/admin/inventory/sync-status/BrandRegionMatrix';
 import {
   Activity, Play, Loader2, CheckCircle2, XCircle, AlertTriangle, Clock,
@@ -24,7 +23,7 @@ import {
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip as RechartsTooltip, ResponsiveContainer, Legend
+  Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -67,6 +66,8 @@ interface BrandSyncLog {
   products_failed: number | null;
   duration_seconds: number | null;
   price_changes: number | null;
+  sync_type: string;
+  triggered_by: string | null;
 }
 
 interface StaleProduct {
@@ -126,6 +127,7 @@ export function SyncMonitorContent() {
 
   // ── Queries ──────────────────────────────────────────────────────────────
 
+  // Primary: orchestration_runs (may be empty)
   const { data: runs = [] } = useQuery({
     queryKey: ['sync-monitor-runs'],
     queryFn: async () => {
@@ -139,8 +141,42 @@ export function SyncMonitorContent() {
     refetchInterval: 10000,
   });
 
+  // Fallback: brand_sync_logs (always has data)
+  const { data: syncLogs = [] } = useQuery({
+    queryKey: ['sync-monitor-brand-logs'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('brand_sync_logs')
+        .select('id, brand_slug, started_at, completed_at, status, products_updated, products_created, products_failed, duration_seconds, price_changes, sync_type, triggered_by')
+        .order('started_at', { ascending: false })
+        .limit(100);
+      return (data || []) as BrandSyncLog[];
+    },
+    refetchInterval: 30000,
+  });
+
   const latestRun = runs[0] || null;
   const isRunning = latestRun?.status === 'running';
+
+  // Derive "last sync" from brand_sync_logs if no orchestration_runs
+  const lastSyncInfo = useMemo(() => {
+    if (latestRun) {
+      return {
+        status: latestRun.status,
+        time: latestRun.started_at,
+        completedAt: latestRun.completed_at,
+      };
+    }
+    const lastLog = syncLogs.find(l => l.status === 'completed');
+    if (lastLog) {
+      return {
+        status: lastLog.status,
+        time: lastLog.started_at,
+        completedAt: lastLog.completed_at,
+      };
+    }
+    return null;
+  }, [latestRun, syncLogs]);
 
   const { data: todayStats } = useQuery({
     queryKey: ['sync-monitor-today'],
@@ -213,39 +249,76 @@ export function SyncMonitorContent() {
     staleTime: 300000,
   });
 
+  // Performance chart data: prefer orchestration_runs, fallback to brand_sync_logs aggregated by day
   const { data: chartData = [] } = useQuery({
-    queryKey: ['sync-monitor-charts'],
+    queryKey: ['sync-monitor-charts', runs.length],
     queryFn: async () => {
+      // If we have orchestration runs, use them
+      if (runs.length > 0) {
+        return runs.filter(r => r.completed_at).map(r => {
+          const duration = Math.round((new Date(r.completed_at!).getTime() - new Date(r.started_at).getTime()) / 60000);
+          return {
+            date: format(new Date(r.started_at), 'MM/dd'),
+            duration,
+            products: r.total_products_updated || 0,
+            successRate: r.brands_synced > 0
+              ? Math.round((r.brands_synced / (r.brands_synced + (r.brands_failed?.length || 0))) * 100)
+              : 0,
+          };
+        }).reverse();
+      }
+
+      // Fallback: aggregate brand_sync_logs by day
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
       const { data } = await supabase
-        .from('orchestration_runs')
-        .select('started_at, completed_at, status, total_products_updated, brands_synced, brands_failed')
-        .order('started_at', { ascending: true })
-        .limit(30);
-      return (data || []).map((r: any) => {
-        const duration = r.completed_at
-          ? Math.round((new Date(r.completed_at).getTime() - new Date(r.started_at).getTime()) / 60000)
-          : 0;
-        return {
-          date: format(new Date(r.started_at), 'MM/dd'),
-          duration,
-          products: r.total_products_updated || 0,
-          successRate: r.brands_synced > 0
-            ? Math.round((r.brands_synced / (r.brands_synced + (r.brands_failed?.length || 0))) * 100)
-            : 0,
-        };
+        .from('brand_sync_logs')
+        .select('started_at, completed_at, status, products_updated, duration_seconds')
+        .gte('started_at', thirtyDaysAgo)
+        .order('started_at', { ascending: true });
+
+      if (!data?.length) return [];
+
+      // Group by day
+      const byDay = new Map<string, { total: number; completed: number; failed: number; products: number; totalDuration: number }>();
+      data.forEach(log => {
+        const day = format(new Date(log.started_at), 'MM/dd');
+        const entry = byDay.get(day) || { total: 0, completed: 0, failed: 0, products: 0, totalDuration: 0 };
+        entry.total++;
+        if (log.status === 'completed') entry.completed++;
+        if (log.status === 'failed') entry.failed++;
+        entry.products += log.products_updated || 0;
+        entry.totalDuration += log.duration_seconds || 0;
+        byDay.set(day, entry);
       });
+
+      return Array.from(byDay.entries()).map(([date, d]) => ({
+        date,
+        duration: d.total > 0 ? Math.round(d.totalDuration / d.total / 60) : 0,
+        products: d.products,
+        successRate: d.total > 0 ? Math.round((d.completed / d.total) * 100) : 0,
+      }));
     },
     staleTime: 60000,
   });
 
   // ── Computed ─────────────────────────────────────────────────────────────
 
+  // Avg duration from orchestration_runs or brand_sync_logs
   const avgDuration = useMemo(() => {
-    const completed = runs.filter(r => r.summary && (r.summary as any).duration_seconds);
-    if (!completed.length) return '—';
-    const avg = completed.reduce((s, r) => s + ((r.summary as any).duration_seconds || 0), 0) / completed.length;
-    return `${Math.round(avg / 60)}m`;
-  }, [runs]);
+    if (runs.length > 0) {
+      const completed = runs.filter(r => r.completed_at);
+      if (!completed.length) return '—';
+      const avg = completed.reduce((s, r) => {
+        return s + (new Date(r.completed_at!).getTime() - new Date(r.started_at).getTime()) / 1000;
+      }, 0) / completed.length;
+      return `${Math.round(avg / 60)}m`;
+    }
+    // Fallback: avg from recent brand_sync_logs
+    const withDuration = syncLogs.filter(l => l.duration_seconds && l.duration_seconds > 0);
+    if (!withDuration.length) return '—';
+    const avg = withDuration.slice(0, 30).reduce((s, l) => s + (l.duration_seconds || 0), 0) / Math.min(withDuration.length, 30);
+    return `${Math.round(avg)}s`;
+  }, [runs, syncLogs]);
 
   // Error pattern detection
   const errorPatterns = useMemo(() => {
@@ -265,8 +338,9 @@ export function SyncMonitorContent() {
   // ── Countdown Timer ──────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!latestRun?.completed_at) { setCountdown('—'); return; }
-    const nextSync = new Date(latestRun.completed_at).getTime() + 24 * 3600000;
+    const completedAt = lastSyncInfo?.completedAt;
+    if (!completedAt) { setCountdown('—'); return; }
+    const nextSync = new Date(completedAt).getTime() + 24 * 3600000;
     const tick = () => {
       const diff = nextSync - Date.now();
       if (diff <= 0) { setCountdown('Due now'); return; }
@@ -277,7 +351,7 @@ export function SyncMonitorContent() {
     tick();
     const id = setInterval(tick, 60000);
     return () => clearInterval(id);
-  }, [latestRun?.completed_at]);
+  }, [lastSyncInfo?.completedAt]);
 
   // ── Realtime ─────────────────────────────────────────────────────────────
 
@@ -294,6 +368,8 @@ export function SyncMonitorContent() {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'brand_sync_logs' }, () => {
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-today'] });
+        queryClient.invalidateQueries({ queryKey: ['sync-monitor-brand-logs'] });
+        queryClient.invalidateQueries({ queryKey: ['sync-monitor-charts'] });
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
@@ -345,6 +421,9 @@ export function SyncMonitorContent() {
     }
   }, [queryClient]);
 
+  // Determine which data source to show in Sync History
+  const hasOrchestrationData = runs.length > 0;
+
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -377,10 +456,10 @@ export function SyncMonitorContent() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <StatCard
             title="Last Sync"
-            value={latestRun ? latestRun.status : '—'}
-            subtitle={latestRun ? formatDistanceToNow(new Date(latestRun.started_at), { addSuffix: true }) : 'No runs yet'}
-            icon={latestRun?.status === 'completed' ? CheckCircle2 : latestRun?.status === 'failed' ? XCircle : Clock}
-            color={latestRun?.status === 'completed' ? 'text-green-500' : latestRun?.status === 'failed' ? 'text-red-500' : 'text-blue-500'}
+            value={lastSyncInfo ? lastSyncInfo.status : '—'}
+            subtitle={lastSyncInfo ? formatDistanceToNow(new Date(lastSyncInfo.time), { addSuffix: true }) : 'No syncs yet'}
+            icon={lastSyncInfo?.status === 'completed' ? CheckCircle2 : lastSyncInfo?.status === 'failed' ? XCircle : Clock}
+            color={lastSyncInfo?.status === 'completed' ? 'text-green-500' : lastSyncInfo?.status === 'failed' ? 'text-red-500' : 'text-blue-500'}
           />
           <StatCard
             title="Synced Today"
@@ -399,7 +478,7 @@ export function SyncMonitorContent() {
           <StatCard
             title="Avg Duration"
             value={avgDuration}
-            subtitle="Last 30 runs"
+            subtitle={hasOrchestrationData ? 'Per orchestration' : 'Per brand sync'}
             icon={Timer}
           />
           <StatCard
@@ -456,92 +535,140 @@ export function SyncMonitorContent() {
           <TabsContent value="history">
             <Card>
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Last 30 Orchestration Runs</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() =>
-                  downloadCSV(runs.map(r => ({
-                    started: r.started_at, status: r.status,
-                    brands_synced: r.brands_synced, products: r.total_products_updated,
-                    trigger: r.trigger_type,
-                  })), 'sync-history')
-                }>
+                <div>
+                  <CardTitle className="text-base">
+                    {hasOrchestrationData ? 'Orchestration Runs' : 'Brand Sync History'}
+                  </CardTitle>
+                  {!hasOrchestrationData && (
+                    <CardDescription className="text-xs">
+                      Showing individual brand syncs (no orchestration runs yet)
+                    </CardDescription>
+                  )}
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => {
+                  if (hasOrchestrationData) {
+                    downloadCSV(runs.map(r => ({
+                      started: r.started_at, status: r.status,
+                      brands_synced: r.brands_synced, products: r.total_products_updated,
+                      trigger: r.trigger_type,
+                    })), 'sync-history');
+                  } else {
+                    downloadCSV(syncLogs.map(l => ({
+                      started: l.started_at, brand: l.brand_slug, status: l.status,
+                      products_updated: l.products_updated || 0,
+                      duration_seconds: l.duration_seconds || 0,
+                      type: l.sync_type,
+                    })), 'sync-history');
+                  }
+                }}>
                   <Download className="w-4 h-4 mr-1" /> CSV
                 </Button>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-8" />
-                      <TableHead>Started</TableHead>
-                      <TableHead>Duration</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Brands</TableHead>
-                      <TableHead>Products</TableHead>
-                      <TableHead>Trigger</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {runs.map(run => {
-                      const dur = run.summary
-                        ? `${Math.round(((run.summary as any).duration_seconds || 0) / 60)}m`
-                        : run.completed_at
+                {hasOrchestrationData ? (
+                  /* Orchestration runs table */
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8" />
+                        <TableHead>Started</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Brands</TableHead>
+                        <TableHead>Products</TableHead>
+                        <TableHead>Trigger</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {runs.map(run => {
+                        const dur = run.completed_at
                           ? `${Math.round((new Date(run.completed_at).getTime() - new Date(run.started_at).getTime()) / 60000)}m`
                           : '—';
-                      const isExpanded = expandedRun === run.id;
-                      const brandResults = (run.summary as any)?.brand_results as Record<string, any> | undefined;
-
-                      return (
-                        <>
-                          <TableRow
-                            key={run.id}
-                            className="cursor-pointer"
-                            onClick={() => setExpandedRun(isExpanded ? null : run.id)}
-                          >
-                            <TableCell className="px-2">
-                              {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {format(new Date(run.started_at), 'MMM d, HH:mm')}
-                            </TableCell>
-                            <TableCell className="text-xs font-mono">{dur}</TableCell>
-                            <TableCell><StatusBadge status={run.status} /></TableCell>
-                            <TableCell className="text-xs">{run.brands_synced}/{run.brands_total}</TableCell>
-                            <TableCell className="text-xs font-mono">{run.total_products_updated}</TableCell>
-                            <TableCell className="text-xs capitalize">{run.trigger_type}</TableCell>
-                          </TableRow>
-                          {isExpanded && brandResults && (
-                            <TableRow key={`${run.id}-detail`}>
-                              <TableCell colSpan={7} className="bg-muted/30 p-4">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                                  {Object.entries(brandResults).map(([brand, result]: [string, any]) => (
-                                    <div key={brand} className="p-2 rounded bg-background border">
-                                      <span className="font-medium">{brand}</span>
-                                      <div className="text-muted-foreground">
-                                        {result.status === 'success' ? '✓' : '✗'} {result.products_updated || 0} updated
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                                {run.brands_failed.length > 0 && (
-                                  <p className="text-xs text-red-400 mt-2">
-                                    Failed: {run.brands_failed.join(', ')}
-                                  </p>
-                                )}
+                        const isExpanded = expandedRun === run.id;
+                        const brandResults = (run.summary as any)?.brand_results as Record<string, any> | undefined;
+                        return (
+                          <>
+                            <TableRow
+                              key={run.id}
+                              className="cursor-pointer"
+                              onClick={() => setExpandedRun(isExpanded ? null : run.id)}
+                            >
+                              <TableCell className="px-2">
+                                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                               </TableCell>
+                              <TableCell className="text-xs">{format(new Date(run.started_at), 'MMM d, HH:mm')}</TableCell>
+                              <TableCell className="text-xs font-mono">{dur}</TableCell>
+                              <TableCell><StatusBadge status={run.status} /></TableCell>
+                              <TableCell className="text-xs">{run.brands_synced}/{run.brands_total}</TableCell>
+                              <TableCell className="text-xs font-mono">{run.total_products_updated}</TableCell>
+                              <TableCell className="text-xs capitalize">{run.trigger_type}</TableCell>
                             </TableRow>
-                          )}
-                        </>
-                      );
-                    })}
-                    {runs.length === 0 && (
+                            {isExpanded && brandResults && (
+                              <TableRow key={`${run.id}-detail`}>
+                                <TableCell colSpan={7} className="bg-muted/30 p-4">
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                    {Object.entries(brandResults).map(([brand, result]: [string, any]) => (
+                                      <div key={brand} className="p-2 rounded bg-background border">
+                                        <span className="font-medium">{brand}</span>
+                                        <div className="text-muted-foreground">
+                                          {result.status === 'success' ? '✓' : '✗'} {result.products_updated || 0} updated
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {run.brands_failed.length > 0 && (
+                                    <p className="text-xs text-red-400 mt-2">Failed: {run.brands_failed.join(', ')}</p>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  /* Fallback: brand_sync_logs table */
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          No orchestration runs found
-                        </TableCell>
+                        <TableHead>Started</TableHead>
+                        <TableHead>Brand</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Updated</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Failed</TableHead>
+                        <TableHead>Type</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {syncLogs.map(log => (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {format(new Date(log.started_at), 'MMM d, HH:mm')}
+                          </TableCell>
+                          <TableCell className="text-xs font-medium">{log.brand_slug}</TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {log.duration_seconds ? `${Math.round(log.duration_seconds)}s` : '—'}
+                          </TableCell>
+                          <TableCell><StatusBadge status={log.status} /></TableCell>
+                          <TableCell className="text-xs font-mono">{log.products_updated || 0}</TableCell>
+                          <TableCell className="text-xs font-mono">{log.products_created || 0}</TableCell>
+                          <TableCell className="text-xs font-mono text-red-400">{log.products_failed || 0}</TableCell>
+                          <TableCell className="text-xs capitalize">{log.sync_type}</TableCell>
+                        </TableRow>
+                      ))}
+                      {syncLogs.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                            No sync logs found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -592,7 +719,6 @@ export function SyncMonitorContent() {
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Pattern Alerts */}
                 {errorPatterns.length > 0 && (
                   <div className="mb-4 space-y-1">
                     {errorPatterns.map(p => (
@@ -647,7 +773,7 @@ export function SyncMonitorContent() {
                     {scrapeErrors.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          No errors found
+                          No errors found — scrape errors will appear here when sync functions report failures
                         </TableCell>
                       </TableRow>
                     )}
@@ -747,9 +873,9 @@ export function SyncMonitorContent() {
                       : <Play className="w-4 h-4 mr-1" />}
                     {isRunning ? 'Sync Running…' : 'Run Full Price Sync'}
                   </Button>
-                  {latestRun?.completed_at && (
+                  {lastSyncInfo?.completedAt && (
                     <p className="text-xs text-muted-foreground text-center">
-                      Last completed: {format(new Date(latestRun.completed_at), 'MMM d, HH:mm')}
+                      Last completed: {format(new Date(lastSyncInfo.completedAt), 'MMM d, HH:mm')}
                     </p>
                   )}
                 </CardContent>
@@ -809,64 +935,75 @@ export function SyncMonitorContent() {
 
           {/* ── Tab H: Performance Charts ────────────────────────────────── */}
           <TabsContent value="charts">
-            <div className="grid md:grid-cols-2 gap-4">
+            {chartData.length === 0 ? (
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Timer className="w-4 h-4" /> Sync Duration (minutes)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                      <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                      <Line type="monotone" dataKey="duration" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>No sync data available for charts yet.</p>
+                  <p className="text-xs mt-1">Charts will populate as syncs run and complete.</p>
                 </CardContent>
               </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Timer className="w-4 h-4" /> 
+                      {hasOrchestrationData ? 'Sync Duration (minutes)' : 'Avg Brand Sync Duration (minutes)'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                        <Line type="monotone" dataKey="duration" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" /> Products Synced Per Run
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                      <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                      <Bar dataKey="products" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" /> Products Synced Per {hasOrchestrationData ? 'Run' : 'Day'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                        <Bar dataKey="products" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
 
-              <Card className="md:col-span-2">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" /> Success Rate (%)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis domain={[0, 100]} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                      <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                      <Line type="monotone" dataKey="successRate" stroke="hsl(142 76% 36%)" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
+                <Card className="md:col-span-2">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" /> Success Rate (%)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <YAxis domain={[0, 100]} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                        <Line type="monotone" dataKey="successRate" stroke="hsl(142 76% 36%)" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
