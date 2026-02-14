@@ -10,6 +10,7 @@ import { useAffiliatePrograms } from "@/hooks/useAffiliatePrograms";
 import { AffiliateSummaryStats } from "@/components/admin/affiliate-hub/AffiliateSummaryStats";
 import { BrandAccordionItem } from "@/components/admin/affiliate-hub/BrandAccordionItem";
 import { ProgramFormDialog } from "@/components/admin/affiliate-hub/ProgramFormDialog";
+import { ClickAnalyticsTab } from "@/components/admin/affiliate-hub/ClickAnalyticsTab";
 
 const AdminAffiliateHub = () => {
   const { data: programs = [], isLoading } = useAffiliatePrograms();
@@ -68,7 +69,7 @@ const AdminAffiliateHub = () => {
             </TabsContent>
 
             <TabsContent value="analytics" className="mt-4">
-              <p className="text-muted-foreground text-center py-12">Click Analytics — coming soon.</p>
+              <ClickAnalyticsTab />
             </TabsContent>
           </Tabs>
         </div>
