@@ -1,172 +1,104 @@
 
-# Comprehensive Nightly Price Sync Monitor
+
+# Regional Store Strategy Alignment
 
 ## Overview
 
-Build a dedicated `/old-admin/sync-monitor` page that serves as the central command center for all price synchronization operations. This consolidates and extends the existing orchestration infrastructure (daily-price-orchestrator, OrchestrationControl, brand_sync_logs, orchestration_runs) into a comprehensive monitoring dashboard.
+The CSV provides the authoritative store URL mapping for 24 brands across US, CA, UK, EU, and JP regions. This plan ensures the `brand_regional_stores` table is updated to match, and that the entire site's buy-button, affiliate, and pricing flows correctly adapt to the user's selected region.
 
-## What Already Exists (will be reused)
+## Current State
 
-- `daily-price-orchestrator` edge function -- already handles nightly sync with tier-based scheduling
-- `orchestration_runs` table -- tracks run status, brands synced/failed, products updated
-- `brand_sync_logs` table -- per-brand sync records with detailed stats
-- `broken_product_urls` table -- 404 tracking
-- `OrchestrationControl` component -- manual trigger + progress bar
-- `RecentSyncRuns` component -- paginated sync history with filters
-- `BrandHealthGrid` component -- brand health cards
-- `BrandRegionMatrix` component -- regional coverage grid
-- `usePriceSync` hook -- single product sync trigger
-- `useBrokenProductUrls` hook -- broken link queries
-- `price_discrepancies` table -- price change review queue
-- `get-current-price` edge function -- on-demand scraping
-- `downloadCSV` utility -- CSV export
+The site already has strong regional infrastructure:
+- `brand_regional_stores` table stores per-brand, per-region store URLs
+- `useUnifiedRegionalPricing` hook resolves the best store for a user's region via `brand_regional_stores`
+- `useFilamentDetailPricing` aggregates prices from multiple sources (retailer listings, store pricing, unified regional, Amazon)
+- `useAffiliateLink` wraps URLs with affiliate parameters
+- The `RegionContext` provides the active region from the top-of-page selector
 
-## Why NOT Create New Brand Scrapers
+However, several brands from the CSV are **missing** from `brand_regional_stores`, and some existing entries have **incorrect URLs** that don't match the CSV.
 
-The request asks for a new `supabase/functions/brands/{brand}/` directory structure. However, the project already has 40+ dedicated brand sync functions (e.g., `sync-bambulab-products`, `sync-esun-products`, `sync-polymaker-products`, etc.) plus a multi-platform `scrape-brand-data` framework. Creating duplicate scrapers would conflict with the existing architecture. Instead, the new monitoring page will leverage these existing functions.
+## What Changes
 
-## Database Changes
+### 1. Database: Update `brand_regional_stores` Table
 
-### New Table: `scrape_errors`
+**Correct existing entries** where URLs differ from the CSV:
 
-Dedicated error tracking table (currently errors are embedded in `brand_sync_logs.error_details` JSON, which makes querying/filtering difficult).
+| Brand | Region | Current DB URL | CSV (Correct) URL |
+|-------|--------|---------------|-------------------|
+| Creality | CA | `ca.store.creality.com` | `store.creality.com/ca` |
+| Creality | US | `us.store.creality.com` | `store.creality.com` |
+| Creality | EU | `store.creality.com/eu` | `www.creality.shop` |
+| eSun | EU | `esun3dstore.com` | `esun3dstoreeu.com` |
+| Anycubic | EU | `eu.anycubic.com` | `store.anycubic.com` |
+| Eryone | US | `www.eryone3d.com` | `eryone3d.com` (drop www) |
+| Eryone | EU | `eu.eryone3d.com` | `de.eryone3d.com` |
+| Polymaker | US | varies | `us.polymaker.com` |
 
+**Add new eSun UK** entry: `esun3dstore.uk`
+
+**Insert entries for brands not yet in the table** (about 16 brands):
+- TreeD Filaments (single global store for all regions)
+- Push Plastic (US/CA only)
+- Ultimaker (reseller-based, mark as `is_active: false` or add reseller URL)
+- Fillamentum (EU only via `shop.fillamentum.com`)
+- 3D-Fuel (US/CA/EU)
+- Siraya Tech (global single store)
+- Hatchbox (US/CA only)
+- Proto-Pasta (global single store)
+- Recreus (global single store)
+- Spectrum Filaments (global single store)
+- Gizmo Dorks (global single store)
+- Amolen (global single store)
+- Prusament (global single store via prusa3d.com)
+- Duramic 3D (global single store)
+- Geeetech (global single store)
+- Yousu (global single store)
+
+### 2. Update `affiliate_programs` Base URLs
+
+Where `store_base_url` in the `affiliate_programs` table doesn't match the new CSV data, update those too (e.g., Creality CA, eSun EU). This ensures the `useAffiliateLink` hook generates correct affiliate-wrapped URLs.
+
+### 3. Update Product URLs in `filaments` Table
+
+For brands where the domain has changed (e.g., Creality CA from `ca.store.creality.com` to `store.creality.com/ca`), batch-update the corresponding `product_url_ca`, `product_url_eu`, etc. columns so that legacy product-level URLs also resolve correctly.
+
+### 4. No Code Changes Required
+
+The existing hooks and components already handle regional store resolution correctly:
+- `useUnifiedRegionalPricing` fetches `brand_regional_stores` for the user's region and builds product URLs from the `base_url` + `product_url_pattern`
+- `useFilamentDetailPricing` aggregates all price sources and determines the best price
+- `useRegionalStores` provides the `getLocalStore()` lookup used by deal cards
+- The region selector in the page header already drives `RegionContext`, which cascades to all pricing hooks
+
+All logic is data-driven from the `brand_regional_stores` table, so fixing the data is sufficient.
+
+## Technical Details
+
+### SQL Operations (Data Updates Only)
+
+```text
+Phase 1: Fix existing brand_regional_stores entries
+  - UPDATE base_url for ~8 mismatched entries
+  - INSERT ~1 new regional entry (eSun UK)
+
+Phase 2: Insert new brands (~16 brands x 2-5 regions each)
+  - ~50-60 new rows in brand_regional_stores
+  - Set appropriate currency_code per region (USD/CAD/GBP/EUR/JPY)
+  - Set is_primary = true for the brand's home region
+  - Set product_url_pattern based on brand's URL structure
+
+Phase 3: Sync affiliate_programs.store_base_url
+  - UPDATE any affiliate programs where the base URL changed
+
+Phase 4: Batch-fix filaments product URLs
+  - UPDATE product_url_ca, product_url_eu etc. for affected brands
+  - Use REPLACE() for domain migrations
 ```
-scrape_errors
-- id (uuid, PK)
-- filament_id (uuid, FK to filaments, nullable)
-- brand_slug (text, not null)
-- region (text)
-- error_type (text) -- '404', 'timeout', 'parse_error', 'rate_limit', 'network', 'selector_fail'
-- error_message (text)
-- url (text)
-- sync_run_id (uuid, FK to brand_sync_logs, nullable)
-- is_resolved (boolean, default false)
-- resolved_at (timestamptz)
-- created_at (timestamptz, default now())
-```
 
-RLS: Admin-only read/write via `has_role(auth.uid(), 'admin')`.
+### Verification Steps
 
-Enable realtime on this table for live error streaming.
+After data updates:
+1. Switch region selector to CA, EU, UK and verify buy buttons on product pages point to correct regional stores
+2. Spot-check affiliate link generation for Creality, eSun, Eryone, Polymaker
+3. Confirm deal cards show correct "Buy at [Store Name]" labels per region
 
-### No Other Schema Changes
-
-All other data needs (sync history, brand health, orchestration tracking) are already served by existing tables.
-
-## Implementation Plan
-
-### 1. Create Database Migration
-
-- Create `scrape_errors` table with indexes on `brand_slug`, `error_type`, `created_at`
-- Add RLS policies (admin-only)
-- Enable realtime: `ALTER PUBLICATION supabase_realtime ADD TABLE scrape_errors`
-
-### 2. Create Admin Page: `src/pages/admin/SyncMonitor.tsx`
-
-A single large page component with tab-based navigation across 6 sections. Uses `AdminLayout` + `AdminPageHeader` with `Activity` icon.
-
-**Layout**: Full-width with top stats cards, then tabbed sections below.
-
-#### Section A: Overview Dashboard (always visible at top)
-
-Five stat cards in a row:
-- **Last Sync Status**: Query `orchestration_runs` latest row; show status badge + timestamp
-- **Products Synced Today**: Query `brand_sync_logs` where `started_at > today`, sum `products_updated`
-- **Active Errors**: Count from `scrape_errors` where `is_resolved = false`
-- **Avg Sync Duration**: Average `duration_seconds` from last 30 `orchestration_runs`
-- **Next Scheduled Sync**: Calculate from last completed run + 24h, show countdown using `setInterval`
-
-#### Section B: Sync History Tab
-
-Reuse and extend `RecentSyncRuns` pattern:
-- Query last 30 runs from `orchestration_runs` (not just `brand_sync_logs`)
-- Expandable rows showing per-brand breakdown from `summary.brand_results` JSON
-- Actions: "Re-run" triggers `daily-price-orchestrator` with manual flag; "Download" exports run details as CSV
-
-#### Section C: Live Sync Monitor Tab
-
-- Conditionally renders when latest `orchestration_runs` status = 'running'
-- Realtime subscription on `orchestration_runs` for progress updates
-- Shows: animated progress bar, current brand count vs total, products updated counter
-- Live error feed: realtime subscription on `scrape_errors` filtered by current run, shows new errors as they arrive
-- Estimated time remaining: `(elapsed / brands_synced) * brands_remaining`
-
-#### Section D: Brand Health Matrix Tab
-
-Embed existing `BrandRegionMatrix` component directly (already has color-coded cells, click-to-expand, sync triggers). Add a row of aggregate stats at top.
-
-#### Section E: Recent Errors Tab
-
-New component querying `scrape_errors`:
-- Table: Time, Product, Brand, Region, Error Type, URL
-- Filters: brand dropdown, region dropdown, error type dropdown, date range
-- Bulk actions: "Mark Resolved" (sets `is_resolved = true`), "Retry" (calls `get-current-price`)
-- Pattern detection: Group by `brand_slug + region` and show alert if >5 errors from same source
-
-#### Section F: Stale Products Tab
-
-Query `filaments` where `last_scraped_at < NOW() - 48h OR last_scraped_at IS NULL`:
-- Columns: Product, Brand, Last Checked, Days Stale, Reason
-- "Reason" derived from: never synced, repeated failures (join `scrape_errors`), disabled brand
-- Actions: "Sync Now" per row (calls `get-current-price`), "Sync Brand" button
-
-#### Section G: Manual Sync Controls (sidebar/panel)
-
-Sticky panel at right side or bottom of page:
-- "Run Full Sync" button (reuses `OrchestrationControl` trigger logic)
-- "Sync Single Brand" dropdown populated from `automated_brands`
-- "Sync Single Product" search input with autocomplete from `filaments`
-- Last orchestration timestamp
-- "Review Price Changes" link to `/old-admin/inventory?tab=sync`
-
-#### Section H: Performance Charts
-
-Recharts visualizations:
-- Line chart: sync duration over last 30 days (from `orchestration_runs`)
-- Bar chart: products synced per day (from `brand_sync_logs` aggregated by date)
-- Success rate line (successful / total per day)
-
-### 3. Real-time Subscriptions
-
-Subscribe to:
-- `orchestration_runs` -- updates overview cards + live monitor
-- `scrape_errors` -- live error feed during active sync
-- `brand_sync_logs` -- sync history updates
-
-All channels cleaned up on unmount.
-
-### 4. CSV Exports
-
-Using existing `downloadCSV` utility:
-- Export sync history
-- Export error log
-- Export stale products list
-
-### 5. Route and Navigation
-
-- Add lazy import + route in `App.tsx`: `/old-admin/sync-monitor`
-- Add sidebar entry in `AdminSidebar.tsx` under "Operations" group: `{ title: 'Sync Monitor', href: '/old-admin/sync-monitor', icon: Activity }`
-
-## Files to Create
-
-| File | Purpose | Approx Size |
-|------|---------|-------------|
-| `src/pages/admin/SyncMonitor.tsx` | Main page with all 8 sections | ~700 lines |
-| Migration SQL | `scrape_errors` table + RLS + realtime | ~40 lines |
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Add lazy import + route |
-| `src/components/admin/AdminSidebar.tsx` | Add "Sync Monitor" nav item |
-
-## Technical Notes
-
-- All queries use existing Supabase client with RLS (admin-only)
-- Recharts already installed for charts
-- The page is intentionally a single file to keep related sync monitoring logic co-located
-- Countdown timer for "Next Sync" uses `setInterval` with cleanup
-- Error pattern detection is client-side grouping (no new DB function needed)
-- Brand scraper architecture is NOT duplicated -- the monitoring page surfaces data from the 40+ existing sync functions
