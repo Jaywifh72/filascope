@@ -147,6 +147,7 @@ export function SyncMonitorContent() {
   const [syncBrandSlug, setSyncBrandSlug] = useState('');
   const [syncProductSearch, setSyncProductSearch] = useState('');
   const [countdown, setCountdown] = useState('');
+  const [errorsLastRefreshed, setErrorsLastRefreshed] = useState<Date>(new Date());
 
   // ── Queries ──────────────────────────────────────────────────────────────
 
@@ -222,10 +223,10 @@ export function SyncMonitorContent() {
       const { count } = await supabase
         .from('scrape_errors')
         .select('*', { count: 'exact', head: true })
-        .eq('is_resolved', false);
+        .or('is_resolved.eq.false,is_resolved.is.null');
       return count || 0;
     },
-    refetchInterval: 30000,
+    refetchInterval: isRunning ? 5000 : 30000,
   });
 
   const { data: scrapeErrors = [] } = useQuery({
@@ -234,14 +235,19 @@ export function SyncMonitorContent() {
       let q = supabase
         .from('scrape_errors')
         .select('*')
+        .or('is_resolved.eq.false,is_resolved.is.null')
         .order('created_at', { ascending: false })
         .limit(100);
       if (errorFilters.brand) q = q.eq('brand_slug', errorFilters.brand);
       if (errorFilters.type) q = q.eq('error_type', errorFilters.type);
       if (errorFilters.region) q = q.eq('region', errorFilters.region);
-      const { data } = await q;
+      const { data, error } = await q;
+      if (error) console.error('[SyncMonitor] scrape_errors query error:', error);
+      console.log('[SyncMonitor] scrape_errors returned:', data?.length, 'rows');
+      setErrorsLastRefreshed(new Date());
       return (data || []) as unknown as ScrapeError[];
     },
+    refetchInterval: isRunning ? 5000 : 30000,
   });
 
   const { data: staleProducts = [] } = useQuery({
@@ -443,6 +449,33 @@ export function SyncMonitorContent() {
       queryClient.invalidateQueries({ queryKey: ['sync-monitor-error-count'] });
     }
   }, [queryClient]);
+
+  const forceCompleteRun = useCallback(async (runId: string) => {
+    const { error } = await supabase
+      .from('orchestration_runs')
+      .update({
+        status: 'partial',
+        completed_at: new Date().toISOString(),
+        current_brand_slug: null,
+        current_brand_name: null,
+        current_product_name: null,
+        current_product_url: null,
+        summary: { note: 'Force-completed by admin via Sync Monitor' },
+      } as any)
+      .eq('id', runId);
+    if (error) toast.error('Failed to force complete');
+    else {
+      toast.success('Run marked as partial (force-completed)');
+      queryClient.invalidateQueries({ queryKey: ['sync-monitor-runs'] });
+    }
+  }, [queryClient]);
+
+  // Detect stuck run: status='running' and started >5 minutes ago with no recent update
+  const isStuckRun = useMemo(() => {
+    if (!latestRun || latestRun.status !== 'running') return false;
+    const startedAt = new Date(latestRun.started_at).getTime();
+    return (Date.now() - startedAt) > 5 * 60 * 1000;
+  }, [latestRun]);
 
   // Determine which data source to show in Sync History
   const hasOrchestrationData = runs.length > 0;
@@ -658,6 +691,22 @@ export function SyncMonitorContent() {
                 const remaining = Math.round(perBrand * (latestRun.brands_total - latestRun.brands_synced) / 60);
                 return <p className="text-xs text-muted-foreground">Est. {remaining}m remaining</p>;
               })()}
+              {/* Stuck run warning */}
+              {isStuckRun && (
+                <div className="flex items-center justify-between p-2 rounded bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>This run appears stuck (running &gt;5 min). The edge function may have timed out.</span>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => forceCompleteRun(latestRun!.id)}
+                  >
+                    Force Complete
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -992,6 +1041,20 @@ export function SyncMonitorContent() {
                         )}
                       </SelectContent>
                     </Select>
+                    <Button
+                      variant="outline" size="sm"
+                      onClick={() => {
+                        queryClient.invalidateQueries({ queryKey: ['sync-monitor-errors'] });
+                        queryClient.invalidateQueries({ queryKey: ['sync-monitor-error-count'] });
+                        toast.info('Refreshing errors...');
+                      }}
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                      Refresh
+                      <span className="text-[10px] text-muted-foreground ml-1">
+                        {format(errorsLastRefreshed, 'HH:mm:ss')}
+                      </span>
+                    </Button>
                     <Button
                       variant="outline" size="sm"
                       onClick={() => {
