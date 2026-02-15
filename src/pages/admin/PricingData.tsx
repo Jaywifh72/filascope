@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -9,12 +9,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink } from 'lucide-react';
+import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 type LinkStatus = 'active' | 'stale' | 'broken' | 'alert' | 'unknown';
+
+interface TestResult {
+  status: 'testing' | 'ok' | 'broken' | 'redirect' | 'timeout';
+  statusCode?: number;
+  latencyMs?: number;
+  redirectUrl?: string | null;
+  error?: string;
+}
 
 interface PricingRow {
   id: string;
@@ -36,7 +47,6 @@ interface PricingRow {
   product_url_jp: string | null;
   last_scraped_at: string | null;
   price_confidence: string | null;
-  // computed
   priceChange: { percent: number; direction: 'up' | 'down' | 'unchanged' } | null;
   linkStatus: LinkStatus;
 }
@@ -53,6 +63,57 @@ function getLinkStatusBadge(status: LinkStatus) {
       return <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px]">🟣 Price Alert</Badge>;
     default:
       return <Badge variant="outline" className="text-[10px]">—</Badge>;
+  }
+}
+
+function getTestResultBadge(result: TestResult | undefined) {
+  if (!result) return null;
+  switch (result.status) {
+    case 'testing':
+      return (
+        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px] gap-1">
+          <Loader2 className="w-3 h-3 animate-spin" /> Testing…
+        </Badge>
+      );
+    case 'ok':
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] gap-1 cursor-default">
+              <CheckCircle2 className="w-3 h-3" /> {result.statusCode} · {result.latencyMs}ms
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>HTTP {result.statusCode} — {result.latencyMs}ms response</TooltipContent>
+        </Tooltip>
+      );
+    case 'redirect':
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-[10px] gap-1 cursor-default">
+              <AlertTriangle className="w-3 h-3" /> {result.statusCode} → Redirect
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p>HTTP {result.statusCode} · {result.latencyMs}ms</p>
+            {result.redirectUrl && <p className="text-[10px] mt-1 break-all">→ {result.redirectUrl}</p>}
+          </TooltipContent>
+        </Tooltip>
+      );
+    case 'broken':
+    case 'timeout':
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] gap-1 cursor-default">
+              <XCircle className="w-3 h-3" /> {result.status === 'timeout' ? 'Timeout' : `${result.statusCode || 'Error'}`}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>{result.error || `HTTP ${result.statusCode}`} · {result.latencyMs}ms</TooltipContent>
+        </Tooltip>
+      );
+    default:
+      return null;
   }
 }
 
@@ -82,6 +143,10 @@ export default function PricingData() {
   const [search, setSearch] = useState('');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [testResults, setTestResults] = useState<Map<string, TestResult>>(new Map());
+  const [bulkTesting, setBulkTesting] = useState(false);
+  const abortRef = useRef(false);
 
   // Fetch filaments with pricing data
   const { data: filaments, isLoading: filamentsLoading } = useQuery({
@@ -119,15 +184,12 @@ export default function PricingData() {
   const { data: priceChanges } = useQuery({
     queryKey: ['admin-recent-price-changes'],
     queryFn: async () => {
-      // Get last 2 price records per filament to compute % change
       const { data, error } = await supabase
         .from('price_history')
         .select('filament_id, price, recorded_at')
         .order('recorded_at', { ascending: false })
         .limit(1000);
       if (error) throw error;
-      
-      // Group by filament_id, get last two prices
       const grouped = new Map<string, number[]>();
       (data || []).forEach(r => {
         const existing = grouped.get(r.filament_id) || [];
@@ -136,7 +198,6 @@ export default function PricingData() {
           grouped.set(r.filament_id, existing);
         }
       });
-      
       const changes = new Map<string, { percent: number; direction: 'up' | 'down' | 'unchanged' }>();
       grouped.forEach((prices, id) => {
         if (prices.length < 2 || prices[1] === 0) {
@@ -156,26 +217,18 @@ export default function PricingData() {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Compute link status for a URL
   function computeLinkStatus(url: string | null, priceChangePercent: number | null): LinkStatus {
-    // Check for price alert first
     if (priceChangePercent != null && Math.abs(priceChangePercent) > 10) return 'alert';
-    
     if (!url || !urlCache) return 'unknown';
     const cached = urlCache.get(url);
-    if (!cached) return 'stale'; // never tested
-    
+    if (!cached) return 'stale';
     if (cached.status === 'invalid' || (cached.status_code && cached.status_code >= 400)) return 'broken';
-    
     if (cached.last_checked) {
       const checkedAt = new Date(cached.last_checked);
-      const now = new Date();
-      const hoursSince = (now.getTime() - checkedAt.getTime()) / (1000 * 60 * 60);
-      if (hoursSince < 24) return 'active';
-      if (hoursSince > 168) return 'stale'; // 7 days
+      const hoursSince = (Date.now() - checkedAt.getTime()) / (1000 * 60 * 60);
+      if (hoursSince > 168) return 'stale';
       return 'active';
     }
-    
     return 'stale';
   }
 
@@ -184,21 +237,15 @@ export default function PricingData() {
     return filaments.map(f => {
       const change = priceChanges?.get(f.id) || null;
       const changePct = change?.percent ?? null;
-      return {
-        ...f,
-        priceChange: change,
-        linkStatus: computeLinkStatus(f.product_url, changePct),
-      };
+      return { ...f, priceChange: change, linkStatus: computeLinkStatus(f.product_url, changePct) };
     });
   }, [filaments, urlCache, priceChanges]);
 
-  // Unique vendors
   const vendors = useMemo(() => {
     const set = new Set(rows.map(r => r.vendor).filter(Boolean));
     return Array.from(set).sort();
   }, [rows]);
 
-  // Filter
   const filtered = useMemo(() => {
     return rows.filter(r => {
       if (vendorFilter !== 'all' && r.vendor !== vendorFilter) return false;
@@ -211,7 +258,6 @@ export default function PricingData() {
     });
   }, [rows, vendorFilter, statusFilter, search]);
 
-  // Stats
   const stats = useMemo(() => {
     const active = rows.filter(r => r.linkStatus === 'active').length;
     const stale = rows.filter(r => r.linkStatus === 'stale' || r.linkStatus === 'unknown').length;
@@ -221,9 +267,118 @@ export default function PricingData() {
     return { total: rows.length, active, stale, broken, alerts, withMultiRegion };
   }, [rows]);
 
+  // --- Link testing ---
+  const testSingleUrl = useCallback(async (rowId: string, url: string): Promise<TestResult> => {
+    const startTime = Date.now();
+    setTestResults(prev => new Map(prev).set(rowId, { status: 'testing' }));
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const { data, error } = await supabase.functions.invoke('test-url', {
+        body: { url },
+      });
+
+      clearTimeout(timeoutId);
+      const latencyMs = Date.now() - startTime;
+
+      if (error) throw error;
+
+      let result: TestResult;
+      if (data.ok) {
+        result = { status: 'ok', statusCode: data.statusCode, latencyMs };
+      } else if (data.isRedirect) {
+        result = { status: 'redirect', statusCode: data.statusCode, latencyMs, redirectUrl: data.redirectLocation };
+      } else {
+        result = { status: 'broken', statusCode: data.statusCode, latencyMs, error: data.error };
+      }
+
+      setTestResults(prev => new Map(prev).set(rowId, result));
+      return result;
+    } catch (err: any) {
+      const latencyMs = Date.now() - startTime;
+      const isTimeout = latencyMs >= 4900 || err?.name === 'AbortError';
+      const result: TestResult = {
+        status: isTimeout ? 'timeout' : 'broken',
+        latencyMs,
+        error: isTimeout ? 'Request timeout (5s)' : (err?.message || 'Unknown error'),
+      };
+      setTestResults(prev => new Map(prev).set(rowId, result));
+      return result;
+    }
+  }, []);
+
+  const testBatch = useCallback(async (rowsToTest: PricingRow[]) => {
+    const withUrls = rowsToTest.filter(r => r.product_url);
+    if (withUrls.length === 0) {
+      toast.info('No testable URLs in selection');
+      return;
+    }
+
+    setBulkTesting(true);
+    abortRef.current = false;
+    const startTime = Date.now();
+    let tested = 0;
+    let ok = 0;
+    let broken = 0;
+
+    // Process in batches of 3 to avoid overwhelming
+    for (let i = 0; i < withUrls.length; i += 3) {
+      if (abortRef.current) break;
+      const batch = withUrls.slice(i, i + 3);
+      const results = await Promise.all(
+        batch.map(r => testSingleUrl(r.id, r.product_url!))
+      );
+      results.forEach(r => {
+        tested++;
+        if (r.status === 'ok') ok++;
+        if (r.status === 'broken' || r.status === 'timeout') broken++;
+      });
+    }
+
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    setBulkTesting(false);
+    toast.success(`Tested ${tested} links in ${elapsed}s — ${ok} active, ${broken} broken`);
+  }, [testSingleUrl]);
+
+  const handleTestSelected = useCallback(() => {
+    const selectedRows = filtered.filter(r => selectedIds.has(r.id));
+    testBatch(selectedRows);
+  }, [filtered, selectedIds, testBatch]);
+
+  const handleTestAllStale = useCallback(() => {
+    const staleRows = filtered.filter(r => r.linkStatus === 'stale' || r.linkStatus === 'unknown');
+    testBatch(staleRows);
+  }, [filtered, testBatch]);
+
+  // Selection helpers
+  const visibleIds = useMemo(() => filtered.slice(0, 200).map(r => r.id), [filtered]);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
+  const someVisibleSelected = visibleIds.some(id => selectedIds.has(id));
+
+  const toggleSelectAll = useCallback(() => {
+    if (allVisibleSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(visibleIds));
+    }
+  }, [allVisibleSelected, visibleIds]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   if (filamentsLoading) {
     return <AdminLayout><PageLoadingSkeleton /></AdminLayout>;
   }
+
+  const selectedCount = [...selectedIds].filter(id => visibleIds.includes(id)).length;
 
   return (
     <AdminLayout>
@@ -316,6 +471,48 @@ export default function PricingData() {
           <span className="text-xs text-muted-foreground self-center">{filtered.length} results</span>
         </div>
 
+        {/* Bulk action toolbar */}
+        <div className="flex items-center gap-3 flex-wrap rounded-lg border border-border/50 bg-card p-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={allVisibleSelected}
+              onCheckedChange={toggleSelectAll}
+              aria-label="Select all visible"
+            />
+            <span className="text-xs text-muted-foreground">
+              {selectedCount > 0 ? (
+                <Badge variant="secondary" className="text-[10px]">{selectedCount} selected</Badge>
+              ) : 'Select all'}
+            </span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={selectedCount === 0 || bulkTesting}
+            onClick={handleTestSelected}
+            className="text-xs gap-1.5"
+          >
+            {bulkTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+            Test Selected ({selectedCount})
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={bulkTesting}
+            onClick={handleTestAllStale}
+            className="text-xs gap-1.5"
+          >
+            <Zap className="w-3.5 h-3.5" />
+            Test All Stale
+          </Button>
+          {bulkTesting && (
+            <Button size="sm" variant="ghost" onClick={() => { abortRef.current = true; }} className="text-xs text-destructive">
+              Cancel
+            </Button>
+          )}
+        </div>
+
         {/* Data table */}
         <Card className="border-border/50">
           <CardContent className="p-0">
@@ -323,9 +520,17 @@ export default function PricingData() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
                     <TableHead className="min-w-[220px]">Product</TableHead>
                     <TableHead>Brand</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Test Result</TableHead>
                     <TableHead className="text-right">USD</TableHead>
                     <TableHead className="text-right">CAD</TableHead>
                     <TableHead className="text-right">EUR</TableHead>
@@ -334,63 +539,100 @@ export default function PricingData() {
                     <TableHead className="text-right">JPY</TableHead>
                     <TableHead>Change</TableHead>
                     <TableHead>Last Checked</TableHead>
-                    <TableHead>Link</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.slice(0, 200).map(row => (
-                    <TableRow key={row.id}>
-                      <TableCell className="max-w-[220px]">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-xs truncate block">{row.product_title}</span>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-xs">{row.product_title}</TooltipContent>
-                        </Tooltip>
-                        {row.material && (
-                          <span className="text-[10px] text-muted-foreground font-mono">{row.material}</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap">{row.vendor}</TableCell>
-                      <TableCell>{getLinkStatusBadge(row.linkStatus)}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">
-                        {formatCurrency(row.variant_price, '$')}
-                        {row.variant_compare_at_price != null && row.variant_compare_at_price > (row.variant_price ?? 0) && (
-                          <span className="text-[10px] text-muted-foreground line-through ml-1">
-                            ${row.variant_compare_at_price.toFixed(2)}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_cad, 'C$')}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_eur, '€')}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_gbp, '£')}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_aud, 'A$')}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_jpy, '¥')}</TableCell>
-                      <TableCell><PriceChangeIndicator change={row.priceChange} /></TableCell>
-                      <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap">
-                        {row.last_scraped_at
-                          ? formatDistanceToNow(new Date(row.last_scraped_at), { addSuffix: true })
-                          : '—'}
-                      </TableCell>
-                      <TableCell>
-                        {row.product_url ? (
-                          <a
-                            href={row.product_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:text-primary/80"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filtered.slice(0, 200).map(row => {
+                    const result = testResults.get(row.id);
+                    return (
+                      <TableRow key={row.id} data-state={selectedIds.has(row.id) ? 'selected' : undefined}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(row.id)}
+                            onCheckedChange={() => toggleSelect(row.id)}
+                            aria-label={`Select ${row.product_title}`}
+                          />
+                        </TableCell>
+                        <TableCell className="max-w-[220px]">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-xs truncate block">{row.product_title}</span>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-xs">{row.product_title}</TooltipContent>
+                          </Tooltip>
+                          {row.material && (
+                            <span className="text-[10px] text-muted-foreground font-mono">{row.material}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs whitespace-nowrap">{row.vendor}</TableCell>
+                        <TableCell>{getLinkStatusBadge(row.linkStatus)}</TableCell>
+                        <TableCell>
+                          {result ? getTestResultBadge(result) : (
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground">⚪ Not Tested</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs">
+                          {formatCurrency(row.variant_price, '$')}
+                          {row.variant_compare_at_price != null && row.variant_compare_at_price > (row.variant_price ?? 0) && (
+                            <span className="text-[10px] text-muted-foreground line-through ml-1">
+                              ${row.variant_compare_at_price.toFixed(2)}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_cad, 'C$')}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_eur, '€')}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_gbp, '£')}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_aud, 'A$')}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{formatCurrency(row.price_jpy, '¥')}</TableCell>
+                        <TableCell><PriceChangeIndicator change={row.priceChange} /></TableCell>
+                        <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap">
+                          {row.last_scraped_at
+                            ? formatDistanceToNow(new Date(row.last_scraped_at), { addSuffix: true })
+                            : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {row.product_url && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7"
+                                    disabled={result?.status === 'testing'}
+                                    onClick={() => testSingleUrl(row.id, row.product_url!)}
+                                  >
+                                    {result?.status === 'testing' ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <Play className="w-3.5 h-3.5" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Test link</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {row.product_url ? (
+                              <a
+                                href={row.product_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:text-primary/80"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {filtered.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={14} className="text-center text-muted-foreground py-8">
                         No pricing data found
                       </TableCell>
                     </TableRow>
