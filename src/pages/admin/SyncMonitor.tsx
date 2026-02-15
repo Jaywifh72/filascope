@@ -17,6 +17,7 @@ import { downloadCSV } from '@/lib/csvExport';
 import { formatDistanceToNow, format, differenceInDays } from 'date-fns';
 import { BrandRegionMatrix } from '@/components/admin/inventory/sync-status/BrandRegionMatrix';
 import { BuyButtonValidator } from '@/components/admin/inventory/sync-status/BuyButtonValidator';
+import { SmartUrlValidator } from '@/components/admin/inventory/sync-status/SmartUrlValidator';
 import {
   Activity, Play, Loader2, CheckCircle2, XCircle, AlertTriangle, Clock,
   Download, RefreshCw, Search, ChevronDown, ChevronRight, ExternalLink,
@@ -817,6 +818,7 @@ export function SyncMonitorContent() {
             <TabsTrigger value="controls">Manual Sync</TabsTrigger>
             <TabsTrigger value="charts">Performance</TabsTrigger>
             <TabsTrigger value="buy-buttons">Buy Button Validator</TabsTrigger>
+            <TabsTrigger value="smart-validator">Smart URL Repair</TabsTrigger>
           </TabsList>
 
           {/* ── Tab B: Sync History ──────────────────────────────────────── */}
@@ -1463,6 +1465,11 @@ export function SyncMonitorContent() {
           {/* ── Tab: Buy Button Validator ─────────────────────────────────── */}
           <TabsContent value="buy-buttons">
             <BuyButtonValidator />
+          </TabsContent>
+
+          {/* ── Tab: Smart URL Repair ──────────────────────────────────── */}
+          <TabsContent value="smart-validator">
+            <SmartUrlValidator />
           </TabsContent>
         </Tabs>
       </div>
