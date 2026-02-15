@@ -11,3 +11,4 @@ export { RegionalUrlManager } from './RegionalUrlManager';
 export { OrchestrationControl } from './OrchestrationControl';
 export { PriceDiscrepancyQueue } from './PriceDiscrepancyQueue';
 export { UrlHealthTab } from './UrlHealthTab';
+export { BuyButtonValidator } from './BuyButtonValidator';

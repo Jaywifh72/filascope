@@ -13,10 +13,11 @@ import { RegionalUrlManager } from './sync-status/RegionalUrlManager';
 import { OrchestrationControl } from './sync-status/OrchestrationControl';
 import { PriceDiscrepancyQueue } from './sync-status/PriceDiscrepancyQueue';
 import { UrlHealthTab } from './sync-status/UrlHealthTab';
+import { BuyButtonValidator } from './sync-status/BuyButtonValidator';
 
 export function SyncStatusTab() {
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined);
-  const [viewMode, setViewMode] = useState<'overview' | 'regional' | 'discrepancies' | 'url-health'>('regional');
+  const [viewMode, setViewMode] = useState<'overview' | 'regional' | 'discrepancies' | 'url-health' | 'buy-buttons'>('regional');
 
   const handleBrandClick = (brandSlug: string) => {
     setBrandFilter(brandSlug);
@@ -35,12 +36,13 @@ export function SyncStatusTab() {
       <CurrentSyncStatus />
 
       {/* View Mode Toggle */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'overview' | 'regional' | 'discrepancies' | 'url-health')}>
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'overview' | 'regional' | 'discrepancies' | 'url-health' | 'buy-buttons')}>
         <TabsList>
           <TabsTrigger value="regional">Regional View</TabsTrigger>
           <TabsTrigger value="overview">Brand Overview</TabsTrigger>
           <TabsTrigger value="discrepancies">Price Review</TabsTrigger>
           <TabsTrigger value="url-health">URL Health</TabsTrigger>
+          <TabsTrigger value="buy-buttons">Buy Button Validator</TabsTrigger>
         </TabsList>
 
         <TabsContent value="discrepancies" className="mt-4">
@@ -83,6 +85,10 @@ export function SyncStatusTab() {
 
         <TabsContent value="url-health" className="mt-4">
           <UrlHealthTab />
+        </TabsContent>
+
+        <TabsContent value="buy-buttons" className="mt-4">
+          <BuyButtonValidator />
         </TabsContent>
       </Tabs>
     </div>
