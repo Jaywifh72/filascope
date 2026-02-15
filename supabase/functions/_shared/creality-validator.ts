@@ -93,14 +93,25 @@ const WRONG_CREALITY_DOMAINS = [
   'www.creality.com',  // sometimes used incorrectly instead of store.creality.com
 ];
 
+// Subdomain pattern: ca.store.creality.com → store.creality.com/ca/
+const SUBDOMAIN_REGION_PATTERN = /^(ca|uk|eu|au|jp)\.store\.creality\.com$/i;
+
 export function correctCrealityDomain(url: string): { corrected: boolean; url: string } {
   try {
     const parsed = new URL(url);
     const hostname = parsed.hostname.toLowerCase();
     
+    // Fix wrong domains (creality3dofficial.com → store.creality.com)
     if (WRONG_CREALITY_DOMAINS.includes(hostname)) {
-      // Keep the path, swap the domain to store.creality.com
       const correctedUrl = `https://${CREALITY_DOMAIN}${parsed.pathname}${parsed.search}${parsed.hash}`;
+      return { corrected: true, url: correctedUrl };
+    }
+    
+    // Fix subdomain pattern: ca.store.creality.com/products/x → store.creality.com/ca/products/x
+    const subdomainMatch = hostname.match(SUBDOMAIN_REGION_PATTERN);
+    if (subdomainMatch) {
+      const regionPrefix = subdomainMatch[1].toLowerCase();
+      const correctedUrl = `https://${CREALITY_DOMAIN}/${regionPrefix}${parsed.pathname}${parsed.search}${parsed.hash}`;
       return { corrected: true, url: correctedUrl };
     }
     
