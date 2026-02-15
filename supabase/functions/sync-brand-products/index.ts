@@ -447,6 +447,16 @@ Deno.serve(async (req) => {
             const errorMsg = err instanceof Error ? err.message : 'Unknown scraping error';
             console.error(`[sync-brand-products] Scraping error for ${brandSlug} region ${region}:`, err);
             progress.errors.push(`${region}: ${errorMsg}`);
+            
+            // Log region-level scraping failure to scrape_errors
+            await supabase.from('scrape_errors').insert({
+              brand_slug: brandSlug,
+              error_type: errorMsg.includes('timeout') ? 'timeout' : errorMsg.includes('404') ? '404' : 'network',
+              error_message: `Region ${region}: ${errorMsg}`.slice(0, 500),
+              stack_trace: err instanceof Error ? err.stack?.slice(0, 2000) : null,
+              region: region,
+              sync_run_id: jobId || null,
+            }).then(() => {});
           }
 
           // Tag products with region and currency
@@ -637,6 +647,18 @@ Deno.serve(async (req) => {
             // Update region breakdown
             const regionStats = regionBreakdown.find(r => r.region === productRegion);
             if (regionStats) regionStats.errors++;
+            
+            // Insert error into scrape_errors table
+            await supabase.from('scrape_errors').insert({
+              brand_slug: brandSlug,
+              filament_id: product.existingId || null,
+              url: product.url || null,
+              error_type: errorMsg.includes('timeout') ? 'timeout' : errorMsg.includes('404') ? '404' : 'parse_error',
+              error_message: errorMsg.slice(0, 500),
+              stack_trace: err instanceof Error ? err.stack?.slice(0, 2000) : null,
+              region: productRegion,
+              sync_run_id: jobId || null,
+            }).then(() => {});
           }
         } else {
           // Dry run - mark as would be created/updated

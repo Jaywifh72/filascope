@@ -3827,6 +3827,10 @@ export type Database = {
           brands_synced: number
           brands_total: number
           completed_at: string | null
+          current_brand_name: string | null
+          current_brand_slug: string | null
+          current_product_name: string | null
+          current_product_url: string | null
           error_log: Json | null
           id: string
           started_at: string
@@ -3841,6 +3845,10 @@ export type Database = {
           brands_synced?: number
           brands_total?: number
           completed_at?: string | null
+          current_brand_name?: string | null
+          current_brand_slug?: string | null
+          current_product_name?: string | null
+          current_product_url?: string | null
           error_log?: Json | null
           id?: string
           started_at?: string
@@ -3855,6 +3863,10 @@ export type Database = {
           brands_synced?: number
           brands_total?: number
           completed_at?: string | null
+          current_brand_name?: string | null
+          current_brand_slug?: string | null
+          current_product_name?: string | null
+          current_product_url?: string | null
           error_log?: Json | null
           id?: string
           started_at?: string
@@ -7137,6 +7149,7 @@ export type Database = {
           is_resolved: boolean
           region: string | null
           resolved_at: string | null
+          stack_trace: string | null
           sync_run_id: string | null
           url: string | null
         }
@@ -7150,6 +7163,7 @@ export type Database = {
           is_resolved?: boolean
           region?: string | null
           resolved_at?: string | null
+          stack_trace?: string | null
           sync_run_id?: string | null
           url?: string | null
         }
@@ -7163,6 +7177,7 @@ export type Database = {
           is_resolved?: boolean
           region?: string | null
           resolved_at?: string | null
+          stack_trace?: string | null
           sync_run_id?: string | null
           url?: string | null
         }
