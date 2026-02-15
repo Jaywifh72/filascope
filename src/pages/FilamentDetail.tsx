@@ -36,6 +36,7 @@ import {
   type FilamentTab 
 } from "@/components/filament/tabs";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { trackProductView as trackGA4ProductView } from "@/lib/analytics";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 import { useRegionalStore, getRegionDisplayName } from "@/hooks/useRegionalStore";
 import { useUnifiedRegionalPricing, type UnifiedRegionalPricingResult } from "@/hooks/useUnifiedRegionalPricing";
@@ -341,6 +342,16 @@ const FilamentDetail = () => {
         image: filament.featured_image || null,
         url: `/filament/${filament.product_handle || filament.id}`,
         type: "filament",
+      });
+
+      // GA4 product view
+      trackGA4ProductView({
+        productId: filament.id,
+        productName: filament.product_title || 'Unknown',
+        brand: filament.vendor || 'Unknown',
+        category: filament.material || undefined,
+        price: filament.variant_price ?? undefined,
+        currency: 'USD',
       });
     }
   }, [filament?.id]);

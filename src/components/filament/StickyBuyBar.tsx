@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { ShoppingCart, ExternalLink, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
 import { useRegion } from "@/contexts/RegionContext";
 import { cn } from "@/lib/utils";
 import { PriceUrgencyBadge } from "./urgency/PriceUrgencyBadge";
@@ -106,6 +107,15 @@ export function StickyBuyBar({
       moduleName: 'sticky_buy_bar',
       entityId: filament.id,
       entityType: 'filament',
+    });
+
+    // GA4 tracking
+    trackGA4AffiliateClick({
+      brand: filament.vendor || '',
+      productName: filament.product_title,
+      productId: filament.id,
+      price: pricePerKg ?? undefined,
+      linkType: 'affiliate',
     });
 
     if (affiliateUrl) {

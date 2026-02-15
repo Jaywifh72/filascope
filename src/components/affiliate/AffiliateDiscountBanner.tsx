@@ -1,6 +1,7 @@
 import type { AffiliateDiscountCode } from "@/types/affiliate";
 import { Badge } from "@/components/ui/badge";
 import { Tag } from "lucide-react";
+import { trackDiscountCode as trackGA4DiscountCode } from "@/lib/analytics";
 
 interface AffiliateDiscountBannerProps {
   discountCodes: AffiliateDiscountCode[];
@@ -17,12 +18,21 @@ export function AffiliateDiscountBanner({ discountCodes, className }: AffiliateD
 
   if (activeCodes.length === 0) return null;
 
+  const handleCodeClick = (code: AffiliateDiscountCode) => {
+    trackGA4DiscountCode(
+      code.code || '',
+      '', // brand not available here
+      code.discount_value ?? undefined
+    );
+  };
+
   return (
     <div className={className}>
       {activeCodes.map((code) => (
         <div
           key={code.id}
-          className="flex items-center gap-2 rounded-md bg-primary/10 border border-primary/20 px-3 py-1.5 text-xs"
+          className="flex items-center gap-2 rounded-md bg-primary/10 border border-primary/20 px-3 py-1.5 text-xs cursor-pointer"
+          onClick={() => handleCodeClick(code)}
         >
           <Tag className="w-3 h-3 text-primary shrink-0" />
           <span className="text-foreground">
