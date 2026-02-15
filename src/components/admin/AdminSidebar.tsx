@@ -81,6 +81,7 @@ const navGroups: NavGroup[] = [
       { title: 'Quality Dashboard', href: '/old-admin/data-quality-dashboard', icon: ShieldCheck },
       { title: 'Price Extraction', href: '/old-admin/brand-extraction', icon: Wrench },
       { title: 'Price Verification', href: '/old-admin/price-verification', icon: DollarSign },
+      { title: 'Pricing Data', href: '/admin/pricing-data', icon: DollarSign },
       { title: 'Field Coverage', href: '/old-admin/field-coverage', icon: BarChart3 },
       { title: 'Broken Links', href: '/old-admin/broken-links', icon: Link2 },
       { title: 'Duplicates', href: '/old-admin/duplicates', icon: Copy },
