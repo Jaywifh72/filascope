@@ -82,20 +82,17 @@ export function BuyButtonValidator() {
     refetchInterval: latestRun?.status === 'running' ? 3000 : false,
   });
 
-  // Get unique brands from results
+  // Get all brands from automated_brands
   const { data: brands } = useQuery({
-    queryKey: ['validation-brands', activeRunId],
+    queryKey: ['validation-brands-all'],
     queryFn: async () => {
-      if (!activeRunId) return [];
       const { data } = await supabase
-        .from('buy_button_validation_log')
-        .select('brand_name')
-        .eq('validation_run_id', activeRunId)
-        .order('brand_name');
-      const unique = [...new Set(data?.map(d => d.brand_name).filter(Boolean))];
-      return unique as string[];
+        .from('automated_brands')
+        .select('display_name')
+        .eq('scraping_enabled', true)
+        .order('display_name');
+      return data?.map(d => d.display_name).filter(Boolean) as string[] || [];
     },
-    enabled: !!activeRunId,
   });
 
   // Trigger validation mutation
