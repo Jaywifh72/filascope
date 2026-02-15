@@ -474,7 +474,16 @@ Deno.serve(async (req) => {
     let scraped = 0;
     let filtered = 0;
     
+    const TIME_LIMIT_MS = 120_000; // Stop scraping at 120s to leave time for insert/cleanup
+    
     for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
+      // Time guard: stop scraping if approaching edge function timeout
+      const elapsed = Date.now() - startTime;
+      if (elapsed > TIME_LIMIT_MS) {
+        console.log(`[ATOMIC-SYNC] ⏱️ Time guard triggered at ${Math.round(elapsed/1000)}s - stopping scrape with ${productsToInsert.length} products collected`);
+        break;
+      }
+      
       const batchStart = batchIdx * BATCH_SIZE;
       const batch = productEntries.slice(batchStart, batchStart + BATCH_SIZE);
       
