@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useRegion } from '@/contexts/RegionContext';
 import { PriceConfidence, usePriceFreshness } from '@/hooks/usePriceFreshness';
-import { PriceVerificationDialog, usePriceVerification } from './PriceVerificationDialog';
+
 import { ReportPriceIssue } from './ReportPriceIssue';
 import { AdminPriceRefreshButton } from '@/components/admin/AdminPriceRefreshButton';
 import { cn } from '@/lib/utils';
@@ -142,14 +142,7 @@ export function HonestPriceDisplay({
       : effectiveLastVerified
   );
   
-  // Price verification dialog state
-  const {
-    showDialog,
-    setShowDialog,
-    pendingNavigation,
-    handleBuyClick,
-    handleContinue,
-  } = usePriceVerification();
+  
   
   // Handle refresh state changes from AdminPriceRefreshButton
   const handleRefreshStart = useCallback(() => {
@@ -183,19 +176,10 @@ export function HonestPriceDisplay({
   const sizes = sizeClasses[size];
 
   const handleClick = () => {
-    const shouldProceed = handleBuyClick({
-      storeName,
-      storeUrl: storeUrl || '',
-      lastVerifiedAt,
-      priceConfidence: confidence,
-    });
-
-    if (shouldProceed) {
-      if (onBuyClick) {
-        onBuyClick();
-      } else if (storeUrl) {
-        window.open(storeUrl, '_blank', 'noopener,noreferrer');
-      }
+    if (onBuyClick) {
+      onBuyClick();
+    } else if (storeUrl) {
+      window.open(storeUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -353,18 +337,6 @@ export function HonestPriceDisplay({
           </p>
         )}
 
-        {/* Price Verification Dialog */}
-        {pendingNavigation && (
-          <PriceVerificationDialog
-            open={showDialog}
-            onOpenChange={setShowDialog}
-            storeName={pendingNavigation.storeName}
-            storeUrl={pendingNavigation.storeUrl}
-            lastVerifiedAt={pendingNavigation.lastVerifiedAt}
-            priceConfidence={pendingNavigation.priceConfidence}
-            onContinue={handleContinue}
-          />
-        )}
       </div>
     </TooltipProvider>
   );

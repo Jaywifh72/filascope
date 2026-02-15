@@ -214,7 +214,7 @@ function StoreRow({ store, userCurrencySymbol, lastScrapedAt, formatPrice }: {
             </>
           ) : (
             <div className="text-xs text-muted-foreground">
-              {store.inStock ? 'Check price' : 'Out of stock'}
+              {store.inStock ? 'View price' : 'Out of stock'}
             </div>
           )}
         </div>

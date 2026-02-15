@@ -828,7 +828,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
-                {timeAgo ? `Last checked ${timeAgo}` : 'No price check data'}
+                {timeAgo ? `Last updated ${timeAgo}` : 'No price data'}
               </TooltipContent>
             </Tooltip>
             
@@ -857,7 +857,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         ) : (
           <div className="flex items-center gap-2">
             <ExternalLink className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Check price at store</span>
+            <span className="text-sm text-muted-foreground">View at store</span>
           </div>
        )}
 
