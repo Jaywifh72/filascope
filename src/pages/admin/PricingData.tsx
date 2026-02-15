@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Progress } from '@/components/ui/progress';
 import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
@@ -146,6 +147,7 @@ export default function PricingData() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [testResults, setTestResults] = useState<Map<string, TestResult>>(new Map());
   const [bulkTesting, setBulkTesting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ tested: number; total: number } | null>(null);
   const abortRef = useRef(false);
 
   // Fetch filaments with pricing data
@@ -268,19 +270,15 @@ export default function PricingData() {
   }, [rows]);
 
   // --- Link testing ---
-  const testSingleUrl = useCallback(async (rowId: string, url: string): Promise<TestResult> => {
+  const testSingleUrl = useCallback(async (rowId: string, url: string, showToast = true): Promise<TestResult> => {
     const startTime = Date.now();
     setTestResults(prev => new Map(prev).set(rowId, { status: 'testing' }));
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
       const { data, error } = await supabase.functions.invoke('test-url', {
         body: { url },
       });
 
-      clearTimeout(timeoutId);
       const latencyMs = Date.now() - startTime;
 
       if (error) throw error;
@@ -295,6 +293,26 @@ export default function PricingData() {
       }
 
       setTestResults(prev => new Map(prev).set(rowId, result));
+
+      // Update url_validation_cache
+      const cacheStatus = result.status === 'ok' ? 'valid' : result.status === 'redirect' ? 'redirect' : 'invalid';
+      await supabase
+        .from('url_validation_cache')
+        .upsert({
+          url,
+          status: cacheStatus,
+          status_code: result.statusCode ?? null,
+          redirect_url: result.redirectUrl ?? null,
+          last_checked: new Date().toISOString(),
+          check_count: 1,
+        }, { onConflict: 'url' });
+
+      if (showToast) {
+        if (result.status === 'ok') toast.success(`✅ Link active (${result.statusCode}) — ${latencyMs}ms`);
+        else if (result.status === 'redirect') toast.warning(`⚠️ Redirect (${result.statusCode}) → ${result.redirectUrl?.slice(0, 60) || 'unknown'}`);
+        else toast.error(`❌ Link broken (${result.statusCode || result.error})`);
+      }
+
       return result;
     } catch (err: any) {
       const latencyMs = Date.now() - startTime;
@@ -305,6 +323,23 @@ export default function PricingData() {
         error: isTimeout ? 'Request timeout (5s)' : (err?.message || 'Unknown error'),
       };
       setTestResults(prev => new Map(prev).set(rowId, result));
+
+      // Update url_validation_cache for failures too
+      await supabase
+        .from('url_validation_cache')
+        .upsert({
+          url,
+          status: 'invalid',
+          status_code: null,
+          redirect_url: null,
+          last_checked: new Date().toISOString(),
+          consecutive_failures: 1,
+        }, { onConflict: 'url' });
+
+      if (showToast) {
+        toast.error(`❌ ${isTimeout ? 'Timeout (5s)' : 'Network error'}`);
+      }
+
       return result;
     }
   }, []);
@@ -317,29 +352,33 @@ export default function PricingData() {
     }
 
     setBulkTesting(true);
+    setBulkProgress({ tested: 0, total: withUrls.length });
     abortRef.current = false;
     const startTime = Date.now();
     let tested = 0;
     let ok = 0;
     let broken = 0;
+    let warnings = 0;
 
-    // Process in batches of 3 to avoid overwhelming
     for (let i = 0; i < withUrls.length; i += 3) {
       if (abortRef.current) break;
       const batch = withUrls.slice(i, i + 3);
       const results = await Promise.all(
-        batch.map(r => testSingleUrl(r.id, r.product_url!))
+        batch.map(r => testSingleUrl(r.id, r.product_url!, false))
       );
       results.forEach(r => {
         tested++;
         if (r.status === 'ok') ok++;
-        if (r.status === 'broken' || r.status === 'timeout') broken++;
+        else if (r.status === 'broken' || r.status === 'timeout') broken++;
+        else warnings++;
       });
+      setBulkProgress({ tested, total: withUrls.length });
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     setBulkTesting(false);
-    toast.success(`Tested ${tested} links in ${elapsed}s — ${ok} active, ${broken} broken`);
+    setBulkProgress(null);
+    toast.success(`Tested ${tested} links in ${elapsed}s — ${ok} active, ${broken} broken, ${warnings} warnings`);
   }, [testSingleUrl]);
 
   const handleTestSelected = useCallback(() => {
@@ -512,6 +551,16 @@ export default function PricingData() {
             </Button>
           )}
         </div>
+
+        {/* Bulk progress bar */}
+        {bulkProgress && (
+          <div className="space-y-1">
+            <Progress value={(bulkProgress.tested / bulkProgress.total) * 100} className="h-2" />
+            <p className="text-xs text-muted-foreground text-center">
+              Testing {bulkProgress.tested}/{bulkProgress.total} links…
+            </p>
+          </div>
+        )}
 
         {/* Data table */}
         <Card className="border-border/50">
