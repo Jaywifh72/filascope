@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { validateCrealityUrl, parseCrealityUrl } from "../_shared/creality-validator.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,7 +32,9 @@ interface ValidationResult {
   redirect_url: string | null;
 }
 
-async function validateUrl(url: string): Promise<{
+// ─── Generic URL validator (non-Creality) ─────────────────────────────────────
+
+async function validateUrlGeneric(url: string): Promise<{
   status: string;
   statusCode: number | null;
   errorMessage: string | null;
@@ -69,6 +72,12 @@ async function validateUrl(url: string): Promise<{
     }
     return { status: 'error', statusCode: null, errorMessage: error.message?.substring(0, 200), responseTimeMs: elapsed, redirectUrl: null };
   }
+}
+
+// ─── Determine if URL is Creality ─────────────────────────────────────────────
+
+function isCrealityUrl(url: string): boolean {
+  return url.includes('store.creality.com');
 }
 
 Deno.serve(async (req) => {
@@ -134,12 +143,12 @@ Deno.serve(async (req) => {
       : REGION_URL_COLUMNS;
 
     // Build work items
-    const workItems: { product: any; region: string; url: string }[] = [];
+    const workItems: { product: any; region: string; url: string; column: string }[] = [];
     for (const product of allProducts) {
       for (const [region, col] of Object.entries(regionsToCheck)) {
         const url = product[col];
         if (url && url.trim()) {
-          workItems.push({ product, region, url: url.trim() });
+          workItems.push({ product, region, url: url.trim(), column: col });
         }
       }
     }
@@ -149,22 +158,77 @@ Deno.serve(async (req) => {
     let redirectCount = 0;
     let errorCount = 0;
     let timeoutCount = 0;
+    let fixedCount = 0;
 
     // Process in batches
     for (let i = 0; i < workItems.length; i += BATCH_SIZE) {
       const batch = workItems.slice(i, i + BATCH_SIZE);
 
-      const results: ValidationResult[] = await Promise.all(
-        batch.map(async (item) => {
-          let result = await validateUrl(item.url);
+      const results: ValidationResult[] = [];
+      const urlFixes: Array<{ product_id: string; column: string; new_url: string }> = [];
+
+      // Process each item — Creality gets intelligent validation, others get generic
+      for (const item of batch) {
+        if (isCrealityUrl(item.url)) {
+          // ── Creality intelligent validation ──
+          const crResult = await validateCrealityUrl(item.url, item.region);
+          
+          let status = 'valid';
+          let errorMsg: string | null = null;
+
+          if (!crResult.is_valid) {
+            if (crResult.is_soft_404) {
+              status = 'broken';
+              errorMsg = 'Soft 404: page returns 200 but shows "not found" content';
+            } else if (crResult.failure_reason === 'hard_404') {
+              status = 'broken';
+              errorMsg = `HTTP ${crResult.http_status}`;
+            } else if (crResult.failure_reason === 'redirect_homepage') {
+              status = 'broken';
+              errorMsg = 'Redirects to homepage — product discontinued';
+            } else if (crResult.failure_reason === 'timeout') {
+              status = 'timeout';
+              errorMsg = 'Request timed out';
+            } else if (crResult.failure_reason) {
+              status = 'error';
+              errorMsg = crResult.failure_reason;
+            }
+          }
+
+          // If Creality validator found a fix, queue it for auto-update
+          if (crResult.suggested_fix_url && crResult.fix_validated) {
+            urlFixes.push({
+              product_id: item.product.id,
+              column: item.column,
+              new_url: crResult.suggested_fix_url,
+            });
+            status = 'fixed'; // custom status to indicate auto-repair
+            errorMsg = `Auto-fixed: ${crResult.fix_source} → ${crResult.suggested_fix_url}`;
+          }
+
+          results.push({
+            product_id: item.product.id,
+            product_name: item.product.product_title,
+            brand_name: item.product.vendor,
+            region: item.region,
+            store_url: item.url,
+            http_status_code: crResult.http_status,
+            validation_status: status,
+            error_message: errorMsg,
+            response_time_ms: crResult.response_time_ms,
+            redirect_url: crResult.suggested_fix_url,
+          });
+        } else {
+          // ── Generic validation ──
+          let result = await validateUrlGeneric(item.url);
 
           // Auto-retry once on error/timeout
           if (result.status === 'error' || result.status === 'timeout') {
             await new Promise(r => setTimeout(r, 500));
-            result = await validateUrl(item.url);
+            result = await validateUrlGeneric(item.url);
           }
 
-          return {
+          results.push({
             product_id: item.product.id,
             product_name: item.product.product_title,
             brand_name: item.product.vendor,
@@ -175,9 +239,9 @@ Deno.serve(async (req) => {
             error_message: result.errorMessage,
             response_time_ms: result.responseTimeMs,
             redirect_url: result.redirectUrl,
-          };
-        })
-      );
+          });
+        }
+      }
 
       // Count results
       for (const r of results) {
@@ -186,11 +250,12 @@ Deno.serve(async (req) => {
           case 'broken': brokenCount++; break;
           case 'redirect': redirectCount++; break;
           case 'timeout': timeoutCount++; break;
+          case 'fixed': fixedCount++; validCount++; break; // fixed counts as valid
           default: errorCount++; break;
         }
       }
 
-      // Insert batch results
+      // Insert batch results into validation log
       const insertData = results.map(r => ({
         validation_run_id: runId,
         product_id: r.product_id,
@@ -207,14 +272,24 @@ Deno.serve(async (req) => {
 
       await supabase.from('buy_button_validation_log').insert(insertData);
 
+      // Auto-apply URL fixes to the filaments table
+      for (const fix of urlFixes) {
+        const { error: fixErr } = await supabase
+          .from('filaments')
+          .update({ [fix.column]: fix.new_url })
+          .eq('id', fix.product_id);
+
+        if (fixErr) {
+          console.error(`Failed to auto-fix URL for product ${fix.product_id}:`, fixErr);
+        } else {
+          console.log(`✅ Auto-fixed ${fix.column} for product ${fix.product_id} → ${fix.new_url}`);
+        }
+      }
+
       // Delay between batches
       if (i + BATCH_SIZE < workItems.length) {
         await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
       }
-
-      // Check time limit (120s guard)
-      // Edge functions have ~150s limit, stop at 120s
-      // We can't easily track wall time from Deno.serve start, so skip this for now
     }
 
     // Complete the run
@@ -229,6 +304,7 @@ Deno.serve(async (req) => {
         redirect_count: redirectCount,
         error_count: errorCount,
         timeout_count: timeoutCount,
+        fixed_count: fixedCount,
       })
       .eq('id', runId);
 
@@ -240,6 +316,7 @@ Deno.serve(async (req) => {
       redirect_count: redirectCount,
       error_count: errorCount,
       timeout_count: timeoutCount,
+      fixed_count: fixedCount,
       status: 'completed',
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
