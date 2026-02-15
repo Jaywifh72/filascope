@@ -7,20 +7,15 @@ const corsHeaders = {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BRAND CONFIGURATION
-// Two sync paths:
-//   1. Regional brands → calls sync-regional-prices (multi-region price scraping)
-//   2. Brand-specific brands → calls sync-{slug}-products (dedicated scraper)
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface BrandEntry {
   slug: string;
   syncType: 'regional' | 'brand-specific';
   tier: 1 | 2 | 3;
-  // For brand-specific: the edge function slug (may differ from brand slug)
   functionSlug?: string;
 }
 
-// Slug → edge function name mapping (when they differ from brand slug)
 const SLUG_TO_FUNCTION: Record<string, string> = {
   '3d-fuel': '3dfuel',
   'atomic-filament': 'atomic',
@@ -42,28 +37,23 @@ function getFunctionSlug(brandSlug: string): string {
   return SLUG_TO_FUNCTION[brandSlug] || brandSlug;
 }
 
-// All brands the orchestrator manages
 const ALL_BRANDS: BrandEntry[] = [
   // ── TIER 1: Daily sync (major brands) ────────────────────────────────
-  // Regional brands (multi-store, uses sync-regional-prices)
   { slug: 'bambu-lab',    syncType: 'regional', tier: 1 },
   { slug: 'polymaker',    syncType: 'regional', tier: 1 },
   { slug: 'elegoo',       syncType: 'regional', tier: 1 },
   { slug: 'creality',     syncType: 'regional', tier: 1 },
   { slug: 'anycubic',     syncType: 'regional', tier: 1 },
-  // Brand-specific Tier 1
   { slug: 'esun',         syncType: 'brand-specific', tier: 1 },
   { slug: 'prusament',    syncType: 'brand-specific', tier: 1 },
   { slug: 'overture',     syncType: 'brand-specific', tier: 1 },
 
   // ── TIER 2: Every 3 days ─────────────────────────────────────────────
-  // Regional brands
   { slug: 'sunlu',        syncType: 'regional', tier: 2 },
   { slug: 'eryone',       syncType: 'regional', tier: 2 },
   { slug: 'jayo',         syncType: 'regional', tier: 2 },
   { slug: 'kingroon',     syncType: 'regional', tier: 2 },
   { slug: 'sovol',        syncType: 'regional', tier: 2 },
-  // Brand-specific Tier 2
   { slug: 'hatchbox',     syncType: 'brand-specific', tier: 2 },
   { slug: 'colorfabb',    syncType: 'brand-specific', tier: 2 },
   { slug: 'fillamentum',  syncType: 'brand-specific', tier: 2 },
@@ -72,7 +62,6 @@ const ALL_BRANDS: BrandEntry[] = [
   { slug: 'ninjatek',     syncType: 'brand-specific', tier: 2 },
 
   // ── TIER 3: Weekly ───────────────────────────────────────────────────
-  // Regional brands
   { slug: 'qidi',         syncType: 'regional', tier: 3 },
   { slug: 'flashforge',   syncType: 'regional', tier: 3 },
   { slug: 'artillery',    syncType: 'regional', tier: 3 },
@@ -80,7 +69,6 @@ const ALL_BRANDS: BrandEntry[] = [
   { slug: 'two-trees',    syncType: 'regional', tier: 3 },
   { slug: 'geeetech',     syncType: 'regional', tier: 3 },
   { slug: 'voxelab',      syncType: 'regional', tier: 3 },
-  // Brand-specific Tier 3
   { slug: '3d-fuel',      syncType: 'brand-specific', tier: 3 },
   { slug: '3dhojor',      syncType: 'brand-specific', tier: 3 },
   { slug: '3dxtech',      syncType: 'brand-specific', tier: 3 },
@@ -108,15 +96,202 @@ const ALL_BRANDS: BrandEntry[] = [
 ];
 
 const TIER_FREQUENCY_HOURS: Record<number, number> = {
-  1: 24,      // daily
-  2: 72,      // every 3 days
-  3: 168,     // weekly
+  1: 24,
+  2: 72,
+  3: 168,
 };
+
+const BATCH_SIZE = 12;
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SHARED: Process a single brand (used by both orchestrator and continue)
+// ═══════════════════════════════════════════════════════════════════════════
+export async function processBrand(
+  brand: { slug: string; syncType: string },
+  supabaseUrl: string,
+  anonKey: string,
+  serviceRoleKey: string,
+  supabase: any,
+  runId: string,
+): Promise<{ success: boolean; productsUpdated: number; error?: string; regionalData?: Record<string, any> }> {
+  const { slug, syncType } = brand;
+
+  try {
+    let syncResponse: Response;
+
+    if (syncType === 'regional') {
+      const syncUrl = `${supabaseUrl}/functions/v1/sync-regional-prices`;
+      syncResponse = await fetch(syncUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${anonKey}`,
+        },
+        body: JSON.stringify({ brandSlug: slug, regions: ['US', 'CA', 'EU', 'UK', 'AU'], dryRun: false }),
+      });
+    } else {
+      const functionSlug = getFunctionSlug(slug);
+      const functionName = `sync-${functionSlug}-products`;
+      const syncUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+      syncResponse = await fetch(syncUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({ dryRun: false, triggeredBy: 'orchestrator' }),
+      });
+    }
+
+    const syncResult = await syncResponse.json().catch(() => null);
+
+    if (syncResponse.ok) {
+      const updated = syncResult?.summary?.totalUpdated
+        || syncResult?.totalUpdated
+        || syncResult?.stats?.updated
+        || syncResult?.updated
+        || syncResult?.summary?.totalMatched
+        || 0;
+      const regionalData = syncResult?.regionBreakdown || syncResult?.regional_breakdown || null;
+      console.log(`[ORCHESTRATOR] ✅ ${slug} synced (${updated} updated)`);
+      return { success: true, productsUpdated: updated, regionalData };
+    } else {
+      const errorMsg = syncResult?.error || syncResponse.statusText;
+      console.error(`[ORCHESTRATOR] ❌ ${slug} failed: ${errorMsg}`);
+      await supabase.from('scrape_errors').insert({
+        brand_slug: slug,
+        error_type: `http_${syncResponse.status}`,
+        error_message: `Sync failed: ${String(errorMsg).slice(0, 500)}`,
+        sync_run_id: runId,
+      });
+      return { success: false, productsUpdated: 0, error: String(errorMsg) };
+    }
+  } catch (err) {
+    console.error(`[ORCHESTRATOR] ❌ ${slug} error: ${err}`);
+    await supabase.from('scrape_errors').insert({
+      brand_slug: slug,
+      error_type: 'network',
+      error_message: String(err).slice(0, 500),
+      stack_trace: err instanceof Error ? err.stack?.slice(0, 2000) : null,
+      sync_run_id: runId,
+    });
+    return { success: false, productsUpdated: 0, error: String(err) };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SHARED: Process a batch of brands
+// ═══════════════════════════════════════════════════════════════════════════
+export async function processBatch(
+  batchId: string,
+  brandSlugs: string[],
+  supabaseUrl: string,
+  anonKey: string,
+  serviceRoleKey: string,
+  supabase: any,
+  runId: string,
+): Promise<{ brandsSynced: number; productsSynced: number; errorsCount: number; brandsFailed: string[] }> {
+  // Mark batch as running
+  await supabase.from('orchestration_batches').update({
+    status: 'running',
+    started_at: new Date().toISOString(),
+  }).eq('id', batchId);
+
+  let brandsSynced = 0;
+  let productsSynced = 0;
+  let errorsCount = 0;
+  const brandsFailed: string[] = [];
+
+  for (const slug of brandSlugs) {
+    const brandEntry = ALL_BRANDS.find(b => b.slug === slug) || { slug, syncType: 'brand-specific' };
+
+    // Update live progress on orchestration_runs
+    await supabase.from('orchestration_runs').update({
+      current_brand_slug: slug,
+      current_brand_name: slug,
+      current_product_name: null,
+      current_product_url: null,
+    }).eq('id', runId);
+
+    const result = await processBrand(brandEntry, supabaseUrl, anonKey, serviceRoleKey, supabase, runId);
+
+    if (result.success) {
+      brandsSynced++;
+      productsSynced += result.productsUpdated;
+    } else {
+      errorsCount++;
+      brandsFailed.push(slug);
+    }
+
+    // Update batch progress
+    await supabase.from('orchestration_batches').update({
+      brands_synced: brandsSynced,
+      products_synced: productsSynced,
+      errors_count: errorsCount,
+    }).eq('id', batchId);
+
+    // Rate limiting between brands
+    if (slug !== brandSlugs[brandSlugs.length - 1]) {
+      await sleep(3000);
+    }
+  }
+
+  // Mark batch as completed/failed
+  const batchStatus = errorsCount === brandSlugs.length ? 'failed' : 'completed';
+  await supabase.from('orchestration_batches').update({
+    status: batchStatus,
+    completed_at: new Date().toISOString(),
+    brands_synced: brandsSynced,
+    products_synced: productsSynced,
+    errors_count: errorsCount,
+    error_details: brandsFailed.length > 0 ? { failed_brands: brandsFailed } : null,
+  }).eq('id', batchId);
+
+  return { brandsSynced, productsSynced, errorsCount, brandsFailed };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Update orchestration-level totals from all batches
+// ═══════════════════════════════════════════════════════════════════════════
+async function updateOrchestrationTotals(supabase: any, runId: string) {
+  const { data: batches } = await supabase
+    .from('orchestration_batches')
+    .select('brands_synced, products_synced, errors_count, status, error_details')
+    .eq('orchestration_id', runId);
+
+  if (!batches) return;
+
+  const totalBrandsSynced = batches.reduce((s: number, b: any) => s + (b.brands_synced || 0), 0);
+  const totalProducts = batches.reduce((s: number, b: any) => s + (b.products_synced || 0), 0);
+  const allFailed: string[] = batches.flatMap((b: any) => b.error_details?.failed_brands || []);
+  const allComplete = batches.every((b: any) => b.status === 'completed' || b.status === 'failed');
+  const anyPending = batches.some((b: any) => b.status === 'pending');
+
+  const update: Record<string, any> = {
+    brands_synced: totalBrandsSynced,
+    total_products_updated: totalProducts,
+    brands_failed: allFailed,
+  };
+
+  if (allComplete && !anyPending) {
+    update.status = allFailed.length === 0 ? 'completed' : totalBrandsSynced === 0 ? 'failed' : 'partial';
+    update.completed_at = new Date().toISOString();
+    update.current_brand_slug = null;
+    update.current_brand_name = null;
+    update.current_product_name = null;
+    update.current_product_url = null;
+  }
+
+  await supabase.from('orchestration_runs').update(update).eq('id', runId);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN HANDLER
+// ═══════════════════════════════════════════════════════════════════════════
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -136,31 +311,30 @@ Deno.serve(async (req) => {
     if (trigger === 'manual') {
       const authHeader = req.headers.get('Authorization');
       if (!authHeader?.startsWith('Bearer ')) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-      
+
       const token = authHeader.replace('Bearer ', '');
       const { data: claimsData, error: claimsError } = await supabase.auth.getUser(token);
       if (claimsError || !claimsData?.user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
       userId = claimsData.user.id;
 
-      // Check admin role
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .eq('role', 'admin')
         .maybeSingle();
-      
+
       if (!roleData) {
-        return new Response(JSON.stringify({ error: 'Admin role required' }), { 
-          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        return new Response(JSON.stringify({ error: 'Admin role required' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
     }
@@ -175,36 +349,28 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (runningRun) {
-      const startedAt = new Date(runningRun.started_at);
-      const minutesRunning = (Date.now() - startedAt.getTime()) / 60000;
-      
+      const minutesRunning = (Date.now() - new Date(runningRun.started_at).getTime()) / 60000;
       if (minutesRunning < 30) {
-        return new Response(JSON.stringify({ 
-          error: 'Orchestration already running', 
+        return new Response(JSON.stringify({
+          error: 'Orchestration already running',
           runId: runningRun.id,
-          startedAt: runningRun.started_at 
-        }), { 
-          status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          startedAt: runningRun.started_at
+        }), {
+          status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-      
-      // If stuck for 30+ minutes, mark as failed
-      await supabase
-        .from('orchestration_runs')
-        .update({ status: 'failed', completed_at: new Date().toISOString(), error_log: { error: 'Timed out after 30 minutes' } })
-        .eq('id', runningRun.id);
+      // Stuck for 30+ min, mark as failed
+      await supabase.from('orchestration_runs').update({
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        error_log: { error: 'Timed out after 30 minutes' },
+      }).eq('id', runningRun.id);
     }
 
     // Determine eligible brands based on tier frequency
     const eligibleBrands: BrandEntry[] = [];
-    
     for (const brand of ALL_BRANDS) {
       const frequencyHours = TIER_FREQUENCY_HOURS[brand.tier];
-      
-      // Determine sync_type filter for brand_sync_logs
-      const syncTypeFilter = brand.syncType === 'regional' ? 'regional_prices' : 'clean_slate';
-      
-      // Check last sync time from brand_sync_logs
       const { data: lastSync } = await supabase
         .from('brand_sync_logs')
         .select('completed_at')
@@ -213,22 +379,19 @@ Deno.serve(async (req) => {
         .order('completed_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      
+
       if (!lastSync?.completed_at) {
         eligibleBrands.push(brand);
         continue;
       }
-      
       const hoursSinceSync = (Date.now() - new Date(lastSync.completed_at).getTime()) / 3600000;
       if (hoursSinceSync >= frequencyHours) {
         eligibleBrands.push(brand);
       }
     }
 
-    // Sort: Tier 1 first, then Tier 2, then Tier 3
     eligibleBrands.sort((a, b) => a.tier - b.tier);
-
-    console.log(`[ORCHESTRATOR] Eligible brands: ${eligibleBrands.length} (${eligibleBrands.filter(b => b.syncType === 'regional').length} regional, ${eligibleBrands.filter(b => b.syncType === 'brand-specific').length} brand-specific)`);
+    console.log(`[ORCHESTRATOR] Eligible brands: ${eligibleBrands.length}`);
 
     // Create orchestration run record
     const { data: run, error: runError } = await supabase
@@ -243,211 +406,105 @@ Deno.serve(async (req) => {
       .single();
 
     if (runError || !run) {
-      return new Response(JSON.stringify({ error: 'Failed to create orchestration run', details: runError }), { 
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      return new Response(JSON.stringify({ error: 'Failed to create orchestration run', details: runError }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     const runId = run.id;
 
-    // Return immediately with run ID, process in background
+    // Split eligible brands into batches of BATCH_SIZE
+    const batches: string[][] = [];
+    for (let i = 0; i < eligibleBrands.length; i += BATCH_SIZE) {
+      batches.push(eligibleBrands.slice(i, i + BATCH_SIZE).map(b => b.slug));
+    }
+
+    // Create batch records
+    const batchRecords = batches.map((brandSlugs, idx) => ({
+      orchestration_id: runId,
+      batch_number: idx + 1,
+      status: idx === 0 ? 'pending' : 'pending',
+      brand_slugs: brandSlugs,
+    }));
+
+    const { data: insertedBatches, error: batchInsertError } = await supabase
+      .from('orchestration_batches')
+      .insert(batchRecords)
+      .select('id, batch_number, brand_slugs');
+
+    if (batchInsertError || !insertedBatches?.length) {
+      return new Response(JSON.stringify({ error: 'Failed to create batches', details: batchInsertError }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log(`[ORCHESTRATOR] Created ${insertedBatches.length} batches of ${BATCH_SIZE} brands`);
+
+    // Process ONLY the first batch in background, then exit
+    const firstBatch = insertedBatches.find((b: any) => b.batch_number === 1)!;
+
     const backgroundWork = async () => {
-      let brandsSynced = 0;
-      const brandsFailed: string[] = [];
-      let totalProductsUpdated = 0;
-      const brandResults: Record<string, unknown> = {};
-      // Aggregate regional totals across all brands
-      const regionalTotals: Record<string, { brands_synced: number; products_updated: number; errors: number }> = {};
+      try {
+        await processBatch(
+          firstBatch.id,
+          firstBatch.brand_slugs,
+          supabaseUrl,
+          anonKey,
+          serviceRoleKey,
+          supabase,
+          runId,
+        );
 
-      for (const brand of eligibleBrands) {
-        const { slug, syncType } = brand;
-        
-        // Update live progress: current brand
-        await supabase
-          .from('orchestration_runs')
-          .update({
-            current_brand_slug: slug,
-            current_brand_name: slug,
-            current_product_name: null,
-            current_product_url: null,
-          })
-          .eq('id', runId);
-        
-        try {
-          let syncResponse: Response;
-          
-          if (syncType === 'regional') {
-            // ── Path 1: Regional price sync (multi-store brands) ──────
-            const syncUrl = `${supabaseUrl}/functions/v1/sync-regional-prices`;
-            console.log(`[ORCHESTRATOR] Syncing ${slug} via sync-regional-prices`);
-            syncResponse = await fetch(syncUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${anonKey}`,
-              },
-              body: JSON.stringify({
-                brandSlug: slug,
-                regions: ['US', 'CA', 'EU', 'UK', 'AU'],
-                dryRun: false,
-              }),
-            });
-          } else {
-            // ── Path 2: Brand-specific sync function ──────────────────
-            const functionSlug = getFunctionSlug(slug);
-            const functionName = `sync-${functionSlug}-products`;
-            const syncUrl = `${supabaseUrl}/functions/v1/${functionName}`;
-            console.log(`[ORCHESTRATOR] Syncing ${slug} via ${functionName}`);
-            syncResponse = await fetch(syncUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${serviceRoleKey}`,
-              },
-              body: JSON.stringify({
-                dryRun: false,
-                triggeredBy: 'orchestrator',
-              }),
-            });
-          }
+        // Update orchestration totals
+        await updateOrchestrationTotals(supabase, runId);
 
-          const syncResult = await syncResponse.json().catch(() => null);
-          
-          if (syncResponse.ok) {
-            brandsSynced++;
-            const updated = syncResult?.summary?.totalUpdated 
-              || syncResult?.totalUpdated 
-              || syncResult?.stats?.updated 
-              || syncResult?.updated
-              || syncResult?.summary?.totalMatched
-              || 0;
-            totalProductsUpdated += updated;
-            brandResults[slug] = { status: 'success', syncType, productsUpdated: updated };
-            console.log(`[ORCHESTRATOR] ✅ ${slug} synced (${updated} updated)`);
+        // Check if there are more batches pending
+        const { data: pendingBatches } = await supabase
+          .from('orchestration_batches')
+          .select('id')
+          .eq('orchestration_id', runId)
+          .eq('status', 'pending');
 
-            // Aggregate regional totals from sync result
-            const rb = syncResult?.regionBreakdown || syncResult?.regional_breakdown;
-            if (rb && typeof rb === 'object') {
-              for (const [region, stats] of Object.entries(rb as Record<string, any>)) {
-                if (!regionalTotals[region]) regionalTotals[region] = { brands_synced: 0, products_updated: 0, errors: 0 };
-                regionalTotals[region].brands_synced++;
-                regionalTotals[region].products_updated += (stats.updated || stats.matched || 0);
-                regionalTotals[region].errors += (stats.errors || stats.rejected || 0);
-              }
-            }
-          } else {
-            brandsFailed.push(slug);
-            const errorMsg = syncResult?.error || syncResponse.statusText;
-            brandResults[slug] = { status: 'failed', syncType, error: errorMsg };
-            console.error(`[ORCHESTRATOR] ❌ ${slug} failed: ${errorMsg}`);
-            
-            // Log HTTP failure to scrape_errors
-            await supabase.from('scrape_errors').insert({
-              brand_slug: slug,
-              error_type: `http_${syncResponse.status}`,
-              error_message: `Sync failed: ${String(errorMsg).slice(0, 500)}`,
-              sync_run_id: runId,
-              region: null,
-            }).then(() => {});
-          }
-        } catch (err) {
-          brandsFailed.push(slug);
-          brandResults[slug] = { status: 'error', syncType, error: String(err) };
-          console.error(`[ORCHESTRATOR] ❌ ${slug} error: ${err}`);
-          
-          // Log error to scrape_errors
-          await supabase.from('scrape_errors').insert({
-            brand_slug: slug,
-            error_type: 'network',
-            error_message: String(err).slice(0, 500),
-            stack_trace: err instanceof Error ? err.stack?.slice(0, 2000) : null,
-            sync_run_id: runId,
-            region: null,
-          }).then(() => {});
+        if (pendingBatches?.length > 0) {
+          console.log(`[ORCHESTRATOR] Batch 1 complete. ${pendingBatches.length} batches remaining — will be picked up by orchestrator-continue.`);
+        } else {
+          console.log(`[ORCHESTRATOR] All batches complete.`);
+          await updateOrchestrationTotals(supabase, runId);
         }
-
-        // Update progress in DB
-        await supabase
-          .from('orchestration_runs')
-          .update({
-            brands_synced: brandsSynced,
-            brands_failed: brandsFailed,
-            total_products_updated: totalProductsUpdated,
-          })
-          .eq('id', runId);
-
-        // Rate limiting: wait 3 seconds between brands
-        if (brand !== eligibleBrands[eligibleBrands.length - 1]) {
-          await sleep(3000);
-        }
+      } catch (err) {
+        console.error(`[ORCHESTRATOR] Batch 1 error:`, err);
+        await supabase.from('orchestration_batches').update({
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          error_details: { error: String(err) },
+        }).eq('id', firstBatch.id);
+        await updateOrchestrationTotals(supabase, runId);
       }
-
-      // Determine final status
-      const finalStatus = brandsFailed.length === 0 
-        ? 'completed' 
-        : brandsSynced === 0 
-          ? 'failed' 
-          : 'partial';
-
-      const completedAt = new Date().toISOString();
-      const runStartTime = run.started_at ? new Date(run.started_at).getTime() : Date.now();
-      const actualDuration = (Date.now() - runStartTime) / 1000;
-
-      // Update final status with regional totals, clear live progress
-      await supabase
-        .from('orchestration_runs')
-        .update({
-          status: finalStatus,
-          completed_at: completedAt,
-          brands_synced: brandsSynced,
-          brands_failed: brandsFailed,
-          total_products_updated: totalProductsUpdated,
-          current_brand_slug: null,
-          current_brand_name: null,
-          current_product_name: null,
-          current_product_url: null,
-          summary: {
-            duration_seconds: Math.round(actualDuration),
-            eligible_brands: eligibleBrands.length,
-            regional_brands: eligibleBrands.filter(b => b.syncType === 'regional').length,
-            brand_specific_brands: eligibleBrands.filter(b => b.syncType === 'brand-specific').length,
-            brand_results: brandResults,
-            regional_totals: regionalTotals,
-            tier_breakdown: {
-              tier1: eligibleBrands.filter(b => b.tier === 1).length,
-              tier2: eligibleBrands.filter(b => b.tier === 2).length,
-              tier3: eligibleBrands.filter(b => b.tier === 3).length,
-            }
-          },
-        })
-        .eq('id', runId);
-      
-      console.log(`[ORCHESTRATOR] ═══ Complete: ${brandsSynced} synced, ${brandsFailed.length} failed, ${totalProductsUpdated} products updated ═══`);
     };
 
-    // Use EdgeRuntime.waitUntil if available, otherwise run inline
     if (typeof (globalThis as any).EdgeRuntime !== 'undefined' && (globalThis as any).EdgeRuntime.waitUntil) {
       (globalThis as any).EdgeRuntime.waitUntil(backgroundWork());
     } else {
       backgroundWork().catch(console.error);
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
+    return new Response(JSON.stringify({
+      success: true,
       runId,
       eligibleBrands: eligibleBrands.length,
-      regionalBrands: eligibleBrands.filter(b => b.syncType === 'regional').map(b => b.slug),
-      brandSpecificBrands: eligibleBrands.filter(b => b.syncType === 'brand-specific').map(b => b.slug),
-      message: `Orchestration started. Processing ${eligibleBrands.length} brands (${eligibleBrands.filter(b => b.syncType === 'regional').length} regional, ${eligibleBrands.filter(b => b.syncType === 'brand-specific').length} brand-specific).`
-    }), { 
-      status: 200, 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      totalBatches: batches.length,
+      batchSize: BATCH_SIZE,
+      firstBatchBrands: firstBatch.brand_slugs,
+      message: `Orchestration started. ${eligibleBrands.length} brands split into ${batches.length} batches of ${BATCH_SIZE}. Processing batch 1 now.`
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (err) {
     console.error('Orchestrator error:', err);
-    return new Response(JSON.stringify({ error: String(err) }), { 
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 });
