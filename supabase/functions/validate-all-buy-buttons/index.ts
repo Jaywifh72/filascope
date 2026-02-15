@@ -77,7 +77,7 @@ async function validateUrlGeneric(url: string): Promise<{
 // ─── Determine if URL is Creality ─────────────────────────────────────────────
 
 function isCrealityUrl(url: string): boolean {
-  return url.includes('store.creality.com');
+  return url.includes('store.creality.com') || url.includes('creality3dofficial.com') || /\b(ca|uk|eu|au|jp)\.store\.creality\.com\b/.test(url);
 }
 
 Deno.serve(async (req) => {
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json().catch(() => ({}));
-    const { brand_filter, region_filter, product_ids } = body;
+    const { brand_filter, region_filter, product_ids, limit } = body;
 
     // Create validation run
     const { data: run, error: runErr } = await supabase
@@ -123,18 +123,27 @@ Deno.serve(async (req) => {
     if (product_ids && product_ids.length > 0) {
       query = query.in('id', product_ids);
     }
+    if (limit) {
+      query = query.limit(limit);
+    }
 
-    // Fetch all products (paginated to avoid 1000 limit)
+    // Fetch products (paginated if no limit set)
     let allProducts: any[] = [];
-    let offset = 0;
-    const pageSize = 1000;
-    while (true) {
-      const { data, error } = await query.range(offset, offset + pageSize - 1);
+    if (limit) {
+      const { data, error } = await query;
       if (error) throw new Error(`Failed to fetch products: ${error.message}`);
-      if (!data || data.length === 0) break;
-      allProducts = allProducts.concat(data);
-      if (data.length < pageSize) break;
-      offset += pageSize;
+      allProducts = data || [];
+    } else {
+      let offset = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await query.range(offset, offset + pageSize - 1);
+        if (error) throw new Error(`Failed to fetch products: ${error.message}`);
+        if (!data || data.length === 0) break;
+        allProducts = allProducts.concat(data);
+        if (data.length < pageSize) break;
+        offset += pageSize;
+      }
     }
 
     // Determine which regions to check
