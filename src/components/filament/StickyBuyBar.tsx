@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ShoppingCart, ExternalLink, Clock } from "lucide-react";
+import { ShoppingCart, ExternalLink, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
@@ -9,6 +9,7 @@ import { PriceUrgencyBadge } from "./urgency/PriceUrgencyBadge";
 import { StockUrgencyIndicator } from "./urgency/StockUrgencyIndicator";
 import { ShippingCountdown } from "./urgency/ShippingCountdown";
 import { differenceInDays } from "date-fns";
+import { useBrokenUrlCheck } from "@/hooks/useBrokenUrlCheck";
 
 interface StickyBuyBarProps {
   filament: {
@@ -57,6 +58,7 @@ export function StickyBuyBar({
 }: StickyBuyBarProps) {
   const { trackStoreClick } = useConversionTracking();
   const { formatPrice, region: userRegion } = useRegion();
+  const { isBroken: isUrlBroken } = useBrokenUrlCheck(affiliateUrl);
 
   // Normalize region code to uppercase for consistent comparison
   const normalizedStoreRegion = storeRegion?.toUpperCase() || null;
@@ -139,7 +141,7 @@ export function StickyBuyBar({
       : `${filament.net_weight_g}g`
     : null;
 
-  if (!affiliateUrl) return null;
+  if (!affiliateUrl || isUrlBroken) return null;
 
   return (
     <div
