@@ -85,12 +85,38 @@ async function rateLimitedFetch(url: string, options: RequestInit & { timeout?: 
   }
 }
 
+// ─── Wrong Domain Detection & Correction ─────────────────────────────────────
+
+const WRONG_CREALITY_DOMAINS = [
+  'www.creality3dofficial.com',
+  'creality3dofficial.com',
+  'www.creality.com',  // sometimes used incorrectly instead of store.creality.com
+];
+
+export function correctCrealityDomain(url: string): { corrected: boolean; url: string } {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+    
+    if (WRONG_CREALITY_DOMAINS.includes(hostname)) {
+      // Keep the path, swap the domain to store.creality.com
+      const correctedUrl = `https://${CREALITY_DOMAIN}${parsed.pathname}${parsed.search}${parsed.hash}`;
+      return { corrected: true, url: correctedUrl };
+    }
+    
+    return { corrected: false, url };
+  } catch {
+    return { corrected: false, url };
+  }
+}
+
 // ─── URL Parsing ──────────────────────────────────────────────────────────────
 
 export function parseCrealityUrl(url: string): { region: string; handle: string } | null {
   try {
     const parsed = new URL(url);
-    if (!parsed.hostname.includes('creality.com')) return null;
+    // Accept both correct and wrong domains for parsing
+    if (!parsed.hostname.includes('creality')) return null;
 
     // Match: /products/handle OR /{region}/products/handle
     const match = parsed.pathname.match(/^(?:\/(ca|uk|eu|au|jp))?\/products\/([^?#/]+)/i);
@@ -228,10 +254,36 @@ export async function validateCrealityUrl(url: string, region?: string): Promise
     details: {},
   };
 
+  // Step 0: Domain correction (creality3dofficial.com → store.creality.com)
+  const domainFix = correctCrealityDomain(url);
+  if (domainFix.corrected) {
+    result.details = { ...result.details, original_domain_wrong: true, corrected_from: url };
+    // Validate the corrected URL
+    try {
+      const checkCorrected = await rateLimitedFetch(domainFix.url, { method: 'HEAD', redirect: 'manual' });
+      if (checkCorrected.status === 200) {
+        // Verify not a soft 404
+        const soft = await isSoft404(domainFix.url);
+        if (!soft) {
+          result.is_valid = false; // original is still broken
+          result.suggested_fix_url = domainFix.url;
+          result.fix_source = 'domain_correction';
+          result.fix_validated = true;
+          result.http_status = checkCorrected.status;
+          result.details = { ...result.details, fix_note: 'Wrong domain corrected: creality3dofficial.com → store.creality.com' };
+          result.response_time_ms = Date.now() - start;
+          return result;
+        }
+      }
+    } catch { /* domain-corrected URL also failed, continue with other strategies */ }
+    // Update url to corrected domain for further parsing/variants
+    url = domainFix.url;
+  }
+
   const parsed = parseCrealityUrl(url);
   if (!parsed) {
     result.failure_reason = 'error';
-    result.details = { error: 'Not a valid Creality store URL' };
+    result.details = { ...result.details, error: 'Not a valid Creality store URL' };
     result.response_time_ms = Date.now() - start;
     return result;
   }
