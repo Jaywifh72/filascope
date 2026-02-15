@@ -1518,6 +1518,62 @@ export type Database = {
         }
         Relationships: []
       }
+      buy_button_validation_log: {
+        Row: {
+          brand_name: string | null
+          checked_at: string
+          error_message: string | null
+          http_status_code: number | null
+          id: string
+          product_id: string
+          product_name: string | null
+          redirect_url: string | null
+          region: string
+          response_time_ms: number | null
+          store_url: string | null
+          validation_run_id: string
+          validation_status: string
+        }
+        Insert: {
+          brand_name?: string | null
+          checked_at?: string
+          error_message?: string | null
+          http_status_code?: number | null
+          id?: string
+          product_id: string
+          product_name?: string | null
+          redirect_url?: string | null
+          region: string
+          response_time_ms?: number | null
+          store_url?: string | null
+          validation_run_id: string
+          validation_status?: string
+        }
+        Update: {
+          brand_name?: string | null
+          checked_at?: string
+          error_message?: string | null
+          http_status_code?: number | null
+          id?: string
+          product_id?: string
+          product_name?: string | null
+          redirect_url?: string | null
+          region?: string
+          response_time_ms?: number | null
+          store_url?: string | null
+          validation_run_id?: string
+          validation_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buy_button_validation_log_validation_run_id_fkey"
+            columns: ["validation_run_id"]
+            isOneToOne: false
+            referencedRelation: "validation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       color_audit_logs: {
         Row: {
           audit_run_id: string | null
@@ -8959,6 +9015,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      validation_runs: {
+        Row: {
+          broken_count: number | null
+          completed_at: string | null
+          created_at: string
+          error_count: number | null
+          filter_brand: string | null
+          filter_region: string | null
+          id: string
+          redirect_count: number | null
+          started_at: string
+          status: string
+          timeout_count: number | null
+          total_checks: number | null
+          triggered_by: string | null
+          valid_count: number | null
+        }
+        Insert: {
+          broken_count?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error_count?: number | null
+          filter_brand?: string | null
+          filter_region?: string | null
+          id?: string
+          redirect_count?: number | null
+          started_at?: string
+          status?: string
+          timeout_count?: number | null
+          total_checks?: number | null
+          triggered_by?: string | null
+          valid_count?: number | null
+        }
+        Update: {
+          broken_count?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error_count?: number | null
+          filter_brand?: string | null
+          filter_region?: string | null
+          id?: string
+          redirect_count?: number | null
+          started_at?: string
+          status?: string
+          timeout_count?: number | null
+          total_checks?: number | null
+          triggered_by?: string | null
+          valid_count?: number | null
+        }
+        Relationships: []
       }
       wishlist_collections: {
         Row: {
