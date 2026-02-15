@@ -1,5 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { validateCrealityUrl, parseCrealityUrl } from "../_shared/creality-validator.ts";
+import { validateCrealityUrl } from "../_shared/creality-validator.ts";
+import { validateBrandUrl, hasUniversalBrandPattern } from "../_shared/universal-brand-validator.ts";
+import { findBrandPattern } from "../_shared/brand-url-patterns.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,7 +34,7 @@ interface ValidationResult {
   redirect_url: string | null;
 }
 
-// ─── Generic URL validator (non-Creality) ─────────────────────────────────────
+// ─── Generic URL validator (fallback for unknown brands) ──────────────────────
 
 async function validateUrlGeneric(url: string): Promise<{
   status: string;
@@ -74,11 +76,148 @@ async function validateUrlGeneric(url: string): Promise<{
   }
 }
 
-// ─── Determine if URL is Creality ─────────────────────────────────────────────
+// ─── Brand Detection ──────────────────────────────────────────────────────────
 
 function isCrealityUrl(url: string): boolean {
   return url.includes('store.creality.com') || url.includes('creality3dofficial.com') || /\b(ca|uk|eu|au|jp)\.store\.creality\.com\b/.test(url);
 }
+
+function getValidatorType(url: string, vendor: string): 'creality' | 'universal' | 'generic' {
+  // Creality has its own specialized validator
+  if (isCrealityUrl(url) || vendor.toLowerCase() === 'creality') {
+    return 'creality';
+  }
+  // Check if we have a universal brand pattern for this vendor/URL
+  if (hasUniversalBrandPattern(url, vendor)) {
+    return 'universal';
+  }
+  return 'generic';
+}
+
+// ─── Process a single validation item using the correct validator ─────────────
+
+async function processValidationItem(
+  item: { product: any; region: string; url: string; column: string }
+): Promise<{
+  result: ValidationResult;
+  fix?: { product_id: string; column: string; new_url: string };
+}> {
+  const validatorType = getValidatorType(item.url, item.product.vendor || '');
+
+  if (validatorType === 'creality') {
+    // ── Creality intelligent validation ──
+    const crResult = await validateCrealityUrl(item.url, item.region);
+
+    let status = 'valid';
+    let errorMsg: string | null = null;
+
+    if (!crResult.is_valid) {
+      if (crResult.is_soft_404) {
+        status = 'broken'; errorMsg = 'Soft 404: page returns 200 but shows "not found" content';
+      } else if (crResult.failure_reason === 'hard_404') {
+        status = 'broken'; errorMsg = `HTTP ${crResult.http_status}`;
+      } else if (crResult.failure_reason === 'redirect_homepage') {
+        status = 'broken'; errorMsg = 'Redirects to homepage — product discontinued';
+      } else if (crResult.failure_reason === 'timeout') {
+        status = 'timeout'; errorMsg = 'Request timed out';
+      } else if (crResult.failure_reason) {
+        status = 'error'; errorMsg = crResult.failure_reason;
+      }
+    }
+
+    let fix: { product_id: string; column: string; new_url: string } | undefined;
+    if (crResult.suggested_fix_url && crResult.fix_validated) {
+      fix = { product_id: item.product.id, column: item.column, new_url: crResult.suggested_fix_url };
+      status = 'fixed';
+      errorMsg = `Auto-fixed (${crResult.fix_source}): ${crResult.suggested_fix_url}`;
+    }
+
+    return {
+      result: {
+        product_id: item.product.id,
+        product_name: item.product.product_title,
+        brand_name: item.product.vendor,
+        region: item.region,
+        store_url: item.url,
+        http_status_code: crResult.http_status,
+        validation_status: status,
+        error_message: errorMsg,
+        response_time_ms: crResult.response_time_ms,
+        redirect_url: crResult.suggested_fix_url,
+      },
+      fix,
+    };
+  }
+
+  if (validatorType === 'universal') {
+    // ── Universal brand-aware validation ──
+    const brResult = await validateBrandUrl(item.url, item.product.vendor, item.region);
+
+    let status = 'valid';
+    let errorMsg: string | null = null;
+
+    if (!brResult.is_valid) {
+      if (brResult.is_soft_404) {
+        status = 'broken'; errorMsg = 'Soft 404';
+      } else if (brResult.failure_reason === 'hard_404') {
+        status = 'broken'; errorMsg = `HTTP ${brResult.http_status}`;
+      } else if (brResult.failure_reason === 'redirect_homepage') {
+        status = 'broken'; errorMsg = 'Redirects to homepage';
+      } else if (brResult.failure_reason === 'timeout') {
+        status = 'timeout'; errorMsg = 'Request timed out';
+      } else if (brResult.failure_reason) {
+        status = 'error'; errorMsg = brResult.failure_reason;
+      }
+    }
+
+    let fix: { product_id: string; column: string; new_url: string } | undefined;
+    if (brResult.suggested_fix_url && brResult.fix_validated) {
+      fix = { product_id: item.product.id, column: item.column, new_url: brResult.suggested_fix_url };
+      status = 'fixed';
+      errorMsg = `Auto-fixed (${brResult.fix_source}): ${brResult.suggested_fix_url}`;
+    }
+
+    return {
+      result: {
+        product_id: item.product.id,
+        product_name: item.product.product_title,
+        brand_name: item.product.vendor,
+        region: item.region,
+        store_url: item.url,
+        http_status_code: brResult.http_status,
+        validation_status: status,
+        error_message: errorMsg,
+        response_time_ms: brResult.response_time_ms,
+        redirect_url: brResult.suggested_fix_url,
+      },
+      fix,
+    };
+  }
+
+  // ── Generic validation (fallback) ──
+  let genResult = await validateUrlGeneric(item.url);
+  if (genResult.status === 'error' || genResult.status === 'timeout') {
+    await new Promise(r => setTimeout(r, 500));
+    genResult = await validateUrlGeneric(item.url);
+  }
+
+  return {
+    result: {
+      product_id: item.product.id,
+      product_name: item.product.product_title,
+      brand_name: item.product.vendor,
+      region: item.region,
+      store_url: item.url,
+      http_status_code: genResult.statusCode,
+      validation_status: genResult.status,
+      error_message: genResult.errorMessage,
+      response_time_ms: genResult.responseTimeMs,
+      redirect_url: genResult.redirectUrl,
+    },
+  };
+}
+
+// ─── Main Handler ─────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -91,14 +230,17 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json().catch(() => ({}));
-    const { brand_filter, region_filter, product_ids, limit } = body;
+    const { brand_filter, region_filter, product_ids, limit, brand_slug } = body;
+
+    // Support brand_slug as alias for brand_filter
+    const effectiveBrandFilter = brand_filter || brand_slug || null;
 
     // Create validation run
     const { data: run, error: runErr } = await supabase
       .from('validation_runs')
       .insert({
         status: 'running',
-        filter_brand: brand_filter || null,
+        filter_brand: effectiveBrandFilter,
         filter_region: region_filter || null,
         triggered_by: 'manual',
       })
@@ -117,8 +259,8 @@ Deno.serve(async (req) => {
       .select('id, product_title, vendor, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp')
       .order('vendor');
 
-    if (brand_filter) {
-      query = query.ilike('vendor', brand_filter);
+    if (effectiveBrandFilter) {
+      query = query.ilike('vendor', effectiveBrandFilter);
     }
     if (product_ids && product_ids.length > 0) {
       query = query.in('id', product_ids);
@@ -147,7 +289,7 @@ Deno.serve(async (req) => {
     }
 
     // Determine which regions to check
-    const regionsToCheck = region_filter 
+    const regionsToCheck = region_filter
       ? { [region_filter]: REGION_URL_COLUMNS[region_filter] }
       : REGION_URL_COLUMNS;
 
@@ -173,99 +315,29 @@ Deno.serve(async (req) => {
     for (let i = 0; i < workItems.length; i += BATCH_SIZE) {
       const batch = workItems.slice(i, i + BATCH_SIZE);
 
-      const results: ValidationResult[] = [];
+      const batchResults: ValidationResult[] = [];
       const urlFixes: Array<{ product_id: string; column: string; new_url: string }> = [];
 
-      // Process each item — Creality gets intelligent validation, others get generic
       for (const item of batch) {
-        if (isCrealityUrl(item.url)) {
-          // ── Creality intelligent validation ──
-          const crResult = await validateCrealityUrl(item.url, item.region);
-          
-          let status = 'valid';
-          let errorMsg: string | null = null;
-
-          if (!crResult.is_valid) {
-            if (crResult.is_soft_404) {
-              status = 'broken';
-              errorMsg = 'Soft 404: page returns 200 but shows "not found" content';
-            } else if (crResult.failure_reason === 'hard_404') {
-              status = 'broken';
-              errorMsg = `HTTP ${crResult.http_status}`;
-            } else if (crResult.failure_reason === 'redirect_homepage') {
-              status = 'broken';
-              errorMsg = 'Redirects to homepage — product discontinued';
-            } else if (crResult.failure_reason === 'timeout') {
-              status = 'timeout';
-              errorMsg = 'Request timed out';
-            } else if (crResult.failure_reason) {
-              status = 'error';
-              errorMsg = crResult.failure_reason;
-            }
-          }
-
-          // If Creality validator found a fix, queue it for auto-update
-          if (crResult.suggested_fix_url && crResult.fix_validated) {
-            urlFixes.push({
-              product_id: item.product.id,
-              column: item.column,
-              new_url: crResult.suggested_fix_url,
-            });
-            status = 'fixed'; // custom status to indicate auto-repair
-            errorMsg = `Auto-fixed: ${crResult.fix_source} → ${crResult.suggested_fix_url}`;
-          }
-
-          results.push({
-            product_id: item.product.id,
-            product_name: item.product.product_title,
-            brand_name: item.product.vendor,
-            region: item.region,
-            store_url: item.url,
-            http_status_code: crResult.http_status,
-            validation_status: status,
-            error_message: errorMsg,
-            response_time_ms: crResult.response_time_ms,
-            redirect_url: crResult.suggested_fix_url,
-          });
-        } else {
-          // ── Generic validation ──
-          let result = await validateUrlGeneric(item.url);
-
-          // Auto-retry once on error/timeout
-          if (result.status === 'error' || result.status === 'timeout') {
-            await new Promise(r => setTimeout(r, 500));
-            result = await validateUrlGeneric(item.url);
-          }
-
-          results.push({
-            product_id: item.product.id,
-            product_name: item.product.product_title,
-            brand_name: item.product.vendor,
-            region: item.region,
-            store_url: item.url,
-            http_status_code: result.statusCode,
-            validation_status: result.status,
-            error_message: result.errorMessage,
-            response_time_ms: result.responseTimeMs,
-            redirect_url: result.redirectUrl,
-          });
-        }
+        const { result, fix } = await processValidationItem(item);
+        batchResults.push(result);
+        if (fix) urlFixes.push(fix);
       }
 
       // Count results
-      for (const r of results) {
+      for (const r of batchResults) {
         switch (r.validation_status) {
           case 'valid': validCount++; break;
           case 'broken': brokenCount++; break;
           case 'redirect': redirectCount++; break;
           case 'timeout': timeoutCount++; break;
-          case 'fixed': fixedCount++; validCount++; break; // fixed counts as valid
+          case 'fixed': fixedCount++; validCount++; break;
           default: errorCount++; break;
         }
       }
 
-      // Insert batch results into validation log
-      const insertData = results.map(r => ({
+      // Insert batch results
+      const insertData = batchResults.map(r => ({
         validation_run_id: runId,
         product_id: r.product_id,
         product_name: r.product_name,
@@ -281,7 +353,7 @@ Deno.serve(async (req) => {
 
       await supabase.from('buy_button_validation_log').insert(insertData);
 
-      // Auto-apply URL fixes to the filaments table
+      // Auto-apply URL fixes
       for (const fix of urlFixes) {
         const { error: fixErr } = await supabase
           .from('filaments')
@@ -289,9 +361,9 @@ Deno.serve(async (req) => {
           .eq('id', fix.product_id);
 
         if (fixErr) {
-          console.error(`Failed to auto-fix URL for product ${fix.product_id}:`, fixErr);
+          console.error(`Failed to auto-fix URL for ${fix.product_id}:`, fixErr);
         } else {
-          console.log(`✅ Auto-fixed ${fix.column} for product ${fix.product_id} → ${fix.new_url}`);
+          console.log(`✅ Auto-fixed ${fix.column} for ${fix.product_id} → ${fix.new_url}`);
         }
       }
 
@@ -319,6 +391,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       run_id: runId,
+      total_products: allProducts.length,
       total_checks: workItems.length,
       valid_count: validCount,
       broken_count: brokenCount,
