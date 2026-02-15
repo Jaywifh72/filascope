@@ -223,9 +223,17 @@ Deno.serve(async (req) => {
 
     // =========================================================================
     // STEP 3.5: CACHE IMAGES TO LOCAL STORAGE
+    // Skip when triggered by orchestrator to avoid timeouts
     // =========================================================================
     
-    console.log('[Step 3.5] Caching images to local storage');
+    const isOrchestratorTriggered = body.triggeredBy === 'orchestrator';
+    const elapsedSoFar = Date.now() - startTime;
+    const skipImageCache = isOrchestratorTriggered || elapsedSoFar > 60_000;
+    
+    if (skipImageCache) {
+      console.log(`[Step 3.5] Skipping image caching (orchestrator: ${isOrchestratorTriggered}, elapsed: ${Math.round(elapsedSoFar/1000)}s)`);
+    } else {
+      console.log('[Step 3.5] Caching images to local storage');
     
     let imagesCached = 0;
     let imagesFailed = 0;
@@ -352,6 +360,7 @@ Deno.serve(async (req) => {
     }
     
     console.log(`[Step 3.5] Image caching complete: ${imagesCached} cached, ${imagesPlaceholder} placeholders, ${imagesFailed} failed`);
+    } // end of !skipImageCache
 
     // =========================================================================
     // STEP 4: FINALIZE
