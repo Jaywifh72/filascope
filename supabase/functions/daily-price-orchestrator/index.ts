@@ -262,6 +262,17 @@ Deno.serve(async (req) => {
       for (const brand of eligibleBrands) {
         const { slug, syncType } = brand;
         
+        // Update live progress: current brand
+        await supabase
+          .from('orchestration_runs')
+          .update({
+            current_brand_slug: slug,
+            current_brand_name: slug,
+            current_product_name: null,
+            current_product_url: null,
+          })
+          .eq('id', runId);
+        
         try {
           let syncResponse: Response;
           
@@ -326,13 +337,33 @@ Deno.serve(async (req) => {
             }
           } else {
             brandsFailed.push(slug);
-            brandResults[slug] = { status: 'failed', syncType, error: syncResult?.error || syncResponse.statusText };
-            console.error(`[ORCHESTRATOR] ❌ ${slug} failed: ${syncResult?.error || syncResponse.statusText}`);
+            const errorMsg = syncResult?.error || syncResponse.statusText;
+            brandResults[slug] = { status: 'failed', syncType, error: errorMsg };
+            console.error(`[ORCHESTRATOR] ❌ ${slug} failed: ${errorMsg}`);
+            
+            // Log HTTP failure to scrape_errors
+            await supabase.from('scrape_errors').insert({
+              brand_slug: slug,
+              error_type: `http_${syncResponse.status}`,
+              error_message: `Sync failed: ${String(errorMsg).slice(0, 500)}`,
+              sync_run_id: runId,
+              region: null,
+            }).then(() => {});
           }
         } catch (err) {
           brandsFailed.push(slug);
           brandResults[slug] = { status: 'error', syncType, error: String(err) };
           console.error(`[ORCHESTRATOR] ❌ ${slug} error: ${err}`);
+          
+          // Log error to scrape_errors
+          await supabase.from('scrape_errors').insert({
+            brand_slug: slug,
+            error_type: 'network',
+            error_message: String(err).slice(0, 500),
+            stack_trace: err instanceof Error ? err.stack?.slice(0, 2000) : null,
+            sync_run_id: runId,
+            region: null,
+          }).then(() => {});
         }
 
         // Update progress in DB
@@ -362,7 +393,7 @@ Deno.serve(async (req) => {
       const runStartTime = run.started_at ? new Date(run.started_at).getTime() : Date.now();
       const actualDuration = (Date.now() - runStartTime) / 1000;
 
-      // Update final status with regional totals
+      // Update final status with regional totals, clear live progress
       await supabase
         .from('orchestration_runs')
         .update({
@@ -371,6 +402,10 @@ Deno.serve(async (req) => {
           brands_synced: brandsSynced,
           brands_failed: brandsFailed,
           total_products_updated: totalProductsUpdated,
+          current_brand_slug: null,
+          current_brand_name: null,
+          current_product_name: null,
+          current_product_url: null,
           summary: {
             duration_seconds: Math.round(actualDuration),
             eligible_brands: eligibleBrands.length,

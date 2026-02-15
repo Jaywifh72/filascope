@@ -41,6 +41,10 @@ interface OrchestrationRun {
   triggered_by_user: string | null;
   error_log: Record<string, unknown> | null;
   summary: Record<string, unknown> | null;
+  current_brand_slug: string | null;
+  current_brand_name: string | null;
+  current_product_name: string | null;
+  current_product_url: string | null;
 }
 
 interface ScrapeError {
@@ -381,7 +385,7 @@ export function SyncMonitorContent() {
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-runs'] });
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-today'] });
       })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scrape_errors' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scrape_errors' }, () => {
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-errors'] });
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-error-count'] });
       })
@@ -628,6 +632,26 @@ export function SyncMonitorContent() {
                 value={latestRun.brands_total > 0 ? (latestRun.brands_synced / latestRun.brands_total) * 100 : 0}
                 className="h-3"
               />
+              {/* Live progress: current brand & product */}
+              {latestRun.current_brand_slug && (
+                <div className="text-xs space-y-0.5 p-2 rounded bg-muted/50 border border-border/50">
+                  <div className="flex items-center gap-1.5">
+                    <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
+                    <span className="text-muted-foreground">Currently syncing:</span>
+                    <span className="font-medium">{latestRun.current_brand_name || latestRun.current_brand_slug}</span>
+                  </div>
+                  {latestRun.current_product_name && (
+                    <div className="pl-[18px] text-muted-foreground truncate">
+                      {latestRun.current_product_name}
+                      {latestRun.current_product_url && (
+                        <a href={latestRun.current_product_url} target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-400 hover:underline inline-flex items-center">
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               {latestRun.brands_synced > 0 && latestRun.brands_total > latestRun.brands_synced && (() => {
                 const elapsed = (Date.now() - new Date(latestRun.started_at).getTime()) / 1000;
                 const perBrand = elapsed / latestRun.brands_synced;
