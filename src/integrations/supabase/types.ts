@@ -3821,6 +3821,59 @@ export type Database = {
         }
         Relationships: []
       }
+      orchestration_batches: {
+        Row: {
+          batch_number: number
+          brand_slugs: string[]
+          brands_synced: number
+          completed_at: string | null
+          created_at: string
+          error_details: Json | null
+          errors_count: number
+          id: string
+          orchestration_id: string
+          products_synced: number
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          batch_number: number
+          brand_slugs?: string[]
+          brands_synced?: number
+          completed_at?: string | null
+          created_at?: string
+          error_details?: Json | null
+          errors_count?: number
+          id?: string
+          orchestration_id: string
+          products_synced?: number
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          batch_number?: number
+          brand_slugs?: string[]
+          brands_synced?: number
+          completed_at?: string | null
+          created_at?: string
+          error_details?: Json | null
+          errors_count?: number
+          id?: string
+          orchestration_id?: string
+          products_synced?: number
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orchestration_batches_orchestration_id_fkey"
+            columns: ["orchestration_id"]
+            isOneToOne: false
+            referencedRelation: "orchestration_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orchestration_runs: {
         Row: {
           brands_failed: string[]

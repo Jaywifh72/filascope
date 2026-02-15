@@ -47,6 +47,19 @@ interface OrchestrationRun {
   current_product_url: string | null;
 }
 
+interface OrchestrationBatch {
+  id: string;
+  orchestration_id: string;
+  batch_number: number;
+  status: string;
+  brand_slugs: string[];
+  started_at: string | null;
+  completed_at: string | null;
+  brands_synced: number;
+  products_synced: number;
+  errors_count: number;
+}
+
 interface ScrapeError {
   id: string;
   filament_id: string | null;
@@ -181,6 +194,26 @@ export function SyncMonitorContent() {
 
   const latestRun = runs[0] || null;
   const isRunning = latestRun?.status === 'running';
+
+  // Batches for the latest run
+  const { data: batches = [] } = useQuery({
+    queryKey: ['sync-monitor-batches', latestRun?.id],
+    queryFn: async () => {
+      if (!latestRun?.id) return [];
+      const { data } = await supabase
+        .from('orchestration_batches')
+        .select('*')
+        .eq('orchestration_id', latestRun.id)
+        .order('batch_number', { ascending: true });
+      return (data || []) as unknown as OrchestrationBatch[];
+    },
+    enabled: !!latestRun?.id,
+    refetchInterval: isRunning ? 5000 : 30000,
+  });
+
+  const currentBatch = batches.find(b => b.status === 'running');
+  const pendingBatches = batches.filter(b => b.status === 'pending');
+  const hasResumableBatches = pendingBatches.length > 0 && (latestRun?.status === 'running' || latestRun?.status === 'partial');
 
   // Derive "last sync" from brand_sync_logs if no orchestration_runs
   const lastSyncInfo = useMemo(() => {
@@ -391,6 +424,10 @@ export function SyncMonitorContent() {
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-runs'] });
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-today'] });
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orchestration_batches' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['sync-monitor-batches'] });
+        queryClient.invalidateQueries({ queryKey: ['sync-monitor-runs'] });
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'scrape_errors' }, () => {
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-errors'] });
         queryClient.invalidateQueries({ queryKey: ['sync-monitor-error-count'] });
@@ -468,6 +505,17 @@ export function SyncMonitorContent() {
       toast.success('Run marked as partial (force-completed)');
       queryClient.invalidateQueries({ queryKey: ['sync-monitor-runs'] });
     }
+  }, [queryClient]);
+
+  const resumeSync = useCallback(async () => {
+    try {
+      const res = await supabase.functions.invoke('orchestrator-continue');
+      if (res.error) { toast.error(res.error.message); return; }
+      if (res.data?.error) { toast.error(res.data.error); return; }
+      toast.success(res.data?.message || 'Resuming next batch...');
+      queryClient.invalidateQueries({ queryKey: ['sync-monitor-runs'] });
+      queryClient.invalidateQueries({ queryKey: ['sync-monitor-batches'] });
+    } catch { toast.error('Failed to resume sync'); }
   }, [queryClient]);
 
   // Detect stuck run: status='running' and started >5 minutes ago with no recent update
@@ -657,6 +705,33 @@ export function SyncMonitorContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {/* Batch progress */}
+              {batches.length > 0 && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-medium text-foreground">
+                    Batch {currentBatch?.batch_number || (batches.filter(b => b.status === 'completed' || b.status === 'failed').length)} of {batches.length}
+                  </span>
+                  {currentBatch && (
+                    <span className="text-muted-foreground">
+                      — {currentBatch.brands_synced}/{currentBatch.brand_slugs.length} brands synced
+                    </span>
+                  )}
+                  <div className="flex gap-1 ml-auto">
+                    {batches.map(b => (
+                      <div
+                        key={b.id}
+                        title={`Batch ${b.batch_number}: ${b.status} (${b.brand_slugs.join(', ')})`}
+                        className={`w-5 h-2 rounded-sm ${
+                          b.status === 'completed' ? 'bg-green-500' :
+                          b.status === 'running' ? 'bg-blue-500 animate-pulse' :
+                          b.status === 'failed' ? 'bg-red-500' :
+                          'bg-muted-foreground/30'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>{latestRun.brands_synced} / {latestRun.brands_total} brands</span>
                 <span>{latestRun.total_products_updated} products updated</span>
@@ -707,6 +782,24 @@ export function SyncMonitorContent() {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ─── Resume Sync (when batches pending) ────────────────────────── */}
+        {!isRunning && hasResumableBatches && (
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardContent className="py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <span>{pendingBatches.length} batch(es) remaining</span>
+                <span className="text-muted-foreground text-xs">
+                  ({pendingBatches.reduce((s, b) => s + b.brand_slugs.length, 0)} brands)
+                </span>
+              </div>
+              <Button size="sm" onClick={resumeSync}>
+                <Play className="w-4 h-4 mr-1" /> Resume Sync
+              </Button>
             </CardContent>
           </Card>
         )}
