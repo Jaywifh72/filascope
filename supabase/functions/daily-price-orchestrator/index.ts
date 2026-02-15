@@ -65,10 +65,9 @@ const ALL_BRANDS: BrandEntry[] = [
   { slug: 'qidi',         syncType: 'regional', tier: 3 },
   { slug: 'flashforge',   syncType: 'regional', tier: 3 },
   { slug: 'artillery',    syncType: 'regional', tier: 3 },
-  { slug: 'longer',       syncType: 'regional', tier: 3 },
-  { slug: 'two-trees',    syncType: 'regional', tier: 3 },
+  // Removed: 'longer', 'two-trees', 'voxelab' - not in automated_brands
   { slug: 'geeetech',     syncType: 'regional', tier: 3 },
-  { slug: 'voxelab',      syncType: 'regional', tier: 3 },
+  
   { slug: '3d-fuel',      syncType: 'brand-specific', tier: 3 },
   { slug: '3dhojor',      syncType: 'brand-specific', tier: 3 },
   { slug: '3dxtech',      syncType: 'brand-specific', tier: 3 },

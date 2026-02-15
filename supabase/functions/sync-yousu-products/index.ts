@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
               auto_updated: true,
               last_scraped_at: new Date().toISOString(),
             }, {
-              onConflict: 'product_id',
+              onConflict: 'vendor,product_id',
             });
 
           if (insertError) {
