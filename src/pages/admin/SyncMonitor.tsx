@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { downloadCSV } from '@/lib/csvExport';
 import { formatDistanceToNow, format, differenceInDays } from 'date-fns';
 import { BrandRegionMatrix } from '@/components/admin/inventory/sync-status/BrandRegionMatrix';
+import { BuyButtonValidator } from '@/components/admin/inventory/sync-status/BuyButtonValidator';
 import {
   Activity, Play, Loader2, CheckCircle2, XCircle, AlertTriangle, Clock,
   Download, RefreshCw, Search, ChevronDown, ChevronRight, ExternalLink,
@@ -815,6 +816,7 @@ export function SyncMonitorContent() {
             <TabsTrigger value="stale">Stale Products</TabsTrigger>
             <TabsTrigger value="controls">Manual Sync</TabsTrigger>
             <TabsTrigger value="charts">Performance</TabsTrigger>
+            <TabsTrigger value="buy-buttons">Buy Button Validator</TabsTrigger>
           </TabsList>
 
           {/* ── Tab B: Sync History ──────────────────────────────────────── */}
@@ -1456,6 +1458,11 @@ export function SyncMonitorContent() {
                 </Card>
               </div>
             )}
+          </TabsContent>
+
+          {/* ── Tab: Buy Button Validator ─────────────────────────────────── */}
+          <TabsContent value="buy-buttons">
+            <BuyButtonValidator />
           </TabsContent>
         </Tabs>
       </div>
