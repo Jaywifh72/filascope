@@ -8125,6 +8125,125 @@ export type Database = {
           },
         ]
       }
+      url_repair_queue: {
+        Row: {
+          applied_at: string | null
+          brand_name: string | null
+          created_at: string | null
+          diagnosis_details: Json | null
+          failure_reason: string | null
+          http_status: number | null
+          id: string
+          original_url: string
+          product_id: string | null
+          product_name: string | null
+          region: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          suggested_url: string | null
+          suggestion_confidence: number | null
+          suggestion_source: string | null
+          suggestion_validated: boolean | null
+          updated_at: string | null
+          url_column: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          brand_name?: string | null
+          created_at?: string | null
+          diagnosis_details?: Json | null
+          failure_reason?: string | null
+          http_status?: number | null
+          id?: string
+          original_url: string
+          product_id?: string | null
+          product_name?: string | null
+          region?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          suggested_url?: string | null
+          suggestion_confidence?: number | null
+          suggestion_source?: string | null
+          suggestion_validated?: boolean | null
+          updated_at?: string | null
+          url_column?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          brand_name?: string | null
+          created_at?: string | null
+          diagnosis_details?: Json | null
+          failure_reason?: string | null
+          http_status?: number | null
+          id?: string
+          original_url?: string
+          product_id?: string | null
+          product_name?: string | null
+          region?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          suggested_url?: string | null
+          suggestion_confidence?: number | null
+          suggestion_source?: string | null
+          suggestion_validated?: boolean | null
+          updated_at?: string | null
+          url_column?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "url_repair_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "url_repair_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "url_repair_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "url_repair_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "url_repair_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "url_repair_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "url_repair_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       url_validation_cache: {
         Row: {
           check_count: number | null
