@@ -27,6 +27,8 @@ import { ScreenReaderAnnouncerProvider } from "./components/accessibility/Screen
 import { GlobalKeyboardHandler } from "./components/accessibility/GlobalKeyboardHandler";
 import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analytics/ErrorBoundary";
 import { OfflineBanner, SWUpdateNotifier } from "./components/pwa";
+import { initGA } from "./lib/analytics";
+import { GA4RouteTracker } from "./components/analytics/GA4RouteTracker";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
 import { CanonicalLink } from "./components/seo/CanonicalLink";
@@ -48,6 +50,8 @@ const PWAInstallBanner = lazy(() => import("./components/pwa").then(m => ({ defa
 
 // Initialize global error handlers for uncaught errors
 initializeGlobalErrorHandler();
+// Initialize Google Analytics 4
+initGA();
 // Lazy load route components for better performance
 const Finder = lazy(() => import("./pages/Finder"));
 const Brands = lazy(() => import("./pages/Brands"));
@@ -182,6 +186,7 @@ const App = () => (
                 <CanonicalLink />
                 {/* SEO: hreflang for multi-region international SEO */}
                 <HreflangTags />
+                <GA4RouteTracker />
                 <SchemaValidatorRunner />
                 <GlobalKeyboardHandler>
                 {/* WCAG 2.1 AA: Skip to main content link */}

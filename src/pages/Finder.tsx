@@ -7,6 +7,7 @@ import { useFinderQuery, type FinderFilters, DEFAULT_PAGE_SIZE } from "@/hooks/u
 import { useFilterCounts } from "@/hooks/useFilterCounts";
 import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
 import { useSearchContext } from "@/hooks/useSearchContext";
+import { trackSearch as trackGA4Search, trackFilter as trackGA4Filter } from "@/lib/analytics";
 import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -855,9 +856,27 @@ const Finder = () => {
           has_results: totalCount > 0,
           filters_applied: appliedFilters,
         });
+        // GA4
+        trackGA4Search(searchTerm, totalCount);
       }
     }
   }, [searchTerm, isLoading, displayedGroups, selectedMaterials, selectedBrands, trackSearch, totalCount]);
+
+  // GA4: track filter changes
+  const prevMaterialsRef = useRef(selectedMaterials);
+  const prevBrandsRef = useRef(selectedBrands);
+  useEffect(() => {
+    if (prevMaterialsRef.current !== selectedMaterials && selectedMaterials.length > 0 && !selectedMaterials.includes("All")) {
+      trackGA4Filter('material', selectedMaterials.join(','), totalCount);
+    }
+    prevMaterialsRef.current = selectedMaterials;
+  }, [selectedMaterials, totalCount]);
+  useEffect(() => {
+    if (prevBrandsRef.current !== selectedBrands && selectedBrands.length > 0) {
+      trackGA4Filter('brand', selectedBrands.join(','), totalCount);
+    }
+    prevBrandsRef.current = selectedBrands;
+  }, [selectedBrands, totalCount]);
 
   // Track region changes for smooth transitions
   useEffect(() => {

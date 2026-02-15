@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRegion } from "@/contexts/RegionContext";
 import { buildAffiliateLinkLocal, trackAffiliateClick } from "@/utils/affiliateLinks";
+import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
 import type { AffiliateProgram, AffiliateDiscountCode } from "@/types/affiliate";
 
 export interface ClickMetadata {
@@ -139,6 +140,16 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
     (url: string, metadata: ClickMetadata) => {
       const finalUrl = buildLink(url);
 
+      // GA4 tracking
+      trackGA4AffiliateClick({
+        brand: program?.brand_name || brandName || '',
+        productName: metadata.productName || '',
+        productId: metadata.sourceComponent || '',
+        affiliateProgram: program?.affiliate_network,
+        region: program?.region_code || region,
+        linkType: program ? 'affiliate' : 'direct',
+      });
+
       if (program) {
         trackAffiliateClick(program.id, finalUrl, {
           brandName: program.brand_name,
@@ -151,7 +162,7 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
 
       window.open(finalUrl, "_blank", "noopener,noreferrer");
     },
-    [program, buildLink]
+    [program, buildLink, brandName, region]
   );
 
   return {

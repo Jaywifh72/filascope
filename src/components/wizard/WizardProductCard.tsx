@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 import { getBrandLogo } from '@/lib/brandLogos';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { trackAffiliateClick as trackGA4AffiliateClick } from '@/lib/analytics';
 import type { WizardProduct } from '@/hooks/useWizardRecommendations';
 
 interface WizardProductCardProps {
@@ -76,7 +77,19 @@ export function WizardProductCard({ product }: WizardProductCardProps) {
           </Button>
           {product.buyUrl && (
             <Button size="sm" asChild className="flex-1 h-7 text-[10px] px-2 gap-1">
-              <a href={product.buyUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={product.buyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  trackGA4AffiliateClick({
+                    brand: product.vendor,
+                    productName: product.productTitle,
+                    productId: product.id || '',
+                    linkType: 'affiliate',
+                  });
+                }}
+              >
                 Buy
                 <ExternalLink className="h-2.5 w-2.5" />
               </a>

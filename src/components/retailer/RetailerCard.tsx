@@ -11,6 +11,7 @@ import { ShipsToIndicator } from "./RegionalAvailability";
 import { ShippingEstimate, formatDeliveryRange } from "@/lib/shippingZones";
 import { useUserShipping } from "@/hooks/useUserShipping";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
 
 interface RetailerCardProps {
   retailer: Retailer;
@@ -48,6 +49,16 @@ export function RetailerCard({
 
   const handleBuyClick = () => {
     if (affiliateUrl) {
+      // GA4 tracking
+      trackGA4AffiliateClick({
+        brand: retailer.name,
+        productName: retailer.name,
+        productId: retailer.slug,
+        region: preferences.country,
+        price,
+        currency,
+        linkType: isAmazon ? 'amazon' : 'affiliate',
+      });
       // DEBUG: Verify Creality URLs are using direct product links, not search
       if (retailer.name.toLowerCase().includes('creality') || affiliateUrl.includes('creality')) {
         console.log('🔗 Creality Buy Now URL:', affiliateUrl);

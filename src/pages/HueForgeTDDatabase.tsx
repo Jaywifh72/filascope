@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/accordion';
 import { FAQSchema, DatasetSchema, BreadcrumbSchema } from '@/components/seo';
 import { useCurrency } from '@/hooks/useCurrency';
+import { trackTDSearch as trackGA4TDSearch } from '@/lib/analytics';
 
 // ── FAQ data ──────────────────────────────────────────────────────────
 const faqData = [
@@ -156,6 +157,13 @@ export default function HueForgeTDDatabase() {
     });
     return result;
   }, [filaments, searchTerm, materialFilter, brandFilter, colorFilter, sortField, sortDirection]);
+
+  // GA4: track TD search when filters change
+  useEffect(() => {
+    if (searchTerm || colorFilter !== 'all') {
+      trackGA4TDSearch(colorFilter !== 'all' ? colorFilter : searchTerm, null, filteredData.length);
+    }
+  }, [searchTerm, colorFilter, filteredData.length]);
 
   // ── Top 10 most opaque ──────────────────────────────────────────────
   const top10 = useMemo(() => (filaments ? filaments.slice(0, 10) : []), [filaments]);

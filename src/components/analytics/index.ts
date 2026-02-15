@@ -6,3 +6,4 @@ export {
   initializeFullStory,
   initializeHotjar 
 } from './HeatmapReadyWrapper';
+export { GA4RouteTracker } from './GA4RouteTracker';
