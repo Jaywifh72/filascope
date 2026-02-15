@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle, ArrowRight, AlertTriangle, Clock, Download, ExternalLink, RefreshCw, Play, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, AlertTriangle, Clock, Download, ExternalLink, RefreshCw, Play, Loader2, Wrench } from 'lucide-react';
 import { downloadCSV } from '@/lib/csvExport';
 
 const REGIONS = ['US', 'CA', 'UK', 'EU', 'AU', 'JP'];
@@ -23,6 +23,8 @@ function statusBadge(status: string) {
       return <Badge variant="secondary" className="bg-yellow-600 text-white"><ArrowRight className="w-3 h-3 mr-1" />Redirect</Badge>;
     case 'timeout':
       return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Timeout</Badge>;
+    case 'fixed':
+      return <Badge variant="default" className="bg-blue-600"><Wrench className="w-3 h-3 mr-1" />Auto-Fixed</Badge>;
     default:
       return <Badge variant="outline"><AlertTriangle className="w-3 h-3 mr-1" />Error</Badge>;
   }
@@ -148,7 +150,7 @@ export function BuyButtonValidator() {
     <div className="space-y-6">
       {/* Summary Cards */}
       {latestRun && (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold">{latestRun.total_checks || 0}</div>
@@ -171,6 +173,12 @@ export function BuyButtonValidator() {
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-yellow-600">{latestRun.redirect_count || 0}</div>
               <div className="text-xs text-muted-foreground">Redirects</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600">{(latestRun as any).fixed_count || 0}</div>
+              <div className="text-xs text-muted-foreground">Auto-Fixed</div>
             </CardContent>
           </Card>
           <Card>
@@ -252,6 +260,7 @@ export function BuyButtonValidator() {
                 <SelectItem value="valid">Valid</SelectItem>
                 <SelectItem value="broken">Broken</SelectItem>
                 <SelectItem value="redirect">Redirect</SelectItem>
+                <SelectItem value="fixed">Auto-Fixed</SelectItem>
                 <SelectItem value="timeout">Timeout</SelectItem>
                 <SelectItem value="error">Error</SelectItem>
               </SelectContent>

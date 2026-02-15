@@ -9143,6 +9143,7 @@ export type Database = {
           error_count: number | null
           filter_brand: string | null
           filter_region: string | null
+          fixed_count: number | null
           id: string
           redirect_count: number | null
           started_at: string
@@ -9159,6 +9160,7 @@ export type Database = {
           error_count?: number | null
           filter_brand?: string | null
           filter_region?: string | null
+          fixed_count?: number | null
           id?: string
           redirect_count?: number | null
           started_at?: string
@@ -9175,6 +9177,7 @@ export type Database = {
           error_count?: number | null
           filter_brand?: string | null
           filter_region?: string | null
+          fixed_count?: number | null
           id?: string
           redirect_count?: number | null
           started_at?: string
