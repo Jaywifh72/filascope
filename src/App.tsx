@@ -105,6 +105,7 @@ const SyncMonitor = lazy(() => import("./pages/admin/SyncMonitor"));
 const AdminPriceImport = lazy(() => import("./pages/AdminPriceImport"));
 const AdminStores = lazy(() => import("./pages/AdminStores"));
 const AdminAffiliateHub = lazy(() => import("./pages/AdminAffiliateHub"));
+const AdminPricingData = lazy(() => import("./pages/admin/PricingData"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -227,6 +228,7 @@ const App = () => (
                   <Route path="/collections/:username/:slug" element={<PublicCollection />} />
                   <Route path="/admin" element={<NewAdminPanel />} />
                   <Route path="/admin/affiliate-hub" element={<AdminAffiliateHub />} />
+                  <Route path="/admin/pricing-data" element={<AdminPricingData />} />
                   <Route path="/admin/*" element={<AdminRedirect />} />
                   <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
                   <Route path="/old-admin/dashboard" element={<AdminDashboard />} />

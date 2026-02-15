@@ -102,6 +102,18 @@ export default function NewAdminPanel() {
                   <p className="text-xs text-muted-foreground">Programs, discount codes, campaigns & click analytics</p>
                 </div>
               </Link>
+              <Link
+                to="/admin/pricing-data"
+                className="flex items-center gap-3 p-4 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors mt-3"
+              >
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Settings className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Pricing Data</p>
+                  <p className="text-xs text-muted-foreground">Raw pricing, link health & regional price overview</p>
+                </div>
+              </Link>
             </CardContent>
           </Card>
         </div>
