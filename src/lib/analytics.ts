@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-const GA_MEASUREMENT_ID = 'G-PLACEHOLDER';
+const GA_MEASUREMENT_ID = 'G-Q96R53VCKM';
 
 let initialized = false;
 
@@ -22,9 +22,9 @@ let initialized = false;
 export function initGA() {
   if (initialized || typeof window === 'undefined') return;
 
-  // Don't initialise if the placeholder hasn't been replaced
-  if (GA_MEASUREMENT_ID === 'G-PLACEHOLDER') {
-    console.warn('[GA4] Measurement ID is still G-PLACEHOLDER – skipping initialisation.');
+  // Don't initialise if the measurement ID is missing
+  if (!GA_MEASUREMENT_ID) {
+    console.warn('[GA4] Measurement ID is not set – skipping initialisation.');
     return;
   }
 
