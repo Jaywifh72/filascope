@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { ExternalLink, Truck, Clock, ShoppingCart } from "lucide-react";
+import { ExternalLink, Truck, Clock, ShoppingCart, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Retailer } from "@/hooks/useRetailerData";
@@ -12,6 +12,7 @@ import { ShippingEstimate, formatDeliveryRange } from "@/lib/shippingZones";
 import { useUserShipping } from "@/hooks/useUserShipping";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
+import { useBrokenUrlCheck } from "@/hooks/useBrokenUrlCheck";
 
 interface RetailerCardProps {
   retailer: Retailer;
@@ -36,6 +37,7 @@ export function RetailerCard({
 }: RetailerCardProps) {
   const { preferences } = useUserShipping();
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
+  const { isBroken: isUrlBroken } = useBrokenUrlCheck(productUrl);
   
   const isAmazon = retailer.slug === 'amazon';
   const isPrimeMember = preferences.amazonPrimeMember;
@@ -160,15 +162,27 @@ export function RetailerCard({
               </div>
             )}
             
-            <Button
-              size="sm"
-              onClick={handleBuyClick}
-              disabled={stockStatus === 'out_of_stock' || !affiliateUrl}
-              className="gap-1.5"
-            >
-              {stockStatus === 'out_of_stock' ? 'Sold Out' : 'Buy'}
-              <ExternalLink className="h-3 w-3" />
-            </Button>
+            {isUrlBroken ? (
+              <div className="flex flex-col items-end gap-1">
+                <span className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertTriangle className="h-3 w-3" />
+                  Unavailable
+                </span>
+                <Button size="sm" variant="outline" disabled className="gap-1.5 opacity-60">
+                  Link Broken
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                onClick={handleBuyClick}
+                disabled={stockStatus === 'out_of_stock' || !affiliateUrl}
+                className="gap-1.5"
+              >
+                {stockStatus === 'out_of_stock' ? 'Sold Out' : 'Buy'}
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            )}
 
             {/* Return policy */}
             <div className="mt-2">

@@ -12,10 +12,11 @@ import { SyncScheduleHints } from './sync-status/SyncScheduleHints';
 import { RegionalUrlManager } from './sync-status/RegionalUrlManager';
 import { OrchestrationControl } from './sync-status/OrchestrationControl';
 import { PriceDiscrepancyQueue } from './sync-status/PriceDiscrepancyQueue';
+import { UrlHealthTab } from './sync-status/UrlHealthTab';
 
 export function SyncStatusTab() {
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined);
-  const [viewMode, setViewMode] = useState<'overview' | 'regional' | 'discrepancies'>('regional');
+  const [viewMode, setViewMode] = useState<'overview' | 'regional' | 'discrepancies' | 'url-health'>('regional');
 
   const handleBrandClick = (brandSlug: string) => {
     setBrandFilter(brandSlug);
@@ -34,11 +35,12 @@ export function SyncStatusTab() {
       <CurrentSyncStatus />
 
       {/* View Mode Toggle */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'overview' | 'regional' | 'discrepancies')}>
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'overview' | 'regional' | 'discrepancies' | 'url-health')}>
         <TabsList>
           <TabsTrigger value="regional">Regional View</TabsTrigger>
           <TabsTrigger value="overview">Brand Overview</TabsTrigger>
           <TabsTrigger value="discrepancies">Price Review</TabsTrigger>
+          <TabsTrigger value="url-health">URL Health</TabsTrigger>
         </TabsList>
 
         <TabsContent value="discrepancies" className="mt-4">
@@ -77,6 +79,10 @@ export function SyncStatusTab() {
 
           {/* Failed Products (legacy) */}
           <FailedProductsList />
+        </TabsContent>
+
+        <TabsContent value="url-health" className="mt-4">
+          <UrlHealthTab />
         </TabsContent>
       </Tabs>
     </div>
