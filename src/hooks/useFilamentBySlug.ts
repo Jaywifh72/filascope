@@ -108,7 +108,9 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
 
         // If found, update URL to SEO-friendly slug without navigation
         if (data) {
-          const slug = data.product_handle || generateFilamentSlug(
+          // ALWAYS use generateFilamentSlug (vendor-prefixed) to avoid collisions
+          // product_handle alone (e.g., "petg") is NOT unique across brands
+          const slug = generateFilamentSlug(
             data.vendor,
             data.material,
             data.product_title,
@@ -120,7 +122,7 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
             window.history.replaceState(null, '', `/filament/${slug}`);
             
             // Update product_handle in background for future lookups
-            if (!data.product_handle && slug) {
+            if (slug && data.product_handle !== slug) {
               updateProductHandle(data.id, slug);
             }
           }
@@ -158,16 +160,24 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
  * Multi-stage fallback search for slug-based lookups
  */
 async function searchBySlug(slug: string): Promise<Filament | null> {
-  // Stage 1: Exact product_handle match
+  // Stage 1: Exact product_handle match (must be unique — if multiple, use similarity)
   const { data: exactMatch, error: exactError } = await supabase
     .from('filaments')
     .select('*')
     .eq('product_handle', slug)
-    .limit(1);
+    .limit(10);
 
-  if (!exactError && exactMatch?.[0]) {
-    console.log('[useFilamentBySlug] Found by exact product_handle');
-    return exactMatch[0];
+  if (!exactError && exactMatch?.length) {
+    if (exactMatch.length === 1) {
+      console.log('[useFilamentBySlug] Found by exact product_handle (unique)');
+      return exactMatch[0];
+    }
+    // Multiple matches — use similarity scoring to pick the best one
+    const best = findBestMatch(exactMatch, slug);
+    if (best) {
+      console.log('[useFilamentBySlug] Found by exact product_handle (disambiguated from', exactMatch.length, 'matches)');
+      return best;
+    }
   }
 
   // Stage 2: Fuzzy product_handle match
@@ -272,10 +282,8 @@ async function searchByComponents(
  * Get the SEO-friendly URL for a filament
  */
 export function getFilamentSeoUrl(filament: Filament): string {
-  if (filament.product_handle) {
-    return `/filament/${filament.product_handle}`;
-  }
-  
+  // Always generate vendor-prefixed slug to avoid collisions
+  // product_handle alone (e.g., "petg") may be shared across brands
   const slug = generateFilamentSlug(
     filament.vendor,
     filament.material,
