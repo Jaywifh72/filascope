@@ -1,81 +1,108 @@
 
 
-# Geo-Redirect Bypass + Pricing Data UI Fixes
+# Fix Regional Price Sync System
 
-## Context
-The pricing data deduplication by `product_line_id` is already fully implemented. This plan addresses the remaining items: optimizing the price sync engine to skip doomed Shopify JSON attempts for geo-redirect domains, and fixing UI gaps in the admin pricing table.
+## Problem Summary
 
-## Changes
+Regional store rows (CA, UK, EU, AU) are invisible or non-functional because the database columns (`product_url_ca`, `product_url_uk`, etc.) are NULL for most multi-region brands. This cascades into three failures:
 
-### 1. `get-current-price/index.ts` -- Geo-redirect Firecrawl-first bypass
+1. **No store rows created** -- line 506 skips regions where both URL and price are NULL
+2. **No action buttons** -- lines 1463, 1481, 1497 gate Sync/Test/Link buttons behind `store.productUrl`
+3. **Batch operations silently skip** -- `testBatch` (line 786) does `if (!s.productUrl) continue`
 
-**Problem:** For non-USD currencies on geo-redirect domains (Bambu Lab, Anycubic, Creality, etc.), the Shopify JSON API always returns USD prices regardless of region headers. The function wastes time trying Shopify JSON first, then falling back to Firecrawl.
+The edge function routing (Phases 3 in your request) is already correctly implemented with `shouldAlwaysUseFirecrawl` including Bambu Lab and the geo-redirect Firecrawl-first bypass.
 
-**Fix:** Add a check before the Shopify JSON attempt: if the domain is a known geo-redirector AND the requested currency is not USD, skip straight to Firecrawl with the correct location.
+## Solution
 
-Insert after the `shouldAlwaysUseFirecrawl` check (around line 2596) and before the standard Shopify path:
+### Phase 1: Client-side URL derivation in PricingData.tsx
 
-```
-} else if (isGeoRedirectDomain(urlToFetch) && expectedCurrency !== 'USD') {
-  console.log(`Geo-redirect domain with ${expectedCurrency}, using Firecrawl directly`);
-  result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
-```
+Add a `BRAND_REGIONAL_CONFIGS` map mirroring the edge function's `REGIONAL_STORE_CONFIGS`. When constructing store rows (line 488 loop), if a region's URL column is NULL but the US URL exists, derive the regional URL using subdomain transformation.
 
-**Also:** Add `store.bambulab.com` to `shouldAlwaysUseFirecrawl` (line 1669), since their JSON API is completely disabled and always returns errors:
-
+**New config (added near line 120):**
 ```typescript
-const unreliableJsonStores = ['amolen.com', 'store.bambulab.com'];
+const BRAND_REGIONAL_CONFIGS: Record<string, {
+  pattern: 'subdomain';
+  baseDomain: string;
+  regions: Record<string, { subdomain?: string; domain?: string }>;
+}> = {
+  'Bambu Lab':    { pattern: 'subdomain', baseDomain: 'store.bambulab.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' }, JP: { subdomain: 'jp' } } },
+  'Polymaker':    { pattern: 'subdomain', baseDomain: 'polymaker.com', regions: { CA: { subdomain: 'ca' }, EU: { subdomain: 'eu' } } },
+  'Elegoo':       { pattern: 'subdomain', baseDomain: 'elegoo.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
+  'Anycubic':     { pattern: 'subdomain', baseDomain: 'anycubic.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { domain: 'www.anycubic.au' } } },
+};
 ```
 
-### 2. `_shared/regional-fetch.ts` -- Export helper
-
-Add a convenience function that edge functions can use to check if a URL+currency combo should bypass Shopify JSON:
-
+**New derivation function:**
 ```typescript
-export function shouldUseFirecrawlForRegion(url: string, currency: string): boolean {
-  return isGeoRedirectDomain(url) && currency !== 'USD';
+function deriveRegionalUrl(usUrl: string, vendor: string, region: string): string | null {
+  const config = BRAND_REGIONAL_CONFIGS[vendor];
+  if (!config || !config.regions[region]) return null;
+  try {
+    const urlObj = new URL(usUrl);
+    const regionConfig = config.regions[region];
+    if (regionConfig.domain) {
+      urlObj.hostname = regionConfig.domain;
+    } else if (regionConfig.subdomain) {
+      const parts = urlObj.hostname.split('.');
+      if (parts.length >= 3) parts[0] = regionConfig.subdomain;
+      else parts.unshift(regionConfig.subdomain);
+      urlObj.hostname = parts.join('.');
+    }
+    return urlObj.toString().replace(/[?#].*$/, '');
+  } catch { return null; }
 }
 ```
 
-### 3. `PricingData.tsx` -- Show extraction source in sync results
+**Modify the store row loop (line 488-535):**
 
-**Problem:** Admins cannot see which extraction method was used (Shopify JSON vs Firecrawl) after a price sync.
+- Track the US URL from the first iteration
+- When `url` is NULL for a non-US region, attempt `deriveRegionalUrl(usUrl, vendor, region)`
+- Remove the `if (!url && price == null) continue;` guard -- instead, only skip if there's no URL (database or derived) AND no price
+- Add `isDerived?: boolean` to `StoreRow` interface to flag derived URLs
 
-**Fix:** The `get-current-price` response already includes a `source` field ('shopify' or 'firecrawl'). Capture it in the `SyncResult` type and display it as a small badge next to the synced price.
+### Phase 2: Fix batch operations
 
-- Add `source?: string` and `location?: string` to the `SyncResult` interface
-- Store `data.source` from the edge function response into the sync result
-- Show a small "Firecrawl" or "Shopify" badge in the price cell after sync, with the region location if Firecrawl was used
+**testBatch (line 786):** Replace silent skip with a count of skipped stores. After the loop, if any were skipped, show a toast: "X stores skipped (no URL available)".
 
-### 4. `PricingData.tsx` -- Regional store rows already have action buttons
+**syncSinglePrice (line 821):** Already correctly early-returns for null URLs. With Phase 1 providing derived URLs, this will now work for all stores.
 
-After reviewing the code (lines 1425-1468), the child store rows already have sync, test, and external link buttons. No fix needed here -- the buttons are present for all rows that have a `productUrl`.
+### Phase 3: UI for derived URLs
 
----
+- Action buttons (lines 1462-1504): Already gated on `store.productUrl` -- with derived URLs populating this field, buttons will appear automatically
+- Add a small "derived" badge (italic link icon or `🔗` next to the hostname tooltip) when `store.isDerived` is true, so admins know the URL was computed, not stored in the database
+- Add a "Generate Regional URLs" button in the toolbar that calls `populate-regional-urls` to permanently write derived URLs to the database
+
+### Phase 4: Edge function -- already done
+
+The geo-redirect bypass and Bambu Lab Firecrawl-first routing are already correctly implemented:
+- `shouldAlwaysUseFirecrawl` includes `store.bambulab.com` (line 1669)
+- Geo-redirect + non-USD check at line 2597
+- `transformToRegionalUrl` handles subdomain swapping (line 150)
+
+No edge function changes needed.
 
 ## Technical Details
 
 ### Files Modified
 
-1. **`supabase/functions/get-current-price/index.ts`**
-   - Line 1669: Add `'store.bambulab.com'` to `unreliableJsonStores` array
-   - Lines 2596-2600: Insert geo-redirect Firecrawl-first condition before the standard Shopify path
+1. **`src/pages/admin/PricingData.tsx`**
+   - Add `isDerived?: boolean` to `StoreRow` interface (line 66)
+   - Add `BRAND_REGIONAL_CONFIGS` constant (after line 120)
+   - Add `deriveRegionalUrl()` function
+   - Modify store row construction loop (lines 488-535): derive URLs when database column is NULL
+   - Remove strict skip guard (line 506): allow rows with derived URLs
+   - Update `testBatch` (line 786): count and report skipped stores instead of silent skip
+   - Add derived URL indicator in store row tooltip (line 1404)
+   - Add "Generate Regional URLs" button in toolbar
 
-2. **`supabase/functions/_shared/regional-fetch.ts`**
-   - Add exported `shouldUseFirecrawlForRegion(url, currency)` helper function
+### No Database or Edge Function Changes
 
-3. **`src/pages/admin/PricingData.tsx`**
-   - Update `SyncResult` interface to include `source?: string`
-   - Capture `data.source` in `syncSinglePrice` callback
-   - Display extraction source badge in the price cell after sync
+All changes are frontend-only. The edge function already handles URL transformation server-side via `transformToRegionalUrl`, so even if the client passes a US URL with a CAD currency, the edge function will transform it. However, deriving the correct regional URL client-side is preferable because:
+- The admin sees the actual URL that will be fetched
+- Test link calls go to the correct regional domain
+- External link opens the correct regional store
 
-### No Database Changes
+### Expected Result
 
-All changes are to edge function routing logic and admin UI display.
-
-### Impact
-
-- Non-USD syncs on geo-redirect domains (Bambu Lab, Anycubic, Creality, eSUN, etc.) will complete faster by skipping the failing Shopify JSON attempt
-- Bambu Lab US syncs will also go straight to Firecrawl since their JSON API is disabled
-- Admins gain visibility into which extraction method produced each price
-
+Before: Expanding "Bambu Lab ABS" shows 1 US row with action buttons, other regions missing.
+After: Expanding shows US + CA + UK + EU + AU + JP rows, all with Sync/Test/Link buttons. Derived URLs shown with a `🔗` indicator. Batch "Test Selected (6)" tests all 6 regions.
