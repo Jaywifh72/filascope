@@ -978,7 +978,7 @@ export default function PricingData() {
       });
 
       if (rpcError) {
-        const errorMsg = rpcError.message?.includes('Unauthorized') ? 'Admin access required' : 'Failed to save price';
+        const errorMsg = rpcError.message?.includes('Unauthorized') ? 'Admin access required' : `Save failed: ${rpcError.message || 'Unknown error'}`;
         const result: SyncResult = { status: 'failed', error: errorMsg };
         setSyncResults(prev => new Map(prev).set(store.storeKey, result));
         if (showToast) toast.error(`✗ ${errorMsg}`);

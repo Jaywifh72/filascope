@@ -145,7 +145,7 @@ export function useAdminPriceRefresh(
       if (rpcError) {
         const errorMsg = rpcError.message?.includes('Unauthorized') 
           ? 'Admin access required' 
-          : 'Failed to save price to database';
+          : `Save failed: ${rpcError.message || 'Unknown error'}`;
         console.error('RPC error:', rpcError);
         setLastRefreshError(errorMsg);
         setIsRefreshing(false);

@@ -2112,22 +2112,36 @@ async function fetchPriceWithFirecrawl(
   const useMainContentOnly = !isCreality;
   
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: productUrl,
-        formats: ['markdown'],
-        onlyMainContent: useMainContentOnly,
-        waitFor: isCreality ? 5000 : 3000, // Wait longer for Creality dynamic content
-        location: location,
-      }),
-    });
+    const MAX_FIRECRAWL_RETRIES = 2;
+    let response: Response | null = null;
     
-    if (!response.ok) {
+    for (let attempt = 0; attempt <= MAX_FIRECRAWL_RETRIES; attempt++) {
+      response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: productUrl,
+          formats: ['markdown'],
+          onlyMainContent: useMainContentOnly,
+          waitFor: isCreality ? 5000 : 3000,
+          location: location,
+        }),
+      });
+      
+      if (response.ok) break;
+      
+      // Retry only on 5xx errors
+      if (attempt < MAX_FIRECRAWL_RETRIES && [500, 502, 503].includes(response.status)) {
+        const delayMs = 2000 * (attempt + 1);
+        console.log(`Firecrawl returned ${response.status}, retrying (${attempt + 1}/${MAX_FIRECRAWL_RETRIES}) after ${delayMs}ms...`);
+        await new Promise(r => setTimeout(r, delayMs));
+        continue;
+      }
+      
+      // Final failure or non-retryable error
       const errorText = await response.text();
       console.error(`Firecrawl API error: ${response.status} - ${errorText}`);
       return {
