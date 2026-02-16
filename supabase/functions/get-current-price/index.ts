@@ -1968,6 +1968,7 @@ async function fetchPriceWithFirecrawl(
   console.log('URL:', productUrl);
   console.log('Location:', location.country);
   console.log('Currency:', preferredCurrency);
+  console.log('Reason:', isGeoRedirectDomain(productUrl) ? 'geo-redirect-bypass' : 'standard');
   
   // For Creality stores, disable onlyMainContent as their pricing section is often excluded
   const isCreality = productUrl.includes('store.creality.com');
