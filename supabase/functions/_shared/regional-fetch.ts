@@ -58,6 +58,8 @@ const GEO_REDIRECT_DOMAINS = [
   'anycubic.com',
   'store.creality.com',
   'creality.com',
+  'qidi3d.com',
+  'flashforge.com',
 ];
 
 export type FetchMethod = 'direct' | 'spoofed' | 'redirected';

@@ -32,6 +32,7 @@ interface TestResult {
   error?: string;
   fetchMethod?: 'direct' | 'spoofed' | 'redirected';
   isGeoRedirected?: boolean;
+  isKnownGeoRedirect?: boolean;
 }
 
 interface SyncResult {
@@ -208,12 +209,22 @@ function getTestResultBadge(result: TestResult | undefined) {
           <TooltipTrigger asChild>
             <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] gap-1 cursor-default">
               <CheckCircle2 className="w-3 h-3" /> {result.statusCode} · {result.latencyMs}ms
-              {bypassLabel && <span className="ml-0.5 opacity-70">({bypassLabel})</span>}
+              {result.isKnownGeoRedirect && <span className="ml-0.5">🌐</span>}
+              {bypassLabel && !result.isKnownGeoRedirect && <span className="ml-0.5 opacity-70">({bypassLabel})</span>}
             </Badge>
           </TooltipTrigger>
           <TooltipContent>
-            HTTP {result.statusCode} — {result.latencyMs}ms response
-            {bypassLabel && <p className="text-[10px] mt-0.5">Accessed via {result.fetchMethod} headers to bypass geo-restrictions</p>}
+            {result.isKnownGeoRedirect ? (
+              <>
+                <p>URL is valid. Geo-redirect detected (expected for this brand's regional stores).</p>
+                <p className="text-[10px] mt-0.5">Price sync uses Firecrawl to access the correct region.</p>
+              </>
+            ) : (
+              <>
+                HTTP {result.statusCode} — {result.latencyMs}ms response
+                {bypassLabel && <p className="text-[10px] mt-0.5">Accessed via {result.fetchMethod} headers to bypass geo-restrictions</p>}
+              </>
+            )}
           </TooltipContent>
         </Tooltip>
       );
@@ -770,8 +781,9 @@ export default function PricingData() {
       let result: TestResult;
       const fetchMethod = data.fetchMethod as TestResult['fetchMethod'];
       const isGeoRedirected = !!data.isGeoRedirected;
+      const isKnownGeoRedirect = !!data.isKnownGeoRedirect;
       if (data.ok) {
-        result = { status: isGeoRedirected ? 'geo_restricted' : 'ok', statusCode: data.statusCode, latencyMs, fetchMethod, isGeoRedirected };
+        result = { status: isGeoRedirected ? 'geo_restricted' : 'ok', statusCode: data.statusCode, latencyMs, fetchMethod, isGeoRedirected, isKnownGeoRedirect };
       } else if (data.isRedirect) {
         result = { status: 'redirect', statusCode: data.statusCode, latencyMs, redirectUrl: data.redirectLocation, fetchMethod, isGeoRedirected };
       } else {
@@ -797,7 +809,8 @@ export default function PricingData() {
         const variantCount = entry.store.allFilamentIds.length;
         if (showToast) {
           const methodNote = result.fetchMethod && result.fetchMethod !== 'direct' ? ` (${result.fetchMethod})` : '';
-          if (result.status === 'ok') toast.success(`✅ Link active (${result.statusCode}) — ${latencyMs}ms${methodNote}${variantCount > 1 ? ` · covers ${variantCount} variants` : ''}`);
+          if (result.status === 'ok' && result.isKnownGeoRedirect) toast.success(`✅ Link valid (geo-redirect expected) — ${latencyMs}ms${variantCount > 1 ? ` · covers ${variantCount} variants` : ''}`);
+          else if (result.status === 'ok') toast.success(`✅ Link active (${result.statusCode}) — ${latencyMs}ms${methodNote}${variantCount > 1 ? ` · covers ${variantCount} variants` : ''}`);
           else if (result.status === 'geo_restricted') toast.warning(`🌐 Geo-restricted${methodNote}`);
           else if (result.status === 'redirect') toast.warning(`⚠️ Redirect (${result.statusCode})${result.isGeoRedirected ? ' — geo-redirect' : ''}`);
           else toast.error(`❌ Link broken (${result.statusCode || result.error})`);
