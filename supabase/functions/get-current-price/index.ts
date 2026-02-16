@@ -1776,6 +1776,53 @@ function buildCurrencyPricePattern(currency: string): RegExp {
   );
 }
 
+// Split markdown into main product section (before cross-sell/accessory widgets)
+function getMainProductSection(markdown: string): string {
+  const cutoffPatterns = [
+    /(?:frequently\s+bought\s+together|discover\s+more|you\s+may\s+also\s+like|related\s+products|customers\s+also\s+bought|recommended\s+for\s+you)/i,
+    /support\s+for\s+\w+.*?\$/i,
+    /add\s+to\s+cart/i,
+  ];
+  
+  let cutoff = markdown.length;
+  for (const pattern of cutoffPatterns) {
+    const match = markdown.search(pattern);
+    if (match > 0 && match < cutoff) {
+      cutoff = match;
+    }
+  }
+  
+  // Use at least the first 40% of the page if markers found too early
+  const minLength = Math.floor(markdown.length * 0.4);
+  if (cutoff < minLength) {
+    cutoff = minLength;
+  }
+  
+  return markdown.substring(0, cutoff);
+}
+
+// Helper: extract first valid price from matches (by page position, not lowest)
+function extractFirstValidPrice(
+  matches: RegExpMatchArray[],
+  currency: string,
+  groupIndex: number = 1,
+  altGroupIndex?: number
+): { price: number; compareAt: number | null } | null {
+  const prices = matches
+    .map(m => {
+      const raw = m[groupIndex] || (altGroupIndex !== undefined ? m[altGroupIndex] : undefined);
+      if (!raw) return NaN;
+      return parseFloat(raw.replace(',', currency === 'JPY' ? '' : '.'));
+    })
+    .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, currency));
+  
+  if (prices.length === 0) return null;
+  
+  const price = prices[0]; // First by page position
+  const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
+  return { price, compareAt };
+}
+
 // Legacy: Extract price from Bambu Lab and generic stores
 function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   price: number | null;
@@ -1785,15 +1832,16 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
 } {
   console.log(`Extracting price from content, preferred currency: ${preferredCurrency}`);
   
+  const upperMarkdown = getMainProductSection(markdown);
+  console.log(`Main product section: ${upperMarkdown.length} of ${markdown.length} chars (${Math.round(upperMarkdown.length / markdown.length * 100)}%)`);
+  
   const currencyPatterns = ['EUR', 'GBP', 'CAD', 'USD', 'AUD', 'JPY'];
   
   // PRIORITY 1: Look for prices in the preferred currency FIRST
-  // This handles formats like "From €22.99 EUR" or "€22.99"
   const preferredSymbol = getCurrencySymbol(preferredCurrency);
   
   // EUR-specific patterns for Bambu Lab EU store
   if (preferredCurrency === 'EUR') {
-    // Pattern: "From €22.99 EUR" or "€22.99 EUR" or just "€22.99"
     const eurPatterns = [
       /From\s*€\s*([\d,]+(?:\.\d{2})?)\s*EUR/gi,
       /€\s*([\d,]+(?:\.\d{2})?)\s*EUR/gi,
@@ -1801,19 +1849,20 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
     ];
     
     for (const pattern of eurPatterns) {
-      const matches = [...markdown.matchAll(pattern)];
-      if (matches.length > 0) {
-        const prices = matches
-          .map(m => parseFloat(m[1].replace(',', '.')))
-          .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, 'EUR'))
-          .sort((a, b) => a - b);
-        
-        if (prices.length > 0) {
-          const price = prices[0];
-          const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
-          console.log(`Found EUR price: €${price}${compareAt ? `, compare-at: €${compareAt}` : ''}`);
-          return { price, compareAtPrice: compareAt, currency: 'EUR', available: true };
-        }
+      // Try upper section first
+      const upperMatches = [...upperMarkdown.matchAll(new RegExp(pattern.source, pattern.flags))];
+      const upperResult = extractFirstValidPrice(upperMatches, 'EUR');
+      if (upperResult) {
+        console.log(`Found EUR price (upper section): €${upperResult.price}${upperResult.compareAt ? `, compare-at: €${upperResult.compareAt}` : ''}`);
+        return { price: upperResult.price, compareAtPrice: upperResult.compareAt, currency: 'EUR', available: true };
+      }
+      
+      // Fall back to full page
+      const fullMatches = [...markdown.matchAll(new RegExp(pattern.source, pattern.flags))];
+      const fullResult = extractFirstValidPrice(fullMatches, 'EUR');
+      if (fullResult) {
+        console.log(`Found EUR price (full page): €${fullResult.price}${fullResult.compareAt ? `, compare-at: €${fullResult.compareAt}` : ''}`);
+        return { price: fullResult.price, compareAtPrice: fullResult.compareAt, currency: 'EUR', available: true };
       }
     }
   }
@@ -1827,42 +1876,53 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
     ];
     
     for (const pattern of gbpPatterns) {
-      const matches = [...markdown.matchAll(pattern)];
-      if (matches.length > 0) {
-        const prices = matches
-          .map(m => parseFloat(m[1].replace(',', '.')))
-          .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, 'GBP'))
-          .sort((a, b) => a - b);
-        
-        if (prices.length > 0) {
-          const price = prices[0];
-          const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
-          console.log(`Found GBP price: £${price}${compareAt ? `, compare-at: £${compareAt}` : ''}`);
-          return { price, compareAtPrice: compareAt, currency: 'GBP', available: true };
-        }
+      const upperMatches = [...upperMarkdown.matchAll(new RegExp(pattern.source, pattern.flags))];
+      const upperResult = extractFirstValidPrice(upperMatches, 'GBP');
+      if (upperResult) {
+        console.log(`Found GBP price (upper section): £${upperResult.price}${upperResult.compareAt ? `, compare-at: £${upperResult.compareAt}` : ''}`);
+        return { price: upperResult.price, compareAtPrice: upperResult.compareAt, currency: 'GBP', available: true };
+      }
+      
+      const fullMatches = [...markdown.matchAll(new RegExp(pattern.source, pattern.flags))];
+      const fullResult = extractFirstValidPrice(fullMatches, 'GBP');
+      if (fullResult) {
+        console.log(`Found GBP price (full page): £${fullResult.price}${fullResult.compareAt ? `, compare-at: £${fullResult.compareAt}` : ''}`);
+        return { price: fullResult.price, compareAtPrice: fullResult.compareAt, currency: 'GBP', available: true };
       }
     }
   }
   
   // Pattern for USD/CAD/AUD with $ symbol and currency code
   if (['USD', 'CAD', 'AUD'].includes(preferredCurrency)) {
-    // Look for "$22.99 USD" format first
     const dollarWithCodePattern = new RegExp(
       `From\\s*\\$\\s*([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}|\\$\\s*([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}`,
       'gi'
     );
     
-    const matches = [...markdown.matchAll(dollarWithCodePattern)];
-    if (matches.length > 0) {
-      const prices = matches
+    // Try upper section first
+    const upperMatches = [...upperMarkdown.matchAll(new RegExp(dollarWithCodePattern.source, dollarWithCodePattern.flags))];
+    if (upperMatches.length > 0) {
+      const prices = upperMatches
         .map(m => parseFloat((m[1] || m[2]).replace(',', '')))
-        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, preferredCurrency))
-        .sort((a, b) => a - b);
-      
+        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, preferredCurrency));
       if (prices.length > 0) {
         const price = prices[0];
         const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
-        console.log(`Found ${preferredCurrency} price: $${price}${compareAt ? `, compare-at: $${compareAt}` : ''}`);
+        console.log(`Found ${preferredCurrency} price (upper section): $${price}${compareAt ? `, compare-at: $${compareAt}` : ''}`);
+        return { price, compareAtPrice: compareAt, currency: preferredCurrency, available: true };
+      }
+    }
+    
+    // Fall back to full page
+    const fullMatches = [...markdown.matchAll(new RegExp(dollarWithCodePattern.source, dollarWithCodePattern.flags))];
+    if (fullMatches.length > 0) {
+      const prices = fullMatches
+        .map(m => parseFloat((m[1] || m[2]).replace(',', '')))
+        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, preferredCurrency));
+      if (prices.length > 0) {
+        const price = prices[0];
+        const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
+        console.log(`Found ${preferredCurrency} price (full page): $${price}${compareAt ? `, compare-at: $${compareAt}` : ''}`);
         return { price, compareAtPrice: compareAt, currency: preferredCurrency, available: true };
       }
     }
@@ -1883,38 +1943,51 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   
   // PRIORITY 3: Try other currencies as fallback
   for (const cur of currencyPatterns) {
-    if (cur === preferredCurrency) continue; // Already tried
+    if (cur === preferredCurrency) continue;
     
     const symbol = getCurrencySymbol(cur);
     const escapedSymbol = symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const fallbackPattern = new RegExp(`${escapedSymbol}\\s*([\\d,]+(?:\\.\\d{2})?)(?:\\s*${cur})?`, 'g');
     
-    const matches = [...markdown.matchAll(fallbackPattern)];
-    if (matches.length > 0) {
-      const prices = matches
-        .map(m => parseFloat(m[1].replace(',', '.')))
-        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, cur))
-        .sort((a, b) => a - b);
-      
-      if (prices.length > 0) {
-        const price = prices[0];
-        const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
-        console.log(`Found ${cur} price (fallback): ${symbol}${price}${compareAt ? `, compare-at: ${symbol}${compareAt}` : ''}`);
-        return { price, compareAtPrice: compareAt, currency: cur, available: true };
-      }
+    // Try upper section first
+    const upperMatches = [...upperMarkdown.matchAll(new RegExp(fallbackPattern.source, fallbackPattern.flags))];
+    const upperResult = extractFirstValidPrice(upperMatches, cur);
+    if (upperResult) {
+      console.log(`Found ${cur} price (upper section, fallback): ${symbol}${upperResult.price}${upperResult.compareAt ? `, compare-at: ${symbol}${upperResult.compareAt}` : ''}`);
+      return { price: upperResult.price, compareAtPrice: upperResult.compareAt, currency: cur, available: true };
+    }
+    
+    // Fall back to full page
+    const fullMatches = [...markdown.matchAll(new RegExp(fallbackPattern.source, fallbackPattern.flags))];
+    const fullResult = extractFirstValidPrice(fullMatches, cur);
+    if (fullResult) {
+      console.log(`Found ${cur} price (full page, fallback): ${symbol}${fullResult.price}${fullResult.compareAt ? `, compare-at: ${symbol}${fullResult.compareAt}` : ''}`);
+      return { price: fullResult.price, compareAtPrice: fullResult.compareAt, currency: cur, available: true };
     }
   }
   
   // PRIORITY 4: Last resort - any price with $ symbol and validation
+  // Try upper section first
+  const upperDollarPrices = [...upperMarkdown.matchAll(/\$([0-9,]+(?:\.[0-9]{2})?)/g)]
+    .map(m => parseFloat(m[1].replace(',', '')))
+    .filter(p => validateFilamentPrice(p));
+  
+  if (upperDollarPrices.length > 0) {
+    const price = upperDollarPrices[0];
+    const compareAtPrice = upperDollarPrices.length > 1 && upperDollarPrices[1] > price * 1.1 ? upperDollarPrices[1] : null;
+    console.log(`Found generic USD price (upper section): $${price}${compareAtPrice ? `, compare-at: $${compareAtPrice}` : ''}`);
+    return { price, compareAtPrice, currency: 'USD', available: true };
+  }
+  
+  // Fall back to full page
   const allDollarPrices = [...markdown.matchAll(/\$([0-9,]+(?:\.[0-9]{2})?)/g)]
     .map(m => parseFloat(m[1].replace(',', '')))
-    .filter(p => validateFilamentPrice(p))
-    .sort((a, b) => a - b);
+    .filter(p => validateFilamentPrice(p));
   
   if (allDollarPrices.length > 0) {
     const price = allDollarPrices[0];
     const compareAtPrice = allDollarPrices.length > 1 && allDollarPrices[1] > price * 1.1 ? allDollarPrices[1] : null;
-    console.log(`Found generic USD price (filtered): $${price}${compareAtPrice ? `, compare-at: $${compareAtPrice}` : ''}`);
+    console.log(`Found generic USD price (full page): $${price}${compareAtPrice ? `, compare-at: $${compareAtPrice}` : ''}`);
     return { price, compareAtPrice, currency: 'USD', available: true };
   }
   
