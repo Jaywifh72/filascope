@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download, ChevronRight, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download, ChevronRight, ChevronDown, ChevronsUpDown, Palette } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { downloadCSV } from '@/lib/csvExport';
@@ -42,11 +42,15 @@ interface SyncResult {
   error?: string;
 }
 
-/** One store entry (region) for a product */
+/** One store entry (region) for a product group */
 interface StoreRow {
-  /** Unique key: `${filamentId}::${region}` */
+  /** Unique key: `${productLineId}::${region}` */
   storeKey: string;
-  filamentId: string;
+  productLineId: string;
+  /** Representative filament ID for this group (used for price sync RPC) */
+  representativeId: string;
+  /** All filament IDs in this product group */
+  allFilamentIds: string[];
   region: string;
   regionFlag: string;
   storeName: string;
@@ -61,13 +65,26 @@ interface StoreRow {
   netWeightG: number | null;
 }
 
-/** Parent product group */
+/** Parent product group (grouped by product_line_id) */
 interface ProductGroup {
-  filamentId: string;
+  productLineId: string;
+  /** Representative filament ID */
+  representativeId: string;
   productTitle: string;
+  /** Clean product name (without color suffix) */
+  cleanName: string;
   vendor: string;
   material: string | null;
+  variantCount: number;
+  colorCount: number;
+  colorHexes: string[];
+  /** All filament IDs in the group */
+  allFilamentIds: string[];
   stores: StoreRow[];
+  /** Price range */
+  minPrice: number | null;
+  maxPrice: number | null;
+  hasPriceRange: boolean;
   /** Summary counts */
   activeCount: number;
   staleCount: number;
@@ -96,6 +113,17 @@ const REGION_FIELD_MAP: { region: string; priceField: string; urlField: string }
   { region: 'AU', priceField: 'price_aud', urlField: 'product_url_au' },
   { region: 'JP', priceField: 'price_jpy', urlField: 'product_url_jp' },
 ];
+
+// =============================================
+// Helper: strip color suffix from product names
+// =============================================
+
+const COLOR_SUFFIXES_RE = /\s*-\s*(Black|White|Red|Blue|Green|Yellow|Orange|Gray|Grey|Silver|Gold|Purple|Pink|Brown|Clear|Natural|Transparent|Matte|Silk|Rainbow|Multicolor|Jade White|Bambu Green|Arctic Blue|Charcoal|Ivory|Scarlet|Crimson|Navy|Olive|Beige|Burgundy|Teal|Coral|Lavender|Mint|Slate|Maroon|Indigo|Cyan|Magenta|Lime|Peach|Aqua|Tan|Khaki|Mauve|Fuchsia|Turquoise|Violet|Amber|Copper|Bronze|Champagne|Rose|Sand|Forest|Ocean|Sky|Midnight|Sunrise|Sunset|Neon|Pastel|Military|Camo|Chrome|Platinum|Titanium|Mercury|Pewter).*$/i;
+
+function cleanProductName(title: string): string {
+  const cleaned = title.replace(COLOR_SUFFIXES_RE, '').trim();
+  return cleaned || title;
+}
 
 // =============================================
 // Helper components
@@ -249,6 +277,30 @@ function StatusSummary({ group }: { group: ProductGroup }) {
   );
 }
 
+/** Small color swatch circles */
+function ColorSwatches({ hexes, max = 10 }: { hexes: string[]; max?: number }) {
+  const displayed = hexes.slice(0, max);
+  const remaining = hexes.length - max;
+  return (
+    <div className="flex items-center gap-0.5 flex-wrap">
+      {displayed.map((hex, i) => (
+        <Tooltip key={i}>
+          <TooltipTrigger asChild>
+            <div
+              className="w-3.5 h-3.5 rounded-full border border-border/50 cursor-default"
+              style={{ backgroundColor: hex }}
+            />
+          </TooltipTrigger>
+          <TooltipContent>{hex}</TooltipContent>
+        </Tooltip>
+      ))}
+      {remaining > 0 && (
+        <span className="text-[9px] text-muted-foreground ml-0.5">+{remaining}</span>
+      )}
+    </div>
+  );
+}
+
 // =============================================
 // Main Component
 // =============================================
@@ -263,18 +315,18 @@ export default function PricingData() {
   const [syncResults, setSyncResults] = useState<Map<string, SyncResult>>(new Map());
   const [bulkTesting, setBulkTesting] = useState(false);
   const [bulkSyncing, setBulkSyncing] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
-  const [bulkSyncProgress, setBulkSyncProgress] = useState<{ done: number; total: number } | null>(null);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; variants?: number } | null>(null);
+  const [bulkSyncProgress, setBulkSyncProgress] = useState<{ done: number; total: number; variants?: number } | null>(null);
   const abortRef = useRef(false);
   const abortSyncRef = useRef(false);
   const queryClient = useQueryClient();
 
   // =============================================
-  // Data fetching
+  // Data fetching — grouped by product_line_id
   // =============================================
 
-  const { data: filaments, isLoading: filamentsLoading } = useQuery({
-    queryKey: ['admin-pricing-data'],
+  const { data: rawFilaments, isLoading: filamentsLoading } = useQuery({
+    queryKey: ['admin-pricing-data-grouped'],
     queryFn: async () => {
       const allData: any[] = [];
       const pageSize = 1000;
@@ -283,8 +335,8 @@ export default function PricingData() {
       while (hasMore) {
         const { data, error } = await supabase
           .from('filaments')
-          .select('id, product_title, vendor, material, variant_price, variant_compare_at_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, last_scraped_at, price_confidence, net_weight_g')
-          .not('variant_price', 'is', null)
+          .select('id, product_line_id, product_title, vendor, material, variant_price, variant_compare_at_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, last_scraped_at, price_confidence, net_weight_g, color_hex')
+          .not('product_line_id', 'is', null)
           .order('vendor', { ascending: true })
           .order('product_title', { ascending: true })
           .range(from, from + pageSize - 1);
@@ -385,64 +437,136 @@ export default function PricingData() {
   }
 
   // =============================================
-  // Build grouped data: ProductGroup[]
+  // Group raw filaments by product_line_id
   // =============================================
 
+  const totalVariantCount = rawFilaments?.length || 0;
+
   const productGroups: ProductGroup[] = useMemo(() => {
-    if (!filaments) return [];
+    if (!rawFilaments) return [];
 
-    return filaments.map((f: any) => {
-      const change = priceChanges?.get(f.id) || null;
+    // Group by product_line_id
+    const grouped = new Map<string, any[]>();
+    for (const f of rawFilaments) {
+      const key = f.product_line_id;
+      if (!key) continue;
+      const arr = grouped.get(key) || [];
+      arr.push(f);
+      grouped.set(key, arr);
+    }
+
+    const groups: ProductGroup[] = [];
+    for (const [productLineId, variants] of grouped) {
+      const rep = variants[0]; // representative variant
+      const allIds = variants.map((v: any) => v.id);
+      const colorHexes = [...new Set(variants.map((v: any) => v.color_hex).filter(Boolean))] as string[];
+      
+      // Clean product name
+      const cleanName = cleanProductName(rep.product_title || '');
+      
+      // Price range across variants
+      const prices = variants.map((v: any) => v.variant_price).filter((p: any) => p != null) as number[];
+      const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+      const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
+      const hasPriceRange = minPrice != null && maxPrice != null && Math.abs(maxPrice - minPrice) > 0.01;
+
+      // Get representative price change (use first variant with a change)
+      let repChange: ProductGroup['stores'][0]['priceChange'] = null;
+      for (const v of variants) {
+        const c = priceChanges?.get(v.id);
+        if (c && c.direction !== 'unchanged') { repChange = c; break; }
+      }
+
+      // Build store rows - use representative variant for each region
+      // For URLs, pick the first non-null URL across variants (they should all be the same base URL)
       const stores: StoreRow[] = [];
-
       for (const { region, priceField, urlField } of REGION_FIELD_MAP) {
-        const price = f[priceField] as number | null;
-        const url = f[urlField] as string | null;
-        // Only include regions that have a URL or price
+        // Aggregate across variants: take first non-null URL, representative price
+        let url: string | null = null;
+        let price: number | null = null;
+        let compareAtPrice: number | null = null;
+        let lastScrapedAt: string | null = null;
+        let netWeightG: number | null = null;
+
+        for (const v of variants) {
+          if (!url && v[urlField]) url = v[urlField];
+          if (price == null && v[priceField] != null) {
+            price = v[priceField];
+            if (region === 'US') {
+              compareAtPrice = v.variant_compare_at_price;
+              lastScrapedAt = v.last_scraped_at;
+              netWeightG = v.net_weight_g;
+            }
+          }
+        }
+
         if (!url && price == null) continue;
 
+        // Strip variant params from URL for testing
+        const baseUrl = url ? url.replace(/[?#].*$/, '') : null;
+
         const rc = REGION_CONFIG[region];
-        const storeKey = `${f.id}::${region}`;
-        // For US, use the product-level price change. For other regions, no change data yet.
-        const storeChange = region === 'US' ? change : null;
+        const storeKey = `${productLineId}::${region}`;
+        const storeChange = region === 'US' ? repChange : null;
         const changePct = storeChange?.percent ?? null;
 
         stores.push({
           storeKey,
-          filamentId: f.id,
+          productLineId,
+          representativeId: rep.id,
+          allFilamentIds: allIds,
           region,
           regionFlag: rc.flag,
-          storeName: `${f.vendor} ${rc.label}`,
+          storeName: `${rep.vendor} ${rc.label}`,
           price,
-          compareAtPrice: region === 'US' ? f.variant_compare_at_price : null,
+          compareAtPrice,
           currency: rc.currency,
           currencySymbol: rc.symbol,
-          productUrl: url,
-          lastScrapedAt: region === 'US' ? f.last_scraped_at : null,
-          linkStatus: computeLinkStatus(url, changePct),
+          productUrl: baseUrl,
+          lastScrapedAt,
+          linkStatus: computeLinkStatus(baseUrl, changePct),
           priceChange: storeChange,
-          netWeightG: f.net_weight_g,
+          netWeightG,
         });
       }
+
+      if (stores.length === 0 && prices.length === 0) continue;
 
       const activeCount = stores.filter(s => s.linkStatus === 'active').length;
       const staleCount = stores.filter(s => s.linkStatus === 'stale' || s.linkStatus === 'unknown').length;
       const brokenCount = stores.filter(s => s.linkStatus === 'broken').length;
       const alertCount = stores.filter(s => s.linkStatus === 'alert').length;
 
-      return {
-        filamentId: f.id,
-        productTitle: f.product_title,
-        vendor: f.vendor,
-        material: f.material,
+      groups.push({
+        productLineId,
+        representativeId: rep.id,
+        productTitle: rep.product_title,
+        cleanName,
+        vendor: rep.vendor,
+        material: rep.material,
+        variantCount: variants.length,
+        colorCount: colorHexes.length,
+        colorHexes,
+        allFilamentIds: allIds,
         stores,
+        minPrice,
+        maxPrice,
+        hasPriceRange,
         activeCount,
         staleCount,
         brokenCount,
         alertCount,
-      } as ProductGroup;
-    }).filter((g: ProductGroup) => g.stores.length > 0);
-  }, [filaments, urlCache, priceChanges]);
+      });
+    }
+
+    groups.sort((a, b) => {
+      const vc = a.vendor.localeCompare(b.vendor);
+      if (vc !== 0) return vc;
+      return a.cleanName.localeCompare(b.cleanName);
+    });
+
+    return groups;
+  }, [rawFilaments, urlCache, priceChanges]);
 
   // =============================================
   // Filtering
@@ -452,7 +576,6 @@ export default function PricingData() {
     return productGroups.filter(g => {
       if (vendorFilter !== 'all' && g.vendor !== vendorFilter) return false;
       if (statusFilter !== 'all') {
-        // Filter: at least one store must match status
         const hasMatch = g.stores.some(s => {
           if (statusFilter === 'stale') return s.linkStatus === 'stale' || s.linkStatus === 'unknown';
           return s.linkStatus === statusFilter;
@@ -461,7 +584,7 @@ export default function PricingData() {
       }
       if (search) {
         const q = search.toLowerCase();
-        if (!g.productTitle?.toLowerCase().includes(q) && !g.vendor?.toLowerCase().includes(q)) return false;
+        if (!g.cleanName?.toLowerCase().includes(q) && !g.vendor?.toLowerCase().includes(q) && !g.material?.toLowerCase().includes(q)) return false;
       }
       return true;
     });
@@ -495,8 +618,8 @@ export default function PricingData() {
       }).length;
     }, 0);
 
-    return { totalProducts: productGroups.length, totalStores, active, stale, broken, alerts, multiRegion, stalePrices };
-  }, [productGroups]);
+    return { totalProducts: productGroups.length, totalStores, active, stale, broken, alerts, multiRegion, stalePrices, totalVariants: totalVariantCount };
+  }, [productGroups, totalVariantCount]);
 
   // =============================================
   // All visible store keys (for selection)
@@ -505,7 +628,7 @@ export default function PricingData() {
   const visibleStoreKeys = useMemo(() => {
     const keys: string[] = [];
     for (const g of filtered.slice(0, 200)) {
-      if (expandedProducts.has(g.filamentId)) {
+      if (expandedProducts.has(g.productLineId)) {
         for (const s of g.stores) {
           keys.push(s.storeKey);
         }
@@ -531,7 +654,7 @@ export default function PricingData() {
   }, []);
 
   const expandAll = useCallback(() => {
-    setExpandedProducts(new Set(filtered.slice(0, 200).map(g => g.filamentId)));
+    setExpandedProducts(new Set(filtered.slice(0, 200).map(g => g.productLineId)));
   }, [filtered]);
 
   const collapseAll = useCallback(() => {
@@ -574,15 +697,18 @@ export default function PricingData() {
   }, [productGroups]);
 
   // =============================================
-  // Link testing (per store)
+  // Link testing (per store — deduplicated via product_line_id)
   // =============================================
 
   const testSingleUrl = useCallback(async (storeKey: string, url: string, showToast = true, region?: string): Promise<TestResult> => {
     const startTime = Date.now();
     setTestResults(prev => new Map(prev).set(storeKey, { status: 'testing' }));
 
+    // Strip variant params for testing
+    const baseUrl = url.replace(/[?#].*$/, '');
+
     try {
-      const { data, error } = await supabase.functions.invoke('test-url', { body: { url, region } });
+      const { data, error } = await supabase.functions.invoke('test-url', { body: { url: baseUrl, region } });
       const latencyMs = Date.now() - startTime;
       if (error) throw error;
 
@@ -599,9 +725,10 @@ export default function PricingData() {
 
       setTestResults(prev => new Map(prev).set(storeKey, result));
 
+      // Cache the result for the base URL
       const cacheStatus = result.status === 'ok' || result.status === 'geo_restricted' ? 'valid' : result.status === 'redirect' ? 'redirect' : 'invalid';
       await supabase.from('url_validation_cache').upsert({
-        url,
+        url: baseUrl,
         status: cacheStatus,
         status_code: result.statusCode ?? null,
         redirect_url: result.redirectUrl ?? null,
@@ -609,12 +736,17 @@ export default function PricingData() {
         check_count: 1,
       }, { onConflict: 'url' });
 
-      if (showToast) {
-        const methodNote = result.fetchMethod && result.fetchMethod !== 'direct' ? ` (${result.fetchMethod})` : '';
-        if (result.status === 'ok') toast.success(`✅ Link active (${result.statusCode}) — ${latencyMs}ms${methodNote}`);
-        else if (result.status === 'geo_restricted') toast.warning(`🌐 Geo-restricted — accessed via redirect${methodNote}`);
-        else if (result.status === 'redirect') toast.warning(`⚠️ Redirect (${result.statusCode})${result.isGeoRedirected ? ' — geo-redirect' : ''}`);
-        else toast.error(`❌ Link broken (${result.statusCode || result.error})`);
+      // Fan out: update all variants with the same product_line_id for this URL
+      const entry = storeKeyMap.get(storeKey);
+      if (entry) {
+        const variantCount = entry.store.allFilamentIds.length;
+        if (showToast) {
+          const methodNote = result.fetchMethod && result.fetchMethod !== 'direct' ? ` (${result.fetchMethod})` : '';
+          if (result.status === 'ok') toast.success(`✅ Link active (${result.statusCode}) — ${latencyMs}ms${methodNote}${variantCount > 1 ? ` · covers ${variantCount} variants` : ''}`);
+          else if (result.status === 'geo_restricted') toast.warning(`🌐 Geo-restricted${methodNote}`);
+          else if (result.status === 'redirect') toast.warning(`⚠️ Redirect (${result.statusCode})${result.isGeoRedirected ? ' — geo-redirect' : ''}`);
+          else toast.error(`❌ Link broken (${result.statusCode || result.error})`);
+        }
       }
       return result;
     } catch (err: any) {
@@ -627,8 +759,9 @@ export default function PricingData() {
       };
       setTestResults(prev => new Map(prev).set(storeKey, result));
 
+      const baseUrl2 = url.replace(/[?#].*$/, '');
       await supabase.from('url_validation_cache').upsert({
-        url,
+        url: baseUrl2,
         status: 'invalid',
         status_code: null,
         redirect_url: null,
@@ -639,34 +772,46 @@ export default function PricingData() {
       if (showToast) toast.error(`❌ ${isTimeout ? 'Timeout (5s)' : 'Network error'}`);
       return result;
     }
-  }, []);
+  }, [storeKeyMap]);
 
   const testBatch = useCallback(async (storesToTest: StoreRow[]) => {
-    const withUrls = storesToTest.filter(s => s.productUrl);
-    if (withUrls.length === 0) { toast.info('No testable URLs'); return; }
+    // Deduplicate: only test unique base URLs per region
+    const seen = new Set<string>();
+    const deduped: StoreRow[] = [];
+    let totalVariants = 0;
+    for (const s of storesToTest) {
+      if (!s.productUrl) continue;
+      const dedupKey = `${s.productUrl}::${s.region}`;
+      if (seen.has(dedupKey)) continue;
+      seen.add(dedupKey);
+      deduped.push(s);
+      totalVariants += s.allFilamentIds.length;
+    }
+
+    if (deduped.length === 0) { toast.info('No testable URLs'); return; }
 
     setBulkTesting(true);
-    setBulkProgress({ done: 0, total: withUrls.length });
+    setBulkProgress({ done: 0, total: deduped.length, variants: totalVariants });
     abortRef.current = false;
     const startTime = Date.now();
     let done = 0, ok = 0, broken = 0, warnings = 0;
 
-    for (let i = 0; i < withUrls.length; i += 3) {
+    for (let i = 0; i < deduped.length; i += 3) {
       if (abortRef.current) break;
-      const batch = withUrls.slice(i, i + 3);
+      const batch = deduped.slice(i, i + 3);
       const results = await Promise.all(batch.map(s => testSingleUrl(s.storeKey, s.productUrl!, false, s.region)));
       results.forEach(r => { done++; if (r.status === 'ok') ok++; else if (r.status === 'broken' || r.status === 'timeout') broken++; else warnings++; });
-      setBulkProgress({ done, total: withUrls.length });
+      setBulkProgress({ done, total: deduped.length, variants: totalVariants });
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     setBulkTesting(false);
     setBulkProgress(null);
-    toast.success(`Tested ${done} store links in ${elapsed}s — ${ok} active, ${broken} broken, ${warnings} warnings`);
+    toast.success(`Tested ${done} products in ${elapsed}s (covering ${totalVariants} variants) — ${ok} active, ${broken} broken, ${warnings} warnings`);
   }, [testSingleUrl]);
 
   // =============================================
-  // Price sync (per store)
+  // Price sync (per store — deduplicated, fans out to all variants)
   // =============================================
 
   const syncSinglePrice = useCallback(async (store: StoreRow, showToast = true): Promise<SyncResult> => {
@@ -699,8 +844,9 @@ export default function PricingData() {
 
       const { price, compareAtPrice, currency = store.currency } = data;
 
+      // Fan out: update the representative filament via RPC (which logs price history)
       const { error: rpcError } = await supabase.rpc('update_filament_price_after_refresh', {
-        p_filament_id: store.filamentId,
+        p_filament_id: store.representativeId,
         p_new_price: price,
         p_compare_at_price: compareAtPrice || null,
         p_currency: currency,
@@ -713,6 +859,32 @@ export default function PricingData() {
         setSyncResults(prev => new Map(prev).set(store.storeKey, result));
         if (showToast) toast.error(`✗ ${errorMsg}`);
         return result;
+      }
+
+      // Fan out to ALL variants with same product_line_id
+      // Determine which price/url field to update based on region
+      const regionFieldMap: Record<string, { priceField: string; urlField?: string }> = {
+        US: { priceField: 'variant_price' },
+        CA: { priceField: 'price_cad' },
+        UK: { priceField: 'price_gbp' },
+        EU: { priceField: 'price_eur' },
+        AU: { priceField: 'price_aud' },
+        JP: { priceField: 'price_jpy' },
+      };
+      const regionMapping = regionFieldMap[store.region];
+      if (regionMapping && store.allFilamentIds.length > 1) {
+        const updatePayload: Record<string, any> = {
+          [regionMapping.priceField]: price,
+          last_scraped_at: new Date().toISOString(),
+        };
+        // Update all OTHER variants (the representative was already updated via RPC)
+        const otherIds = store.allFilamentIds.filter(id => id !== store.representativeId);
+        if (otherIds.length > 0) {
+          await supabase
+            .from('filaments')
+            .update(updatePayload)
+            .in('id', otherIds);
+        }
       }
 
       invalidatePriceCache(store.productUrl);
@@ -729,9 +901,10 @@ export default function PricingData() {
       setSyncResults(prev => new Map(prev).set(store.storeKey, result));
 
       if (showToast) {
-        if (!priceChanged) toast.success(`✓ Price confirmed: ${store.currencySymbol}${price.toFixed(2)}`);
-        else if (pctChange > 0) toast.warning(`⚠️ Price increased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${price.toFixed(2)} (+${pctChange.toFixed(1)}%)`);
-        else toast.success(`✓ Price decreased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${price.toFixed(2)} (${pctChange.toFixed(1)}%)`);
+        const variantNote = store.allFilamentIds.length > 1 ? ` · updated ${store.allFilamentIds.length} variants` : '';
+        if (!priceChanged) toast.success(`✓ Price confirmed: ${store.currencySymbol}${price.toFixed(2)}${variantNote}`);
+        else if (pctChange > 0) toast.warning(`⚠️ Price increased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${price.toFixed(2)} (+${pctChange.toFixed(1)}%)${variantNote}`);
+        else toast.success(`✓ Price decreased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${price.toFixed(2)} (${pctChange.toFixed(1)}%)${variantNote}`);
       }
       return result;
     } catch (err: any) {
@@ -741,36 +914,48 @@ export default function PricingData() {
       if (showToast) toast.error(`✗ ${errorMsg}`);
       return result;
     }
-  }, []);
+  }, [storeKeyMap]);
 
   const syncBatch = useCallback(async (storesToSync: StoreRow[]) => {
-    const syncable = storesToSync.filter(s => s.productUrl && s.linkStatus !== 'broken');
-    if (syncable.length === 0) { toast.info('No syncable stores'); return; }
+    // Deduplicate: only sync unique base URLs per region
+    const seen = new Set<string>();
+    const deduped: StoreRow[] = [];
+    let totalVariants = 0;
+    for (const s of storesToSync) {
+      if (!s.productUrl || s.linkStatus === 'broken') continue;
+      const dedupKey = `${s.productUrl}::${s.region}`;
+      if (seen.has(dedupKey)) continue;
+      seen.add(dedupKey);
+      deduped.push(s);
+      totalVariants += s.allFilamentIds.length;
+    }
+
+    if (deduped.length === 0) { toast.info('No syncable stores'); return; }
 
     setBulkSyncing(true);
-    setBulkSyncProgress({ done: 0, total: syncable.length });
+    setBulkSyncProgress({ done: 0, total: deduped.length, variants: totalVariants });
     abortSyncRef.current = false;
     const startTime = Date.now();
     let done = 0, updated = 0, unchanged = 0, failed = 0;
 
-    for (let i = 0; i < syncable.length; i += 2) {
+    for (let i = 0; i < deduped.length; i += 2) {
       if (abortSyncRef.current) break;
-      const batch = syncable.slice(i, i + 2);
+      const batch = deduped.slice(i, i + 2);
       const results = await Promise.all(batch.map(s => syncSinglePrice(s, false)));
       results.forEach(r => { done++; if (r.status === 'success') updated++; else if (r.status === 'unchanged') unchanged++; else failed++; });
-      setBulkSyncProgress({ done, total: syncable.length });
+      setBulkSyncProgress({ done, total: deduped.length, variants: totalVariants });
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     setBulkSyncing(false);
     setBulkSyncProgress(null);
-    queryClient.invalidateQueries({ queryKey: ['admin-pricing-data'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-pricing-data-grouped'] });
     queryClient.invalidateQueries({ queryKey: ['admin-recent-price-changes'] });
 
     if (abortSyncRef.current) {
-      toast.info(`⚠️ Sync cancelled — ${done}/${syncable.length} (${updated} updated, ${unchanged} unchanged, ${failed} failed)`);
+      toast.info(`⚠️ Sync cancelled — ${done}/${deduped.length} products (${updated} updated, ${unchanged} unchanged, ${failed} failed)`);
     } else {
-      toast.success(`Synced ${done} store prices in ${elapsed}s — ${updated} updated, ${unchanged} unchanged, ${failed} failed`);
+      toast.success(`Synced ${done} products in ${elapsed}s (covering ${totalVariants} variants) — ${updated} updated, ${unchanged} unchanged, ${failed} failed`);
     }
   }, [syncSinglePrice, queryClient]);
 
@@ -823,9 +1008,10 @@ export default function PricingData() {
     for (const g of filtered) {
       for (const s of g.stores) {
         exportData.push({
-          Product: g.productTitle,
+          Product: g.cleanName,
           Brand: g.vendor,
           Material: g.material || '',
+          Variants: String(g.variantCount),
           Store: s.storeName,
           Region: s.region,
           Price: s.price?.toFixed(2) || '',
@@ -847,8 +1033,9 @@ export default function PricingData() {
       for (const s of g.stores) {
         if (s.priceChange && s.priceChange.direction !== 'unchanged') {
           exportData.push({
-            Product: g.productTitle,
+            Product: g.cleanName,
             Brand: g.vendor,
+            Variants: String(g.variantCount),
             Store: s.storeName,
             'Old Price': s.priceChange.oldPrice?.toFixed(2) || '',
             'New Price': s.priceChange.newPrice?.toFixed(2) || '',
@@ -884,7 +1071,7 @@ export default function PricingData() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Pricing Data</h1>
             <p className="text-sm text-muted-foreground">
-              {stats.totalProducts.toLocaleString()} products across {stats.totalStores.toLocaleString()} store entries
+              {stats.totalProducts.toLocaleString()} products ({stats.totalVariants.toLocaleString()} variants) across {stats.totalStores.toLocaleString()} store entries
             </p>
           </div>
         </div>
@@ -894,7 +1081,7 @@ export default function PricingData() {
           <Card className="border-border/50 cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setStatusFilter('all')}>
             <CardContent className="p-3 text-center">
               <p className="text-2xl font-bold text-foreground">{stats.totalProducts.toLocaleString()}</p>
-              <p className="text-[11px] text-muted-foreground">{stats.totalStores.toLocaleString()} stores</p>
+              <p className="text-[11px] text-muted-foreground">{stats.totalVariants.toLocaleString()} variants</p>
             </CardContent>
           </Card>
           <Card className="border-emerald-500/30 bg-emerald-500/5 cursor-pointer hover:border-emerald-400/50 transition-colors" onClick={() => setStatusFilter('active')}>
@@ -933,7 +1120,7 @@ export default function PricingData() {
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search by name or brand..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder="Search by name, brand, or material..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={vendorFilter} onValueChange={setVendorFilter}>
             <SelectTrigger className="w-[180px]">
@@ -1013,13 +1200,19 @@ export default function PricingData() {
         {bulkProgress && (
           <div className="space-y-1">
             <Progress value={(bulkProgress.done / bulkProgress.total) * 100} className="h-2" />
-            <p className="text-xs text-muted-foreground text-center">Testing store links: {bulkProgress.done}/{bulkProgress.total}</p>
+            <p className="text-xs text-muted-foreground text-center">
+              Testing {bulkProgress.done}/{bulkProgress.total} products
+              {bulkProgress.variants && <span className="text-muted-foreground/70"> (covering {bulkProgress.variants} variants)</span>}
+            </p>
           </div>
         )}
         {bulkSyncProgress && (
           <div className="space-y-1">
             <Progress value={(bulkSyncProgress.done / bulkSyncProgress.total) * 100} className="h-2" />
-            <p className="text-xs text-muted-foreground text-center">Syncing prices: {bulkSyncProgress.done}/{bulkSyncProgress.total}</p>
+            <p className="text-xs text-muted-foreground text-center">
+              Syncing {bulkSyncProgress.done}/{bulkSyncProgress.total} products
+              {bulkSyncProgress.variants && <span className="text-muted-foreground/70"> (covering {bulkSyncProgress.variants} variants)</span>}
+            </p>
           </div>
         )}
 
@@ -1035,6 +1228,7 @@ export default function PricingData() {
                       <Checkbox checked={allVisibleSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" />
                     </TableHead>
                     <TableHead className="min-w-[220px]">Product / Store</TableHead>
+                    <TableHead>Variants</TableHead>
                     <TableHead className="text-right">Price</TableHead>
                     <TableHead className="text-right">Compare</TableHead>
                     <TableHead>Change</TableHead>
@@ -1047,14 +1241,14 @@ export default function PricingData() {
                 </TableHeader>
                 <TableBody>
                   {filtered.slice(0, 200).map(group => {
-                    const isExpanded = expandedProducts.has(group.filamentId);
+                    const isExpanded = expandedProducts.has(group.productLineId);
 
                     return (
                       <ProductGroupRows
-                        key={group.filamentId}
+                        key={group.productLineId}
                         group={group}
                         isExpanded={isExpanded}
-                        onToggleExpand={() => toggleExpand(group.filamentId)}
+                        onToggleExpand={() => toggleExpand(group.productLineId)}
                         selectedStoreKeys={selectedStoreKeys}
                         onToggleSelectStore={toggleSelectStore}
                         testResults={testResults}
@@ -1067,7 +1261,7 @@ export default function PricingData() {
                   })}
                   {filtered.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                         No pricing data found
                       </TableCell>
                     </TableRow>
@@ -1123,21 +1317,44 @@ function ProductGroupRows({
         <TableCell className="w-10">
           {/* No checkbox on parent — selection is per store */}
         </TableCell>
-        <TableCell className="min-w-[220px]" colSpan={1}>
+        <TableCell className="min-w-[220px]">
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-semibold text-foreground truncate max-w-[300px] block">{group.productTitle}</span>
+            <span className="text-xs font-semibold text-foreground truncate max-w-[300px] block">{group.cleanName}</span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-muted-foreground">{group.vendor}</span>
               {group.material && <span className="text-[10px] text-muted-foreground font-mono">· {group.material}</span>}
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0">{group.stores.length} store{group.stores.length !== 1 ? 's' : ''}</Badge>
             </div>
           </div>
         </TableCell>
-        <TableCell colSpan={4}></TableCell>
-        <TableCell colSpan={1}>
+        <TableCell>
+          <div className="flex items-center gap-1.5">
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
+              <Palette className="w-2.5 h-2.5" />
+              {group.colorCount > 0 ? `${group.colorCount} colors` : `${group.variantCount} variants`}
+            </Badge>
+            {group.colorHexes.length > 0 && (
+              <ColorSwatches hexes={group.colorHexes} max={6} />
+            )}
+          </div>
+        </TableCell>
+        <TableCell className="text-right font-mono text-xs">
+          {group.hasPriceRange
+            ? <span>${group.minPrice?.toFixed(2)} – ${group.maxPrice?.toFixed(2)}</span>
+            : formatCurrency(group.minPrice, '$')
+          }
+        </TableCell>
+        <TableCell></TableCell>
+        <TableCell></TableCell>
+        <TableCell></TableCell>
+        <TableCell>
           <StatusSummary group={group} />
         </TableCell>
-        <TableCell colSpan={3}></TableCell>
+        <TableCell colSpan={1}>
+          <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+            {group.stores.length} store{group.stores.length !== 1 ? 's' : ''}
+          </Badge>
+        </TableCell>
+        <TableCell colSpan={2}></TableCell>
       </TableRow>
 
       {/* Child store rows */}
@@ -1155,7 +1372,6 @@ function ProductGroupRows({
             className={`${isLast ? '' : 'border-b-0'} hover:bg-muted/20`}
           >
             <TableCell className="w-8 px-2">
-              {/* Connecting line indicator */}
               <span className="text-muted-foreground/40 text-xs pl-1">└</span>
             </TableCell>
             <TableCell className="w-10">
@@ -1174,10 +1390,11 @@ function ProductGroupRows({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {store.productUrl ? new URL(store.productUrl).hostname : 'No URL'}
+                  {store.productUrl ? (() => { try { return new URL(store.productUrl).hostname; } catch { return store.productUrl; } })() : 'No URL'}
                 </TooltipContent>
               </Tooltip>
             </TableCell>
+            <TableCell></TableCell>
             <TableCell className="text-right font-mono text-xs">
               <span className={
                 syncResult?.status === 'success' && syncResult.percentChange
@@ -1220,7 +1437,9 @@ function ProductGroupRows({
                           : <RefreshCw className={`w-3.5 h-3.5 ${syncResult?.status === 'success' ? 'text-emerald-400' : syncResult?.status === 'failed' ? 'text-red-400' : ''}`} />}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>{store.linkStatus === 'broken' ? 'Cannot sync — broken link' : 'Sync price'}</TooltipContent>
+                    <TooltipContent>
+                      {store.linkStatus === 'broken' ? 'Cannot sync — broken link' : `Sync price (updates ${store.allFilamentIds.length} variants)`}
+                    </TooltipContent>
                   </Tooltip>
                 )}
                 {store.productUrl && (
