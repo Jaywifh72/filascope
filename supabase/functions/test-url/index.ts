@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { fetchRegionalStore, detectRegionFromUrl, type FetchMethod } from '../_shared/regional-fetch.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,7 +30,6 @@ function isPrivateOrReservedHostname(hostname: string): boolean {
   return privatePatterns.some(pattern => pattern.test(hostname));
 }
 
-// Only allow HTTP(S) protocols
 function isAllowedProtocol(protocol: string): boolean {
   return protocol === 'http:' || protocol === 'https:';
 }
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { url } = await req.json();
+    const { url, region } = await req.json();
 
     if (!url) {
       return new Response(
@@ -95,81 +95,50 @@ Deno.serve(async (req) => {
       );
     }
 
-    // SSRF Protection: Block private/internal IP ranges
+    // SSRF Protection
     if (isPrivateOrReservedHostname(parsedUrl.hostname)) {
-      console.warn(`SSRF blocked: Attempted access to private/internal address: ${parsedUrl.hostname}`);
+      console.warn(`SSRF blocked: ${parsedUrl.hostname}`);
       return new Response(
         JSON.stringify({ ok: false, error: 'Private or internal addresses are not allowed', statusCode: 0 }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // SSRF Protection: Only allow HTTP(S) protocols
     if (!isAllowedProtocol(parsedUrl.protocol)) {
-      console.warn(`SSRF blocked: Attempted use of disallowed protocol: ${parsedUrl.protocol}`);
+      console.warn(`SSRF blocked: protocol ${parsedUrl.protocol}`);
       return new Response(
         JSON.stringify({ ok: false, error: 'Only HTTP and HTTPS protocols are allowed', statusCode: 0 }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Testing URL: ${url}`);
+    // Determine target region from explicit param, URL subdomain, or default US
+    const targetRegion = region || detectRegionFromUrl(url) || 'US';
+    console.log(`Testing URL: ${url} (region: ${targetRegion})`);
 
-    // Make HEAD request first (faster), fallback to GET if HEAD fails
-    let response: Response;
-    try {
-      response = await fetch(url, {
-        method: 'HEAD',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-        redirect: 'manual', // Don't follow redirects automatically
-      });
-    } catch (headError) {
-      // If HEAD fails, try GET
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          },
-          redirect: 'manual',
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-      } catch (getError: any) {
-        console.error(`Failed to fetch ${url}:`, getError.message);
-        return new Response(
-          JSON.stringify({ 
-            ok: false, 
-            error: getError.name === 'AbortError' ? 'Request timeout' : getError.message,
-            statusCode: 0 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
+    // Use the shared regional fetch with geo-redirect bypass
+    const result = await fetchRegionalStore(url, targetRegion, {
+      method: 'HEAD',
+      timeoutMs: 10000,
+    });
 
-    const statusCode = response.status;
+    const statusCode = result.statusCode ?? 0;
     const isOk = statusCode >= 200 && statusCode < 300;
     const isRedirect = statusCode >= 300 && statusCode < 400;
-    const location = response.headers.get('location');
+    const isGeoRedirected = result.method === 'redirected' && !!result.warning;
 
-    console.log(`URL ${url} returned status ${statusCode}`);
+    console.log(`URL ${url} → status ${statusCode}, method: ${result.method}${isGeoRedirected ? ' (geo-redirected)' : ''}`);
 
     return new Response(
       JSON.stringify({
         ok: isOk,
         statusCode,
-        isRedirect,
-        redirectLocation: location,
+        isRedirect: isRedirect && !isOk,
+        redirectLocation: result.redirectedTo || null,
         error: isOk ? null : `HTTP ${statusCode}`,
+        fetchMethod: result.method,
+        isGeoRedirected,
+        warning: result.warning || null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
