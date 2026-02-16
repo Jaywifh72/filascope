@@ -432,3 +432,11 @@ export async function validateRegionalUrl(
     lastChecked: now,
   };
 }
+
+/**
+ * Check if a URL+currency combo should bypass Shopify JSON and use Firecrawl directly.
+ * Returns true for geo-redirect domains when the requested currency is not USD.
+ */
+export function shouldUseFirecrawlForRegion(url: string, currency: string): boolean {
+  return isGeoRedirectDomain(url) && currency !== 'USD';
+}

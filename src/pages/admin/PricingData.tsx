@@ -40,6 +40,8 @@ interface SyncResult {
   newPrice?: number;
   percentChange?: number;
   error?: string;
+  source?: string;
+  location?: string;
 }
 
 /** One store entry (region) for a product group */
@@ -897,6 +899,8 @@ export default function PricingData() {
         oldPrice: oldPrice ?? undefined,
         newPrice: price,
         percentChange: pctChange,
+        source: data.source || undefined,
+        location: data.location || undefined,
       };
       setSyncResults(prev => new Map(prev).set(store.storeKey, result));
 
@@ -1396,12 +1400,25 @@ function ProductGroupRows({
             </TableCell>
             <TableCell></TableCell>
             <TableCell className="text-right font-mono text-xs">
-              <span className={
+              <span className={`flex items-center justify-end gap-1 ${
                 syncResult?.status === 'success' && syncResult.percentChange
                   ? syncResult.percentChange > 0 ? 'text-red-400' : 'text-emerald-400'
                   : ''
-              }>
+              }`}>
                 {formatCurrency(displayPrice, store.currencySymbol)}
+                {syncResult?.source && (syncResult.status === 'success' || syncResult.status === 'unchanged') && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className={`text-[9px] px-1 py-0 leading-tight ${syncResult.source === 'firecrawl' ? 'border-purple-400 text-purple-400' : 'border-emerald-400 text-emerald-400'}`}>
+                        {syncResult.source === 'firecrawl' ? '🔥' : '🛒'}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {syncResult.source === 'firecrawl' ? 'Firecrawl' : 'Shopify JSON'}
+                      {syncResult.location ? ` · ${syncResult.location}` : ''}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </span>
             </TableCell>
             <TableCell className="text-right font-mono text-xs">
