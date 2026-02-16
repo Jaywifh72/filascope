@@ -309,12 +309,15 @@ function PriceChangeIndicator({ change }: { change: StoreRow['priceChange'] }) {
   );
 }
 
-function formatCurrency(val: number | null, symbol: string) {
+function formatCurrency(val: number | null, symbol: string, currency?: string) {
   if (val == null) return '—';
-  return `${symbol}${val.toFixed(2)}`;
+  const decimals = currency === 'JPY' ? 0 : 2;
+  return `${symbol}${val.toFixed(decimals)}`;
 }
 
-function SyncChangeIndicator({ syncResult, currencySymbol }: { syncResult: SyncResult; currencySymbol: string }) {
+function SyncChangeIndicator({ syncResult, currencySymbol, currency }: { syncResult: SyncResult; currencySymbol: string; currency?: string }) {
+  const fmt = (v?: number) => v != null ? `${currencySymbol}${v.toFixed(currency === 'JPY' ? 0 : 2)}` : '—';
+
   if (syncResult.status === 'failed') {
     return (
       <Tooltip>
@@ -336,7 +339,7 @@ function SyncChangeIndicator({ syncResult, currencySymbol }: { syncResult: SyncR
             <Minus className="w-3 h-3" /> =
           </span>
         </TooltipTrigger>
-        <TooltipContent>Price unchanged at {currencySymbol}{syncResult.newPrice?.toFixed(2)}</TooltipContent>
+        <TooltipContent>Price unchanged at {fmt(syncResult.newPrice)}</TooltipContent>
       </Tooltip>
     );
   }
@@ -352,7 +355,7 @@ function SyncChangeIndicator({ syncResult, currencySymbol }: { syncResult: SyncR
           </span>
         </TooltipTrigger>
         <TooltipContent>
-          {currencySymbol}{syncResult.oldPrice?.toFixed(2)} → {currencySymbol}{syncResult.newPrice?.toFixed(2)}
+          {fmt(syncResult.oldPrice)} → {fmt(syncResult.newPrice)}
           {' '}({syncResult.percentChange > 0 ? '+' : ''}{syncResult.percentChange.toFixed(1)}%)
         </TooltipContent>
       </Tooltip>
@@ -1627,7 +1630,7 @@ function ProductGroupRows({
             </TableCell>
             <TableCell>
               {syncResult && syncResult.status !== 'syncing' ? (
-                <SyncChangeIndicator syncResult={syncResult} currencySymbol={store.currencySymbol} />
+                <SyncChangeIndicator syncResult={syncResult} currencySymbol={store.currencySymbol} currency={store.currency} />
               ) : (
                 <PriceChangeIndicator change={store.priceChange} />
               )}
