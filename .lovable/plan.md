@@ -1,92 +1,144 @@
 
 
-# Fix Link Testing and Price Sync for Geo-Redirect Domains
+# Fix Three Critical Issues in Pricing Sync System
 
-## Problem
+## Issue 1: Price Validation Rejects Non-USD Currencies (JPY, etc.)
 
-When testing regional store URLs (e.g., `ca.store.bambulab.com`), the `test-url` Edge Function always ends up geo-redirected because Supabase Edge Functions run from a fixed location. The frontend then shows a purple "Geo-Restricted" badge, which is alarming but actually expected behavior for these domains. The URL IS valid -- it just can't be accessed from Edge Functions without Firecrawl.
+### Problem
+`validateFilamentPrice(price, min=10, max=150)` uses USD-hardcoded range. JPY prices like 3400 are rejected because 3400 > 150.
 
-## Changes
+### Solution
+Replace the function with a currency-aware version:
 
-### 1. `supabase/functions/test-url/index.ts` -- Treat known geo-redirect domains as OK
+**File: `supabase/functions/get-current-price/index.ts`**
 
-After the fetch completes (line 125), add a check: if the domain is a known geo-redirector AND the fetch ended up redirected with a 200 status code, return `ok: true` with a new `isKnownGeoRedirect: true` flag.
-
-```text
-Current response logic (line 125-142):
-  statusCode check -> isOk (200-299) -> isGeoRedirected -> return
-
-New logic:
-  statusCode check -> if isGeoRedirectDomain AND status=200 AND method='redirected':
-    return ok: true, isKnownGeoRedirect: true
-  else: existing logic unchanged
-```
-
-The `isGeoRedirectDomain` function is already imported from `_shared/regional-fetch.ts` (via the existing imports). We just need to use it.
-
-Specific changes:
-- After line 128, check `isGeoRedirectDomain(url)` (already available from the import of `regional-fetch.ts` -- we need to add it to the import)
-- Update the import on line 2 to also import `isGeoRedirectDomain`
-- When status is 200 and `isGeoRedirected` is true and the domain is a known geo-redirector, set `ok: true` and add `isKnownGeoRedirect: true` to the response
-- This means the frontend will receive `ok: true` + `isKnownGeoRedirect: true` instead of `ok: true` + `isGeoRedirected: true`
-
-### 2. `src/pages/admin/PricingData.tsx` -- Update test result handling
-
-**a) Update `TestResult` interface (line 28):**
-Add `isKnownGeoRedirect?: boolean` to the interface.
-
-**b) Update test result processing (line 770-778):**
-When `data.ok` is true and `data.isKnownGeoRedirect` is true, set status to `'ok'` (not `'geo_restricted'`), and store `isKnownGeoRedirect: true`.
-
-Current code:
+Replace `validateFilamentPrice` (line 1265-1268) with:
 ```typescript
-if (data.ok) {
-  result = { status: isGeoRedirected ? 'geo_restricted' : 'ok', ... };
-}
-```
-New code:
-```typescript
-const isKnownGeoRedirect = !!data.isKnownGeoRedirect;
-if (data.ok) {
-  result = {
-    status: 'ok',  // Always OK if data.ok is true
-    ..., isGeoRedirected, isKnownGeoRedirect
-  };
+const CURRENCY_PRICE_RANGES: Record<string, { min: number; max: number }> = {
+  USD: { min: 3, max: 200 },
+  CAD: { min: 3, max: 200 },
+  AUD: { min: 3, max: 200 },
+  GBP: { min: 3, max: 150 },
+  EUR: { min: 3, max: 200 },
+  JPY: { min: 100, max: 30000 },
+  default: { min: 1, max: 50000 },
+};
+
+function validateFilamentPrice(price: number, currency: string = 'USD'): boolean {
+  const range = CURRENCY_PRICE_RANGES[currency] || CURRENCY_PRICE_RANGES.default;
+  return price >= range.min && price <= range.max;
 }
 ```
 
-**c) Update `getTestResultBadge` (line 194) for the `'ok'` case:**
-When `result.isKnownGeoRedirect` is true, show a green badge with a small globe icon:
-- Badge text: `200 . {latencyMs}ms 🌐`
-- Tooltip: "URL is valid. Geo-redirect detected (expected for this brand's regional stores). Price sync uses Firecrawl to access the correct region."
+Update all ~15 call sites to pass the appropriate currency. The calls fall into these categories:
 
-**d) Update toast message (line 800):**
-When `isKnownGeoRedirect`, show success toast instead of warning: `"Link valid (geo-redirect expected) -- {latencyMs}ms"`
+| Location | Current Call | Currency Source |
+|----------|-------------|----------------|
+| Creality extraction (~lines 1550, 1590, 1608, 1625, 1639) | `validateFilamentPrice(p)` | Hardcoded `'USD'` (Creality is always USD) -- no change needed since USD is default |
+| `extractPriceFromContent` EUR block (~line 1796) | `validateFilamentPrice(p)` | Pass `'EUR'` |
+| `extractPriceFromContent` GBP block (~line 1822) | `validateFilamentPrice(p)` | Pass `'GBP'` |
+| `extractPriceFromContent` USD/CAD/AUD block (~line 1847) | `validateFilamentPrice(p)` | Pass `preferredCurrency` |
+| `extractPriceFromContent` fallback currencies (~line 1884) | `validateFilamentPrice(p)` | Pass `cur` (the loop variable) |
+| `extractPriceFromContent` last resort dollar (~line 1899) | `validateFilamentPrice(p)` | `'USD'` (default, no change) |
 
-**e) Remove the `geo_restricted` status assignment for known domains:**
-The `geo_restricted` status should now only apply to UNKNOWN geo-redirecting domains (domains not in the known list). For known domains, we get `ok` + `isKnownGeoRedirect`.
+This is backwards-compatible: existing USD-only calls keep working since `'USD'` is the default.
 
-### 3. No Edge Function changes needed for `get-current-price`
+---
 
-Already verified in previous turns: `shouldAlwaysUseFirecrawl` includes `store.bambulab.com`, and the geo-redirect + non-USD Firecrawl-first bypass is implemented.
+## Issue 2: Firecrawl Routing Confirmation
 
-### 4. Add `qidi3d.com`, `flashforge.com`, `sovol3d.com` to `GEO_REDIRECT_DOMAINS` in `regional-fetch.ts`
+### Current State (Already Correct)
+After inspecting the code, both changes are actually already in place:
 
-The shared list (line 53-61) is missing some domains mentioned in the user's request. Add:
-- `qidi3d.com`
-- `flashforge.com`
+- Line 1669: `shouldAlwaysUseFirecrawl` already contains `['amolen.com', 'store.bambulab.com']`
+- Lines 2597-2599: The geo-redirect + non-USD Firecrawl-first routing is already implemented
 
-## Files Modified
+No changes needed for this issue. The previous edits were applied successfully.
 
-| File | Change |
-|------|--------|
-| `supabase/functions/test-url/index.ts` | Import `isGeoRedirectDomain`, return `ok: true` + `isKnownGeoRedirect` for known geo-redirect domains |
-| `supabase/functions/_shared/regional-fetch.ts` | Add `qidi3d.com`, `flashforge.com` to `GEO_REDIRECT_DOMAINS` |
-| `src/pages/admin/PricingData.tsx` | Add `isKnownGeoRedirect` to TestResult, show green badge with globe icon instead of purple "Geo-Restricted" for known domains |
+---
 
-## Expected Result
+## Issue 3: Sync Result Feedback in Change Column
 
-Before: Testing `ca.store.bambulab.com/products/abs` shows purple "Geo-Restricted" badge with warning language.
+### Problem
+After syncing, the Change column always shows "---" because `PriceChangeIndicator` reads from `store.priceChange` (historical DB data), not from the just-completed `syncResult`.
 
-After: Shows green `200 . 150ms 🌐` badge with tooltip explaining geo-redirect is expected and Firecrawl handles price sync correctly.
+### Solution
+**File: `src/pages/admin/PricingData.tsx`**
+
+In the store row rendering (line 1579), replace the static `PriceChangeIndicator` with sync-aware logic:
+
+```typescript
+{/* Change column - show sync result if available, otherwise historical */}
+<TableCell>
+  {syncResult && syncResult.status !== 'syncing' ? (
+    <SyncChangeIndicator syncResult={syncResult} currencySymbol={store.currencySymbol} />
+  ) : (
+    <PriceChangeIndicator change={store.priceChange} />
+  )}
+</TableCell>
+```
+
+Add a new `SyncChangeIndicator` component (near `PriceChangeIndicator`, around line 310):
+
+```typescript
+function SyncChangeIndicator({ syncResult, currencySymbol }: { syncResult: SyncResult; currencySymbol: string }) {
+  if (syncResult.status === 'failed') {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-red-400 flex items-center gap-0.5 text-xs cursor-default">
+            <XCircle className="w-3 h-3" /> Failed
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{syncResult.error || 'Sync failed'}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (syncResult.status === 'unchanged') {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-muted-foreground flex items-center gap-1 text-xs cursor-default">
+            <Minus className="w-3 h-3" /> =
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Price unchanged at {currencySymbol}{syncResult.newPrice?.toFixed(2)}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (syncResult.status === 'success' && syncResult.percentChange != null) {
+    const isUp = syncResult.percentChange > 0;
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`flex items-center gap-0.5 font-mono text-xs cursor-default ${isUp ? 'text-red-400' : 'text-emerald-400'}`}>
+            {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+            {isUp ? '↑' : '↓'}{Math.abs(syncResult.percentChange).toFixed(1)}%
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {currencySymbol}{syncResult.oldPrice?.toFixed(2)} -> {currencySymbol}{syncResult.newPrice?.toFixed(2)}
+          ({syncResult.percentChange > 0 ? '+' : ''}{syncResult.percentChange.toFixed(1)}%)
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return <span className="text-muted-foreground">---</span>;
+}
+```
+
+Also add `'unchanged'` row background highlight (already partially done at line 1507-1510, add yellow for unchanged):
+```typescript
+syncResult?.status === 'unchanged' ? 'bg-yellow-500/5' : ''
+```
+
+## Summary of File Changes
+
+| File | Changes |
+|------|---------|
+| `supabase/functions/get-current-price/index.ts` | Replace `validateFilamentPrice` with currency-aware version; update ~6 call sites in `extractPriceFromContent` to pass currency |
+| `src/pages/admin/PricingData.tsx` | Add `SyncChangeIndicator` component; use it in Change column when sync results exist; add yellow background for unchanged rows |
 
