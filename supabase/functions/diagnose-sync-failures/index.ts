@@ -79,6 +79,17 @@ function classifyError(error: string): {
     };
   }
 
+  if (e.includes('product_page_not_found') || e.includes('product page not found')) {
+    return {
+      pattern: 'Product page not found (404)',
+      severity: 'medium',
+      diagnosis: 'The product page returned a 404 or soft-404. The product may have been discontinued, renamed, or the URL slug changed.',
+      suggestedFix: 'Check if the product still exists on the store. If the URL changed, update it in the database. If discontinued, mark the filament accordingly.',
+      suggestedPrompt: 'Some product URLs are returning 404. Check the affected URLs manually — the products may have been discontinued or their slugs changed. Update or remove broken URLs from the filaments table.',
+      isTransient: false,
+    };
+  }
+
   if (e.includes('could not extract price')) {
     return {
       pattern: 'Price extraction failed',
