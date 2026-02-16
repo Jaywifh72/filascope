@@ -42,6 +42,9 @@ interface SyncResult {
   error?: string;
   source?: string;
   location?: string;
+  currencyMismatch?: boolean;
+  detectedCurrency?: string;
+  requestedCurrency?: string;
 }
 
 /** One store entry (region) for a product group */
@@ -494,12 +497,10 @@ export default function PricingData() {
           if (!url && v[urlField]) url = v[urlField];
           if (price == null && v[priceField] != null) {
             price = v[priceField];
-            if (region === 'US') {
-              compareAtPrice = v.variant_compare_at_price;
-              lastScrapedAt = v.last_scraped_at;
-              netWeightG = v.net_weight_g;
-            }
+            compareAtPrice = region === 'US' ? v.variant_compare_at_price : null;
+            netWeightG = v.net_weight_g;
           }
+          if (!lastScrapedAt && v.last_scraped_at) lastScrapedAt = v.last_scraped_at;
         }
 
         if (!url && price == null) continue;
@@ -901,6 +902,9 @@ export default function PricingData() {
         percentChange: pctChange,
         source: data.source || undefined,
         location: data.location || undefined,
+        currencyMismatch: data.currencyMismatch || false,
+        detectedCurrency: data.detectedCurrency || undefined,
+        requestedCurrency: data.requestedCurrency || undefined,
       };
       setSyncResults(prev => new Map(prev).set(store.storeKey, result));
 
@@ -1373,7 +1377,10 @@ function ProductGroupRows({
         return (
           <TableRow
             key={store.storeKey}
-            className={`${isLast ? '' : 'border-b-0'} hover:bg-muted/20`}
+            className={`${isLast ? '' : 'border-b-0'} hover:bg-muted/20 transition-colors duration-500 ${
+              syncResult?.status === 'success' ? 'bg-emerald-500/10' :
+              syncResult?.status === 'failed' ? 'bg-red-500/10' : ''
+            }`}
           >
             <TableCell className="w-8 px-2">
               <span className="text-muted-foreground/40 text-xs pl-1">└</span>
@@ -1416,6 +1423,18 @@ function ProductGroupRows({
                     <TooltipContent>
                       {syncResult.source === 'firecrawl' ? 'Firecrawl' : 'Shopify JSON'}
                       {syncResult.location ? ` · ${syncResult.location}` : ''}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {syncResult?.currencyMismatch && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 leading-tight border-yellow-400 text-yellow-400">
+                        ⚠️
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Currency mismatch: got {syncResult.detectedCurrency}, expected {syncResult.requestedCurrency}
                     </TooltipContent>
                   </Tooltip>
                 )}
