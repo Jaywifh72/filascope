@@ -1029,6 +1029,19 @@ export default function PricingData() {
       };
       setSyncResults(prev => new Map(prev).set(store.storeKey, result));
 
+      // Update url_validation_cache to reflect successful sync
+      if (store.productUrl) {
+        const baseUrl = store.productUrl.replace(/\?.*$/, '');
+        await supabase.from('url_validation_cache').upsert({
+          url: baseUrl,
+          status: 'valid',
+          status_code: 200,
+          redirect_url: null,
+          last_checked: new Date().toISOString(),
+          consecutive_failures: 0,
+        }, { onConflict: 'url' });
+      }
+
       if (showToast) {
         const variantNote = store.allFilamentIds.length > 1 ? ` · updated ${store.allFilamentIds.length} variants` : '';
         if (!priceChanged) toast.success(`✓ Price confirmed: ${store.currencySymbol}${price.toFixed(2)}${variantNote}`);
@@ -1648,16 +1661,24 @@ function ProductGroupRows({
               )}
             </TableCell>
             <TableCell className="text-xs text-muted-foreground">{store.currency}</TableCell>
-            <TableCell>{getLinkStatusBadge(store.linkStatus)}</TableCell>
+            <TableCell>
+              {syncResult?.status === 'success' || syncResult?.status === 'unchanged'
+                ? <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">🟢 Active</Badge>
+                : syncResult?.status === 'failed'
+                ? <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">🔴 Failed</Badge>
+                : getLinkStatusBadge(store.linkStatus)}
+            </TableCell>
             <TableCell>
               {result ? getTestResultBadge(result) : (
                 <Badge variant="outline" className="text-[10px] text-muted-foreground">⚪ Not Tested</Badge>
               )}
             </TableCell>
             <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap">
-              {store.lastScrapedAt
-                ? formatDistanceToNow(new Date(store.lastScrapedAt), { addSuffix: true })
-                : '—'}
+              {syncResult?.status === 'success' || syncResult?.status === 'unchanged'
+                ? 'just now'
+                : store.lastScrapedAt
+                  ? formatDistanceToNow(new Date(store.lastScrapedAt), { addSuffix: true })
+                  : '—'}
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-1">
