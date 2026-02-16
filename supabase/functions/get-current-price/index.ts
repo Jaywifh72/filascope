@@ -328,7 +328,7 @@ async function logExtractionAttempt(
   }
 }
 
-// Rate limit manual refreshes: 1 per URL per minute
+// Rate limit manual refreshes: 1 per URL per minute (only successful extractions count)
 async function canForceRefresh(productUrl: string): Promise<boolean> {
   const supabase = getSupabaseClient();
   const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
@@ -338,10 +338,11 @@ async function canForceRefresh(productUrl: string): Promise<boolean> {
     .select('id')
     .eq('product_url', productUrl)
     .eq('extraction_method', 'manual_refresh')
+    .eq('success', true)
     .gte('created_at', oneMinuteAgo)
     .limit(1);
   
-  // Allow if no recent manual refresh
+  // Allow if no recent SUCCESSFUL manual refresh (failed extractions can be retried immediately)
   return !data || data.length === 0;
 }
 
