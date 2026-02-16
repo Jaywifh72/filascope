@@ -1,112 +1,66 @@
 
 
-# Fix Cross-Sell Price Contamination in extractBambuLabPrice
+# Fix Three Critical Pricing Sync Bugs
 
-## Problem
+## Bug 1: Firecrawl 500 Retry Logic
 
-The `extractBambuLabPrice` function in `supabase/functions/get-current-price/index.ts` extracts ALL prices from the full page markdown, sorts them ascending, and picks the lowest. This causes it to select cross-sell/accessory prices (e.g., "$11.99 Support for ABS") instead of the main product price ("$19.99 ABS Filament").
+**File:** `supabase/functions/get-current-price/index.ts`
 
-This affects Bambu Lab and any other brand with "Frequently Bought Together" or cross-sell widgets on product pages.
+In `fetchPriceWithFirecrawl` (line ~2114), the Firecrawl API call at line 2115-2128 has no retry logic. When the response is not ok (line 2130), it immediately returns an error.
 
-## Root Cause
+**Fix:** Wrap the `fetch` call in a retry loop (up to 2 retries for 500/502/503 status codes with exponential backoff starting at 2s). Non-5xx errors return immediately as before.
 
-In every price extraction block (EUR, GBP, USD/CAD/AUD, fallback currencies, and last-resort dollar), the pattern is:
+The change replaces lines 2114-2146 with:
+- A `for` loop (attempts 0-2)
+- On 5xx: log retry, wait `2000 * (attempt + 1)` ms, continue
+- On final failure or 4xx: return the existing error response
+- On success: break out and continue to markdown extraction
+
+---
+
+## Bug 2: RPC Currency-Aware Price Column Updates
+
+**Migration:** New SQL migration to replace `update_filament_price_after_refresh`
+
+The current RPC always writes to `variant_price` regardless of currency. When called with JPY price 3400, it overwrites the USD base price.
+
+**Fix:** Replace the function with currency-branched logic:
+- USD writes to `variant_price` + `variant_compare_at_price`
+- CAD writes to `price_cad`
+- GBP writes to `price_gbp`
+- EUR writes to `price_eur`
+- AUD writes to `price_aud`
+- JPY writes to `price_jpy`
+- Unknown currencies default to USD behavior
+
+Price history INSERT remains unchanged (always logs with currency).
+
+---
+
+## Bug 3: Detailed RPC Error Messages
+
+**File:** `src/hooks/useAdminPriceRefresh.ts` (line 146-148)
+
+Replace generic "Failed to save price to database" with actual error:
 ```
-prices.sort((a, b) => a - b);  // sort ascending
-price = prices[0];              // take the LOWEST
-```
-
-The lowest price on the page is often an accessory, not the main product.
-
-## Solution
-
-Split the markdown into an "upper section" (before cross-sell markers) and extract prices from there first. Only fall back to the full page if the upper section yields nothing. In the upper section, take the FIRST price found (by page position), not the lowest.
-
-### Changes to `supabase/functions/get-current-price/index.ts`
-
-**1. Add a helper function to split markdown into main product vs. cross-sell sections (~line 1775)**
-
-```typescript
-function getMainProductSection(markdown: string): string {
-  // Split before cross-sell/accessory sections
-  const cutoffPatterns = [
-    /(?:frequently\s+bought\s+together|discover\s+more|you\s+may\s+also\s+like|related\s+products|customers\s+also\s+bought|recommended\s+for\s+you|support\s+for\s+\w+.*?\$)/i,
-    /add\s+to\s+cart/i,
-  ];
-  
-  let cutoff = markdown.length;
-  for (const pattern of cutoffPatterns) {
-    const match = markdown.search(pattern);
-    if (match > 0 && match < cutoff) {
-      cutoff = match;
-    }
-  }
-  
-  // Use at least the first 40% of the page if no markers found early
-  const minLength = Math.floor(markdown.length * 0.4);
-  if (cutoff < minLength) {
-    cutoff = minLength;
-  }
-  
-  return markdown.substring(0, cutoff);
-}
+Save failed: {rpcError.message}
 ```
 
-**2. Update `extractBambuLabPrice` to use upper-section-first strategy**
+**File:** `src/pages/admin/PricingData.tsx` (line 981)
 
-For each price extraction block (EUR at ~line 1803, GBP at ~line 1830, USD/CAD/AUD at ~line 1857, fallback currencies at ~line 1894, and last-resort dollar at ~line 1909):
-
-- First, try extracting from the main product section (upper portion)
-- If that yields valid prices, take the FIRST match by page position (not the lowest)
-- Only fall back to full-page extraction if upper section yields nothing
-- When falling back to full page, still take the first valid price rather than the lowest
-
-The key change in each block is replacing:
-```typescript
-.sort((a, b) => a - b);
-// take prices[0] (lowest)
+Replace generic "Failed to save price" with actual error:
 ```
-With:
-```typescript
-// No sort — take first valid match by page position
-// take prices[0] (first on page)
+Save failed: {rpcError.message}
 ```
 
-And wrapping each block to try the upper section first:
-```typescript
-const upperMarkdown = getMainProductSection(markdown);
+---
 
-// Try upper section first
-const upperMatches = [...upperMarkdown.matchAll(pattern)];
-if (upperMatches.length > 0) {
-  const prices = upperMatches
-    .map(m => parseFloat(m[1].replace(',', '.')))
-    .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, currency));
-  // Take FIRST valid price (by position), not lowest
-  if (prices.length > 0) {
-    return { price: prices[0], ... };
-  }
-}
+## Technical Summary
 
-// Fall back to full page
-const fullMatches = [...markdown.matchAll(pattern)];
-// same logic...
-```
-
-**3. Handle compare-at price correctly**
-
-When we take the first price by position instead of the lowest, the compare-at detection also changes. If two prices appear near each other (like "$19.99 ~~$22.99~~"), the first is the current price and the second (if higher by >10%) is the compare-at price. This logic stays the same but now operates on position-ordered prices rather than value-sorted ones.
-
-### No changes needed to other files
-
-- `validateFilamentPrice` is already currency-aware (JPY: 100-30000)
-- `shouldAlwaysUseFirecrawl` already includes `store.bambulab.com`
-- Geo-redirect Firecrawl-first routing is already active
-- `SyncChangeIndicator` UI is already implemented in PricingData.tsx
-
-## Expected Outcome
-
-- Bambu Lab ABS page: extracts $19.99 (main product) instead of $11.99 (cross-sell support material)
-- Works for all brands with cross-sell widgets since it uses generic section markers
-- No regression for pages without cross-sell sections (falls through to full-page extraction)
+| File | Change |
+|------|--------|
+| `supabase/functions/get-current-price/index.ts` | Add retry loop around Firecrawl fetch (lines 2114-2146) |
+| New SQL migration | Replace `update_filament_price_after_refresh` with currency-branched version |
+| `src/hooks/useAdminPriceRefresh.ts` | Line 148: show actual RPC error message |
+| `src/pages/admin/PricingData.tsx` | Line 981: show actual RPC error message |
 
