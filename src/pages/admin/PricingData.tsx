@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -14,9 +14,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { downloadCSV } from '@/lib/csvExport';
+import { invalidatePriceCache } from '@/hooks/useCurrentPrice';
 
 type LinkStatus = 'active' | 'stale' | 'broken' | 'alert' | 'unknown';
 
@@ -25,6 +27,14 @@ interface TestResult {
   statusCode?: number;
   latencyMs?: number;
   redirectUrl?: string | null;
+  error?: string;
+}
+
+interface SyncResult {
+  status: 'syncing' | 'success' | 'failed' | 'unchanged';
+  oldPrice?: number;
+  newPrice?: number;
+  percentChange?: number;
   error?: string;
 }
 
@@ -48,7 +58,8 @@ interface PricingRow {
   product_url_jp: string | null;
   last_scraped_at: string | null;
   price_confidence: string | null;
-  priceChange: { percent: number; direction: 'up' | 'down' | 'unchanged' } | null;
+  net_weight_g: number | null;
+  priceChange: { percent: number; direction: 'up' | 'down' | 'unchanged'; oldPrice?: number; newPrice?: number } | null;
   linkStatus: LinkStatus;
 }
 
@@ -121,17 +132,35 @@ function getTestResultBadge(result: TestResult | undefined) {
 function PriceChangeIndicator({ change }: { change: PricingRow['priceChange'] }) {
   if (!change) return <span className="text-muted-foreground">—</span>;
   if (change.direction === 'unchanged') return <span className="text-muted-foreground flex items-center gap-1"><Minus className="w-3 h-3" /> —</span>;
+
+  const diff = change.newPrice != null && change.oldPrice != null
+    ? (change.newPrice - change.oldPrice)
+    : null;
+  const tooltipText = change.oldPrice != null && change.newPrice != null
+    ? `Was $${change.oldPrice.toFixed(2)}, now $${change.newPrice.toFixed(2)} (${diff != null && diff > 0 ? '+' : ''}$${diff?.toFixed(2)})`
+    : `${change.direction === 'up' ? '+' : '-'}${Math.abs(change.percent).toFixed(1)}%`;
+
   if (change.direction === 'up') {
     return (
-      <span className="text-red-400 flex items-center gap-0.5 font-mono text-xs">
-        <ArrowUpRight className="w-3 h-3" />↑{Math.abs(change.percent).toFixed(1)}%
-      </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-red-400 flex items-center gap-0.5 font-mono text-xs cursor-default">
+            <ArrowUpRight className="w-3 h-3" />↑{Math.abs(change.percent).toFixed(1)}%
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{tooltipText}</TooltipContent>
+      </Tooltip>
     );
   }
   return (
-    <span className="text-emerald-400 flex items-center gap-0.5 font-mono text-xs">
-      <ArrowDownRight className="w-3 h-3" />↓{Math.abs(change.percent).toFixed(1)}%
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="text-emerald-400 flex items-center gap-0.5 font-mono text-xs cursor-default">
+          <ArrowDownRight className="w-3 h-3" />↓{Math.abs(change.percent).toFixed(1)}%
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{tooltipText}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -146,9 +175,14 @@ export default function PricingData() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [testResults, setTestResults] = useState<Map<string, TestResult>>(new Map());
+  const [syncResults, setSyncResults] = useState<Map<string, SyncResult>>(new Map());
   const [bulkTesting, setBulkTesting] = useState(false);
+  const [bulkSyncing, setBulkSyncing] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ tested: number; total: number } | null>(null);
+  const [bulkSyncProgress, setBulkSyncProgress] = useState<{ done: number; total: number } | null>(null);
   const abortRef = useRef(false);
+  const abortSyncRef = useRef(false);
+  const queryClient = useQueryClient();
 
   // Fetch filaments with pricing data
   const { data: filaments, isLoading: filamentsLoading } = useQuery({
@@ -156,7 +190,7 @@ export default function PricingData() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('filaments')
-        .select('id, product_title, vendor, material, variant_price, variant_compare_at_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, last_scraped_at, price_confidence')
+        .select('id, product_title, vendor, material, variant_price, variant_compare_at_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, last_scraped_at, price_confidence, net_weight_g')
         .not('variant_price', 'is', null)
         .order('vendor', { ascending: true })
         .order('product_title', { ascending: true })
@@ -200,7 +234,7 @@ export default function PricingData() {
           grouped.set(r.filament_id, existing);
         }
       });
-      const changes = new Map<string, { percent: number; direction: 'up' | 'down' | 'unchanged' }>();
+      const changes = new Map<string, { percent: number; direction: 'up' | 'down' | 'unchanged'; oldPrice?: number; newPrice?: number }>();
       grouped.forEach((prices, id) => {
         if (prices.length < 2 || prices[1] === 0) {
           changes.set(id, { percent: 0, direction: 'unchanged' });
@@ -211,7 +245,7 @@ export default function PricingData() {
         if (Math.abs(pct) < 0.1) {
           changes.set(id, { percent: 0, direction: 'unchanged' });
         } else {
-          changes.set(id, { percent: pct, direction: pct > 0 ? 'up' : 'down' });
+          changes.set(id, { percent: pct, direction: pct > 0 ? 'up' : 'down', oldPrice: previous, newPrice: current });
         }
       });
       return changes;
@@ -266,7 +300,11 @@ export default function PricingData() {
     const broken = rows.filter(r => r.linkStatus === 'broken').length;
     const alerts = rows.filter(r => r.linkStatus === 'alert').length;
     const withMultiRegion = rows.filter(r => [r.price_cad, r.price_eur, r.price_gbp, r.price_aud, r.price_jpy].filter(p => p != null).length > 0).length;
-    return { total: rows.length, active, stale, broken, alerts, withMultiRegion };
+    const stalePrices = rows.filter(r => {
+      if (!r.last_scraped_at) return true;
+      return (Date.now() - new Date(r.last_scraped_at).getTime()) > 7 * 24 * 60 * 60 * 1000;
+    }).length;
+    return { total: rows.length, active, stale, broken, alerts, withMultiRegion, stalePrices };
   }, [rows]);
 
   // --- Link testing ---
@@ -324,7 +362,6 @@ export default function PricingData() {
       };
       setTestResults(prev => new Map(prev).set(rowId, result));
 
-      // Update url_validation_cache for failures too
       await supabase
         .from('url_validation_cache')
         .upsert({
@@ -391,6 +428,193 @@ export default function PricingData() {
     testBatch(staleRows);
   }, [filtered, testBatch]);
 
+  // --- Price sync ---
+  const syncSinglePrice = useCallback(async (row: PricingRow, showToast = true): Promise<SyncResult> => {
+    if (!row.product_url) return { status: 'failed', error: 'No product URL' };
+    if (row.linkStatus === 'broken') return { status: 'failed', error: 'Link is broken' };
+
+    const oldPrice = row.variant_price;
+    setSyncResults(prev => new Map(prev).set(row.id, { status: 'syncing' }));
+
+    try {
+      // Call get-current-price edge function
+      const { data, error } = await supabase.functions.invoke('get-current-price', {
+        body: {
+          productUrl: row.product_url,
+          forceRefresh: true,
+          targetWeightGrams: row.net_weight_g,
+        },
+      });
+
+      if (error) {
+        const errorMsg = data?.error || error.message || 'Failed to fetch price';
+        const result: SyncResult = { status: 'failed', error: errorMsg };
+        setSyncResults(prev => new Map(prev).set(row.id, result));
+        if (showToast) toast.error(`✗ Failed to sync price — ${errorMsg}`);
+        return result;
+      }
+
+      if (!data?.success || data.price == null) {
+        const errorMsg = data?.error || 'Invalid price data received';
+        const result: SyncResult = { status: 'failed', error: errorMsg };
+        setSyncResults(prev => new Map(prev).set(row.id, result));
+        if (showToast) toast.error(`✗ ${errorMsg}`);
+        return result;
+      }
+
+      const { price, compareAtPrice, currency = 'USD' } = data;
+
+      // Persist via RPC
+      const { error: rpcError } = await supabase.rpc('update_filament_price_after_refresh', {
+        p_filament_id: row.id,
+        p_new_price: price,
+        p_compare_at_price: compareAtPrice || null,
+        p_currency: currency,
+        p_source: 'manual',
+      });
+
+      if (rpcError) {
+        const errorMsg = rpcError.message?.includes('Unauthorized') ? 'Admin access required' : 'Failed to save price';
+        const result: SyncResult = { status: 'failed', error: errorMsg };
+        setSyncResults(prev => new Map(prev).set(row.id, result));
+        if (showToast) toast.error(`✗ ${errorMsg}`);
+        return result;
+      }
+
+      // Invalidate price cache
+      invalidatePriceCache(row.product_url);
+
+      // Determine result
+      const priceChanged = oldPrice != null && Math.abs(price - oldPrice) > 0.01;
+      const pctChange = oldPrice && oldPrice > 0 ? ((price - oldPrice) / oldPrice) * 100 : 0;
+
+      const result: SyncResult = {
+        status: priceChanged ? 'success' : 'unchanged',
+        oldPrice: oldPrice ?? undefined,
+        newPrice: price,
+        percentChange: pctChange,
+      };
+      setSyncResults(prev => new Map(prev).set(row.id, result));
+
+      if (showToast) {
+        if (!priceChanged) {
+          toast.success(`✓ Price confirmed: $${price.toFixed(2)}`);
+        } else if (pctChange > 0) {
+          toast.warning(`⚠️ Price increased: $${oldPrice?.toFixed(2)} → $${price.toFixed(2)} (+${pctChange.toFixed(1)}%)`);
+        } else {
+          toast.success(`✓ Price decreased: $${oldPrice?.toFixed(2)} → $${price.toFixed(2)} (${pctChange.toFixed(1)}%)`);
+        }
+      }
+
+      return result;
+    } catch (err: any) {
+      const errorMsg = err instanceof Error ? err.message : 'Unexpected error';
+      const result: SyncResult = { status: 'failed', error: errorMsg };
+      setSyncResults(prev => new Map(prev).set(row.id, result));
+      if (showToast) toast.error(`✗ ${errorMsg}`);
+      return result;
+    }
+  }, []);
+
+  const syncBatch = useCallback(async (rowsToSync: PricingRow[]) => {
+    const syncable = rowsToSync.filter(r => r.product_url && r.linkStatus !== 'broken');
+    if (syncable.length === 0) {
+      toast.info('No syncable products in selection');
+      return;
+    }
+
+    setBulkSyncing(true);
+    setBulkSyncProgress({ done: 0, total: syncable.length });
+    abortSyncRef.current = false;
+    const startTime = Date.now();
+    let done = 0;
+    let updated = 0;
+    let unchanged = 0;
+    let failed = 0;
+
+    // Batch of 2 to avoid rate limits
+    for (let i = 0; i < syncable.length; i += 2) {
+      if (abortSyncRef.current) break;
+      const batch = syncable.slice(i, i + 2);
+      const results = await Promise.all(
+        batch.map(r => syncSinglePrice(r, false))
+      );
+      results.forEach(r => {
+        done++;
+        if (r.status === 'success') updated++;
+        else if (r.status === 'unchanged') unchanged++;
+        else failed++;
+      });
+      setBulkSyncProgress({ done, total: syncable.length });
+    }
+
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    setBulkSyncing(false);
+    setBulkSyncProgress(null);
+
+    // Refresh data
+    queryClient.invalidateQueries({ queryKey: ['admin-pricing-data'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-recent-price-changes'] });
+
+    if (abortSyncRef.current) {
+      toast.info(`⚠️ Sync cancelled — ${done}/${syncable.length} completed (${updated} updated, ${unchanged} unchanged, ${failed} failed)`);
+    } else {
+      toast.success(`Synced ${done} prices in ${elapsed}s — ${updated} updated, ${unchanged} unchanged, ${failed} failed`);
+    }
+  }, [syncSinglePrice, queryClient]);
+
+  const handleSyncSelected = useCallback(() => {
+    const selectedRows = filtered.filter(r => selectedIds.has(r.id));
+    syncBatch(selectedRows);
+  }, [filtered, selectedIds, syncBatch]);
+
+  const handleSyncStale = useCallback(() => {
+    const staleRows = filtered.filter(r => {
+      if (!r.last_scraped_at) return true;
+      return (Date.now() - new Date(r.last_scraped_at).getTime()) > 7 * 24 * 60 * 60 * 1000;
+    });
+    syncBatch(staleRows);
+  }, [filtered, syncBatch]);
+
+  // --- CSV Export ---
+  const handleExportPricing = useCallback(() => {
+    const exportData = filtered.map(r => ({
+      Product: r.product_title,
+      Brand: r.vendor,
+      Material: r.material || '',
+      Status: r.linkStatus,
+      USD: r.variant_price?.toFixed(2) || '',
+      CAD: r.price_cad?.toFixed(2) || '',
+      EUR: r.price_eur?.toFixed(2) || '',
+      GBP: r.price_gbp?.toFixed(2) || '',
+      AUD: r.price_aud?.toFixed(2) || '',
+      JPY: r.price_jpy?.toFixed(2) || '',
+      'Change %': r.priceChange?.percent?.toFixed(1) || '0',
+      'Last Sync': r.last_scraped_at || '',
+    }));
+    downloadCSV(exportData, 'pricing-report');
+    toast.success('Exported pricing report');
+  }, [filtered]);
+
+  const handleExportChanges = useCallback(() => {
+    const changedRows = filtered.filter(r => r.priceChange && r.priceChange.direction !== 'unchanged');
+    if (changedRows.length === 0) {
+      toast.info('No price changes to export');
+      return;
+    }
+    const exportData = changedRows.map(r => ({
+      Product: r.product_title,
+      Brand: r.vendor,
+      'Old Price': r.priceChange?.oldPrice?.toFixed(2) || '',
+      'New Price': r.priceChange?.newPrice?.toFixed(2) || '',
+      'Change %': r.priceChange?.percent?.toFixed(1) || '',
+      Direction: r.priceChange?.direction || '',
+      'Last Sync': r.last_scraped_at || '',
+    }));
+    downloadCSV(exportData, 'price-changes');
+    toast.success(`Exported ${changedRows.length} price changes`);
+  }, [filtered]);
+
   // Selection helpers
   const visibleIds = useMemo(() => filtered.slice(0, 200).map(r => r.id), [filtered]);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
@@ -418,6 +642,7 @@ export default function PricingData() {
   }
 
   const selectedCount = [...selectedIds].filter(id => visibleIds.includes(id)).length;
+  const isBusy = bulkTesting || bulkSyncing;
 
   return (
     <AdminLayout>
@@ -435,31 +660,31 @@ export default function PricingData() {
 
         {/* Stats cards */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <Card className="border-border/50">
+          <Card className="border-border/50 cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setStatusFilter('all')}>
             <CardContent className="p-3 text-center">
               <p className="text-2xl font-bold text-foreground">{stats.total}</p>
               <p className="text-[11px] text-muted-foreground">Total Products</p>
             </CardContent>
           </Card>
-          <Card className="border-emerald-500/30 bg-emerald-500/5">
+          <Card className="border-emerald-500/30 bg-emerald-500/5 cursor-pointer hover:border-emerald-400/50 transition-colors" onClick={() => setStatusFilter('active')}>
             <CardContent className="p-3 text-center">
               <p className="text-2xl font-bold text-emerald-400">{stats.active}</p>
               <p className="text-[11px] text-emerald-400/70">Active Links</p>
             </CardContent>
           </Card>
-          <Card className="border-yellow-500/30 bg-yellow-500/5">
+          <Card className="border-yellow-500/30 bg-yellow-500/5 cursor-pointer hover:border-yellow-400/50 transition-colors" onClick={() => setStatusFilter('stale')}>
             <CardContent className="p-3 text-center">
               <p className="text-2xl font-bold text-yellow-400">{stats.stale}</p>
               <p className="text-[11px] text-yellow-400/70">Stale Links</p>
             </CardContent>
           </Card>
-          <Card className="border-red-500/30 bg-red-500/5">
+          <Card className="border-red-500/30 bg-red-500/5 cursor-pointer hover:border-red-400/50 transition-colors" onClick={() => setStatusFilter('broken')}>
             <CardContent className="p-3 text-center">
               <p className="text-2xl font-bold text-red-400">{stats.broken}</p>
               <p className="text-[11px] text-red-400/70">Broken Links</p>
             </CardContent>
           </Card>
-          <Card className="border-purple-500/30 bg-purple-500/5">
+          <Card className="border-purple-500/30 bg-purple-500/5 cursor-pointer hover:border-purple-400/50 transition-colors" onClick={() => setStatusFilter('alert')}>
             <CardContent className="p-3 text-center">
               <p className="text-2xl font-bold text-purple-400">{stats.alerts}</p>
               <p className="text-[11px] text-purple-400/70">Price Alerts</p>
@@ -525,10 +750,11 @@ export default function PricingData() {
             </span>
           </div>
           <div className="h-4 w-px bg-border" />
+          {/* Link testing buttons */}
           <Button
             size="sm"
             variant="outline"
-            disabled={selectedCount === 0 || bulkTesting}
+            disabled={selectedCount === 0 || isBusy}
             onClick={handleTestSelected}
             className="text-xs gap-1.5"
           >
@@ -538,15 +764,53 @@ export default function PricingData() {
           <Button
             size="sm"
             variant="outline"
-            disabled={bulkTesting}
+            disabled={isBusy}
             onClick={handleTestAllStale}
             className="text-xs gap-1.5"
           >
             <Zap className="w-3.5 h-3.5" />
             Test All Stale
           </Button>
-          {bulkTesting && (
-            <Button size="sm" variant="ghost" onClick={() => { abortRef.current = true; }} className="text-xs text-destructive">
+          <div className="h-4 w-px bg-border" />
+          {/* Price sync buttons */}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={selectedCount === 0 || isBusy}
+            onClick={handleSyncSelected}
+            className="text-xs gap-1.5"
+          >
+            {bulkSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Resync Selected ({selectedCount})
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isBusy}
+            onClick={handleSyncStale}
+            className="text-xs gap-1.5"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Resync Stale
+            {stats.stalePrices > 0 && (
+              <Badge variant="secondary" className="text-[9px] ml-1">{stats.stalePrices}</Badge>
+            )}
+          </Button>
+          <div className="h-4 w-px bg-border" />
+          {/* Export buttons */}
+          <Button size="sm" variant="ghost" onClick={handleExportPricing} className="text-xs gap-1.5">
+            <Download className="w-3.5 h-3.5" /> Export Pricing
+          </Button>
+          <Button size="sm" variant="ghost" onClick={handleExportChanges} className="text-xs gap-1.5">
+            <Download className="w-3.5 h-3.5" /> Export Changes
+          </Button>
+          {isBusy && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => { abortRef.current = true; abortSyncRef.current = true; }}
+              className="text-xs text-destructive"
+            >
               Cancel
             </Button>
           )}
@@ -558,6 +822,14 @@ export default function PricingData() {
             <Progress value={(bulkProgress.tested / bulkProgress.total) * 100} className="h-2" />
             <p className="text-xs text-muted-foreground text-center">
               Testing {bulkProgress.tested}/{bulkProgress.total} links…
+            </p>
+          </div>
+        )}
+        {bulkSyncProgress && (
+          <div className="space-y-1">
+            <Progress value={(bulkSyncProgress.done / bulkSyncProgress.total) * 100} className="h-2" />
+            <p className="text-xs text-muted-foreground text-center">
+              Syncing prices: {bulkSyncProgress.done}/{bulkSyncProgress.total}
             </p>
           </div>
         )}
@@ -594,8 +866,18 @@ export default function PricingData() {
                 <TableBody>
                   {filtered.slice(0, 200).map(row => {
                     const result = testResults.get(row.id);
+                    const syncResult = syncResults.get(row.id);
+                    const hasLargeChange = row.priceChange && Math.abs(row.priceChange.percent) > 10;
+                    const displayPrice = syncResult?.status === 'success' || syncResult?.status === 'unchanged'
+                      ? syncResult.newPrice ?? row.variant_price
+                      : row.variant_price;
+
                     return (
-                      <TableRow key={row.id} data-state={selectedIds.has(row.id) ? 'selected' : undefined}>
+                      <TableRow
+                        key={row.id}
+                        data-state={selectedIds.has(row.id) ? 'selected' : undefined}
+                        className={hasLargeChange ? 'bg-purple-500/5' : undefined}
+                      >
                         <TableCell>
                           <Checkbox
                             checked={selectedIds.has(row.id)}
@@ -622,8 +904,14 @@ export default function PricingData() {
                           )}
                         </TableCell>
                         <TableCell className="text-right font-mono text-xs">
-                          {formatCurrency(row.variant_price, '$')}
-                          {row.variant_compare_at_price != null && row.variant_compare_at_price > (row.variant_price ?? 0) && (
+                          <span className={
+                            syncResult?.status === 'success' && syncResult.percentChange
+                              ? syncResult.percentChange > 0 ? 'text-red-400' : 'text-emerald-400'
+                              : ''
+                          }>
+                            {formatCurrency(displayPrice, '$')}
+                          </span>
+                          {row.variant_compare_at_price != null && row.variant_compare_at_price > (displayPrice ?? 0) && (
                             <span className="text-[10px] text-muted-foreground line-through ml-1">
                               ${row.variant_compare_at_price.toFixed(2)}
                             </span>
@@ -642,6 +930,7 @@ export default function PricingData() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
+                            {/* Resync Price button */}
                             {row.product_url && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -649,7 +938,30 @@ export default function PricingData() {
                                     size="icon"
                                     variant="ghost"
                                     className="h-7 w-7"
-                                    disabled={result?.status === 'testing'}
+                                    disabled={syncResult?.status === 'syncing' || row.linkStatus === 'broken' || isBusy}
+                                    onClick={() => syncSinglePrice(row)}
+                                  >
+                                    {syncResult?.status === 'syncing' ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <RefreshCw className={`w-3.5 h-3.5 ${syncResult?.status === 'success' ? 'text-emerald-400' : syncResult?.status === 'failed' ? 'text-red-400' : ''}`} />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {row.linkStatus === 'broken' ? 'Cannot sync — link is broken' : 'Fetch current price from store'}
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                            {/* Test link button */}
+                            {row.product_url && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7"
+                                    disabled={result?.status === 'testing' || isBusy}
                                     onClick={() => testSingleUrl(row.id, row.product_url!)}
                                   >
                                     {result?.status === 'testing' ? (
