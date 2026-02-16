@@ -783,7 +783,7 @@ export default function PricingData() {
       const isGeoRedirected = !!data.isGeoRedirected;
       const isKnownGeoRedirect = !!data.isKnownGeoRedirect;
       if (data.ok) {
-        result = { status: isGeoRedirected ? 'geo_restricted' : 'ok', statusCode: data.statusCode, latencyMs, fetchMethod, isGeoRedirected, isKnownGeoRedirect };
+        result = { status: 'ok', statusCode: data.statusCode, latencyMs, fetchMethod, isGeoRedirected: data.isKnownGeoRedirect ? false : isGeoRedirected, isKnownGeoRedirect };
       } else if (data.isRedirect) {
         result = { status: 'redirect', statusCode: data.statusCode, latencyMs, redirectUrl: data.redirectLocation, fetchMethod, isGeoRedirected };
       } else {
