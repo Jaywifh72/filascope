@@ -1,144 +1,112 @@
 
 
-# Fix Three Critical Issues in Pricing Sync System
+# Fix Cross-Sell Price Contamination in extractBambuLabPrice
 
-## Issue 1: Price Validation Rejects Non-USD Currencies (JPY, etc.)
+## Problem
 
-### Problem
-`validateFilamentPrice(price, min=10, max=150)` uses USD-hardcoded range. JPY prices like 3400 are rejected because 3400 > 150.
+The `extractBambuLabPrice` function in `supabase/functions/get-current-price/index.ts` extracts ALL prices from the full page markdown, sorts them ascending, and picks the lowest. This causes it to select cross-sell/accessory prices (e.g., "$11.99 Support for ABS") instead of the main product price ("$19.99 ABS Filament").
 
-### Solution
-Replace the function with a currency-aware version:
+This affects Bambu Lab and any other brand with "Frequently Bought Together" or cross-sell widgets on product pages.
 
-**File: `supabase/functions/get-current-price/index.ts`**
+## Root Cause
 
-Replace `validateFilamentPrice` (line 1265-1268) with:
+In every price extraction block (EUR, GBP, USD/CAD/AUD, fallback currencies, and last-resort dollar), the pattern is:
+```
+prices.sort((a, b) => a - b);  // sort ascending
+price = prices[0];              // take the LOWEST
+```
+
+The lowest price on the page is often an accessory, not the main product.
+
+## Solution
+
+Split the markdown into an "upper section" (before cross-sell markers) and extract prices from there first. Only fall back to the full page if the upper section yields nothing. In the upper section, take the FIRST price found (by page position), not the lowest.
+
+### Changes to `supabase/functions/get-current-price/index.ts`
+
+**1. Add a helper function to split markdown into main product vs. cross-sell sections (~line 1775)**
+
 ```typescript
-const CURRENCY_PRICE_RANGES: Record<string, { min: number; max: number }> = {
-  USD: { min: 3, max: 200 },
-  CAD: { min: 3, max: 200 },
-  AUD: { min: 3, max: 200 },
-  GBP: { min: 3, max: 150 },
-  EUR: { min: 3, max: 200 },
-  JPY: { min: 100, max: 30000 },
-  default: { min: 1, max: 50000 },
-};
-
-function validateFilamentPrice(price: number, currency: string = 'USD'): boolean {
-  const range = CURRENCY_PRICE_RANGES[currency] || CURRENCY_PRICE_RANGES.default;
-  return price >= range.min && price <= range.max;
+function getMainProductSection(markdown: string): string {
+  // Split before cross-sell/accessory sections
+  const cutoffPatterns = [
+    /(?:frequently\s+bought\s+together|discover\s+more|you\s+may\s+also\s+like|related\s+products|customers\s+also\s+bought|recommended\s+for\s+you|support\s+for\s+\w+.*?\$)/i,
+    /add\s+to\s+cart/i,
+  ];
+  
+  let cutoff = markdown.length;
+  for (const pattern of cutoffPatterns) {
+    const match = markdown.search(pattern);
+    if (match > 0 && match < cutoff) {
+      cutoff = match;
+    }
+  }
+  
+  // Use at least the first 40% of the page if no markers found early
+  const minLength = Math.floor(markdown.length * 0.4);
+  if (cutoff < minLength) {
+    cutoff = minLength;
+  }
+  
+  return markdown.substring(0, cutoff);
 }
 ```
 
-Update all ~15 call sites to pass the appropriate currency. The calls fall into these categories:
+**2. Update `extractBambuLabPrice` to use upper-section-first strategy**
 
-| Location | Current Call | Currency Source |
-|----------|-------------|----------------|
-| Creality extraction (~lines 1550, 1590, 1608, 1625, 1639) | `validateFilamentPrice(p)` | Hardcoded `'USD'` (Creality is always USD) -- no change needed since USD is default |
-| `extractPriceFromContent` EUR block (~line 1796) | `validateFilamentPrice(p)` | Pass `'EUR'` |
-| `extractPriceFromContent` GBP block (~line 1822) | `validateFilamentPrice(p)` | Pass `'GBP'` |
-| `extractPriceFromContent` USD/CAD/AUD block (~line 1847) | `validateFilamentPrice(p)` | Pass `preferredCurrency` |
-| `extractPriceFromContent` fallback currencies (~line 1884) | `validateFilamentPrice(p)` | Pass `cur` (the loop variable) |
-| `extractPriceFromContent` last resort dollar (~line 1899) | `validateFilamentPrice(p)` | `'USD'` (default, no change) |
+For each price extraction block (EUR at ~line 1803, GBP at ~line 1830, USD/CAD/AUD at ~line 1857, fallback currencies at ~line 1894, and last-resort dollar at ~line 1909):
 
-This is backwards-compatible: existing USD-only calls keep working since `'USD'` is the default.
+- First, try extracting from the main product section (upper portion)
+- If that yields valid prices, take the FIRST match by page position (not the lowest)
+- Only fall back to full-page extraction if upper section yields nothing
+- When falling back to full page, still take the first valid price rather than the lowest
 
----
-
-## Issue 2: Firecrawl Routing Confirmation
-
-### Current State (Already Correct)
-After inspecting the code, both changes are actually already in place:
-
-- Line 1669: `shouldAlwaysUseFirecrawl` already contains `['amolen.com', 'store.bambulab.com']`
-- Lines 2597-2599: The geo-redirect + non-USD Firecrawl-first routing is already implemented
-
-No changes needed for this issue. The previous edits were applied successfully.
-
----
-
-## Issue 3: Sync Result Feedback in Change Column
-
-### Problem
-After syncing, the Change column always shows "---" because `PriceChangeIndicator` reads from `store.priceChange` (historical DB data), not from the just-completed `syncResult`.
-
-### Solution
-**File: `src/pages/admin/PricingData.tsx`**
-
-In the store row rendering (line 1579), replace the static `PriceChangeIndicator` with sync-aware logic:
-
+The key change in each block is replacing:
 ```typescript
-{/* Change column - show sync result if available, otherwise historical */}
-<TableCell>
-  {syncResult && syncResult.status !== 'syncing' ? (
-    <SyncChangeIndicator syncResult={syncResult} currencySymbol={store.currencySymbol} />
-  ) : (
-    <PriceChangeIndicator change={store.priceChange} />
-  )}
-</TableCell>
+.sort((a, b) => a - b);
+// take prices[0] (lowest)
+```
+With:
+```typescript
+// No sort — take first valid match by page position
+// take prices[0] (first on page)
 ```
 
-Add a new `SyncChangeIndicator` component (near `PriceChangeIndicator`, around line 310):
-
+And wrapping each block to try the upper section first:
 ```typescript
-function SyncChangeIndicator({ syncResult, currencySymbol }: { syncResult: SyncResult; currencySymbol: string }) {
-  if (syncResult.status === 'failed') {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="text-red-400 flex items-center gap-0.5 text-xs cursor-default">
-            <XCircle className="w-3 h-3" /> Failed
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>{syncResult.error || 'Sync failed'}</TooltipContent>
-      </Tooltip>
-    );
-  }
+const upperMarkdown = getMainProductSection(markdown);
 
-  if (syncResult.status === 'unchanged') {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="text-muted-foreground flex items-center gap-1 text-xs cursor-default">
-            <Minus className="w-3 h-3" /> =
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>Price unchanged at {currencySymbol}{syncResult.newPrice?.toFixed(2)}</TooltipContent>
-      </Tooltip>
-    );
+// Try upper section first
+const upperMatches = [...upperMarkdown.matchAll(pattern)];
+if (upperMatches.length > 0) {
+  const prices = upperMatches
+    .map(m => parseFloat(m[1].replace(',', '.')))
+    .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, currency));
+  // Take FIRST valid price (by position), not lowest
+  if (prices.length > 0) {
+    return { price: prices[0], ... };
   }
-
-  if (syncResult.status === 'success' && syncResult.percentChange != null) {
-    const isUp = syncResult.percentChange > 0;
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className={`flex items-center gap-0.5 font-mono text-xs cursor-default ${isUp ? 'text-red-400' : 'text-emerald-400'}`}>
-            {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-            {isUp ? '↑' : '↓'}{Math.abs(syncResult.percentChange).toFixed(1)}%
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>
-          {currencySymbol}{syncResult.oldPrice?.toFixed(2)} -> {currencySymbol}{syncResult.newPrice?.toFixed(2)}
-          ({syncResult.percentChange > 0 ? '+' : ''}{syncResult.percentChange.toFixed(1)}%)
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-
-  return <span className="text-muted-foreground">---</span>;
 }
+
+// Fall back to full page
+const fullMatches = [...markdown.matchAll(pattern)];
+// same logic...
 ```
 
-Also add `'unchanged'` row background highlight (already partially done at line 1507-1510, add yellow for unchanged):
-```typescript
-syncResult?.status === 'unchanged' ? 'bg-yellow-500/5' : ''
-```
+**3. Handle compare-at price correctly**
 
-## Summary of File Changes
+When we take the first price by position instead of the lowest, the compare-at detection also changes. If two prices appear near each other (like "$19.99 ~~$22.99~~"), the first is the current price and the second (if higher by >10%) is the compare-at price. This logic stays the same but now operates on position-ordered prices rather than value-sorted ones.
 
-| File | Changes |
-|------|---------|
-| `supabase/functions/get-current-price/index.ts` | Replace `validateFilamentPrice` with currency-aware version; update ~6 call sites in `extractPriceFromContent` to pass currency |
-| `src/pages/admin/PricingData.tsx` | Add `SyncChangeIndicator` component; use it in Change column when sync results exist; add yellow background for unchanged rows |
+### No changes needed to other files
+
+- `validateFilamentPrice` is already currency-aware (JPY: 100-30000)
+- `shouldAlwaysUseFirecrawl` already includes `store.bambulab.com`
+- Geo-redirect Firecrawl-first routing is already active
+- `SyncChangeIndicator` UI is already implemented in PricingData.tsx
+
+## Expected Outcome
+
+- Bambu Lab ABS page: extracts $19.99 (main product) instead of $11.99 (cross-sell support material)
+- Works for all brands with cross-sell widgets since it uses generic section markers
+- No regression for pages without cross-sell sections (falls through to full-page extraction)
 
