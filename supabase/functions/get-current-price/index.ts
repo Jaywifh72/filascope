@@ -2114,22 +2114,53 @@ async function fetchPriceWithFirecrawl(
   try {
     const MAX_FIRECRAWL_RETRIES = 2;
     let response: Response | null = null;
+    let lastNetworkError: string | null = null;
     
     for (let attempt = 0; attempt <= MAX_FIRECRAWL_RETRIES; attempt++) {
-      response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${firecrawlApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: productUrl,
-          formats: ['markdown'],
-          onlyMainContent: useMainContentOnly,
-          waitFor: isCreality ? 5000 : 3000,
-          location: location,
-        }),
-      });
+      try {
+        response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${firecrawlApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: productUrl,
+            formats: ['markdown'],
+            onlyMainContent: useMainContentOnly,
+            waitFor: isCreality ? 5000 : 3000,
+            location: location,
+          }),
+        });
+        lastNetworkError = null;
+      } catch (networkErr) {
+        // Network-level errors (TCP connection failures, DNS errors, timeouts)
+        const errMsg = networkErr instanceof Error ? networkErr.message : String(networkErr);
+        lastNetworkError = errMsg;
+        console.error(`Firecrawl network error on attempt ${attempt + 1}/${MAX_FIRECRAWL_RETRIES + 1}: ${errMsg}`);
+        
+        if (attempt < MAX_FIRECRAWL_RETRIES) {
+          const delayMs = 2000 * (attempt + 1);
+          console.log(`Retrying after ${delayMs}ms...`);
+          await new Promise(r => setTimeout(r, delayMs));
+          continue;
+        }
+        
+        // Exhausted retries on network error
+        return {
+          success: false,
+          price: null,
+          compareAtPrice: null,
+          weightGrams: null,
+          diameterMm: null,
+          variantTitle: null,
+          currency: preferredCurrency,
+          available: false,
+          source: 'firecrawl',
+          fetchedAt: new Date().toISOString(),
+          error: `Firecrawl network error: ${errMsg}`,
+        };
+      }
       
       if (response.ok) break;
       
