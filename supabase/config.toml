@@ -467,3 +467,6 @@ verify_jwt = false
 
 [functions.daily-price-orchestrator]
 verify_jwt = false
+
+[functions.diagnose-sync-failures]
+verify_jwt = false

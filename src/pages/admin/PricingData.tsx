@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
@@ -12,11 +12,34 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download, ChevronRight, ChevronDown, ChevronsUpDown, Palette, Link2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download, ChevronRight, ChevronDown, ChevronsUpDown, Palette, Link2, Bot, Copy, RotateCcw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { downloadCSV } from '@/lib/csvExport';
 import { invalidatePriceCache } from '@/hooks/useCurrentPrice';
+
+// =============================================
+// Diagnosis types
+// =============================================
+
+interface DiagnosisItem {
+  pattern: string;
+  count: number;
+  severity: 'high' | 'medium' | 'low';
+  diagnosis: string;
+  suggestedFix: string;
+  suggestedPrompt: string;
+  affectedProducts: string[];
+  isTransient: boolean;
+}
+
+interface DiagnosisResult {
+  summary: string;
+  diagnoses: DiagnosisItem[];
+  overallHealth: 'good' | 'fair' | 'poor';
+}
 
 // =============================================
 // Types
@@ -423,9 +446,23 @@ export default function PricingData() {
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; variants?: number } | null>(null);
   const [bulkSyncProgress, setBulkSyncProgress] = useState<{ done: number; total: number; variants?: number } | null>(null);
   const [isPopulatingUrls, setIsPopulatingUrls] = useState(false);
+  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
+  const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const abortRef = useRef(false);
   const abortSyncRef = useRef(false);
   const queryClient = useQueryClient();
+
+  // Load persisted diagnosis from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('filascope_last_diagnosis');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.result) setDiagnosisResult(parsed.result);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   // =============================================
   // Data fetching — grouped by product_line_id
@@ -1249,6 +1286,74 @@ export default function PricingData() {
   }, [canPopulateUrls, vendorFilter, filtered.length, queryClient]);
 
   // =============================================
+  // Failure Diagnosis
+  // =============================================
+
+  const failedSyncCount = useMemo(() => {
+    let count = 0;
+    syncResults.forEach(r => { if (r.status === 'failed') count++; });
+    return count;
+  }, [syncResults]);
+
+  const handleDiagnoseFailures = useCallback(async () => {
+    const failures: { product: string; region: string; currency: string; url: string; error: string; brand: string; extractedPrice?: number; source?: string }[] = [];
+
+    syncResults.forEach((result, storeKey) => {
+      if (result.status !== 'failed') return;
+      const entry = storeKeyMap.get(storeKey);
+      if (!entry) return;
+      failures.push({
+        product: entry.group.cleanName,
+        region: entry.store.region,
+        currency: entry.store.currency,
+        url: entry.store.productUrl || '',
+        error: result.error || 'Unknown error',
+        brand: entry.group.vendor,
+        extractedPrice: result.newPrice,
+        source: result.source,
+      });
+    });
+
+    if (failures.length === 0) { toast.info('No failures to diagnose'); return; }
+
+    setIsDiagnosing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('diagnose-sync-failures', {
+        body: { failures },
+      });
+      if (error) throw error;
+      setDiagnosisResult(data as DiagnosisResult);
+      setShowDiagnosisModal(true);
+      localStorage.setItem('filascope_last_diagnosis', JSON.stringify({ result: data, timestamp: new Date().toISOString() }));
+    } catch (err: any) {
+      toast.error(`Diagnosis failed: ${err.message}`);
+    } finally {
+      setIsDiagnosing(false);
+    }
+  }, [syncResults, storeKeyMap]);
+
+  const handleRetryTransient = useCallback(async () => {
+    if (!diagnosisResult) return;
+    const transientPatterns = diagnosisResult.diagnoses.filter(d => d.isTransient);
+    const transientProducts = new Set(transientPatterns.flatMap(d => d.affectedProducts));
+
+    const storesToRetry: StoreRow[] = [];
+    syncResults.forEach((result, storeKey) => {
+      if (result.status !== 'failed') return;
+      const entry = storeKeyMap.get(storeKey);
+      if (!entry) return;
+      const label = `${entry.group.cleanName} ${entry.store.region}`;
+      if (transientProducts.has(label)) {
+        storesToRetry.push(entry.store);
+      }
+    });
+
+    if (storesToRetry.length === 0) { toast.info('No transient failures to retry'); return; }
+    setShowDiagnosisModal(false);
+    syncBatch(storesToRetry);
+  }, [diagnosisResult, syncResults, storeKeyMap, syncBatch]);
+
+  // =============================================
   // Render
   // =============================================
 
@@ -1379,8 +1484,22 @@ export default function PricingData() {
             <RefreshCw className="w-3.5 h-3.5" /> Resync Stale
             {stats.stalePrices > 0 && <Badge variant="secondary" className="text-[9px] ml-1">{stats.stalePrices}</Badge>}
           </Button>
+          {(failedSyncCount > 0 || diagnosisResult) && (
+            <>
+              <div className="h-4 w-px bg-border" />
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isDiagnosing || (failedSyncCount === 0 && !diagnosisResult)}
+                onClick={failedSyncCount > 0 ? handleDiagnoseFailures : () => setShowDiagnosisModal(true)}
+                className="text-xs gap-1.5"
+              >
+                {isDiagnosing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bot className="w-3.5 h-3.5" />}
+                {failedSyncCount > 0 ? `Diagnose (${failedSyncCount})` : 'Last Diagnosis'}
+              </Button>
+            </>
+          )}
           <div className="h-4 w-px bg-border" />
-          {/* Export */}
           <Button size="sm" variant="ghost" onClick={handleExportPricing} className="text-xs gap-1.5">
             <Download className="w-3.5 h-3.5" /> Export
           </Button>
@@ -1488,6 +1607,103 @@ export default function PricingData() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Diagnosis Modal */}
+      <Dialog open={showDiagnosisModal} onOpenChange={setShowDiagnosisModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="w-5 h-5" />
+              Sync Failure Diagnosis
+              {diagnosisResult && (
+                <Badge className={`ml-2 text-[10px] ${
+                  diagnosisResult.overallHealth === 'poor' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                  diagnosisResult.overallHealth === 'fair' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
+                  'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                }`}>
+                  {diagnosisResult.overallHealth === 'poor' ? '🔴' : diagnosisResult.overallHealth === 'fair' ? '🟡' : '🟢'} {diagnosisResult.overallHealth.toUpperCase()}
+                </Badge>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {diagnosisResult?.summary || 'Analyzing failures...'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {diagnosisResult && (
+            <div className="space-y-3 mt-2">
+              {diagnosisResult.diagnoses.map((d, i) => (
+                <Card key={i} className={`border-l-4 ${
+                  d.severity === 'high' ? 'border-l-red-500' :
+                  d.severity === 'medium' ? 'border-l-yellow-500' :
+                  'border-l-emerald-500'
+                }`}>
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge className={`text-[10px] ${
+                          d.severity === 'high' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                          d.severity === 'medium' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
+                          'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                        }`}>
+                          {d.severity}
+                        </Badge>
+                        <span className="text-sm font-medium text-foreground">{d.pattern}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">{d.count} affected</Badge>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">{d.diagnosis}</p>
+                    <p className="text-xs text-foreground"><span className="font-medium">Fix:</span> {d.suggestedFix}</p>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs gap-1.5 h-7"
+                        onClick={() => {
+                          navigator.clipboard.writeText(d.suggestedPrompt);
+                          toast.success('Fix prompt copied to clipboard');
+                        }}
+                      >
+                        <Copy className="w-3 h-3" /> Copy Fix Prompt
+                      </Button>
+                      {d.isTransient && (
+                        <Badge variant="outline" className="text-[9px] text-muted-foreground">Transient — can retry</Badge>
+                      )}
+                    </div>
+
+                    {d.affectedProducts.length > 0 && (
+                      <Collapsible>
+                        <CollapsibleTrigger className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 pt-1">
+                          <ChevronRight className="w-3 h-3" /> Show {d.affectedProducts.length} affected products
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-1 pl-4 space-y-0.5 max-h-32 overflow-y-auto">
+                            {d.affectedProducts.map((p, j) => (
+                              <p key={j} className="text-[10px] text-muted-foreground font-mono">{p}</p>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+
+              {diagnosisResult.diagnoses.some(d => d.isTransient) && (
+                <Button
+                  variant="outline"
+                  className="w-full text-xs gap-1.5"
+                  onClick={handleRetryTransient}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Retry Transient Failures
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
