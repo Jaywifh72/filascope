@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { fetchRegionalStore, detectRegionFromUrl, type FetchMethod } from '../_shared/regional-fetch.ts';
+import { fetchRegionalStore, detectRegionFromUrl, isGeoRedirectDomain, type FetchMethod } from '../_shared/regional-fetch.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -126,18 +126,20 @@ Deno.serve(async (req) => {
     const isOk = statusCode >= 200 && statusCode < 300;
     const isRedirect = statusCode >= 300 && statusCode < 400;
     const isGeoRedirected = result.method === 'redirected' && !!result.warning;
+    const knownGeoRedirect = isGeoRedirected && isOk && isGeoRedirectDomain(url);
 
-    console.log(`URL ${url} → status ${statusCode}, method: ${result.method}${isGeoRedirected ? ' (geo-redirected)' : ''}`);
+    console.log(`URL ${url} → status ${statusCode}, method: ${result.method}${isGeoRedirected ? ' (geo-redirected)' : ''}${knownGeoRedirect ? ' [known geo-redirect domain]' : ''}`);
 
     return new Response(
       JSON.stringify({
-        ok: isOk,
+        ok: isOk || knownGeoRedirect,
         statusCode,
         isRedirect: isRedirect && !isOk,
         redirectLocation: result.redirectedTo || null,
-        error: isOk ? null : `HTTP ${statusCode}`,
+        error: (isOk || knownGeoRedirect) ? null : `HTTP ${statusCode}`,
         fetchMethod: result.method,
-        isGeoRedirected,
+        isGeoRedirected: isGeoRedirected && !knownGeoRedirect,
+        isKnownGeoRedirect: knownGeoRedirect,
         warning: result.warning || null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
