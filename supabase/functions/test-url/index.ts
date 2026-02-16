@@ -1,10 +1,37 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { fetchRegionalStore, detectRegionFromUrl, isGeoRedirectDomain, type FetchMethod } from '../_shared/regional-fetch.ts';
+import { fetchRegionalStore, detectRegionFromUrl, type FetchMethod } from '../_shared/regional-fetch.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Domains that use IP-based geo-redirects for regional stores
+// HEAD requests from Edge Functions will always be redirected - this is EXPECTED behavior
+// The URLs are valid and prices can be fetched via Firecrawl with location parameter
+const KNOWN_GEO_REDIRECT_DOMAINS = [
+  'store.bambulab.com',
+  'elegoo.com',
+  'polymaker.com',
+  'anycubic.com',
+  'store.creality.com',
+  'creality.com',
+  'qidi3d.com',
+  'flashforge.com',
+  'sovol3d.com',
+  'kingroon.com',
+  'sunlu.com',
+  'artillery3d.com',
+];
+
+function isKnownGeoRedirectDomain(url: string): boolean {
+  try {
+    const hostname = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.toLowerCase();
+    return KNOWN_GEO_REDIRECT_DOMAINS.some(domain => hostname.endsWith(domain));
+  } catch {
+    return false;
+  }
+}
 
 // SSRF Protection: Check if hostname resolves to private/internal IP ranges
 function isPrivateOrReservedHostname(hostname: string): boolean {
@@ -126,20 +153,26 @@ Deno.serve(async (req) => {
     const isOk = statusCode >= 200 && statusCode < 300;
     const isRedirect = statusCode >= 300 && statusCode < 400;
     const isGeoRedirected = result.method === 'redirected' && !!result.warning;
-    const knownGeoRedirect = isGeoRedirected && isOk && isGeoRedirectDomain(url);
 
-    console.log(`URL ${url} → status ${statusCode}, method: ${result.method}${isGeoRedirected ? ' (geo-redirected)' : ''}${knownGeoRedirect ? ' [known geo-redirect domain]' : ''}`);
+    // For known geo-redirect domains, treat redirects as OK
+    // The URL is valid — it just redirects when accessed from the Edge Function's region
+    // Price sync uses Firecrawl with location parameter to access the correct region
+    const knownGeoRedirect = isKnownGeoRedirectDomain(url);
+    const effectiveOk = isOk || (knownGeoRedirect && (isRedirect || isGeoRedirected));
+    const effectiveStatusCode = effectiveOk ? (isOk ? statusCode : 200) : statusCode;
+
+    console.log(`URL ${url} → status ${effectiveStatusCode}(actual:${statusCode}), method: ${result.method}${knownGeoRedirect ? ' (known-geo-redirect, treated as OK)' : ''}${isGeoRedirected ? ' (geo-redirected)' : ''}`);
 
     return new Response(
       JSON.stringify({
-        ok: isOk || knownGeoRedirect,
-        statusCode,
-        isRedirect: isRedirect && !isOk,
+        ok: effectiveOk,
+        statusCode: effectiveStatusCode,
+        isRedirect: isRedirect && !effectiveOk,
         redirectLocation: result.redirectedTo || null,
-        error: (isOk || knownGeoRedirect) ? null : `HTTP ${statusCode}`,
+        error: effectiveOk ? null : `HTTP ${statusCode}`,
         fetchMethod: result.method,
-        isGeoRedirected: isGeoRedirected && !knownGeoRedirect,
-        isKnownGeoRedirect: knownGeoRedirect,
+        isGeoRedirected: knownGeoRedirect ? false : isGeoRedirected,
+        isKnownGeoRedirect: knownGeoRedirect && (isRedirect || isGeoRedirected),
         warning: result.warning || null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
