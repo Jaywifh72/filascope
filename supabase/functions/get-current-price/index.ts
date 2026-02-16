@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getRegionHeaders, getSpoofedHeaders, isGeoRedirectDomain, isGeoRedirect, detectRegionFromUrl, type FetchMethod } from "../_shared/regional-fetch.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -2353,22 +2354,61 @@ function detectCurrencyFromUrl(url: string): string {
 }
 
 // Fetch price from Shopify JSON API
-async function fetchShopifyPrice(productUrl: string, preferredCurrency: string, targetWeightGrams: number | null = null): Promise<PriceResponse> {
+async function fetchShopifyPrice(productUrl: string, preferredCurrency: string, targetWeightGrams: number | null = null): Promise<PriceResponse & { fetchMethod?: FetchMethod }> {
   const jsonUrl = getShopifyJsonUrl(productUrl);
   console.log(`Fetching Shopify JSON from: ${jsonUrl}`);
   
+  // Determine target region from currency for geo-bypass headers
+  const regionFromCurrency: Record<string, string> = {
+    CAD: 'CA', GBP: 'UK', EUR: 'EU', AUD: 'AU', JPY: 'JP',
+  };
+  const targetRegion = regionFromCurrency[preferredCurrency] || 'US';
+  const isKnownGeoRedirector = isGeoRedirectDomain(productUrl);
+  
   try {
+    // Build region-aware headers for Shopify JSON API
+    const regionHeaders = getRegionHeaders(targetRegion);
     const headers: Record<string, string> = {
-      'Accept': 'application/json',
-      'User-Agent': 'Mozilla/5.0 (compatible; PriceChecker/1.0)',
+      ...regionHeaders,
+      'Accept': 'application/json', // Override to request JSON
     };
     
-    if (preferredCurrency === 'CAD') headers['Accept-Language'] = 'en-CA';
-    else if (preferredCurrency === 'GBP') headers['Accept-Language'] = 'en-GB';
-    else if (preferredCurrency === 'EUR') headers['Accept-Language'] = 'de-DE';
-    else if (preferredCurrency === 'AUD') headers['Accept-Language'] = 'en-AU';
+    let response: Response;
+    let fetchMethod: FetchMethod = 'direct';
     
-    const response = await fetch(jsonUrl, { headers });
+    if (isKnownGeoRedirector) {
+      // Method 1: Try with region headers, manual redirect handling
+      console.log(`[GeoBypass] Shopify fetch using region headers for ${targetRegion}`);
+      response = await fetch(jsonUrl, { headers, redirect: 'manual' });
+      
+      if (response.status >= 300 && response.status < 400) {
+        const redirectUrl = response.headers.get('location') || '';
+        const fullRedirect = redirectUrl.startsWith('/') ? `${new URL(jsonUrl).origin}${redirectUrl}` : redirectUrl;
+        
+        if (isGeoRedirect(jsonUrl, fullRedirect)) {
+          console.log(`[GeoBypass] Geo-redirect detected: ${jsonUrl} → ${fullRedirect}, trying spoofed headers`);
+          await response.text().catch(() => {}); // consume body
+          
+          // Method 2: Spoofed headers
+          const spoofedHeaders = { ...getSpoofedHeaders(targetRegion), 'Accept': 'application/json' };
+          response = await fetch(jsonUrl, { headers: spoofedHeaders, redirect: 'manual' });
+          fetchMethod = 'spoofed';
+          
+          if (response.status >= 300 && response.status < 400) {
+            console.log(`[GeoBypass] Spoofed headers still redirected, following redirect`);
+            await response.text().catch(() => {});
+            response = await fetch(jsonUrl, { headers, redirect: 'follow' });
+            fetchMethod = 'redirected';
+          }
+        } else {
+          // Legitimate redirect, follow it
+          await response.text().catch(() => {});
+          response = await fetch(fullRedirect, { headers });
+        }
+      }
+    } else {
+      response = await fetch(jsonUrl, { headers });
+    }
     
     if (!response.ok) {
       console.error(`Shopify fetch failed: ${response.status} ${response.statusText}`);

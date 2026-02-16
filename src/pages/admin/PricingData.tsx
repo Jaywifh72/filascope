@@ -25,11 +25,13 @@ import { invalidatePriceCache } from '@/hooks/useCurrentPrice';
 type LinkStatus = 'active' | 'stale' | 'broken' | 'alert' | 'unknown';
 
 interface TestResult {
-  status: 'testing' | 'ok' | 'broken' | 'redirect' | 'timeout';
+  status: 'testing' | 'ok' | 'broken' | 'redirect' | 'timeout' | 'geo_restricted';
   statusCode?: number;
   latencyMs?: number;
   redirectUrl?: string | null;
   error?: string;
+  fetchMethod?: 'direct' | 'spoofed' | 'redirected';
+  isGeoRedirected?: boolean;
 }
 
 interface SyncResult {
@@ -114,8 +116,17 @@ function getLinkStatusBadge(status: LinkStatus) {
   }
 }
 
+function getBypassMethodLabel(result: TestResult): string | null {
+  if (!result.fetchMethod || result.fetchMethod === 'direct') return null;
+  if (result.fetchMethod === 'spoofed') return 'Spoofed';
+  if (result.fetchMethod === 'redirected') return 'Redirected';
+  return null;
+}
+
 function getTestResultBadge(result: TestResult | undefined) {
   if (!result) return null;
+  const bypassLabel = result ? getBypassMethodLabel(result) : null;
+  
   switch (result.status) {
     case 'testing':
       return (
@@ -129,9 +140,27 @@ function getTestResultBadge(result: TestResult | undefined) {
           <TooltipTrigger asChild>
             <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] gap-1 cursor-default">
               <CheckCircle2 className="w-3 h-3" /> {result.statusCode} · {result.latencyMs}ms
+              {bypassLabel && <span className="ml-0.5 opacity-70">({bypassLabel})</span>}
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>HTTP {result.statusCode} — {result.latencyMs}ms response</TooltipContent>
+          <TooltipContent>
+            HTTP {result.statusCode} — {result.latencyMs}ms response
+            {bypassLabel && <p className="text-[10px] mt-0.5">Accessed via {result.fetchMethod} headers to bypass geo-restrictions</p>}
+          </TooltipContent>
+        </Tooltip>
+      );
+    case 'geo_restricted':
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px] gap-1 cursor-default">
+              <AlertTriangle className="w-3 h-3" /> Geo-Restricted
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Store responded but geo-redirected to different region</p>
+            <p className="text-[10px] mt-0.5">Price may be from wrong region — manual entry recommended</p>
+          </TooltipContent>
         </Tooltip>
       );
     case 'redirect':
@@ -140,10 +169,12 @@ function getTestResultBadge(result: TestResult | undefined) {
           <TooltipTrigger asChild>
             <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-[10px] gap-1 cursor-default">
               <AlertTriangle className="w-3 h-3" /> {result.statusCode} → Redirect
+              {result.isGeoRedirected && <span className="ml-0.5 opacity-70">(Geo)</span>}
             </Badge>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">
             <p>HTTP {result.statusCode} · {result.latencyMs}ms</p>
+            {result.isGeoRedirected && <p className="text-[10px] mt-0.5 text-yellow-300">⚠️ Geo-redirect detected — price may be from wrong region</p>}
             {result.redirectUrl && <p className="text-[10px] mt-1 break-all">→ {result.redirectUrl}</p>}
           </TooltipContent>
         </Tooltip>
@@ -546,27 +577,29 @@ export default function PricingData() {
   // Link testing (per store)
   // =============================================
 
-  const testSingleUrl = useCallback(async (storeKey: string, url: string, showToast = true): Promise<TestResult> => {
+  const testSingleUrl = useCallback(async (storeKey: string, url: string, showToast = true, region?: string): Promise<TestResult> => {
     const startTime = Date.now();
     setTestResults(prev => new Map(prev).set(storeKey, { status: 'testing' }));
 
     try {
-      const { data, error } = await supabase.functions.invoke('test-url', { body: { url } });
+      const { data, error } = await supabase.functions.invoke('test-url', { body: { url, region } });
       const latencyMs = Date.now() - startTime;
       if (error) throw error;
 
       let result: TestResult;
+      const fetchMethod = data.fetchMethod as TestResult['fetchMethod'];
+      const isGeoRedirected = !!data.isGeoRedirected;
       if (data.ok) {
-        result = { status: 'ok', statusCode: data.statusCode, latencyMs };
+        result = { status: isGeoRedirected ? 'geo_restricted' : 'ok', statusCode: data.statusCode, latencyMs, fetchMethod, isGeoRedirected };
       } else if (data.isRedirect) {
-        result = { status: 'redirect', statusCode: data.statusCode, latencyMs, redirectUrl: data.redirectLocation };
+        result = { status: 'redirect', statusCode: data.statusCode, latencyMs, redirectUrl: data.redirectLocation, fetchMethod, isGeoRedirected };
       } else {
-        result = { status: 'broken', statusCode: data.statusCode, latencyMs, error: data.error };
+        result = { status: 'broken', statusCode: data.statusCode, latencyMs, error: data.error, fetchMethod };
       }
 
       setTestResults(prev => new Map(prev).set(storeKey, result));
 
-      const cacheStatus = result.status === 'ok' ? 'valid' : result.status === 'redirect' ? 'redirect' : 'invalid';
+      const cacheStatus = result.status === 'ok' || result.status === 'geo_restricted' ? 'valid' : result.status === 'redirect' ? 'redirect' : 'invalid';
       await supabase.from('url_validation_cache').upsert({
         url,
         status: cacheStatus,
@@ -577,8 +610,10 @@ export default function PricingData() {
       }, { onConflict: 'url' });
 
       if (showToast) {
-        if (result.status === 'ok') toast.success(`✅ Link active (${result.statusCode}) — ${latencyMs}ms`);
-        else if (result.status === 'redirect') toast.warning(`⚠️ Redirect (${result.statusCode})`);
+        const methodNote = result.fetchMethod && result.fetchMethod !== 'direct' ? ` (${result.fetchMethod})` : '';
+        if (result.status === 'ok') toast.success(`✅ Link active (${result.statusCode}) — ${latencyMs}ms${methodNote}`);
+        else if (result.status === 'geo_restricted') toast.warning(`🌐 Geo-restricted — accessed via redirect${methodNote}`);
+        else if (result.status === 'redirect') toast.warning(`⚠️ Redirect (${result.statusCode})${result.isGeoRedirected ? ' — geo-redirect' : ''}`);
         else toast.error(`❌ Link broken (${result.statusCode || result.error})`);
       }
       return result;
@@ -619,7 +654,7 @@ export default function PricingData() {
     for (let i = 0; i < withUrls.length; i += 3) {
       if (abortRef.current) break;
       const batch = withUrls.slice(i, i + 3);
-      const results = await Promise.all(batch.map(s => testSingleUrl(s.storeKey, s.productUrl!, false)));
+      const results = await Promise.all(batch.map(s => testSingleUrl(s.storeKey, s.productUrl!, false, s.region)));
       results.forEach(r => { done++; if (r.status === 'ok') ok++; else if (r.status === 'broken' || r.status === 'timeout') broken++; else warnings++; });
       setBulkProgress({ done, total: withUrls.length });
     }
@@ -1065,7 +1100,7 @@ interface ProductGroupRowsProps {
   testResults: Map<string, TestResult>;
   syncResults: Map<string, SyncResult>;
   isBusy: boolean;
-  onTestUrl: (storeKey: string, url: string, showToast?: boolean) => Promise<TestResult>;
+  onTestUrl: (storeKey: string, url: string, showToast?: boolean, region?: string) => Promise<TestResult>;
   onSyncPrice: (store: StoreRow, showToast?: boolean) => Promise<SyncResult>;
 }
 
@@ -1194,7 +1229,7 @@ function ProductGroupRows({
                       <Button
                         size="icon" variant="ghost" className="h-7 w-7"
                         disabled={result?.status === 'testing' || isBusy}
-                        onClick={() => onTestUrl(store.storeKey, store.productUrl!)}
+                        onClick={() => onTestUrl(store.storeKey, store.productUrl!, true, store.region)}
                       >
                         {result?.status === 'testing'
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
