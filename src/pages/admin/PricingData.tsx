@@ -314,6 +314,54 @@ function formatCurrency(val: number | null, symbol: string) {
   return `${symbol}${val.toFixed(2)}`;
 }
 
+function SyncChangeIndicator({ syncResult, currencySymbol }: { syncResult: SyncResult; currencySymbol: string }) {
+  if (syncResult.status === 'failed') {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-red-400 flex items-center gap-0.5 text-xs cursor-default">
+            <XCircle className="w-3 h-3" /> Failed
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{syncResult.error || 'Sync failed'}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (syncResult.status === 'unchanged') {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-muted-foreground flex items-center gap-1 text-xs cursor-default">
+            <Minus className="w-3 h-3" /> =
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Price unchanged at {currencySymbol}{syncResult.newPrice?.toFixed(2)}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (syncResult.status === 'success' && syncResult.percentChange != null) {
+    const isUp = syncResult.percentChange > 0;
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`flex items-center gap-0.5 font-mono text-xs cursor-default ${isUp ? 'text-red-400' : 'text-emerald-400'}`}>
+            {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+            {isUp ? '↑' : '↓'}{Math.abs(syncResult.percentChange).toFixed(1)}%
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {currencySymbol}{syncResult.oldPrice?.toFixed(2)} → {currencySymbol}{syncResult.newPrice?.toFixed(2)}
+          {' '}({syncResult.percentChange > 0 ? '+' : ''}{syncResult.percentChange.toFixed(1)}%)
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return <span className="text-muted-foreground">---</span>;
+}
+
 function StatusSummary({ group }: { group: ProductGroup }) {
   const parts: React.ReactNode[] = [];
   if (group.activeCount > 0) parts.push(<span key="a" className="text-emerald-400">{group.activeCount} Active</span>);
@@ -1506,7 +1554,8 @@ function ProductGroupRows({
             key={store.storeKey}
             className={`${isLast ? '' : 'border-b-0'} hover:bg-muted/20 transition-colors duration-500 ${
               syncResult?.status === 'success' ? 'bg-emerald-500/10' :
-              syncResult?.status === 'failed' ? 'bg-red-500/10' : ''
+              syncResult?.status === 'failed' ? 'bg-red-500/10' :
+              syncResult?.status === 'unchanged' ? 'bg-yellow-500/5' : ''
             }`}
           >
             <TableCell className="w-8 px-2">
@@ -1576,7 +1625,13 @@ function ProductGroupRows({
                 ? <span className="text-muted-foreground line-through">{formatCurrency(store.compareAtPrice, store.currencySymbol)}</span>
                 : '—'}
             </TableCell>
-            <TableCell><PriceChangeIndicator change={store.priceChange} /></TableCell>
+            <TableCell>
+              {syncResult && syncResult.status !== 'syncing' ? (
+                <SyncChangeIndicator syncResult={syncResult} currencySymbol={store.currencySymbol} />
+              ) : (
+                <PriceChangeIndicator change={store.priceChange} />
+              )}
+            </TableCell>
             <TableCell className="text-xs text-muted-foreground">{store.currency}</TableCell>
             <TableCell>{getLinkStatusBadge(store.linkStatus)}</TableCell>
             <TableCell>

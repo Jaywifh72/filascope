@@ -1262,9 +1262,20 @@ function validateProductPrice(price: number, productType: ProductType = 'filamen
   return price >= range.min && price <= range.max;
 }
 
-// Legacy wrapper for backward compatibility
-function validateFilamentPrice(price: number, min = 10, max = 150): boolean {
-  return price >= min && price <= max;
+// Currency-aware filament price validation
+const CURRENCY_PRICE_RANGES: Record<string, { min: number; max: number }> = {
+  USD: { min: 3, max: 200 },
+  CAD: { min: 3, max: 200 },
+  AUD: { min: 3, max: 200 },
+  GBP: { min: 3, max: 150 },
+  EUR: { min: 3, max: 200 },
+  JPY: { min: 100, max: 30000 },
+  default: { min: 1, max: 50000 },
+};
+
+function validateFilamentPrice(price: number, currency: string = 'USD'): boolean {
+  const range = CURRENCY_PRICE_RANGES[currency] || CURRENCY_PRICE_RANGES.default;
+  return price >= range.min && price <= range.max;
 }
 
 // Extract printer price from page content
@@ -1793,7 +1804,7 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
       if (matches.length > 0) {
         const prices = matches
           .map(m => parseFloat(m[1].replace(',', '.')))
-          .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p))
+          .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, 'EUR'))
           .sort((a, b) => a - b);
         
         if (prices.length > 0) {
@@ -1819,7 +1830,7 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
       if (matches.length > 0) {
         const prices = matches
           .map(m => parseFloat(m[1].replace(',', '.')))
-          .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p))
+          .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, 'GBP'))
           .sort((a, b) => a - b);
         
         if (prices.length > 0) {
@@ -1844,7 +1855,7 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
     if (matches.length > 0) {
       const prices = matches
         .map(m => parseFloat((m[1] || m[2]).replace(',', '')))
-        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p))
+        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, preferredCurrency))
         .sort((a, b) => a - b);
       
       if (prices.length > 0) {
@@ -1881,7 +1892,7 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
     if (matches.length > 0) {
       const prices = matches
         .map(m => parseFloat(m[1].replace(',', '.')))
-        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p))
+        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, cur))
         .sort((a, b) => a - b);
       
       if (prices.length > 0) {
