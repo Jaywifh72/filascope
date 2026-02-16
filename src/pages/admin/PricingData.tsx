@@ -64,6 +64,7 @@ interface StoreRow {
   currency: string;
   currencySymbol: string;
   productUrl: string | null;
+  isDerived?: boolean;
   lastScrapedAt: string | null;
   linkStatus: LinkStatus;
   priceChange: { percent: number; direction: 'up' | 'down' | 'unchanged'; oldPrice?: number; newPrice?: number } | null;
@@ -118,6 +119,40 @@ const REGION_FIELD_MAP: { region: string; priceField: string; urlField: string }
   { region: 'AU', priceField: 'price_aud', urlField: 'product_url_au' },
   { region: 'JP', priceField: 'price_jpy', urlField: 'product_url_jp' },
 ];
+
+// =============================================
+// Brand regional URL derivation configs
+// =============================================
+
+const BRAND_REGIONAL_CONFIGS: Record<string, {
+  pattern: 'subdomain';
+  baseDomain: string;
+  regions: Record<string, { subdomain?: string; domain?: string }>;
+}> = {
+  'Bambu Lab':    { pattern: 'subdomain', baseDomain: 'store.bambulab.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' }, JP: { subdomain: 'jp' } } },
+  'Polymaker':    { pattern: 'subdomain', baseDomain: 'polymaker.com', regions: { CA: { subdomain: 'ca' }, EU: { subdomain: 'eu' } } },
+  'Elegoo':       { pattern: 'subdomain', baseDomain: 'elegoo.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
+  'Anycubic':     { pattern: 'subdomain', baseDomain: 'anycubic.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { domain: 'www.anycubic.au' } } },
+  'Creality':     { pattern: 'subdomain', baseDomain: 'store.creality.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
+};
+
+function deriveRegionalUrl(usUrl: string, vendor: string, region: string): string | null {
+  const config = BRAND_REGIONAL_CONFIGS[vendor];
+  if (!config || !config.regions[region]) return null;
+  try {
+    const urlObj = new URL(usUrl);
+    const regionConfig = config.regions[region];
+    if (regionConfig.domain) {
+      urlObj.hostname = regionConfig.domain;
+    } else if (regionConfig.subdomain) {
+      const parts = urlObj.hostname.split('.');
+      if (parts.length >= 3) parts[0] = regionConfig.subdomain;
+      else parts.unshift(regionConfig.subdomain);
+      urlObj.hostname = parts.join('.');
+    }
+    return urlObj.toString().replace(/[?#].*$/, '');
+  } catch { return null; }
+}
 
 // =============================================
 // Helper: strip color suffix from product names
@@ -485,6 +520,7 @@ export default function PricingData() {
       // Build store rows - use representative variant for each region
       // For URLs, pick the first non-null URL across variants (they should all be the same base URL)
       const stores: StoreRow[] = [];
+      let usUrl: string | null = null; // Track US URL for derivation
       for (const { region, priceField, urlField } of REGION_FIELD_MAP) {
         // Aggregate across variants: take first non-null URL, representative price
         let url: string | null = null;
@@ -503,6 +539,20 @@ export default function PricingData() {
           if (!lastScrapedAt && v.last_scraped_at) lastScrapedAt = v.last_scraped_at;
         }
 
+        // Track US URL for regional derivation
+        if (region === 'US' && url) usUrl = url;
+
+        // Derive regional URL if database URL is null but US URL exists
+        let isDerived = false;
+        if (!url && region !== 'US' && usUrl) {
+          const derived = deriveRegionalUrl(usUrl, rep.vendor, region);
+          if (derived) {
+            url = derived;
+            isDerived = true;
+          }
+        }
+
+        // Skip only if there's no URL (database or derived) AND no price
         if (!url && price == null) continue;
 
         // Strip variant params from URL for testing
@@ -526,6 +576,7 @@ export default function PricingData() {
           currency: rc.currency,
           currencySymbol: rc.symbol,
           productUrl: baseUrl,
+          isDerived,
           lastScrapedAt,
           linkStatus: computeLinkStatus(baseUrl, changePct),
           priceChange: storeChange,
@@ -782,8 +833,9 @@ export default function PricingData() {
     const seen = new Set<string>();
     const deduped: StoreRow[] = [];
     let totalVariants = 0;
+    let skippedCount = 0;
     for (const s of storesToTest) {
-      if (!s.productUrl) continue;
+      if (!s.productUrl) { skippedCount++; continue; }
       const dedupKey = `${s.productUrl}::${s.region}`;
       if (seen.has(dedupKey)) continue;
       seen.add(dedupKey);
@@ -791,6 +843,7 @@ export default function PricingData() {
       totalVariants += s.allFilamentIds.length;
     }
 
+    if (skippedCount > 0) toast.warning(`${skippedCount} store${skippedCount > 1 ? 's' : ''} skipped (no URL available)`);
     if (deduped.length === 0) { toast.info('No testable URLs'); return; }
 
     setBulkTesting(true);
@@ -1398,10 +1451,14 @@ function ProductGroupRows({
                   <span className="text-xs flex items-center gap-1.5 cursor-default">
                     <span>{store.regionFlag}</span>
                     <span className="font-medium">{group.vendor} {store.region}</span>
+                    {store.isDerived && (
+                      <span className="text-[9px] text-muted-foreground italic" title="URL derived from US store">🔗</span>
+                    )}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   {store.productUrl ? (() => { try { return new URL(store.productUrl).hostname; } catch { return store.productUrl; } })() : 'No URL'}
+                  {store.isDerived && <p className="text-[10px] text-muted-foreground mt-0.5">Derived from US URL — not stored in database</p>}
                 </TooltipContent>
               </Tooltip>
             </TableCell>
