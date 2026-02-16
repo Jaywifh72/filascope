@@ -1,104 +1,150 @@
 
 
-# Regional Store Strategy Alignment
+# Phase 3: Price Sync and Monitoring for /admin/pricing-data
 
 ## Overview
 
-The CSV provides the authoritative store URL mapping for 24 brands across US, CA, UK, EU, and JP regions. This plan ensures the `brand_regional_stores` table is updated to match, and that the entire site's buy-button, affiliate, and pricing flows correctly adapt to the user's selected region.
+Add price resync capabilities to the existing Pricing Data dashboard, leveraging the already-built `get-current-price` edge function and `useAdminPriceRefresh` hook. No new edge function needed -- the infrastructure exists.
 
-## Current State
+## Scope (Pragmatic Cut)
 
-The site already has strong regional infrastructure:
-- `brand_regional_stores` table stores per-brand, per-region store URLs
-- `useUnifiedRegionalPricing` hook resolves the best store for a user's region via `brand_regional_stores`
-- `useFilamentDetailPricing` aggregates prices from multiple sources (retailer listings, store pricing, unified regional, Amazon)
-- `useAffiliateLink` wraps URLs with affiliate parameters
-- The `RegionContext` provides the active region from the top-of-page selector
+Given the massive spec, this plan focuses on the high-impact items that can be built reliably with existing infrastructure. Deferred items (scheduling, Web Workers, email notifications) are noted at the end.
 
-However, several brands from the CSV are **missing** from `brand_regional_stores`, and some existing entries have **incorrect URLs** that don't match the CSV.
+---
 
-## What Changes
+## 1. Per-Row "Resync Price" Button
 
-### 1. Database: Update `brand_regional_stores` Table
+Add a refresh/dollar icon button next to the existing Test Link button in the Actions column.
 
-**Correct existing entries** where URLs differ from the CSV:
+- Calls `get-current-price` edge function via `supabase.functions.invoke`
+- Shows spinner while syncing
+- On success: updates the price cell inline, shows toast with old/new price
+- On failure: shows error toast, does not update price
+- Skips if link status is "broken" (no point syncing a dead link)
 
-| Brand | Region | Current DB URL | CSV (Correct) URL |
-|-------|--------|---------------|-------------------|
-| Creality | CA | `ca.store.creality.com` | `store.creality.com/ca` |
-| Creality | US | `us.store.creality.com` | `store.creality.com` |
-| Creality | EU | `store.creality.com/eu` | `www.creality.shop` |
-| eSun | EU | `esun3dstore.com` | `esun3dstoreeu.com` |
-| Anycubic | EU | `eu.anycubic.com` | `store.anycubic.com` |
-| Eryone | US | `www.eryone3d.com` | `eryone3d.com` (drop www) |
-| Eryone | EU | `eu.eryone3d.com` | `de.eryone3d.com` |
-| Polymaker | US | varies | `us.polymaker.com` |
+## 2. Enhanced Price Change Indicator
 
-**Add new eSun UK** entry: `esun3dstore.uk`
+Upgrade the Change column with richer tooltips:
 
-**Insert entries for brands not yet in the table** (about 16 brands):
-- TreeD Filaments (single global store for all regions)
-- Push Plastic (US/CA only)
-- Ultimaker (reseller-based, mark as `is_active: false` or add reseller URL)
-- Fillamentum (EU only via `shop.fillamentum.com`)
-- 3D-Fuel (US/CA/EU)
-- Siraya Tech (global single store)
-- Hatchbox (US/CA only)
-- Proto-Pasta (global single store)
-- Recreus (global single store)
-- Spectrum Filaments (global single store)
-- Gizmo Dorks (global single store)
-- Amolen (global single store)
-- Prusament (global single store via prusa3d.com)
-- Duramic 3D (global single store)
-- Geeetech (global single store)
-- Yousu (global single store)
+- Tooltip shows: "Was $25.99, now $29.99 (+$4.00)"
+- Rows with >10% change get a subtle background highlight
+- Existing arrow indicators (up red / down green / unchanged dash) remain
 
-### 2. Update `affiliate_programs` Base URLs
+## 3. Bulk "Resync Selected Prices" Button
 
-Where `store_base_url` in the `affiliate_programs` table doesn't match the new CSV data, update those too (e.g., Creality CA, eSun EU). This ensures the `useAffiliateLink` hook generates correct affiliate-wrapped URLs.
+Add to the existing bulk toolbar alongside "Test Selected" and "Test All Stale":
 
-### 3. Update Product URLs in `filaments` Table
+- "Resync Selected" button -- syncs all checked products sequentially (batches of 2 to avoid rate limits)
+- Reuses the same progress bar infrastructure from link testing
+- Progress text: "Syncing prices: 15/50"
+- Summary toast: "Updated 12 prices, 8 unchanged, 3 failed"
+- Cancel button to abort
 
-For brands where the domain has changed (e.g., Creality CA from `ca.store.creality.com` to `store.creality.com/ca`), batch-update the corresponding `product_url_ca`, `product_url_eu`, etc. columns so that legacy product-level URLs also resolve correctly.
+## 4. Bulk "Resync Stale Prices" Button
 
-### 4. No Code Changes Required
+- Targets products where `last_scraped_at` is older than 7 days or null
+- Badge showing stale count
+- Same batch processing as Resync Selected
 
-The existing hooks and components already handle regional store resolution correctly:
-- `useUnifiedRegionalPricing` fetches `brand_regional_stores` for the user's region and builds product URLs from the `base_url` + `product_url_pattern`
-- `useFilamentDetailPricing` aggregates all price sources and determines the best price
-- `useRegionalStores` provides the `getLocalStore()` lookup used by deal cards
-- The region selector in the page header already drives `RegionContext`, which cascades to all pricing hooks
+## 5. Price Sync State Management
 
-All logic is data-driven from the `brand_regional_stores` table, so fixing the data is sufficient.
+New state alongside `testResults`:
+
+```text
+syncResults: Map<string, {
+  status: 'syncing' | 'success' | 'failed' | 'unchanged'
+  oldPrice?: number
+  newPrice?: number
+  percentChange?: number
+  error?: string
+}>
+```
+
+- `bulkSyncing` boolean + `bulkSyncProgress` for progress bar
+- Separate `abortSyncRef` for cancellation
+
+## 6. Toast Notifications
+
+- No change: "Price confirmed: $29.99"
+- Increased: "Price increased: $25.99 -> $29.99 (+15%)"
+- Decreased: "Price decreased: $29.99 -> $24.99 (-17%)"
+- Error: "Failed to sync price - [error message]"
+- Bulk complete: "Synced 50 prices: 12 updated, 35 unchanged, 3 failed"
+
+## 7. CSV Export Buttons
+
+Add two export buttons to the toolbar:
+
+- "Export Pricing Report" -- exports filtered table data as CSV (product, brand, status, all currencies, last sync, change %)
+- "Export Price Changes" -- exports only rows with non-zero price changes
+
+Uses existing `src/lib/csvExport.ts` utility.
+
+## 8. Updated Stats Cards
+
+Replace/enhance the existing 6 stat cards:
+
+- Keep: Total Products, Active Links, Stale Links, Broken Links, Price Alerts, Multi-Region
+- Make Price Alerts card clickable to filter the table to alert status
+
+---
 
 ## Technical Details
 
-### SQL Operations (Data Updates Only)
+### Files Modified
+
+1. **`src/pages/admin/PricingData.tsx`** -- All UI changes:
+   - New state for sync results, bulk sync progress
+   - `syncSinglePrice` callback invoking `get-current-price`
+   - `syncBatch` callback for bulk operations
+   - Resync button in Actions column
+   - Resync Selected / Resync Stale buttons in toolbar
+   - Export buttons
+   - Enhanced PriceChangeIndicator tooltips
+   - Row highlighting for large changes
+
+### No New Edge Functions
+
+The existing `get-current-price` edge function (2654 lines) already handles:
+- Shopify API extraction
+- HTML price scraping with Firecrawl fallback
+- Currency detection
+- Stock status detection
+- Rate limiting and retry logic
+
+The existing `useAdminPriceRefresh` hook pattern will be adapted inline (not used directly since it's tied to a single filament lifecycle).
+
+### No Database Changes
+
+The existing schema already has:
+- `filaments.last_scraped_at` -- updated on sync
+- `filaments.variant_price` / `variant_compare_at_price` -- price storage
+- `price_history` table -- tracks all price changes (auto-populated by `auto_log_price_change` trigger)
+- `update_filament_price_after_refresh` RPC -- atomic admin price update with history logging
+
+### Price Sync Flow
 
 ```text
-Phase 1: Fix existing brand_regional_stores entries
-  - UPDATE base_url for ~8 mismatched entries
-  - INSERT ~1 new regional entry (eSun UK)
-
-Phase 2: Insert new brands (~16 brands x 2-5 regions each)
-  - ~50-60 new rows in brand_regional_stores
-  - Set appropriate currency_code per region (USD/CAD/GBP/EUR/JPY)
-  - Set is_primary = true for the brand's home region
-  - Set product_url_pattern based on brand's URL structure
-
-Phase 3: Sync affiliate_programs.store_base_url
-  - UPDATE any affiliate programs where the base URL changed
-
-Phase 4: Batch-fix filaments product URLs
-  - UPDATE product_url_ca, product_url_eu etc. for affected brands
-  - Use REPLACE() for domain migrations
+1. User clicks Resync on row
+2. Frontend calls get-current-price with { productUrl, forceRefresh: true }
+3. Edge function scrapes price, returns { price, compareAtPrice, currency }
+4. Frontend calls update_filament_price_after_refresh RPC to persist
+5. UI updates inline with animation
+6. Toast shows result
 ```
 
-### Verification Steps
+---
 
-After data updates:
-1. Switch region selector to CA, EU, UK and verify buy buttons on product pages point to correct regional stores
-2. Spot-check affiliate link generation for Creality, eSun, Eryone, Polymaker
-3. Confirm deal cards show correct "Buy at [Store Name]" labels per region
+## Deferred (Not in This Phase)
+
+- Schedule Auto-Sync toggle (requires pg_cron setup, separate admin settings page)
+- Expandable price history per row (adds significant complexity to table)
+- Price alert "Mark as Reviewed" workflow
+- Sync Health dashboard card with success rate
+- Out of Stock tracker grouping
+- Web Workers for price parsing
+- Pause/Resume for bulk operations
+- Email notifications
+
+These can be added incrementally in future phases.
 
