@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { validateRegionalUrl, type FetchMethod } from "../_shared/regional-fetch.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,51 +8,26 @@ const corsHeaders = {
 
 interface UrlValidationResult {
   url: string;
-  status: 'valid' | 'invalid' | 'redirect' | 'unknown';
+  status: 'valid' | 'invalid' | 'redirect' | 'geo_restricted' | 'unknown';
   statusCode: number | null;
   redirectUrl: string | null;
   lastChecked: string;
+  fetchMethod?: FetchMethod;
+  isGeoRedirected?: boolean;
 }
 
-async function validateUrl(url: string): Promise<UrlValidationResult> {
-  const now = new Date().toISOString();
+async function validateUrl(url: string, region?: string): Promise<UrlValidationResult> {
+  const result = await validateRegionalUrl(url, region);
   
-  try {
-    // Use HEAD request to check URL without downloading content
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-    
-    const response = await fetch(url, { 
-      method: 'HEAD', 
-      redirect: 'manual',
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'FilaScope URL Validator/1.0'
-      }
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (response.status === 200 || response.status === 204) {
-      return { url, status: 'valid', statusCode: response.status, redirectUrl: null, lastChecked: now };
-    } else if (response.status >= 300 && response.status < 400) {
-      const redirectUrl = response.headers.get('location');
-      return { 
-        url, 
-        status: 'redirect', 
-        statusCode: response.status,
-        redirectUrl,
-        lastChecked: now
-      };
-    } else if (response.status === 404 || response.status === 410) {
-      return { url, status: 'invalid', statusCode: response.status, redirectUrl: null, lastChecked: now };
-    }
-    
-    return { url, status: 'unknown', statusCode: response.status, redirectUrl: null, lastChecked: now };
-  } catch (error) {
-    console.error(`Error validating URL ${url}:`, error);
-    return { url, status: 'unknown', statusCode: null, redirectUrl: null, lastChecked: now };
-  }
+  return {
+    url,
+    status: result.status,
+    statusCode: result.statusCode,
+    redirectUrl: result.redirectUrl,
+    lastChecked: result.lastChecked,
+    fetchMethod: result.method,
+    isGeoRedirected: result.isGeoRedirected,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -65,7 +41,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { url, urls, forceRecheck = false } = await req.json();
+    const { url, urls, region, forceRecheck = false } = await req.json();
     
     // Handle single URL
     if (url) {
@@ -93,8 +69,8 @@ Deno.serve(async (req) => {
         }
       }
       
-      // Validate the URL
-      const result = await validateUrl(url);
+      // Validate the URL with region-aware geo-bypass
+      const result = await validateUrl(url, region);
       
       // Upsert to cache
       const { error: upsertError } = await supabase
@@ -123,14 +99,20 @@ Deno.serve(async (req) => {
       });
     }
     
-    // Handle batch URLs
+    // Handle batch URLs (each entry can be a string or { url, region })
     if (urls && Array.isArray(urls)) {
       const results: UrlValidationResult[] = [];
       
       // Process in batches of 5 to avoid overwhelming
       for (let i = 0; i < urls.length; i += 5) {
         const batch = urls.slice(i, i + 5);
-        const batchResults = await Promise.all(batch.map(validateUrl));
+        const batchResults = await Promise.all(
+          batch.map((entry: string | { url: string; region?: string }) => {
+            const entryUrl = typeof entry === 'string' ? entry : entry.url;
+            const entryRegion = typeof entry === 'string' ? region : (entry.region || region);
+            return validateUrl(entryUrl, entryRegion);
+          })
+        );
         results.push(...batchResults);
         
         // Small delay between batches
