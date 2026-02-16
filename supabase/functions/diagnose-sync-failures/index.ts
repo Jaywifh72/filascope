@@ -46,6 +46,17 @@ function classifyError(error: string): {
     };
   }
 
+  if (e.includes('firecrawl network error') || e.includes('tcp con') || e.includes('error sending request') || e.includes('connection reset')) {
+    return {
+      pattern: 'Firecrawl network/connection error',
+      severity: 'medium',
+      diagnosis: 'TCP connection to Firecrawl failed — likely a transient network issue between the edge function and Firecrawl servers.',
+      suggestedFix: 'Retry the sync. These are transient network errors that resolve on their own.',
+      suggestedPrompt: 'Some price syncs failed due to transient TCP connection errors to the Firecrawl API. Please retry the affected products.',
+      isTransient: true,
+    };
+  }
+
   if (e.includes('firecrawl error: 500') || e.includes('firecrawl error: 502') || e.includes('firecrawl error: 503')) {
     return {
       pattern: 'Firecrawl server error',
