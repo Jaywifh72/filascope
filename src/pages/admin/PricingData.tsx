@@ -318,15 +318,19 @@ function formatCurrency(val: number | null, symbol: string, currency?: string) {
 function SyncChangeIndicator({ syncResult, currencySymbol, currency }: { syncResult: SyncResult; currencySymbol: string; currency?: string }) {
   const fmt = (v?: number) => v != null ? `${currencySymbol}${v.toFixed(currency === 'JPY' ? 0 : 2)}` : '—';
 
+  if (syncResult.status === 'syncing') {
+    return <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />;
+  }
+
   if (syncResult.status === 'failed') {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="text-red-400 flex items-center gap-0.5 text-xs cursor-default">
+          <span className="text-red-400 flex items-center gap-1 text-xs cursor-default">
             <XCircle className="w-3 h-3" /> Failed
           </span>
         </TooltipTrigger>
-        <TooltipContent>{syncResult.error || 'Sync failed'}</TooltipContent>
+        <TooltipContent className="max-w-xs">{syncResult.error || 'Price extraction failed'}</TooltipContent>
       </Tooltip>
     );
   }
@@ -336,7 +340,7 @@ function SyncChangeIndicator({ syncResult, currencySymbol, currency }: { syncRes
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="text-muted-foreground flex items-center gap-1 text-xs cursor-default">
-            <Minus className="w-3 h-3" /> =
+            <Minus className="w-3 h-3" /> Same
           </span>
         </TooltipTrigger>
         <TooltipContent>Price unchanged at {fmt(syncResult.newPrice)}</TooltipContent>
@@ -349,20 +353,19 @@ function SyncChangeIndicator({ syncResult, currencySymbol, currency }: { syncRes
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`flex items-center gap-0.5 font-mono text-xs cursor-default ${isUp ? 'text-red-400' : 'text-emerald-400'}`}>
+          <span className={`flex items-center gap-0.5 font-mono text-xs font-medium cursor-default ${isUp ? 'text-red-400' : 'text-emerald-400'}`}>
             {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-            {isUp ? '↑' : '↓'}{Math.abs(syncResult.percentChange).toFixed(1)}%
+            {isUp ? '+' : ''}{syncResult.percentChange.toFixed(1)}%
           </span>
         </TooltipTrigger>
         <TooltipContent>
           {fmt(syncResult.oldPrice)} → {fmt(syncResult.newPrice)}
-          {' '}({syncResult.percentChange > 0 ? '+' : ''}{syncResult.percentChange.toFixed(1)}%)
         </TooltipContent>
       </Tooltip>
     );
   }
 
-  return <span className="text-muted-foreground">---</span>;
+  return <span className="text-muted-foreground text-xs">—</span>;
 }
 
 function StatusSummary({ group }: { group: ProductGroup }) {
@@ -1062,13 +1065,21 @@ export default function PricingData() {
     setBulkSyncProgress({ done: 0, total: deduped.length, variants: totalVariants });
     abortSyncRef.current = false;
     const startTime = Date.now();
-    let done = 0, updated = 0, unchanged = 0, failed = 0;
+    let done = 0, updated = 0, unchanged = 0, failed = 0, priceUp = 0, priceDown = 0;
 
     for (let i = 0; i < deduped.length; i += 2) {
       if (abortSyncRef.current) break;
       const batch = deduped.slice(i, i + 2);
       const results = await Promise.all(batch.map(s => syncSinglePrice(s, false)));
-      results.forEach(r => { done++; if (r.status === 'success') updated++; else if (r.status === 'unchanged') unchanged++; else failed++; });
+      results.forEach(r => {
+        done++;
+        if (r.status === 'success') {
+          updated++;
+          if (r.percentChange && r.percentChange > 0) priceUp++;
+          else if (r.percentChange && r.percentChange < 0) priceDown++;
+        } else if (r.status === 'unchanged') unchanged++;
+        else failed++;
+      });
       setBulkSyncProgress({ done, total: deduped.length, variants: totalVariants });
     }
 
@@ -1078,10 +1089,11 @@ export default function PricingData() {
     queryClient.invalidateQueries({ queryKey: ['admin-pricing-data-grouped'] });
     queryClient.invalidateQueries({ queryKey: ['admin-recent-price-changes'] });
 
+    const updatedDetail = updated > 0 ? ` (↑${priceUp} ↓${priceDown})` : '';
     if (abortSyncRef.current) {
-      toast.info(`⚠️ Sync cancelled — ${done}/${deduped.length} products (${updated} updated, ${unchanged} unchanged, ${failed} failed)`);
+      toast.info(`⚠️ Sync cancelled — ${done}/${deduped.length} stores: ${updated} updated${updatedDetail}, ${unchanged} unchanged, ${failed} failed`);
     } else {
-      toast.success(`Synced ${done} products in ${elapsed}s (covering ${totalVariants} variants) — ${updated} updated, ${unchanged} unchanged, ${failed} failed`);
+      toast.success(`Synced ${done} stores: ${updated} updated${updatedDetail}, ${unchanged} unchanged, ${failed} failed`);
     }
   }, [syncSinglePrice, queryClient]);
 
@@ -1629,7 +1641,7 @@ function ProductGroupRows({
                 : '—'}
             </TableCell>
             <TableCell>
-              {syncResult && syncResult.status !== 'syncing' ? (
+              {syncResult ? (
                 <SyncChangeIndicator syncResult={syncResult} currencySymbol={store.currencySymbol} currency={store.currency} />
               ) : (
                 <PriceChangeIndicator change={store.priceChange} />
