@@ -1,91 +1,95 @@
 
-
-# Phase 3: Price Sync and Monitoring for /admin/pricing-data
+# Phase 4: Pricing Data Deduplication by product_line_id
 
 ## Overview
 
-Add price resync capabilities to the existing Pricing Data dashboard, leveraging the already-built `get-current-price` edge function and `useAdminPriceRefresh` hook. No new edge function needed -- the infrastructure exists.
+Deduplicate the `/admin/pricing-data` page by grouping filaments by `product_line_id` instead of showing every color variant as a separate row. This reduces display from ~8,380 rows to ~1,080 product groups (87% reduction) and eliminates redundant API calls during link testing and price syncing.
 
-## Scope (Pragmatic Cut)
+## Confirmed Data
 
-Given the massive spec, this plan focuses on the high-impact items that can be built reliably with existing infrastructure. Deferred items (scheduling, Web Workers, email notifications) are noted at the end.
+- 8,380 filament rows → 1,080 unique product_line_ids
+- 472 product groups have identical prices across all color variants
+- 362 groups vary by weight/pack only, NOT by color
+- product_line_id has 100% coverage
+- All color variants share the same base product URL per weight tier
 
 ---
 
-## 1. Per-Row "Resync Price" Button
+## 1. Grouped Data Query
 
-Add a refresh/dollar icon button next to the existing Test Link button in the Actions column.
+Replace the per-variant fetch with a grouped query:
 
-- Calls `get-current-price` edge function via `supabase.functions.invoke`
-- Shows spinner while syncing
-- On success: updates the price cell inline, shows toast with old/new price
-- On failure: shows error toast, does not update price
-- Skips if link status is "broken" (no point syncing a dead link)
+- GROUP BY `product_line_id`
+- Select one `representative_id` (MIN(id)) per group
+- Strip color suffixes from product name via regex
+- Strip `?variant=` / `?id=` params from URL to get base URL
+- Aggregate: `COUNT(*)` as variant_count, `COUNT(DISTINCT color_hex)` as color_count
+- Price: `MIN(variant_price)`, `MAX(variant_price)`, `has_price_range` boolean
+- Regional URLs: `MIN(product_url_ca)`, `MIN(product_url_uk)`, etc.
+- Collect `array_agg(id)` for fan-out updates
 
-## 2. Enhanced Price Change Indicator
+## 2. Table Layout
 
-Upgrade the Change column with richer tooltips:
+Each row = one product (grouped by product_line_id):
 
-- Tooltip shows: "Was $25.99, now $29.99 (+$4.00)"
-- Rows with >10% change get a subtle background highlight
-- Existing arrow indicators (up red / down green / unchanged dash) remain
+**Columns:**
+- Checkbox (bulk selection)
+- Product: Clean name without color suffix
+- Brand
+- Material
+- Variants: Badge "15 colors"
+- Price: "$19.99" or "$19.99 – $29.99" if range
+- Status: Link health
+- Last Checked
+- Actions: Test / Sync / View
 
-## 3. Bulk "Resync Selected Prices" Button
+**Expandable row shows:**
+- Regional store rows (one per region with flag, price, currency, status)
+- Color swatches
+- Price breakdown if variants differ by weight tier
 
-Add to the existing bulk toolbar alongside "Test Selected" and "Test All Stale":
+## 3. Link Testing Deduplication
 
-- "Resync Selected" button -- syncs all checked products sequentially (batches of 2 to avoid rate limits)
-- Reuses the same progress bar infrastructure from link testing
-- Progress text: "Syncing prices: 15/50"
-- Summary toast: "Updated 12 prices, 8 unchanged, 3 failed"
-- Cancel button to abort
+When testing a product's link:
+1. Strip variant params (`?id=`, `?variant=`, `?sku=`) from URL
+2. Make ONE request to base URL per region
+3. Apply result to ALL filament rows sharing that `product_line_id`
+4. Toast: "Tested 1 URL → updated 15 variants"
 
-## 4. Bulk "Resync Stale Prices" Button
-
-- Targets products where `last_scraped_at` is older than 7 days or null
-- Badge showing stale count
-- Same batch processing as Resync Selected
-
-## 5. Price Sync State Management
-
-New state alongside `testResults`:
-
-```text
-syncResults: Map<string, {
-  status: 'syncing' | 'success' | 'failed' | 'unchanged'
-  oldPrice?: number
-  newPrice?: number
-  percentChange?: number
-  error?: string
-}>
+```typescript
+// Fan-out update
+await supabase
+  .from('filaments')
+  .update({ link_status: result.status, last_link_check: now })
+  .eq('product_line_id', productLineId)
 ```
 
-- `bulkSyncing` boolean + `bulkSyncProgress` for progress bar
-- Separate `abortSyncRef` for cancellation
+## 4. Price Sync Deduplication
 
-## 6. Toast Notifications
+When syncing a product's price:
+1. Fetch product page ONCE per region
+2. If all variants same price → update all rows
+3. If prices vary (weight tiers) → extract from JSON-LD, update each accordingly
+4. Toast: "Synced 1 page → updated 15 variants"
 
-- No change: "Price confirmed: $29.99"
-- Increased: "Price increased: $25.99 -> $29.99 (+15%)"
-- Decreased: "Price decreased: $29.99 -> $24.99 (-17%)"
-- Error: "Failed to sync price - [error message]"
-- Bulk complete: "Synced 50 prices: 12 updated, 35 unchanged, 3 failed"
+## 5. Bulk Operations
 
-## 7. CSV Export Buttons
+All bulk ops work on deduplicated product_line_ids:
+- "Test All Stale": ~1,080 products, not 8,380 variants
+- Progress: "Testing 50/1,080 products (covering 8,380 variants)"
+- Batch size of 2 to respect rate limits
 
-Add two export buttons to the toolbar:
+## 6. Stats Dashboard
 
-- "Export Pricing Report" -- exports filtered table data as CSV (product, brand, status, all currencies, last sync, change %)
-- "Export Price Changes" -- exports only rows with non-zero price changes
+Update stat cards:
+- "1,080 Products (8,380 variants)"
+- Active/Stale/Broken counts by unique product_line_id
+- Sync time estimate based on deduplicated count
 
-Uses existing `src/lib/csvExport.ts` utility.
+## 7. Filters
 
-## 8. Updated Stats Cards
-
-Replace/enhance the existing 6 stat cards:
-
-- Keep: Total Products, Active Links, Stale Links, Broken Links, Price Alerts, Multi-Region
-- Make Price Alerts card clickable to filter the table to alert status
+- Brand, Status, Search all work on grouped products
+- Optional "Show individual variants" toggle (OFF by default)
 
 ---
 
@@ -93,58 +97,38 @@ Replace/enhance the existing 6 stat cards:
 
 ### Files Modified
 
-1. **`src/pages/admin/PricingData.tsx`** -- All UI changes:
-   - New state for sync results, bulk sync progress
-   - `syncSinglePrice` callback invoking `get-current-price`
-   - `syncBatch` callback for bulk operations
-   - Resync button in Actions column
-   - Resync Selected / Resync Stale buttons in toolbar
-   - Export buttons
-   - Enhanced PriceChangeIndicator tooltips
-   - Row highlighting for large changes
+1. **`src/pages/admin/PricingData.tsx`** — All changes:
+   - Replace per-variant query with grouped query
+   - New `ProductGroup` type with variant_count, all_ids, price range
+   - Update table rendering to show grouped rows
+   - Expandable row detail with regional stores + color swatches
+   - Fan-out logic for test/sync results
+   - Updated stats cards
+   - Updated bulk operation counts
 
 ### No New Edge Functions
 
-The existing `get-current-price` edge function (2654 lines) already handles:
-- Shopify API extraction
-- HTML price scraping with Firecrawl fallback
-- Currency detection
-- Stock status detection
-- Rate limiting and retry logic
+Existing `get-current-price` and `test-url` handle the actual requests. Only the frontend query and fan-out logic changes.
 
-The existing `useAdminPriceRefresh` hook pattern will be adapted inline (not used directly since it's tied to a single filament lifecycle).
+### No Database Schema Changes
 
-### No Database Changes
+- `product_line_id` already exists with 100% coverage
+- All variant rows preserved in `filaments` table
+- Frontend site unaffected
 
-The existing schema already has:
-- `filaments.last_scraped_at` -- updated on sync
-- `filaments.variant_price` / `variant_compare_at_price` -- price storage
-- `price_history` table -- tracks all price changes (auto-populated by `auto_log_price_change` trigger)
-- `update_filament_price_after_refresh` RPC -- atomic admin price update with history logging
+### Performance Impact
 
-### Price Sync Flow
-
-```text
-1. User clicks Resync on row
-2. Frontend calls get-current-price with { productUrl, forceRefresh: true }
-3. Edge function scrapes price, returns { price, compareAtPrice, currency }
-4. Frontend calls update_filament_price_after_refresh RPC to persist
-5. UI updates inline with animation
-6. Toast shows result
-```
+| Metric | Before | After | Reduction |
+|--------|--------|-------|-----------|
+| Rows rendered | 8,380 | 1,080 | 87% |
+| Link tests (5 regions) | 41,900 | 5,400 | 87% |
+| Price syncs | 8,380 | 1,080 | 87% |
+| Page load | Slow | Fast | Significant |
 
 ---
 
-## Deferred (Not in This Phase)
+## Deferred
 
-- Schedule Auto-Sync toggle (requires pg_cron setup, separate admin settings page)
-- Expandable price history per row (adds significant complexity to table)
-- Price alert "Mark as Reviewed" workflow
-- Sync Health dashboard card with success rate
-- Out of Stock tracker grouping
-- Web Workers for price parsing
-- Pause/Resume for bulk operations
-- Email notifications
-
-These can be added incrementally in future phases.
-
+- Per-row expandable price history chart
+- "Show individual variants" toggle view
+- Mixed availability badge ("12/15 in stock")
