@@ -1666,7 +1666,7 @@ function isMultiCurrencyShopifyStore(url: string): boolean {
 
 // Detect stores where Shopify JSON API returns unreliable prices
 function shouldAlwaysUseFirecrawl(url: string): boolean {
-  const unreliableJsonStores = ['amolen.com'];
+  const unreliableJsonStores = ['amolen.com', 'store.bambulab.com'];
   const urlLower = url.toLowerCase();
   return unreliableJsonStores.some(domain => urlLower.includes(domain));
 }
@@ -2592,6 +2592,9 @@ serve(async (req) => {
       result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
     } else if (shouldAlwaysUseFirecrawl(urlToFetch)) {
       console.log(`Store has unreliable JSON API, using Firecrawl for accurate pricing (productType: ${productType})`);
+      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
+    } else if (isGeoRedirectDomain(urlToFetch) && expectedCurrency !== 'USD') {
+      console.log(`Geo-redirect domain with ${expectedCurrency}, using Firecrawl directly (productType: ${productType})`);
       result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
     } else if (brandConfig && brandConfig.extraction_method === 'firecrawl') {
       // Brand config explicitly requests Firecrawl
