@@ -188,15 +188,25 @@ export default function PricingData() {
   const { data: filaments, isLoading: filamentsLoading } = useQuery({
     queryKey: ['admin-pricing-data'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('filaments')
-        .select('id, product_title, vendor, material, variant_price, variant_compare_at_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, last_scraped_at, price_confidence, net_weight_g')
-        .not('variant_price', 'is', null)
-        .order('vendor', { ascending: true })
-        .order('product_title', { ascending: true })
-        .limit(1000);
-      if (error) throw error;
-      return data || [];
+      // Fetch all products (no limit) using pagination
+      const allData: any[] = [];
+      const pageSize = 1000;
+      let from = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('filaments')
+          .select('id, product_title, vendor, material, variant_price, variant_compare_at_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, last_scraped_at, price_confidence, net_weight_g')
+          .not('variant_price', 'is', null)
+          .order('vendor', { ascending: true })
+          .order('product_title', { ascending: true })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        allData.push(...(data || []));
+        hasMore = (data?.length || 0) === pageSize;
+        from += pageSize;
+      }
+      return allData;
     },
     staleTime: 1000 * 60 * 5,
   });
@@ -277,10 +287,23 @@ export default function PricingData() {
     });
   }, [filaments, urlCache, priceChanges]);
 
-  const vendors = useMemo(() => {
-    const set = new Set(rows.map(r => r.vendor).filter(Boolean));
-    return Array.from(set).sort();
-  }, [rows]);
+  // Fetch ALL distinct vendors from the database (not just from loaded rows)
+  const { data: allVendors } = useQuery({
+    queryKey: ['admin-pricing-all-vendors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('filaments')
+        .select('vendor')
+        .not('variant_price', 'is', null)
+        .not('vendor', 'is', null);
+      if (error) throw error;
+      const set = new Set((data || []).map(r => r.vendor).filter(Boolean));
+      return Array.from(set).sort() as string[];
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const vendors = allVendors || [];
 
   const filtered = useMemo(() => {
     return rows.filter(r => {
