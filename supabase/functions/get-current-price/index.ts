@@ -1782,6 +1782,9 @@ function getMainProductSection(markdown: string): string {
     /(?:frequently\s+bought\s+together|discover\s+more|you\s+may\s+also\s+like|related\s+products|customers\s+also\s+bought|recommended\s+for\s+you)/i,
     /support\s+for\s+\w+.*?\$/i,
     /add\s+to\s+cart/i,
+    /カートに追加/i,          // Japanese: "Add to Cart"
+    /おすすめ商品/i,          // Japanese: "Recommended products"  
+    /一緒に購入/i,            // Japanese: "Bought together"
   ];
   
   let cutoff = markdown.length;
@@ -1812,7 +1815,7 @@ function extractFirstValidPrice(
     .map(m => {
       const raw = m[groupIndex] || (altGroupIndex !== undefined ? m[altGroupIndex] : undefined);
       if (!raw) return NaN;
-      return parseFloat(raw.replace(',', currency === 'JPY' ? '' : '.'));
+      return parseFloat(raw.replace(/,/g, ''));
     })
     .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, currency));
   
@@ -1865,6 +1868,55 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
         return { price: fullResult.price, compareAtPrice: fullResult.compareAt, currency: 'EUR', available: true };
       }
     }
+  }
+  
+  // JPY-specific patterns for Bambu Lab JP store
+  if (preferredCurrency === 'JPY') {
+    const jpyPatterns = [
+      /[¥￥]\s*([\d,]+)\s*(?:円)?/g,           // ¥3,400 円 or ¥3,400 or ￥3,400
+      /([\d,]+)\s*円/g,                         // 3,400円 (number followed by 円)
+      /(?:税込|価格|通常価格)[^\d]*?([\d,]+)/g,  // 税込価格 3,400 (after price labels)
+    ];
+    
+    for (const pattern of jpyPatterns) {
+      // Try upper section first
+      const upperMatches = [...upperMarkdown.matchAll(new RegExp(pattern.source, pattern.flags))];
+      const pricesByPosition = upperMatches
+        .map(m => ({
+          price: parseFloat((m[1] || '').replace(/,/g, '')),
+          index: m.index || 0,
+        }))
+        .filter(p => !isNaN(p.price) && p.price > 0 && validateFilamentPrice(p.price, 'JPY'))
+        .sort((a, b) => a.index - b.index);
+      
+      if (pricesByPosition.length > 0) {
+        const mainPrice = pricesByPosition[0].price;
+        const compareAt = pricesByPosition.length > 1 && pricesByPosition[1].price > mainPrice * 1.1
+          ? pricesByPosition[1].price : null;
+        console.log(`Found JPY price (upper section): ¥${mainPrice}${compareAt ? `, compare-at: ¥${compareAt}` : ''} (from ${pricesByPosition.length} matches)`);
+        return { price: mainPrice, compareAtPrice: compareAt, currency: 'JPY', available: true };
+      }
+      
+      // Fall back to full page
+      const fullMatches = [...markdown.matchAll(new RegExp(pattern.source, pattern.flags))];
+      const fullByPosition = fullMatches
+        .map(m => ({
+          price: parseFloat((m[1] || '').replace(/,/g, '')),
+          index: m.index || 0,
+        }))
+        .filter(p => !isNaN(p.price) && p.price > 0 && validateFilamentPrice(p.price, 'JPY'))
+        .sort((a, b) => a.index - b.index);
+      
+      if (fullByPosition.length > 0) {
+        const mainPrice = fullByPosition[0].price;
+        const compareAt = fullByPosition.length > 1 && fullByPosition[1].price > mainPrice * 1.1
+          ? fullByPosition[1].price : null;
+        console.log(`Found JPY price (full page): ¥${mainPrice}${compareAt ? `, compare-at: ¥${compareAt}` : ''} (from ${fullByPosition.length} matches)`);
+        return { price: mainPrice, compareAtPrice: compareAt, currency: 'JPY', available: true };
+      }
+    }
+    
+    console.log('No JPY price found with specific patterns, falling through to generic extraction...');
   }
   
   // GBP-specific patterns
@@ -1969,8 +2021,8 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   // PRIORITY 4: Last resort - any price with $ symbol and validation
   // Try upper section first
   const upperDollarPrices = [...upperMarkdown.matchAll(/\$([0-9,]+(?:\.[0-9]{2})?)/g)]
-    .map(m => parseFloat(m[1].replace(',', '')))
-    .filter(p => validateFilamentPrice(p));
+    .map(m => parseFloat(m[1].replace(/,/g, '')))
+    .filter(p => validateFilamentPrice(p, 'USD'));
   
   if (upperDollarPrices.length > 0) {
     const price = upperDollarPrices[0];
@@ -1981,8 +2033,8 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   
   // Fall back to full page
   const allDollarPrices = [...markdown.matchAll(/\$([0-9,]+(?:\.[0-9]{2})?)/g)]
-    .map(m => parseFloat(m[1].replace(',', '')))
-    .filter(p => validateFilamentPrice(p));
+    .map(m => parseFloat(m[1].replace(/,/g, '')))
+    .filter(p => validateFilamentPrice(p, 'USD'));
   
   if (allDollarPrices.length > 0) {
     const price = allDollarPrices[0];
