@@ -1,95 +1,55 @@
 
-# Phase 4: Pricing Data Deduplication by product_line_id
 
-## Overview
+# Geo-Redirect Bypass + Pricing Data UI Fixes
 
-Deduplicate the `/admin/pricing-data` page by grouping filaments by `product_line_id` instead of showing every color variant as a separate row. This reduces display from ~8,380 rows to ~1,080 product groups (87% reduction) and eliminates redundant API calls during link testing and price syncing.
+## Context
+The pricing data deduplication by `product_line_id` is already fully implemented. This plan addresses the remaining items: optimizing the price sync engine to skip doomed Shopify JSON attempts for geo-redirect domains, and fixing UI gaps in the admin pricing table.
 
-## Confirmed Data
+## Changes
 
-- 8,380 filament rows → 1,080 unique product_line_ids
-- 472 product groups have identical prices across all color variants
-- 362 groups vary by weight/pack only, NOT by color
-- product_line_id has 100% coverage
-- All color variants share the same base product URL per weight tier
+### 1. `get-current-price/index.ts` -- Geo-redirect Firecrawl-first bypass
 
----
+**Problem:** For non-USD currencies on geo-redirect domains (Bambu Lab, Anycubic, Creality, etc.), the Shopify JSON API always returns USD prices regardless of region headers. The function wastes time trying Shopify JSON first, then falling back to Firecrawl.
 
-## 1. Grouped Data Query
+**Fix:** Add a check before the Shopify JSON attempt: if the domain is a known geo-redirector AND the requested currency is not USD, skip straight to Firecrawl with the correct location.
 
-Replace the per-variant fetch with a grouped query:
+Insert after the `shouldAlwaysUseFirecrawl` check (around line 2596) and before the standard Shopify path:
 
-- GROUP BY `product_line_id`
-- Select one `representative_id` (MIN(id)) per group
-- Strip color suffixes from product name via regex
-- Strip `?variant=` / `?id=` params from URL to get base URL
-- Aggregate: `COUNT(*)` as variant_count, `COUNT(DISTINCT color_hex)` as color_count
-- Price: `MIN(variant_price)`, `MAX(variant_price)`, `has_price_range` boolean
-- Regional URLs: `MIN(product_url_ca)`, `MIN(product_url_uk)`, etc.
-- Collect `array_agg(id)` for fan-out updates
-
-## 2. Table Layout
-
-Each row = one product (grouped by product_line_id):
-
-**Columns:**
-- Checkbox (bulk selection)
-- Product: Clean name without color suffix
-- Brand
-- Material
-- Variants: Badge "15 colors"
-- Price: "$19.99" or "$19.99 – $29.99" if range
-- Status: Link health
-- Last Checked
-- Actions: Test / Sync / View
-
-**Expandable row shows:**
-- Regional store rows (one per region with flag, price, currency, status)
-- Color swatches
-- Price breakdown if variants differ by weight tier
-
-## 3. Link Testing Deduplication
-
-When testing a product's link:
-1. Strip variant params (`?id=`, `?variant=`, `?sku=`) from URL
-2. Make ONE request to base URL per region
-3. Apply result to ALL filament rows sharing that `product_line_id`
-4. Toast: "Tested 1 URL → updated 15 variants"
-
-```typescript
-// Fan-out update
-await supabase
-  .from('filaments')
-  .update({ link_status: result.status, last_link_check: now })
-  .eq('product_line_id', productLineId)
+```
+} else if (isGeoRedirectDomain(urlToFetch) && expectedCurrency !== 'USD') {
+  console.log(`Geo-redirect domain with ${expectedCurrency}, using Firecrawl directly`);
+  result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
 ```
 
-## 4. Price Sync Deduplication
+**Also:** Add `store.bambulab.com` to `shouldAlwaysUseFirecrawl` (line 1669), since their JSON API is completely disabled and always returns errors:
 
-When syncing a product's price:
-1. Fetch product page ONCE per region
-2. If all variants same price → update all rows
-3. If prices vary (weight tiers) → extract from JSON-LD, update each accordingly
-4. Toast: "Synced 1 page → updated 15 variants"
+```typescript
+const unreliableJsonStores = ['amolen.com', 'store.bambulab.com'];
+```
 
-## 5. Bulk Operations
+### 2. `_shared/regional-fetch.ts` -- Export helper
 
-All bulk ops work on deduplicated product_line_ids:
-- "Test All Stale": ~1,080 products, not 8,380 variants
-- Progress: "Testing 50/1,080 products (covering 8,380 variants)"
-- Batch size of 2 to respect rate limits
+Add a convenience function that edge functions can use to check if a URL+currency combo should bypass Shopify JSON:
 
-## 6. Stats Dashboard
+```typescript
+export function shouldUseFirecrawlForRegion(url: string, currency: string): boolean {
+  return isGeoRedirectDomain(url) && currency !== 'USD';
+}
+```
 
-Update stat cards:
-- "1,080 Products (8,380 variants)"
-- Active/Stale/Broken counts by unique product_line_id
-- Sync time estimate based on deduplicated count
+### 3. `PricingData.tsx` -- Show extraction source in sync results
 
-## 7. Filters
+**Problem:** Admins cannot see which extraction method was used (Shopify JSON vs Firecrawl) after a price sync.
 
-- Brand, Status, Search all work on grouped products
-- Optional "Show individual variants" toggle (OFF by default)
+**Fix:** The `get-current-price` response already includes a `source` field ('shopify' or 'firecrawl'). Capture it in the `SyncResult` type and display it as a small badge next to the synced price.
+
+- Add `source?: string` and `location?: string` to the `SyncResult` interface
+- Store `data.source` from the edge function response into the sync result
+- Show a small "Firecrawl" or "Shopify" badge in the price cell after sync, with the region location if Firecrawl was used
+
+### 4. `PricingData.tsx` -- Regional store rows already have action buttons
+
+After reviewing the code (lines 1425-1468), the child store rows already have sync, test, and external link buttons. No fix needed here -- the buttons are present for all rows that have a `productUrl`.
 
 ---
 
@@ -97,38 +57,25 @@ Update stat cards:
 
 ### Files Modified
 
-1. **`src/pages/admin/PricingData.tsx`** — All changes:
-   - Replace per-variant query with grouped query
-   - New `ProductGroup` type with variant_count, all_ids, price range
-   - Update table rendering to show grouped rows
-   - Expandable row detail with regional stores + color swatches
-   - Fan-out logic for test/sync results
-   - Updated stats cards
-   - Updated bulk operation counts
+1. **`supabase/functions/get-current-price/index.ts`**
+   - Line 1669: Add `'store.bambulab.com'` to `unreliableJsonStores` array
+   - Lines 2596-2600: Insert geo-redirect Firecrawl-first condition before the standard Shopify path
 
-### No New Edge Functions
+2. **`supabase/functions/_shared/regional-fetch.ts`**
+   - Add exported `shouldUseFirecrawlForRegion(url, currency)` helper function
 
-Existing `get-current-price` and `test-url` handle the actual requests. Only the frontend query and fan-out logic changes.
+3. **`src/pages/admin/PricingData.tsx`**
+   - Update `SyncResult` interface to include `source?: string`
+   - Capture `data.source` in `syncSinglePrice` callback
+   - Display extraction source badge in the price cell after sync
 
-### No Database Schema Changes
+### No Database Changes
 
-- `product_line_id` already exists with 100% coverage
-- All variant rows preserved in `filaments` table
-- Frontend site unaffected
+All changes are to edge function routing logic and admin UI display.
 
-### Performance Impact
+### Impact
 
-| Metric | Before | After | Reduction |
-|--------|--------|-------|-----------|
-| Rows rendered | 8,380 | 1,080 | 87% |
-| Link tests (5 regions) | 41,900 | 5,400 | 87% |
-| Price syncs | 8,380 | 1,080 | 87% |
-| Page load | Slow | Fast | Significant |
+- Non-USD syncs on geo-redirect domains (Bambu Lab, Anycubic, Creality, eSUN, etc.) will complete faster by skipping the failing Shopify JSON attempt
+- Bambu Lab US syncs will also go straight to Firecrawl since their JSON API is disabled
+- Admins gain visibility into which extraction method produced each price
 
----
-
-## Deferred
-
-- Per-row expandable price history chart
-- "Show individual variants" toggle view
-- Mixed availability badge ("12/15 in stock")
