@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download, ChevronRight, ChevronDown, ChevronsUpDown, Palette } from 'lucide-react';
+import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download, ChevronRight, ChevronDown, ChevronsUpDown, Palette, Link2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { downloadCSV } from '@/lib/csvExport';
@@ -357,6 +357,7 @@ export default function PricingData() {
   const [bulkSyncing, setBulkSyncing] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; variants?: number } | null>(null);
   const [bulkSyncProgress, setBulkSyncProgress] = useState<{ done: number; total: number; variants?: number } | null>(null);
+  const [isPopulatingUrls, setIsPopulatingUrls] = useState(false);
   const abortRef = useRef(false);
   const abortSyncRef = useRef(false);
   const queryClient = useQueryClient();
@@ -1112,6 +1113,53 @@ export default function PricingData() {
   }, [filtered]);
 
   // =============================================
+  // Populate Regional URLs
+  // =============================================
+
+  const canPopulateUrls = vendorFilter !== 'all' && vendorFilter in BRAND_REGIONAL_CONFIGS;
+
+  const handlePopulateRegionalUrls = useCallback(async () => {
+    if (!canPopulateUrls) return;
+    const vendor = vendorFilter;
+    const productCount = filtered.length;
+    const brandSlug = vendor.toLowerCase().replace(/\s+/g, '-');
+
+    const confirmed = window.confirm(
+      `Generate regional URLs for ${productCount} ${vendor} products?\n\nThis will fill in missing CA/UK/EU/AU/JP URLs by transforming the US URL using known store patterns.\n\nProducts without a US URL will be skipped.`
+    );
+    if (!confirmed) return;
+
+    setIsPopulatingUrls(true);
+    const toastId = toast.loading(`Generating regional URLs for ${vendor}...`);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('populate-regional-urls', {
+        body: {
+          brandSlug,
+          productType: 'filament',
+          regions: ['CA', 'UK', 'EU', 'AU', 'JP'],
+          validateUrls: false,
+          dryRun: false,
+        },
+      });
+
+      if (error) throw error;
+
+      const updated = data?.updated ?? data?.results?.updated ?? 0;
+      const skipped = data?.skipped ?? data?.results?.skipped ?? 0;
+      const total = data?.total ?? data?.results?.total ?? 0;
+
+      toast.success(`Generated ${updated} regional URLs for ${total} products. ${skipped} skipped (no US URL).`, { id: toastId });
+      queryClient.invalidateQueries({ queryKey: ['admin-pricing-data-grouped'] });
+    } catch (err: any) {
+      console.error('Populate regional URLs error:', err);
+      toast.error(`Failed to populate URLs: ${err.message}`, { id: toastId });
+    } finally {
+      setIsPopulatingUrls(false);
+    }
+  }, [canPopulateUrls, vendorFilter, filtered.length, queryClient]);
+
+  // =============================================
   // Render
   // =============================================
 
@@ -1250,6 +1298,19 @@ export default function PricingData() {
           <Button size="sm" variant="ghost" onClick={handleExportChanges} className="text-xs gap-1.5">
             <Download className="w-3.5 h-3.5" /> Changes
           </Button>
+          {canPopulateUrls && (
+            <>
+              <div className="h-4 w-px bg-border" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="ghost" onClick={handlePopulateRegionalUrls} disabled={isBusy || isPopulatingUrls} className="text-xs gap-1.5">
+                    {isPopulatingUrls ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />} Populate URLs
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Generate regional store URLs for {vendorFilter} products</TooltipContent>
+              </Tooltip>
+            </>
+          )}
           {isBusy && (
             <Button size="sm" variant="ghost" onClick={() => { abortRef.current = true; abortSyncRef.current = true; }} className="text-xs text-destructive">
               Cancel
