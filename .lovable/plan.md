@@ -1,71 +1,81 @@
 
 
-# Enhance "Copy Fix Prompt" with Context-Rich Lovable Prompts
+# Extend Diagnosis System to Include Test Failures (Link Testing)
 
 ## Summary
 
-Upgrade the diagnosis system so that "Copy Fix Prompt" generates dynamic, context-aware prompts containing actual failure details (products, URLs, errors, HTTP status codes, latencies) instead of generic static text. Also add a "Copy All as Lovable Prompt" button.
+Make the Diagnose button aware of both link test failures (`testResults`) and price sync failures (`syncResults`), presenting a unified diagnosis view.
 
 ## Changes
 
-### 1. Edge Function: `supabase/functions/diagnose-sync-failures/index.ts`
+### 1. Frontend: `src/pages/admin/PricingData.tsx`
 
-- Extend the `Failure` interface with optional fields: `statusCode`, `latencyMs`, `storeKey`
-- Add a `contextualPromptParts` field to the `Diagnosis` interface containing `errorPattern`, `edgeFunctionName`, and an array of `failureDetails` (product, region, url, error, statusCode, latencyMs, brand)
-- In the grouping loop, collect full failure details (not just product labels) and attach them as `contextualPromptParts` on each diagnosis
-- Keep the existing static `suggestedPrompt` untouched as a fallback
+**Add `failedTestCount` memo** (after `failedSyncCount` at line 1342):
+- Count entries in `testResults` where `status === 'broken'` or `status === 'timeout'`
+- Add `totalFailureCount = failedSyncCount + failedTestCount`
 
-### 2. Frontend: `src/pages/admin/PricingData.tsx`
+**Update Diagnose button** (lines 1541-1554):
+- Change visibility condition to use `totalFailureCount > 0` instead of `failedSyncCount > 0`
+- Change disabled condition to use `totalFailureCount === 0`
+- Update label to show `totalFailureCount`
+- When `totalFailureCount > 0`, clicking calls `handleDiagnoseFailures`; otherwise shows last diagnosis
 
-**Update `DiagnosisItem` interface** to include optional `contextualPromptParts` field matching the edge function output.
+**Update `handleDiagnoseFailures`** (line 1348):
+- After the existing `syncResults.forEach` block, add a new block iterating `testResults`
+- For each broken/timeout test result, push a failure with error prefixed by `[LINK_TEST]` and `source: 'link_test'`
+- Ensure `testResults` and `storeKeyMap` remain in the dependency array
 
-**Update failure payload** in `handleDiagnoseFailures` to include `statusCode` and `latencyMs` from the `testResults` map, and `storeKey` from the store entry.
+**Auto-trigger diagnosis after test completion** (line 1021, after `toast.success` in `testBatch`):
+- If `broken > 0`, call `handleDiagnoseFailures()` after a 500ms delay
 
-**Add `generateLovablePrompt` utility function** that builds a rich Markdown prompt including:
-- Error pattern, severity, and count
-- Edge function name
-- Table of affected products with URLs, regions, errors, HTTP status codes, and latencies
-- Diagnosis, suggested fix, and files likely involved
-- Graceful fallback to `d.suggestedPrompt` when `contextualPromptParts` is missing
+### 2. Edge Function: `supabase/functions/diagnose-sync-failures/index.ts`
 
-**Update "Copy Fix Prompt" button** to call `generateLovablePrompt(d)` instead of copying `d.suggestedPrompt`. Rename label to "Copy Lovable Prompt".
-
-**Add "Copy All as Lovable Prompt" button** after the diagnosis cards list (visible when there are 2+ diagnoses) that concatenates all prompts with a header including overall health and summary.
+**Add link test error patterns** in `classifyError` (before the default catch-all at line 166):
+- `[link_test]` + 404/not found -> "Broken link (404)", high severity, not transient
+- `[link_test]` + timeout -> "Link timeout", medium severity, transient
+- `[link_test]` + 301/302/redirect -> "Link redirect", medium severity, not transient
+- `[link_test]` + geo/geo_restricted -> "Geo-restricted link", low severity, not transient
+- `[link_test]` + 500/502/503 -> "Store server error", medium severity, transient
+- `[link_test]` generic catch-all -> "Link test failure", medium severity, not transient
 
 ## Technical Details
 
-### Edge Function Failure Interface Addition
+### Failure Object for Test Results
 
 ```text
-Failure {
-  ...existing fields...
-  statusCode?: number    // from TestResult
-  latencyMs?: number     // from TestResult  
-  storeKey?: string      // store identifier
+{
+  product: entry.group.cleanName,
+  region: entry.store.region,
+  currency: entry.store.currency,
+  url: entry.store.productUrl,
+  error: "[LINK_TEST] <original error or status description>",
+  brand: entry.group.vendor,
+  extractedPrice: 0,
+  source: "link_test",
+  statusCode: result.statusCode,
+  latencyMs: result.latencyMs,
+  storeKey: entry.store.storeKey,
 }
 ```
 
-### Grouping Enhancement
+### Pattern Matching Strategy
 
-Instead of only tracking product labels (`string[]`), each group will also track full failure objects. The `contextualPromptParts.failureDetails` array will contain up to 20 entries per group (truncated for very large groups).
+The `[LINK_TEST]` prefix in the error string is the mechanism for the edge function to distinguish test failures from sync failures. The `classifyError` function checks `e.includes('[link_test]')` first, then sub-classifies by HTTP status code or error type.
 
-### Prompt Format
+### Auto-Trigger Behavior
 
-The generated prompt will be structured Markdown with:
-- H2 header with pattern name and count
-- "Problem" section with edge function name and severity
-- "Affected Products" section with bullet list including URL, error, HTTP status, latency
-- "Suggested Fix Direction" section
-- "Files Likely Involved" section listing relevant edge functions and UI files
+After `testBatch` completes, if any broken links were found, `handleDiagnoseFailures` is called after a 500ms delay to let React state settle. This provides immediate diagnosis without requiring manual button clicks.
 
-### Fallback Behavior
+### Backward Compatibility
 
-If `contextualPromptParts` is undefined (e.g., from a cached/old diagnosis), the function falls back to `d.suggestedPrompt` -- preserving backward compatibility.
+- Existing sync diagnosis remains unchanged -- all sync error patterns are checked before the new link test patterns
+- If `testResults` is empty, behavior is identical to before
+- The `contextualPromptParts` system from the previous enhancement works for link test failures too
 
 ### Files Modified
 
 | File | Action |
 |------|--------|
-| `supabase/functions/diagnose-sync-failures/index.ts` | Add fields to Failure/Diagnosis interfaces, populate contextualPromptParts in grouping loop |
-| `src/pages/admin/PricingData.tsx` | Add `generateLovablePrompt`, update DiagnosisItem type, update copy button, add "Copy All" button, pass test result data to failures payload |
+| `src/pages/admin/PricingData.tsx` | Add `failedTestCount`/`totalFailureCount` memos, update diagnose button conditions, extend `handleDiagnoseFailures` to include test failures, add auto-trigger in `testBatch` |
+| `supabase/functions/diagnose-sync-failures/index.ts` | Add 6 new link test error patterns before the default catch-all |
 
