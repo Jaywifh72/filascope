@@ -501,6 +501,7 @@ export default function PricingData() {
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const abortRef = useRef(false);
   const abortSyncRef = useRef(false);
+  const diagnoseRef = useRef<() => void>(() => {});
   const queryClient = useQueryClient();
 
   // Load persisted diagnosis from localStorage
@@ -1019,6 +1020,13 @@ export default function PricingData() {
     setBulkTesting(false);
     setBulkProgress(null);
     toast.success(`Tested ${done} products in ${elapsed}s (covering ${totalVariants} variants) — ${ok} active, ${broken} broken, ${warnings} warnings`);
+
+    // Auto-trigger diagnosis if broken links found
+    if (broken > 0) {
+      setTimeout(() => {
+        diagnoseRef.current();
+      }, 500);
+    }
   }, [testSingleUrl]);
 
   // =============================================
@@ -1345,6 +1353,14 @@ export default function PricingData() {
     return count;
   }, [syncResults]);
 
+  const failedTestCount = useMemo(() => {
+    let count = 0;
+    testResults.forEach(r => { if (r.status === 'broken' || r.status === 'timeout') count++; });
+    return count;
+  }, [testResults]);
+
+  const totalFailureCount = failedSyncCount + failedTestCount;
+
   const handleDiagnoseFailures = useCallback(async () => {
     const failures: { product: string; region: string; currency: string; url: string; error: string; brand: string; extractedPrice?: number; source?: string; statusCode?: number; latencyMs?: number; storeKey?: string }[] = [];
 
@@ -1368,6 +1384,29 @@ export default function PricingData() {
       });
     });
 
+    // Also collect test failures (broken links, timeouts)
+    testResults.forEach((result, storeKey) => {
+      if (result.status !== 'broken' && result.status !== 'timeout') return;
+      // Skip if already covered by a sync failure for the same store
+      const syncResult = syncResults.get(storeKey);
+      if (syncResult?.status === 'failed') return;
+      const entry = storeKeyMap.get(storeKey);
+      if (!entry) return;
+      failures.push({
+        product: entry.group.cleanName,
+        region: entry.store.region,
+        currency: entry.store.currency,
+        url: entry.store.productUrl || '',
+        error: `[LINK_TEST] ${result.error || `HTTP ${result.statusCode} - Link ${result.status}`}`,
+        brand: entry.group.vendor,
+        extractedPrice: 0,
+        source: 'link_test',
+        statusCode: result.statusCode,
+        latencyMs: result.latencyMs,
+        storeKey: entry.store.storeKey,
+      });
+    });
+
     if (failures.length === 0) { toast.info('No failures to diagnose'); return; }
 
     setIsDiagnosing(true);
@@ -1385,6 +1424,9 @@ export default function PricingData() {
       setIsDiagnosing(false);
     }
   }, [syncResults, storeKeyMap, testResults]);
+
+  // Keep ref in sync for auto-trigger from testBatch
+  diagnoseRef.current = handleDiagnoseFailures;
 
   const handleRetryTransient = useCallback(async () => {
     if (!diagnosisResult) return;
@@ -1538,18 +1580,18 @@ export default function PricingData() {
             <RefreshCw className="w-3.5 h-3.5" /> Resync Stale
             {stats.stalePrices > 0 && <Badge variant="secondary" className="text-[9px] ml-1">{stats.stalePrices}</Badge>}
           </Button>
-          {(failedSyncCount > 0 || diagnosisResult) && (
+          {(totalFailureCount > 0 || diagnosisResult) && (
             <>
               <div className="h-4 w-px bg-border" />
               <Button
                 size="sm"
                 variant="outline"
-                disabled={isDiagnosing || (failedSyncCount === 0 && !diagnosisResult)}
-                onClick={failedSyncCount > 0 ? handleDiagnoseFailures : () => setShowDiagnosisModal(true)}
+                disabled={isDiagnosing || (totalFailureCount === 0 && !diagnosisResult)}
+                onClick={totalFailureCount > 0 ? handleDiagnoseFailures : () => setShowDiagnosisModal(true)}
                 className="text-xs gap-1.5"
               >
                 {isDiagnosing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bot className="w-3.5 h-3.5" />}
-                {failedSyncCount > 0 ? `Diagnose (${failedSyncCount})` : 'Last Diagnosis'}
+                {totalFailureCount > 0 ? `🤖 Diagnose (${totalFailureCount})` : 'Last Diagnosis'}
               </Button>
             </>
           )}
