@@ -1,0 +1,1 @@
+ALTER TABLE public.brand_regional_stores ADD COLUMN shopify_domain TEXT;

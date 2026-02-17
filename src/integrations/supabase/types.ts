@@ -1101,6 +1101,7 @@ export type Database = {
           product_url_pattern: string | null
           region_code: string
           ships_from_country: string | null
+          shopify_domain: string | null
           store_name: string
           updated_at: string
         }
@@ -1118,6 +1119,7 @@ export type Database = {
           product_url_pattern?: string | null
           region_code: string
           ships_from_country?: string | null
+          shopify_domain?: string | null
           store_name: string
           updated_at?: string
         }
@@ -1135,6 +1137,7 @@ export type Database = {
           product_url_pattern?: string | null
           region_code?: string
           ships_from_country?: string | null
+          shopify_domain?: string | null
           store_name?: string
           updated_at?: string
         }

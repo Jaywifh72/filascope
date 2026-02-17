@@ -43,6 +43,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 import { REGIONS } from '@/config/regions';
 import { validateStoreUrl, validateStoreUrls } from '@/services/urlValidationService';
 import type { RegionCode } from '@/types/regional';
@@ -57,6 +58,7 @@ interface StoreWithValidation {
   currency_code: string;
   base_url: string;
   product_url_pattern: string | null;
+  shopify_domain: string | null;
   is_active: boolean;
   is_primary: boolean;
   updated_at: string;
@@ -85,6 +87,8 @@ export default function AdminStoreUrls() {
   const [testSlug, setTestSlug] = useState('');
   const [testResult, setTestResult] = useState<{ url: string; status: string; code: number | null } | null>(null);
   const [testLoading, setTestLoading] = useState(false);
+  const [editingShopifyId, setEditingShopifyId] = useState<string | null>(null);
+  const [editingShopifyValue, setEditingShopifyValue] = useState('');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -103,6 +107,7 @@ export default function AdminStoreUrls() {
           currency_code,
           base_url,
           product_url_pattern,
+          shopify_domain,
           is_active,
           is_primary,
           updated_at,
@@ -314,6 +319,46 @@ export default function AdminStoreUrls() {
     },
   });
 
+  // Update shopify_domain mutation
+  const updateShopifyDomainMutation = useMutation({
+    mutationFn: async ({ storeId, shopifyDomain }: { storeId: string; shopifyDomain: string | null }) => {
+      const { error } = await supabase
+        .from('brand_regional_stores')
+        .update({ 
+          shopify_domain: shopifyDomain || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', storeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchStores();
+      toast({ title: 'Shopify domain updated' });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to update Shopify domain',
+        description: String(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+
+
+  const startEditShopify = (store: StoreWithValidation) => {
+    setEditingShopifyId(store.id);
+    setEditingShopifyValue(store.shopify_domain || '');
+  };
+
+  const saveShopifyDomain = (storeId: string) => {
+    updateShopifyDomainMutation.mutate({ 
+      storeId, 
+      shopifyDomain: editingShopifyValue.trim() || null 
+    });
+    setEditingShopifyId(null);
+  };
+
   const getStatusBadge = (status: string | undefined) => {
     switch (status) {
       case 'valid':
@@ -500,6 +545,7 @@ export default function AdminStoreUrls() {
                   <TableHead>Brand</TableHead>
                   <TableHead>Region</TableHead>
                   <TableHead>URL / Pattern</TableHead>
+                  <TableHead>Shopify Domain</TableHead>
                   <TableHead>Currency</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Last Checked</TableHead>
@@ -509,13 +555,13 @@ export default function AdminStoreUrls() {
               <TableBody>
                 {storesLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={8} className="text-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : filteredStores.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No stores found
                     </TableCell>
                   </TableRow>
@@ -560,6 +606,47 @@ export default function AdminStoreUrls() {
                             </div>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell className="max-w-[180px]">
+                        {editingShopifyId === store.id ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={editingShopifyValue}
+                              onChange={(e) => setEditingShopifyValue(e.target.value)}
+                              placeholder="store.myshopify.com"
+                              className="h-7 text-xs"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveShopifyDomain(store.id);
+                                if (e.key === 'Escape') setEditingShopifyId(null);
+                              }}
+                              autoFocus
+                            />
+                            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => saveShopifyDomain(store.id)}>
+                              <CheckCircle2 className="w-3 h-3 text-green-500" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="cursor-pointer group/shopify flex items-center gap-1"
+                            onClick={() => startEditShopify(store)}
+                          >
+                            {store.shopify_domain ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="text-xs font-mono text-primary truncate">{store.shopify_domain}</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Shopify JSON API domain — click to edit</p>
+                                  <p className="text-xs text-muted-foreground mt-1">Enables direct API pricing instead of scraping</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="text-xs text-muted-foreground opacity-0 group-hover/shopify:opacity-100 transition-opacity">
+                                + Add domain
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{store.currency_code}</Badge>
