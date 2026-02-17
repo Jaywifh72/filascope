@@ -86,6 +86,17 @@ function classifyError(error: string): {
     };
   }
 
+  if (e.includes('firecrawl error: 408')) {
+    return {
+      pattern: 'Firecrawl request timeout',
+      severity: 'medium',
+      diagnosis: 'Firecrawl timed out scraping the page (408). The target site may be slow to respond or temporarily overloaded.',
+      suggestedFix: 'Retry the sync. If persistent, check if the product page loads slowly or has heavy JavaScript rendering.',
+      suggestedPrompt: 'The Firecrawl scraping service timed out (408) for some products. Retry the affected syncs. If persistent, the target pages may need a longer timeout or an alternative extraction method.',
+      isTransient: true,
+    };
+  }
+
   if (e.includes('firecrawl error: 402')) {
     return {
       pattern: 'Firecrawl credits exhausted',
