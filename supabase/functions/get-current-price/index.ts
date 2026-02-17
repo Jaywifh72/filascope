@@ -1804,6 +1804,25 @@ function getMainProductSection(markdown: string): string {
   return markdown.substring(0, cutoff);
 }
 
+// Parse a price string that may use European decimal format (comma as decimal separator)
+// Examples: "15,99" → 15.99, "1.299,00" → 1299.00, "15.99" → 15.99, "1,299.00" → 1299.00
+function parseEuropeanPrice(raw: string): number {
+  if (!raw) return NaN;
+  const trimmed = raw.trim();
+  
+  // Detect European format: if the last separator is a comma and has exactly 2 digits after it
+  // e.g. "15,99" or "1.299,99"
+  const europeanMatch = trimmed.match(/^([\d.]*?)(\d+),(\d{2})$/);
+  if (europeanMatch) {
+    // European format: dots are thousand separators, comma is decimal
+    const intPart = (europeanMatch[1] + europeanMatch[2]).replace(/\./g, '');
+    return parseFloat(`${intPart}.${europeanMatch[3]}`);
+  }
+  
+  // Standard format: commas are thousand separators, dot is decimal
+  return parseFloat(trimmed.replace(/,/g, ''));
+}
+
 // Helper: extract first valid price from matches (by page position, not lowest)
 function extractFirstValidPrice(
   matches: RegExpMatchArray[],
@@ -1815,7 +1834,7 @@ function extractFirstValidPrice(
     .map(m => {
       const raw = m[groupIndex] || (altGroupIndex !== undefined ? m[altGroupIndex] : undefined);
       if (!raw) return NaN;
-      return parseFloat(raw.replace(/,/g, ''));
+      return parseEuropeanPrice(raw);
     })
     .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p, currency));
   
@@ -1846,9 +1865,9 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   // EUR-specific patterns for Bambu Lab EU store
   if (preferredCurrency === 'EUR') {
     const eurPatterns = [
-      /From\s*€\s*([\d,]+(?:\.\d{2})?)\s*EUR/gi,
-      /€\s*([\d,]+(?:\.\d{2})?)\s*EUR/gi,
-      /€\s*([\d,]+(?:\.\d{2})?)/g,
+      /From\s*€\s*([\d.,]+(?:\.\d{2})?)\s*EUR/gi,
+      /€\s*([\d.,]+(?:\.\d{2})?)\s*EUR/gi,
+      /€\s*([\d.,]+)/g,  // Matches €15,99 and €15.99
     ];
     
     for (const pattern of eurPatterns) {
