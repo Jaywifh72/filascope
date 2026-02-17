@@ -33,6 +33,56 @@ interface DiagnosisItem {
   suggestedPrompt: string;
   affectedProducts: string[];
   isTransient: boolean;
+  contextualPromptParts?: {
+    errorPattern: string;
+    edgeFunctionName: string;
+    failureDetails: Array<{
+      product: string;
+      region: string;
+      url: string;
+      error: string;
+      statusCode?: number;
+      latencyMs?: number;
+      brand: string;
+    }>;
+  };
+}
+
+function generateLovablePrompt(d: DiagnosisItem): string {
+  if (!d.contextualPromptParts) return d.suggestedPrompt;
+
+  const details = d.contextualPromptParts.failureDetails;
+  const affectedList = details
+    .map(f => `- **${f.product}** (${f.region}): URL=\`${f.url}\`, Error="${f.error}", HTTP=${f.statusCode || 'N/A'}, Latency=${f.latencyMs || 'N/A'}ms`)
+    .join('\n');
+
+  const edgeFunction = d.contextualPromptParts.edgeFunctionName || 'get-current-price';
+
+  return `## Fix: ${d.pattern} (${d.count} affected)
+
+### Problem
+The \`${edgeFunction}\` edge function is producing "${d.pattern}" errors for ${d.count} product(s).
+**Severity:** ${d.severity}
+**Error classification:** ${d.diagnosis}
+
+### Affected Products
+${affectedList}
+
+### Current Behavior
+${d.diagnosis}
+
+### Expected Behavior
+All affected products should sync successfully with valid price extraction.
+
+### Suggested Fix Direction
+${d.suggestedFix}
+
+### Files Likely Involved
+- \`supabase/functions/${edgeFunction}/index.ts\` — the edge function performing price sync
+- \`supabase/functions/diagnose-sync-failures/index.ts\` — the diagnosis engine (may need new pattern)
+- \`src/pages/admin/PricingData.tsx\` — the admin UI displaying results
+
+Please investigate the root cause in the edge function and implement a fix. If this is a data issue (wrong URLs, discontinued products), suggest the appropriate data cleanup instead.`;
 }
 
 interface DiagnosisResult {
@@ -1296,12 +1346,13 @@ export default function PricingData() {
   }, [syncResults]);
 
   const handleDiagnoseFailures = useCallback(async () => {
-    const failures: { product: string; region: string; currency: string; url: string; error: string; brand: string; extractedPrice?: number; source?: string }[] = [];
+    const failures: { product: string; region: string; currency: string; url: string; error: string; brand: string; extractedPrice?: number; source?: string; statusCode?: number; latencyMs?: number; storeKey?: string }[] = [];
 
     syncResults.forEach((result, storeKey) => {
       if (result.status !== 'failed') return;
       const entry = storeKeyMap.get(storeKey);
       if (!entry) return;
+      const testResult = testResults.get(storeKey);
       failures.push({
         product: entry.group.cleanName,
         region: entry.store.region,
@@ -1311,6 +1362,9 @@ export default function PricingData() {
         brand: entry.group.vendor,
         extractedPrice: result.newPrice,
         source: result.source,
+        statusCode: testResult?.statusCode,
+        latencyMs: testResult?.latencyMs,
+        storeKey: entry.store.storeKey,
       });
     });
 
@@ -1330,7 +1384,7 @@ export default function PricingData() {
     } finally {
       setIsDiagnosing(false);
     }
-  }, [syncResults, storeKeyMap]);
+  }, [syncResults, storeKeyMap, testResults]);
 
   const handleRetryTransient = useCallback(async () => {
     if (!diagnosisResult) return;
@@ -1662,11 +1716,11 @@ export default function PricingData() {
                         variant="outline"
                         className="text-xs gap-1.5 h-7"
                         onClick={() => {
-                          navigator.clipboard.writeText(d.suggestedPrompt);
-                          toast.success('Fix prompt copied to clipboard');
+                          navigator.clipboard.writeText(generateLovablePrompt(d));
+                          toast.success('Lovable fix prompt copied to clipboard');
                         }}
                       >
-                        <Copy className="w-3 h-3" /> Copy Fix Prompt
+                        <Copy className="w-3 h-3" /> 📋 Copy Lovable Prompt
                       </Button>
                       {d.isTransient && (
                         <Badge variant="outline" className="text-[9px] text-muted-foreground">Transient — can retry</Badge>
@@ -1690,6 +1744,23 @@ export default function PricingData() {
                   </CardContent>
                 </Card>
               ))}
+
+              {diagnosisResult.diagnoses.length > 1 && (
+                <Button
+                  variant="outline"
+                  className="w-full text-xs gap-1.5"
+                  onClick={() => {
+                    const fullPrompt = diagnosisResult.diagnoses
+                      .map(d => generateLovablePrompt(d))
+                      .join('\n\n---\n\n');
+                    const header = `## Pricing Sync Diagnosis Report\n\n**Overall Health:** ${diagnosisResult.overallHealth}\n**Summary:** ${diagnosisResult.summary}\n\nThe following ${diagnosisResult.diagnoses.length} issue categories were found. Please address them in priority order:\n\n`;
+                    navigator.clipboard.writeText(header + fullPrompt);
+                    toast.success('Full diagnosis prompt copied to clipboard');
+                  }}
+                >
+                  <Copy className="w-3 h-3" /> Copy All as Lovable Prompt
+                </Button>
+              )}
 
               {diagnosisResult.diagnoses.some(d => d.isTransient) && (
                 <Button
