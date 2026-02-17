@@ -90,13 +90,42 @@ const BRAND_PATTERNS: Record<string, BrandPattern> = {
       return [...new Set(variants)];
     },
   },
+  anycubic: {
+    domain: /(?:store\.anycubic|(?:ca|uk|eu|au)\.anycubic)\.com/i,
+    extractHandle: (url) => {
+      const m = url.match(/(?:store\.anycubic|(?:ca|uk|eu|au)\.anycubic)\.com\/(?:products\/)?([^?#/]+)/i);
+      return m?.[1] || null;
+    },
+    buildUrl: (handle, region) => {
+      const regionMap: Record<string, string> = {
+        US: 'store', CA: 'ca', UK: 'uk', EU: 'eu', AU: 'au',
+      };
+      const sub = region ? (regionMap[region.toUpperCase()] || 'store') : 'store';
+      return `https://${sub}.anycubic.com/products/${handle}`;
+    },
+    slugVariants: (handle) => {
+      const variants = [handle];
+      if (handle.endsWith('-filament')) variants.push(handle.replace(/-filament$/, ''));
+      if (!handle.endsWith('-filament')) variants.push(`${handle}-filament`);
+      if (handle.includes('3d-printer-')) variants.push(handle.replace('3d-printer-', ''));
+      if (!handle.includes('3d-printer-')) variants.push(`3d-printer-${handle}`);
+      variants.push(handle.replace(/-1kg$/, '').replace(/-1-75mm$/, ''));
+      if (handle.includes('-special')) {
+        variants.push(handle.replace('-special', '-special-filament'));
+        variants.push(handle.replace('-special-filament', '-special'));
+      }
+      if (handle.includes('color')) variants.push(handle.replace(/color/g, 'colour'));
+      if (handle.includes('colour')) variants.push(handle.replace(/colour/g, 'color'));
+      return [...new Set(variants)];
+    },
+  },
   generic_shopify: {
     domain: /\.myshopify\.com|shopify/i,
     extractHandle: (url) => {
       const m = url.match(/\/products\/([^?#/]+)/i);
       return m?.[1] || null;
     },
-    buildUrl: (handle) => handle, // needs domain context
+    buildUrl: (handle) => handle,
     slugVariants: (handle) => {
       const variants = [handle];
       variants.push(handle.replace(/-/g, '_'));
@@ -242,7 +271,7 @@ function fuzzyProductMatch(searchTerms: string, productTitle: string, originalHa
 
 interface SearchResult {
   url: string;
-  source: 'shopify_catalog' | 'shopify_search' | 'site_search';
+  source: 'cross_region_lookup' | 'shopify_catalog' | 'shopify_search' | 'site_search';
   confidence: number;
   validated: boolean;
   searchQuery: string;
@@ -253,7 +282,9 @@ async function searchStoreProducts(
   originalUrl: string,
   handle: string,
   region?: string,
-  _brandName?: string
+  brandName?: string,
+  supabaseClient?: any,
+  productId?: string,
 ): Promise<SearchResult | null> {
   const startTime = Date.now();
   const TOTAL_TIMEOUT = 20_000;
@@ -273,6 +304,47 @@ async function searchStoreProducts(
   console.log(`[SearchStore] handle="${handle}" searchTerms="${searchTerms}" broadTerms="${broadTerms}" base="${baseUrl}"`);
 
   const isTimedOut = () => Date.now() - startTime > TOTAL_TIMEOUT;
+
+  // ── Strategy 0: Cross-region handle lookup ──
+  if (supabaseClient && productId && region && region !== 'US') {
+    try {
+      const { data: filament } = await supabaseClient
+        .from('filaments')
+        .select('product_url')
+        .eq('id', productId)
+        .single();
+
+      if (filament?.product_url) {
+        const usHandleMatch = filament.product_url.match(/\/products\/([^?#/]+)/i);
+        if (usHandleMatch?.[1] && usHandleMatch[1] !== handle) {
+          const usHandle = usHandleMatch[1];
+          // Build regional URL using the brand pattern if available
+          const brandMatch = identifyBrand(originalUrl);
+          const candidateUrl = brandMatch
+            ? brandMatch[1].buildUrl(usHandle, region)
+            : `${baseUrl}/products/${usHandle}`;
+
+          const check = await checkUrl(candidateUrl, FETCH_TIMEOUT);
+          if (check.status === 200) {
+            console.log(`[SearchStore] Strategy 0 match: US handle "${usHandle}" works on ${region}`);
+            return {
+              url: candidateUrl,
+              source: 'cross_region_lookup',
+              confidence: 0.95,
+              validated: true,
+              searchQuery: usHandle,
+              candidatesFound: 1,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      console.log(`[SearchStore] Strategy 0 failed: ${e.message}`);
+    }
+
+    if (isTimedOut()) return null;
+    await delay(300);
+  }
 
   // ── Strategy A: Shopify /products.json ──
   try {
@@ -451,7 +523,7 @@ async function searchStoreProducts(
   return null;
 }
 
-async function diagnoseUrl(url: string, region?: string): Promise<DiagnosisResult> {
+async function diagnoseUrl(url: string, region?: string, supabaseClient?: any, productId?: string): Promise<DiagnosisResult> {
   const result: DiagnosisResult = {
     original_url: url,
     http_status: null,
@@ -590,7 +662,7 @@ async function diagnoseUrl(url: string, region?: string): Promise<DiagnosisResul
 
       // Step 4b: Search store product catalog (brand identified)
       if (handle) {
-        const searchResult = await searchStoreProducts(url, handle, region, brandName);
+        const searchResult = await searchStoreProducts(url, handle, region, brandName, supabaseClient, productId);
         if (searchResult) {
           result.suggested_url = searchResult.url;
           result.suggestion_source = searchResult.source;
@@ -620,7 +692,7 @@ async function diagnoseUrl(url: string, region?: string): Promise<DiagnosisResul
           handle: unknownHandle,
         };
 
-        const searchResult = await searchStoreProducts(url, unknownHandle, region);
+        const searchResult = await searchStoreProducts(url, unknownHandle, region, undefined, supabaseClient, productId);
         if (searchResult) {
           result.suggested_url = searchResult.url;
           result.suggestion_source = searchResult.source;
@@ -673,7 +745,7 @@ Deno.serve(async (req) => {
 
     // ── Single URL diagnosis ──
     if (action === 'diagnose' && url) {
-      const diagnosis = await diagnoseUrl(url, region);
+      const diagnosis = await diagnoseUrl(url, region, supabase, product_id);
       return new Response(JSON.stringify({ success: true, diagnosis }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -717,7 +789,7 @@ Deno.serve(async (req) => {
             if (!productUrl || productUrl === 'DISCONTINUED') continue;
 
             checks.push(
-              diagnoseUrl(productUrl, regionCode).then((diagnosis) => {
+              diagnoseUrl(productUrl, regionCode, supabase, product.id).then((diagnosis) => {
                 if (diagnosis.failure_reason !== 'none') {
                   results.push(diagnosis);
                   repairs.push({
