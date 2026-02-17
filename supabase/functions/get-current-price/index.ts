@@ -1518,7 +1518,9 @@ async function updateFilamentStockStatus(
   productUrl: string,
   available: boolean,
   stockStatus: StockStatus,
-  price: number | null
+  price: number | null,
+  currency: string = 'USD',
+  region: string = 'US'
 ): Promise<void> {
   try {
     const supabase = getSupabaseClient();
@@ -1559,8 +1561,8 @@ async function updateFilamentStockStatus(
           old_price: filament.variant_price,
           new_price: price,
           price_change_percent: Math.round(changePercent * 100) / 100,
-          currency: 'USD',
-          region: 'US',
+          currency: currency,
+          region: region,
           status: 'auto_approved',
           source_url: productUrl,
           reviewed_at: new Date().toISOString(),
@@ -1575,8 +1577,8 @@ async function updateFilamentStockStatus(
           old_price: filament.variant_price,
           new_price: price,
           price_change_percent: Math.round(changePercent * 100) / 100,
-          currency: 'USD',
-          region: 'US',
+          currency: currency,
+          region: region,
           status: 'manual_review',
           source_url: productUrl,
           notes: isUrgent ? 'URGENT: Price change > 20%' : 'Price change 5-20%, needs review',
@@ -2918,7 +2920,9 @@ serve(async (req) => {
         productUrl, // Use original URL for DB lookup
         result.available,
         result.stockStatus || (result.available ? 'in_stock' : 'out_of_stock'),
-        result.price
+        result.price,
+        result.currency || 'USD',
+        CURRENCY_TO_REGION[result.currency] || 'US'
       ).catch(err => console.error('Background stock update failed:', err));
     }
 

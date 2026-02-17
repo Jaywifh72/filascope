@@ -34,6 +34,17 @@ const BRAND_PATTERNS: Record<string, BrandPattern> = {
       if (!handle.includes('3d-printer')) variants.push(`${handle}-3d-printer-filament`);
       // Remove trailing suffixes
       variants.push(handle.replace(/-filament$/, '').replace(/-3d-printer-filament$/, ''));
+      // Weight/diameter suffix variants
+      variants.push(handle.replace(/-1-75mm-1kg$/, ''));
+      variants.push(handle.replace(/-1kg$/, ''));
+      if (!handle.endsWith('-1kg')) variants.push(`${handle}-1kg`);
+      if (!handle.endsWith('-1-75mm-1kg')) variants.push(`${handle}-1-75mm-1kg`);
+      // RFID variants
+      variants.push(handle.replace(/-rfid/, ''));
+      if (!handle.includes('-rfid')) variants.push(handle.replace(/-filament/, '-rfid-filament'), `${handle}-rfid`);
+      // '3d-printing-' prefix
+      variants.push(handle.replace(/^3d-printing-/, ''));
+      if (!handle.startsWith('3d-printing-')) variants.push(`3d-printing-${handle}`);
       return [...new Set(variants)];
     },
   },
