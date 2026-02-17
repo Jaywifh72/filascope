@@ -48,6 +48,45 @@ export function SmartUrlValidator() {
   const [scanProgress, setScanProgress] = useState<{ scanning: boolean; message: string }>({ scanning: false, message: '' });
   const [singleUrl, setSingleUrl] = useState('');
   const [singleDiagnosis, setSingleDiagnosis] = useState<any>(null);
+  const [deepSearching, setDeepSearching] = useState<Record<string, boolean>>({});
+
+  const SOURCE_BADGES: Record<string, { label: string; className: string }> = {
+    slug_variant: { label: 'Slug Match', className: '' },
+    shopify_catalog: { label: 'Catalog Search', className: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
+    shopify_search: { label: 'Store Search', className: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
+    site_search: { label: 'Site Search', className: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
+    cross_region_lookup: { label: 'Cross-Region', className: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+  };
+
+  const handleDeepSearch = useCallback(async (item: RepairItem) => {
+    setDeepSearching(prev => ({ ...prev, [item.id]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('smart-url-validator', {
+        body: { action: 'diagnose', url: item.original_url, region: item.region },
+      });
+      if (error) throw error;
+      const diag = data?.diagnosis;
+      if (diag?.suggested_url) {
+        await supabase
+          .from('url_repair_queue')
+          .update({
+            suggested_url: diag.suggested_url,
+            suggestion_source: diag.suggestion_source || 'unknown',
+            suggestion_confidence: diag.suggestion_confidence || 0,
+            suggestion_validated: diag.suggestion_validated ?? false,
+          })
+          .eq('id', item.id);
+        queryClient.invalidateQueries({ queryKey: ['url-repair-queue'] });
+        toast.success(`Found fix: ${diag.suggested_url.slice(0, 50)}...`);
+      } else {
+        toast.info('No match found for this URL');
+      }
+    } catch (err: any) {
+      toast.error(`Deep search failed: ${err.message}`);
+    } finally {
+      setDeepSearching(prev => ({ ...prev, [item.id]: false }));
+    }
+  }, [queryClient]);
 
   // Fetch repair queue
   const { data: repairs, isLoading } = useQuery({
@@ -362,15 +401,20 @@ export function SmartUrlValidator() {
                         </Badge>
                       </TableCell>
                       <TableCell><ReasonBadge reason={item.failure_reason} /></TableCell>
-                      <TableCell className="text-xs max-w-[200px]">
+                      <TableCell className="text-xs max-w-[250px]">
                         {item.suggested_url ? (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {item.suggestion_source && SOURCE_BADGES[item.suggestion_source] && (
+                              <Badge variant="outline" className={`text-[9px] h-4 px-1 ${SOURCE_BADGES[item.suggestion_source].className}`}>
+                                {SOURCE_BADGES[item.suggestion_source].label}
+                              </Badge>
+                            )}
                             {item.suggestion_validated ? (
                               <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
                             ) : (
                               <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                             )}
-                            <a href={item.suggested_url} target="_blank" rel="noopener noreferrer" className="truncate underline text-blue-600">
+                            <a href={item.suggested_url} target="_blank" rel="noopener noreferrer" className="truncate underline text-blue-600 max-w-[120px]">
                               {new URL(item.suggested_url).pathname}
                             </a>
                             <span className="text-muted-foreground shrink-0">
@@ -378,7 +422,24 @@ export function SmartUrlValidator() {
                             </span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">No fix found</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-muted-foreground">No fix found</span>
+                            {item.status === 'pending' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-[10px] h-6 px-2 gap-1"
+                                disabled={deepSearching[item.id]}
+                                onClick={() => handleDeepSearch(item)}
+                              >
+                                {deepSearching[item.id] ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <><Search className="w-3 h-3" /> Deep Search</>
+                                )}
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="text-right">

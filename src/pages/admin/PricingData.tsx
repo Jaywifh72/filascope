@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download, ChevronRight, ChevronDown, ChevronsUpDown, Palette, Link2, Bot, Copy, RotateCcw } from 'lucide-react';
+import { DollarSign, Search, ArrowUpRight, ArrowDownRight, Minus, ExternalLink, Loader2, Play, Zap, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Download, ChevronRight, ChevronDown, ChevronsUpDown, Palette, Link2, Bot, Copy, RotateCcw, Wrench } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { downloadCSV } from '@/lib/csvExport';
@@ -499,10 +499,104 @@ export default function PricingData() {
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
+  const [searchResults, setSearchResults] = useState<Record<string, { loading: boolean; url?: string; confidence?: number; method?: string; query?: string; error?: boolean }>>({});
+  const [bulkSearchProgress, setBulkSearchProgress] = useState<{ running: boolean; done: number; total: number; found: number } | null>(null);
   const abortRef = useRef(false);
   const abortSyncRef = useRef(false);
   const diagnoseRef = useRef<() => void>(() => {});
   const queryClient = useQueryClient();
+
+  const REGION_URL_COLUMN_MAP: Record<string, string> = {
+    US: 'product_url', CA: 'product_url_ca', UK: 'product_url_uk',
+    EU: 'product_url_eu', AU: 'product_url_au', JP: 'product_url_jp',
+  };
+
+  const handleSearchStore = useCallback(async (url: string, region: string) => {
+    setSearchResults(prev => ({ ...prev, [url]: { loading: true } }));
+    try {
+      const { data, error } = await supabase.functions.invoke('smart-url-validator', {
+        body: { action: 'diagnose', url, region },
+      });
+      if (error) throw error;
+      const diag = data?.diagnosis;
+      if (diag?.suggested_url) {
+        setSearchResults(prev => ({
+          ...prev,
+          [url]: {
+            loading: false,
+            url: diag.suggested_url,
+            confidence: diag.suggestion_confidence,
+            method: diag.suggestion_source || 'unknown',
+            query: diag.search_query,
+          },
+        }));
+      } else {
+        setSearchResults(prev => ({ ...prev, [url]: { loading: false, error: true } }));
+      }
+    } catch {
+      setSearchResults(prev => ({ ...prev, [url]: { loading: false, error: true } }));
+      toast.error('Search failed for ' + url.slice(0, 40));
+    }
+  }, []);
+
+  const handleSearchAllBroken = useCallback(async (failureDetails: Array<{ product: string; region: string; url: string; error: string; statusCode?: number; latencyMs?: number; brand: string }>) => {
+    if (!failureDetails?.length) return;
+    setBulkSearchProgress({ running: true, done: 0, total: failureDetails.length, found: 0 });
+    let found = 0;
+    for (let i = 0; i < failureDetails.length; i++) {
+      const f = failureDetails[i];
+      setBulkSearchProgress(prev => prev ? { ...prev, done: i + 1 } : null);
+      try {
+        const { data, error } = await supabase.functions.invoke('smart-url-validator', {
+          body: { action: 'diagnose', url: f.url, region: f.region },
+        });
+        if (!error && data?.diagnosis?.suggested_url) {
+          found++;
+          setSearchResults(prev => ({
+            ...prev,
+            [f.url]: {
+              loading: false,
+              url: data.diagnosis.suggested_url,
+              confidence: data.diagnosis.suggestion_confidence,
+              method: data.diagnosis.suggestion_source || 'unknown',
+              query: data.diagnosis.search_query,
+            },
+          }));
+        } else {
+          setSearchResults(prev => ({ ...prev, [f.url]: { loading: false, error: true } }));
+        }
+      } catch {
+        setSearchResults(prev => ({ ...prev, [f.url]: { loading: false, error: true } }));
+      }
+      if (i < failureDetails.length - 1) await new Promise(r => setTimeout(r, 1000));
+    }
+    setBulkSearchProgress({ running: false, done: failureDetails.length, total: failureDetails.length, found });
+    toast.success(`Search complete: found fixes for ${found}/${failureDetails.length} products`);
+  }, []);
+
+  const handleApplyAllFixes = useCallback(async (failureDetails: Array<{ product: string; region: string; url: string; error: string; brand: string }>) => {
+    if (!failureDetails) return;
+    const fixes = failureDetails.filter(f => searchResults[f.url]?.url);
+    if (!fixes.length) { toast.info('No fixes to apply'); return; }
+    let applied = 0;
+    for (const f of fixes) {
+      const sr = searchResults[f.url];
+      if (!sr?.url) continue;
+      const col = REGION_URL_COLUMN_MAP[f.region?.toUpperCase()] || 'product_url';
+      const { data: filament } = await (supabase
+        .from('filaments')
+        .select('id') as any)
+        .eq(col, f.url)
+        .limit(1)
+        .maybeSingle();
+      if (filament) {
+        await supabase.from('filaments').update({ [col]: sr.url } as any).eq('id', filament.id);
+        applied++;
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['admin-pricing-data-grouped'] });
+    toast.success(`Applied ${applied}/${fixes.length} URL fixes`);
+  }, [searchResults, queryClient]);
 
   // Load persisted diagnosis from localStorage
   useEffect(() => {
@@ -1752,7 +1846,7 @@ export default function PricingData() {
                     <p className="text-xs text-muted-foreground">{d.diagnosis}</p>
                     <p className="text-xs text-foreground"><span className="font-medium">Fix:</span> {d.suggestedFix}</p>
 
-                    <div className="flex items-center gap-2 pt-1">
+                    <div className="flex items-center gap-2 pt-1 flex-wrap">
                       <Button
                         size="sm"
                         variant="outline"
@@ -1764,6 +1858,33 @@ export default function PricingData() {
                       >
                         <Copy className="w-3 h-3" /> 📋 Copy Lovable Prompt
                       </Button>
+                      {(d.pattern.includes('404') || d.pattern.toLowerCase().includes('broken link')) && d.contextualPromptParts?.failureDetails && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs gap-1.5 h-7"
+                            disabled={bulkSearchProgress?.running}
+                            onClick={() => handleSearchAllBroken(d.contextualPromptParts!.failureDetails)}
+                          >
+                            {bulkSearchProgress?.running ? (
+                              <><Loader2 className="w-3 h-3 animate-spin" /> Searching {bulkSearchProgress.done}/{bulkSearchProgress.total}...</>
+                            ) : (
+                              <><Search className="w-3 h-3" /> 🔍 Search All Broken</>
+                            )}
+                          </Button>
+                          {bulkSearchProgress && !bulkSearchProgress.running && bulkSearchProgress.found > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs gap-1.5 h-7 text-emerald-400 border-emerald-500/30"
+                              onClick={() => handleApplyAllFixes(d.contextualPromptParts!.failureDetails)}
+                            >
+                              <Wrench className="w-3 h-3" /> Apply {bulkSearchProgress.found} fixes
+                            </Button>
+                          )}
+                        </>
+                      )}
                       {d.isTransient && (
                         <Badge variant="outline" className="text-[9px] text-muted-foreground">Transient — can retry</Badge>
                       )}
@@ -1775,10 +1896,89 @@ export default function PricingData() {
                           <ChevronRight className="w-3 h-3" /> Show {d.affectedProducts.length} affected products
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <div className="mt-1 pl-4 space-y-0.5 max-h-32 overflow-y-auto">
-                            {d.affectedProducts.map((p, j) => (
-                              <p key={j} className="text-[10px] text-muted-foreground font-mono">{p}</p>
-                            ))}
+                          <div className="mt-1 pl-4 space-y-1.5 max-h-48 overflow-y-auto">
+                            {d.affectedProducts.map((p, j) => {
+                              const detail = d.contextualPromptParts?.failureDetails?.[j];
+                              const sr = detail ? searchResults[detail.url] : undefined;
+                              const isBroken = d.pattern.includes('404') || d.pattern.toLowerCase().includes('broken link');
+
+                              return (
+                                <div key={j} className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-[10px] text-muted-foreground font-mono flex-1 truncate">{p}</p>
+                                    {isBroken && detail && !sr?.url && !sr?.loading && (
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="text-[10px] h-6 px-2 gap-1 shrink-0"
+                                        onClick={() => handleSearchStore(detail.url, detail.region)}
+                                      >
+                                        <Search className="w-3 h-3" /> Search
+                                      </Button>
+                                    )}
+                                    {sr?.loading && (
+                                      <Loader2 className="w-3 h-3 animate-spin text-muted-foreground shrink-0" />
+                                    )}
+                                  </div>
+                                  {sr?.url && (
+                                    <div className="flex items-center gap-1.5 pl-2 text-[10px]">
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                                      <a href={sr.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline truncate max-w-[200px]" title={sr.query ? `Search: ${sr.query}` : undefined}>
+                                        {sr.url.replace(/^https?:\/\//, '').slice(0, 50)}
+                                      </a>
+                                      <Badge variant="outline" className="text-[9px] h-4 px-1">
+                                        {((sr.confidence || 0) * 100).toFixed(0)}%
+                                      </Badge>
+                                      <span className="text-muted-foreground text-[9px]">{sr.method}</span>
+                                      <a href={sr.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3 h-3 text-muted-foreground" /></a>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="text-[9px] h-5 px-1.5 text-emerald-400"
+                                        onClick={async () => {
+                                          if (!detail) return;
+                                          const col = REGION_URL_COLUMN_MAP[detail.region?.toUpperCase()] || 'product_url';
+                                          const { data: filament } = await (supabase.from('filaments').select('id') as any).eq(col, detail.url).limit(1).maybeSingle();
+                                          if (filament) {
+                                            await supabase.from('filaments').update({ [col]: sr.url } as any).eq('id', filament.id);
+                                            toast.success('URL updated');
+                                            queryClient.invalidateQueries({ queryKey: ['admin-pricing-data-grouped'] });
+                                          } else {
+                                            toast.error('Could not find filament to update');
+                                          }
+                                        }}
+                                      >
+                                        Apply Fix
+                                      </Button>
+                                    </div>
+                                  )}
+                                  {sr?.error && !sr?.url && !sr?.loading && (
+                                    <div className="flex items-center gap-1.5 pl-2 text-[10px]">
+                                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                                      <span className="text-amber-400">No match</span>
+                                      {detail && (
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="text-[9px] h-5 px-1.5"
+                                          onClick={() => {
+                                            try {
+                                              const urlObj = new URL(detail.url);
+                                              const searchTerms = detail.product.replace(/[^a-zA-Z0-9 ]/g, ' ').trim();
+                                              window.open(`${urlObj.origin}/search?q=${encodeURIComponent(searchTerms)}`, '_blank');
+                                            } catch {
+                                              toast.error('Could not build search URL');
+                                            }
+                                          }}
+                                        >
+                                          Manual Search
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </CollapsibleContent>
                       </Collapsible>
