@@ -156,12 +156,299 @@ async function followRedirects(url: string, maxHops = 5): Promise<{ finalUrl: st
     if (!redirectUrl || !status || status < 300 || status >= 400) {
       return { finalUrl: current, statusCode: status, hops };
     }
-    // Resolve relative redirects
     const next = redirectUrl.startsWith('http') ? redirectUrl : new URL(redirectUrl, current).href;
     hops.push(next);
     current = next;
   }
   return { finalUrl: current, statusCode: null, hops };
+}
+
+// ─── Step 4b: Intelligent product search helpers ──────────────────────────────
+
+const GENERIC_SUFFIXES = new Set([
+  'filament', '3d', 'printer', '1kg', '2kg', '500g', '1-75mm', '2-85mm', 'printing',
+  '3d-printer', '3d-printer-filament', 'for', 'the', 'and', 'with',
+]);
+
+const MATERIAL_WORDS = new Set([
+  'pla', 'abs', 'petg', 'tpu', 'tpe', 'asa', 'nylon', 'pa', 'pc', 'hips', 'pva',
+  'polycarbonate', 'silk', 'matte', 'wood', 'marble', 'metallic', 'glow',
+]);
+
+function extractSearchTerms(handle: string): { searchTerms: string; broadTerms: string } {
+  const words = handle.split('-').filter(Boolean);
+
+  // Determine if the first word is the material (primary identifier)
+  const firstWordIsMaterial = words.length > 0 && MATERIAL_WORDS.has(words[0].toLowerCase());
+
+  const filtered: string[] = [];
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i].toLowerCase();
+    if (GENERIC_SUFFIXES.has(w)) continue;
+    // Only remove material words if they appear at the end (not the primary identifier)
+    if (MATERIAL_WORDS.has(w) && i > 0 && i >= words.length - 2 && !firstWordIsMaterial) continue;
+    filtered.push(w);
+  }
+
+  const searchTerms = filtered.join(' ') || words.slice(0, 3).join(' ');
+
+  // Broad terms: material + first key descriptor
+  const material = words.find((w) => MATERIAL_WORDS.has(w.toLowerCase()));
+  const descriptor = filtered.find((w) => !MATERIAL_WORDS.has(w.toLowerCase()));
+  const broadTerms = [material, descriptor].filter(Boolean).join(' ') || searchTerms;
+
+  return { searchTerms, broadTerms };
+}
+
+function fuzzyProductMatch(searchTerms: string, productTitle: string, originalHandle: string): number {
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+  const searchNorm = normalize(searchTerms);
+  const titleNorm = normalize(productTitle);
+  const handleNorm = normalize(originalHandle.replace(/-/g, ' '));
+
+  const searchWords = searchNorm.split(/\s+/).filter(Boolean);
+  const titleWords = titleNorm.split(/\s+/).filter(Boolean);
+
+  if (searchWords.length === 0 || titleWords.length === 0) return 0;
+
+  // Word overlap score (each shared word = 0.2, capped at 1.0)
+  let overlapCount = 0;
+  for (const sw of searchWords) {
+    if (titleWords.some((tw) => tw === sw || tw.includes(sw) || sw.includes(tw))) {
+      overlapCount++;
+    }
+  }
+  const overlapScore = Math.min(overlapCount * 0.2, 1.0);
+
+  // Sequential word match bonus
+  let seqBonus = 0;
+  if (searchWords.length >= 2) {
+    const searchPhrase = searchWords.join(' ');
+    if (titleNorm.includes(searchPhrase)) {
+      seqBonus = 0.15;
+    }
+  }
+
+  // Handle substring match bonus
+  let handleBonus = 0;
+  const handleWords = handleNorm.split(/\s+/).filter(Boolean);
+  const handleOverlap = handleWords.filter((hw) =>
+    titleWords.some((tw) => tw === hw || tw.includes(hw))
+  ).length;
+  if (handleOverlap >= 2) handleBonus = 0.1;
+
+  return Math.min(overlapScore + seqBonus + handleBonus, 1.0);
+}
+
+interface SearchResult {
+  url: string;
+  source: 'shopify_catalog' | 'shopify_search' | 'site_search';
+  confidence: number;
+  validated: boolean;
+  searchQuery: string;
+  candidatesFound: number;
+}
+
+async function searchStoreProducts(
+  originalUrl: string,
+  handle: string,
+  region?: string,
+  _brandName?: string
+): Promise<SearchResult | null> {
+  const startTime = Date.now();
+  const TOTAL_TIMEOUT = 20_000;
+  const FETCH_TIMEOUT = 8_000;
+  const FETCH_HEADERS = { 'User-Agent': 'FilaScope URLValidator/2.0' };
+  const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  let baseUrl: string;
+  try {
+    const parsed = new URL(originalUrl);
+    baseUrl = `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return null;
+  }
+
+  const { searchTerms, broadTerms } = extractSearchTerms(handle);
+  console.log(`[SearchStore] handle="${handle}" searchTerms="${searchTerms}" broadTerms="${broadTerms}" base="${baseUrl}"`);
+
+  const isTimedOut = () => Date.now() - startTime > TOTAL_TIMEOUT;
+
+  // ── Strategy A: Shopify /products.json ──
+  try {
+    let bestMatch: { handle: string; score: number; title: string } | null = null;
+    let candidatesFound = 0;
+
+    for (let page = 1; page <= 3 && !isTimedOut(); page++) {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
+      const res = await fetch(`${baseUrl}/products.json?limit=250&page=${page}`, {
+        signal: controller.signal,
+        headers: FETCH_HEADERS,
+      });
+      clearTimeout(tid);
+
+      if (!res.ok) break;
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('json')) break;
+
+      const data = await res.json();
+      const products = data?.products;
+      if (!Array.isArray(products) || products.length === 0) break;
+
+      candidatesFound += products.length;
+
+      for (const product of products) {
+        const title = product.title || '';
+        const pHandle = product.handle || '';
+        const score = fuzzyProductMatch(searchTerms, title, handle);
+
+        // Also check exact title match
+        const titleLower = title.toLowerCase();
+        const termsLower = searchTerms.toLowerCase();
+        let finalScore = score;
+        if (titleLower === termsLower) finalScore = Math.max(finalScore, 1.0);
+        else if (titleLower.includes(termsLower)) finalScore = Math.max(finalScore, 0.85);
+
+        // Handle similarity bonus
+        if (pHandle === handle) finalScore = Math.max(finalScore, 0.95);
+        else if (pHandle.includes(handle) || handle.includes(pHandle)) {
+          finalScore = Math.max(finalScore, 0.7);
+        }
+
+        if (finalScore > (bestMatch?.score || 0)) {
+          bestMatch = { handle: pHandle, score: finalScore, title };
+        }
+      }
+
+      if (products.length < 250) break; // Last page
+      await delay(300);
+    }
+
+    if (bestMatch && bestMatch.score >= 0.6) {
+      const candidateUrl = `${baseUrl}/products/${bestMatch.handle}`;
+      const check = await checkUrl(candidateUrl, FETCH_TIMEOUT);
+      if (check.status === 200) {
+        console.log(`[SearchStore] Strategy A match: "${bestMatch.title}" (score=${bestMatch.score})`);
+        return {
+          url: candidateUrl,
+          source: 'shopify_catalog',
+          confidence: bestMatch.score,
+          validated: true,
+          searchQuery: searchTerms,
+          candidatesFound,
+        };
+      }
+    }
+  } catch (e) {
+    console.log(`[SearchStore] Strategy A failed: ${e.message}`);
+  }
+
+  if (isTimedOut()) return null;
+  await delay(300);
+
+  // ── Strategy B: Shopify search suggest ──
+  try {
+    const qTerms = encodeURIComponent(searchTerms);
+    const suggestUrl = `${baseUrl}/search/suggest.json?q=${qTerms}&resources[type]=product&resources[limit]=10`;
+
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+    const res = await fetch(suggestUrl, { signal: controller.signal, headers: FETCH_HEADERS });
+    clearTimeout(tid);
+
+    if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('json')) {
+        const data = await res.json();
+        const products = data?.resources?.results?.products || [];
+
+        for (const product of products) {
+          const productUrl = product.url
+            ? (product.url.startsWith('http') ? product.url : `${baseUrl}${product.url}`)
+            : null;
+
+          if (!productUrl) continue;
+
+          const check = await checkUrl(productUrl, FETCH_TIMEOUT);
+          if (check.status === 200) {
+            const score = fuzzyProductMatch(searchTerms, product.title || '', handle);
+            console.log(`[SearchStore] Strategy B match: "${product.title}" url=${productUrl}`);
+            return {
+              url: productUrl,
+              source: 'shopify_search',
+              confidence: Math.max(score, 0.7),
+              validated: true,
+              searchQuery: searchTerms,
+              candidatesFound: products.length,
+            };
+          }
+          await delay(300);
+          if (isTimedOut()) return null;
+        }
+      }
+    }
+  } catch (e) {
+    console.log(`[SearchStore] Strategy B failed: ${e.message}`);
+  }
+
+  if (isTimedOut()) return null;
+  await delay(300);
+
+  // ── Strategy C: HTML site search ──
+  try {
+    const qTerms = encodeURIComponent(broadTerms);
+    const searchUrl = `${baseUrl}/search?q=${qTerms}&type=product`;
+
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+    const res = await fetch(searchUrl, { signal: controller.signal, headers: FETCH_HEADERS });
+    clearTimeout(tid);
+
+    if (res.ok) {
+      const html = await res.text();
+      const productHandles = new Set<string>();
+      const regex = /\/products\/([a-z0-9][a-z0-9-]*[a-z0-9])/g;
+      let match;
+      while ((match = regex.exec(html)) !== null) {
+        productHandles.add(match[1]);
+      }
+
+      // Filter to relevant handles (contain keywords from original handle)
+      const keywords = handle.split('-').filter((w) => w.length > 2 && !GENERIC_SUFFIXES.has(w));
+      const relevantHandles = [...productHandles].filter((h) =>
+        keywords.some((kw) => h.includes(kw))
+      );
+
+      let checked = 0;
+      for (const candidateHandle of relevantHandles) {
+        if (checked >= 5 || isTimedOut()) break;
+        const candidateUrl = `${baseUrl}/products/${candidateHandle}`;
+        const check = await checkUrl(candidateUrl, FETCH_TIMEOUT);
+        checked++;
+
+        if (check.status === 200) {
+          const score = fuzzyProductMatch(searchTerms, candidateHandle.replace(/-/g, ' '), handle);
+          console.log(`[SearchStore] Strategy C match: ${candidateHandle}`);
+          return {
+            url: candidateUrl,
+            source: 'site_search',
+            confidence: Math.max(score, 0.6),
+            validated: true,
+            searchQuery: broadTerms,
+            candidatesFound: relevantHandles.length,
+          };
+        }
+        await delay(300);
+      }
+    }
+  } catch (e) {
+    console.log(`[SearchStore] Strategy C failed: ${e.message}`);
+  }
+
+  return null;
 }
 
 async function diagnoseUrl(url: string, region?: string): Promise<DiagnosisResult> {
@@ -298,6 +585,56 @@ async function diagnoseUrl(url: string, region?: string): Promise<DiagnosisResul
               return result;
             }
           }
+        }
+      }
+
+      // Step 4b: Search store product catalog (brand identified)
+      if (handle) {
+        const searchResult = await searchStoreProducts(url, handle, region, brandName);
+        if (searchResult) {
+          result.suggested_url = searchResult.url;
+          result.suggestion_source = searchResult.source;
+          result.suggestion_confidence = searchResult.confidence;
+          result.suggestion_validated = searchResult.validated;
+          result.failure_reason = 'slug_changed';
+          result.diagnosis_details = {
+            ...result.diagnosis_details,
+            search_method: searchResult.source,
+            search_query: searchResult.searchQuery,
+            candidates_found: searchResult.candidatesFound,
+            match_score: searchResult.confidence,
+          };
+          return result;
+        }
+      }
+    }
+
+    // Step 4b: Search for unknown brands with Shopify-like URLs
+    if (!brandMatch && url.includes('/products/')) {
+      const handleMatch = url.match(/\/products\/([^?#/]+)/i);
+      if (handleMatch?.[1]) {
+        const unknownHandle = handleMatch[1];
+        result.diagnosis_details = {
+          ...result.diagnosis_details,
+          brand: 'unknown_shopify',
+          handle: unknownHandle,
+        };
+
+        const searchResult = await searchStoreProducts(url, unknownHandle, region);
+        if (searchResult) {
+          result.suggested_url = searchResult.url;
+          result.suggestion_source = searchResult.source;
+          result.suggestion_confidence = searchResult.confidence;
+          result.suggestion_validated = searchResult.validated;
+          result.failure_reason = 'slug_changed';
+          result.diagnosis_details = {
+            ...result.diagnosis_details,
+            search_method: searchResult.source,
+            search_query: searchResult.searchQuery,
+            candidates_found: searchResult.candidatesFound,
+            match_score: searchResult.confidence,
+          };
+          return result;
         }
       }
     }
