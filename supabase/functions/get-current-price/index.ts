@@ -155,6 +155,28 @@ function transformToRegionalUrl(url: string, requestedCurrency: string): { url: 
   for (const [brandKey, config] of Object.entries(REGIONAL_STORE_CONFIGS)) {
     if (!urlLower.includes(config.baseDomain.toLowerCase())) continue;
     
+    // Check if the URL already matches a regional store — if so, keep it and use that region's currency
+    try {
+      const urlObj = new URL(url);
+      const currentHost = urlObj.hostname.toLowerCase();
+      for (const [regionKey, regionCfg] of Object.entries(config.regions)) {
+        const rc = regionCfg as { subdomain?: string; domain?: string; currency: string };
+        if (rc.domain && currentHost === rc.domain.toLowerCase()) {
+          // URL already on a full-domain regional store (e.g. anycubic.au)
+          console.log(`URL already on ${regionKey} regional store (${currentHost}), keeping as-is`);
+          return { url, expectedCurrency: rc.currency, transformed: false };
+        }
+        if (rc.subdomain) {
+          const expectedHost = `${rc.subdomain}.${config.baseDomain}`.toLowerCase();
+          if (currentHost === expectedHost && regionKey !== regionCode) {
+            // URL is on a different region's subdomain than requested — keep URL, use its native currency
+            console.log(`URL already on ${regionKey} regional store (${currentHost}), keeping as-is with currency ${rc.currency}`);
+            return { url, expectedCurrency: rc.currency, transformed: false };
+          }
+        }
+      }
+    } catch (_) { /* ignore parse errors, proceed with transformation */ }
+    
     const regionConfig = config.regions[regionCode];
     if (!regionConfig) {
       // No regional store for this region, use fallback
