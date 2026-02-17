@@ -95,7 +95,7 @@ interface DiagnosisResult {
 // Types
 // =============================================
 
-type LinkStatus = 'active' | 'stale' | 'broken' | 'alert' | 'unknown';
+type LinkStatus = 'active' | 'stale' | 'broken' | 'failed' | 'alert' | 'unknown';
 
 interface TestResult {
   status: 'testing' | 'ok' | 'broken' | 'redirect' | 'timeout' | 'geo_restricted';
@@ -251,10 +251,26 @@ function getLinkStatusBadge(status: LinkStatus) {
       return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-[10px]">🟡 Stale</Badge>;
     case 'broken':
       return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">🔴 Broken</Badge>;
+    case 'failed':
+      return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">🔴 Failed</Badge>;
     case 'alert':
       return <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px]">🟣 Alert</Badge>;
     default:
       return <Badge variant="outline" className="text-[10px]">—</Badge>;
+  }
+}
+
+function getSyncMethodBadge(source: string | undefined) {
+  if (!source) return null;
+  switch (source) {
+    case 'shopify_json':
+      return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">🟦 API</Badge>;
+    case 'firecrawl':
+      return <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-[10px]">🟧 Scraped</Badge>;
+    case 'json_ld':
+      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">🟩 JSON-LD</Badge>;
+    default:
+      return <Badge variant="outline" className="text-[10px]">{source}</Badge>;
   }
 }
 
@@ -643,9 +659,9 @@ export default function PricingData() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('url_validation_cache')
-        .select('url, status, status_code, last_checked');
+        .select('url, status, status_code, last_checked, consecutive_failures');
       if (error) throw error;
-      const map = new Map<string, { status: string; status_code: number | null; last_checked: string | null }>();
+      const map = new Map<string, { status: string; status_code: number | null; last_checked: string | null; consecutive_failures: number | null }>();
       (data || []).forEach(r => map.set(r.url, r));
       return map;
     },
@@ -713,15 +729,17 @@ export default function PricingData() {
     if (priceChangePercent != null && Math.abs(priceChangePercent) > 10) return 'alert';
     if (!url || !urlCache) return 'unknown';
     const cached = urlCache.get(url);
-    if (!cached) return 'stale';
+    if (!cached) return 'unknown';
     if (cached.status === 'invalid' || (cached.status_code && cached.status_code >= 400)) return 'broken';
+    // If the URL was previously checked and sync failed (consecutive_failures > 0), show as failed
+    if (cached.consecutive_failures && cached.consecutive_failures > 0 && cached.status === 'sync_failed') return 'failed';
     if (cached.last_checked) {
       const checkedAt = new Date(cached.last_checked);
       const hoursSince = (Date.now() - checkedAt.getTime()) / (1000 * 60 * 60);
-      if (hoursSince > 168) return 'stale';
+      if (hoursSince > 168) return 'stale'; // >7 days since last successful check
       return 'active';
     }
-    return 'stale';
+    return 'unknown';
   }
 
   // =============================================
@@ -835,8 +853,8 @@ export default function PricingData() {
       if (stores.length === 0 && prices.length === 0) continue;
 
       const activeCount = stores.filter(s => s.linkStatus === 'active').length;
-      const staleCount = stores.filter(s => s.linkStatus === 'stale' || s.linkStatus === 'unknown').length;
-      const brokenCount = stores.filter(s => s.linkStatus === 'broken').length;
+      const staleCount = stores.filter(s => s.linkStatus === 'stale').length;
+      const brokenCount = stores.filter(s => s.linkStatus === 'broken' || s.linkStatus === 'failed').length;
       const alertCount = stores.filter(s => s.linkStatus === 'alert').length;
 
       groups.push({
@@ -1144,6 +1162,17 @@ export default function PricingData() {
         const result: SyncResult = { status: 'failed', error: errorMsg };
         setSyncResults(prev => new Map(prev).set(store.storeKey, result));
         if (showToast) toast.error(`✗ Failed to sync — ${errorMsg}`);
+        // Persist sync failure to URL cache
+        if (store.productUrl) {
+          try {
+            await supabase.from('url_validation_cache').upsert({
+              url: store.productUrl.replace(/\?.*$/, ''),
+              status: 'sync_failed',
+              last_checked: new Date().toISOString(),
+              consecutive_failures: 1,
+            }, { onConflict: 'url' });
+          } catch {}
+        }
         return result;
       }
 
@@ -1152,6 +1181,17 @@ export default function PricingData() {
         const result: SyncResult = { status: 'failed', error: errorMsg };
         setSyncResults(prev => new Map(prev).set(store.storeKey, result));
         if (showToast) toast.error(`✗ ${errorMsg}`);
+        // Persist sync failure to URL cache
+        if (store.productUrl) {
+          try {
+            await supabase.from('url_validation_cache').upsert({
+              url: store.productUrl.replace(/\?.*$/, ''),
+              status: 'sync_failed',
+              last_checked: new Date().toISOString(),
+              consecutive_failures: 1,
+            }, { onConflict: 'url' });
+          } catch {}
+        }
         return result;
       }
 
@@ -1633,6 +1673,7 @@ export default function PricingData() {
               <SelectItem value="active">🟢 Active</SelectItem>
               <SelectItem value="stale">🟡 Stale</SelectItem>
               <SelectItem value="broken">🔴 Broken</SelectItem>
+              <SelectItem value="failed">🔴 Failed</SelectItem>
               <SelectItem value="alert">🟣 Price Alert</SelectItem>
             </SelectContent>
           </Select>
@@ -2198,9 +2239,14 @@ function ProductGroupRows({
                 : getLinkStatusBadge(store.linkStatus)}
             </TableCell>
             <TableCell>
-              {result ? getTestResultBadge(result) : (
-                <Badge variant="outline" className="text-[10px] text-muted-foreground">⚪ Not Tested</Badge>
-              )}
+              <div className="flex items-center gap-1 flex-wrap">
+                {result ? getTestResultBadge(result) : (
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground">⚪ Not Tested</Badge>
+                )}
+                {(syncResult?.status === 'success' || syncResult?.status === 'unchanged') && syncResult?.source && (
+                  getSyncMethodBadge(syncResult.source)
+                )}
+              </div>
             </TableCell>
             <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap">
               {syncResult?.status === 'success' || syncResult?.status === 'unchanged'
