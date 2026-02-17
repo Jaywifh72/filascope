@@ -126,11 +126,16 @@ const REGIONAL_STORE_CONFIGS: Record<string, RegionalStoreConfig> = {
     }
   },
   'creality': {
-    pattern: 'subdomain',
+    pattern: 'path',
     baseDomain: 'store.creality.com',
     fallbackRegion: 'US',
     regions: {
-      US: { subdomain: 'us', currency: 'USD' },
+      US: { pathPrefix: '', currency: 'USD' },
+      CA: { pathPrefix: '/ca', currency: 'CAD' },
+      UK: { pathPrefix: '/uk', currency: 'GBP' },
+      EU: { pathPrefix: '/eu', currency: 'EUR' },
+      AU: { pathPrefix: '/au', currency: 'AUD' },
+      JP: { pathPrefix: '/jp', currency: 'JPY' },
     }
   },
 };
@@ -159,19 +164,31 @@ function transformToRegionalUrl(url: string, requestedCurrency: string): { url: 
     try {
       const urlObj = new URL(url);
       const currentHost = urlObj.hostname.toLowerCase();
-      for (const [regionKey, regionCfg] of Object.entries(config.regions)) {
-        const rc = regionCfg as { subdomain?: string; domain?: string; currency: string };
-        if (rc.domain && currentHost === rc.domain.toLowerCase()) {
-          // URL already on a full-domain regional store (e.g. anycubic.au)
-          console.log(`URL already on ${regionKey} regional store (${currentHost}), keeping as-is`);
-          return { url, expectedCurrency: rc.currency, transformed: false };
-        }
-        if (rc.subdomain) {
-          const expectedHost = `${rc.subdomain}.${config.baseDomain}`.toLowerCase();
-          if (currentHost === expectedHost && regionKey !== regionCode) {
-            // URL is on a different region's subdomain than requested — keep URL, use its native currency
-            console.log(`URL already on ${regionKey} regional store (${currentHost}), keeping as-is with currency ${rc.currency}`);
+      const currentPath = urlObj.pathname.toLowerCase();
+      
+      if (config.pattern === 'path') {
+        // For path-based patterns, check if URL already has a region prefix
+        for (const [regionKey, regionCfg] of Object.entries(config.regions)) {
+          const rc = regionCfg as { pathPrefix?: string; currency: string };
+          if (rc.pathPrefix && currentPath.startsWith(rc.pathPrefix.toLowerCase() + '/')) {
+            console.log(`URL already on ${regionKey} regional path (${rc.pathPrefix}), keeping as-is with currency ${rc.currency}`);
             return { url, expectedCurrency: rc.currency, transformed: false };
+          }
+        }
+      } else {
+        // Subdomain / domain-based detection
+        for (const [regionKey, regionCfg] of Object.entries(config.regions)) {
+          const rc = regionCfg as { subdomain?: string; domain?: string; currency: string };
+          if (rc.domain && currentHost === rc.domain.toLowerCase()) {
+            console.log(`URL already on ${regionKey} regional store (${currentHost}), keeping as-is`);
+            return { url, expectedCurrency: rc.currency, transformed: false };
+          }
+          if (rc.subdomain) {
+            const expectedHost = `${rc.subdomain}.${config.baseDomain}`.toLowerCase();
+            if (currentHost === expectedHost && regionKey !== regionCode) {
+              console.log(`URL already on ${regionKey} regional store (${currentHost}), keeping as-is with currency ${rc.currency}`);
+              return { url, expectedCurrency: rc.currency, transformed: false };
+            }
           }
         }
       }
@@ -189,13 +206,43 @@ function transformToRegionalUrl(url: string, requestedCurrency: string): { url: 
       const urlObj = new URL(url);
       const originalHost = urlObj.hostname;
       
-      if (config.pattern === 'subdomain') {
+      if (config.pattern === 'path') {
+        // Path-based regional URLs (e.g., store.creality.com/ca/products/...)
+        const rc = regionConfig as { pathPrefix?: string; currency: string };
+        // Known region prefixes to strip from the path before re-applying
+        const knownPrefixes = Object.values(config.regions)
+          .map((r: any) => r.pathPrefix)
+          .filter((p: string) => p && p.length > 0)
+          .sort((a: string, b: string) => b.length - a.length); // longest first
+        
+        let cleanPath = urlObj.pathname;
+        // Strip any existing region prefix to avoid double-prefixing
+        for (const prefix of knownPrefixes) {
+          if (cleanPath.toLowerCase().startsWith(prefix.toLowerCase() + '/') || cleanPath.toLowerCase() === prefix.toLowerCase()) {
+            cleanPath = cleanPath.slice(prefix.length);
+            break;
+          }
+        }
+        // Ensure cleanPath starts with /
+        if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+        
+        const newPath = (rc.pathPrefix || '') + cleanPath;
+        urlObj.pathname = newPath;
+        // Ensure we're on the correct base domain
+        urlObj.hostname = config.baseDomain;
+        
+        const newUrl = urlObj.toString();
+        if (newUrl !== url) {
+          console.log(`Regional URL transformation (path): ${url} -> ${newUrl}`);
+          return { url: newUrl, expectedCurrency: rc.currency, transformed: true };
+        }
+        return { url, expectedCurrency: rc.currency, transformed: false };
+        
+      } else if (config.pattern === 'subdomain') {
         // Replace subdomain: us.store.bambulab.com -> eu.store.bambulab.com
         if (regionConfig.domain) {
-          // Full domain replacement (e.g., anycubic.au)
           urlObj.hostname = regionConfig.domain;
         } else if (regionConfig.subdomain) {
-          // Subdomain replacement
           const hostParts = originalHost.split('.');
           if (hostParts.length >= 3) {
             hostParts[0] = regionConfig.subdomain;
@@ -211,7 +258,6 @@ function transformToRegionalUrl(url: string, requestedCurrency: string): { url: 
           return { url: newUrl, expectedCurrency: regionConfig.currency, transformed: true };
         }
       }
-      // Add path prefix pattern handling here if needed
       
     } catch (e) {
       console.error('URL transformation error:', e);
