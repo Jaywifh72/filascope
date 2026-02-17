@@ -163,6 +163,74 @@ function classifyError(error: string): {
     };
   }
 
+  // === Link Test Errors ===
+  if (e.includes('[link_test]') && (e.includes('404') || e.includes('not found'))) {
+    return {
+      pattern: 'Broken link (404)',
+      severity: 'high',
+      diagnosis: 'The product URL returned a 404 error during link testing. The page may have been removed, renamed, or the URL slug changed.',
+      suggestedFix: 'Check if the product still exists on the store. If renamed, update the URL in the database. If discontinued, mark the store entry as inactive.',
+      suggestedPrompt: 'Link testing found 404 broken links for some products. Check the affected URLs — the products may have been discontinued or their URL slugs changed on the store. Update or remove the affected store_url entries in the database.',
+      isTransient: false,
+    };
+  }
+
+  if (e.includes('[link_test]') && e.includes('timeout')) {
+    return {
+      pattern: 'Link timeout',
+      severity: 'medium',
+      diagnosis: 'The product URL timed out during link testing. The store may be temporarily slow or unreachable.',
+      suggestedFix: 'Retry the test. If persistent, the store may be blocking automated requests or experiencing downtime.',
+      suggestedPrompt: 'Some product links timed out during testing. This is usually transient. Retry the test for the affected products. If the timeouts persist for a specific store/region, investigate whether the store is blocking requests or if the URL pattern needs updating.',
+      isTransient: true,
+    };
+  }
+
+  if (e.includes('[link_test]') && (e.includes('301') || e.includes('302') || e.includes('redirect'))) {
+    return {
+      pattern: 'Link redirect',
+      severity: 'medium',
+      diagnosis: 'The product URL is redirecting to a different page. This may indicate a URL change, geo-redirect, or the product was moved.',
+      suggestedFix: 'Check the redirect destination. If it\'s a geo-redirect, this may be expected. If the product moved, update the URL.',
+      suggestedPrompt: 'Link testing found redirects for some product URLs. Check if these are expected geo-redirects (e.g., US URL redirecting to regional store) or if the product URL has changed. Update the store URLs for any that have permanently moved.',
+      isTransient: false,
+    };
+  }
+
+  if (e.includes('[link_test]') && (e.includes('geo') || e.includes('geo_restricted'))) {
+    return {
+      pattern: 'Geo-restricted link',
+      severity: 'low',
+      diagnosis: 'The product URL is geo-restricted and redirects based on the requester\'s location. This is expected behavior for regional stores.',
+      suggestedFix: 'This is usually expected. Verify the regional URL mappings are correct for each store.',
+      suggestedPrompt: 'Some product links are geo-restricted (redirecting based on location). This is usually expected behavior for brands with regional stores (e.g., Bambu Lab). Verify the regional URL mappings are correct and the isKnownGeoRedirect flag is set properly for these stores.',
+      isTransient: false,
+    };
+  }
+
+  if (e.includes('[link_test]') && (e.includes('500') || e.includes('502') || e.includes('503'))) {
+    return {
+      pattern: 'Store server error',
+      severity: 'medium',
+      diagnosis: 'The store is returning a server error (5xx). This is typically a temporary issue with the store itself.',
+      suggestedFix: 'Retry the test later. If persistent, the store may be having extended issues.',
+      suggestedPrompt: 'Link testing found server errors (5xx) from some stores. This is usually a transient issue with the store itself. Retry testing later. If it persists for a specific store, investigate whether the store is down or if our request pattern triggers rate limiting.',
+      isTransient: true,
+    };
+  }
+
+  // Generic link test failure (catch-all for [LINK_TEST] errors)
+  if (e.includes('[link_test]')) {
+    return {
+      pattern: 'Link test failure',
+      severity: 'medium',
+      diagnosis: `Link test failed: ${error.substring(12, 200)}`,
+      suggestedFix: 'Review the specific error and check if the URL is accessible manually.',
+      suggestedPrompt: `Link testing failed for some products: "${error.substring(12, 150)}". Check the affected URLs manually and update any that have changed.`,
+      isTransient: false,
+    };
+  }
+
   // Default catch-all
   return {
     pattern: 'Unknown error',
