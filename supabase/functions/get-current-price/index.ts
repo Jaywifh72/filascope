@@ -2205,8 +2205,8 @@ async function fetchPriceWithFirecrawl(
       
       if (response.ok) break;
       
-      // Retry only on 5xx errors
-      if (attempt < MAX_FIRECRAWL_RETRIES && [500, 502, 503].includes(response.status)) {
+      // Retry on 5xx errors and 408 timeout
+      if (attempt < MAX_FIRECRAWL_RETRIES && [408, 500, 502, 503].includes(response.status)) {
         const delayMs = 2000 * (attempt + 1);
         console.log(`Firecrawl returned ${response.status}, retrying (${attempt + 1}/${MAX_FIRECRAWL_RETRIES}) after ${delayMs}ms...`);
         await new Promise(r => setTimeout(r, delayMs));
