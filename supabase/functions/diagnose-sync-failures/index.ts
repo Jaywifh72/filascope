@@ -12,6 +12,19 @@ interface Failure {
   brand: string;
   extractedPrice?: number;
   source?: string;
+  statusCode?: number;
+  latencyMs?: number;
+  storeKey?: string;
+}
+
+interface FailureDetail {
+  product: string;
+  region: string;
+  url: string;
+  error: string;
+  statusCode?: number;
+  latencyMs?: number;
+  brand: string;
 }
 
 interface Diagnosis {
@@ -23,6 +36,11 @@ interface Diagnosis {
   suggestedPrompt: string;
   affectedProducts: string[];
   isTransient: boolean;
+  contextualPromptParts?: {
+    errorPattern: string;
+    edgeFunctionName: string;
+    failureDetails: FailureDetail[];
+  };
 }
 
 function classifyError(error: string): {
@@ -172,17 +190,30 @@ Deno.serve(async (req) => {
     }
 
     // Classify and group failures
-    const groups = new Map<string, { info: ReturnType<typeof classifyError>; products: string[] }>();
+    const groups = new Map<string, { info: ReturnType<typeof classifyError>; products: string[]; failureDetails: FailureDetail[] }>();
 
     for (const f of failures) {
       const classification = classifyError(f.error || 'Unknown error');
       const productLabel = `${f.product} ${f.region}`;
 
+      const detail: FailureDetail = {
+        product: f.product,
+        region: f.region,
+        url: f.url,
+        error: f.error || 'Unknown error',
+        statusCode: f.statusCode,
+        latencyMs: f.latencyMs,
+        brand: f.brand,
+      };
+
       const existing = groups.get(classification.pattern);
       if (existing) {
         existing.products.push(productLabel);
+        if (existing.failureDetails.length < 20) {
+          existing.failureDetails.push(detail);
+        }
       } else {
-        groups.set(classification.pattern, { info: classification, products: [productLabel] });
+        groups.set(classification.pattern, { info: classification, products: [productLabel], failureDetails: [detail] });
       }
     }
 
@@ -198,6 +229,11 @@ Deno.serve(async (req) => {
         suggestedPrompt: group.info.suggestedPrompt,
         affectedProducts: group.products,
         isTransient: group.info.isTransient,
+        contextualPromptParts: {
+          errorPattern: group.info.pattern,
+          edgeFunctionName: 'get-current-price',
+          failureDetails: group.failureDetails,
+        },
       });
     }
 
