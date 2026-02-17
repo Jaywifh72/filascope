@@ -2248,7 +2248,10 @@ async function fetchPriceWithFirecrawl(
     }
     
     if (!markdown) {
-      console.error('No markdown content returned from Firecrawl');
+      // Check if the Firecrawl response contains error details (e.g., SSL errors)
+      const firecrawlError = data.data?.error || data.error || data.code || '';
+      const errorDetail = firecrawlError ? ` (${firecrawlError})` : '';
+      console.error(`No markdown content returned from Firecrawl${errorDetail}`);
       return {
         success: false,
         price: null,
@@ -2260,7 +2263,7 @@ async function fetchPriceWithFirecrawl(
         available: false,
         source: 'firecrawl',
         fetchedAt: new Date().toISOString(),
-        error: 'No content returned',
+        error: `No content returned${errorDetail}`,
       };
     }
     

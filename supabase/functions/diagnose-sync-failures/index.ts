@@ -97,6 +97,17 @@ function classifyError(error: string): {
     };
   }
 
+  if (e.includes('no content returned') || e.includes('no markdown content')) {
+    return {
+      pattern: 'No content returned from scraper',
+      severity: 'medium',
+      diagnosis: 'Firecrawl returned a 200 response but with empty content. This often indicates the page failed to render (SSL error, DNS failure, or anti-bot block). For Creality regional URLs, check if the domain is correct (e.g., store.creality.com/ca vs ca.creality.com).',
+      suggestedFix: 'Check that the regional URL domain is correct. Creality uses path-based URLs (store.creality.com/ca/products/...) not subdomain-based (ca.creality.com). Retry after fixing URLs.',
+      suggestedPrompt: 'Multiple products returned empty content from the scraper. This is likely caused by incorrect regional URL domains. Check the Creality URL memory doc and fix any subdomain-based URLs to use the correct path-based format.',
+      isTransient: false,
+    };
+  }
+
   if (e.includes('firecrawl error: 402')) {
     return {
       pattern: 'Firecrawl credits exhausted',
