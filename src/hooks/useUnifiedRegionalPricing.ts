@@ -485,9 +485,22 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     if (!rawStores.length) return null;
     const { store } = findBestStore(rawStores, region);
     if (!store) return null;
+
+    // If no product_url_pattern is configured, we cannot build a valid product URL.
+    // Return null so we don't validate or sync against a bare base domain (homepage).
+    if (!store.product_url_pattern) {
+      // Fallback: use the original product URL from the filament record if available
+      if (originalUrl) return originalUrl;
+      console.warn(
+        `Skipping URL build for store ${store.store_name} (${store.region_code}): ` +
+        `no product_url_pattern configured and no existing product_url`
+      );
+      return null;
+    }
+
     const slugResolution = resolveRegionalSlug(regionalSlugData || null, resolvedSlug);
     return buildRegionalUrl(store.product_url_pattern, store.base_url, slugResolution.effectiveSlug);
-  }, [rawStores, region, regionalSlugData, resolvedSlug]);
+  }, [rawStores, region, regionalSlugData, resolvedSlug, originalUrl]);
   
   // Query 4: Check URL validation cache (non-blocking)
   const { data: urlValidationData } = useQuery({
@@ -589,12 +602,27 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
       };
     }
     
-    // We have a matching store - build the URL
-    let storeUrl = buildRegionalUrl(
-      matchedStore.product_url_pattern,
-      matchedStore.base_url,
-      effectiveSlug
-    );
+    // We have a matching store - build the URL.
+    // If no product_url_pattern is configured, use the filament's existing product_url
+    // as a fallback rather than constructing a bare base domain URL.
+    let storeUrl: string;
+    if (!matchedStore.product_url_pattern) {
+      if (originalUrl) {
+        storeUrl = originalUrl;
+      } else {
+        console.warn(
+          `Skipping sync for store ${matchedStore.store_name} (${matchedStore.region_code}): ` +
+          `no product_url_pattern configured and no existing product_url`
+        );
+        storeUrl = matchedStore.base_url;
+      }
+    } else {
+      storeUrl = buildRegionalUrl(
+        matchedStore.product_url_pattern,
+        matchedStore.base_url,
+        effectiveSlug
+      );
+    }
     
     // Check URL validation status and apply fallback if invalid
     let urlValidation: 'valid' | 'invalid' | 'redirect' | 'unknown' | 'pending' = 'pending';

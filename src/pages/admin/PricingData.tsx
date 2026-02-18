@@ -1209,6 +1209,25 @@ export default function PricingData() {
     if (!store.productUrl) return { status: 'failed', error: 'No product URL' };
     if (store.linkStatus === 'broken') return { status: 'failed', error: 'Link is broken' };
 
+    // Guard: skip bare base-domain URLs (no product path configured).
+    // This happens when product_url_pattern is null and we fell back to the store base URL.
+    // Syncing a homepage URL will never yield a valid product price.
+    try {
+      const urlObj = new URL(store.productUrl);
+      const hasProductPath = urlObj.pathname.length > 1; // more than just "/"
+      const hasProductQuery = urlObj.search.length > 0;
+      if (!hasProductPath && !hasProductQuery) {
+        console.warn(
+          `Skipping sync for ${store.storeName} (${store.region}): ` +
+          `no product_url_pattern configured and no existing product_url — ` +
+          `URL "${store.productUrl}" appears to be a bare domain`
+        );
+        return { status: 'failed', error: 'No product_url_pattern configured and no existing product_url' };
+      }
+    } catch {
+      // If URL parsing fails, proceed and let the edge function handle it
+    }
+
     const oldPrice = store.price;
     setSyncResults(prev => new Map(prev).set(store.storeKey, { status: 'syncing' }));
 
@@ -1379,7 +1398,14 @@ export default function PricingData() {
     for (let i = 0; i < deduped.length; i += 2) {
       if (abortSyncRef.current) break;
       const batch = deduped.slice(i, i + 2);
-      const results = await Promise.all(batch.map(s => syncSinglePrice(s, false)));
+      const results = await Promise.all(batch.map(async (s) => {
+        try {
+          return await syncSinglePrice(s, false);
+        } catch (error: any) {
+          console.error(`Sync failed for ${s.storeName}:`, error?.message || error);
+          return { status: 'failed' as const, error: error?.message || 'Unexpected error' };
+        }
+      }));
       results.forEach(r => {
         done++;
         if (r.status === 'success') {
