@@ -1091,9 +1091,7 @@ function is404Content(markdown: string): boolean {
     /product\s*(is\s*)?no\s*longer\s*available/i,
     /oops[!?.\s]*(page|something)/i,
     /your\s*shopping\s*bag\s*is\s*empty/i, // Alternative Creality pattern
-    // Prusa's "MK404" easter-egg 404 page
-    /mk404/i,
-    /top\s*secret\s*printer\s*coming\s*in\s*distant\s*future/i,
+    // NOTE: Prusa MK404 is handled separately (location gate, not a real 404)
   ];
 
   for (const pattern of notFoundPatterns) {
@@ -2440,6 +2438,26 @@ async function fetchPriceWithFirecrawl(
     console.log("Contains $29.99:", markdown?.includes("$29.99"));
     console.log('Contains "Hyper ABS":', markdown?.includes("Hyper ABS"));
     console.log('Contains "Add to Cart":', markdown?.includes("Add to Cart"));
+
+    // Prusa-specific: detect MK404 location-gate BEFORE generic 404 check.
+    // Prusa's Next.js site requires a ZIP/session cookie to serve product pages.
+    // Without it, Firecrawl always gets the "MK404" easter-egg page.
+    // This is NOT a broken URL — the product exists, it just needs location auth.
+    // Treat as notAvailableInRegion so it shows as gray N/A (not red Failed).
+    if (isPrusa && (/mk404/i.test(markdown) || /top\s*secret\s*printer/i.test(markdown))) {
+      console.log(`[Prusa] MK404 location-gate detected for ${productUrl} — requires ZIP/session cookie`);
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        currency: preferredCurrency,
+        available: false,
+        source: "firecrawl",
+        fetchedAt: new Date().toISOString(),
+        error: "LOCATION_GATE",
+        notAvailableInRegion: true, // Show as N/A badge, not Failed
+      };
+    }
 
     // Check for 404/not found content BEFORE extracting prices
     if (is404Content(markdown)) {
