@@ -3460,22 +3460,219 @@ async function fetchExtrudrPriceDirect(
   }
 }
 
-// ===== TREED FILAMENTS DIRECT FETCH =====
-// TreeD is an Italian EUR-only brand using WooCommerce at treedfilaments.com.
-// Product URLs use query parameter format: /shop/product/?sku={SKU}
-// WooCommerce pages expose JSON-LD Product schema with offers.price in EUR.
+// ===== TREED FILAMENTS PRICE FETCH (Firecrawl SPA renderer) =====
+// TreeD Filaments (treedfilaments.com) is a fully client-side SPA.
+// The server sends a JS shell — prices are only present in the rendered DOM.
+// Firecrawl executes JavaScript and returns rendered markdown/HTML with live prices.
+
+function extractSkuFromTreedUrl(productUrl: string): string | null {
+  try {
+    const u = new URL(productUrl);
+    return u.searchParams.get("sku");
+  } catch {
+    return null;
+  }
+}
+
+async function fetchTreedPriceViaFirecrawl(productUrl: string): Promise<PriceResponse> {
+  const resolvedCurrency = "EUR";
+  const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
+
+  if (!firecrawlApiKey) {
+    console.log("[TREED FIRECRAWL] No FIRECRAWL_API_KEY — cannot render SPA");
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: "Firecrawl not configured (required for TreeD SPA)",
+    };
+  }
+
+  console.log(`[TREED FIRECRAWL] Rendering SPA: ${productUrl}`);
+
+  try {
+    const fcResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${firecrawlApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: productUrl,
+        formats: ["markdown", "html"],
+        actions: [{ type: "wait", milliseconds: 2500 }],
+        location: { country: "IT", languages: ["it-IT", "en"] },
+        timeout: 30000,
+      }),
+      signal: AbortSignal.timeout(35000),
+    });
+
+    console.log(`[TREED FIRECRAWL] HTTP ${fcResponse.status}`);
+
+    if (!fcResponse.ok) {
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        error: `Firecrawl HTTP ${fcResponse.status}`,
+      };
+    }
+
+    const fcData = await fcResponse.json() as { success: boolean; data?: { markdown?: string; html?: string } };
+    const markdown = fcData?.data?.markdown || "";
+    const html = fcData?.data?.html || "";
+    const content = markdown + "\n" + html;
+
+    console.log(`[TREED FIRECRAWL] Rendered content size: ${content.length} chars`);
+    if (content.length > 0) {
+      console.log(`[TREED FIRECRAWL] Snippet: ${content.slice(0, 300).replace(/\s+/g, " ")}`);
+    }
+
+    // Price patterns for TreeD rendered output:
+    // "€ 28,00" / "28,00 €" / "€28.00" in markdown and HTML
+    const eurPatterns: RegExp[] = [
+      // Rendered markdown: "€ 28,00" or "€28,00"
+      /€\s*(\d+[.,]\d{2})/g,
+      /(\d+[.,]\d{2})\s*€/g,
+      // HTML span with id="product_price" or class containing "price"
+      /id="product_price"[^>]*>\s*(?:€\s*)?([\d.,]+)/gi,
+      /id="product_unit_price"[^>]*>\s*(?:€\s*)?([\d.,]+)/gi,
+      /<span[^>]*class="[^"]*price[^"]*"[^>]*>(?:[^<]|<(?!\/span))*?([\d.,]+)/gi,
+      // data-price attributes (SPA often embeds raw values)
+      /data-price="(\d+(?:[.,]\d+)?)"/g,
+      /"price":\s*"?(\d+(?:[.,]\d{2}))"?/g,
+    ];
+
+    for (const pattern of eurPatterns) {
+      const matches = [...content.matchAll(pattern)];
+      if (matches.length > 0) {
+        const prices = matches
+          .map((m) => parseEuropeanPrice(m[1]))
+          .filter((p) => !isNaN(p) && validateFilamentPrice(p, "EUR"));
+        if (prices.length > 0) {
+          const price = Math.min(...prices);
+          console.log(`[TREED FIRECRAWL] ✓ Price found: €${price} (pattern: ${pattern.source.slice(0, 50)})`);
+          return {
+            success: true,
+            price,
+            compareAtPrice: null,
+            weightGrams: null,
+            diameterMm: null,
+            variantTitle: extractSkuFromTreedUrl(productUrl),
+            currency: "EUR",
+            available: true,
+            stockStatus: "in_stock" as StockStatus,
+            source: "html" as const,
+            fetchedAt: new Date().toISOString(),
+            detectedCurrency: "EUR",
+            sourceUrl: productUrl,
+          };
+        }
+      }
+    }
+
+    console.log("[TREED FIRECRAWL] ❌ No price found in Firecrawl-rendered content");
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: "Price not found in rendered TreeD page",
+    };
+  } catch (error) {
+    console.error("[TREED FIRECRAWL] Error:", error);
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: `Firecrawl error: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
+// ===== TREED FILAMENTS DIRECT FETCH (HTML fallback — kept for reference) =====
+// This is NOT used for production since the site is a SPA. Kept as reference.
 
 async function fetchTreedPriceDirect(productUrl: string): Promise<PriceResponse> {
+
   const resolvedCurrency = "EUR";
   console.log(`[TREED FETCH] Fetching: ${productUrl}`);
 
+  const commonHeaders = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/html, */*;q=0.8",
+    "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+  };
+
+  // ── Strategy 1: WooCommerce REST API (public, no auth required) ──
+  const sku = extractSkuFromTreedUrl(productUrl);
+  if (sku) {
+    console.log(`[TREED FETCH] Trying WooCommerce REST API for SKU: ${sku}`);
+    try {
+      const apiUrl = `https://treedfilaments.com/wp-json/wc/v3/products?sku=${encodeURIComponent(sku)}&per_page=1`;
+      const apiResponse = await fetch(apiUrl, {
+        headers: commonHeaders,
+        redirect: "follow",
+        signal: AbortSignal.timeout(12000),
+      });
+
+      console.log(`[TREED API] HTTP ${apiResponse.status} from WooCommerce REST API`);
+
+      if (apiResponse.ok) {
+        const products = await apiResponse.json() as any[];
+        console.log(`[TREED API] Found ${products.length} product(s) for SKU ${sku}`);
+
+        if (Array.isArray(products) && products.length > 0) {
+          const product = products[0];
+          const rawPrice = product.price || product.regular_price;
+          const rawSalePrice = product.sale_price;
+          const rawRegularPrice = product.regular_price;
+
+          const price = rawPrice ? parseEuropeanPrice(String(rawPrice)) : null;
+          const salePrice = rawSalePrice ? parseEuropeanPrice(String(rawSalePrice)) : null;
+          const regularPrice = rawRegularPrice ? parseEuropeanPrice(String(rawRegularPrice)) : null;
+
+          const finalPrice = (salePrice && !isNaN(salePrice) && salePrice > 0) ? salePrice : price;
+          const compareAt = (regularPrice && finalPrice && regularPrice > finalPrice * 1.01) ? regularPrice : null;
+
+          const stockStatus = product.stock_status || "instock";
+          const available = stockStatus === "instock";
+
+          console.log(`[TREED API] ✓ price=${finalPrice} EUR, compareAt=${compareAt}, stock=${stockStatus}, name=${product.name}`);
+
+          if (finalPrice && !isNaN(finalPrice) && finalPrice > 0) {
+            return {
+              success: true,
+              price: Math.round(finalPrice * 100) / 100,
+              compareAtPrice: compareAt ? Math.round(compareAt * 100) / 100 : null,
+              weightGrams: null,
+              diameterMm: null,
+              variantTitle: product.name || null,
+              currency: "EUR",
+              available,
+              stockStatus: available ? "in_stock" : ("out_of_stock" as StockStatus),
+              source: "html" as const,
+              fetchedAt: new Date().toISOString(),
+              detectedCurrency: "EUR",
+              sourceUrl: productUrl,
+            };
+          }
+        }
+      } else if (apiResponse.status === 401 || apiResponse.status === 403) {
+        console.log(`[TREED API] WooCommerce REST API requires auth (${apiResponse.status}), falling back to HTML`);
+      } else {
+        console.log(`[TREED API] WooCommerce REST API failed with ${apiResponse.status}, falling back to HTML`);
+      }
+    } catch (apiErr) {
+      console.log(`[TREED API] REST API error: ${apiErr instanceof Error ? apiErr.message : String(apiErr)}, falling back to HTML`);
+    }
+  } else {
+    console.log(`[TREED FETCH] No SKU found in URL, skipping REST API`);
+  }
+
+  // ── Strategy 2: Direct HTML fetch + JSON-LD / HTML patterns ──
   try {
     const response = await fetch(productUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
-      },
+      headers: { ...commonHeaders, Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" },
       redirect: "follow",
       signal: AbortSignal.timeout(15000),
     });
@@ -3492,70 +3689,86 @@ async function fetchTreedPriceDirect(productUrl: string): Promise<PriceResponse>
     }
 
     const html = await response.text();
-    console.log(`[TREED FETCH] HTML size: ${html.length} bytes, has JSON-LD: ${html.includes("application/ld+json")}`);
+    const hasJsonLd = html.includes("application/ld+json");
+    console.log(`[TREED FETCH] HTML size: ${html.length} bytes, has JSON-LD: ${hasJsonLd}`);
 
-    // Parse JSON-LD Product schema (WooCommerce always emits this)
-    const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
-    let scriptMatch;
-    while ((scriptMatch = jsonLdRegex.exec(html)) !== null) {
-      try {
-        const parsed = JSON.parse(scriptMatch[1].trim());
-        const items: any[] = Array.isArray(parsed) ? parsed : [parsed];
-        const product = items.find((item: any) => item["@type"] === "Product");
-        if (!product?.offers) continue;
+    // Log a snippet to help diagnose what the page actually returns
+    const bodyStart = html.indexOf("<body");
+    const snippet = html.slice(bodyStart > 0 ? bodyStart : 0, (bodyStart > 0 ? bodyStart : 0) + 500).replace(/\s+/g, " ");
+    console.log(`[TREED FETCH] Page snippet: ${snippet}`);
 
-        const offers: any[] = Array.isArray(product.offers) ? product.offers : [product.offers];
-        const inStockOffers = offers.filter(
-          (o: any) => o.price != null && String(o.availability || "").toLowerCase().includes("instock"),
-        );
-        const validOffers = inStockOffers.length > 0 ? inStockOffers : offers.filter((o: any) => o.price != null);
+    // Parse JSON-LD Product schema (WooCommerce emits this on real product pages)
+    if (hasJsonLd) {
+      const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+      let scriptMatch;
+      while ((scriptMatch = jsonLdRegex.exec(html)) !== null) {
+        try {
+          const parsed = JSON.parse(scriptMatch[1].trim());
+          const items: any[] = Array.isArray(parsed) ? parsed : [parsed];
+          const product = items.find((item: any) => item["@type"] === "Product");
+          if (!product?.offers) continue;
 
-        if (validOffers.length === 0) continue;
+          const offers: any[] = Array.isArray(product.offers) ? product.offers : [product.offers];
+          const inStockOffers = offers.filter(
+            (o: any) => o.price != null && String(o.availability || "").toLowerCase().includes("instock"),
+          );
+          const validOffers = inStockOffers.length > 0 ? inStockOffers : offers.filter((o: any) => o.price != null);
 
-        const prices = validOffers
-          .map((o: any) => parseEuropeanPrice(String(o.price)))
-          .filter((p: number) => !isNaN(p) && p > 0);
+          if (validOffers.length === 0) continue;
 
-        if (prices.length === 0) continue;
+          const prices = validOffers
+            .map((o: any) => parseEuropeanPrice(String(o.price)))
+            .filter((p: number) => !isNaN(p) && p > 0);
 
-        const lowestPrice = Math.min(...prices);
-        const highestPrice = Math.max(...prices);
-        const compareAt = highestPrice > lowestPrice * 1.1 ? highestPrice : null;
-        const detectedCurrency = (validOffers[0].priceCurrency as string) || resolvedCurrency;
-        const available = inStockOffers.length > 0;
+          if (prices.length === 0) continue;
 
-        console.log(
-          `[TREED FETCH] ✓ JSON-LD: price=${lowestPrice} ${detectedCurrency}, compareAt=${compareAt}, inStock=${available}`,
-        );
+          const lowestPrice = Math.min(...prices);
+          const highestPrice = Math.max(...prices);
+          const compareAt = highestPrice > lowestPrice * 1.1 ? highestPrice : null;
+          const detectedCurrency = (validOffers[0].priceCurrency as string) || resolvedCurrency;
+          const available = inStockOffers.length > 0;
 
-        return {
-          success: true,
-          price: lowestPrice,
-          compareAtPrice: compareAt,
-          weightGrams: null,
-          diameterMm: null,
-          variantTitle: null,
-          currency: detectedCurrency,
-          available,
-          stockStatus: available ? "in_stock" : ("out_of_stock" as StockStatus),
-          source: "html" as const,
-          fetchedAt: new Date().toISOString(),
-          detectedCurrency,
-          sourceUrl: productUrl,
-        };
-      } catch (_e) {
-        // ignore parse errors, try next script tag
+          console.log(`[TREED FETCH] ✓ JSON-LD: price=${lowestPrice} ${detectedCurrency}, compareAt=${compareAt}, inStock=${available}`);
+
+          return {
+            success: true,
+            price: lowestPrice,
+            compareAtPrice: compareAt,
+            weightGrams: null,
+            diameterMm: null,
+            variantTitle: null,
+            currency: detectedCurrency,
+            available,
+            stockStatus: available ? "in_stock" : ("out_of_stock" as StockStatus),
+            source: "html" as const,
+            fetchedAt: new Date().toISOString(),
+            detectedCurrency,
+            sourceUrl: productUrl,
+          };
+        } catch (_e) {
+          // ignore parse errors, try next script tag
+        }
       }
     }
 
-    // Fallback: try European EUR price patterns in the HTML text
+    // Strategy 3: try European EUR price patterns in the HTML text
     console.log("[TREED FETCH] No JSON-LD found, trying HTML price patterns...");
-    const eurPatterns = [
+
+    // WooCommerce product pages expose price in woocommerce_params or in data attributes
+    const wcPricePatterns = [
+      // WooCommerce data attributes: data-price="12.50"
+      /data-price="(\d+(?:\.\d+)?)"/g,
+      // WooCommerce raw price in JS: "price":"12.50"
+      /"price":"(\d+(?:[.,]\d+)?)"/g,
+      // EUR symbol patterns
       /(\d+[.,]\d{2})\s*€/g,
       /€\s*(\d+[.,]\d{2})/g,
-      /<span[^>]*class="[^"]*price[^"]*"[^>]*>\s*(?:€\s*)?([\d.,]+)/gi,
+      // WooCommerce span.price
+      /<span[^>]*class="[^"]*(?:woocommerce-Price-amount|price-amount)[^"]*"[^>]*>\s*<bdi>(?:<span[^>]*>[^<]*<\/span>)?\s*([\d.,]+)/gi,
+      /<span[^>]*class="[^"]*price[^"]*"[^>]*>[^<]*(?:€\s*)?([\d.,]+)/gi,
     ];
-    for (const pattern of eurPatterns) {
+
+    for (const pattern of wcPricePatterns) {
       const matches = [...html.matchAll(pattern)];
       if (matches.length > 0) {
         const prices = matches
@@ -3563,7 +3776,7 @@ async function fetchTreedPriceDirect(productUrl: string): Promise<PriceResponse>
           .filter((p) => !isNaN(p) && validateFilamentPrice(p, "EUR"));
         if (prices.length > 0) {
           const price = Math.min(...prices);
-          console.log(`[TREED FETCH] ✓ HTML pattern price: €${price}`);
+          console.log(`[TREED FETCH] ✓ HTML pattern price: €${price} (pattern: ${pattern.source.slice(0, 40)})`);
           return {
             success: true,
             price,
@@ -3823,8 +4036,10 @@ serve(async (req) => {
       // Extrudr is EUR-only — normalise the currency response so the caller
       // receives EUR even when it requested USD (currencyMismatch handled below)
     } else if (customStorefront === "treed") {
-      console.log(`[TREED ROUTING] ✓ Direct JSON-LD fetch path selected (EUR-only WooCommerce)`);
-      result = await fetchTreedPriceDirect(urlToFetch);
+      // TreeD Filaments is a client-side SPA — all prices are loaded via JS.
+      // Direct HTML fetch returns an empty shell; Firecrawl renders JS and returns the live price.
+      console.log(`[TREED ROUTING] ✓ Firecrawl path selected (SPA — JS-rendered prices)`);
+      result = await fetchTreedPriceViaFirecrawl(urlToFetch);
       // TreeD is EUR-only — always return EUR regardless of requested currency
     } else if (customStorefront === "creality") {
       console.log(`[CREALITY ROUTING] ✓ Direct fetch path selected`);
