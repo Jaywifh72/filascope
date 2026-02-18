@@ -2238,7 +2238,7 @@ async function fetchPriceWithFirecrawl(
           },
           body: JSON.stringify({
             url: productUrl,
-            formats: ["markdown"],
+            formats: isCreality ? ["markdown", "html"] : ["markdown"],
             onlyMainContent: useMainContentOnly,
             waitFor: isCreality ? 5000 : 3000,
             location: location,
@@ -2408,6 +2408,51 @@ async function fetchPriceWithFirecrawl(
       const isCreality = productUrl.includes("store.creality.com");
 
       if (isCreality) {
+        // Try JSON-LD extraction first — most reliable for Creality
+        const firecrawlHtml = data.data?.html || data.html || "";
+        if (firecrawlHtml) {
+          const jsonLdMatches = firecrawlHtml.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+          if (jsonLdMatches) {
+            for (const scriptTag of jsonLdMatches) {
+              try {
+                const jsonContent = scriptTag.replace(/<script[^>]*>|<\/script>/gi, "").trim();
+                const parsed = JSON.parse(jsonContent);
+                const items = Array.isArray(parsed) ? parsed : [parsed];
+                const product = items.find((item: any) => item["@type"] === "Product");
+                if (product?.offers) {
+                  const offers = Array.isArray(product.offers) ? product.offers : [product.offers];
+                  const inStockOffers = offers.filter((o: any) => o.price && o.availability?.includes("InStock"));
+                  const allOffers = inStockOffers.length > 0 ? inStockOffers : offers.filter((o: any) => o.price);
+                  if (allOffers.length > 0) {
+                    const prices = allOffers.map((o: any) => parseFloat(o.price)).filter((p: number) => !isNaN(p) && p > 0);
+                    if (prices.length > 0) {
+                      const lowestPrice = Math.min(...prices);
+                      const detectedCurrency = allOffers[0].priceCurrency || preferredCurrency;
+                      const highestPrice = Math.max(...prices);
+                      const compareAt = highestPrice > lowestPrice * 1.1 ? highestPrice : null;
+                      console.log(`✓ Creality JSON-LD extraction: price=${lowestPrice} ${detectedCurrency}, compareAt=${compareAt}, offers=${allOffers.length}`);
+                      return {
+                        success: true,
+                        price: lowestPrice,
+                        compareAtPrice: compareAt,
+                        weightGrams: null,
+                        diameterMm: null,
+                        variantTitle: null,
+                        currency: detectedCurrency,
+                        available: inStockOffers.length > 0,
+                        source: "firecrawl" as const,
+                        fetchedAt: new Date().toISOString(),
+                      };
+                    }
+                  }
+                }
+              } catch (e) {
+                console.log("JSON-LD parse attempt failed, continuing to markdown extraction");
+              }
+            }
+          }
+        }
+        // JSON-LD not found or failed — fall back to markdown extraction
         priceData = extractCrealityPrice(markdown, preferredCurrency);
       } else if (isOpenCart) {
         priceData = extractOpenCartPrice(markdown);
