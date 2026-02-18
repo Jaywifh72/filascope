@@ -146,6 +146,23 @@ const REGIONAL_STORE_CONFIGS: Record<string, RegionalStoreConfig> = {
       JP: { pathPrefix: "/jp", currency: "JPY" },
     },
   },
+  // Extrudr: path-based regional URLs with locale+region prefix: /en/{region}/products/{slug}/
+  // ALL regions map to the "de" locale — Extrudr only sells in EUR.
+  // NOTE: pathPrefix here is the segment injected AFTER /en/ (not prepended to full path).
+  // The actual URL transformation is handled by normalizeExtrudrUrl() inside fetchExtrudrPriceDirect,
+  // so transformToRegionalUrl returns the URL unchanged (pathPrefix = "") to avoid double-prefixing.
+  extrudr: {
+    pattern: "path",
+    baseDomain: "www.extrudr.com",
+    fallbackRegion: "EU",
+    regions: {
+      EU: { pathPrefix: "", currency: "EUR" },
+      US: { pathPrefix: "", currency: "EUR" }, // EUR-only brand, no USD pricing
+      CA: { pathPrefix: "", currency: "EUR" },
+      UK: { pathPrefix: "", currency: "EUR" },
+      AU: { pathPrefix: "", currency: "EUR" },
+    },
+  },
 };
 
 // Currency to region code mapping
