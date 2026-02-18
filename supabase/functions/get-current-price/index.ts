@@ -2565,8 +2565,10 @@ async function fetchPriceWithFirecrawl(
         // JSON-LD not found or failed — fall back to markdown extraction
         priceData = extractCrealityPrice(markdown, preferredCurrency);
       } else if (isPrusa) {
-        // Prusa hides prices behind a location/ZIP selector. Try JSON-LD from HTML first.
-        const firecrawlHtml = data.data?.html || data.html || "";
+        // Prusa hides prices behind a location/ZIP selector. Try JSON-LD then __NEXT_DATA__ from HTML.
+        let firecrawlHtml = data.data?.html || data.html || "";
+        // Strip zero-width characters that can corrupt JSON parsing
+        firecrawlHtml = firecrawlHtml.replace(/[\u200B-\u200D\u200C\uFEFF]/g, "");
         let prusaResolved = false;
         if (firecrawlHtml) {
           const jsonLdMatches = firecrawlHtml.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
@@ -2602,8 +2604,50 @@ async function fetchPriceWithFirecrawl(
             }
           }
         }
+        // __NEXT_DATA__ extraction: Prusa embeds pricing in a Next.js data script tag
+        if (!prusaResolved && firecrawlHtml) {
+          try {
+            // Match the __NEXT_DATA__ script tag (handles both quoted and unquoted id attributes)
+            const nextDataMatch = firecrawlHtml.match(/<script[^>]*id=["']?__NEXT_DATA__["']?[^>]*>([\s\S]*?)<\/script>/i);
+            if (nextDataMatch?.[1]) {
+              const nextData = JSON.parse(nextDataMatch[1].trim());
+              const urqlState = nextData?.props?.pageProps?.urqlState;
+              if (urqlState && typeof urqlState === "object") {
+                for (const key of Object.keys(urqlState)) {
+                  const entry = urqlState[key];
+                  if (!entry?.data) continue;
+                  try {
+                    // The data field is a JSON string — parse it
+                    const innerData = typeof entry.data === "string" ? JSON.parse(entry.data) : entry.data;
+                    const product = innerData?.product;
+                    if (product?.price?.priceWithVat !== undefined) {
+                      const rawPrice = parseFloat(product.price.priceWithVat);
+                      if (!isNaN(rawPrice) && rawPrice > 0) {
+                        const availName: string = product?.availability?.name ?? "";
+                        const available = /in\s*stock/i.test(availName);
+                        // Prusa always prices in EUR regardless of region requested
+                        priceData = {
+                          price: rawPrice,
+                          compareAtPrice: null,
+                          currency: "EUR",
+                          available,
+                        };
+                        prusaResolved = true;
+                        console.log(`Prusa __NEXT_DATA__ extraction: price=${rawPrice} EUR, available=${available} (availName="${availName}")`);
+                        break;
+                      }
+                    }
+                  } catch (_) { /* skip unparseable entries */ }
+                  if (prusaResolved) break;
+                }
+              }
+            }
+          } catch (e) {
+            console.log("Prusa __NEXT_DATA__ parse failed:", e instanceof Error ? e.message : String(e));
+          }
+        }
         if (!prusaResolved) {
-          console.log("Prusa JSON-LD extraction failed, falling back to markdown extraction");
+          console.log("Prusa JSON-LD extraction failed, falling back to markdown extraction (no JSON-LD or __NEXT_DATA__ found)");
           priceData = extractBambuLabPrice(markdown, preferredCurrency);
         }
       } else if (isOpenCart) {
