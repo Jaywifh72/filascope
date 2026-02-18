@@ -1165,7 +1165,7 @@ export default function PricingData() {
 
     try {
       const { data, error } = await supabase.functions.invoke('get-current-price', {
-        body: { productUrl: store.productUrl, currency: store.currency, forceRefresh: true, targetWeightGrams: store.netWeightG },
+        body: { productUrl: store.productUrl, currency: store.currency, forceRefresh: true, targetWeightGrams: store.netWeightG, filamentId: store.representativeId },
       });
 
       if (error) {
