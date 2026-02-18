@@ -134,11 +134,16 @@ const REGIONAL_STORE_CONFIGS: Record<string, RegionalStoreConfig> = {
     },
   },
   creality: {
-    pattern: "subdomain",
+    pattern: "path",
     baseDomain: "store.creality.com",
     fallbackRegion: "US",
     regions: {
-      US: { subdomain: "us", currency: "USD" },
+      US: { pathPrefix: "", currency: "USD" },
+      CA: { pathPrefix: "/ca", currency: "CAD" },
+      UK: { pathPrefix: "/uk", currency: "GBP" },
+      EU: { pathPrefix: "/eu", currency: "EUR" },
+      AU: { pathPrefix: "/au", currency: "AUD" },
+      JP: { pathPrefix: "/jp", currency: "JPY" },
     },
   },
 };
