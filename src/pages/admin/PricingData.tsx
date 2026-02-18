@@ -204,7 +204,7 @@ type BrandRegionalConfig = SubdomainConfig | PathConfig;
 
 const BRAND_REGIONAL_CONFIGS: Record<string, BrandRegionalConfig> = {
   'Bambu Lab':    { pattern: 'subdomain', baseDomain: 'store.bambulab.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' }, JP: { subdomain: 'jp' } } },
-  'Polymaker':    { pattern: 'subdomain', baseDomain: 'polymaker.com', regions: { CA: { subdomain: 'ca' }, EU: { subdomain: 'eu' } } },
+  'Polymaker':    { pattern: 'subdomain', baseDomain: 'polymaker.com', regions: { CA: { subdomain: 'ca' } } }, // EU store shut down Feb 2026
   'Elegoo':       { pattern: 'subdomain', baseDomain: 'elegoo.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
   'Anycubic':     { pattern: 'subdomain', baseDomain: 'anycubic.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { domain: 'www.anycubic.au' } } },
   // Creality uses PATH-based regional URLs, not subdomains:
@@ -546,6 +546,7 @@ export default function PricingData() {
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [searchResults, setSearchResults] = useState<Record<string, { loading: boolean; url?: string; confidence?: number; method?: string; query?: string; error?: boolean }>>({});
   const [bulkSearchProgress, setBulkSearchProgress] = useState<{ running: boolean; done: number; total: number; found: number } | null>(null);
+  const [isClearingInactiveCache, setIsClearingInactiveCache] = useState(false);
   const abortRef = useRef(false);
   const abortSyncRef = useRef(false);
   const diagnoseRef = useRef<() => void>(() => {});
@@ -657,6 +658,28 @@ export default function PricingData() {
   // =============================================
   // Data fetching — grouped by product_line_id
   // =============================================
+
+  // Fetch active regions per brand — used to hide rows for deactivated stores
+  const { data: activeStoreRegions } = useQuery({
+    queryKey: ['admin-active-store-regions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('brand_regional_stores')
+        .select('brand_id, region_code, automated_brands!brand_regional_stores_brand_id_fkey(brand_name)')
+        .eq('is_active', true);
+      if (error) throw error;
+      // Build a Map<brandName_lowercase, Set<regionCode>>
+      const map = new Map<string, Set<string>>();
+      for (const row of data || []) {
+        const brand = (row.automated_brands as any)?.brand_name?.toLowerCase();
+        if (!brand) continue;
+        if (!map.has(brand)) map.set(brand, new Set());
+        map.get(brand)!.add(row.region_code);
+      }
+      return map;
+    },
+    staleTime: 1000 * 60 * 10,
+  });
 
   const { data: rawFilaments, isLoading: filamentsLoading } = useQuery({
     queryKey: ['admin-pricing-data-grouped'],
@@ -816,7 +839,15 @@ export default function PricingData() {
       // For URLs, pick the first non-null URL across variants (they should all be the same base URL)
       const stores: StoreRow[] = [];
       let usUrl: string | null = null; // Track US URL for derivation
+
+      // Determine which regions are active for this vendor via brand_regional_stores
+      const vendorKey = rep.vendor?.toLowerCase();
+      const activeRegionsForBrand = activeStoreRegions?.get(vendorKey);
+
       for (const { region, priceField, urlField } of REGION_FIELD_MAP) {
+        // Skip regions whose brand_regional_stores entry is inactive
+        // (only applies to brands that have at least one entry — global/unmanaged brands pass through)
+        if (activeRegionsForBrand && !activeRegionsForBrand.has(region)) continue;
         // Aggregate across variants: take first non-null URL, representative price
         let url: string | null = null;
         let price: number | null = null;
@@ -915,7 +946,7 @@ export default function PricingData() {
     });
 
     return groups;
-  }, [rawFilaments, urlCache, priceChanges]);
+  }, [rawFilaments, urlCache, priceChanges, activeStoreRegions]);
 
   // =============================================
   // Filtering
@@ -1514,6 +1545,63 @@ export default function PricingData() {
   }, [canPopulateUrls, vendorFilter, filtered.length, queryClient]);
 
   // =============================================
+  // Clear stale cache for inactive stores
+  // =============================================
+
+  
+
+  const handleClearInactiveStoreCache = useCallback(async () => {
+    const confirmed = window.confirm(
+      'Clear URL validation cache entries for inactive stores?\n\nThis removes stale "Failed" status entries for stores that have been deactivated (e.g., Polymaker EU). The rows will disappear from this view on next reload.'
+    );
+    if (!confirmed) return;
+
+    setIsClearingInactiveCache(true);
+    const toastId = toast.loading('Finding inactive store URLs…');
+
+    try {
+      // Get all inactive store base_urls
+      const { data: inactiveStores, error: storeError } = await supabase
+        .from('brand_regional_stores')
+        .select('base_url')
+        .eq('is_active', false);
+
+      if (storeError) throw storeError;
+
+      const domains = (inactiveStores || [])
+        .map(s => {
+          try { return new URL(s.base_url).hostname; } catch { return null; }
+        })
+        .filter(Boolean) as string[];
+
+      if (domains.length === 0) {
+        toast.dismiss(toastId);
+        toast.info('No inactive stores found');
+        return;
+      }
+
+      // Delete url_validation_cache entries matching these domains
+      let totalDeleted = 0;
+      for (const domain of domains) {
+        const { error: delError } = await supabase
+          .from('url_validation_cache')
+          .delete()
+          .ilike('url', `%${domain}%`);
+        if (!delError) totalDeleted++;
+      }
+
+      toast.dismiss(toastId);
+      toast.success(`Cleared cache for ${totalDeleted} inactive store domain(s)`);
+      queryClient.invalidateQueries({ queryKey: ['admin-url-validation-cache'] });
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error('Failed to clear cache: ' + (err?.message || 'Unknown error'));
+    } finally {
+      setIsClearingInactiveCache(false);
+    }
+  }, [queryClient]);
+
+  // =============================================
   // Failure Diagnosis
   // =============================================
 
@@ -1773,6 +1861,15 @@ export default function PricingData() {
           <Button size="sm" variant="ghost" onClick={handleExportChanges} className="text-xs gap-1.5">
             <Download className="w-3.5 h-3.5" /> Changes
           </Button>
+          <div className="h-4 w-px bg-border" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="sm" variant="ghost" onClick={handleClearInactiveStoreCache} disabled={isClearingInactiveCache} className="text-xs gap-1.5 text-muted-foreground hover:text-destructive">
+                {isClearingInactiveCache ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />} Clear Inactive
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Clear URL cache entries for deactivated stores (removes stale Failed rows)</TooltipContent>
+          </Tooltip>
           {canPopulateUrls && (
             <>
               <div className="h-4 w-px bg-border" />
