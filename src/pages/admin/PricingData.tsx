@@ -109,7 +109,7 @@ interface TestResult {
 }
 
 interface SyncResult {
-  status: 'syncing' | 'success' | 'failed' | 'unchanged';
+  status: 'syncing' | 'success' | 'failed' | 'unchanged' | 'unavailable';
   oldPrice?: number;
   newPrice?: number;
   percentChange?: number;
@@ -413,13 +413,22 @@ function SyncChangeIndicator({ syncResult, currencySymbol, currency }: { syncRes
     return <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />;
   }
 
+  if (syncResult.status === 'unavailable') {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-muted-foreground cursor-default text-xs">⊘</span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{syncResult.error || 'Not available in this region'}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
   if (syncResult.status === 'failed') {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="text-red-400 flex items-center gap-1 text-xs cursor-default">
-            <XCircle className="w-3 h-3" /> Failed
-          </span>
+          <span className="text-destructive cursor-default text-xs font-medium">✗</span>
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">{syncResult.error || 'Price extraction failed'}</TooltipContent>
       </Tooltip>
@@ -1179,6 +1188,13 @@ export default function PricingData() {
       }
 
       if (!data?.success || data.price == null) {
+        // Check if this is a "not available in region" response (e.g. Creality HTTP 404)
+        if (data?.notAvailableInRegion) {
+          const result: SyncResult = { status: 'unavailable', error: data.error || 'Product not available in this region' };
+          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+          if (showToast) toast.warning(`⚪ Not available in this region`);
+          return result;
+        }
         const errorMsg = data?.error || 'Invalid price data';
         const result: SyncResult = { status: 'failed', error: errorMsg };
         setSyncResults(prev => new Map(prev).set(store.storeKey, result));
@@ -2238,6 +2254,8 @@ function ProductGroupRows({
                 ? <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">🟢 Active</Badge>
                 : syncResult?.status === 'failed'
                 ? <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">🔴 Failed</Badge>
+                : syncResult?.status === 'unavailable'
+                ? <Badge className="bg-muted/60 text-muted-foreground border-muted text-[10px]">⊘ N/A</Badge>
                 : getLinkStatusBadge(store.linkStatus)}
             </TableCell>
             <TableCell>
@@ -2245,8 +2263,11 @@ function ProductGroupRows({
                 {result ? getTestResultBadge(result) : (
                   <Badge variant="outline" className="text-[10px] text-muted-foreground">⚪ Not Tested</Badge>
                 )}
-                {(syncResult?.status === 'success' || syncResult?.status === 'unchanged') && syncResult?.source && (
+              {(syncResult?.status === 'success' || syncResult?.status === 'unchanged') && syncResult?.source && (
                   getSyncMethodBadge(syncResult.source)
+                )}
+                {syncResult?.status === 'unavailable' && (
+                  <Badge className="bg-muted/60 text-muted-foreground border-muted text-[10px]">⊘ Not in Region</Badge>
                 )}
               </div>
             </TableCell>

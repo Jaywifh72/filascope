@@ -2926,11 +2926,21 @@ async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: st
 
     if (!response.ok) {
       console.error(`[CREALITY FETCH] Direct fetch failed: HTTP ${response.status}`);
+      if (response.status === 404) {
+        console.log(`[CREALITY FETCH] HTTP 404 — product not available in this region: ${productUrl}`);
+        return {
+          success: false, price: null, compareAtPrice: null, weightGrams: null,
+          diameterMm: null, variantTitle: null, currency: expectedCurrency,
+          available: false, source: "html", fetchedAt: new Date().toISOString(),
+          error: "Product not available in this region (HTTP 404)",
+          notAvailableInRegion: true,
+        };
+      }
       return {
         success: false, price: null, compareAtPrice: null, weightGrams: null,
         diameterMm: null, variantTitle: null, currency: expectedCurrency,
         available: false, source: "html", fetchedAt: new Date().toISOString(),
-        error: `HTTP ${response.status}`, is404: response.status === 404,
+        error: `HTTP ${response.status}`, is404: false,
       };
     }
 
