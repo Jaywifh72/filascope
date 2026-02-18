@@ -60,6 +60,8 @@ const GEO_REDIRECT_DOMAINS = [
   'creality.com',
   'qidi3d.com',
   'flashforge.com',
+  'www.extrudr.com',
+  'extrudr.com',
 ];
 
 export type FetchMethod = 'direct' | 'spoofed' | 'redirected';
