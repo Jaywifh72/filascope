@@ -2895,6 +2895,111 @@ async function fetchShopifyPrice(
   }
 }
 
+// Direct fetch + JSON-LD extraction for Creality (Firecrawl returns empty for store.creality.com)
+async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: string): Promise<PriceResponse> {
+  console.log(`Fetching Creality price directly: ${productUrl} (expected currency: ${expectedCurrency})`);
+  try {
+    const response = await fetch(productUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      redirect: "follow",
+    });
+
+    if (!response.ok) {
+      console.error(`Creality direct fetch failed: HTTP ${response.status}`);
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: expectedCurrency,
+        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        error: `HTTP ${response.status}`, is404: response.status === 404,
+      };
+    }
+
+    const html = await response.text();
+    console.log(`Creality HTML fetched: ${html.length} bytes`);
+
+    // Extract JSON-LD structured data
+    const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+    let match;
+    while ((match = jsonLdRegex.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(match[1].trim());
+        const items = Array.isArray(parsed) ? parsed : [parsed];
+        const product = items.find((item: any) => item["@type"] === "Product");
+        if (product?.offers) {
+          const offers = Array.isArray(product.offers) ? product.offers : [product.offers];
+          const inStockOffers = offers.filter((o: any) =>
+            o.price != null && String(o.availability || "").includes("InStock")
+          );
+          const validOffers = inStockOffers.length > 0 ? inStockOffers : offers.filter((o: any) => o.price != null);
+          if (validOffers.length > 0) {
+            const prices = validOffers
+              .map((o: any) => parseFloat(String(o.price)))
+              .filter((p: number) => !isNaN(p) && p > 0);
+            if (prices.length > 0) {
+              const lowestPrice = Math.min(...prices);
+              const highestPrice = Math.max(...prices);
+              const compareAt = highestPrice > lowestPrice * 1.1 ? highestPrice : null;
+              const detectedCurrency = validOffers[0].priceCurrency || expectedCurrency;
+              console.log(`✓ Creality JSON-LD: $${lowestPrice} ${detectedCurrency}, compare=${compareAt}, ${validOffers.length} offers, ${inStockOffers.length} in stock`);
+              return {
+                success: true,
+                price: lowestPrice,
+                compareAtPrice: compareAt,
+                weightGrams: null,
+                diameterMm: null,
+                variantTitle: null,
+                currency: detectedCurrency,
+                available: inStockOffers.length > 0,
+                stockStatus: inStockOffers.length > 0 ? "in_stock" as StockStatus : "out_of_stock" as StockStatus,
+                source: "html" as const,
+                fetchedAt: new Date().toISOString(),
+                detectedCurrency: detectedCurrency,
+                sourceUrl: productUrl,
+              };
+            }
+          }
+        }
+      } catch (e) {
+        console.log("JSON-LD parse failed, trying next script tag");
+      }
+    }
+
+    // Fallback: try to extract price from HTML text if JSON-LD failed
+    console.log("No JSON-LD product data found, attempting HTML price extraction");
+    const priceMatch = html.match(/"price"\s*:\s*(\d+\.?\d*)/);
+    if (priceMatch) {
+      const price = parseFloat(priceMatch[1]);
+      if (price > 0 && price < 500) {
+        console.log(`Creality HTML regex fallback: ${price}`);
+        return {
+          success: true, price, compareAtPrice: null, weightGrams: null,
+          diameterMm: null, variantTitle: null, currency: expectedCurrency,
+          available: true, source: "html" as const, fetchedAt: new Date().toISOString(),
+        };
+      }
+    }
+
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: expectedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: "No price found in Creality page JSON-LD or HTML",
+    };
+  } catch (error) {
+    console.error("Creality direct fetch error:", error);
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: expectedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: `Fetch error: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -2973,7 +3078,10 @@ serve(async (req) => {
     const customStorefront = detectCustomStorefront(urlToFetch);
     let result: PriceResponse;
 
-    if (customStorefront) {
+    if (customStorefront === "creality") {
+      console.log("Creality store detected — using direct fetch + JSON-LD extraction (Firecrawl returns empty for this store)");
+      result = await fetchCrealityPriceDirect(urlToFetch, expectedCurrency);
+    } else if (customStorefront) {
       console.log(`Detected custom storefront: ${customStorefront}, using Firecrawl (productType: ${productType})`);
       result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
     } else if (shouldAlwaysUseFirecrawl(urlToFetch)) {
