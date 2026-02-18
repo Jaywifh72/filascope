@@ -2909,16 +2909,280 @@ async function fetchShopifyPrice(
   }
 }
 
+// Browser-like headers for Creality fetches
+const CREALITY_BROWSER_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+};
+
+// Helper: try to extract a valid price from Creality HTML (JSON-LD only)
+function extractCrealityPriceFromHtml(html: string, expectedCurrency: string, sourceUrl: string): PriceResponse | null {
+  const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  while ((match = jsonLdRegex.exec(html)) !== null) {
+    try {
+      const parsed = JSON.parse(match[1].trim());
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      const product = items.find((item: any) => item["@type"] === "Product");
+      if (product?.offers) {
+        const offers = Array.isArray(product.offers) ? product.offers : [product.offers];
+        const inStockOffers = offers.filter((o: any) =>
+          o.price != null && String(o.availability || "").includes("InStock")
+        );
+        const validOffers = inStockOffers.length > 0 ? inStockOffers : offers.filter((o: any) => o.price != null);
+        if (validOffers.length > 0) {
+          const prices = validOffers
+            .map((o: any) => parseFloat(String(o.price)))
+            .filter((p: number) => !isNaN(p) && p > 0);
+          if (prices.length > 0) {
+            const lowestPrice = Math.min(...prices);
+            const highestPrice = Math.max(...prices);
+            const compareAt = highestPrice > lowestPrice * 1.1 ? highestPrice : null;
+            const detectedCurrency = validOffers[0].priceCurrency || expectedCurrency;
+            return {
+              success: true,
+              price: lowestPrice,
+              compareAtPrice: compareAt,
+              weightGrams: null,
+              diameterMm: null,
+              variantTitle: null,
+              currency: detectedCurrency,
+              available: inStockOffers.length > 0,
+              stockStatus: inStockOffers.length > 0 ? "in_stock" as StockStatus : "out_of_stock" as StockStatus,
+              source: "html" as const,
+              fetchedAt: new Date().toISOString(),
+              detectedCurrency,
+              sourceUrl,
+            };
+          }
+        }
+      }
+    } catch (_e) {
+      // ignore parse errors, try next script tag
+    }
+  }
+  return null;
+}
+
+// Generate slug variants for Creality regional slug discovery
+function generateCrealitySlugVariants(originalSlug: string): string[] {
+  const variants = new Set<string>();
+  // Always try original first (will be skipped since it already 404'd)
+  variants.add(originalSlug);
+
+  // Strip weight/diameter suffixes
+  const weightStripped = originalSlug
+    .replace(/-3kg\b/gi, "")
+    .replace(/-1kg\b/gi, "")
+    .replace(/-500g\b/gi, "")
+    .replace(/-1-75mm\b/gi, "")
+    .replace(/-175mm\b/gi, "")
+    .replace(/-1\.75mm\b/gi, "")
+    .replace(/-trailing-dashes?$/i, "")
+    .replace(/-+$/, "");
+
+  if (weightStripped !== originalSlug) variants.add(weightStripped);
+
+  // Strip "-3d-printing-filament" and any weight suffix after it
+  const filamentPhraseRegex = /-3d-printing-filament(?:-\w+)*/gi;
+  const withoutFilamentPhrase = originalSlug.replace(filamentPhraseRegex, "").replace(/-+$/, "");
+  if (withoutFilamentPhrase !== originalSlug) {
+    variants.add(withoutFilamentPhrase);
+    // Also try stripping weight from the filament-phrase-stripped version
+    const withoutFilamentAndWeight = withoutFilamentPhrase
+      .replace(/-3kg\b/gi, "")
+      .replace(/-1kg\b/gi, "")
+      .replace(/-500g\b/gi, "")
+      .replace(/-1-75mm\b/gi, "")
+      .replace(/-+$/, "");
+    if (withoutFilamentAndWeight !== withoutFilamentPhrase) {
+      variants.add(withoutFilamentAndWeight);
+    }
+  }
+
+  // Weight-stripped then filament-phrase-stripped
+  const weightThenPhrase = weightStripped.replace(filamentPhraseRegex, "").replace(/-+$/, "");
+  if (weightThenPhrase !== weightStripped && weightThenPhrase !== withoutFilamentPhrase) {
+    variants.add(weightThenPhrase);
+  }
+
+  // Toggle "creality-" prefix for each candidate
+  const candidates = Array.from(variants);
+  for (const slug of candidates) {
+    if (slug.startsWith("creality-")) {
+      variants.add(slug.slice("creality-".length));
+    } else {
+      variants.add(`creality-${slug}`);
+    }
+  }
+
+  // Return all candidates except the original (it already failed)
+  return Array.from(variants).filter(s => s !== originalSlug && s.length > 3);
+}
+
+// Attempt to discover a working Creality regional slug by trying variants
+async function attemptCrealitySlugDiscovery(
+  baseUrl: string,         // e.g. "https://store.creality.com/ca"
+  originalSlug: string,    // e.g. "hyper-series-pla-3d-printing-filament-1kg"
+  expectedCurrency: string,
+  filamentId: string | null,
+  regionCode: string,
+): Promise<PriceResponse | null> {
+  console.log(`[SLUG DISCOVERY] Starting for slug: ${originalSlug}, region: ${regionCode}`);
+
+  // 1. Check slug cache in DB first (if we have a filamentId)
+  if (filamentId) {
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+      const { data: cached } = await adminClient
+        .from("product_regional_slugs")
+        .select("slug, verified, http_status")
+        .eq("filament_id", filamentId)
+        .eq("region_code", regionCode)
+        .maybeSingle();
+
+      if (cached?.verified && cached.slug && cached.slug !== originalSlug) {
+        console.log(`[SLUG DISCOVERY] Found cached slug: ${cached.slug}, trying it first`);
+        const testUrl = `${baseUrl}/products/${cached.slug}`;
+        try {
+          const resp = await fetch(testUrl, { headers: CREALITY_BROWSER_HEADERS, redirect: "follow", signal: AbortSignal.timeout(5000) });
+          if (resp.ok) {
+            const html = await resp.text();
+            const isSoft404 = html.includes("Oops! Page not found") || html.includes("page you requested does not exist") || html.includes("Page Not Found") || html.includes("template-404");
+            if (!isSoft404) {
+              const priceResult = extractCrealityPriceFromHtml(html, expectedCurrency, testUrl);
+              if (priceResult) {
+                console.log(`[SLUG DISCOVERY] ✓ Cached slug worked: ${cached.slug} → ${priceResult.price} ${priceResult.currency}`);
+                return priceResult;
+              }
+            }
+          }
+        } catch (_e) {
+          console.log(`[SLUG DISCOVERY] Cached slug fetch failed, continuing with variants`);
+        }
+      }
+    } catch (e) {
+      console.log(`[SLUG DISCOVERY] Cache lookup failed (non-fatal): ${e}`);
+    }
+  }
+
+  // 2. Try generated slug variants
+  const variants = generateCrealitySlugVariants(originalSlug);
+  console.log(`[SLUG DISCOVERY] Trying ${variants.length} slug variants: [${variants.slice(0, 5).join(", ")}${variants.length > 5 ? "..." : ""}]`);
+
+  for (const candidateSlug of variants) {
+    const testUrl = `${baseUrl}/products/${candidateSlug}`;
+    console.log(`[SLUG DISCOVERY] Trying: ${testUrl}`);
+    try {
+      const resp = await fetch(testUrl, { headers: CREALITY_BROWSER_HEADERS, redirect: "follow", signal: AbortSignal.timeout(5000) });
+      if (!resp.ok) {
+        console.log(`[SLUG DISCOVERY] HTTP ${resp.status} for ${candidateSlug}, skipping`);
+        continue;
+      }
+      const html = await resp.text();
+      const isSoft404 = html.includes("Oops! Page not found") || html.includes("page you requested does not exist") || html.includes("Page Not Found") || html.includes("template-404");
+      if (isSoft404) {
+        console.log(`[SLUG DISCOVERY] Soft 404 for ${candidateSlug}, skipping`);
+        continue;
+      }
+      const priceResult = extractCrealityPriceFromHtml(html, expectedCurrency, testUrl);
+      if (priceResult) {
+        console.log(`[SLUG DISCOVERY] ✓ Found working slug: ${candidateSlug} → ${priceResult.price} ${priceResult.currency}`);
+
+        // 3. Cache the discovered slug
+        if (filamentId) {
+          try {
+            const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+            const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+            const adminClient = createClient(supabaseUrl, serviceRoleKey);
+            await adminClient.from("product_regional_slugs").upsert({
+              filament_id: filamentId,
+              region_code: regionCode,
+              slug: candidateSlug,
+              verified: true,
+              http_status: 200,
+              verified_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "filament_id,region_code" });
+            console.log(`[SLUG DISCOVERY] ✓ Cached slug ${candidateSlug} for filament ${filamentId} / region ${regionCode}`);
+          } catch (e) {
+            console.log(`[SLUG DISCOVERY] Cache write failed (non-fatal): ${e}`);
+          }
+        }
+
+        return priceResult;
+      }
+      console.log(`[SLUG DISCOVERY] Page loaded but no valid JSON-LD for ${candidateSlug}`);
+    } catch (_e) {
+      console.log(`[SLUG DISCOVERY] Fetch error for ${candidateSlug}: ${_e}`);
+    }
+  }
+
+  console.log(`[SLUG DISCOVERY] No working slug found for ${originalSlug} in ${regionCode}`);
+  return null;
+}
+
 // Direct fetch + JSON-LD extraction for Creality (Firecrawl returns empty for store.creality.com)
-async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: string): Promise<PriceResponse> {
+async function fetchCrealityPriceDirect(
+  productUrl: string,
+  expectedCurrency: string,
+  filamentId?: string | null,
+  regionCode?: string | null,
+): Promise<PriceResponse> {
   console.log(`Fetching Creality price directly: ${productUrl} (expected currency: ${expectedCurrency})`);
+
+  // Helper to attempt slug discovery when original URL fails
+  const trySlugDiscovery = async (reason: string): Promise<PriceResponse> => {
+    if (!regionCode) {
+      // No region context — can't attempt discovery
+      console.log(`[CREALITY FETCH] No regionCode — skipping slug discovery (reason: ${reason})`);
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: expectedCurrency,
+        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        error: "Product not available in this region (HTTP 404)",
+        notAvailableInRegion: true,
+      };
+    }
+
+    console.log(`[CREALITY FETCH] Product not found at regional URL (${reason}), attempting slug discovery`);
+
+    // Extract base URL (e.g. "https://store.creality.com/ca") and slug from productUrl
+    const urlObj = new URL(productUrl);
+    const pathParts = urlObj.pathname.split("/products/");
+    const baseUrl = urlObj.origin + (pathParts[0] || "");
+    const originalSlug = pathParts[1]?.split("?")[0] || "";
+
+    if (!originalSlug) {
+      console.log(`[CREALITY FETCH] Could not extract slug from URL: ${productUrl}`);
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: expectedCurrency,
+        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        error: "Product not available in this region",
+        notAvailableInRegion: true,
+      };
+    }
+
+    const discovered = await attemptCrealitySlugDiscovery(baseUrl, originalSlug, expectedCurrency, filamentId ?? null, regionCode);
+    if (discovered) return discovered;
+
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: expectedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: "Product not available in this region (HTTP 404)",
+      notAvailableInRegion: true,
+    };
+  };
+
   try {
     const response = await fetch(productUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
+      headers: CREALITY_BROWSER_HEADERS,
       redirect: "follow",
     });
 
@@ -2927,14 +3191,7 @@ async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: st
     if (!response.ok) {
       console.error(`[CREALITY FETCH] Direct fetch failed: HTTP ${response.status}`);
       if (response.status === 404) {
-        console.log(`[CREALITY FETCH] HTTP 404 — product not available in this region: ${productUrl}`);
-        return {
-          success: false, price: null, compareAtPrice: null, weightGrams: null,
-          diameterMm: null, variantTitle: null, currency: expectedCurrency,
-          available: false, source: "html", fetchedAt: new Date().toISOString(),
-          error: "Product not available in this region (HTTP 404)",
-          notAvailableInRegion: true,
-        };
+        return await trySlugDiscovery("HTTP 404");
       }
       return {
         success: false, price: null, compareAtPrice: null, weightGrams: null,
@@ -2955,62 +3212,14 @@ async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: st
       html.includes("template-404")
     ) {
       console.log(`[CREALITY FETCH] ⚠️ Soft 404 detected for: ${productUrl}`);
-      return {
-        success: false, price: null, compareAtPrice: null, weightGrams: null,
-        diameterMm: null, variantTitle: null, currency: expectedCurrency,
-        available: false, source: "html" as const, fetchedAt: new Date().toISOString(),
-        error: "Product not found on Creality regional store (soft 404)",
-        is404: true,
-      };
+      return await trySlugDiscovery("soft 404");
     }
 
-    // Extract JSON-LD structured data
-    const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
-    let match;
-    while ((match = jsonLdRegex.exec(html)) !== null) {
-      try {
-        const parsed = JSON.parse(match[1].trim());
-        const items = Array.isArray(parsed) ? parsed : [parsed];
-        const product = items.find((item: any) => item["@type"] === "Product");
-        console.log(`[CREALITY FETCH] Found ${items.length} JSON-LD items, product found: ${!!product}`);
-        if (product?.offers) {
-          const offers = Array.isArray(product.offers) ? product.offers : [product.offers];
-          const inStockOffers = offers.filter((o: any) =>
-            o.price != null && String(o.availability || "").includes("InStock")
-          );
-          const validOffers = inStockOffers.length > 0 ? inStockOffers : offers.filter((o: any) => o.price != null);
-          if (validOffers.length > 0) {
-            const prices = validOffers
-              .map((o: any) => parseFloat(String(o.price)))
-              .filter((p: number) => !isNaN(p) && p > 0);
-            console.log(`[CREALITY FETCH] Offers: ${offers.length} total, ${inStockOffers.length} in stock, prices: [${prices.join(", ")}]`);
-            if (prices.length > 0) {
-              const lowestPrice = Math.min(...prices);
-              const highestPrice = Math.max(...prices);
-              const compareAt = highestPrice > lowestPrice * 1.1 ? highestPrice : null;
-              const detectedCurrency = validOffers[0].priceCurrency || expectedCurrency;
-              console.log(`✓ Creality JSON-LD: $${lowestPrice} ${detectedCurrency}, compare=${compareAt}, ${validOffers.length} offers, ${inStockOffers.length} in stock`);
-              return {
-                success: true,
-                price: lowestPrice,
-                compareAtPrice: compareAt,
-                weightGrams: null,
-                diameterMm: null,
-                variantTitle: null,
-                currency: detectedCurrency,
-                available: inStockOffers.length > 0,
-                stockStatus: inStockOffers.length > 0 ? "in_stock" as StockStatus : "out_of_stock" as StockStatus,
-                source: "html" as const,
-                fetchedAt: new Date().toISOString(),
-                detectedCurrency: detectedCurrency,
-                sourceUrl: productUrl,
-              };
-            }
-          }
-        }
-      } catch (e) {
-        console.log("JSON-LD parse failed, trying next script tag");
-      }
+    // Extract JSON-LD using shared helper
+    const priceResult = extractCrealityPriceFromHtml(html, expectedCurrency, productUrl);
+    if (priceResult) {
+      console.log(`✓ Creality JSON-LD: $${priceResult.price} ${priceResult.currency}`);
+      return priceResult;
     }
 
     // Fallback: try to extract price from HTML text if JSON-LD failed
@@ -3057,7 +3266,13 @@ serve(async (req) => {
       forceRefresh = false,
       targetWeightGrams = null,
       productType = "filament",
+      filamentId = null,
     } = await req.json();
+
+    // Derive region code from currency for slug discovery
+    const regionCode: string = ({
+      USD: "US", CAD: "CA", GBP: "UK", EUR: "EU", AUD: "AU", JPY: "JP",
+    } as Record<string, string>)[currency] ?? "US";
 
     if (!productUrl) {
       return new Response(JSON.stringify({ error: "productUrl is required" }), {
@@ -3130,7 +3345,7 @@ serve(async (req) => {
       console.log(`[CREALITY ROUTING] Transformed URL: ${urlToFetch}`);
       console.log(`[CREALITY ROUTING] Expected currency: ${expectedCurrency}`);
       console.log(`[CREALITY ROUTING] Was transformed: ${transformed}`);
-      result = await fetchCrealityPriceDirect(urlToFetch, expectedCurrency);
+      result = await fetchCrealityPriceDirect(urlToFetch, expectedCurrency, filamentId, regionCode);
     } else if (customStorefront) {
       console.log(`[ROUTING] Custom storefront: ${customStorefront}, using Firecrawl`);
       console.log(`[ROUTING] URL: ${urlToFetch}, currency: ${expectedCurrency}`);
@@ -3140,7 +3355,7 @@ serve(async (req) => {
       console.log(`[CREALITY ROUTING] urlToFetch: ${urlToFetch}`);
       console.log(`[CREALITY ROUTING] productUrl: ${productUrl}`);
       console.log(`[CREALITY ROUTING] Forcing direct fetch path`);
-      result = await fetchCrealityPriceDirect(urlToFetch, expectedCurrency);
+      result = await fetchCrealityPriceDirect(urlToFetch, expectedCurrency, filamentId, regionCode);
     } else if (shouldAlwaysUseFirecrawl(urlToFetch)) {
       console.log(`Store has unreliable JSON API, using Firecrawl for accurate pricing (productType: ${productType})`);
       result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
