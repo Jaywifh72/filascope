@@ -106,7 +106,7 @@ const REGIONAL_STORE_CONFIGS: Record<string, RegionalStoreConfig> = {
     regions: {
       US: { subdomain: "us", currency: "USD" },
       CA: { subdomain: "ca", currency: "CAD" },
-      EU: { subdomain: "eu", currency: "EUR" },
+      // EU store (eu.polymaker.com) shut down Feb 2026 - deactivated
     },
   },
   elegoo: {
@@ -1091,6 +1091,9 @@ function is404Content(markdown: string): boolean {
     /product\s*(is\s*)?no\s*longer\s*available/i,
     /oops[!?.\s]*(page|something)/i,
     /your\s*shopping\s*bag\s*is\s*empty/i, // Alternative Creality pattern
+    // Prusa's "MK404" easter-egg 404 page
+    /mk404/i,
+    /top\s*secret\s*printer\s*coming\s*in\s*distant\s*future/i,
   ];
 
   for (const pattern of notFoundPatterns) {
@@ -2306,6 +2309,10 @@ async function fetchPriceWithFirecrawl(
 
   // For Creality stores, disable onlyMainContent as their pricing section is often excluded
   const isCreality = productUrl.includes("store.creality.com");
+  // For Prusa, request HTML too so we can extract JSON-LD price data
+  // (Prusa hides prices behind a location/ZIP selector that Firecrawl can't interact with,
+  //  but JSON-LD in the HTML contains the price for SEO purposes)
+  const isPrusa = productUrl.includes("prusa3d.com");
   const useMainContentOnly = !isCreality;
 
   try {
@@ -2321,11 +2328,11 @@ async function fetchPriceWithFirecrawl(
             Authorization: `Bearer ${firecrawlApiKey}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
+            body: JSON.stringify({
             url: productUrl,
-            formats: isCreality ? ["markdown", "html"] : ["markdown"],
+            formats: (isCreality || isPrusa) ? ["markdown", "html"] : ["markdown"],
             onlyMainContent: useMainContentOnly,
-            waitFor: isCreality ? 5000 : 3000,
+            waitFor: isCreality ? 5000 : isPrusa ? 4000 : 3000,
             location: location,
           }),
         });
@@ -2539,6 +2546,48 @@ async function fetchPriceWithFirecrawl(
         }
         // JSON-LD not found or failed — fall back to markdown extraction
         priceData = extractCrealityPrice(markdown, preferredCurrency);
+      } else if (isPrusa) {
+        // Prusa hides prices behind a location/ZIP selector. Try JSON-LD from HTML first.
+        const firecrawlHtml = data.data?.html || data.html || "";
+        let prusaResolved = false;
+        if (firecrawlHtml) {
+          const jsonLdMatches = firecrawlHtml.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+          if (jsonLdMatches) {
+            for (const scriptTag of jsonLdMatches) {
+              try {
+                const jsonContent = scriptTag.replace(/<script[^>]*>|<\/script>/gi, "").trim();
+                const parsed = JSON.parse(jsonContent);
+                const items = Array.isArray(parsed) ? parsed : [parsed];
+                const product = items.find((item: any) => item["@type"] === "Product");
+                if (product?.offers) {
+                  const offers = Array.isArray(product.offers) ? product.offers : [product.offers];
+                  const validOffers = offers.filter((o: any) => o.price && parseFloat(o.price) > 0);
+                  if (validOffers.length > 0) {
+                    const prices = validOffers.map((o: any) => parseFloat(o.price)).filter((p: number) => !isNaN(p) && validateFilamentPrice(p, preferredCurrency));
+                    if (prices.length > 0) {
+                      const lowestPrice = Math.min(...prices);
+                      const detectedCurrency = validOffers[0].priceCurrency || preferredCurrency;
+                      const inStockOffers = validOffers.filter((o: any) => o.availability?.includes("InStock"));
+                      console.log(`✓ Prusa JSON-LD price: ${lowestPrice} ${detectedCurrency}, inStock=${inStockOffers.length > 0}`);
+                      priceData = {
+                        price: lowestPrice,
+                        compareAtPrice: null,
+                        currency: detectedCurrency,
+                        available: inStockOffers.length > 0,
+                      };
+                      prusaResolved = true;
+                      break;
+                    }
+                  }
+                }
+              } catch (_) { /* continue */ }
+            }
+          }
+        }
+        if (!prusaResolved) {
+          console.log("Prusa JSON-LD extraction failed, falling back to markdown extraction");
+          priceData = extractBambuLabPrice(markdown, preferredCurrency);
+        }
       } else if (isOpenCart) {
         priceData = extractOpenCartPrice(markdown);
       } else {
