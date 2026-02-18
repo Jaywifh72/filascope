@@ -1294,7 +1294,16 @@ function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" 
   if (url.includes("store.bambulab.com")) return "bambulab";
   if (url.includes("prusa3d.com")) return "prusa";
   if (url.includes("geeetech.com")) return "opencart";
-  if (url.includes("store.creality.com")) return "creality";
+  // Creality: catch all domain/path variations
+  if (
+    url.includes("store.creality.com") ||
+    url.includes("creality.shop") ||
+    url.includes("creality.com/ca/") ||
+    url.includes("creality.com/uk/") ||
+    url.includes("creality.com/eu/") ||
+    url.includes("creality.com/au/") ||
+    url.includes("creality.com/jp/")
+  ) return "creality";
   return null;
 }
 
@@ -2913,8 +2922,10 @@ async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: st
       redirect: "follow",
     });
 
+    console.log(`[CREALITY FETCH] Response: HTTP ${response.status}, redirected: ${response.redirected}, final URL: ${response.url}`);
+
     if (!response.ok) {
-      console.error(`Creality direct fetch failed: HTTP ${response.status}`);
+      console.error(`[CREALITY FETCH] Direct fetch failed: HTTP ${response.status}`);
       return {
         success: false, price: null, compareAtPrice: null, weightGrams: null,
         diameterMm: null, variantTitle: null, currency: expectedCurrency,
@@ -2924,7 +2935,24 @@ async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: st
     }
 
     const html = await response.text();
-    console.log(`Creality HTML fetched: ${html.length} bytes`);
+    console.log(`[CREALITY FETCH] HTML size: ${html.length} bytes, has JSON-LD: ${html.includes("application/ld+json")}`);
+
+    // Detect soft 404 (Creality returns HTTP 200 for missing pages)
+    if (
+      html.includes("Oops! Page not found") ||
+      html.includes("page you requested does not exist") ||
+      html.includes("Page Not Found") ||
+      html.includes("template-404")
+    ) {
+      console.log(`[CREALITY FETCH] ⚠️ Soft 404 detected for: ${productUrl}`);
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: expectedCurrency,
+        available: false, source: "html" as const, fetchedAt: new Date().toISOString(),
+        error: "Product not found on Creality regional store (soft 404)",
+        is404: true,
+      };
+    }
 
     // Extract JSON-LD structured data
     const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
@@ -2934,6 +2962,7 @@ async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: st
         const parsed = JSON.parse(match[1].trim());
         const items = Array.isArray(parsed) ? parsed : [parsed];
         const product = items.find((item: any) => item["@type"] === "Product");
+        console.log(`[CREALITY FETCH] Found ${items.length} JSON-LD items, product found: ${!!product}`);
         if (product?.offers) {
           const offers = Array.isArray(product.offers) ? product.offers : [product.offers];
           const inStockOffers = offers.filter((o: any) =>
@@ -2944,6 +2973,7 @@ async function fetchCrealityPriceDirect(productUrl: string, expectedCurrency: st
             const prices = validOffers
               .map((o: any) => parseFloat(String(o.price)))
               .filter((p: number) => !isNaN(p) && p > 0);
+            console.log(`[CREALITY FETCH] Offers: ${offers.length} total, ${inStockOffers.length} in stock, prices: [${prices.join(", ")}]`);
             if (prices.length > 0) {
               const lowestPrice = Math.min(...prices);
               const highestPrice = Math.max(...prices);
@@ -3080,15 +3110,27 @@ serve(async (req) => {
     const startTime = Date.now();
 
     // Check for custom storefronts first (they don't support Shopify JSON)
-    const customStorefront = detectCustomStorefront(urlToFetch);
+    // Check both the transformed URL and the original productUrl in case transformation obscured the domain
+    const customStorefront = detectCustomStorefront(urlToFetch) || detectCustomStorefront(productUrl);
     let result: PriceResponse;
 
     if (customStorefront === "creality") {
-      console.log("Creality store detected — using direct fetch + JSON-LD extraction (Firecrawl returns empty for this store)");
+      console.log(`[CREALITY ROUTING] ✓ Direct fetch path selected`);
+      console.log(`[CREALITY ROUTING] Original URL: ${productUrl}`);
+      console.log(`[CREALITY ROUTING] Transformed URL: ${urlToFetch}`);
+      console.log(`[CREALITY ROUTING] Expected currency: ${expectedCurrency}`);
+      console.log(`[CREALITY ROUTING] Was transformed: ${transformed}`);
       result = await fetchCrealityPriceDirect(urlToFetch, expectedCurrency);
     } else if (customStorefront) {
-      console.log(`Detected custom storefront: ${customStorefront}, using Firecrawl (productType: ${productType})`);
+      console.log(`[ROUTING] Custom storefront: ${customStorefront}, using Firecrawl`);
+      console.log(`[ROUTING] URL: ${urlToFetch}, currency: ${expectedCurrency}`);
       result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
+    } else if (urlToFetch.toLowerCase().includes("creality") || productUrl.toLowerCase().includes("creality")) {
+      console.log(`[CREALITY ROUTING] ⚠️ Creality URL detected but not caught by detectCustomStorefront!`);
+      console.log(`[CREALITY ROUTING] urlToFetch: ${urlToFetch}`);
+      console.log(`[CREALITY ROUTING] productUrl: ${productUrl}`);
+      console.log(`[CREALITY ROUTING] Forcing direct fetch path`);
+      result = await fetchCrealityPriceDirect(urlToFetch, expectedCurrency);
     } else if (shouldAlwaysUseFirecrawl(urlToFetch)) {
       console.log(`Store has unreliable JSON API, using Firecrawl for accurate pricing (productType: ${productType})`);
       result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
