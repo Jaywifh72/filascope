@@ -1345,11 +1345,12 @@ function extractPriceWithConfig(
 }
 
 // Legacy: Detect custom storefronts that don't support Shopify JSON API
-function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" | "creality" | "extrudr" | null {
+function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" | "creality" | "extrudr" | "treed" | null {
   if (url.includes("store.bambulab.com")) return "bambulab";
   if (url.includes("prusa3d.com")) return "prusa";
   if (url.includes("geeetech.com")) return "opencart";
   if (url.includes("extrudr.com")) return "extrudr";
+  if (url.includes("treedfilaments.com")) return "treed";
   // Creality: catch all domain/path variations
   if (
     url.includes("store.creality.com") ||
@@ -3459,9 +3460,151 @@ async function fetchExtrudrPriceDirect(
   }
 }
 
-// ===== END EXTRUDR DIRECT FETCH =====
+// ===== TREED FILAMENTS DIRECT FETCH =====
+// TreeD is an Italian EUR-only brand using WooCommerce at treedfilaments.com.
+// Product URLs use query parameter format: /shop/product/?sku={SKU}
+// WooCommerce pages expose JSON-LD Product schema with offers.price in EUR.
+
+async function fetchTreedPriceDirect(productUrl: string): Promise<PriceResponse> {
+  const resolvedCurrency = "EUR";
+  console.log(`[TREED FETCH] Fetching: ${productUrl}`);
+
+  try {
+    const response = await fetch(productUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(15000),
+    });
+
+    console.log(`[TREED FETCH] HTTP ${response.status}, final URL: ${response.url}`);
+
+    if (!response.ok) {
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        error: `HTTP ${response.status}`,
+      };
+    }
+
+    const html = await response.text();
+    console.log(`[TREED FETCH] HTML size: ${html.length} bytes, has JSON-LD: ${html.includes("application/ld+json")}`);
+
+    // Parse JSON-LD Product schema (WooCommerce always emits this)
+    const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+    let scriptMatch;
+    while ((scriptMatch = jsonLdRegex.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(scriptMatch[1].trim());
+        const items: any[] = Array.isArray(parsed) ? parsed : [parsed];
+        const product = items.find((item: any) => item["@type"] === "Product");
+        if (!product?.offers) continue;
+
+        const offers: any[] = Array.isArray(product.offers) ? product.offers : [product.offers];
+        const inStockOffers = offers.filter(
+          (o: any) => o.price != null && String(o.availability || "").toLowerCase().includes("instock"),
+        );
+        const validOffers = inStockOffers.length > 0 ? inStockOffers : offers.filter((o: any) => o.price != null);
+
+        if (validOffers.length === 0) continue;
+
+        const prices = validOffers
+          .map((o: any) => parseEuropeanPrice(String(o.price)))
+          .filter((p: number) => !isNaN(p) && p > 0);
+
+        if (prices.length === 0) continue;
+
+        const lowestPrice = Math.min(...prices);
+        const highestPrice = Math.max(...prices);
+        const compareAt = highestPrice > lowestPrice * 1.1 ? highestPrice : null;
+        const detectedCurrency = (validOffers[0].priceCurrency as string) || resolvedCurrency;
+        const available = inStockOffers.length > 0;
+
+        console.log(
+          `[TREED FETCH] ✓ JSON-LD: price=${lowestPrice} ${detectedCurrency}, compareAt=${compareAt}, inStock=${available}`,
+        );
+
+        return {
+          success: true,
+          price: lowestPrice,
+          compareAtPrice: compareAt,
+          weightGrams: null,
+          diameterMm: null,
+          variantTitle: null,
+          currency: detectedCurrency,
+          available,
+          stockStatus: available ? "in_stock" : ("out_of_stock" as StockStatus),
+          source: "html" as const,
+          fetchedAt: new Date().toISOString(),
+          detectedCurrency,
+          sourceUrl: productUrl,
+        };
+      } catch (_e) {
+        // ignore parse errors, try next script tag
+      }
+    }
+
+    // Fallback: try European EUR price patterns in the HTML text
+    console.log("[TREED FETCH] No JSON-LD found, trying HTML price patterns...");
+    const eurPatterns = [
+      /(\d+[.,]\d{2})\s*€/g,
+      /€\s*(\d+[.,]\d{2})/g,
+      /<span[^>]*class="[^"]*price[^"]*"[^>]*>\s*(?:€\s*)?([\d.,]+)/gi,
+    ];
+    for (const pattern of eurPatterns) {
+      const matches = [...html.matchAll(pattern)];
+      if (matches.length > 0) {
+        const prices = matches
+          .map((m) => parseEuropeanPrice(m[1]))
+          .filter((p) => !isNaN(p) && validateFilamentPrice(p, "EUR"));
+        if (prices.length > 0) {
+          const price = Math.min(...prices);
+          console.log(`[TREED FETCH] ✓ HTML pattern price: €${price}`);
+          return {
+            success: true,
+            price,
+            compareAtPrice: null,
+            weightGrams: null,
+            diameterMm: null,
+            variantTitle: null,
+            currency: "EUR",
+            available: true,
+            stockStatus: "in_stock" as StockStatus,
+            source: "html" as const,
+            fetchedAt: new Date().toISOString(),
+            detectedCurrency: "EUR",
+            sourceUrl: productUrl,
+          };
+        }
+      }
+    }
+
+    console.log("[TREED FETCH] ❌ No valid price found on TreeD page");
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: "Could not extract price from TreeD Filaments page",
+    };
+  } catch (error) {
+    console.error("[TREED FETCH] Error:", error);
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: `Fetch error: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
+// ===== END TREED FILAMENTS DIRECT FETCH =====
 
 // Direct fetch + JSON-LD extraction for Creality (Firecrawl returns empty for store.creality.com)
+
 async function fetchCrealityPriceDirect(
   productUrl: string,
   expectedCurrency: string,
@@ -3679,6 +3822,10 @@ serve(async (req) => {
       result = await fetchExtrudrPriceDirect(urlToFetch, expectedCurrency);
       // Extrudr is EUR-only — normalise the currency response so the caller
       // receives EUR even when it requested USD (currencyMismatch handled below)
+    } else if (customStorefront === "treed") {
+      console.log(`[TREED ROUTING] ✓ Direct JSON-LD fetch path selected (EUR-only WooCommerce)`);
+      result = await fetchTreedPriceDirect(urlToFetch);
+      // TreeD is EUR-only — always return EUR regardless of requested currency
     } else if (customStorefront === "creality") {
       console.log(`[CREALITY ROUTING] ✓ Direct fetch path selected`);
       console.log(`[CREALITY ROUTING] Original URL: ${productUrl}`);
