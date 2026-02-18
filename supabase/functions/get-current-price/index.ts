@@ -1600,7 +1600,7 @@ async function updateFilamentStockStatus(
 }
 
 // Legacy: Extract price specifically from Creality store pages
-function extractCrealityPrice(markdown: string): {
+function extractCrealityPrice(markdown: string, preferredCurrency: string = "USD"): {
   price: number | null;
   compareAtPrice: number | null;
   currency: string;
@@ -1614,12 +1614,12 @@ function extractCrealityPrice(markdown: string): {
   const saleResult = extractSalePriceBeforeSave(markdown);
   console.log("Sale format extraction result:", JSON.stringify(saleResult));
 
-  if (saleResult.salePrice && validateFilamentPrice(saleResult.salePrice)) {
+  if (saleResult.salePrice && validateFilamentPrice(saleResult.salePrice, preferredCurrency)) {
     console.log(`✓ Creality sale format matched: $${saleResult.salePrice}, compare-at: $${saleResult.compareAtPrice}`);
     const result = {
       price: saleResult.salePrice,
       compareAtPrice: saleResult.compareAtPrice,
-      currency: "USD",
+      currency: preferredCurrency,
       available: true,
     };
     console.log("Final Creality price returned:", JSON.stringify(result));
@@ -1656,9 +1656,9 @@ function extractCrealityPrice(markdown: string): {
       `Dual price parsed: price1=$${price1}, price2=$${price2}, sale=$${salePrice}, compare=$${comparePrice}`,
     );
 
-    if (validateFilamentPrice(salePrice) && validateFilamentPrice(comparePrice, 10, 200)) {
+    if (validateFilamentPrice(salePrice, preferredCurrency) && validateFilamentPrice(comparePrice, preferredCurrency)) {
       console.log(`✓ Found Creality dual price: $${salePrice}, compare-at: $${comparePrice}`);
-      const result = { price: salePrice, compareAtPrice: comparePrice, currency: "USD", available: true };
+      const result = { price: salePrice, compareAtPrice: comparePrice, currency: preferredCurrency, available: true };
       console.log("Final Creality price returned:", JSON.stringify(result));
       return result;
     }
@@ -1673,14 +1673,14 @@ function extractCrealityPrice(markdown: string): {
     const allParsed = allPricesInSection.map((p) => parseFloat(p.replace("$", "")));
     console.log("All prices parsed:", allParsed);
 
-    const validPrices = allParsed.filter((p) => validateFilamentPrice(p)).sort((a, b) => a - b);
+    const validPrices = allParsed.filter((p) => validateFilamentPrice(p, preferredCurrency)).sort((a, b) => a - b);
     console.log("Valid prices after filtering (min=$10, max=$150):", validPrices);
 
     if (validPrices.length > 0) {
       const price = validPrices[0];
       const compareAt = validPrices.length > 1 && validPrices[1] > price * 1.1 ? validPrices[1] : null;
       console.log(`✓ Found Creality price: $${price}${compareAt ? `, compare-at: $${compareAt}` : ""}`);
-      const result = { price, compareAtPrice: compareAt, currency: "USD", available: true };
+      const result = { price, compareAtPrice: compareAt, currency: preferredCurrency, available: true };
       console.log("Final Creality price returned:", JSON.stringify(result));
       return result;
     }
@@ -1689,9 +1689,9 @@ function extractCrealityPrice(markdown: string): {
   // Try explicit sale match
   if (saleMatch) {
     const price = parseFloat(saleMatch[1]);
-    if (validateFilamentPrice(price)) {
+    if (validateFilamentPrice(price, preferredCurrency)) {
       console.log(`Found Creality explicit sale price: $${price}`);
-      return { price, compareAtPrice: null, currency: "USD", available: true };
+      return { price, compareAtPrice: null, currency: preferredCurrency, available: true };
     }
   }
 
@@ -1706,7 +1706,7 @@ function extractCrealityPrice(markdown: string): {
 
   const allPrices = allPricesRaw
     .map((m) => parseFloat(m[1]))
-    .filter((p) => validateFilamentPrice(p))
+    .filter((p) => validateFilamentPrice(p, preferredCurrency))
     .sort((a, b) => a - b);
 
   console.log("Valid prices after filtering:", allPrices);
@@ -1716,7 +1716,7 @@ function extractCrealityPrice(markdown: string): {
     const result = {
       price: allPrices[0],
       compareAtPrice: allPrices.length > 1 && allPrices[1] > allPrices[0] * 1.1 ? allPrices[1] : null,
-      currency: "USD",
+      currency: preferredCurrency,
       available: true,
     };
     console.log("Final Creality price returned:", JSON.stringify(result));
@@ -1724,7 +1724,7 @@ function extractCrealityPrice(markdown: string): {
   }
 
   console.log("❌ No valid Creality price found");
-  return { price: null, compareAtPrice: null, currency: "USD", available: false };
+  return { price: null, compareAtPrice: null, currency: preferredCurrency, available: false };
 }
 
 // Detect Shopify stores known to use multi-currency
@@ -2408,7 +2408,7 @@ async function fetchPriceWithFirecrawl(
       const isCreality = productUrl.includes("store.creality.com");
 
       if (isCreality) {
-        priceData = extractCrealityPrice(markdown);
+        priceData = extractCrealityPrice(markdown, preferredCurrency);
       } else if (isOpenCart) {
         priceData = extractOpenCartPrice(markdown);
       } else {
