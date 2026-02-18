@@ -269,6 +269,8 @@ function getSyncMethodBadge(source: string | undefined) {
       return <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-[10px]">🟧 Scraped</Badge>;
     case 'json_ld':
       return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">🟩 JSON-LD</Badge>;
+    case 'html':
+      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">🟢 Direct</Badge>;
     default:
       return <Badge variant="outline" className="text-[10px]">{source}</Badge>;
   }
@@ -2194,12 +2196,12 @@ function ProductGroupRows({
                 {syncResult?.source && (syncResult.status === 'success' || syncResult.status === 'unchanged') && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className={`text-[9px] px-1 py-0 leading-tight ${syncResult.source === 'firecrawl' ? 'border-purple-400 text-purple-400' : 'border-emerald-400 text-emerald-400'}`}>
-                        {syncResult.source === 'firecrawl' ? '🔥' : '🛒'}
+                      <Badge variant="outline" className={`text-[9px] px-1 py-0 leading-tight ${syncResult.source === 'firecrawl' ? 'border-purple-400 text-purple-400' : syncResult.source === 'html' ? 'border-green-400 text-green-400' : 'border-emerald-400 text-emerald-400'}`}>
+                        {syncResult.source === 'firecrawl' ? '🔥' : syncResult.source === 'html' ? '🌐' : '🛒'}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {syncResult.source === 'firecrawl' ? 'Firecrawl' : 'Shopify JSON'}
+                      {syncResult.source === 'firecrawl' ? 'Firecrawl' : syncResult.source === 'html' ? 'Direct Fetch' : 'Shopify JSON'}
                       {syncResult.location ? ` · ${syncResult.location}` : ''}
                     </TooltipContent>
                   </Tooltip>
