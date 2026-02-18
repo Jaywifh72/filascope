@@ -225,8 +225,32 @@ function transformToRegionalUrl(
           console.log(`Regional URL transformation: ${url} -> ${newUrl}`);
           return { url: newUrl, expectedCurrency: regionConfig.currency, transformed: true };
         }
+      } else if (config.pattern === "path") {
+        // Path-based regional URLs: store.creality.com/ca/products/handle
+        const pathPrefix = regionConfig.pathPrefix || "";
+
+        if (pathPrefix) {
+          // Strip any existing region prefix from the path to avoid double-prefixing
+          const knownPrefixes = Object.values(config.regions)
+            .map((r) => r.pathPrefix)
+            .filter((p): p is string => !!p && p.length > 0);
+
+          let cleanPath = urlObj.pathname;
+          for (const prefix of knownPrefixes) {
+            if (cleanPath.startsWith(prefix + "/")) {
+              cleanPath = cleanPath.substring(prefix.length);
+              break;
+            }
+          }
+
+          urlObj.pathname = pathPrefix + cleanPath;
+          const newUrl = urlObj.toString();
+          if (newUrl !== url) {
+            console.log(`Regional URL transformation (path): ${url} -> ${newUrl}`);
+            return { url: newUrl, expectedCurrency: regionConfig.currency, transformed: true };
+          }
+        }
       }
-      // Add path prefix pattern handling here if needed
     } catch (e) {
       console.error("URL transformation error:", e);
     }
