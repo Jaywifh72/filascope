@@ -1964,12 +1964,15 @@ function extractBambuLabPrice(
   // PRIORITY 1: Look for prices in the preferred currency FIRST
   const preferredSymbol = getCurrencySymbol(preferredCurrency);
 
-  // EUR-specific patterns for Bambu Lab EU store
+  // EUR-specific patterns for Bambu Lab EU store and Extrudr (inlt) format
   if (preferredCurrency === "EUR") {
     const eurPatterns = [
       /From\s*€\s*([\d.,]+(?:\.\d{2})?)\s*EUR/gi,
       /€\s*([\d.,]+(?:\.\d{2})?)\s*EUR/gi,
       /€\s*([\d.,]+)/g, // Matches €15,99 and €15.99
+      // Extrudr & European stores: number BEFORE € symbol — e.g. "25,76 €" or "25,76 EUR"
+      /([\d]+[,.][\d]{2})\s*€/g,
+      /([\d]+[,.][\d]{2})\s*EUR/gi,
     ];
 
     for (const pattern of eurPatterns) {
@@ -2141,8 +2144,22 @@ function extractBambuLabPrice(
     const fallbackPattern = new RegExp(`${escapedSymbol}\\s*([\\d,]+(?:\\.\\d{2})?)(?:\\s*${cur})?`, "g");
 
     // Try upper section first
-    const upperMatches = [...upperMarkdown.matchAll(new RegExp(fallbackPattern.source, fallbackPattern.flags))];
-    const upperResult = extractFirstValidPrice(upperMatches, cur);
+    let upperMatches = [...upperMarkdown.matchAll(new RegExp(fallbackPattern.source, fallbackPattern.flags))];
+    let upperResult = extractFirstValidPrice(upperMatches, cur);
+
+    // EUR special: also try number-before-symbol format (e.g. Extrudr: "25,76 €" or "25,76 EUR")
+    if (!upperResult && cur === "EUR") {
+      const eurReversePatterns = [
+        /([\d]+[,.][\d]{2})\s*€/g,
+        /([\d]+[,.][\d]{2})\s*EUR/gi,
+      ];
+      for (const revPat of eurReversePatterns) {
+        const revMatches = [...upperMarkdown.matchAll(revPat)];
+        upperResult = extractFirstValidPrice(revMatches, "EUR");
+        if (upperResult) break;
+      }
+    }
+
     if (upperResult) {
       console.log(
         `Found ${cur} price (upper section, fallback): ${symbol}${upperResult.price}${upperResult.compareAt ? `, compare-at: ${symbol}${upperResult.compareAt}` : ""}`,
@@ -2151,8 +2168,22 @@ function extractBambuLabPrice(
     }
 
     // Fall back to full page
-    const fullMatches = [...markdown.matchAll(new RegExp(fallbackPattern.source, fallbackPattern.flags))];
-    const fullResult = extractFirstValidPrice(fullMatches, cur);
+    let fullMatches = [...markdown.matchAll(new RegExp(fallbackPattern.source, fallbackPattern.flags))];
+    let fullResult = extractFirstValidPrice(fullMatches, cur);
+
+    // EUR special: also try number-before-symbol format on full page
+    if (!fullResult && cur === "EUR") {
+      const eurReversePatterns = [
+        /([\d]+[,.][\d]{2})\s*€/g,
+        /([\d]+[,.][\d]{2})\s*EUR/gi,
+      ];
+      for (const revPat of eurReversePatterns) {
+        const revMatches = [...markdown.matchAll(revPat)];
+        fullResult = extractFirstValidPrice(revMatches, "EUR");
+        if (fullResult) break;
+      }
+    }
+
     if (fullResult) {
       console.log(
         `Found ${cur} price (full page, fallback): ${symbol}${fullResult.price}${fullResult.compareAt ? `, compare-at: ${symbol}${fullResult.compareAt}` : ""}`,
