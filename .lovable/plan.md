@@ -1,80 +1,143 @@
 
+## Creality Regional Slug Discovery Fallback
 
-# Intelligent Search Resolution for Diagnosis Dialog and SmartUrlValidator
+### Problem
 
-## Summary
+When syncing prices for non-US Creality regions (CA, UK, AU, EU), the system uses the same product slug as the US store. For example, `store.creality.com/products/hyper-series-pla-3d-printing-filament-1kg` becomes `store.creality.com/ca/products/hyper-series-pla-3d-printing-filament-1kg`. Creality's regional stores sometimes use a shorter slug (e.g., `hyper-series-pla`) or don't carry the product at all. This currently results in false 404s or soft-404s, causing syncs to mark valid products as unavailable.
 
-Add search-and-fix capabilities to two admin UI components: the Sync Failure Diagnosis dialog in PricingData.tsx and the SmartUrlValidator repair queue. Admins can trigger intelligent store searches (individually or in bulk) for broken links and apply discovered fixes directly.
+### Solution Overview
 
-## Database
+Two-layer fix:
 
-No changes needed -- `suggestion_source` column already exists in `url_repair_queue`.
+1. **Edge Function**: When a 404 or soft-404 is detected, try a series of slug variants before giving up. If a working slug is found, cache it in the existing `product_regional_slugs` table and return the price. If no slug works, return `notAvailableInRegion: true`.
 
-## Changes
+2. **Edge Function**: Pass the `filamentId` from the caller so the function can query and write slug cache entries.
 
-### File 1: `src/pages/admin/PricingData.tsx`
+3. **PricingData.tsx**: Pass `filamentId` (the `representativeId`) alongside the existing sync body so the edge function can use it for slug caching.
 
-**New state variables** (near line ~500):
-- `searchResults: Record<string, { loading: boolean; url?: string; confidence?: number; method?: string; query?: string; error?: boolean }>` -- per-product search state keyed by URL
-- `bulkSearchProgress: { running: boolean; done: number; total: number; found: number } | null`
+---
 
-**Helper: `parseAffectedProduct`** -- extracts URL, region, and product name from `contextualPromptParts.failureDetails` entries (which already have structured `url`, `region`, `product`, `brand` fields)
+### Technical Details
 
-**Helper: `REGION_URL_COLUMN_MAP`** -- maps region codes to filament table columns: `{ US: 'product_url', CA: 'product_url_ca', UK: 'product_url_uk', EU: 'product_url_eu', AU: 'product_url_au', JP: 'product_url_jp' }`
+#### Change 1 — Pass `filamentId` in the sync invocation (PricingData.tsx)
 
-**Per-product "Search Store" button** (modify lines ~1777-1781 in the Collapsible affected products list):
-- For diagnosis cards where `d.pattern` contains "404" or "Broken link", replace the plain `<p>` text with a row containing:
-  - The existing product text (font-mono, text-[10px])
-  - A compact "Search Store" button (size="sm", h-6) with Search icon
-  - When clicked: call `supabase.functions.invoke('smart-url-validator', { body: { action: 'diagnose', url, region } })` using the URL and region from `contextualPromptParts.failureDetails[j]`
-  - While loading: show Loader2 spinner
-  - On success with `suggested_url`: show green CheckCircle2 + truncated URL + confidence badge + method label + ExternalLink icon to open URL + "Apply Fix" button
-  - On success without match: show amber AlertTriangle + "No match" + "Manual Search" button (opens `{baseUrl}/search?q={searchTerms}`)
-  - "Apply Fix": updates the correct `product_url_{region}` column in filaments table, then invalidates `['pricing-data']`
+In the `syncSingleStore` function at line ~1168, the edge function is called without a `filamentId`:
 
-**"Search All Broken" bulk button** (add at line ~1755, inside the diagnosis card's button row, after "Copy Lovable Prompt"):
-- Only shown on diagnosis cards where `d.pattern` includes "404" or "Broken link" AND `contextualPromptParts` exists
-- Label: "Search All Broken" with Search icon
-- On click: iterates through `d.contextualPromptParts.failureDetails` sequentially with 1-second delay
-- Updates `bulkSearchProgress` state for progress display ("Searching 3/12...")
-- After completion: shows summary toast ("Found fixes for 8/12 products")
-- Populates `searchResults` map for inline display
+```ts
+body: { productUrl: store.productUrl, currency: store.currency, forceRefresh: true, ... }
+```
 
-**"Apply All Found Fixes" button** (appears after bulk search when fixes found):
-- Only visible when `searchResults` has entries with valid URLs
-- Label: "Apply {n} fixes" with Wrench icon
-- Iterates through found fixes, updates each filament's regional URL column
-- Shows progress toast and completion confirmation
-- Invalidates `['pricing-data']` query key
+Add `filamentId: store.representativeId` to the body. The edge function's `serve` handler already accepts loose JSON, so no schema change is needed.
 
-### File 2: `src/components/admin/inventory/sync-status/SmartUrlValidator.tsx`
+#### Change 2 — Accept `filamentId` in the edge function serve handler
 
-**New state** (near line ~48):
-- `deepSearching: Record<string, boolean>` -- tracks per-item deep search loading state
+In the `serve` handler (line ~3054), destructure `filamentId` from the request body alongside the existing fields.
 
-**"Deep Search" button in Fix column** (modify lines ~380-382):
-- When `item.suggested_url` is null AND `item.status === 'pending'`, show a "Deep Search" button (size="sm", h-6) next to "No fix found"
-- On click: call `supabase.functions.invoke('smart-url-validator', { body: { action: 'diagnose', url: item.original_url, region: item.region } })`
-- On success with match: update the repair queue row via `supabase.from('url_repair_queue').update(...)` with `suggested_url`, `suggestion_source`, `suggestion_confidence`, `suggestion_validated`, then invalidate `['url-repair-queue']`
-- On failure: toast error
-- While loading: show Loader2 spinner
+#### Change 3 — New `attemptCrealitySlugDiscovery` helper function (edge function)
 
-**Search method badges in Fix column** (modify lines ~366-379):
-- When `item.suggested_url` exists, add a Badge before the URL link:
-  - Map `item.suggestion_source` to labels and colors:
-    - `slug_variant` -> "Slug Match" (default variant)
-    - `shopify_catalog` -> "Catalog Search" (`bg-emerald-500/20 text-emerald-400 border-emerald-500/30`)
-    - `shopify_search` -> "Store Search" (`bg-emerald-500/20 text-emerald-400 border-emerald-500/30`)
-    - `site_search` -> "Site Search" (`bg-amber-500/20 text-amber-400 border-amber-500/30`)
-    - `cross_region_lookup` -> "Cross-Region" (`bg-purple-500/20 text-purple-400 border-purple-500/30`)
-  - Confidence percentage is already shown; no change needed there
+Add a new pure async function above `fetchCrealityPriceDirect` that implements the slug-variant trial loop:
 
-## What stays unchanged
+```
+function attemptCrealitySlugDiscovery(
+  baseUrl: string,            // e.g. "https://store.creality.com/ca"
+  originalSlug: string,       // e.g. "hyper-series-pla-3d-printing-filament-1kg"
+  expectedCurrency: string,
+  filamentId: string | null,
+  regionCode: string,
+): Promise<PriceResponse | null>
+```
 
-- All existing diagnosis logic and pattern matching
-- The `handleDiagnoseFailures` callback
-- The `handleRetryTransient` callback
-- The repair queue fetch query and all existing mutations
-- The `smart-url-validator` Edge Function (no changes)
-- Database schema (no migrations needed)
+**Slug variant generation logic** (deterministic, no external calls):
 
+1. Start with the raw slug from the URL path.
+2. Strip weight/diameter suffixes: `-1kg`, `-1-75mm`, `-175mm`, `-500g`, `-3kg`.
+3. Strip the trailing `-3d-printing-filament` phrase (and variants like `-3d-printing-filament-1kg`).
+4. Add/remove the `creality-` prefix.
+5. Combine the above to produce a small set of unique candidates (typically 4–8).
+6. Always include the original slug first (already tried — skip it) and attempt others in order.
+
+For each candidate slug, call a simplified inner fetch:
+
+```ts
+const testUrl = `${baseUrl}/products/${candidateSlug}`;
+const response = await fetch(testUrl, { headers: browserHeaders, redirect: 'follow' });
+```
+
+- If HTTP 404 → skip.
+- If HTTP 200 + soft-404 HTML → skip.
+- If HTTP 200 + valid JSON-LD → success! Extract price and proceed to cache the slug.
+
+**Slug caching** — on a successful discovery, upsert into `product_regional_slugs`:
+
+```sql
+INSERT INTO product_regional_slugs (filament_id, region_code, slug, verified, http_status, verified_at)
+VALUES ($filamentId, $regionCode, $discoveredSlug, true, 200, now())
+ON CONFLICT (filament_id, region_code) DO UPDATE
+  SET slug = EXCLUDED.slug, verified = true, http_status = 200, verified_at = now(), updated_at = now();
+```
+
+The Supabase admin client (service role key from `SUPABASE_SERVICE_ROLE_KEY`) will be used for this write since edge functions run server-side.
+
+**Slug cache lookup** — before the discovery loop, also check the `product_regional_slugs` table first (if `filamentId` is known). If a previously-verified slug is cached, attempt that URL before trying variants. This prevents re-running discovery on every sync once a slug has been found.
+
+#### Change 4 — Wire discovery into `fetchCrealityPriceDirect`
+
+Currently the function returns `notAvailableInRegion: true` immediately on a 404 or soft-404. Replace those early-return points with a call to `attemptCrealitySlugDiscovery`. Only if discovery also fails does the function return `notAvailableInRegion: true`.
+
+The function signature gets two new optional parameters:
+
+```ts
+async function fetchCrealityPriceDirect(
+  productUrl: string,
+  expectedCurrency: string,
+  filamentId?: string | null,   // new
+  regionCode?: string | null,   // new
+): Promise<PriceResponse>
+```
+
+`regionCode` is derived in the serve handler from the `currency` field (USD→US, CAD→CA, GBP→UK, EUR→EU, AUD→AU, JPY→JP) — the same mapping already exists in `update_filament_price_after_refresh`.
+
+#### Change 5 — Pass new args at the call sites
+
+In the serve handler, where `fetchCrealityPriceDirect(urlToFetch, expectedCurrency)` is called (two places around lines 3133 and 3143), pass the `filamentId` and derived `regionCode`.
+
+---
+
+### Data Flow (end-to-end)
+
+```text
+PricingData sync click
+  → invoke get-current-price { productUrl, currency, filamentId, ... }
+  → transformToRegionalUrl: /products/slug → /ca/products/slug
+  → detectCustomStorefront → 'creality'
+  → fetchCrealityPriceDirect(url, 'CAD', filamentId, 'CA')
+    → fetch /ca/products/slug → HTTP 404 or soft-404
+    → [NEW] attemptCrealitySlugDiscovery(baseUrl, slug, 'CAD', filamentId, 'CA')
+      → check product_regional_slugs for cached slug → try it first if found
+      → generate variants: slug without -1kg, without -3d-printing-filament, etc.
+      → fetch each variant until one returns valid JSON-LD
+      → if found: upsert into product_regional_slugs, return price
+      → if not found: return { notAvailableInRegion: true }
+  → PricingData UI shows ⊘ N/A  OR  price synced successfully
+```
+
+---
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `supabase/functions/get-current-price/index.ts` | Add `attemptCrealitySlugDiscovery`, update `fetchCrealityPriceDirect` signature + internal logic, accept `filamentId` in serve handler |
+| `src/pages/admin/PricingData.tsx` | Add `filamentId: store.representativeId` to the sync invocation body |
+
+No database migrations are needed — the `product_regional_slugs` table already exists with the right schema (`filament_id`, `region_code`, `slug`, `verified`, `http_status`, `verified_at`, `updated_at`).
+
+---
+
+### Edge Cases & Constraints
+
+- **No `filamentId` available**: Discovery still runs (variants are tried), but no slug is cached afterward. Future syncs will re-run discovery. This is safe and acceptable.
+- **Discovery adds a small delay**: Each variant attempt is a network fetch (~200–500ms). With ~4–8 variants, worst-case adds 1–4 seconds if all fail. Timeouts on individual attempts are set to 5s.
+- **Race conditions on cache write**: The upsert uses `ON CONFLICT DO UPDATE` so concurrent writes are safe.
+- **Slug cache lookup**: Only queries the DB if `filamentId` is provided; gracefully skips otherwise.
+- **`product_regional_slugs` unique constraint**: Assumed to be `(filament_id, region_code)` — consistent with the existing `verify-regional-slugs` function usage seen in memory notes.
