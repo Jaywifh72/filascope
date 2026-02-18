@@ -159,11 +159,33 @@ const CURRENCY_TO_REGION: Record<string, string> = {
   CNY: "CN",
 };
 
+// Normalize malformed Creality subdomain URLs to the correct path-based format.
+// e.g. https://ca.creality.com/products/slug -> https://store.creality.com/ca/products/slug
+// e.g. https://uk.creality.com/products/slug -> https://store.creality.com/uk/products/slug
+function normalizeCrealityUrl(url: string): string {
+  const CREALITY_REGION_SUBDOMAINS = ["ca", "uk", "eu", "au", "jp"];
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    // Match e.g. ca.creality.com or au.creality.com (but NOT store.creality.com)
+    for (const region of CREALITY_REGION_SUBDOMAINS) {
+      if (hostname === `${region}.creality.com`) {
+        const normalized = `https://store.creality.com/${region}${urlObj.pathname}${urlObj.search}`;
+        console.log(`[CREALITY NORMALIZE] Bad subdomain URL corrected: ${url} -> ${normalized}`);
+        return normalized;
+      }
+    }
+  } catch (_) { /* ignore */ }
+  return url;
+}
+
 // Transform URL to regional store URL based on currency
 function transformToRegionalUrl(
   url: string,
   requestedCurrency: string,
 ): { url: string; expectedCurrency: string; transformed: boolean } {
+  // Fix malformed Creality subdomain URLs before any other processing
+  url = normalizeCrealityUrl(url);
   const urlLower = url.toLowerCase();
   const regionCode = CURRENCY_TO_REGION[requestedCurrency] || "US";
 
