@@ -1312,10 +1312,11 @@ function extractPriceWithConfig(
 }
 
 // Legacy: Detect custom storefronts that don't support Shopify JSON API
-function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" | "creality" | null {
+function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" | "creality" | "extrudr" | null {
   if (url.includes("store.bambulab.com")) return "bambulab";
   if (url.includes("prusa3d.com")) return "prusa";
   if (url.includes("geeetech.com")) return "opencart";
+  if (url.includes("extrudr.com")) return "extrudr";
   // Creality: catch all domain/path variations
   if (
     url.includes("store.creality.com") ||
@@ -3179,6 +3180,144 @@ async function attemptCrealitySlugDiscovery(
   return null;
 }
 
+// ===== EXTRUDR DIRECT FETCH =====
+// Extrudr pages carry rich JSON-LD (schema.org/Product) with exact EUR price.
+// URL structure: /en/{region}/products/{slug}/
+// If no region code is present we insert /de/ to get stable pricing (no geo-redirect).
+const EXTRUDR_REGION_CODES = ["de", "at", "gb", "fr", "it", "es", "nl", "pl", "cz", "eu", "ch"];
+
+function normalizeExtrudrUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const path = urlObj.pathname; // e.g. /en/products/biofusion/ or /en/de/products/biofusion/
+
+    // Check if a region code is already present: /en/{region}/products/
+    const alreadyRegional = EXTRUDR_REGION_CODES.some(
+      (r) => path.includes(`/en/${r}/products/`),
+    );
+    if (alreadyRegional) return url;
+
+    // Insert /de/ between /en/ and /products/
+    const fixed = path.replace(/\/en\/products\//i, "/en/de/products/");
+    if (fixed !== path) {
+      urlObj.pathname = fixed;
+      const normalized = urlObj.toString();
+      console.log(`[EXTRUDR FETCH] URL normalized: ${url} -> ${normalized}`);
+      return normalized;
+    }
+  } catch (_) { /* ignore */ }
+  return url;
+}
+
+async function fetchExtrudrPriceDirect(
+  productUrl: string,
+  expectedCurrency: string,
+): Promise<PriceResponse> {
+  // Always use EUR for Extrudr (EUR-only brand)
+  const resolvedCurrency = "EUR";
+  const canonicalUrl = normalizeExtrudrUrl(productUrl);
+
+  console.log(`[EXTRUDR FETCH] Fetching: ${canonicalUrl} (expected currency: ${resolvedCurrency})`);
+
+  try {
+    const response = await fetch(canonicalUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(15000),
+    });
+
+    console.log(`[EXTRUDR FETCH] HTTP ${response.status}, final URL: ${response.url}`);
+
+    if (!response.ok) {
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        error: `HTTP ${response.status}`,
+      };
+    }
+
+    const html = await response.text();
+    console.log(`[EXTRUDR FETCH] HTML size: ${html.length} bytes, has JSON-LD: ${html.includes("application/ld+json")}`);
+
+    // Parse all JSON-LD script tags
+    const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+    let scriptMatch;
+    while ((scriptMatch = jsonLdRegex.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(scriptMatch[1].trim());
+        const items: any[] = Array.isArray(parsed) ? parsed : [parsed];
+        const product = items.find((item: any) => item["@type"] === "Product");
+        if (!product?.offers) continue;
+
+        const offers: any[] = Array.isArray(product.offers) ? product.offers : [product.offers];
+        const inStockOffers = offers.filter(
+          (o: any) => o.price != null && String(o.availability || "").toLowerCase().includes("instock"),
+        );
+        const validOffers = inStockOffers.length > 0 ? inStockOffers : offers.filter((o: any) => o.price != null);
+
+        if (validOffers.length === 0) continue;
+
+        const prices = validOffers
+          .map((o: any) => parseFloat(String(o.price)))
+          .filter((p: number) => !isNaN(p) && p > 0);
+
+        if (prices.length === 0) continue;
+
+        const lowestPrice = Math.min(...prices);
+        const highestPrice = Math.max(...prices);
+        const compareAt = highestPrice > lowestPrice * 1.1 ? highestPrice : null;
+        const detectedCurrency = (validOffers[0].priceCurrency as string) || resolvedCurrency;
+        const available = inStockOffers.length > 0;
+
+        console.log(
+          `[EXTRUDR FETCH] ✓ JSON-LD: price=${lowestPrice} ${detectedCurrency}, compareAt=${compareAt}, inStock=${available}`,
+        );
+
+        return {
+          success: true,
+          price: lowestPrice,
+          compareAtPrice: compareAt,
+          weightGrams: null,
+          diameterMm: null,
+          variantTitle: null,
+          currency: detectedCurrency,
+          available,
+          stockStatus: available ? "in_stock" : ("out_of_stock" as StockStatus),
+          source: "html" as const,
+          fetchedAt: new Date().toISOString(),
+          detectedCurrency,
+          sourceUrl: canonicalUrl,
+        };
+      } catch (_e) {
+        // ignore parse errors, try next script tag
+      }
+    }
+
+    console.log("[EXTRUDR FETCH] ❌ No valid JSON-LD Product found on page");
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: "Could not extract price from Extrudr page JSON-LD",
+    };
+  } catch (error) {
+    console.error("[EXTRUDR FETCH] Error:", error);
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: resolvedCurrency,
+      available: false, source: "html", fetchedAt: new Date().toISOString(),
+      error: `Fetch error: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
+// ===== END EXTRUDR DIRECT FETCH =====
+
 // Direct fetch + JSON-LD extraction for Creality (Firecrawl returns empty for store.creality.com)
 async function fetchCrealityPriceDirect(
   productUrl: string,
@@ -3392,7 +3531,12 @@ serve(async (req) => {
     const customStorefront = detectCustomStorefront(urlToFetch) || detectCustomStorefront(productUrl);
     let result: PriceResponse;
 
-    if (customStorefront === "creality") {
+    if (customStorefront === "extrudr") {
+      console.log(`[EXTRUDR ROUTING] ✓ Direct JSON-LD fetch path selected`);
+      result = await fetchExtrudrPriceDirect(urlToFetch, expectedCurrency);
+      // Extrudr is EUR-only — normalise the currency response so the caller
+      // receives EUR even when it requested USD (currencyMismatch handled below)
+    } else if (customStorefront === "creality") {
       console.log(`[CREALITY ROUTING] ✓ Direct fetch path selected`);
       console.log(`[CREALITY ROUTING] Original URL: ${productUrl}`);
       console.log(`[CREALITY ROUTING] Transformed URL: ${urlToFetch}`);
