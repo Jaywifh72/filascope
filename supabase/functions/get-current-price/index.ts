@@ -163,6 +163,21 @@ const REGIONAL_STORE_CONFIGS: Record<string, RegionalStoreConfig> = {
       AU: { pathPrefix: "", currency: "EUR" },
     },
   },
+  // Prusa: single global store — ALL regions use www.prusa3d.com with EUR server-side pricing.
+  // Prusa uses Global-e for client-side currency conversion, which Firecrawl cannot execute.
+  // The __NEXT_DATA__ extraction always returns EUR; display currency is handled via exchange rates.
+  prusa: {
+    pattern: "path",
+    baseDomain: "www.prusa3d.com",
+    fallbackRegion: "EU",
+    regions: {
+      EU: { pathPrefix: "", currency: "EUR" },
+      US: { pathPrefix: "", currency: "EUR" }, // Single store, EUR only server-side
+      CA: { pathPrefix: "", currency: "EUR" },
+      UK: { pathPrefix: "", currency: "EUR" },
+      AU: { pathPrefix: "", currency: "EUR" },
+    },
+  },
 };
 
 // Currency to region code mapping
