@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface AffiliateConfig {
   vendor_name: string;
+  affiliate_id: string | null;
   affiliate_url_pattern: string | null;
   amazon_us_tag: string | null;
   amazon_uk_tag: string | null;
@@ -125,15 +126,28 @@ function transformUrlSync(
 
     if (config?.affiliate_url_pattern) {
       const pattern = config.affiliate_url_pattern;
+      // Resolve affiliate_id placeholder ({{id}})
+      const affiliateId = config.affiliate_id || "";
+
+      // {{raw_url}} pattern: Prusa-style fragment-based tracking e.g. "{{raw_url}}#a_aid={{id}}"
+      // Strip any existing fragment first to avoid double-fragments
+      if (pattern.includes("{{raw_url}}")) {
+        const cleanUrl = fixedUrl.split("#")[0];
+        return pattern
+          .replace(/\{\{raw_url\}\}/gi, cleanUrl)
+          .replace(/\{\{id\}\}/gi, affiliateId);
+      }
 
       if (pattern.includes("{{url}}")) {
-        return pattern.replace("{{url}}", fixedUrl);
+        return pattern
+          .replace(/\{\{url\}\}/gi, encodeURIComponent(fixedUrl))
+          .replace(/\{\{id\}\}/gi, affiliateId);
       }
 
       if (pattern.startsWith("?") || pattern.startsWith("&")) {
         const hasQuery = fixedUrl.includes("?");
         const separator = hasQuery ? "&" : "?";
-        const params = pattern.substring(1);
+        const params = pattern.substring(1).replace(/\{\{id\}\}/gi, affiliateId);
         return `${fixedUrl}${separator}${params}`;
       }
     }
