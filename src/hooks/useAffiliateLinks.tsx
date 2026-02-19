@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AffiliateConfig {
@@ -8,11 +8,86 @@ interface AffiliateConfig {
   amazon_us_tag: string | null;
   amazon_uk_tag: string | null;
   amazon_de_tag: string | null;
+  // Awin fields for eSUN/KingRoon/Bambu etc.
+  awin_advertiser_id?: string | null;
+  awin_affiliate_id?: string | null;
+  affiliate_network?: string | null;
 }
 
-// In-memory cache for configs fetched from edge function
+// In-memory cache for configs — include a version key so updates to affiliate_configs bust it
 let cachedConfigs: AffiliateConfig[] | null = null;
 let configsFetchPromise: Promise<AffiliateConfig[]> | null = null;
+const CACHE_VERSION = "v2"; // bump when affiliate_configs data changes
+
+
+/**
+ * Fetch affiliate_programs rows and convert them into AffiliateConfig shape
+ * so they can be merged with the affiliate_configs data.
+ * Only returns brands NOT already covered by affiliate_configs.
+ */
+async function fetchAffiliateProgramsBridge(
+  existingVendorNames: string[]
+): Promise<AffiliateConfig[]> {
+  try {
+    const existing = new Set(existingVendorNames.map((v) => v.toLowerCase()));
+
+    const { data, error } = await supabase
+      .from("affiliate_programs")
+      .select(
+        "brand_name, link_generation_method, link_template, tracking_parameter, tracking_value, source_parameter, source_value, awin_merchant_id, awin_publisher_id, is_active"
+      )
+      .eq("is_active", true);
+
+    if (error || !data) return [];
+
+    // De-duplicate by brand_name (take first active row per brand)
+    const seen = new Set<string>();
+    const bridged: AffiliateConfig[] = [];
+
+    for (const prog of data) {
+      const key = prog.brand_name.toLowerCase();
+      // Skip if already in affiliate_configs OR already seen
+      if (existing.has(key) || seen.has(key)) continue;
+      seen.add(key);
+
+      // Build a synthetic AffiliateConfig from affiliate_programs data
+      let url_pattern: string | null = null;
+      let awin_advertiser: string | null = null;
+      let awin_affiliate: string | null = null;
+      let network: string | null = null;
+
+      if (prog.link_generation_method === "url_parameter" && prog.tracking_parameter && prog.tracking_value) {
+        // e.g. ?ref=JEANJACQUESBOILEAU or ?sca_ref=432793.sgEubTAk&source=filascope
+        let params = `?${prog.tracking_parameter}=${prog.tracking_value}`;
+        if (prog.source_parameter && prog.source_value) {
+          params += `&${prog.source_parameter}=${prog.source_value}`;
+        }
+        url_pattern = params;
+        network = "direct";
+      } else if (prog.link_generation_method === "awin_redirect" && prog.awin_merchant_id && prog.awin_publisher_id) {
+        awin_advertiser = prog.awin_merchant_id;
+        awin_affiliate = prog.awin_publisher_id;
+        network = "awin";
+      }
+
+      bridged.push({
+        vendor_name: prog.brand_name,
+        affiliate_id: prog.tracking_value || null,
+        affiliate_url_pattern: url_pattern,
+        amazon_us_tag: null,
+        amazon_uk_tag: null,
+        amazon_de_tag: null,
+        awin_advertiser_id: awin_advertiser,
+        awin_affiliate_id: awin_affiliate,
+        affiliate_network: network,
+      });
+    }
+
+    return bridged;
+  } catch {
+    return [];
+  }
+}
 
 async function fetchConfigs(): Promise<AffiliateConfig[]> {
   if (cachedConfigs) return cachedConfigs;
@@ -21,6 +96,7 @@ async function fetchConfigs(): Promise<AffiliateConfig[]> {
 
   configsFetchPromise = (async () => {
     try {
+      // Fetch base configs from edge function (affiliate_configs table)
       const { data, error } = await supabase.functions.invoke("get-affiliate-url", {
         body: { getConfigs: true },
       });
@@ -30,7 +106,13 @@ async function fetchConfigs(): Promise<AffiliateConfig[]> {
         return [];
       }
 
-      cachedConfigs = data.configs;
+      const baseConfigs: AffiliateConfig[] = data.configs;
+
+      // Bridge: also fetch affiliate_programs for brands NOT in affiliate_configs
+      const existingNames = baseConfigs.map((c) => c.vendor_name);
+      const bridged = await fetchAffiliateProgramsBridge(existingNames);
+
+      cachedConfigs = [...baseConfigs, ...bridged];
       return cachedConfigs;
     } catch (err) {
       console.error("Error calling affiliate function:", err);
@@ -40,6 +122,7 @@ async function fetchConfigs(): Promise<AffiliateConfig[]> {
 
   return configsFetchPromise;
 }
+
 
 function transformUrlSync(
   url: string,
@@ -124,6 +207,16 @@ function transformUrlSync(
       });
     }
 
+    // Handle Awin redirect — wrap with awin1.com deep link
+    if (
+      config?.affiliate_network === "awin" &&
+      config?.awin_advertiser_id &&
+      config?.awin_affiliate_id
+    ) {
+      const encodedUrl = encodeURIComponent(fixedUrl);
+      return `https://www.awin1.com/cread.php?awinmid=${config.awin_advertiser_id}&awinaffid=${config.awin_affiliate_id}&clickref=filascope&ued=${encodedUrl}`;
+    }
+
     if (config?.affiliate_url_pattern) {
       const pattern = config.affiliate_url_pattern;
       // Resolve affiliate_id placeholder ({{id}})
@@ -149,6 +242,20 @@ function transformUrlSync(
         const separator = hasQuery ? "&" : "?";
         const params = pattern.substring(1).replace(/\{\{id\}\}/gi, affiliateId);
         return `${fixedUrl}${separator}${params}`;
+      }
+    }
+
+    // UTM fallback: brand found but no affiliate pattern — minimum tracking
+    if (config) {
+      try {
+        const fallbackObj = new URL(fixedUrl);
+        if (!fallbackObj.searchParams.has("utm_source")) {
+          fallbackObj.searchParams.set("utm_source", "filascope");
+          fallbackObj.searchParams.set("utm_medium", "referral");
+        }
+        return fallbackObj.toString();
+      } catch {
+        // ignore
       }
     }
 

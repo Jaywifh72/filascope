@@ -196,7 +196,8 @@ function transformUrl(
           const separator = url.includes("?") ? "&" : "?";
           return `${url}${separator}ref=${config.affiliate_id}`;
         }
-        return url;
+        // No pattern or ID — UTM fallback
+        return addUtmFallback(url);
         
       case "none":
         return url;
@@ -206,8 +207,30 @@ function transformUrl(
         if (config.affiliate_url_pattern) {
           return applyPattern(url, config.affiliate_url_pattern, config.affiliate_id);
         }
-        return url;
+        // UTM fallback: brand is configured but no pattern — at minimum tag with filascope UTMs
+        try {
+          const fallbackObj = new URL(url);
+          fallbackObj.searchParams.set("utm_source", "filascope");
+          fallbackObj.searchParams.set("utm_medium", "referral");
+          return fallbackObj.toString();
+        } catch {
+          return url;
+        }
     }
+  } catch {
+    return url;
+  }
+}
+
+// Add UTM fallback to any recognized vendor with no affiliate transformation
+function addUtmFallback(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    if (!urlObj.searchParams.has("utm_source")) {
+      urlObj.searchParams.set("utm_source", "filascope");
+      urlObj.searchParams.set("utm_medium", "referral");
+    }
+    return urlObj.toString();
   } catch {
     return url;
   }
