@@ -42,48 +42,48 @@ function buildOgImageUrl(params: {
 
 const GUIDE_META: Record<string, { title: string; description: string }> = {
   "best-pla-filaments": {
-    title: "Best PLA Filaments 2026",
-    description: "Top-rated PLA filaments for 3D printing. Compare brands, prices, and print quality across Bambu Lab, Polymaker, eSUN & more.",
+    title: "Best PLA Filaments 2026 — Top Picks Ranked by Print Quality",
+    description: "The best PLA filaments ranked by print quality, consistency & value. Compare Bambu Lab, Polymaker, eSUN & more with specs, TD values, and pricing data.",
   },
   "best-petg-filaments": {
-    title: "Best PETG Filaments 2026",
-    description: "Top PETG filaments ranked by print quality, strength & value. Find the best PETG for your 3D printer.",
+    title: "Best PETG Filaments 2026 — Strongest Picks Compared",
+    description: "Top PETG filaments ranked by strength, layer adhesion & print quality. Compare brands, check printer compatibility, and find the best PETG for your project.",
   },
   "best-abs-filaments": {
-    title: "Best ABS Filaments 2026",
-    description: "Top ABS filaments for strength and heat resistance. Compare specs, warping behavior & price across brands.",
+    title: "Best ABS Filaments 2026 — Heat Resistance & Strength Ranked",
+    description: "Top ABS filaments compared by heat resistance, warping behavior & print quality. Specs, prices, and compatibility data across 48+ brands.",
   },
   "pla-vs-petg": {
-    title: "PLA vs PETG — Which Filament Is Right?",
-    description: "PLA vs PETG compared: strength, ease of printing, heat resistance, cost. Choose the right filament for your project.",
+    title: "PLA vs PETG — Complete Comparison for 3D Printing",
+    description: "PLA vs PETG compared: strength, ease of printing, heat resistance, cost, and HueForge TD values. Choose the right filament with data from 1,080+ products.",
   },
   "beginners-guide": {
-    title: "3D Printing Filament Beginner's Guide",
-    description: "Everything beginners need to know about 3D printer filament: materials, temperatures, storage, and choosing the right filament.",
+    title: "3D Printing Filament Guide for Beginners — What You Need to Know",
+    description: "Everything beginners need to know about 3D printer filament: PLA, PETG, ABS explained. Materials, temperatures, storage tips, and how to choose your first filament.",
   },
   "hueforge-filaments": {
-    title: "Best Filaments for HueForge",
-    description: "Find the best filaments for HueForge lithophanes. TD values, color recommendations & tested filaments for multicolor prints.",
+    title: "Best Filaments for HueForge 2026 — TD Values & Color Picks",
+    description: "Find the best filaments for HueForge lithophanes. TD values, color recommendations & tested filaments for stunning multicolor prints. 500+ TD values indexed.",
   },
   "best-filaments-for-hueforge-lithophanes": {
-    title: "Best Filaments for HueForge Lithophanes",
-    description: "Top 10 filaments for HueForge lithophanes ranked by TD value. Compare opacity, prices, and settings for stunning lithophane prints.",
+    title: "Best Filaments for HueForge Lithophanes — TD Ranked Guide",
+    description: "Top 10 filaments for HueForge lithophanes ranked by TD value. Detailed opacity testing, color recommendations, print settings, and pricing compared.",
   },
   "pla-plus-vs-pla-pro": {
-    title: "PLA+ vs PLA Pro — What's the Difference?",
-    description: "PLA+ and PLA Pro compared: actual material differences, brand naming conventions, strength tests, and top product picks for each.",
+    title: "PLA+ vs PLA Pro — What's Actually Different?",
+    description: "PLA+ vs PLA Pro compared: are they the same? Actual material differences, strength tests, brand naming conventions, and top product picks for each.",
   },
   "best-filament-for-bambu-lab-p1s": {
-    title: "Best Filaments for Bambu Lab P1S",
-    description: "Top filament picks for the Bambu Lab P1S. PLA, PETG, ABS, and TPU recommendations with AMS compatibility notes and print settings.",
+    title: "Best Filament for Bambu Lab P1S — Compatible Picks 2026",
+    description: "Top filament picks for Bambu Lab P1S. PLA, PETG, ABS, and TPU recommendations with AMS compatibility notes, print settings, and community ratings.",
   },
   "silk-pla-comparison": {
-    title: "Best Silk PLA Filaments Compared",
-    description: "Top 10 silk PLA filaments ranked. Compare sheen quality, color options, print settings, and prices for the shiniest prints.",
+    title: "Best Silk PLA Filaments 2026 — Sheen & Color Compared",
+    description: "Top silk PLA filaments ranked by sheen quality and color vibrancy. Compare print settings, prices, and find the shiniest silk PLA for your prints.",
   },
   "asa-vs-abs-outdoor-printing": {
-    title: "ASA vs ABS for Outdoor 3D Prints",
-    description: "ASA vs ABS for outdoor use: UV resistance, heat tolerance, print difficulty, and weathering compared. Find the best filament for outdoor parts.",
+    title: "ASA vs ABS for Outdoor 3D Prints — UV & Weather Resistance",
+    description: "ASA vs ABS for outdoor use: UV resistance, heat tolerance, weathering compared. Find the best filament for outdoor functional parts with real test data.",
   },
 };
 
