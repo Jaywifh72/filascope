@@ -127,15 +127,15 @@ export function SiteFooter() {
   };
 
   const materialLinks = [
-    { name: "PLA Filaments", href: "/?material=PLA" },
-    { name: "PETG Filaments", href: "/?material=PETG" },
-    { name: "ABS Filaments", href: "/?material=ABS" },
-    { name: "TPU Filaments", href: "/?material=TPU" },
-    { name: "ASA Filaments", href: "/?material=ASA" },
-    { name: "Silk PLA Filaments", href: "/?material=Silk+PLA" },
-    { name: "High Speed PLA", href: "/?material=High+Speed+PLA" },
-    { name: "Nylon Filaments", href: "/?material=PA" },
-    { name: "All Materials →", href: "/filament-database" },
+    { name: "PLA Filaments", href: "/filaments/pla" },
+    { name: "PETG Filaments", href: "/filaments/petg" },
+    { name: "ABS Filaments", href: "/filaments/abs" },
+    { name: "TPU Filaments", href: "/filaments/tpu" },
+    { name: "ASA Filaments", href: "/filaments/asa" },
+    { name: "Silk PLA Filaments", href: "/filaments/silk-pla" },
+    { name: "High Speed PLA", href: "/filaments/high-speed-pla" },
+    { name: "Nylon Filaments", href: "/filaments/nylon" },
+    { name: "All Filaments →", href: "/filaments" },
   ];
 
   const brandLinks = [

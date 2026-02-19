@@ -102,6 +102,12 @@ interface PageData {
   h1: string;
   bodyText: string;
   modifiedTime?: string;
+  /** Crawlable product links to emit in body */
+  links?: { href: string; text: string }[];
+  /** rel="prev" URL */
+  paginationPrev?: string;
+  /** rel="next" URL */
+  paginationNext?: string;
 }
 
 // ============================================================
@@ -132,6 +138,17 @@ function buildHtml(data: PageData): string {
     )
     .join(" › ");
 
+  const paginationLinks = [
+    data.paginationPrev ? `<link rel="prev" href="${escapeHtml(data.paginationPrev)}" />` : "",
+    data.paginationNext ? `<link rel="next" href="${escapeHtml(data.paginationNext)}" />` : "",
+  ].filter(Boolean).join("\n    ");
+
+  const bodyLinks = data.links && data.links.length > 0
+    ? `<ul aria-label="Filament listing">\n          ${
+        data.links.map(l => `<li><a href="${escapeHtml(l.href)}">${escapeHtml(l.text)}</a></li>`).join("\n          ")
+      }\n        </ul>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -140,6 +157,7 @@ function buildHtml(data: PageData): string {
     <title>${escapeHtml(data.title)}</title>
     <meta name="description" content="${escapeHtml(data.description)}" />
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    ${paginationLinks}
     <meta property="og:title" content="${escapeHtml(data.title)}" />
     <meta property="og:description" content="${escapeHtml(data.description)}" />
     <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
@@ -159,6 +177,7 @@ function buildHtml(data: PageData): string {
       <main>
         <h1>${escapeHtml(data.h1)}</h1>
         <p>${escapeHtml(data.bodyText)}</p>
+        ${bodyLinks}
       </main>
       <noscript><p>FilaScope requires JavaScript to display full interactive content.</p></noscript>
     </div>
@@ -213,8 +232,206 @@ function breadcrumbSchema(items: { name: string; url: string }[]): Record<string
 // ============================================================
 // Route handlers
 // ============================================================
-async function getPageData(path: string, supabase: SupabaseClient): Promise<PageData> {
+// ──────────────────────────────────────────────
+// Prerender MATERIAL_SLUG_CONFIG (mirrors client)
+// ──────────────────────────────────────────────
+const PRERENDER_SLUG_CONFIG: Record<string, { label: string; materials: string[]; ilike?: string }> = {
+  pla: { label: "PLA", materials: ["PLA", "PLA+", "PLA-HS", "HTPLA", "PLA Pro", "PLA-CF", "Matte PLA", "Marble PLA", "Wood PLA", "Rainbow PLA"] },
+  petg: { label: "PETG", materials: ["PETG", "PCTG", "PETG-CF", "PETG+", "Co-Polyester"] },
+  abs: { label: "ABS", materials: ["ABS", "ABS+", "ABS-CF", "ABS Pro"] },
+  asa: { label: "ASA", materials: ["ASA", "ASA+", "ASA-CF"] },
+  tpu: { label: "TPU", materials: ["TPU", "TPU-95A", "TPU-98A", "TPE", "Flexible"] },
+  "pla-plus": { label: "PLA+", materials: ["PLA+", "PLA Pro", "PLA-HS"] },
+  "silk-pla": { label: "Silk PLA", materials: ["Silk PLA", "Silk PLA+", "Silk"], ilike: "%silk%" },
+  nylon: { label: "Nylon", materials: ["PA", "PA-CF", "PA-GF", "PA6", "PA12", "Nylon", "Nylon-CF"] },
+  pc: { label: "PC", materials: ["PC", "PC-CF", "PC-ABS", "PCTG", "Polycarbonate"] },
+  polycarbonate: { label: "PC", materials: ["PC", "PC-CF", "PC-ABS", "PCTG", "Polycarbonate"] },
+  "high-speed-pla": { label: "High Speed PLA", materials: ["PLA-HS", "PLA High Speed", "High Speed PLA", "Premium PLA High Speed"] },
+  "petg-cf": { label: "PETG-CF", materials: ["PETG-CF", "PETG-GF", "Carbon Fiber PETG"] },
+};
+
+const CATEGORY_META_PRERENDER: Record<string, { title: string; desc: string; h1: string; intro: string }> = {
+  pla: { title: "PLA Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ PLA 3D printer filaments by price, brand, TD value, and printer compatibility. Find the best PLA for your printer with real-time pricing.", h1: "PLA Filaments", intro: "PLA (Polylactic Acid) is the most popular 3D printing material — easy to print, biodegradable, and available in hundreds of colors. Compare {count} PLA filaments with real-time pricing, HueForge TD values, and printer compatibility data." },
+  petg: { title: "PETG Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ PETG 3D printer filaments. Stronger than PLA with better heat resistance. Filter by brand, price, TD value, and printer compatibility.", h1: "PETG Filaments", intro: "PETG combines the printability of PLA with the strength of ABS. It's impact-resistant, food-safe options exist, and it handles higher temperatures. Compare {count} PETG filaments with real-time pricing and compatibility data." },
+  abs: { title: "ABS Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ ABS 3D printer filaments. Heat-resistant and durable for functional parts. Filter by brand, price, and printer compatibility on FilaScope.", h1: "ABS Filaments", intro: "ABS is a durable, heat-resistant engineering plastic ideal for functional parts. It requires an enclosed printer and heated bed. Compare {count} ABS filaments with specs, pricing, and compatibility data." },
+  tpu: { title: "TPU Flexible Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ TPU and flexible 3D printer filaments. Find the right shore hardness for your project. Filter by brand, price, and printer compatibility.", h1: "TPU & Flexible Filaments", intro: "TPU is a flexible filament with rubber-like properties, ideal for phone cases, gaskets, and wearables. Print slowly with a direct-drive extruder. Compare {count} TPU filaments with specs and pricing." },
+  asa: { title: "ASA Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ ASA 3D printer filaments. UV-resistant and weatherproof for outdoor use. Filter by brand, price, and printer compatibility on FilaScope.", h1: "ASA Filaments", intro: "ASA offers superior UV and weather resistance compared to ABS, making it ideal for outdoor parts. It requires an enclosure. Compare {count} ASA filaments with specs, pricing, and compatibility data." },
+  "silk-pla": { title: "Silk PLA Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ Silk PLA filaments with shimmery metallic finish. High TD values ideal for HueForge. Filter by brand, color, price, and TD value.", h1: "Silk PLA Filaments", intro: "Silk PLA produces stunning metallic-sheen prints with vibrant colors. It's particularly popular for HueForge lithophanes due to high TD values. Compare {count} Silk PLA filaments with color options and pricing." },
+  nylon: { title: "Nylon/PA Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ Nylon and PA 3D printer filaments. Strong, flexible engineering material. Filter by brand, price, and printer compatibility on FilaScope.", h1: "Nylon (PA) Filaments", intro: "Nylon (PA) is a strong, flexible engineering material ideal for functional parts requiring fatigue resistance. It's highly hygroscopic — always dry before printing. Compare {count} Nylon filaments with specs and pricing." },
+  "pla-plus": { title: "PLA+ Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ PLA+ 3D printer filaments. Improved impact resistance over standard PLA. Filter by brand, price, and printer compatibility on FilaScope.", h1: "PLA+ Filaments", intro: "PLA+ offers improved impact resistance and reduced brittleness over standard PLA while maintaining easy printability. Compare {count} PLA+ filaments across brands with real-time pricing and specs." },
+  "high-speed-pla": { title: "High Speed PLA Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ High Speed PLA filaments for fast 3D printing. Compatible with Bambu Lab, Creality K1, and more. Filter by brand and price.", h1: "High Speed PLA Filaments", intro: "High-Speed PLA is formulated for printing at 200–600mm/s on modern printers like Bambu Lab and Creality K1. Compare {count} high-speed PLA filaments with compatible printers and pricing data." },
+  polycarbonate: { title: "Polycarbonate Filaments — Compare {count}+ PC Options | FilaScope", desc: "Compare {count}+ PC and Polycarbonate 3D printer filaments. Strongest print material with high heat tolerance. Filter by brand and printer compatibility.", h1: "Polycarbonate (PC) Filaments", intro: "Polycarbonate is one of the strongest 3D printing materials, with exceptional impact resistance and heat tolerance up to 130°C. Requires an all-metal hotend and enclosure. Compare {count} PC filaments." },
+  "petg-cf": { title: "PETG Carbon Fiber Filaments — Compare {count}+ Options | FilaScope", desc: "Compare {count}+ PETG-CF carbon fiber 3D printer filaments. Stiff, lightweight, and strong. Filter by brand, price, and printer compatibility.", h1: "PETG Carbon Fiber Filaments", intro: "PETG-CF (Carbon Fiber) combines PETG's printability with the rigidity of carbon fiber reinforcement. Ideal for lightweight structural parts. Compare {count} PETG-CF filaments with specs and pricing." },
+};
+
+function applyCount(template: string, count: number): string {
+  return template.replace(/\{count\}/g, count.toLocaleString());
+}
+
+async function filamentListingPage(supabase: SupabaseClient): Promise<PageData> {
+  const { count } = await supabase.from("filaments").select("id", { count: "exact", head: true });
+  const n = count ?? 0;
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Filaments", url: "/filaments" }];
+  // Top 50 filaments for ItemList
+  const { data: topFilaments } = await supabase
+    .from("filaments")
+    .select("product_handle, id, product_title, display_name, vendor, material, variant_price, featured_image, filascope_score, variant_available")
+    .not("filascope_score", "is", null)
+    .order("filascope_score", { ascending: false })
+    .limit(50);
+
+  const items = (topFilaments ?? []) as any[];
+  const bodyLinks = items.map((f: any) => ({
+    href: `${BASE_URL}/filament/${f.product_handle || f.id}`,
+    text: f.display_name || f.product_title || "Filament",
+  }));
+
+  const itemListSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "3D Printer Filament Database",
+    numberOfItems: items.length,
+    itemListElement: items.map((f: any, i: number) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Product",
+        name: f.display_name || f.product_title || "Filament",
+        url: `${BASE_URL}/filament/${f.product_handle || f.id}`,
+        ...(f.vendor && { brand: { "@type": "Brand", name: f.vendor } }),
+        category: `${f.material || "3D Printer"} Filament`,
+        ...(f.variant_price && {
+          offers: {
+            "@type": "Offer",
+            price: f.variant_price.toFixed(2),
+            priceCurrency: "USD",
+            availability: f.variant_available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          },
+        }),
+      },
+    })),
+  };
+
+  return {
+    type: "listing",
+    title: applyCount("3D Printer Filaments — Compare {count}+ Filaments | FilaScope", n),
+    description: applyCount("Browse and compare {count}+ 3D printer filaments from 48+ brands. Filter by material, price, printer compatibility, and TD value for HueForge. Updated daily.", n),
+    canonical: "/filaments",
+    ogType: "website",
+    jsonLd: [breadcrumbSchema(crumbs), itemListSchema],
+    breadcrumbs: crumbs,
+    h1: "3D Printer Filament Database",
+    bodyText: applyCount("Browse all {count}+ 3D printer filaments from 48+ brands. Filter by material, brand, price range, and printer compatibility.", n),
+    links: bodyLinks,
+  };
+}
+
+async function filamentCategoryPage(slug: string, supabase: SupabaseClient, page: number = 0): Promise<PageData> {
+  const config = PRERENDER_SLUG_CONFIG[slug];
+  if (!config) return fallback(`/filaments/${slug}`);
+
+  const meta = CATEGORY_META_PRERENDER[slug] ?? CATEGORY_META_PRERENDER["pla"];
+  const PAGE_SIZE = 50;
+  const offset = page * PAGE_SIZE;
+  const canonical = `/filaments/${slug}`;
+
+  // Count
+  let countQ = supabase.from("filaments").select("id", { count: "exact", head: true });
+  if (config.ilike) {
+    countQ = (supabase as any).from("filaments").select("id", { count: "exact", head: true })
+      .or(config.materials.map((m: string) => `material.eq.${m}`).join(",") + `,material.ilike.${config.ilike}`);
+  } else {
+    countQ = countQ.in("material", config.materials);
+  }
+  const { count } = await countQ;
+  const n = count ?? 0;
+  const totalPages = Math.ceil(n / PAGE_SIZE);
+
+  // Top 50 for page
+  let q = (supabase as any).from("filaments")
+    .select("product_handle, id, product_title, display_name, vendor, material, variant_price, featured_image, filascope_score, variant_available")
+    .in("material", config.materials)
+    .not("filascope_score", "is", null)
+    .order("filascope_score", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+  const { data: topFilaments } = await q;
+  const items = (topFilaments ?? []) as any[];
+
+  const bodyLinks = items.map((f: any) => ({
+    href: `${BASE_URL}/filament/${f.product_handle || f.id}`,
+    text: f.display_name || f.product_title || "Filament",
+  }));
+
+  const crumbs = [
+    { name: "Home", url: "/" },
+    { name: "Filaments", url: "/filaments" },
+    { name: config.label, url: canonical },
+  ];
+
+  const breadcrumb = breadcrumbSchema(crumbs);
+
+  const itemListSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `Best ${config.label} Filaments`,
+    numberOfItems: items.length,
+    itemListElement: items.map((f: any, i: number) => ({
+      "@type": "ListItem",
+      position: offset + i + 1,
+      item: {
+        "@type": "Product",
+        name: f.display_name || f.product_title || "Filament",
+        url: `${BASE_URL}/filament/${f.product_handle || f.id}`,
+        ...(f.vendor && { brand: { "@type": "Brand", name: f.vendor } }),
+        category: `${config.label} 3D Printer Filament`,
+        ...(f.variant_price && {
+          offers: {
+            "@type": "Offer",
+            price: f.variant_price.toFixed(2),
+            priceCurrency: "USD",
+            availability: f.variant_available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          },
+        }),
+      },
+    })),
+  };
+
+  // Pagination links
+  const baseCanonical = `${BASE_URL}${canonical}`;
+  const paginationPrev = page > 0
+    ? (page === 1 ? baseCanonical : `${baseCanonical}?page=${page}`)
+    : undefined;
+  const paginationNext = page < totalPages - 1
+    ? `${baseCanonical}?page=${page + 2}`
+    : undefined;
+
+  return {
+    type: "listing",
+    title: applyCount(meta.title, n),
+    description: applyCount(meta.desc, n),
+    canonical,
+    ogType: "website",
+    jsonLd: [breadcrumb, itemListSchema],
+    breadcrumbs: crumbs,
+    h1: meta.h1,
+    bodyText: applyCount(meta.intro, n),
+    links: bodyLinks,
+    paginationPrev,
+    paginationNext,
+  };
+}
+
+async function getPageData(path: string, supabase: SupabaseClient, queryString?: string): Promise<PageData> {
   if (path === "/" || path === "") return homepage();
+
+  // /filaments (all) and /filaments/:slug (category pages)
+  if (path === "/filaments") return await filamentListingPage(supabase);
+  const flm = path.match(/^\/filaments\/([^\/]+)$/);
+  if (flm) {
+    const pageParam = queryString ? new URLSearchParams(queryString).get("page") : null;
+    const page = pageParam ? Math.max(0, parseInt(pageParam, 10) - 1) : 0;
+    return await filamentCategoryPage(flm[1], supabase, page);
+  }
 
   const fm = path.match(/^\/filament\/(.+)$/);
   if (fm) return await filamentPage(fm[1], supabase);
@@ -1219,15 +1436,29 @@ function sitemapGuides(): string {
 }
 
 const MATERIAL_SITEMAP_PAGES = [
-  { path: "/materials/pla", priority: 0.9, changefreq: "weekly" },
-  { path: "/materials/petg", priority: 0.8, changefreq: "weekly" },
-  { path: "/materials/abs", priority: 0.8, changefreq: "weekly" },
-  { path: "/materials/tpu", priority: 0.7, changefreq: "weekly" },
-  { path: "/materials/asa", priority: 0.7, changefreq: "weekly" },
-  { path: "/materials/pla-plus", priority: 0.7, changefreq: "weekly" },
-  { path: "/materials/silk-pla", priority: 0.6, changefreq: "weekly" },
-  { path: "/materials/nylon", priority: 0.6, changefreq: "weekly" },
-  { path: "/materials/pc", priority: 0.6, changefreq: "weekly" },
+  // /filaments/* category pages (new SEO routes)
+  { path: "/filaments", priority: 0.9, changefreq: "daily" },
+  { path: "/filaments/pla", priority: 0.9, changefreq: "daily" },
+  { path: "/filaments/petg", priority: 0.8, changefreq: "daily" },
+  { path: "/filaments/abs", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/tpu", priority: 0.7, changefreq: "weekly" },
+  { path: "/filaments/asa", priority: 0.7, changefreq: "weekly" },
+  { path: "/filaments/silk-pla", priority: 0.7, changefreq: "weekly" },
+  { path: "/filaments/pla-plus", priority: 0.7, changefreq: "weekly" },
+  { path: "/filaments/nylon", priority: 0.6, changefreq: "weekly" },
+  { path: "/filaments/high-speed-pla", priority: 0.7, changefreq: "weekly" },
+  { path: "/filaments/polycarbonate", priority: 0.6, changefreq: "weekly" },
+  { path: "/filaments/petg-cf", priority: 0.6, changefreq: "weekly" },
+  // Legacy /materials/* pages
+  { path: "/materials/pla", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/petg", priority: 0.6, changefreq: "weekly" },
+  { path: "/materials/abs", priority: 0.6, changefreq: "weekly" },
+  { path: "/materials/tpu", priority: 0.5, changefreq: "weekly" },
+  { path: "/materials/asa", priority: 0.5, changefreq: "weekly" },
+  { path: "/materials/pla-plus", priority: 0.5, changefreq: "weekly" },
+  { path: "/materials/silk-pla", priority: 0.5, changefreq: "weekly" },
+  { path: "/materials/nylon", priority: 0.5, changefreq: "weekly" },
+  { path: "/materials/pc", priority: 0.5, changefreq: "weekly" },
   { path: "/best-filaments-for-hueforge", priority: 0.8, changefreq: "weekly" },
   { path: "/best-white-filaments", priority: 0.8, changefreq: "weekly" },
   { path: "/pla-vs-petg", priority: 0.8, changefreq: "monthly" },
@@ -1265,11 +1496,12 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const userAgent = req.headers.get("user-agent");
-    // Prefer ?path= param; fall back to URL pathname (strips /prerender prefix if called directly)
-    let path = url.searchParams.get("path")
+    const rawPath = url.searchParams.get("path")
       || url.pathname.replace(/^\/functions\/v1\/prerender/, "").replace(/^\/prerender/, "")
       || "/";
-    path = path.split("?")[0];          // strip any embedded query string
+    const qsIndex = rawPath.indexOf("?");
+    const queryString = qsIndex >= 0 ? rawPath.slice(qsIndex + 1) : url.search.slice(1);
+    let path = qsIndex >= 0 ? rawPath.slice(0, qsIndex) : rawPath;
     path = path.replace(/\/+$/, "") || "/"; // strip trailing slashes
 
     // --- robots.txt (served to ALL user agents) ---
@@ -1314,7 +1546,7 @@ Deno.serve(async (req) => {
 
       // Crawler prerender
       console.log(`[PRERENDER] crawler="${userAgent}" path="${path}"`);
-      const pageData = await getPageData(path, supabase);
+      const pageData = await getPageData(path, supabase, queryString);
       const is404 = pageData.type === "notfound";
       console.log(`[PRERENDER] status=${is404 ? 404 : 200} path="${path}"`);
       const html = is404 ? build404Html(pageData) : buildHtml(pageData);

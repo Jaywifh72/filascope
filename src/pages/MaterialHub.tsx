@@ -103,6 +103,27 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     relatedMaterials: ["ABS", "ASA", "Nylon"],
     guides: [],
   },
+  polycarbonate: {
+    label: "PC",
+    materials: ["PC", "PC-CF", "PC-ABS", "PCTG", "Polycarbonate"],
+    relatedSlugs: ["abs", "asa", "nylon"],
+    relatedMaterials: ["ABS", "ASA", "Nylon"],
+    guides: [],
+  },
+  "high-speed-pla": {
+    label: "High Speed PLA",
+    materials: ["PLA-HS", "PLA High Speed", "High Speed PLA", "Premium PLA High Speed"],
+    relatedSlugs: ["pla", "pla-plus", "petg"],
+    relatedMaterials: ["PLA", "PLA+", "PETG"],
+    guides: [],
+  },
+  "petg-cf": {
+    label: "PETG-CF",
+    materials: ["PETG-CF", "PETG-GF", "Carbon Fiber PETG"],
+    relatedSlugs: ["petg", "abs", "nylon"],
+    relatedMaterials: ["PETG", "ABS", "Nylon"],
+    guides: [],
+  },
 };
 
 // ──────────────────────────────────────────────────────────────
