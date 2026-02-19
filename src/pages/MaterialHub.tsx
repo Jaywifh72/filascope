@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FAQSection } from "@/components/seo/FAQSection";
 import { ItemListSchema } from "@/components/seo/ItemListSchema";
 import { ArticleSchema } from "@/components/seo/ArticleSchema";
+import { DefinedTermSetSchema } from "@/components/seo/DefinedTermSetSchema";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
 import { FilamentCard } from "@/components/FilamentCard";
 import { Thermometer, Scale, Tag, Layers, Wind, Droplets, CheckCircle, XCircle, ExternalLink } from "lucide-react";
@@ -848,6 +849,17 @@ export default function MaterialHub() {
           description={description}
           datePublished="2025-01-01T00:00:00Z"
           url={`/materials/${slug}`}
+        />
+      )}
+      {reference && (
+        <DefinedTermSetSchema
+          name="3D Printing Materials"
+          terms={[{
+            name: `${label} (${reference.fullName})`,
+            description: reference.strengths.whyChooseThis ||
+              (reference.strengths.uniqueProperties || []).slice(0, 3).join('. '),
+            url: `https://filascope.com/materials/${slug}`,
+          }]}
         />
       )}
       {itemListItems.length > 0 && (
