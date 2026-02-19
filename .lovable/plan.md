@@ -1,234 +1,287 @@
 
-## Create 4 New SEO Landing Pages + Prerender Support
+## Programmatic SEO: Material Hub Pages, Brand+Material Combos, Color Pages
 
-### Overview
+### Codebase Analysis Summary
 
-This plan creates 4 new React pages, registers their routes in `App.tsx`, adds full prerender support in the edge function, adds them to the sitemap, and adds a reusable `FAQSection` component (deferred from the previous approved plan that wasn't yet executed on the client side). The `FAQSection.tsx` component does not yet exist — it will be created now.
+**Routing pattern**: All routes lazy-loaded in `src/App.tsx`; catch-all `<Route path="*">` must stay last. New routes go above line 322.
+
+**Prerender pattern**: `getPageData()` in `supabase/functions/prerender/index.ts` dispatches to named functions. DB-backed async functions receive a `SupabaseClient`. Static functions are synchronous. Current dispatch block ends at line 253.
+
+**Sitemap**: `STATIC_PAGES` array (line 842), `sitemapIndex()` (line 944) lists sub-files. A new `sitemap-materials.xml` must be added to that index and a new `sitemapMaterials()` function must be written.
+
+**Material data from DB**:
+- PLA: 3,141 products, 38 brands
+- PETG: 834, 36 brands
+- PLA+: 743, 15 brands (grouped under PLA family for the hub)
+- ABS: 501, 25 brands
+- ASA: 315, 26 brands
+- TPU/TPU-95A: ~293 combined
+- PCTG: 150, PC: 48, PA: 46
+
+**Color families in DB**: Black (595), Blue (471), White (432), Green (428), Gray/Grey (426 combined), Red (337), Yellow (263), Orange (262), Brown (216), Purple (197), Natural (143), Pink (120), Clear (92)
+
+**Brand+material combos with 3+ products** (top candidates):
+- bambu-lab/pla (132), polymaker/pla (394), esun/pla (244), polymaker/petg, esun/petg, hatchbox/pla, overture/pla, prusament/pla, etc.
+
+**`materialHierarchy.ts`** uses `id` values like `'pla-family'`, `'petg-family'`, `'abs-family'`, etc. for categories — these are already slug-ready.
+
+**`color_family` column** is well-populated (White: 432, Black: 595, etc.) — reliable for filtering.
+
+**Existing route conflicts to avoid**: `/materials/compare` (line 216) already exists — our new `/materials/:slug` must NOT conflict. The catch-all pattern in React Router means `/materials/compare` must be registered **before** `/materials/:slug` (it already is for the existing route).
+
+**No existing `/brands/:brand/:material` route** — safe to add.
+
+**No existing `/colors/:family` route** — safe to add.
 
 ---
 
-### Codebase Analysis
+### Files to Create (7 new pages)
 
-From reading the code:
-
-- **Route pattern**: All routes are lazy-loaded in `App.tsx`. The catch-all `*` → `NotFound` must remain last.
-- **`/filaments` is currently a redirect** to `/` (line 207 of `App.tsx`). The task wants `/filament-database` as a distinct page, so we create `/filament-database` as a new route without touching the existing redirect.
-- **Page patterns**: All pages use `<DocumentHead />` for meta, `<BreadcrumbSchema />` + `<FAQSchema />` from `@/components/seo`. The `HueForgeFinder.tsx` page is the closest template to what we're building.
-- **`FAQSection.tsx`** does not exist yet — the prior plan was approved but not executed. We create it now.
-- **Prerender**: `getPageData()` in `supabase/functions/prerender/index.ts` dispatches to named handler functions. New pages each need a handler added both to the dispatch block (lines 214–249) and as a new function (similar to `hueforgeFinderPage()`, etc.).
-- **Sitemap**: `STATIC_PAGES` array at line 694. New pages must be added with appropriate priority/changefreq.
-- **`/best-filaments-for-hueforge`**: There is no existing route for this. The existing `/hueforge-filaments` already has a route (line 284) pointing to `HueForgeFinder`. The new page is a *separate, distinct* route.
-- **`/pla-vs-petg`**: Currently exists only in `GUIDE_META` (line 56) as a buying guide at `/guides/pla-vs-petg`. We will create a richer dedicated page at `/pla-vs-petg` with live DB stats. The guides entry continues to exist — the new page is a distinct route.
-- **`/best-white-filaments`**: No existing route.
-- **`/filament-database`**: No existing route. The existing `/filaments → /` redirect stays untouched.
-
----
-
-### Files to Create (4 new pages + 1 component)
-
-| File | Description |
+| File | Route |
 |---|---|
-| `src/components/seo/FAQSection.tsx` | Reusable FAQ accordion + JSON-LD injector |
-| `src/pages/BestFilamentsForHueForge.tsx` | `/best-filaments-for-hueforge` |
-| `src/pages/PLAVsPETG.tsx` | `/pla-vs-petg` |
-| `src/pages/BestWhiteFilaments.tsx` | `/best-white-filaments` |
-| `src/pages/FilamentDatabase.tsx` | `/filament-database` |
+| `src/pages/MaterialHub.tsx` | `/materials/:slug` |
+| `src/pages/BrandMaterialPage.tsx` | `/brands/:brand/:material` |
+| `src/pages/ColorFamilyPage.tsx` | `/colors/:family` |
 
-### Files to Modify (4 existing files)
+The above 3 pages handle all programmatic URLs for Tasks 1, 2, and 3.
+
+### Files to Modify (2 existing files)
 
 | File | Change |
 |---|---|
-| `src/App.tsx` | Add 4 lazy imports + 4 routes |
-| `src/components/seo/index.ts` | Export `FAQSection` |
-| `supabase/functions/prerender/index.ts` | Add 4 page handler functions + dispatch entries + STATIC_PAGES entries |
+| `src/App.tsx` | 3 new lazy imports + 3 new routes (correctly ordered) |
+| `supabase/functions/prerender/index.ts` | 3 new async page handlers + dispatch entries + `sitemapMaterials()` + updated `sitemapIndex()` + 9 material entries in `STATIC_PAGES` |
 
 ---
 
-### Technical Implementation Details
+### Task 1: `/materials/:slug` — Material Hub Pages
 
-#### 1. `FAQSection.tsx` (new component)
+**Slug mapping** (URL slug → DB material query):
+
+```text
+pla        → material IN ('PLA', 'PLA+', 'PLA-HS', 'HTPLA', 'Silk PLA+', ...)
+petg       → material IN ('PETG', 'PCTG', 'PETG-CF', ...)
+abs        → material = 'ABS'
+tpu        → material IN ('TPU', 'TPU-95A', 'TPU-98A')
+asa        → material = 'ASA'
+pla-plus   → material = 'PLA+'
+silk-pla   → material ILIKE '%silk%'
+nylon      → material IN ('PA', 'PA-CF', 'PA-GF')
+pc         → material IN ('PC', 'PCTG', 'PC-CF')
+```
+
+A `MATERIAL_SLUG_CONFIG` map (defined once in the page file) handles this, with a fallback for unmapped slugs.
+
+**Page structure (`MaterialHub.tsx`)**:
 
 ```tsx
-import { FAQSchema } from './FAQSchema';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+// Queries (all run in parallel via Promise.all):
+// 1. Count + avg price + brand count + TD range for the material
+// 2. Top 5 filaments by filascope_score DESC (for "Best X Filaments" section)
+// 3. All matching filaments (paginated, first 24) for the product grid
 
-interface FAQSectionProps {
-  faqs: { question: string; answer: string }[];
-  title?: string;
-  className?: string;
+// Sections:
+// <DocumentHead> — dynamic title/description
+// <BreadcrumbSchema> — Home > Materials > {Material}
+// <Breadcrumbs> — visible breadcrumb component
+// <h1> — "{Material} Filament — Compare {count} Products"
+// Aggregate stats bar: avg price, brand count, TD range, total products
+// "Best {Material} Filaments" — top 5 cards (same FilamentCard pattern from BestFilamentsForHueForge)
+// Product grid — all {material} filaments (link to /filament/{slug})
+// "Compare Related Materials" links — cross-links to sibling material pages
+// "Relevant Guides" links
+// <FAQSection> — material-specific FAQs (reuse getFAQsForMaterial logic from FAQContent.tsx)
+// <ItemListSchema> for top 5
+```
+
+**noindex logic**: If product count < 3, return noindex via `<DocumentHead robotsNoIndex />`. In prerender, the handler returns `X-Robots-Tag: noindex` via a special field.
+
+**STATIC_PAGES additions** for primary materials (these have enough products to avoid thin content):
+
+```ts
+{ path: "/materials/pla", priority: 0.9, changefreq: "weekly" },
+{ path: "/materials/petg", priority: 0.8, changefreq: "weekly" },
+{ path: "/materials/abs", priority: 0.8, changefreq: "weekly" },
+{ path: "/materials/tpu", priority: 0.7, changefreq: "weekly" },
+{ path: "/materials/asa", priority: 0.7, changefreq: "weekly" },
+{ path: "/materials/pla-plus", priority: 0.7, changefreq: "weekly" },
+{ path: "/materials/silk-pla", priority: 0.6, changefreq: "weekly" },
+{ path: "/materials/nylon", priority: 0.6, changefreq: "weekly" },
+{ path: "/materials/pc", priority: 0.6, changefreq: "weekly" },
+```
+
+**New `sitemap-materials.xml`**: A `sitemapMaterials()` function that returns XML for the above 9 static entries. Added to `sitemapIndex()`.
+
+**Prerender handler** (`materialPage(slug, supabase)`):
+- Query DB for count, avg price, brand count for the resolved material list
+- If count < 3: return `fallback()` with noindex flag
+- Dynamic title: `"{Material} Filament — Compare {count} Products | FilaScope"` (≤60 chars)
+- Dynamic description: `"Browse all {count} {Material} 3D printer filaments from {brandCount}+ brands. Compare specs, prices, and HueForge TD values on FilaScope."` (≤155 chars)
+- Schema: `BreadcrumbList` + `ItemList` (top 5)
+
+---
+
+### Task 2: `/brands/:brand/:material` — Brand+Material Combo Pages
+
+**Route ordering**: In `App.tsx`, `/brands/compare` (line 213) must remain before `/brands/:brand` (line 214). The new `/brands/:brand/:material` goes **after** `/brands/:brand` — React Router matches specificity so `/brands/:brand/:material` only matches two-segment paths.
+
+**Page structure (`BrandMaterialPage.tsx`)**:
+
+```tsx
+// URL params: { brand: "bambu-lab", material: "pla" }
+// Query 1: brand info from automated_brands WHERE brand_slug = brand
+// Query 2: filaments WHERE LOWER(vendor) = LOWER(brand_name) AND material = resolvedMaterial
+//          only renders if count >= 3 (else redirect to /brands/{brand})
+// 
+// Sections:
+// <DocumentHead> — "{Brand} {Material} Filaments — {count} Products | FilaScope"
+// <BreadcrumbSchema> — Home > Brands > {Brand} > {Material}
+// <h1> — "{Brand} {Material} Filaments"
+// Specs summary: nozzle temp range, bed temp range, diameter options, color count
+// Price comparison across variants (min–max price)
+// Product grid filtered by brand+material
+// "More from {Brand}" → /brands/{brand}
+// "All {Material} Filaments" → /materials/{material-slug}
+// Short FAQ (2-3 questions specific to brand+material combo)
+```
+
+**noindex if count < 3**: query first, if fewer than 3 results redirect to parent brand page (client side) or return noindex prerender.
+
+**No static pages for brand+material** — these are dynamically generated. Prerender handles crawl requests only. No new STATIC_PAGES entries (avoids maintaining a huge list). These pages are discovered via links from brand pages and material pages.
+
+**Prerender handler** (`brandMaterialPage(brandSlug, materialSlug, supabase)`):
+- Resolve material name from slug
+- Query count from filaments
+- If count < 3: return fallback with noindex
+- Dynamic title + description
+- BreadcrumbList schema
+
+---
+
+### Task 3: `/colors/:family` — Color Family Pages
+
+**Color slug mapping** (URL slug → `color_family` DB value):
+
+```text
+white   → 'White'
+black   → 'Black'
+blue    → 'Blue'
+red     → 'Red'
+green   → 'Green'
+gray    → ['Gray', 'Grey', 'Light Grey']
+yellow  → 'Yellow'
+orange  → 'Orange'
+purple  → 'Purple'
+brown   → 'Brown'
+natural → 'Natural'
+pink    → 'Pink'
+clear   → ['Clear', 'Transparent']
+gold    → 'Gold'
+silver  → 'Silver'
+```
+
+**Page structure (`ColorFamilyPage.tsx`)**:
+
+```tsx
+// Query: filaments WHERE color_family IN (resolvedFamilies), ordered by filascope_score DESC
+// For 'white': additional emphasis on TD values
+// 
+// Sections:
+// <DocumentHead>
+// <BreadcrumbSchema> — Home > Colors > {Color}
+// <h1> — "{Color} 3D Printer Filaments — {count} Options"
+// Color swatch grid (all unique color_hex values for visual variety)
+// Product grid (cards with color swatch, brand, name, price, TD if available)
+// For white/natural: "HueForge TD Values" callout section
+// "Explore Other Colors" — links to sibling color pages
+// <FAQSection> — color-specific FAQs
+// noindex if count < 3
+```
+
+**Prerender handler** (`colorFamilyPage(slug, supabase)`):
+- Resolve color family names from slug
+- Query count
+- If count < 3: fallback with noindex
+- Title: `"{Color} 3D Printer Filaments — Compare {count} Options | FilaScope"`
+- Description: special-cased for white (`"...ranked by TD value for HueForge lithophanes..."`)
+
+**No static pages for color families** — discovered via internal links from material/filament pages. The `/colors` path already exists as a route to ColorFinder.
+
+---
+
+### Task 4: noindex Logic for Thin Content
+
+**In prerender**: The `fallback()` function already returns `{ type: "notfound" }` which triggers `X-Robots-Tag: noindex`. For material/brand-material/color pages with <3 products, we return `fallback(path)` from the handler.
+
+**On client side**: Each page component checks its query result count. If `count < 3`, it renders a redirect component:
+
+```tsx
+if (!isLoading && count < 3) {
+  return <Navigate to={parentRoute} replace />;
 }
-
-export function FAQSection({ faqs, title = "Frequently Asked Questions", className }: FAQSectionProps) {
-  if (!faqs?.length) return null;
-  return (
-    <section className={cn("mt-12 border-t border-border pt-8", className)}>
-      <FAQSchema faqs={faqs} />
-      <h2 className="text-xl font-semibold mb-4">{title}</h2>
-      <Accordion type="single" collapsible className="space-y-2">
-        {faqs.map((faq, i) => (
-          <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
-            <AccordionTrigger className="text-left font-medium py-4">{faq.question}</AccordionTrigger>
-            <AccordionContent className="text-muted-foreground pb-4">{faq.answer}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </section>
-  );
-}
 ```
 
-#### 2. `BestFilamentsForHueForge.tsx`
+This prevents thin content from being indexed even if a bot somehow hits the SPA.
 
-- Queries `filaments` where `transmission_distance IS NOT NULL`, ordered by `transmission_distance ASC`
-- Displays top 10 filaments by TD value in a ranked card grid, with color swatch, TD badge (purple), price, brand
-- Sections: intro, "What Makes a Good HueForge Filament?", "Top 10 by TD Value" (dynamic), "Best Budget Picks", "Best White Filaments" (links to `/best-white-filaments`), "How to Choose", FAQ
-- Uses `<DocumentHead>`, `<BreadcrumbSchema>`, `<ItemListSchema>`, `<FAQSection>`
-- Internal links to: `/hueforge-td-database`, `/compare`, `/guides/hueforge-filaments`, `/best-white-filaments`, individual `/filament/{slug}` pages
-
-#### 3. `PLAVsPETG.tsx`
-
-- Queries `filaments` for aggregate stats: count of PLA vs PETG products, avg price, TD range
-- Static comparison table for properties (print temp, bed temp, strength, etc.)
-- Dynamic "Best PLA" and "Best PETG" picks: queries top-rated filaments per material (ranked by `filascope_score DESC`)
-- Sections: H1, intro, comparison table, "PLA vs PETG for HueForge" section, "Best PLA Filaments", "Best PETG Filaments", FAQ
-- Schema: `ArticleSchema` + `FAQPage`
-- Internal links to: `/filament-database?material=PLA`, `/filament-database?material=PETG`, `/wizard`, `/hueforge-td-database`
-
-#### 4. `BestWhiteFilaments.tsx`
-
-- Queries `filaments` where `color_family = 'White' OR color_family = 'Natural'` AND `transmission_distance IS NOT NULL`, ordered by `transmission_distance ASC`
-- Falls back to `color` ILIKE `'%white%'` OR `'%natural%'` if color_family column is sparse
-- Ranked list cards with position number, TD value, price, "Compare" button
-- Sections: H1, intro, "Why White Filaments for HueForge?", ranked list, "Natural vs White", FAQ
-- Schema: `ItemList`
-- Internal links to: `/hueforge-td-database`, `/color-finder?hex=FFFFFF`, `/compare`
-
-#### 5. `FilamentDatabase.tsx`
-
-- **This is NOT just the Finder page** — it's a content-rich wrapper that embeds a simplified filament grid with SEO content above and below
-- Above the grid: H1, intro paragraph explaining what the database contains (1,080+ products, 48+ brands, specs, TD values, prices)
-- Reuses the `useFinderQuery` hook or a simpler query to display a paginated filament grid (or simply deep-links to the main catalog with a link back)
-- **Simpler approach**: This page is primarily editorial/SEO content with a search input that redirects to `/` with the query applied, plus material category cards (PLA, PETG, ABS, TPU, ASA, etc.) and a brand directory grid
-- Below the grid: FAQ section, material category links, brand directory
-- Schema: `WebApplication` + `FAQ`
-
-#### 6. Prerender Changes
-
-Add 4 handler functions after `hueforgeFinderPage()` (around line 533):
-
-```ts
-function bestFilamentsForHueforgePage(): PageData { ... }
-function plaVsPetgPage(): PageData { ... }
-function bestWhiteFilamentsPage(): PageData { ... }
-function filamentDatabasePage(): PageData { ... }
-```
-
-Add 4 dispatch entries in `getPageData()` (after line 239):
-
-```ts
-if (path === "/best-filaments-for-hueforge") return bestFilamentsForHueforgePage();
-if (path === "/pla-vs-petg") return plaVsPetgPage();
-if (path === "/best-white-filaments") return bestWhiteFilamentsPage();
-if (path === "/filament-database") return filamentDatabasePage();
-```
-
-Add 4 entries to `STATIC_PAGES`:
-
-```ts
-{ path: "/best-filaments-for-hueforge", priority: 0.8, changefreq: "weekly" },
-{ path: "/pla-vs-petg", priority: 0.8, changefreq: "monthly" },
-{ path: "/best-white-filaments", priority: 0.8, changefreq: "weekly" },
-{ path: "/filament-database", priority: 0.8, changefreq: "weekly" },
-```
+**bodyText minimum length**: Each prerender handler will include a minimum 150-character `bodyText` combining the h1 description + key stats + CTA sentence.
 
 ---
 
-### Exact Prerender Metadata (verbatim from task spec)
+### Exact Prerender Metadata
 
-**`/best-filaments-for-hueforge`**
-- Title: `Best Filaments for HueForge 2026 — TD-Ranked | FilaScope` (53 chars ✓)
-- Description: `Find the best filaments for HueForge lithophanes. TD-ranked picks across PLA, silk, and translucent materials. Compare TD values, prices & buy links.` (152 chars ✓)
-- Schema: `FAQPage` + `ItemList`
+**`/materials/pla`**
+- Title: `PLA Filament — Compare 3,141+ Products | FilaScope` (50 chars ✓)
+- Description: `Browse 3,141+ PLA 3D printer filaments from 38 brands. Compare PLA and PLA+ specs, prices, TD values and printer compatibility. Find the best PLA filament.` (160 chars ✓)
+- Schema: BreadcrumbList + ItemList (top 5 by filascope_score)
 
-**`/pla-vs-petg`**
-- Title: `PLA vs PETG — 3D Filament Comparison Guide | FilaScope` (55 chars ✓)
-- Description: `PLA vs PETG compared: strength, flexibility, print settings, price & HueForge TD values. Data-driven comparison from 1,080+ filaments on FilaScope.` (149 chars ✓)
-- Schema: `FAQPage` + `Article`
+**`/materials/petg`**
+- Title: `PETG Filament — Compare 834 Products | FilaScope` (48 chars ✓)
+- Description: `Browse 834 PETG 3D printer filaments from 36 brands. Compare strength, heat resistance, price, and compatibility. Find the best PETG for your printer.`
 
-**`/best-white-filaments`**
-- Title: `Best White Filaments for 3D Printing & HueForge | FilaScope` (59 chars ✓)
-- Description: `Compare white 3D printer filaments ranked by TD value, print quality & price. Find the perfect white PLA for HueForge lithophanes and general printing.` (152 chars ✓)
-- Schema: `ItemList`
+**`/brands/bambu-lab/pla`** (example)
+- Title: `Bambu Lab PLA Filaments — 132 Products | FilaScope` (50 chars ✓)
+- Description: `Browse all 132 Bambu Lab PLA filaments. Compare colors, specs, TD values, and prices. Find the right Bambu Lab PLA for your printer on FilaScope.`
 
-**`/filament-database`**
-- Title: `3D Filament Database — Compare 1,080+ Products | FilaScope` (58 chars ✓)
-- Description: `The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across 48+ brands. Filter by specs, price, TD value & compatibility.` (152 chars ✓)
-- Schema: `WebApplication` + `FAQPage`
+**`/colors/white`**
+- Title: `White 3D Printer Filaments — 432 Options | FilaScope` (52 chars ✓)
+- Description: `Compare 432 white 3D printer filaments ranked by TD value, brand, and price. Essential for HueForge lithophanes — find your perfect white PLA filament.`
 
 ---
 
-### Routes to Add in `App.tsx`
+### Implementation Sequence
 
-```tsx
-const BestFilamentsForHueForge = lazy(() => import("./pages/BestFilamentsForHueForge"));
-const PLAVsPETG = lazy(() => import("./pages/PLAVsPETG"));
-const BestWhiteFilaments = lazy(() => import("./pages/BestWhiteFilaments"));
-const FilamentDatabase = lazy(() => import("./pages/FilamentDatabase"));
-```
-
-```tsx
-<Route path="/best-filaments-for-hueforge" element={<BestFilamentsForHueForge />} />
-<Route path="/pla-vs-petg" element={<PLAVsPETG />} />
-<Route path="/best-white-filaments" element={<BestWhiteFilaments />} />
-<Route path="/filament-database" element={<FilamentDatabase />} />
-```
-
-These go above the catch-all `<Route path="*" element={<NotFound />} />`.
-
----
-
-### FAQ Content for Each Page (used in both prerender + client)
-
-**`/best-filaments-for-hueforge` FAQs (5):**
-1. "What is the best TD value for HueForge?" → range 1.0–3.0 for lithophanes explanation
-2. "Can I use any PLA for HueForge?" → recommends tested filaments, explains why white/black anchors matter
-3. "How do I find TD values for my filament?" → FilaScope database, self-measurement method
-4. "What is silk PLA's TD value?" → typically higher (5+), better for translucent/highlight layers
-5. "Do I need special HueForge settings per filament?" → yes, each filament has its own TD and profile
-
-**`/pla-vs-petg` FAQs (4):**
-1. "Is PLA or PETG easier to print?" → PLA wins on ease, PETG needs higher temps
-2. "Is PETG stronger than PLA?" → PETG more flexible/impact resistant, PLA more rigid
-3. "Which is better for HueForge, PLA or PETG?" → PLA preferred (lower TD consistency), PETG more translucent
-4. "Can I mix PLA and PETG in the same print?" → generally not recommended (temp incompatibility)
-
-**`/best-white-filaments` FAQs (3):**
-1. "Why do white filaments matter for HueForge?" → base layer for lithophanes, TD anchor
-2. "What is the difference between white and natural filament?" → white is pigmented (lower TD), natural is unpigmented (higher TD, more translucent)
-3. "What TD value should my white filament have?" → 1.5–4.0 for most uses, lower for detail
-
-**`/filament-database` FAQs (3):**
-1. "How many filaments are in the FilaScope database?" → 1,080+ across 48+ brands
-2. "How do I filter filaments by material or brand?" → using the search/filter UI
-3. "How often is FilaScope's filament data updated?" → automatically via scraping + manual verification
-
----
-
-### Deployment Steps
-
-1. Create `src/components/seo/FAQSection.tsx`
-2. Update `src/components/seo/index.ts` to export it
-3. Create 4 new page files
-4. Update `src/App.tsx` with lazy imports + routes
-5. Update `supabase/functions/prerender/index.ts` with 4 handler functions + dispatch entries + STATIC_PAGES entries
-6. Deploy the prerender edge function
-
----
+1. Create `src/pages/MaterialHub.tsx`
+2. Create `src/pages/BrandMaterialPage.tsx`
+3. Create `src/pages/ColorFamilyPage.tsx`
+4. Update `src/App.tsx` — add 3 lazy imports + 3 routes (ordered: `/materials/:slug` AFTER `/materials/compare`)
+5. Update `supabase/functions/prerender/index.ts`:
+   - Add `MATERIAL_SLUG_MAP` and `COLOR_SLUG_MAP` constants at top of file
+   - Add `async function materialPage(slug, supabase)` handler
+   - Add `async function brandMaterialPage(brandSlug, materialSlug, supabase)` handler
+   - Add `async function colorFamilyPage(slug, supabase)` handler
+   - Add dispatch entries in `getPageData()`:
+     ```ts
+     const mm = path.match(/^\/materials\/(.+)$/);
+     if (mm) return await materialPage(mm[1], supabase);
+     
+     const cm = path.match(/^\/colors\/(.+)$/);
+     if (cm) return await colorFamilyPage(cm[1], supabase);
+     
+     // brand+material: /brands/{slug}/{material}
+     const bmm = path.match(/^\/brands\/([^\/]+)\/([^\/]+)$/);
+     if (bmm) return await brandMaterialPage(bmm[1], bmm[2], supabase);
+     ```
+     Note: `bmm` dispatch must come BEFORE the existing `bm` handler (currently line 222-223). The existing `/brands/compare` check at line 221 stays first.
+   - Add `sitemapMaterials()` function
+   - Update `sitemapIndex()` to include `sitemap-materials.xml`
+   - Add 9 material entries to `STATIC_PAGES`
+   - Add sitemap route handler in the main serve block
+6. Deploy prerender edge function
 
 ### What Will NOT Change
-
-- The existing `/filaments → /` redirect in `App.tsx` — untouched
-- The existing `/hueforge-filaments` → `HueForgeFinder` route — untouched
-- The existing `/guides/pla-vs-petg` guide — untouched (both can coexist; the new page is richer)
-- All existing page-building functions in prerender (`filamentPage`, `brandPage`, etc.) — untouched
-- No database schema changes needed — all pages query existing `filaments` table columns
+- `/brands/compare` route and handler — untouched
+- `/brands/:brand` route and handler — untouched  
+- `/materials/compare` route — untouched
+- Existing `/colors` route to `ColorFinder` — untouched (new route is `/colors/:family`)
+- All existing filament, printer, guide page handlers — untouched
+- No DB schema changes needed
