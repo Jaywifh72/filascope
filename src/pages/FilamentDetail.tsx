@@ -48,6 +48,7 @@ import { REGIONS } from "@/config/regions";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd } from "@/components/seo";
+import { FilamentFAQSchema } from "@/components/seo/FilamentFAQSchema";
 import { cleanFilamentDisplayName, getProductLineName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
 import { RelatedFilaments } from "@/components/filament/RelatedFilaments";
@@ -738,28 +739,37 @@ const FilamentDetail = () => {
   const productLineStartsWithVendor = vendorName && productLineName.toLowerCase().startsWith(
     vendorName.replace(/™|®|©/g, '').trim().toLowerCase()
   );
+  const colorDisplay = displayFilament.color_family || null;
+  const colorSuffix = colorDisplay ? ` ${colorDisplay}` : '';
   const seoFullName = productLineStartsWithVendor
-    ? productLineName
-    : `${vendorName} ${productLineName}`.trim();
+    ? `${productLineName}${colorSuffix}`
+    : `${vendorName} ${productLineName}${colorSuffix}`.trim();
 
-  // Build SEO description — template:
-  // "[Brand] [Product Name] — [Material Type] filament. [Nozzle Temp Range]. From [Best Price] in [Region]. Compare specs, read reviews, and find the best deal."
+  // Build SEO description — with TD+HueForge when available
   const regionName = getRegionDisplayName(currentRegionCode as any);
   const tempDisplay = displayFilament.nozzle_temp_min_c && displayFilament.nozzle_temp_max_c
     ? `Nozzle temp ${displayFilament.nozzle_temp_min_c}-${displayFilament.nozzle_temp_max_c}°C.`
     : null;
   const materialType = displayFilament.material || 'filament';
+  const tdValue = displayFilament.transmission_distance;
   const priceSnippet = sidebarPricePerKg
     ? `From ${formatPrice(sidebarPricePerKg)}/kg in ${regionName}.`
     : sidebarPricePerSpool
       ? `From ${formatPrice(sidebarPricePerSpool)} in ${regionName}.`
       : null;
-  const seoDescParts = [
-    `${seoFullName} — ${materialType} filament.`,
-    tempDisplay,
-    priceSnippet,
-    'Compare specs, read reviews, and find the best deal.',
-  ].filter(Boolean);
+  const seoDescParts = tdValue
+    ? [
+        `${seoFullName} ${materialType} filament with TD value ${tdValue} for HueForge.`,
+        tempDisplay,
+        priceSnippet,
+        'Compare specs, TD data & prices on FilaScope.',
+      ].filter(Boolean)
+    : [
+        `${seoFullName} — ${materialType} filament.`,
+        tempDisplay,
+        priceSnippet,
+        'Compare specs, printer compatibility & prices on FilaScope.',
+      ].filter(Boolean);
   const seoDescription = seoDescParts.join(' ').replace(/\s+/g, ' ').trim();
 
   // Build brand slug for breadcrumb link
@@ -773,7 +783,7 @@ const FilamentDetail = () => {
       <ProductSEO
         title={seoFullName}
         description={seoDescription}
-        canonicalUrl={`/filament/${id}`}
+        canonicalUrl={`/filament/${displayFilament.product_handle || id}`}
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
         material={displayFilament.material}
@@ -782,6 +792,8 @@ const FilamentDetail = () => {
         availability={displayFilament.variant_available ?? true}
         transmissionDistance={displayFilament.transmission_distance}
         productType="filament"
+        colorHex={displayFilament.color_hex}
+        featuredImage={displayFilament.featured_image}
       />
       
       {/* JSON-LD Structured Data — enriched with offers, ratings, and weight */}
@@ -807,6 +819,9 @@ const FilamentDetail = () => {
         printSpeedMax={displayFilament.print_speed_max_mms}
         weightGrams={displayFilament.net_weight_g}
         diameter={displayFilament.diameter_nominal_mm}
+        colorHex={displayFilament.color_hex}
+        filaScopeScore={displayFilament.filascope_score}
+        dateModified={displayFilament.last_scraped_at || (displayFilament as any).updated_at}
         // ── Rich offers from detail pricing (enables Google price range snippets) ──
         regionalOffers={
           detailPricing.allCandidates.length > 0
@@ -913,7 +928,24 @@ const FilamentDetail = () => {
                 community: communityReviewStats?.reviewCount ?? 0,
                 compatibility: compatiblePrinterCount ?? undefined,
               }}
-            />
+      />
+
+      {/* FAQPage JSON-LD — auto-generated from filament data for rich results */}
+      <FilamentFAQSchema
+        brand={displayFilament.vendor}
+        productName={productLineName}
+        color={displayFilament.color_family}
+        material={displayFilament.material}
+        nozzleTempMin={displayFilament.nozzle_temp_min_c}
+        nozzleTempMax={displayFilament.nozzle_temp_max_c}
+        bedTempMin={displayFilament.bed_temp_min_c}
+        bedTempMax={displayFilament.bed_temp_max_c}
+        transmissionDistance={displayFilament.transmission_distance}
+        price={sidebarPricePerKg}
+        regionName={regionName}
+        filaScopeScore={displayFilament.filascope_score}
+        compatiblePrinterCount={compatiblePrinterCount ?? null}
+      />
 
 
             {/* Quick Summary Bar - appears when hero scrolls out of view */}

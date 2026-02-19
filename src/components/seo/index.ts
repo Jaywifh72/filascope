@@ -16,4 +16,5 @@ export { DefinedTermSetSchema } from './DefinedTermSetSchema';
 export { HreflangTags } from './HreflangTags';
 export { FAQSection } from './FAQSection';
 export { Breadcrumbs } from './Breadcrumbs';
+export { FilamentFAQSchema } from './FilamentFAQSchema';
 

@@ -112,7 +112,16 @@ export function FilamentHeroSection({
             {/* Product Line Name + Share */}
             <div className="flex items-start justify-between gap-3">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
-                {productLineName}
+                {/* Visually show product line name; full SEO text hidden for crawlers */}
+                <span aria-hidden="true">{productLineName}</span>
+                <span className="sr-only">
+                  {(() => {
+                    const colorDisplay = pricingFilament.color_family || null;
+                    const h1Full = `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''} — ${pricingFilament.material} 3D Printer Filament`;
+                    const h1Short = `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''} — ${pricingFilament.material} Filament`;
+                    return h1Full.length <= 70 ? h1Full : h1Short.length <= 70 ? h1Short : `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''}`;
+                  })()}
+                </span>
               </h1>
               <ShareButton title={productLineName} />
             </div>
