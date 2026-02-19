@@ -319,6 +319,21 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
   let description = `${brand} ${name}${colorStr} ${material} filament — ${tdStr}${nozzleStr}${diaStr}. ${priceStr}Compare specs, read community reviews & find the best price on FilaScope.`;
   if (description.length > 160) description = description.slice(0, 157) + "...";
 
+  // Build additionalProperty array
+  const additionalProperties: Record<string, unknown>[] = [];
+  if (material) {
+    additionalProperties.push({ "@type": "PropertyValue", "name": "Material Type", "value": material });
+  }
+  if (td != null) {
+    additionalProperties.push({ "@type": "PropertyValue", "name": "Transmission Distance (TD)", "value": td, "unitText": "mm" });
+  }
+  if (data.nozzle_temp_min_c && data.nozzle_temp_max_c) {
+    additionalProperties.push({ "@type": "PropertyValue", "name": "Nozzle Temperature Range", "value": `${data.nozzle_temp_min_c}-${data.nozzle_temp_max_c}°C` });
+  }
+
+  // Price valid until 30 days from now
+  const priceValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
   const productSchema: Record<string, unknown> = {
     "@context": "https://schema.org", "@type": "Product",
     name: `${brand} ${name}`, description,
@@ -326,13 +341,23 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
     ...(brand && { brand: { "@type": "Brand", name: brand } }),
     sku: canonicalSlug,
     category: `3D Printer Filament${material ? ` - ${material}` : ""}`,
-    ...(material && { material }), ...(color && { color }),
+    ...(material && { material }),
+    ...(color && { color }),
     url: `${BASE_URL}${canonical}`,
+    ...(data.net_weight_g && { weight: { "@type": "QuantitativeValue", value: data.net_weight_g, unitCode: "GRM" } }),
+    ...(data.diameter_nominal_mm && { width: { "@type": "QuantitativeValue", value: data.diameter_nominal_mm, unitCode: "MMT" } }),
+    ...(additionalProperties.length > 0 && { additionalProperty: additionalProperties }),
   };
   if (price) {
     productSchema.offers = {
-      "@type": "Offer", priceCurrency: "USD", price: price.toFixed(2),
-      availability: "https://schema.org/InStock", url: `${BASE_URL}${canonical}`,
+      "@type": "Offer",
+      priceCurrency: "USD",
+      price: price.toFixed(2),
+      priceValidUntil,
+      availability: "https://schema.org/InStock",
+      itemCondition: "https://schema.org/NewCondition",
+      url: `${BASE_URL}${canonical}`,
+      ...(brand && { seller: { "@type": "Organization", name: brand } }),
     };
   }
 
@@ -518,7 +543,19 @@ function hueforgeDbPage(): PageData {
     description: "Complete HueForge TD value database. Search transmission distance values for 500+ filaments. Filter by brand, material & color for lithophane projects.",
     canonical: "/hueforge-td-database", ogType: "website",
     jsonLd: [
-      { "@context": "https://schema.org", "@type": "Dataset", name: "HueForge TD Value Database", description: "Transmission Distance (TD) values for 3D printer filaments used in HueForge lithophane printing.", url: `${BASE_URL}/hueforge-td-database`, creator: { "@type": "Organization", name: "FilaScope" } },
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        name: "HueForge TD Value Database",
+        description: "Transmission Distance (TD) values for 500+ 3D printer filaments, used for HueForge lithophane and multicolor printing projects.",
+        url: `${BASE_URL}/hueforge-td-database`,
+        creator: { "@type": "Organization", name: "FilaScope", url: BASE_URL },
+        license: "https://creativecommons.org/licenses/by-nc/4.0/",
+        variableMeasured: "Transmission Distance",
+        measurementTechnique: "Community testing with standardized methodology",
+        keywords: ["HueForge", "TD value", "transmission distance", "3D printing", "lithophane", "filament"],
+        includedInDataCatalog: { "@type": "DataCatalog", name: "FilaScope 3D Printing Database" },
+      },
       breadcrumbSchema(crumbs),
     ],
     breadcrumbs: crumbs, h1: "HueForge TD Value Database",
