@@ -1,0 +1,9 @@
+# Sitemap & robots.txt — server-side proxy to edge function
+# These must be handled BEFORE the SPA catches the request.
+# Cloudflare Pages / Netlify: status 200 = proxy (pass-through), not redirect.
+
+/sitemap.xml      https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-xml  200
+/sitemap-:rest.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-xml?slug=:rest  200
+
+# SPA fallback — must be last
+/*    /index.html   200
