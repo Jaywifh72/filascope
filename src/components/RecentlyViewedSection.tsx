@@ -6,6 +6,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
 import { cn, normalizeColorHex } from "@/lib/utils";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
+import { getFilamentHref } from "@/lib/filamentUrl";
 
 const COLLAPSED_KEY = "filascope_recently_viewed_collapsed";
 
@@ -41,7 +42,7 @@ function CompactFilamentCard({ item }: { item: BrowseHistoryItem }) {
   if (!isFilament && !isPrinter) return null;
 
   const href = isFilament
-    ? `/filament/${item.product_id}`
+    ? getFilamentHref(item.product_id, (item.filament as any)?.product_handle)
     : `/printers/${(item.printer as any)?.printer_id || item.product_id}`;
 
   const title = isFilament

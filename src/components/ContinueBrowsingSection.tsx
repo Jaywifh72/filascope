@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
+import { getFilamentHref } from "@/lib/filamentUrl";
 
 function ContinueCard({ item }: { item: BrowseHistoryItem }) {
   const { formatPrice, convertPrice, hasRates, currency } = useRegion();
@@ -16,7 +17,7 @@ function ContinueCard({ item }: { item: BrowseHistoryItem }) {
   if (!isFilament && !isPrinter) return null;
 
   const href = isFilament
-    ? `/filament/${item.product_id}`
+    ? getFilamentHref(item.product_id, (item.filament as any)?.product_handle)
     : `/printers/${item.product_id}`;
 
   const title = isFilament

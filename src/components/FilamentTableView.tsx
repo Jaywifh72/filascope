@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getFilamentHref } from "@/lib/filamentUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
@@ -48,6 +49,7 @@ interface Filament {
   finish_type?: string | null;
   last_scraped_at?: string | null;
   transmission_distance?: number | null;
+  product_handle?: string | null;
 }
 
 interface FilamentTableViewProps {
@@ -215,7 +217,7 @@ export function FilamentTableView({
                     ? "bg-primary/5 hover:bg-primary/10" 
                     : "hover:bg-muted/50 even:bg-muted/10"
                 )}
-                onClick={() => navigate(`/filament/${filament.id}`)}
+                onClick={() => navigate(getFilamentHref(filament.id, filament.product_handle))}
               >
                 <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
                   <Checkbox 
@@ -377,7 +379,7 @@ export function FilamentTableView({
                   <div className="flex items-center justify-end gap-2">
                     <LikeButton filamentId={filament.id} size="sm" />
                     <Link 
-                      to={`/filament/${filament.id}`}
+                      to={getFilamentHref(filament.id, filament.product_handle)}
                       className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                     >
                       Details

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { FlaskConical, ExternalLink } from "lucide-react";
+import { getFilamentHref } from "@/lib/filamentUrl";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -68,7 +69,7 @@ export function RecommendedFilaments({ printers }: RecommendedFilamentsProps) {
                 filaments.map((f) => (
                   <Link
                     key={f.id}
-                    to={`/filaments/${f.product_handle || f.id}`}
+                    to={getFilamentHref(f.id, f.product_handle)}
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors group"
                   >
                     {f.color_hex ? (

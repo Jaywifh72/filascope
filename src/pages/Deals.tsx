@@ -159,7 +159,7 @@ const Deals = () => {
   const dealListItems = useMemo(() => {
     return groupedDeals.slice(0, 20).map((group, index) => ({
       name: group.groupKey,
-      url: `https://filascope.com/filament/${group.variants[0]?.id || ''}`,
+      url: `https://filascope.com/filament/${(group.variants[0] as any)?.product_handle || group.variants[0]?.id || ''}`,
       description: `${Math.round(group.bestDiscount ?? 0)}% off`,
       position: index + 1,
     }));
