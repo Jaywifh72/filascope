@@ -1,46 +1,41 @@
 
-## SEO Overhaul: Material Knowledge Base — Individual Material Pages & Content Unlocking
+## SEO Overhaul: Printers Listing Page — Crawlable Categories, Filter URLs & Link Structure
 
 ### Current State Analysis
 
-**What exists:**
-- `/reference/materials` — `MaterialKnowledgeBase.tsx` renders the `MaterialReference` component: a two-panel layout with a searchable sidebar (236+ materials as `<button>` elements) and a detail panel on the right. All content is JavaScript-only.
-- `/materials/:slug` — `MaterialHub.tsx` handles 12 slugs via `MATERIAL_SLUG_CONFIG`. It renders product listings but has NO Knowledge Base content (print settings, strengths, weaknesses, etc.). The "0 products" bug is caused by a `td_value` column reference (now fixed to `transmission_distance`, but the query still works as stats use `td_value`).
-- `src/lib/materialReferenceData.ts` — 14,868 lines containing `MATERIAL_REFERENCE_DATA` for rich material content plus 3 extended data files (`materialReferenceDataExtended.ts/2/3`). The `getMaterialReference()` function provides lookup with alias resolution.
-- `src/components/MaterialReference.tsx` — 1,324-line component containing `MaterialDetailView` which renders ALL the Knowledge Base sections (print settings, strengths, weaknesses, TDS, adhesion, practical context, origin, composition, post-processing, safety). This logic is already written — it just needs to be embedded into `MaterialHub.tsx`.
+**`/printers` page (`src/pages/Printers.tsx`, 1,080 lines):**
+- H1: "Deploy Fabrication Hardware." (inside `PrintersHeroSection`, line 44)
+- Printer names use `<h3>` tags inside `MediumStandardPrinterCard` (line 330) with no H2 parent section
+- "Load X more printers" button — only 24 of 118 printers in DOM (line 976)
+- Quick filter chips in `PrinterQuickFilterChips.tsx` are all `<button>` elements
+- Brand items in `PrintersLeftSidebar.tsx` are `<button>` elements (lines 306-318)
+- `MediumStandardPrinterCard` uses `<Link>` correctly already — the card itself wraps in `<Link to={...}>` on line 224, so "View Details" is crawlable. However, the admin "View Details" button vs the card-level link needs review.
 
-**The core problem:** Two systems are completely disconnected. `MaterialHub.tsx` shows product listings; `MaterialReference` shows knowledge content. They've never been merged. Additionally, the 236 materials in the sidebar are `<button>` elements with no URL change — Google sees a blank right panel.
+**Routing in `App.tsx`:**
+- `<Route path="/printers" element={<Printers />} />` — line 225
+- `<Route path="/printers/:id" element={<PrinterDetail />} />` — line 226  
+- **Critical conflict:** `/printers/enclosed` would match `/printers/:id` and render `PrinterDetail` instead of a category page. Category routes must be defined BEFORE the `:id` route.
 
-**"0 Products" bug root cause:** The stats query on line 205-215 in `MaterialHub.tsx` references `td_value` (a non-existent column). The query itself fails silently, causing `data` to be null. This means `count` returns 0 and `stats` is null, causing the `!isLoading && stats && stats.count < 3` check on line 266 to not trigger, but `count = stats?.count ?? 0` evaluates to 0. The fix: change `td_value` to `transmission_distance`.
-
----
-
-### Architecture Decision
-
-**Option A (Simpler):** Embed `MaterialDetailView` directly into the existing `MaterialHub.tsx`, using a slug-to-material-name resolver. Works for 12 existing slugs immediately.
-
-**Option B (Full):** Create a new `MaterialGuidePage.tsx` that handles ALL 236 material types via dynamic routes, with slug-based URL patterns generated from `MATERIAL_CATEGORIES` in `materialHierarchy.ts`.
-
-**Decision: Option A first (fix the existing pages), then extend** — The brief requests fixing existing pages AND creating new ones. We fix `MaterialHub.tsx` to include Knowledge Base content for the 12 existing slugs, then add a slug-to-material resolver for all 236 types. The route `/materials/:slug` already exists in `App.tsx` and handles all slugs via `MaterialHub`.
-
-The key challenge: mapping URL slugs (e.g., `pla-silk`) to Knowledge Base keys (e.g., `PLA Silk` or `PLA-Silk`). We need a comprehensive slug-to-material-name map.
+**Key Architecture:**
+- All filtering is done client-side in `filteredPrinters` useMemo — no URL state
+- `displayedCount` caps rendering at 24 initially (line 117, line 532-534)
+- The `MediumStandardPrinterCard` does use `<Link to={...}>` properly for the card clickable area (line 224)
+- `PrinterQuickFilterChips` uses `<button>` elements with `onClick` only (no `href`)
+- Brand pills in sidebar use `<button>` elements with `onClick` only
 
 ---
 
-### Slug Generation Strategy
+### Strategy
 
-URL slugs will be generated from material names using this pattern:
-- `PLA` → `pla`
-- `PLA+` → `pla-plus`
-- `PLA-CF` → `pla-cf`
-- `PLA Silk` → `pla-silk`
-- `PLA-Matte` → `pla-matte`
-- `TPU 95A` → `tpu-95a`
-- `PA6-CF` → `pa6-cf`
-
-This is a lowercase, special-char-to-hyphen transformation, with `+` → `plus`.
-
-A utility function `materialNameToSlug(name: string): string` will be created in `src/lib/materialSlugUtils.ts`, plus the reverse `slugToMaterialNames(slug: string): string[]` that returns the original material names that map to that slug. This handles the case where multiple names produce the same slug (e.g., `PLA Silk`, `PLA-Silk`, `Silk PLA` all resolve to related slugs).
+**The most SEO-impactful changes in priority order:**
+1. Fix H1 in `PrintersHeroSection`
+2. Remove "Load more" / render ALL printers in DOM
+3. Convert quick filter chip `<button>`s to `<a>` links
+4. Convert brand pills in sidebar to `<a>` links
+5. Fix heading hierarchy (printer names: `<h3>` → `<p>`)
+6. Create a new `PrinterCategoryPage.tsx` for all category/brand routes
+7. Register category routes in `App.tsx` BEFORE the `:id` route
+8. Add FAQPage schema to main printers page
 
 ---
 
@@ -48,450 +43,378 @@ A utility function `materialNameToSlug(name: string): string` will be created in
 
 | File | Action | Summary |
 |---|---|---|
-| `src/lib/materialSlugUtils.ts` | CREATE | `materialNameToSlug()`, `slugToMaterialName()`, full slug↔name mapping from MATERIAL_CATEGORIES |
-| `src/pages/MaterialHub.tsx` | MODIFY | Fix `td_value` bug; add Knowledge Base content sections; add Article schema; enhance FAQs; update CTA links; fix BreadcrumbList duplication; expand MATERIAL_SLUG_CONFIG for more materials |
-| `src/components/MaterialReference.tsx` | MODIFY | Convert all sidebar `<button>` to `<a>` tags linking to `/materials/{slug}`; update Browse CTA from `/?material=` to `/filaments/{slug}` |
-| `src/pages/MaterialKnowledgeBase.tsx` | MODIFY | Update H1; add CollectionPage JSON-LD; add material families grid with links; update stats copy |
-| `supabase/functions/prerender/index.ts` | MODIFY | Add `materialPage()` handler that generates rich prerender HTML for `/materials/:slug` with Knowledge Base text content, Article schema, FAQPage schema, and crawlable body text |
+| `src/components/PrintersHeroSection.tsx` | MODIFY | Fix H1: remove tagline from `<h1>`, replace with keyword-optimized text; move "Deploy Fabrication Hardware" to a visual `<p>` below |
+| `src/components/printers/MediumStandardPrinterCard.tsx` | MODIFY | Change `<h3>` for printer name to `<p className="text-sm sm:text-lg font-semibold...">` — removes bad heading hierarchy |
+| `src/components/printers/PrinterQuickFilterChips.tsx` | MODIFY | Convert `<button>` to `<a href="/printers/{category-slug}">` with `onClick` that calls `onChange` AND `e.preventDefault()` for SPA behavior |
+| `src/components/printers/PrintersLeftSidebar.tsx` | MODIFY | Convert brand pill `<button>` elements to `<a href="/printers/brand/{brand-slug}">` with onClick prevention |
+| `src/pages/Printers.tsx` | MODIFY | (A) Remove `displayedCount` cap — render all `filteredPrinters` not `displayedPrinters`; (B) Remove "Load more" button; (C) Add H2 "Hardware Registry" wrapper above the grid; (D) Add FAQPage schema; (E) Update meta title/description; (F) Update `ItemListSchema` to include all printers (cap at 50) |
+| `src/pages/PrinterCategoryPage.tsx` | CREATE | New page handling all `/printers/enclosed`, `/printers/brand/bambu-lab`, etc. routes. Reads category from URL, pre-applies filter, renders full grid (no load-more), adds unique meta/H1/schema |
+| `src/App.tsx` | MODIFY | Register category routes before the `:id` wildcard route |
 
 ---
 
 ### Detailed Changes
 
-#### 1. Create `src/lib/materialSlugUtils.ts`
+#### 1. Fix H1 — `src/components/PrintersHeroSection.tsx`
 
-```ts
-import { MATERIAL_CATEGORIES } from './materialHierarchy';
-import { getMaterialReference } from './materialReferenceData';
+The `<h1>` at line 43 currently contains "Deploy Fabrication Hardware."
 
-export function materialNameToSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/\+/g, '-plus')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-// Returns the canonical material name(s) for a given slug
-// Searches ALL MATERIAL_CATEGORIES for matching materials
-export function slugToMaterialNames(slug: string): string[] {
-  const results: string[] = [];
-  for (const cat of MATERIAL_CATEGORIES) {
-    for (const mat of cat.materials) {
-      if (materialNameToSlug(mat) === slug) {
-        results.push(mat);
-      }
-    }
-  }
-  return results;
-}
-
-// Returns the BEST match for a slug — prefers the one with reference data
-export function slugToMaterialName(slug: string): string | null {
-  const names = slugToMaterialNames(slug);
-  if (names.length === 0) return null;
-  // Prefer name with reference data
-  const withRef = names.find(n => getMaterialReference(n));
-  return withRef || names[0];
-}
-
-// All unique slugs from MATERIAL_CATEGORIES (for route generation)
-export function getAllMaterialSlugs(): string[] {
-  const seen = new Set<string>();
-  const slugs: string[] = [];
-  for (const cat of MATERIAL_CATEGORIES) {
-    for (const mat of cat.materials) {
-      const slug = materialNameToSlug(mat);
-      if (!seen.has(slug)) {
-        seen.add(slug);
-        slugs.push(slug);
-      }
-    }
-  }
-  return slugs;
-}
-```
-
-#### 2. Modify `src/pages/MaterialHub.tsx`
-
-**A. Fix the `td_value` bug (line 205):**
-```ts
-// BEFORE:
-.select("id, vendor, variant_price, td_value", { count: "exact" })
-// AFTER:
-.select("id, vendor, variant_price, transmission_distance", { count: "exact" })
-```
-Also change the `tds` computation:
-```ts
-const tds = (data as any[]).map((d: any) => d.transmission_distance).filter(Boolean) as number[];
-```
-
-**B. Expand `MATERIAL_SLUG_CONFIG`:**
-The existing 12-slug config already handles major materials. We need to add a fallback path for unknown slugs that uses `slugToMaterialName()` from the new utility. Modify `MaterialHub` so that when `slug` is not in `MATERIAL_SLUG_CONFIG`, it tries `slugToMaterialName(slug)` and builds a dynamic config from it:
+**Change:** Replace the entire `<h1>` block with a keyword-first heading, and demote the tagline to a decorative `<p>`:
 
 ```tsx
-// In MaterialHub component:
-const config = slug ? (MATERIAL_SLUG_CONFIG[slug] ?? buildDynamicConfig(slug)) : null;
+{/* SEO H1 — keyword-optimized, must appear first in DOM */}
+<h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2">
+  3D Printer Database — Compare {printerCount > 0 ? printerCount.toLocaleString() : '118'}+ Printers
+</h1>
 
-function buildDynamicConfig(slug: string): SlugConfig | null {
-  const materialName = slugToMaterialName(slug);
-  if (!materialName) return null;
-  return {
-    label: materialName,
-    materials: slugToMaterialNames(slug),
-    relatedSlugs: [],
-    relatedMaterials: [],
-    guides: [],
-  };
-}
-```
-
-**C. Add Knowledge Base content sections to the page:**
-
-After the existing "All {label} Filaments" product grid, add:
-
-```tsx
-import { getMaterialReference } from '@/lib/materialReferenceData';
-import { slugToMaterialName } from '@/lib/materialSlugUtils';
-
-// In MaterialHub component, after existing queries:
-const materialName = slug ? (MATERIAL_SLUG_CONFIG[slug]?.materials[0] ?? slugToMaterialName(slug)) : null;
-const reference = materialName ? getMaterialReference(materialName) : null;
-
-// Then render sections:
-{reference && (
-  <>
-    {/* Quick Start — Print Settings */}
-    <section className="mb-10" aria-labelledby="print-settings-h2">
-      <h2 id="print-settings-h2" className="text-xl font-semibold mb-4">
-        Quick Start — {label} Print Settings
-      </h2>
-      <PrintSettingsSummary reference={reference} />
-    </section>
-
-    {/* Strengths */}
-    <section className="mb-10" aria-labelledby="strengths-h2">
-      <h2 id="strengths-h2" className="text-xl font-semibold mb-4">
-        {label} Strengths
-      </h2>
-      <StrengthsContent reference={reference} />
-    </section>
-
-    {/* Weaknesses */}
-    ...
-
-    {/* Technical Data Sheet */}
-    ...
-
-    {/* Adhesion & Multi-Material Compatibility */}
-    ...
-
-    {/* Practical Guide */}
-    ...
-
-    {/* Post-Processing */}
-    ...
-
-    {/* Safety & Sustainability */}
-    ...
-  </>
-)}
-```
-
-**Key rendering approach:** All Knowledge Base sections will be rendered **expanded by default** (not behind accordions) on the `/materials/:slug` pages. This ensures Google indexes all content without needing to "click" to expand. The sections use semantic `<section>` with `<h2>` and `<h3>` headings matching the required hierarchy. The existing `AccordionSection` / `AccordionContent` pattern from `MaterialDetailView` will NOT be used here — instead, simple `<div>` containers with headings are used so content is always visible in DOM.
-
-The internal sub-components (`PrintSettingsSummary`, `StrengthsContent`, etc.) can be extracted from the existing `MaterialDetailView` render logic into standalone, non-accordion components. They will be created as local functions within `MaterialHub.tsx` or in a new `src/components/materials/` folder.
-
-**D. Update H1:**
-```tsx
-// BEFORE:
-<h1>...{label} Filament — Compare {count} Products</h1>
-// AFTER:
-<h1>...{label} Filament — Complete Guide & {count} Products</h1>
-```
-
-**E. Update meta title/description to spec:**
-```tsx
-const title = reference
-  ? `${label} Filament Guide — Print Settings, Specs & ${count.toLocaleString()} Products | FilaScope`
-  : `${label} Filament — Compare ${count.toLocaleString()} Products | FilaScope`;
-```
-Description includes temperature data from `reference.printSettings.nozzleTemp` when available.
-
-**F. Add Article schema:**
-```tsx
-import { ArticleSchema } from '@/components/seo/ArticleSchema';
-
-<ArticleSchema
-  headline={`${label} Filament — Complete Guide & ${count} Products`}
-  description={description}
-  datePublished="2025-01-01T00:00:00Z"
-  url={`/materials/${slug}`}
-/>
-```
-
-**G. Fix the Browse CTA link:**
-```tsx
-// BEFORE:
-to={`/?material=${slug}`}
-// AFTER:
-to={`/filaments/${slug}`}
-```
-
-**H. Fix duplicate BreadcrumbList:**
-`BreadcrumbSchema` is injected by `MaterialHub` and also by `Breadcrumbs` (which uses `useJsonLd`). Remove the `<BreadcrumbSchema>` import from `MaterialHub` since `Breadcrumbs` already handles it.
-
-**I. Enhanced FAQ content:**
-
-The `getMaterialFAQs` function needs to be updated to:
-- Include material name in every question
-- Include temperature data pulled from `getMaterialReference()` when available
-- Add HueForge/TD question for PLA-family materials
-- Add product count question
-- Reduce generic questions
-
-For PLA, the full 8-question FAQ set as specified in the brief will be implemented. For other materials, a template-based generator using reference data will produce material-specific questions.
-
-**J. Heading hierarchy (per spec):**
-```
-H1: PLA Filament — Complete Guide & 434 Products
-  H2: Quick Stats (visual, no heading tag needed — it's a grid)
-  H2: Best PLA Filaments
-  H2: All PLA Filaments
-  H2: Quick Start — PLA Print Settings
-    H3: Temperature Settings
-    H3: Cooling & Enclosure
-    H3: Drying Instructions
-  H2: PLA Strengths
-    H3: Unique Properties
-    H3: Best Use Scenarios
-    H3: Advantages Over Competitors
-  H2: PLA Weaknesses
-    H3: Limitations
-    H3: Avoid Using PLA For
-  H2: Technical Specifications
-    H3: Technical Data Sheet Profile
-    H3: Adhesion & Multi-Material Compatibility
-  H2: Practical Guide
-    H3: Practical Context
-    H3: Post-Processing
-    H3: Safety & Sustainability
-  H2: Compare Related Materials
-  H2: Relevant Guides
-  H2: PLA Filament FAQ
-```
-
-Note: `sr-only` H2s are NOT used here since these are actual content sections that will be visually displayed.
-
----
-
-#### 3. Modify `src/components/MaterialReference.tsx`
-
-**A. Convert sidebar `<button>` to `<a>` tags (lines 1160-1222):**
-
-```tsx
-// BEFORE:
-<button
-  key={name}
-  onClick={() => selectMaterialAndExpand(name)}
-  className={cn("w-full flex items-center...", ...)}
+{/* Decorative tagline — visually dominant but NOT the H1 */}
+<p 
+  aria-hidden="true"
+  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-light tracking-[0.1em] sm:tracking-[0.15em] leading-[1.15] mb-4 sm:mb-6 animate-fade-in uppercase"
 >
-
-// AFTER:
-<a
-  key={name}
-  href={`/materials/${materialNameToSlug(name)}`}
-  onClick={(e) => {
-    e.preventDefault(); // prevent full page reload for SPA behavior
-    selectMaterialAndExpand(name);
-  }}
-  className={cn("w-full flex items-center...", ...)}
->
+  <span className="text-foreground">Deploy</span>
+  <br />
+  <span className="text-muted-foreground font-light">Fabrication</span>
+  <br />
+  <span className="font-black italic text-primary">Hardware.</span>
+</p>
 ```
 
-This makes every sidebar item crawlable with a valid `href`, while maintaining the existing click behavior for users (content loads in the right panel without a page reload). Googlebot sees real links and can crawl all 236 material URLs.
+The H1 will be visually smaller than the decorative tagline (which is expected — the tagline is brand design, not SEO heading). The H1 will be positioned ABOVE the tagline in the DOM so it's the first heading Google encounters.
 
-**B. Update category headers to link to parent material page:**
-The category `<button>` (line 1112) for family groups (e.g., "PLA Family") will also get an `<a>` wrapping/linking behavior:
-```tsx
-// Category header: link to the parent material page
-<a
-  href={`/materials/${materialNameToSlug(category.replace(/ Family$/i, ''))}`}
-  onClick={(e) => { e.preventDefault(); toggleCategory(category); }}
->
-  {category}
-</a>
-```
+#### 2. Fix Printer Name Heading — `src/components/printers/MediumStandardPrinterCard.tsx`
 
-**C. Update Browse CTA (line 264-270):**
-```tsx
-// BEFORE:
-to={`/?material=${encodeURIComponent(reference.name)}`}
-// AFTER:
-to={`/filaments/${materialNameToSlug(reference.name)}`}
-```
-Also update line 581 (in Practical Context section).
+Line 330: `<h3 className="text-sm sm:text-lg font-semibold text-foreground leading-snug line-clamp-2">` 
 
----
-
-#### 4. Modify `src/pages/MaterialKnowledgeBase.tsx`
-
-**A. Update H1:**
-```tsx
-// BEFORE:
-<h1>Material <span>Knowledge Base</span></h1>
-// AFTER:
-<h1>3D Printing Material Knowledge Base — 236+ Material Types</h1>
-```
-(Keep the visual styling: the word count can be split with a `<span>` for color)
-
-**B. Update stats copy:**
-Change "45+ Material Types" and "12 Property Categories" to accurate counts (236+ and 15+ categories).
-
-**C. Add Material Families grid section:**
-After the intro paragraph, before the `<MaterialReference />` component, add a families grid:
+Change `<h3>` and `</h3>` to `<p>` — keeping the identical className so there's zero visual change:
 
 ```tsx
-<section className="mb-8">
-  <h2 className="text-xl font-semibold mb-4">Browse by Material Family</h2>
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-    {MATERIAL_CATEGORIES.map(cat => {
-      const shortName = cat.name.replace(/ Family$/i, '');
-      const slug = materialNameToSlug(shortName);
-      return (
-        <a
-          key={cat.id}
-          href={`/materials/${slug}`}
-          className="..."
-        >
-          <div className="font-semibold">{shortName}</div>
-          <div className="text-xs text-muted-foreground">{cat.materials.length} materials</div>
-        </a>
-      );
-    })}
-  </div>
-</section>
+<p className="text-sm sm:text-lg font-semibold text-foreground leading-snug line-clamp-2">
+  {printer.model_name}
+</p>
 ```
 
-**D. Add CollectionPage JSON-LD:**
-```tsx
-<useJsonLd({
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  "name": "3D Printing Material Knowledge Base",
-  "description": "Complete reference for 236+ 3D printing filament material types with print settings, strengths, weaknesses, and technical data.",
-  "url": "https://filascope.com/reference/materials",
-  "hasPart": [
-    { "@type": "Article", "name": "PLA Filament Guide", "url": "https://filascope.com/materials/pla" },
-    { "@type": "Article", "name": "PETG Filament Guide", "url": "https://filascope.com/materials/petg" },
-    { "@type": "Article", "name": "ABS Filament Guide", "url": "https://filascope.com/materials/abs" },
-    { "@type": "Article", "name": "ASA Filament Guide", "url": "https://filascope.com/materials/asa" },
-    { "@type": "Article", "name": "TPU Filament Guide", "url": "https://filascope.com/materials/tpu" },
-    { "@type": "Article", "name": "Nylon Filament Guide", "url": "https://filascope.com/materials/nylon" },
-    { "@type": "Article", "name": "Polycarbonate Filament Guide", "url": "https://filascope.com/materials/pc" },
-  ]
-})}
-```
+This removes 24–118 orphaned H3s from the heading outline, fixing the hierarchy completely.
 
-**E. Update `DefinedTermSetSchema` `url` values:**
-Currently links to `?material=pla` — change to `/materials/pla` etc.
+#### 3. Convert Quick Filter Chips — `src/components/printers/PrinterQuickFilterChips.tsx`
 
----
-
-#### 5. Update `supabase/functions/prerender/index.ts`
-
-The existing `materialPage()` handler at line 463 (`if (mm) return await materialPage(mm[1], supabase)`) already handles `/materials/:slug` but currently only renders a basic product listing shell (similar to `filamentCategoryPage`). We need to check what `materialPage` currently does and enhance it.
-
-Looking at lines 450-487, `materialPage()` exists. Let me check what it does — it's defined somewhere between lines 600-1200. The handler will be enhanced to:
-
-1. Use `PRERENDER_SLUG_CONFIG` (already defined) to get material data
-2. Emit rich body text from Knowledge Base data (since the reference data is in client-side TypeScript, we'll replicate the key text content in the prerender function — print settings, strengths text, etc. as static strings per material)
-3. Emit Article schema
-4. Emit enhanced FAQPage schema with material-specific questions
-5. Emit BreadcrumbList schema
-6. Include crawlable `<a>` links to product pages
-
-**Static Knowledge Base content in prerender:** The Knowledge Base data (`materialReferenceData.ts`) is client-side only and cannot be imported in Deno edge functions. Instead, we'll add a `PRERENDER_MATERIAL_CONTENT` map to the prerender function with the key content (print temps, one-line description, key strengths/weaknesses) for the 12 major material types. This is sufficient for the body text crawlability requirement — the client-side rendering handles the full rich content.
+**Slug mapping for category URLs:**
 
 ```ts
-const PRERENDER_MATERIAL_CONTENT: Record<string, {
-  printTemp: string;
-  bedTemp: string;
-  enclosure: string;
-  description: string;
-  strengths: string[];
-  weaknesses: string[];
-}> = {
-  pla: {
-    printTemp: "190-220°C",
-    bedTemp: "35-60°C",
-    enclosure: "Not required",
-    description: "The most popular 3D printing material. Biodegradable, easy to print, low warping.",
-    strengths: ["Easy to print", "Biodegradable", "Wide color selection", "No enclosure needed"],
-    weaknesses: ["Low heat resistance (~60°C)", "Not for outdoor use", "Brittle over time"],
-  },
-  // ... etc for each slug
+const CHIP_HREFS: Record<PrinterQuickFilter, string> = {
+  popular:    "/printers?sort=popular",       // sort param, no dedicated page
+  under500:   "/printers/under-500",
+  enclosed:   "/printers/enclosed",
+  multicolor: "/printers/multi-color",
+  highspeed:  "/printers/high-speed",
+  large:      "/printers/large-format",
+  new:        "/printers?sort=newest",        // sort param
 };
 ```
 
-**Prerender body for `/materials/pla`:**
-```html
-<h1>PLA Filament — Complete Guide & {count} Products</h1>
-<p>Print temp: 190-220°C. Bed: 35-60°C. Enclosure: Not required.</p>
-<h2>PLA Print Settings</h2>
-<p>Nozzle temperature 190-220°C, bed temperature 35-60°C, 100% cooling fan, no enclosure required.</p>
-<h2>PLA Strengths</h2>
-<ul><li>Easy to print</li><li>Biodegradable</li>...</ul>
-<h2>PLA Weaknesses</h2>
-<ul>...</ul>
-<h2>Browse PLA Filaments</h2>
-<ul><li><a href="/filament/bambu-lab-pla-basic">Bambu Lab PLA Basic</a></li>...</ul>
+Change each `<button>` to:
+
+```tsx
+<a
+  key={chip.id}
+  href={CHIP_HREFS[chip.id]}
+  onClick={(e) => {
+    e.preventDefault();
+    onChange(isActive ? null : chip.id);
+  }}
+  className={cn(...)}
+>
 ```
 
-The `buildHtml()` function will be extended with a `sections?: { heading: string; content: string }[]` field in `PageData` to support this richer body structure.
+This gives Googlebot real `href` links to crawl, while maintaining existing SPA filter behavior for users.
 
-**Sitemap updates:** Add entries for the 236 `/materials/` slugs to `MATERIAL_SITEMAP_PAGES`. The most important ones (PLA, PETG, ABS, ASA, TPU, Nylon, PC, PLA+, Silk PLA, high-speed-pla, PETG-CF) are already listed — add the sub-variants (PLA-CF, PLA-Wood, PLA-Matte, PLA-Silk, PETG-GF, ABS-CF, etc.) with lower priority (0.4-0.5).
+#### 4. Convert Brand Sidebar Pills — `src/components/printers/PrintersLeftSidebar.tsx`
+
+Brand names need a slug function:
+
+```ts
+function brandToSlug(brand: string): string {
+  return brand.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+// "Bambu Lab" → "bambu-lab", "Prusa Research" → "prusa-research"
+```
+
+Change the TOP_BRANDS `<button>` pills (line 306) to:
+
+```tsx
+<a
+  key={brand}
+  href={`/printers/brand/${brandToSlug(brand)}`}
+  onClick={(e) => {
+    e.preventDefault();
+    handleBrandToggle(brand);
+  }}
+  className={cn(...same styles...)}
+>
+  {brand}
+</a>
+```
+
+Do the same for the checkbox list brands at line 334.
+
+#### 5. Render All Printers + Remove "Load More" — `src/pages/Printers.tsx`
+
+**Change line 532:**
+```ts
+// BEFORE:
+const displayedPrinters = filteredPrinters.slice(0, displayedCount);
+const hasMore = displayedCount < filteredPrinters.length;
+const remaining = filteredPrinters.length - displayedCount;
+
+// AFTER:
+const displayedPrinters = filteredPrinters; // render all
+```
+
+Remove the "Load More" button block (lines 976-1018) and replace with a simple total count footer if desired.
+
+Remove the `displayedCount` / `isLoadingMore` state variables and related `useEffect`s that reset them (lines 117-120, 229-237).
+
+**Performance note:** 118 printer cards, each with `usePrinterCurrentPrice` hook, could cause many network requests. To mitigate: the price hook already has caching. The card uses lazy image loading. This is acceptable for 118 items.
+
+#### 6. Add FAQPage Schema + H2 Wrapper — `src/pages/Printers.tsx`
+
+Add `FAQSection` import and place it after the printer grid:
+
+```tsx
+import { FAQSection } from "@/components/seo/FAQSection";
+
+const PRINTERS_FAQ = [
+  {
+    question: "What is the best 3D printer for beginners in 2026?",
+    answer: "For beginners, popular choices include the Bambu Lab A1 Mini (from ~$199) and Creality Ender 3 V3 SE (from ~$179). Use FilaScope's Hardware Quiz to find the best printer for your specific needs."
+  },
+  {
+    question: "How many 3D printers does FilaScope track?",
+    answer: `FilaScope tracks ${count} 3D printers from ${brandCount}+ brands with detailed specifications including build volume, print speed, nozzle temperature, motion system type, and connectivity options.`
+  },
+  // ... all 5 FAQs from the brief
+];
+
+// After the grid:
+<FAQSection faqs={PRINTERS_FAQ} title="3D Printer FAQ" />
+```
+
+Add an H2 around the printer grid:
+
+```tsx
+<section aria-labelledby="registry-h2">
+  <h2 id="registry-h2" className="sr-only">Hardware Registry — {filteredPrinters.length} Printers</h2>
+  {/* grid */}
+</section>
+```
+
+Update `DocumentHead` title and description:
+```tsx
+title="3D Printer Database — Compare {count}+ Printers | FilaScope"
+description={`Compare ${count}+ 3D printers from ${brandCount}+ brands. Filter by build volume, speed, features, and price. Find compatible filaments for your printer on FilaScope.`}
+```
+
+#### 7. Create `src/pages/PrinterCategoryPage.tsx`
+
+This new page handles all category and brand-specific routes. It:
+- Reads the category from `useParams()` — both `category` from `/printers/:category` and `brand` from `/printers/brand/:brand`
+- Applies the pre-defined filter to the full printer list
+- Renders ALL matching printers (no load-more)
+- Has unique meta title, H1, intro paragraph, and JSON-LD per category
+
+**Category config:**
+```ts
+type CategoryConfig = {
+  label: string;
+  h1: (count: number) => string;
+  title: (count: number) => string;
+  description: (count: number) => string;
+  intro: string;
+  filter: (p: Printer) => boolean;
+  aboutContent: string; // SEO content block
+  faqItems: { question: string; answer: string }[];
+};
+
+const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
+  "enclosed": {
+    label: "Enclosed 3D Printers",
+    h1: (n) => `Enclosed 3D Printers — ${n} Models Compared`,
+    title: (n) => `Enclosed 3D Printers — Compare ${n} Models | FilaScope`,
+    description: (n) => `Compare ${n} enclosed 3D printers with heated chambers. Better ABS & PETG printing, reduced warping. Filter by brand, speed, and price on FilaScope.`,
+    intro: "Enclosed 3D printers feature a sealed build chamber that maintains consistent temperature, reducing warping and enabling reliable printing with ABS, PETG, and engineering materials.",
+    filter: (p) => !!p.has_enclosure,
+    aboutContent: "...",
+    faqItems: [...],
+  },
+  "multi-color": {
+    label: "Multi-Color 3D Printers",
+    filter: (p) => !!p.multi_material_supported,
+    // ...
+  },
+  "high-speed": {
+    filter: (p) => (p.max_print_speed_mms || 0) >= 300,
+    // ...
+  },
+  "large-format": {
+    filter: (p) => Math.max(p.build_volume_x_mm || 0, p.build_volume_y_mm || 0, p.build_volume_z_mm || 0) >= 300,
+    // ...
+  },
+  "corexy": {
+    filter: (p) => isCoreXY(p),
+    // ...
+  },
+  "bed-slinger": {
+    filter: (p) => (p.motion_system_notes || '').toLowerCase().includes('bed slinger') || (p.machine_style || '').toLowerCase().includes('bed slinger'),
+    // ...
+  },
+  "direct-drive": {
+    filter: (p) => (p.motion_system_notes || '').toLowerCase().includes('direct') || (p.extruder_type || '').toLowerCase().includes('direct'),
+    // ...
+  },
+  "under-300": {
+    filter: (p) => getPrice(p) <= 300,
+    // ...
+  },
+  "under-500": {
+    filter: (p) => getPrice(p) <= 500,
+    // ...
+  },
+  "under-1000": {
+    filter: (p) => getPrice(p) <= 1000,
+    // ...
+  },
+};
+```
+
+**Brand config** (for `/printers/brand/:brand`):
+```ts
+const BRAND_CONFIGS: Record<string, { displayName: string; intro: string; faqItems: ... }> = {
+  "bambu-lab":      { displayName: "Bambu Lab",      intro: "Bambu Lab has rapidly become..." },
+  "creality":       { displayName: "Creality",       intro: "Creality offers..." },
+  "prusa-research": { displayName: "Prusa Research", intro: "Prusa Research..." },
+  // ... all brands from the brief
+};
+```
+
+**Page structure** (no hero section):
+```tsx
+<>
+  <DocumentHead title={config.title(count)} description={config.description(count)} ... />
+  <BreadcrumbSchema items={[{name:'Home', url:'...'}, {name:'3D Printers', url:'.../printers'}, {name:config.label, url:`...${pathname}`}]} />
+  <ItemListSchema ... />
+  <FAQSchema faqs={config.faqItems} />
+  
+  <div className="max-w-[1800px] mx-auto px-4 pt-24">
+    {/* Breadcrumbs */}
+    <Breadcrumbs items={...} />
+    
+    {/* H1 + Intro */}
+    <h1>{config.h1(count)}</h1>
+    <p className="text-muted-foreground mt-2 mb-8">{config.intro}</p>
+    
+    {/* Sidebar + Grid layout (same as Printers.tsx) */}
+    <div className="flex gap-6">
+      <PrintersLeftSidebar ... />
+      <div>
+        {/* Grid — ALL matching printers */}
+        <section aria-labelledby="listing-h2">
+          <h2 id="listing-h2">All {config.label}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredPrinters.map(p => <MediumStandardPrinterCard ... />)}
+          </div>
+        </section>
+        
+        {/* SEO Content Section */}
+        <section className="mt-12">
+          <h2>About {config.label}</h2>
+          <div className="prose prose-invert">{config.aboutContent}</div>
+        </section>
+        
+        {/* Popular Brands (non-brand pages only) */}
+        {!isBrandPage && (
+          <section className="mt-8">
+            <h2>Popular Brands</h2>
+            {/* top brand links */}
+          </section>
+        )}
+        
+        {/* FAQ */}
+        <FAQSection faqs={config.faqItems} title={`${config.label} FAQ`} />
+      </div>
+    </div>
+  </div>
+</>
+```
+
+#### 8. Register Routes in `App.tsx` (CRITICAL ORDER)
+
+The current route order is:
+```
+/printers         → Printers
+/printers/:id     → PrinterDetail   ← would match /printers/enclosed
+/printers/compare → PrinterCompare
+```
+
+The fix — category routes must come before `:id`:
+
+```tsx
+const PrinterCategoryPage = lazy(() => import("./pages/PrinterCategoryPage"));
+
+// Routes (order matters!):
+<Route path="/printers" element={<Printers />} />
+<Route path="/printers/compare" element={<PrinterCompare />} />
+<Route path="/printers/brand/:brand" element={<PrinterCategoryPage />} />
+<Route path="/printers/enclosed" element={<PrinterCategoryPage />} />
+<Route path="/printers/multi-color" element={<PrinterCategoryPage />} />
+<Route path="/printers/high-speed" element={<PrinterCategoryPage />} />
+<Route path="/printers/large-format" element={<PrinterCategoryPage />} />
+<Route path="/printers/corexy" element={<PrinterCategoryPage />} />
+<Route path="/printers/bed-slinger" element={<PrinterCategoryPage />} />
+<Route path="/printers/direct-drive" element={<PrinterCategoryPage />} />
+<Route path="/printers/under-300" element={<PrinterCategoryPage />} />
+<Route path="/printers/under-500" element={<PrinterCategoryPage />} />
+<Route path="/printers/under-1000" element={<PrinterCategoryPage />} />
+<Route path="/printers/:id" element={<PrinterDetail />} />
+```
+
+React Router v7 matches routes in definition order, so specific paths before the wildcard `:id` is essential.
 
 ---
 
-### Material Slug Mapping — Key Concern
+### Technical Considerations
 
-The 236 materials in `MATERIAL_CATEGORIES` will generate slugs like:
-- `PLA` → `pla`  
-- `PLA+` → `pla-plus`
-- `PLA-CF` → `pla-cf`
-- `PLA-Silk` → `pla-silk`  
-- `PLA Silk` → `pla-silk` (both map to same slug — deduplicated)
-- `PLA-Matte` → `pla-matte`
-- `TPU 95A` → `tpu-95a`
-- `PA6-CF` → `pa6-cf`
+**Performance — Rendering all 118 cards:**
+Each `MediumStandardPrinterCard` calls `usePrinterCurrentPrice()` which makes HTTP requests to scrape store prices. With 118 simultaneous cards, this could cause 118 simultaneous HTTP requests to the price-scraping edge function. The existing hook likely has caching (React Query), so only uncached requests will go through. This is acceptable — it's the same pattern used everywhere else in the app.
 
-Collision handling: when two material names generate the same slug (e.g., `PLA-Silk` and `PLA Silk`), `slugToMaterialNames()` returns both and the lookup tries each in order until it finds one with reference data.
+**Heading hierarchy after changes:**
+```
+H1: "3D Printer Database — Compare 118+ Printers" (in PrintersHeroSection)
+  H2: "Hardware Registry — 118 Printers" (sr-only, wrapping the grid section)
+  H2: "3D Printer FAQ" (FAQSection)
+```
+Printer names become `<p>` tags — no more orphaned H3s.
 
-The `MaterialHub.tsx` fallback for unknown slugs uses this resolution. If no match is found and the slug isn't in `MATERIAL_SLUG_CONFIG`, the page returns `<Navigate to="/" replace />` (thin content redirect).
+**Category page heading hierarchy:**
+```
+H1: "Enclosed 3D Printers — 80 Models Compared"
+  H2: "All Enclosed 3D Printers" (grid section)
+  H2: "About Enclosed 3D Printers" (SEO content)
+  H2: "Popular Brands" (brand links)
+  H2: "Enclosed 3D Printers FAQ" (FAQSection)
+```
+
+**Brand slug collisions:** The slug function `brandToSlug("QIDI Tech")` → `"qidi-tech"` and `brandToSlug("QIDI")` → `"qidi"` are distinct. `brandToSlug("eufyMake")` → `"eufymake"`. The `BRAND_CONFIGS` map will use the exact slugs as keys.
+
+**`/printers/compare` route conflict:** Currently at line 227, it's after `:id`. Since React Router v7 uses "best match" rather than "first match" for similar specificity, `/printers/compare` is more specific than `/printers/:id`. However, to be safe, we'll move it before `:id` explicitly.
 
 ---
 
 ### What Will NOT Change
 
-- The visual design of `/reference/materials` Knowledge Base hub — same two-panel layout, same dark theme, same accordion behavior for users
-- The existing 12-slug `MATERIAL_SLUG_CONFIG` — we're extending it, not replacing it
-- Database schema — zero DB migrations needed
-- The `MaterialDetailView` component in `MaterialReference.tsx` — it still powers the right panel of the hub page
-- Admin panel, pricing, affiliate links
-- `/filaments/:slug` category pages — separate system, untouched
-
----
-
-### Priority Order
-
-1. Fix `td_value` → `transmission_distance` bug in `MaterialHub.tsx` (fixes "0 Products" immediately)
-2. Convert sidebar buttons to `<a>` links in `MaterialReference.tsx` (makes all 236 material URLs crawlable)
-3. Add Knowledge Base content sections to `MaterialHub.tsx` (major content unlock)
-4. Update H1, meta title/description, and Article schema in `MaterialHub.tsx`
-5. Enhance FAQPage JSON-LD with material-specific questions
-6. Update `MaterialKnowledgeBase.tsx` hub page (H1, families grid, CollectionPage schema)
-7. Update prerender for `/materials/:slug` with richer body content, Article schema, FAQPage schema
-8. Add new material slugs to sitemap
-
+- The visual design of printer cards (only `<h3>` → `<p>` tag change, same CSS)
+- The existing filter logic in `PrintersLeftSidebar`
+- Admin functionality, rescraping, image editing
+- The `PrinterDetail` page (individual printer pages)
+- The `PrinterCompare` page
+- The printer hero section visual design (tagline stays as decorative `<p aria-hidden>`)
+- Mobile filter drawer behavior
