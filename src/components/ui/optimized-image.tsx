@@ -138,8 +138,9 @@ export const OptimizedImage = memo(function OptimizedImage({
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(!src); // immediately error if no src
   const imgRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Set up intersection observer for lazy loading
   useEffect(() => {
@@ -159,15 +160,36 @@ export const OptimizedImage = memo(function OptimizedImage({
     return () => observer.disconnect();
   }, [priority]);
 
+  // Timeout: if the image doesn't load within 8s, show the placeholder
+  useEffect(() => {
+    if (!src || error || isLoaded) return;
+    // Only start the timer once the image is in view (or priority)
+    if (!isInView && !priority) return;
+
+    timeoutRef.current = setTimeout(() => {
+      if (!isLoaded) {
+        setError(true);
+        onError?.();
+      }
+    }, 8000);
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [src, error, isLoaded, isInView, priority, onError]);
+
   const handleLoad = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setIsLoaded(true);
     onLoad?.();
   };
 
   const handleError = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setError(true);
     onError?.();
   };
+
 
   // Responsive widths for srcset
   const srcSetWidths = [200, 400];
@@ -249,7 +271,7 @@ export const OptimizedImage = memo(function OptimizedImage({
       {/* Spinner loading placeholder */}
       {!isLoaded && !blurDataUrl && (
         <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-          <Loader2 size={24} className="text-gray-700 animate-spin" />
+          <Loader2 size={24} className="text-muted-foreground/40 animate-spin" />
         </div>
       )}
 
@@ -296,11 +318,15 @@ export const ProductCardImage = memo(function ProductCardImage({
   alt,
   className,
   priority = false,
+  colorHex,
+  material,
 }: {
   src: string | null | undefined;
   alt: string;
   className?: string;
   priority?: boolean;
+  colorHex?: string | null;
+  material?: string | null;
 }) {
   return (
     <OptimizedImage
@@ -312,6 +338,8 @@ export const ProductCardImage = memo(function ProductCardImage({
       height={200}
       priority={priority}
       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
+      colorHex={colorHex}
+      material={material}
     />
   );
 });
