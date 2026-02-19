@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { DealQualityDots } from "./DealQualityBadge";
 import { Link, useNavigate } from "react-router-dom";
 import { getFilamentHref } from "@/lib/filamentUrl";
@@ -18,6 +18,7 @@ import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization"
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { toBrandSlug } from "@/utils/brandSlug";
 import { isVerifiedBrand } from "@/lib/verifiedBrands";
+import { trackDealItemView, trackOutboundClick } from "@/lib/analytics";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
 
@@ -205,6 +206,8 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const navigate = useNavigate();
   const { getAffiliateUrl } = useAffiliateLinks();
   const { getLocalStore, region } = useRegionalStores();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const viewFiredRef = useRef(false);
 
   const hasPriceRange = group.priceRange.min !== group.priceRange.max;
   const hasColors = group.colorHexes.length > 0;
@@ -246,6 +249,29 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     : 0;
   const isVeryStale = staleDays >= 45;
 
+  // Fire view_item once when card scrolls into view
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !viewFiredRef.current) {
+          viewFiredRef.current = true;
+          trackDealItemView({
+            productId: group.representativeDeal.id,
+            productName: group.baseName,
+            brand: group.representativeDeal.vendor || '',
+            price: group.priceRange.min ?? undefined,
+            discountPercent: group.bestDiscount,
+          });
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const handleShareClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -257,6 +283,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     e.stopPropagation();
 
     if (hasLocalAlternative && localStore) {
+      trackOutboundClick(localStore.baseUrl, `deal_local_store:${group.representativeDeal.vendor}`);
       window.open(localStore.baseUrl, "_blank", "noopener,noreferrer");
       return;
     }
@@ -266,11 +293,9 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
         group.representativeDeal.product_url,
         group.representativeDeal.vendor
       );
-      window.open(
-        affiliateUrl || group.representativeDeal.product_url,
-        "_blank",
-        "noopener,noreferrer"
-      );
+      const dest = affiliateUrl || group.representativeDeal.product_url;
+      trackOutboundClick(dest, `deal_check_price:${group.baseName}`);
+      window.open(dest, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -278,6 +303,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (localStore) {
+      trackOutboundClick(localStore.baseUrl, `deal_local_store:${group.representativeDeal.vendor}`);
       window.open(localStore.baseUrl, "_blank", "noopener,noreferrer");
     }
   };
@@ -300,6 +326,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
   return (
     <>
       <Card
+        ref={cardRef}
         className={cn(
           "group/card deal-card-hover relative h-full overflow-hidden transition-all duration-200 flex flex-col cursor-pointer",
           "hover:shadow-lg hover:shadow-primary/10 hover:border-primary/40",

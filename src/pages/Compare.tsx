@@ -23,7 +23,7 @@ import { CompareActionRow, TDValueBadge } from "@/components/compare/CompareActi
 import { MobileCompareView } from "@/components/compare/MobileCompareView";
 import { MobileStickyBuyBar } from "@/components/compare/MobileStickyBuyBar";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
-import { trackComparison as trackGA4Comparison } from "@/lib/analytics";
+import { trackComparison as trackGA4Comparison, trackComparisonComplete } from "@/lib/analytics";
 import { useCompare } from "@/hooks/useCompare";
 import { useCompareRegionalPrices } from "@/hooks/useCompareRegionalPrices";
 import { useRegion } from "@/contexts/RegionContext";
@@ -184,6 +184,8 @@ const Compare = () => {
         brands: [...new Set(filaments.map(f => f.vendor).filter(Boolean))] as string[],
         category: filaments[0]?.material || undefined,
       });
+      // Also fire the richer comparison_complete event
+      trackComparisonComplete(filaments.length);
     }
   }, [filaments.length]);
 
