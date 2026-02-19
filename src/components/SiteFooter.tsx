@@ -219,7 +219,7 @@ export function SiteFooter() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-start gap-8 lg:gap-12 flex-wrap">
             {[
-              { icon: Package, stat: "1,073+", label: "Filaments Tracked" },
+              { icon: Package, stat: "1,080+", label: "Filaments Tracked" },
               { icon: Building2, stat: "48+", label: "Brands Monitored" },
               { icon: ShoppingCart, stat: "15+", label: "Retailers Connected" },
               { icon: RefreshCw, stat: "Daily", label: "Price Updates" },

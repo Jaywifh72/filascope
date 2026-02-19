@@ -44,7 +44,7 @@ const BrandsHeroSection = ({
 
   const PLACEHOLDERS = [
     "Try 'flexible TPU'",
-    "Search 1,073+ filaments",
+    "Search 1,080+ filaments",
     "Find 'Bambu Lab filament'",
     "Try 'high temp PETG'",
     "Search by color or brand",

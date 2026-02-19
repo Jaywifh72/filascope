@@ -127,7 +127,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
   const displayProductCount = productCount > 0 ? productCount : (cached?.productCount ?? null);
   const displayVariantCount = filamentCount > 0 ? filamentCount : (cached?.filamentCount ?? null);
   // For brand count: live → cache → fallback of 25 (never show skeleton forever)
-  const displayBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? 25);
+  const displayBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? 48);
 
   // Cache successful live values (all three must be valid)
   useEffect(() => {
