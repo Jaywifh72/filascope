@@ -535,7 +535,7 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
           <div className="bg-purple-500/5 border border-purple-500/20 rounded-lg p-3 mt-3">
             <p className="text-xs text-muted-foreground">
               This data is essential for HueForge filament painting.{' '}
-              <Link to="/compare?tab=reference" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+              <Link to="/reference/materials" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
                 Learn more about TD values →
               </Link>
             </p>

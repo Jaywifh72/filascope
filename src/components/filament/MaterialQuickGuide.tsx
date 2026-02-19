@@ -201,7 +201,7 @@ export function MaterialQuickGuide({ material, sessionViewCount }: MaterialQuick
 
           {/* Learn more link */}
           <Link
-            to={`/compare?tab=reference`}
+            to={`/reference/materials`}
             className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
           >
             Learn more about {materialDisplayName}
