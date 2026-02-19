@@ -61,6 +61,25 @@ async function flushAnalytics(userId?: string) {
     } catch (error) {
       console.error('Failed to flush search analytics:', error);
     }
+
+    // Also write to search_logs for zero-result analysis
+    try {
+      await supabase.from('search_logs').insert(
+        searches.map(s => ({
+          search_term: s.query,
+          results_count: s.result_count,
+          filters_applied: s.filters_applied ? { filters: s.filters_applied } : null,
+          region: null, // will be enriched by caller if needed
+          session_id: sessionId,
+          user_id: userId || null,
+          time_to_results_ms: s.time_to_results_ms ?? null,
+          source_page: typeof window !== 'undefined' ? window.location.pathname : null,
+          created_at: new Date().toISOString(),
+        }))
+      );
+    } catch (error) {
+      // fire-and-forget, don't block user experience
+    }
   }
 }
 

@@ -8,8 +8,11 @@ import type { AffiliateProgram, AffiliateDiscountCode } from "@/types/affiliate"
 
 export interface ClickMetadata {
   productName?: string;
+  productSlug?: string;
   sourcePage?: string;
   sourceComponent?: string;
+  price?: number;
+  currency?: string;
 }
 
 interface UseAffiliateLinkResult {
@@ -155,8 +158,11 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
           brandName: program.brand_name,
           regionCode: program.region_code,
           productName: metadata.productName,
+          productSlug: metadata.productSlug,
           sourcePage: metadata.sourcePage || window.location.pathname,
           sourceComponent: metadata.sourceComponent,
+          price: metadata.price,
+          currency: metadata.currency,
         }).catch(() => {});
       }
 
