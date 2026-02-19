@@ -107,6 +107,7 @@ const AdminStores = lazy(() => import("./pages/AdminStores"));
 const AdminAffiliateHub = lazy(() => import("./pages/AdminAffiliateHub"));
 const AdminPricingData = lazy(() => import("./pages/admin/PricingData"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
+const FilamentCategoryPage = lazy(() => import("./pages/FilamentCategoryPage"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
 const SharedWishlist = lazy(() => import("./pages/SharedWishlist"));
@@ -211,7 +212,8 @@ const App = () => (
                   <Routes>
                   <Route path="/" element={<Finder />} />
                   <Route path="/finder" element={<Finder />} />
-                  <Route path="/filaments" element={<Navigate to="/" replace />} />
+                  <Route path="/filaments" element={<FilamentCategoryPage />} />
+                  <Route path="/filaments/:slug" element={<FilamentCategoryPage />} />
                   <Route path="/brands" element={<Brands />} />
                   <Route path="/brands/compare" element={<BrandComparePage />} />
                   <Route path="/brands/:brand/:material" element={<BrandMaterialPage />} />

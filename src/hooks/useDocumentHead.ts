@@ -60,6 +60,10 @@ export interface DocumentHeadOptions {
   productTargetCountry?: string;
   /** product:transmission_distance */
   productTransmissionDistance?: string;
+  /** rel="prev" pagination link href */
+  paginationPrev?: string;
+  /** rel="next" pagination link href */
+  paginationNext?: string;
 }
 
 // ── helpers ────────────────────────────────────────────────
@@ -139,6 +143,10 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
     if (opts.productTargetCountry) upsertMeta('property', 'product:target_country', opts.productTargetCountry);
     if (opts.productTransmissionDistance) upsertMeta('property', 'product:transmission_distance', opts.productTransmissionDistance);
 
+    // Pagination rel links
+    if (opts.paginationPrev) upsertLink('prev', opts.paginationPrev);
+    if (opts.paginationNext) upsertLink('next', opts.paginationNext);
+
     // Cleanup → only revert tags that THIS call explicitly set
     return () => {
       if (opts.title) document.title = DEFAULTS.title;
@@ -168,6 +176,8 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
       if (opts.productAvailability) removeMeta('property', 'product:availability');
       if (opts.productTargetCountry) removeMeta('property', 'product:target_country');
       if (opts.productTransmissionDistance) removeMeta('property', 'product:transmission_distance');
+      if (opts.paginationPrev) document.head.querySelector('link[rel="prev"]')?.remove();
+      if (opts.paginationNext) document.head.querySelector('link[rel="next"]')?.remove();
     };
   }, [
     opts.title, opts.description, opts.canonical,
@@ -176,5 +186,6 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
     opts.keywords, opts.rating, opts.geoRegion,
     opts.productBrand, opts.productCategory, opts.productPriceAmount, opts.productPriceCurrency,
     opts.productAvailability, opts.productTargetCountry, opts.productTransmissionDistance,
+    opts.paginationPrev, opts.paginationNext,
   ]);
 }

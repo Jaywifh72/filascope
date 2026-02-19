@@ -152,6 +152,27 @@ const Finder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
+
+  // Redirect legacy ?material= param to /filaments/:slug
+  useEffect(() => {
+    const materialParam = searchParams.get("material");
+    if (materialParam) {
+      const slugMap: Record<string, string> = {
+        PLA: "pla", PETG: "petg", ABS: "abs", TPU: "tpu", ASA: "asa",
+        "Silk PLA": "silk-pla", "Silk+PLA": "silk-pla",
+        PA: "nylon", Nylon: "nylon",
+        "High+Speed+PLA": "high-speed-pla", "High Speed PLA": "high-speed-pla",
+        "PLA+": "pla-plus", "PLA-HS": "high-speed-pla",
+        PC: "polycarbonate", Polycarbonate: "polycarbonate",
+        "PETG-CF": "petg-cf",
+      };
+      const decoded = decodeURIComponent(materialParam);
+      const targetSlug = slugMap[materialParam] || slugMap[decoded];
+      if (targetSlug) {
+        navigate(`/filaments/${targetSlug}`, { replace: true });
+      }
+    }
+  }, []); // Only on mount
   
   // Scroll restoration for back/forward navigation
   const { savePaginationState, restorePaginationState } = useScrollRestoration('finder');
