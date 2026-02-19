@@ -252,6 +252,14 @@ function buildRegionalUrl(
   if (!url.startsWith('http')) {
     url = baseUrl.replace(/\/$/, '') + '/' + url.replace(/^\//, '');
   }
+
+  // Guard: if the URL still contains unresolved template tokens (e.g. {sku}),
+  // the slug substitution failed — fall back to baseUrl rather than sending
+  // a malformed URL to the edge function.
+  if (/\{[^}]+\}/.test(url)) {
+    console.warn(`[buildRegionalUrl] Unresolved token in URL "${url}", falling back to baseUrl`);
+    return baseUrl;
+  }
   
   return url;
 }
