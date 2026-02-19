@@ -92,6 +92,10 @@ const ExpandedPlatformCard: React.FC<ExpandedPlatformCardProps> = ({
             src={logo} 
             alt={`${repo.name} logo`}
             className="w-10 h-10 md:w-12 md:h-12 rounded-lg object-contain bg-muted/30 p-1.5 flex-shrink-0"
+            loading="lazy"
+            width={48}
+            height={48}
+            decoding="async"
           />
         )}
         <div className="flex-1 min-w-0">

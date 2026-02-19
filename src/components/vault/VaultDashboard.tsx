@@ -217,6 +217,10 @@ function BrowsingHistoryFeed({ userId, historyCount, onViewAll }: { userId: stri
                         src={filament.featured_image}
                         alt={filament.product_title}
                         className="h-full w-full object-cover"
+                        loading="lazy"
+                        width={40}
+                        height={40}
+                        decoding="async"
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-xs font-bold text-muted-foreground bg-gradient-to-br from-muted/80 to-muted">

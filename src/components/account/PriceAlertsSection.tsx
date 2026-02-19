@@ -107,6 +107,10 @@ export function PriceAlertsSection() {
                     src={alert.filament.featured_image}
                     alt={alert.filament.product_title}
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    width={48}
+                    height={48}
+                    decoding="async"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">

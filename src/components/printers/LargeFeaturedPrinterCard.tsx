@@ -160,6 +160,9 @@ export default function LargeFeaturedPrinterCard({
                     width={280}
                     height={280}
                     loading="lazy"
+                    decoding="async"
+                    srcSet={`${productImage} 280w, ${productImage} 560w`}
+                    sizes="(max-width: 640px) 100vw, 280px"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                       (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');

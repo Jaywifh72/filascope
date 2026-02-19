@@ -87,6 +87,10 @@ export function WishlistDropdown({
                     src={item.filament.featured_image}
                     alt={item.filament.product_title}
                     className="h-full w-full object-cover"
+                    loading="lazy"
+                    width={48}
+                    height={48}
+                    decoding="async"
                   />
                 ) : (
                   <div

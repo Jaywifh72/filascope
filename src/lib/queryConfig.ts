@@ -1,6 +1,11 @@
 /**
  * Centralized React Query cache configuration
  * Provides standardized staleTime and gcTime for different data types
+ *
+ * Stale-While-Revalidate strategy:
+ * - staleTime: How long data is considered "fresh" (served from cache without refetch)
+ * - gcTime: How long unused data stays in memory (garbage collection timeout)
+ * Long staleTime = serve from cache immediately, refresh in background = SWR behaviour
  */
 
 export const QUERY_CONFIG = {
@@ -10,9 +15,9 @@ export const QUERY_CONFIG = {
     gcTime: 1000 * 60 * 30,    // 30 minutes
   },
   
-  // Printer data - changes less frequently
+  // Printer data - changes less frequently; long SWR window
   printers: {
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 15, // 15 minutes (SWR: serve stale, refresh in bg)
     gcTime: 1000 * 60 * 60,    // 1 hour
   },
   
@@ -28,7 +33,7 @@ export const QUERY_CONFIG = {
     gcTime: 1000 * 60 * 15,    // 15 minutes
   },
   
-  // Static reference data - rarely changes
+  // Static reference data - rarely changes; aggressive SWR caching
   static: {
     staleTime: Infinity,
     gcTime: Infinity,
@@ -40,15 +45,28 @@ export const QUERY_CONFIG = {
     gcTime: 1000 * 60 * 30,    // 30 minutes
   },
   
-  // Brands - infrequent updates
+  // Brands - infrequent updates; long SWR window for fast listing renders
   brands: {
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    gcTime: 1000 * 60 * 60,    // 1 hour
+    staleTime: 1000 * 60 * 20, // 20 minutes SWR (was 15min)
+    gcTime: 1000 * 60 * 90,    // 90 minutes (was 60min)
+  },
+
+  // Material reference data (specs, guides, hub pages) - rarely changes
+  materials: {
+    staleTime: 1000 * 60 * 30, // 30 minutes SWR
+    gcTime: 1000 * 60 * 120,   // 2 hours
+  },
+
+  // Printer specs / compatibility matrices - stable reference data
+  printerSpecs: {
+    staleTime: 1000 * 60 * 30, // 30 minutes SWR
+    gcTime: 1000 * 60 * 120,   // 2 hours
   },
 } as const;
 
 /**
  * Default query client options
+ * Uses stale-while-revalidate: return stale data immediately, refetch in background
  */
 export const DEFAULT_QUERY_OPTIONS = {
   staleTime: 1000 * 60 * 2,    // 2 minutes default
