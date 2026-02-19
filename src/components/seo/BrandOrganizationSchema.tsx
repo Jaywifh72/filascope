@@ -27,6 +27,8 @@ export function BrandOrganizationSchema({
   founded,
   topProducts,
 }: BrandOrganizationSchemaProps) {
+  const brandPageUrl = `${BASE_URL}/brands/${slug}`;
+
   const orgJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -57,8 +59,28 @@ export function BrandOrganizationSchema({
     orgJsonLd.makesOffer = offer;
   }
 
-  // Breadcrumb is now handled exclusively by DetailBreadcrumb — removed to avoid duplicates
+  // CollectionPage for the brand's product listing on FilaScope
+  const collectionPageJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${name} 3D Printer Filaments`,
+    description: description || `Browse all ${name} filaments — prices, specs, and availability on FilaScope.`,
+    url: brandPageUrl,
+    ...(logo && { image: logo }),
+    ...(productCount && productCount > 0 && {
+      numberOfItems: productCount,
+    }),
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Brands', item: `${BASE_URL}/brands` },
+        { '@type': 'ListItem', position: 3, name, item: brandPageUrl },
+      ],
+    },
+  };
 
+  // ItemList of top products if available
   const itemListJsonLd =
     topProducts && topProducts.length > 0
       ? {
@@ -75,7 +97,7 @@ export function BrandOrganizationSchema({
         }
       : null;
 
-  useJsonLdMultiple([orgJsonLd, itemListJsonLd]);
+  useJsonLdMultiple([orgJsonLd, collectionPageJsonLd, itemListJsonLd]);
 
   return null;
 }
