@@ -502,7 +502,7 @@ const Deals = () => {
                     <Link to="/finder" className="group p-3 rounded-lg border border-border hover:border-primary/30 transition-colors text-center">
                       <Package className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground group-hover:text-primary transition-colors" />
                       <p className="text-xs font-medium text-foreground">Browse Filaments</p>
-                      <p className="text-[10px] text-muted-foreground">1,073+ products</p>
+                      <p className="text-[10px] text-muted-foreground">1,080+ products</p>
                     </Link>
                     <Link to="/printers" className="group p-3 rounded-lg border border-border hover:border-primary/30 transition-colors text-center">
                       <Printer className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground group-hover:text-primary transition-colors" />

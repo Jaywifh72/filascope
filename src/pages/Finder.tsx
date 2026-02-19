@@ -1025,7 +1025,7 @@ const Finder = () => {
         <div className="text-center mb-6">
           <h2 className="text-xl font-semibold text-foreground">Explore the Filament Catalog</h2>
           <p className="text-sm text-muted-foreground mt-1.5">
-            Explore {unfilteredProductCount ? `${unfilteredProductCount.toLocaleString()}+` : "1,000+"} filaments from 48+ brands. Filter by material, printer compatibility, price, and more.
+            Explore {unfilteredProductCount ? `${unfilteredProductCount.toLocaleString()}+` : "1,000+"} filaments from {unfilteredBrandCount > 0 ? `${unfilteredBrandCount}+` : "40+"} brands. Filter by material, printer compatibility, price, and more.
           </p>
         </div>
       </div>

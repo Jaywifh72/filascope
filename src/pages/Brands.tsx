@@ -375,11 +375,11 @@ const Brands = () => {
   return (
     <>
       <DocumentHead
-        title={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}
+        title={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
         description={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`}
-        ogTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}
+        ogTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
         ogDescription={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`}
-        twitterTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}
+        twitterTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
         twitterDescription={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`}
       />
       <BreadcrumbSchema items={[
