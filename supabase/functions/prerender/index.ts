@@ -219,6 +219,11 @@ async function getPageData(path: string, supabase: SupabaseClient): Promise<Page
 
   // /brands/compare must come BEFORE /brands/:slug
   if (path === "/brands/compare") return brandComparePage();
+
+  // /brands/:brand/:material must come before /brands/:brand
+  const bmm = path.match(/^\/brands\/([^\/]+)\/([^\/]+)$/);
+  if (bmm) return await brandMaterialPage(bmm[1], bmm[2], supabase);
+
   const bm = path.match(/^\/brands\/(.+)$/);
   if (bm) return await brandPage(bm[1], supabase);
   if (path === "/brands") return await brandsListing(supabase);
@@ -234,7 +239,16 @@ async function getPageData(path: string, supabase: SupabaseClient): Promise<Page
   if (path === "/learn") return learnPage();
   if (path === "/compare") return comparePage();
 
+  // /materials/:slug (after /materials/compare which is matched below)
+  if (path === "/materials/compare") return comparePage();
+  const mm = path.match(/^\/materials\/(.+)$/);
+  if (mm) return await materialPage(mm[1], supabase);
+
+  // /colors/:family (after /colors exact)
   if (path === "/color-finder" || path === "/colors") return colorFinderPage();
+  const cm = path.match(/^\/colors\/(.+)$/);
+  if (cm) return await colorFamilyPage(cm[1], supabase);
+
   if (path === "/hueforge-td-database" || path === "/td-database") return hueforgeDbPage();
   if (path === "/hueforge-filaments") return hueforgeFinderPage();
   if (path === "/about") return aboutPage();
@@ -861,6 +875,15 @@ const STATIC_PAGES = [
   { path: "/affiliate-disclosure", priority: 0.2, changefreq: "yearly" },
   { path: "/privacy", priority: 0.2, changefreq: "yearly" },
   { path: "/terms", priority: 0.2, changefreq: "yearly" },
+  { path: "/materials/pla", priority: 0.9, changefreq: "weekly" },
+  { path: "/materials/petg", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/abs", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/tpu", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/asa", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/pla-plus", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/silk-pla", priority: 0.6, changefreq: "weekly" },
+  { path: "/materials/nylon", priority: 0.6, changefreq: "weekly" },
+  { path: "/materials/pc", priority: 0.6, changefreq: "weekly" },
 ];
 
 const GUIDE_SLUGS = [

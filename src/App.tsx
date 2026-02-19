@@ -156,6 +156,9 @@ const BestFilamentsForHueForge = lazy(() => import("./pages/BestFilamentsForHueF
 const PLAVsPETG = lazy(() => import("./pages/PLAVsPETG"));
 const BestWhiteFilaments = lazy(() => import("./pages/BestWhiteFilaments"));
 const FilamentDatabase = lazy(() => import("./pages/FilamentDatabase"));
+const MaterialHub = lazy(() => import("./pages/MaterialHub"));
+const BrandMaterialPage = lazy(() => import("./pages/BrandMaterialPage"));
+const ColorFamilyPage = lazy(() => import("./pages/ColorFamilyPage"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -211,9 +214,11 @@ const App = () => (
                   <Route path="/filaments" element={<Navigate to="/" replace />} />
                   <Route path="/brands" element={<Brands />} />
                   <Route path="/brands/compare" element={<BrandComparePage />} />
+                  <Route path="/brands/:brand/:material" element={<BrandMaterialPage />} />
                   <Route path="/brands/:brand" element={<BrandDetail />} />
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/materials/compare" element={<MaterialCompare />} />
+                  <Route path="/materials/:slug" element={<MaterialHub />} />
                   <Route path="/printers" element={<Printers />} />
                   <Route path="/printers/:id" element={<PrinterDetail />} />
                   <Route path="/printers/compare" element={<PrinterCompare />} />
@@ -287,6 +292,7 @@ const App = () => (
                   <Route path="/reference/repos/quiz-test" element={<QuizScoringTest />} />
                   <Route path="/hueforge-filaments" element={<HueForgeFinder />} />
                   <Route path="/colors" element={<ColorFinder />} />
+                  <Route path="/colors/:family" element={<ColorFamilyPage />} />
                   <Route path="/td-database" element={<TDDatabase />} />
                   <Route path="/hueforge-td-database" element={<HueForgeTDDatabase />} />
                   <Route path="/learn" element={<LearningCenter />} />
