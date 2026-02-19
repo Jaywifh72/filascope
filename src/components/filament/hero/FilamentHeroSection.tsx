@@ -86,6 +86,9 @@ export function FilamentHeroSection({
                   images={[displayFilament.featured_image]}
                   productTitle={displayFilament.product_title}
                   colorHex={displayFilament.color_hex}
+                  brand={pricingFilament.vendor}
+                  material={pricingFilament.material}
+                  colorFamily={displayFilament.color_family}
                 />
               </div>
             </div>

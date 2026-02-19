@@ -53,6 +53,7 @@ import { cleanFilamentDisplayName, getProductLineName } from "@/lib/productNameU
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
 import { RelatedFilaments } from "@/components/filament/RelatedFilaments";
 import { BrandQuickLinks } from "@/components/filament/BrandQuickLinks";
+import { RelatedGuidesLinks } from "@/components/filament/RelatedGuidesLinks";
 import { QuickSummaryBar } from "@/components/filament/QuickSummaryBar";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
@@ -1060,6 +1061,7 @@ const FilamentDetail = () => {
 
       {/* Similar Filaments Section - Full width, OUTSIDE the two-column container so sidebar stops sticking */}
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+        <h2 className="sr-only">Similar Filaments</h2>
         <SimilarFilamentsSection
           currentFilament={{
             id: displayFilament.id,
@@ -1083,11 +1085,17 @@ const FilamentDetail = () => {
           }}
         />
 
-        {/* Brand Quick Links + Related Filaments for internal linking / SEO */}
+        {/* Brand Quick Links + Related Guides for internal linking / SEO */}
         <BrandQuickLinks
           brand={displayFilament.vendor}
           material={displayFilament.material}
           filamentId={displayFilament.id}
+        />
+        <RelatedGuidesLinks
+          brand={displayFilament.vendor}
+          material={displayFilament.material}
+          filamentId={displayFilament.id}
+          hasTransmissionDistance={displayFilament.transmission_distance != null}
         />
         <RelatedFilaments
           filamentId={displayFilament.id}
