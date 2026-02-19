@@ -1,7 +1,7 @@
 // Filament comparison page
 import React, { useEffect, useState, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, WebApplicationSchema } from "@/components/seo";
+import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema } from "@/components/seo";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -462,6 +462,22 @@ const Compare = () => {
         description="Compare 3D printer filaments side by side. Specs, prices, TD values, and printer compatibility."
         offers={{ price: "0", priceCurrency: "USD" }}
       />
+      {filaments.length >= 2 && (
+        <CompareActionSchema
+          products={filaments.map((f) => {
+            const resolved = resolvedPrices.get(f.id);
+            return {
+              id: f.id,
+              name: f.product_title || '',
+              slug: f.product_handle || null,
+              brand: f.vendor || null,
+              material: f.material || null,
+              price: resolved?.spoolPrice ?? null,
+              currency: currency,
+            };
+          })}
+        />
+      )}
       <div className="min-h-screen bg-background relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,207,232,0.03)_0%,_transparent_50%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,_rgba(255,0,85,0.02)_0%,_transparent_40%)] pointer-events-none" />

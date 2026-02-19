@@ -17,4 +17,5 @@ export { HreflangTags } from './HreflangTags';
 export { FAQSection } from './FAQSection';
 export { Breadcrumbs } from './Breadcrumbs';
 export { FilamentFAQSchema } from './FilamentFAQSchema';
+export { CompareActionSchema } from './CompareActionSchema';
 

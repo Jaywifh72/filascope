@@ -1,4 +1,15 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLdMultiple } from './useJsonLd';
+
+const BASE_URL = 'https://filascope.com';
+
+const NAV_ITEMS = [
+  { name: 'Filaments', url: `${BASE_URL}/filaments` },
+  { name: 'Printers',  url: `${BASE_URL}/printers` },
+  { name: 'Brands',    url: `${BASE_URL}/brands` },
+  { name: 'Deals',     url: `${BASE_URL}/deals` },
+  { name: 'Guides',    url: `${BASE_URL}/learn` },
+  { name: 'HueForge TD Database', url: `${BASE_URL}/hueforge-td` },
+] as const;
 
 interface WebSiteSchemaProps {
   name?: string;
@@ -9,11 +20,11 @@ interface WebSiteSchemaProps {
 
 export function WebSiteSchema({
   name = 'FilaScope',
-  url = 'https://filascope.com',
+  url = BASE_URL,
   description = 'Compare 3D printer filaments by material, price, and specifications. Find the perfect filament for your printer with real-time pricing and HueForge TD values.',
-  searchTargetUrl = 'https://filascope.com/?search={search_term_string}',
+  searchTargetUrl = `${BASE_URL}/?search={search_term_string}`,
 }: WebSiteSchemaProps) {
-  useJsonLd({
+  const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name,
@@ -24,7 +35,16 @@ export function WebSiteSchema({
       target: { '@type': 'EntryPoint', urlTemplate: searchTargetUrl },
       'query-input': 'required name=search_term_string',
     },
-  });
+  };
+
+  const siteNavSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SiteNavigationElement',
+    name: NAV_ITEMS.map((n) => n.name),
+    url: NAV_ITEMS.map((n) => n.url),
+  };
+
+  useJsonLdMultiple([websiteSchema, siteNavSchema]);
 
   return null;
 }
