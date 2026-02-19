@@ -492,7 +492,9 @@ export function useFilamentColorVariants(
 
   const handleColorVariantSelect = useCallback((variant: Filament) => {
     setSelectedVariant(variant);
-    window.history.replaceState({}, '', `/filament/${variant.id}`);
+    // Use product_handle (slug) for SEO-friendly URLs; fall back to id only if missing
+    const slug = (variant as any).product_handle || variant.id;
+    window.history.replaceState({}, '', `/filament/${slug}`);
   }, []);
 
   useEffect(() => {

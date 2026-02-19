@@ -42,6 +42,10 @@ interface ProductJsonLdProps {
   printSpeedMax?: number | null;
   weightGrams?: number | null;
   diameter?: number | null;
+  // New: color hex, FilaScore, dateModified
+  colorHex?: string | null;
+  filaScopeScore?: number | null;
+  dateModified?: string | null;
   // Printer-specific
   buildVolume?: { x: number; y: number; z: number } | null;
   maxPrintSpeed?: number | null;
@@ -86,6 +90,9 @@ export function ProductJsonLd({
   printSpeedMax,
   weightGrams,
   diameter,
+  colorHex,
+  filaScopeScore,
+  dateModified,
   buildVolume,
   maxPrintSpeed,
   printerType,
@@ -219,6 +226,23 @@ export function ProductJsonLd({
     });
   }
 
+  // Color hex and FilaScore
+  if (colorHex) {
+    additionalProperties.push({
+      '@type': 'PropertyValue',
+      name: 'Color Hex Code',
+      value: colorHex,
+    });
+  }
+  if (filaScopeScore != null) {
+    additionalProperties.push({
+      '@type': 'PropertyValue',
+      name: 'FilaScore',
+      value: filaScopeScore,
+      description: 'FilaScope quality rating out of 10',
+    });
+  }
+
   // Build offers array for regional pricing (Schema.org AggregateOffer)
   const buildOffers = () => {
     // If we have regional offers, create AggregateOffer + individual Offers
@@ -287,6 +311,7 @@ export function ProductJsonLd({
     '@type': 'Product',
     name,
     description,
+    ...(dateModified && { dateModified }),
     ...(image && { image }),
     ...(brand && {
       brand: {

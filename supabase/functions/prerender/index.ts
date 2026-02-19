@@ -101,6 +101,7 @@ interface PageData {
   breadcrumbs: { name: string; url: string }[];
   h1: string;
   bodyText: string;
+  modifiedTime?: string;
 }
 
 // ============================================================
@@ -149,6 +150,7 @@ function buildHtml(data: PageData): string {
     <meta name="twitter:title" content="${escapeHtml(data.title)}" />
     <meta name="twitter:description" content="${escapeHtml(data.description)}" />
     <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
+    ${data.modifiedTime ? `<meta property="article:modified_time" content="${escapeHtml(data.modifiedTime)}" />` : ''}
     ${jsonLdScripts}
   </head>
   <body>
@@ -294,7 +296,7 @@ function homepage(): PageData {
 }
 
 async function filamentPage(slug: string, supabase: SupabaseClient): Promise<PageData> {
-  const cols = "id, product_handle, product_title, display_name, vendor, material, color, variant_price, featured_image, diameter_nominal_mm, net_weight_g, nozzle_temp_min_c, nozzle_temp_max_c, td_value";
+  const cols = "id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, featured_image, diameter_nominal_mm, net_weight_g, nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c, transmission_distance, filascope_score, updated_at, last_scraped_at";
   let { data } = await supabase.from("filaments").select(cols).eq("product_handle", slug).limit(1).maybeSingle();
   if (!data && slug.match(/^[0-9a-f-]{36}$/i)) {
     const r = await supabase.from("filaments").select(cols).eq("id", slug).limit(1).maybeSingle();
@@ -305,32 +307,38 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
   const name = data.display_name || data.product_title || "Filament";
   const brand = data.vendor || "";
   const material = data.material || "";
-  const color = data.color || "";
+  const color = data.color_family || "";
+  const colorHex = data.color_hex || null;
   const price = data.variant_price;
-  const td = data.td_value;
+  const td = data.transmission_distance;
+  const filaScore = data.filascope_score;
+  const modifiedAt = data.last_scraped_at || data.updated_at || null;
   const canonicalSlug = data.product_handle || data.id;
   const canonical = `/filament/${canonicalSlug}`;
+  const colorPart = color ? ` ${color}` : "";
 
-  // Title: include TD value if available, otherwise fall back to Specs & Price variant
-  let title: string;
+  // Title: include color + TD when available, target ≤60 chars
   const suffix = " | FilaScope";
+  let title: string;
   if (td) {
-    const mid = `${brand} ${name} — TD ${td} | ${material} Filament`;
+    const mid = `${brand} ${name}${colorPart} — ${material} Filament | TD ${td}`;
     title = mid.length + suffix.length <= 60 ? mid + suffix : `${brand} ${name} — TD ${td}${suffix}`;
   } else {
-    const mid = `${brand} ${name} — ${material} Filament Specs & Price`;
+    const mid = `${brand} ${name}${colorPart} — ${material} Filament`;
     title = mid.length + suffix.length <= 60 ? mid + suffix : `${brand} ${name} — ${material} Filament${suffix}`;
   }
   if (title.length > 60) title = `${brand} ${name}${suffix}`;
 
-  // Description: structured spec line + CTA, targeting 140-155 chars
+  // Description: TD+HueForge when available, 140-160 chars
   const nozzleStr = data.nozzle_temp_min_c && data.nozzle_temp_max_c
-    ? `, Nozzle: ${data.nozzle_temp_min_c}-${data.nozzle_temp_max_c}°C` : "";
-  const diaStr = data.diameter_nominal_mm ? `, ${data.diameter_nominal_mm}mm` : "";
-  const tdStr = td ? `TD: ${td}` : "TD: TBD";
-  const priceStr = price ? `From $${price}. ` : "";
-  const colorStr = color ? ` ${color}` : "";
-  let description = `${brand} ${name}${colorStr} ${material} filament — ${tdStr}${nozzleStr}${diaStr}. ${priceStr}Compare specs, read community reviews & find the best price on FilaScope.`;
+    ? `Nozzle ${data.nozzle_temp_min_c}-${data.nozzle_temp_max_c}°C.` : "";
+  const priceStr = price ? `From $${price}.` : "";
+  let description: string;
+  if (td) {
+    description = `${brand} ${name}${colorPart} ${material} filament with TD value ${td} for HueForge. ${nozzleStr} ${priceStr} Compare specs, TD data & prices on FilaScope.`.replace(/\s+/g, ' ').trim();
+  } else {
+    description = `${brand} ${name}${colorPart} ${material} filament. ${nozzleStr} ${priceStr} Compare specs, printer compatibility & prices on FilaScope.`.replace(/\s+/g, ' ').trim();
+  }
   if (description.length > 160) description = description.slice(0, 157) + "...";
 
   // Build additionalProperty array
@@ -339,10 +347,21 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
     additionalProperties.push({ "@type": "PropertyValue", "name": "Material Type", "value": material });
   }
   if (td != null) {
-    additionalProperties.push({ "@type": "PropertyValue", "name": "Transmission Distance (TD)", "value": td, "unitText": "mm" });
+    additionalProperties.push({
+      "@type": "PropertyValue",
+      "name": "HueForge Transmission Distance (TD)",
+      "value": td,
+      "description": "Transmission Distance value for HueForge color mixing and lithophane printing",
+    });
   }
   if (data.nozzle_temp_min_c && data.nozzle_temp_max_c) {
     additionalProperties.push({ "@type": "PropertyValue", "name": "Nozzle Temperature Range", "value": `${data.nozzle_temp_min_c}-${data.nozzle_temp_max_c}°C` });
+  }
+  if (colorHex) {
+    additionalProperties.push({ "@type": "PropertyValue", "name": "Color Hex Code", "value": colorHex });
+  }
+  if (filaScore != null) {
+    additionalProperties.push({ "@type": "PropertyValue", "name": "FilaScore", "value": filaScore, "description": "FilaScope quality rating out of 10" });
   }
 
   // Price valid until 30 days from now
@@ -351,6 +370,7 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
   const productSchema: Record<string, unknown> = {
     "@context": "https://schema.org", "@type": "Product",
     name: `${brand} ${name}`, description,
+    ...(modifiedAt && { dateModified: modifiedAt }),
     ...(data.featured_image && { image: data.featured_image }),
     ...(brand && { brand: { "@type": "Brand", name: brand } }),
     sku: canonicalSlug,
@@ -375,11 +395,63 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
     };
   }
 
+  // Build FAQPage schema from available data
+  const faqs: Record<string, unknown>[] = [];
+  if (data.nozzle_temp_min_c && data.nozzle_temp_max_c) {
+    const mid = Math.round((data.nozzle_temp_min_c + data.nozzle_temp_max_c) / 2);
+    faqs.push({
+      "@type": "Question",
+      name: `What nozzle temperature for ${brand} ${name}${colorPart}?`,
+      acceptedAnswer: { "@type": "Answer", text: `Recommended nozzle temperature for ${brand} ${name}${colorPart} is ${data.nozzle_temp_min_c}–${data.nozzle_temp_max_c}°C. Start at ${mid}°C and adjust based on your results.` },
+    });
+  }
+  if (price) {
+    faqs.push({
+      "@type": "Question",
+      name: `How much does ${brand} ${name}${colorPart} cost?`,
+      acceptedAnswer: { "@type": "Answer", text: `${brand} ${name}${colorPart} is available from $${price.toFixed(2)} on FilaScope. Compare prices from multiple retailers to find the best deal.` },
+    });
+  }
+  if (td) {
+    const tdInterp = td < 2 ? "highly opaque, ideal for dark base layers" : td < 4 ? "semi-opaque, versatile for most HueForge projects" : "translucent, ideal for light-passing highlight layers";
+    faqs.push({
+      "@type": "Question",
+      name: `What is the TD value for ${brand} ${name}${colorPart}?`,
+      acceptedAnswer: { "@type": "Answer", text: `The TD (Transmission Distance) value for ${brand} ${name}${colorPart} is ${td}. This means it is ${tdInterp} in HueForge color mixing and lithophane printing.` },
+    });
+    faqs.push({
+      "@type": "Question",
+      name: `Is ${brand} ${name}${colorPart} good for HueForge?`,
+      acceptedAnswer: { "@type": "Answer", text: `Yes, ${brand} ${name}${colorPart} has a verified TD value of ${td}, making it a suitable choice for HueForge lithophane printing. TD values between 1.0–4.0 are most commonly used for base and highlight layers.` },
+    });
+  }
+  if (material) {
+    const easyMaterials = ['PLA', 'PLA+', 'PETG'];
+    const isEasy = easyMaterials.some(m => material.toUpperCase().startsWith(m));
+    faqs.push({
+      "@type": "Question",
+      name: `Is ${brand} ${name} good for beginners?`,
+      acceptedAnswer: { "@type": "Answer", text: isEasy ? `Yes, ${material} is one of the easiest materials to print with. ${brand} ${name} is well-suited for beginners with straightforward print settings.` : `${material} requires more experience to print reliably. Beginners may want to start with PLA before attempting ${brand} ${name}.` },
+    });
+  }
+
+  const faqSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs,
+  };
+
   const crumbs = [
     { name: "Home", url: "/" }, { name: "Filaments", url: "/" },
     ...(brand ? [{ name: brand, url: `/brands/${brand.toLowerCase().replace(/\s+/g, "-")}` }] : []),
     { name, url: canonical },
   ];
+
+  // H1: full brand+color+material, truncated to 70 chars
+  const h1Full = `${brand} ${name}${colorPart} — ${material} 3D Printer Filament`;
+  const h1Short = `${brand} ${name}${colorPart} — ${material} Filament`;
+  const h1Minimal = `${brand} ${name}${colorPart}`;
+  const h1 = h1Full.length <= 70 ? h1Full : h1Short.length <= 70 ? h1Short : h1Minimal;
 
   return {
     type: "product", title, description, canonical,
@@ -388,10 +460,11 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
       price: price ? `From $${price}` : undefined, image: data.featured_image || undefined,
     }),
     ogType: "product",
-    jsonLd: [productSchema, breadcrumbSchema(crumbs)],
+    jsonLd: faqs.length > 0 ? [productSchema, breadcrumbSchema(crumbs), faqSchema] : [productSchema, breadcrumbSchema(crumbs)],
     breadcrumbs: crumbs,
-    h1: `${brand} ${name}${color ? ` – ${color}` : ""} ${material} Filament`,
-    bodyText: `Complete specs, pricing, and compatibility info for ${brand} ${name} ${material} filament${td ? `. Transmission Distance (TD): ${td}` : ""}. Compare with similar filaments, check printer compatibility, and find the best deals.`,
+    h1,
+    bodyText: `Complete specs, pricing, and compatibility info for ${brand} ${name}${colorPart} ${material} filament${td ? `. Transmission Distance (TD): ${td}` : ""}. Compare with similar filaments, check printer compatibility, and find the best deals.`,
+    ...(modifiedAt && { modifiedTime: modifiedAt }),
   };
 }
 
