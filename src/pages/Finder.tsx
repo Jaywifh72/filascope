@@ -911,14 +911,18 @@ const Finder = () => {
     queryFn: async () => {
       const [rpcResult, brandResult] = await Promise.all([
         supabase.rpc("get_catalog_counts"),
-        supabase.from("v_public_brands").select("id", { count: "exact" }).limit(1),
+        supabase.from("v_public_brands").select("brand_slug"),
       ]);
       if (rpcResult.error) throw rpcResult.error;
       const row = rpcResult.data?.[0] || { product_count: 0, variant_count: 0 };
+      // Count distinct brands; fall back to 25 if the query fails
+      const brandCount = brandResult.error
+        ? 25
+        : (brandResult.data?.length ?? 25);
       return {
         productCount: Number(row.product_count) || 0,
         variantCount: Number(row.variant_count) || 0,
-        brandCount: brandResult.count || brandResult.data?.length || 0,
+        brandCount,
       };
     },
   });
