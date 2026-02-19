@@ -11,7 +11,7 @@ export function WebSiteSchema({
   name = 'FilaScope',
   url = 'https://filascope.com',
   description = 'Compare 3D printer filaments by material, price, and specifications. Find the perfect filament for your printer with real-time pricing and HueForge TD values.',
-  searchTargetUrl = 'https://filascope.com/?searchTerm={search_term_string}',
+  searchTargetUrl = 'https://filascope.com/?search={search_term_string}',
 }: WebSiteSchemaProps) {
   useJsonLd({
     '@context': 'https://schema.org',
