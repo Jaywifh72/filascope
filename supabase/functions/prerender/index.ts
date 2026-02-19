@@ -1532,6 +1532,37 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const userAgent = req.headers.get("user-agent");
+
+    // /api/prerender-test — check BEFORE path derivation (uses ?path= for the test path)
+    // Accessible at: /functions/v1/prerender?path=/api/prerender-test&testpath=/filament/...
+    // or: curl .../prerender with ?path=/api/prerender-test
+    const rawRequestPath = url.searchParams.get("path") || "/";
+    const isTestEndpoint = rawRequestPath === "/api/prerender-test" || url.pathname.endsWith("/api/prerender-test");
+    if (isTestEndpoint) {
+      const supabaseTest = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const testPath = url.searchParams.get("testpath") || url.searchParams.get("p") || "/";
+      const testQs = testPath.includes("?") ? testPath.split("?")[1] : "";
+      const cleanTestPath = testPath.split("?")[0].replace(/\/+$/, "") || "/";
+      console.log(`[PRERENDER-TEST] path="${cleanTestPath}"`);
+      const testData = await getPageData(cleanTestPath, supabaseTest, testQs);
+      const testIs404 = testData.type === "notfound";
+      const testHtml = testIs404 ? build404Html(testData) : buildHtml(testData);
+      return new Response(testHtml, {
+        status: testIs404 ? 404 : 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/html; charset=utf-8",
+          "X-Prerender": "true",
+          "X-Prerender-Test": "true",
+          "X-Prerender-Path": cleanTestPath,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
     const rawPath = url.searchParams.get("path")
       || url.pathname.replace(/^\/functions\/v1\/prerender/, "").replace(/^\/prerender/, "")
       || "/";
@@ -1559,32 +1590,6 @@ Deno.serve(async (req) => {
     }
     if (path === "/sitemap-materials.xml") {
       return new Response(sitemapMaterials(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
-    }
-
-    // /api/prerender-test — open test endpoint accessible by anyone (no crawler check required)
-    if (path === "/api/prerender-test") {
-      const supabaseTest = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
-      const testPath = url.searchParams.get("path") || "/";
-      const testQs = testPath.includes("?") ? testPath.split("?")[1] : "";
-      const cleanTestPath = testPath.split("?")[0].replace(/\/+$/, "") || "/";
-      console.log(`[PRERENDER-TEST] path="${cleanTestPath}"`);
-      const testData = await getPageData(cleanTestPath, supabaseTest, testQs);
-      const testIs404 = testData.type === "notfound";
-      const testHtml = testIs404 ? build404Html(testData) : buildHtml(testData);
-      return new Response(testHtml, {
-        status: testIs404 ? 404 : 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "text/html; charset=utf-8",
-          "X-Prerender": "true",
-          "X-Prerender-Test": "true",
-          "X-Prerender-Path": cleanTestPath,
-          "Cache-Control": "no-store",
-        },
-      });
     }
 
     // DB-backed sitemaps need Supabase client
