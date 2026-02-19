@@ -18,4 +18,4 @@ Disallow: /maintenance
 Disallow: /embed/
 Crawl-delay: 2
 
-Sitemap: https://filascope.com/sitemap.xml
+Sitemap: https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-xml
