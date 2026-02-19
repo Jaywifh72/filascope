@@ -100,6 +100,7 @@ export function buildAffiliateLinkLocal(
  * Directly inserts into affiliate_clicks via the Supabase client.
  * Use when you want to track a click without calling the edge function
  * (e.g., the URL is already built client-side).
+ * Fire-and-forget — does not block the redirect.
  */
 export async function trackAffiliateClick(
   programId: string,
@@ -108,21 +109,31 @@ export async function trackAffiliateClick(
     brandName: string;
     regionCode: string;
     productName?: string;
+    productSlug?: string;
     sourcePage?: string;
     sourceComponent?: string;
+    price?: number;
+    currency?: string;
   }
 ): Promise<void> {
+  const sessionId = sessionStorage.getItem('analytics_session_id') || crypto.randomUUID();
+  const referrer = typeof document !== 'undefined' ? document.referrer || null : null;
+
   const { error } = await supabase.from("affiliate_clicks").insert({
     program_id: programId,
     destination_url: destinationUrl,
     brand_name: metadata.brandName,
     region_code: metadata.regionCode,
     product_name: metadata.productName || null,
-    source_page: metadata.sourcePage || "unknown",
+    product_slug: metadata.productSlug || null,
+    source_page: metadata.sourcePage || (typeof window !== 'undefined' ? window.location.pathname : "unknown"),
     source_component: metadata.sourceComponent || null,
-    session_id: crypto.randomUUID(),
+    session_id: sessionId,
     utm_source: "filascope",
     utm_medium: "affiliate",
+    price: metadata.price ?? null,
+    currency: metadata.currency || null,
+    referrer: referrer,
   });
 
   if (error) {

@@ -279,13 +279,17 @@ export type Database = {
         Row: {
           brand_name: string
           clicked_at: string | null
+          currency: string | null
           destination_url: string
           id: string
           ip_country: string | null
+          price: number | null
           product_id: string | null
           product_name: string | null
+          product_slug: string | null
           product_type: string | null
           program_id: string | null
+          referrer: string | null
           region_code: string
           session_id: string | null
           source_component: string | null
@@ -298,13 +302,17 @@ export type Database = {
         Insert: {
           brand_name: string
           clicked_at?: string | null
+          currency?: string | null
           destination_url: string
           id?: string
           ip_country?: string | null
+          price?: number | null
           product_id?: string | null
           product_name?: string | null
+          product_slug?: string | null
           product_type?: string | null
           program_id?: string | null
+          referrer?: string | null
           region_code: string
           session_id?: string | null
           source_component?: string | null
@@ -317,13 +325,17 @@ export type Database = {
         Update: {
           brand_name?: string
           clicked_at?: string | null
+          currency?: string | null
           destination_url?: string
           id?: string
           ip_country?: string | null
+          price?: number | null
           product_id?: string | null
           product_name?: string | null
+          product_slug?: string | null
           product_type?: string | null
           program_id?: string | null
+          referrer?: string | null
           region_code?: string
           session_id?: string | null
           source_component?: string | null
@@ -7476,6 +7488,48 @@ export type Database = {
         }
         Relationships: []
       }
+      search_logs: {
+        Row: {
+          created_at: string | null
+          filters_applied: Json | null
+          has_results: boolean | null
+          id: string
+          region: string | null
+          results_count: number | null
+          search_term: string
+          session_id: string | null
+          source_page: string | null
+          time_to_results_ms: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          filters_applied?: Json | null
+          has_results?: boolean | null
+          id?: string
+          region?: string | null
+          results_count?: number | null
+          search_term: string
+          session_id?: string | null
+          source_page?: string | null
+          time_to_results_ms?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          filters_applied?: Json | null
+          has_results?: boolean | null
+          id?: string
+          region?: string | null
+          results_count?: number | null
+          search_term?: string
+          session_id?: string | null
+          source_page?: string | null
+          time_to_results_ms?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shared_settings: {
         Row: {
           created_at: string | null
@@ -9239,6 +9293,19 @@ export type Database = {
       }
     }
     Views: {
+      affiliate_clicks_daily: {
+        Row: {
+          avg_price: number | null
+          brand: string | null
+          clicks: number | null
+          date: string | null
+          region: string | null
+          store: string | null
+          unique_products: number | null
+          unique_sessions: number | null
+        }
+        Relationships: []
+      }
       all_time_low_prices: {
         Row: {
           all_time_low: number | null
@@ -10474,6 +10541,16 @@ export type Database = {
           product_title: string | null
           product_url: string | null
           vendor: string | null
+        }
+        Relationships: []
+      }
+      search_zero_results: {
+        Row: {
+          last_searched_at: string | null
+          most_common_region: string | null
+          search_count: number | null
+          search_term: string | null
+          unique_sessions: number | null
         }
         Relationships: []
       }
