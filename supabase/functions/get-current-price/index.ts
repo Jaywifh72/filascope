@@ -1,4 +1,4 @@
-// Force deploy: 2026-02-19T00:00:00Z
+// TreeD direct API v2 — deployed 2026-02-19
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import {
@@ -3461,124 +3461,99 @@ async function fetchExtrudrPriceDirect(
   }
 }
 
-// ===== TREED FILAMENTS PRICE FETCH (Firecrawl SPA renderer) =====
-// TreeD Filaments (treedfilaments.com) is a fully client-side SPA.
-// The server sends a JS shell — prices are only present in the rendered DOM.
-// Firecrawl executes JavaScript and returns rendered markdown/HTML with live prices.
+// ===== TREED FILAMENTS PRICE FETCH (TreeD Direct API) =====
+// TreeD Filaments exposes a backend JSON API at web-gateway.treedfilaments.com.
+// Prices are returned as EUR cents per kg; we calculate per-spool price using targetWeightGrams.
 
-function extractSkuFromTreedUrl(productUrl: string): string | null {
+async function fetchTreeDPrice(productUrl: string, targetWeightGrams?: number | null): Promise<PriceResponse> {
+  // Extract SKU from query parameter
+  let sku: string | null = null;
   try {
     const u = new URL(productUrl);
-    return u.searchParams.get("sku");
+    sku = u.searchParams.get("sku");
   } catch {
-    return null;
+    sku = null;
   }
-}
 
-async function fetchTreedPriceViaFirecrawl(productUrl: string): Promise<PriceResponse> {
-  const sku = extractSkuFromTreedUrl(productUrl);
   if (!sku) {
+    console.log("[TREED] No SKU found in URL:", productUrl);
     return {
       success: false, price: null, compareAtPrice: null, weightGrams: null,
       diameterMm: null, variantTitle: null, currency: "EUR",
-      available: false, source: "html" as const, fetchedAt: new Date().toISOString(),
-      error: "No SKU found in TreeD URL",
+      available: false, source: "html" as const,
+      fetchedAt: new Date().toISOString(),
+      error: "No SKU parameter in TreeD URL",
+      sourceUrl: productUrl, requestedCurrency: "EUR",
     };
   }
 
-  console.log(`[TREED] Fetching SKU: ${sku}`);
+  console.log(`[TREED] Fetching SKU=${sku}, targetWeight=${targetWeightGrams}g`);
 
-  // ── Strategy 1: TreeD web-gateway API (authenticated) ──
   try {
-    const gwResponse = await fetch("https://web-gateway.treedfilaments.com/v1/product", {
+    const apiResp = await fetch("https://web-gateway.treedfilaments.com/v1/product", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sku, email: "", token: "" }),
-      signal: AbortSignal.timeout(12000),
-    });
-
-    console.log(`[TREED GATEWAY] HTTP ${gwResponse.status}`);
-
-    if (gwResponse.ok) {
-      const data = await gwResponse.json() as {
-        price?: number; discount?: number; name?: string;
-        weights?: number[]; d175?: boolean; d285?: boolean;
-      };
-      const price = (data.price ?? 0) / 100;
-      const discount = data.discount ?? 0;
-      const compareAtPrice = discount > 0 ? (data.price! + discount) / 100 : null;
-      console.log(`[TREED GATEWAY] ✓ price=€${price}, name=${data.name}`);
-      return {
-        success: true, price, compareAtPrice,
-        weightGrams: data.weights?.[0] ?? null,
-        diameterMm: data.d175 ? 1.75 : (data.d285 ? 2.85 : null),
-        variantTitle: data.name || sku,
-        currency: "EUR", available: true,
-        stockStatus: "in_stock" as StockStatus,
-        source: "html" as const, fetchedAt: new Date().toISOString(),
-        detectedCurrency: "EUR", sourceUrl: productUrl,
-      };
-    }
-    console.log(`[TREED GATEWAY] HTTP ${gwResponse.status} — falling back to WooCommerce API`);
-  } catch (err) {
-    console.log(`[TREED GATEWAY] Error: ${err instanceof Error ? err.message : String(err)} — falling back`);
-  }
-
-  // ── Strategy 2: WooCommerce public REST API (no auth required) ──
-  try {
-    const wcUrl = `https://treedfilaments.com/wp-json/wc/v3/products?sku=${encodeURIComponent(sku)}&per_page=1`;
-    const wcResponse = await fetch(wcUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "application/json",
-        "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
-      },
       signal: AbortSignal.timeout(15000),
     });
 
-    console.log(`[TREED WC API] HTTP ${wcResponse.status}`);
+    console.log(`[TREED] API HTTP ${apiResp.status}`);
 
-    if (wcResponse.ok) {
-      const products = await wcResponse.json() as any[];
-      if (Array.isArray(products) && products.length > 0) {
-        const product = products[0];
-        const rawSalePrice = product.sale_price ? parseEuropeanPrice(String(product.sale_price)) : null;
-        const rawRegularPrice = product.regular_price ? parseEuropeanPrice(String(product.regular_price)) : null;
-        const rawPrice = product.price ? parseEuropeanPrice(String(product.price)) : null;
-
-        const price = (rawSalePrice && rawSalePrice > 0) ? rawSalePrice : rawPrice;
-        const compareAtPrice = (rawRegularPrice && price && rawRegularPrice > price * 1.01) ? rawRegularPrice : null;
-        const available = (product.stock_status || "instock") === "instock";
-
-        if (price && !isNaN(price) && price > 0) {
-          console.log(`[TREED WC API] ✓ price=€${price}, name=${product.name}, stock=${product.stock_status}`);
-          return {
-            success: true,
-            price: Math.round(price * 100) / 100,
-            compareAtPrice: compareAtPrice ? Math.round(compareAtPrice * 100) / 100 : null,
-            weightGrams: null, diameterMm: null,
-            variantTitle: product.name || sku,
-            currency: "EUR", available,
-            stockStatus: available ? "in_stock" : "out_of_stock" as StockStatus,
-            source: "html" as const, fetchedAt: new Date().toISOString(),
-            detectedCurrency: "EUR", sourceUrl: productUrl,
-          };
-        }
-      }
-      console.log(`[TREED WC API] No product found for SKU: ${sku}`);
-    } else {
-      console.log(`[TREED WC API] HTTP ${wcResponse.status} — giving up`);
+    if (!apiResp.ok) {
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: "EUR",
+        available: false, source: "html" as const,
+        fetchedAt: new Date().toISOString(),
+        error: `TreeD API returned HTTP ${apiResp.status}`,
+        sourceUrl: productUrl, requestedCurrency: "EUR",
+      };
     }
-  } catch (err) {
-    console.error(`[TREED WC API] Error: ${err instanceof Error ? err.message : String(err)}`);
-  }
 
-  return {
-    success: false, price: null, compareAtPrice: null, weightGrams: null,
-    diameterMm: null, variantTitle: null, currency: "EUR",
-    available: false, source: "html" as const, fetchedAt: new Date().toISOString(),
-    error: `TreeD: no price found for SKU ${sku}`,
-  };
+    const d = await apiResp.json() as {
+      price?: number; discount?: number; name?: string;
+      weights?: number[]; d175?: boolean; d285?: boolean;
+    };
+
+    // API price is EUR cents per kg
+    const pricePerKgEur = (d.price ?? 0) / 100;
+    const firstWeight = d.weights?.[0] ?? 1000;
+    const weightG = (targetWeightGrams && targetWeightGrams > 0) ? targetWeightGrams : firstWeight;
+    const spoolPrice = Math.round(pricePerKgEur * (weightG / 1000) * 100) / 100;
+    const discount = d.discount ?? 0;
+    const compareAt = discount > 0
+      ? Math.round(((d.price! + discount) / 100) * (weightG / 1000) * 100) / 100
+      : null;
+
+    console.log(`[TREED] ${d.name} pricePerKg=€${pricePerKgEur} weight=${weightG}g spool=€${spoolPrice}`);
+
+    return {
+      success: true,
+      price: spoolPrice,
+      compareAtPrice: compareAt,
+      weightGrams: weightG,
+      diameterMm: d.d175 ? 1.75 : (d.d285 ? 2.85 : null),
+      variantTitle: d.name || sku,
+      currency: "EUR",
+      available: true,
+      stockStatus: "in_stock" as StockStatus,
+      source: "html" as const,
+      fetchedAt: new Date().toISOString(),
+      detectedCurrency: "EUR",
+      sourceUrl: productUrl,
+      requestedCurrency: "EUR",
+    };
+  } catch (err) {
+    console.error("[TREED] Error:", err);
+    return {
+      success: false, price: null, compareAtPrice: null, weightGrams: null,
+      diameterMm: null, variantTitle: null, currency: "EUR",
+      available: false, source: "html" as const,
+      fetchedAt: new Date().toISOString(),
+      error: `TreeD fetch error: ${err instanceof Error ? err.message : String(err)}`,
+      sourceUrl: productUrl, requestedCurrency: "EUR",
+    };
+  }
 }
 
 // ===== END TREED FILAMENTS DIRECT API =====
@@ -3803,10 +3778,9 @@ serve(async (req) => {
       // Extrudr is EUR-only — normalise the currency response so the caller
       // receives EUR even when it requested USD (currencyMismatch handled below)
     } else if (customStorefront === "treed") {
-      // TreeD Filaments is a client-side SPA — all prices are loaded via JS.
-      // Direct HTML fetch returns an empty shell; Firecrawl renders JS and returns the live price.
-      console.log(`[TREED ROUTING] ✓ Firecrawl path selected (SPA — JS-rendered prices)`);
-      result = await fetchTreedPriceViaFirecrawl(urlToFetch);
+      // TreeD Filaments — uses direct backend API (web-gateway.treedfilaments.com)
+      console.log(`[TREED ROUTING] ✓ TreeD Direct API path selected`);
+      result = await fetchTreeDPrice(urlToFetch, targetWeightGrams);
       // TreeD is EUR-only — always return EUR regardless of requested currency
     } else if (customStorefront === "creality") {
       console.log(`[CREALITY ROUTING] ✓ Direct fetch path selected`);
