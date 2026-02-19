@@ -25,6 +25,7 @@ import { BrandOrganizationSchema } from "@/components/seo";
 
 import { BrandBadgesDisplay, getBrandBadges } from "@/components/brands/BrandBadges";
 import { BrandFAQSection } from "@/components/brands/BrandFAQSection";
+import { RelatedBrandsSection } from "@/components/brands/RelatedBrandsSection";
 
 type Filament = Tables<"filaments">;
 
@@ -728,6 +729,9 @@ const BrandDetail = () => {
             />}
           </div>
         </div>
+
+        {/* Related Brands */}
+        <RelatedBrandsSection brandName={displayName} />
       </div>
     </div>
   );

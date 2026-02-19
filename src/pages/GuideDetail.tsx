@@ -18,6 +18,7 @@ import { GUIDES, type GuideMetadata } from './LearningCenter';
 import { GuideRelatedProducts, GuideReadNext } from '@/components/guides/GuideComponents';
 import { BUYING_GUIDE_SLUGS } from '@/components/guides/guideConfigs';
 import { ArticleSchema } from '@/components/seo/ArticleSchema';
+import { DetailBreadcrumb } from '@/components/navigation/DetailBreadcrumb';
 
 // Guide content components - will be imported dynamically
 import GuidePLAvsPETGvsABS from '@/components/guides/content/GuidePLAvsPETGvsABS';
@@ -218,7 +219,7 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
         datePublished={guide.publishedAt}
         url={`/learn/${slug}`}
       />
-      {/* Header */}
+      {/* Sticky nav header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -235,6 +236,14 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Visible breadcrumb */}
+        <DetailBreadcrumb
+          segments={[
+            { label: "Guides", href: "/learn" },
+            { label: guide.title, href: `/learn/${slug}` },
+          ]}
+          mobileBackLabel="Guides"
+        />
         <div className="flex gap-8">
           {/* Main Content */}
           <article className="flex-1 min-w-0 max-w-3xl">

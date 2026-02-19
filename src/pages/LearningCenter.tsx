@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { BreadcrumbSchema } from '@/components/seo';
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -343,6 +344,11 @@ export default function LearningCenter() {
       { name: 'Learning Center', url: 'https://filascope.com/learn' },
     ]} />
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      {/* Visible breadcrumb trail */}
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        <Breadcrumbs items={[{ name: "Guides", url: "/learn" }]} />
+      </div>
+
       {/* Hero Section */}
       <section className="relative py-16 lg:py-20 overflow-hidden">
         {/* Background effects */}
