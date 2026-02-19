@@ -293,18 +293,26 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
   const canonicalSlug = data.product_handle || data.id;
   const canonical = `/filament/${canonicalSlug}`;
 
-  let title = `${brand} ${name}`;
-  if (material && title.length + material.length < 50) title += ` — ${material}`;
-  title += " | FilaScope";
-  if (title.length > 60) title = `${brand} ${name} | FilaScope`;
+  // Title: include TD value if available, otherwise fall back to Specs & Price variant
+  let title: string;
+  const suffix = " | FilaScope";
+  if (td) {
+    const mid = `${brand} ${name} — TD ${td} | ${material} Filament`;
+    title = mid.length + suffix.length <= 60 ? mid + suffix : `${brand} ${name} — TD ${td}${suffix}`;
+  } else {
+    const mid = `${brand} ${name} — ${material} Filament Specs & Price`;
+    title = mid.length + suffix.length <= 60 ? mid + suffix : `${brand} ${name} — ${material} Filament${suffix}`;
+  }
+  if (title.length > 60) title = `${brand} ${name}${suffix}`;
 
-  const dp: string[] = [`${brand} ${name}${color ? ` in ${color}` : ""}.`];
-  if (material) dp.push(`${material}${data.diameter_nominal_mm ? `, ${data.diameter_nominal_mm}mm` : ""}.`);
-  if (data.nozzle_temp_min_c && data.nozzle_temp_max_c) dp.push(`Nozzle: ${data.nozzle_temp_min_c}-${data.nozzle_temp_max_c}°C.`);
-  if (td) dp.push(`TD: ${td}.`);
-  if (price) dp.push(`From $${price}.`);
-  dp.push("Compare specs & find best price.");
-  let description = dp.join(" ");
+  // Description: structured spec line + CTA, targeting 140-155 chars
+  const nozzleStr = data.nozzle_temp_min_c && data.nozzle_temp_max_c
+    ? `, Nozzle: ${data.nozzle_temp_min_c}-${data.nozzle_temp_max_c}°C` : "";
+  const diaStr = data.diameter_nominal_mm ? `, ${data.diameter_nominal_mm}mm` : "";
+  const tdStr = td ? `TD: ${td}` : "TD: TBD";
+  const priceStr = price ? `From $${price}. ` : "";
+  const colorStr = color ? ` ${color}` : "";
+  let description = `${brand} ${name}${colorStr} ${material} filament — ${tdStr}${nozzleStr}${diaStr}. ${priceStr}Compare specs, read community reviews & find the best price on FilaScope.`;
   if (description.length > 160) description = description.slice(0, 157) + "...";
 
   const productSchema: Record<string, unknown> = {
@@ -338,7 +346,9 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
     }),
     ogType: "product",
     jsonLd: [productSchema, breadcrumbSchema(crumbs)],
-    breadcrumbs: crumbs, h1: `${brand} ${name}${color ? ` — ${color}` : ""}`, bodyText: description,
+    breadcrumbs: crumbs,
+    h1: `${brand} ${name}${color ? ` – ${color}` : ""} ${material} Filament`,
+    bodyText: `Complete specs, pricing, and compatibility info for ${brand} ${name} ${material} filament${td ? `. Transmission Distance (TD): ${td}` : ""}. Compare with similar filaments, check printer compatibility, and find the best deals.`,
   };
 }
 
@@ -352,10 +362,10 @@ async function brandPage(slug: string, supabase: SupabaseClient): Promise<PageDa
   const count = data.product_count || 0;
   const canonical = `/brands/${data.brand_slug}`;
 
-  let title = `${brandName} Filaments — ${count} Products | FilaScope`;
+  let title = `${brandName} Filaments — ${count} Products Compared | FilaScope`;
   if (title.length > 60) title = `${brandName} Filaments | FilaScope`;
 
-  const description = `Explore ${count} ${brandName} filaments. Specs, reviews & printer compatibility on FilaScope.`;
+  const description = `Browse all ${count} ${brandName} 3D printer filaments. Compare PLA, PETG, ABS specs, TD values, prices & printer compatibility. Find your perfect ${brandName} filament on FilaScope.`;
 
   const crumbs = [{ name: "Home", url: "/" }, { name: "Brands", url: "/brands" }, { name: brandName, url: canonical }];
   return {
@@ -402,7 +412,8 @@ async function printerPage(slug: string, supabase: SupabaseClient): Promise<Page
   const canonSlug = data.printer_id || data.id;
   const canonical = `/printers/${canonSlug}`;
 
-  let title = `${full} — Specs & Price | FilaScope`;
+  let title = `${full} — Specs, Compatible Filaments & Price | FilaScope`;
+  if (title.length > 60) title = `${full} — Specs & Price | FilaScope`;
   if (title.length > 60) title = `${full} | FilaScope`;
 
   const dp = [full + "."];
