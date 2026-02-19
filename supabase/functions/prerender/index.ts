@@ -22,6 +22,9 @@ const CRAWLER_AGENTS = [
   "adsbot-google", "mediapartners-google",
   // Other major crawlers
   "petalbot", "bytespider",
+  // Social / messaging crawlers
+  "telegrambot", "whatsappbot", "ia_archiver", "semrushbot", "ahrefsbot",
+  "msnbot", "baiduspider", "sogou", "exabot", "seznambot",
 ];
 
 const BASE_URL = "https://filascope.com";
@@ -1328,7 +1331,6 @@ Disallow: /admin
 Disallow: /settings
 Disallow: /maintenance
 Disallow: /embed/
-Crawl-delay: 1
 
 Sitemap: ${BASE_URL}/sitemap.xml
 `;
@@ -1559,6 +1561,32 @@ Deno.serve(async (req) => {
       return new Response(sitemapMaterials(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
     }
 
+    // /api/prerender-test — open test endpoint accessible by anyone (no crawler check required)
+    if (path === "/api/prerender-test") {
+      const supabaseTest = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const testPath = url.searchParams.get("path") || "/";
+      const testQs = testPath.includes("?") ? testPath.split("?")[1] : "";
+      const cleanTestPath = testPath.split("?")[0].replace(/\/+$/, "") || "/";
+      console.log(`[PRERENDER-TEST] path="${cleanTestPath}"`);
+      const testData = await getPageData(cleanTestPath, supabaseTest, testQs);
+      const testIs404 = testData.type === "notfound";
+      const testHtml = testIs404 ? build404Html(testData) : buildHtml(testData);
+      return new Response(testHtml, {
+        status: testIs404 ? 404 : 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/html; charset=utf-8",
+          "X-Prerender": "true",
+          "X-Prerender-Test": "true",
+          "X-Prerender-Path": cleanTestPath,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
     // DB-backed sitemaps need Supabase client
     const needsDb = ["/sitemap-filaments.xml", "/sitemap-brands.xml", "/sitemap-printers.xml"].includes(path);
 
@@ -1589,6 +1617,7 @@ Deno.serve(async (req) => {
         headers: {
           ...corsHeaders,
           "Content-Type": "text/html; charset=utf-8",
+          "X-Prerender": "true",
           "Cache-Control": is404 ? "public, max-age=60" : "public, max-age=3600, s-maxage=3600",
           ...(is404 ? { "X-Robots-Tag": "noindex" } : { "X-Robots-Tag": "all" }),
         },
