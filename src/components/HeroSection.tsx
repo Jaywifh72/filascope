@@ -123,11 +123,11 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
   // Read cache once on mount
   const cached = useMemo(() => getCachedStats(), []);
 
-  // Resolve display values: live data → cache → null (skeleton)
-  // Never use hardcoded fallbacks — show skeleton instead of wrong numbers
+  // Resolve display values: live data → cache → hardcoded fallback
   const displayProductCount = productCount > 0 ? productCount : (cached?.productCount ?? null);
   const displayVariantCount = filamentCount > 0 ? filamentCount : (cached?.filamentCount ?? null);
-  const displayBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? null);
+  // For brand count: live → cache → fallback of 25 (never show skeleton forever)
+  const displayBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? 25);
 
   // Cache successful live values (all three must be valid)
   useEffect(() => {
