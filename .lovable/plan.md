@@ -1,442 +1,420 @@
 
-## SEO Overhaul: Filament Detail Page — Critical Indexation & Ranking Fixes
+## SEO Overhaul: Filament Listing Page — Crawlable Category Pages, Filter URLs & Pagination
 
-### Root Cause Analysis
+### Architecture Assessment
 
-After a thorough audit, the indexation failure has multiple compounding causes:
+After a complete audit, the core problem is clear:
 
-**Critical Bug #1 — Wrong DB column name in prerender (lines 297, 310, 330, 342, 394):**
-The `filamentPage` handler selects `td_value` but the actual DB column is `transmission_distance`. This means `td` is always `null` in every prerendered page. The title never includes "TD X.X", the description says "TD: TBD" instead of the real value, and the `additionalProperty` TD entry is never emitted. This alone sabotages our HueForge keyword targeting for all 1,078+ pages simultaneously.
+**What exists today:**
+- `/` (Finder.tsx) — homepage with hero, trending, and the full catalog. Material filters only update client-side state via `useSessionFilters`. Zero URL updates.
+- `/filaments` → redirects to `/` (App.tsx line 214). Dead end.
+- `/materials/:slug` (MaterialHub.tsx) — static pages with top 5 + 24 products, no pagination, no full Finder integration.
+- `FinderPaginationBar.tsx` — all `<button>` elements, no `<a>` tags, no `href` attributes.
+- `SiteFooter.tsx` — material links all point to `/?material=PLA` etc. (broken from SEO standpoint).
+- Prerender handles `/materials/:slug` but not `/filaments/:slug`.
 
-**Critical Bug #2 — H1 in client omits brand, color, and material:**
-`FilamentHeroSection` (line 114) renders `<h1>{productLineName}</h1>` — e.g. "PLA Basic" instead of "Bambu Lab PLA Basic Bronze — PLA 3D Printer Filament". The full brand+product+color+material H1 required for ranking is missing.
+**What needs to be built:**
 
-**Critical Bug #3 — Color variant URLs use UUIDs:**
-`handleColorVariantSelect` (line 495) does `window.history.replaceState({}, '', /filament/${variant.id})` — navigating to a UUID URL like `/filament/535db13c-...`. This is the worst SEO URL pattern possible.
-
-**Critical Bug #4 — Meta title/description omit color:**
-The `seoFullName` variable on FilamentDetail line 741-743 is built from `productLineName` (e.g. "PLA Basic") — it does not include the current color variant. The user-requested title format requires color inclusion.
-
-**Additional Gaps:**
-- No FAQPage JSON-LD schema (rich result opportunity)
-- No `article:modified_time` or `dateModified` in structured data
-- No `FilaScore` or `color_hex` in `additionalProperty`
-- Image alt text is generic (`"Preview"` in one place)
-- Internal links section (BrandQuickLinks) has only 3 minimal links — needs richer guide/material hub links
-- The prerender `buildHtml` function doesn't include `article:modified_time` in the `<head>`
-- Prerender `filamentPage` doesn't fetch `filascope_score`, `color_hex`, or `updated_at`
+The key architectural insight: we already have `MaterialHub.tsx` at `/materials/:slug` which is a real indexable page — but it's too sparse (only 24 products, no pagination, no full filter sidebar). The task asks for `/filaments/:slug` routes. Rather than duplicating MaterialHub, the plan creates **new `/filaments/:slug` routes** that are the full-featured Finder with the material pre-applied and crawlable pagination.
 
 ---
 
-### Priority Order (per task specification)
+### What Will Be Built
 
-1. Meta title, meta description, H1 (biggest ranking impact)
-2. Product JSON-LD additions (TD value, hex code, FilaScore, dateModified)
-3. FAQPage JSON-LD schema
-4. Heading hierarchy fix
-5. Color variant URL fix
-6. Internal linking section enhancement
-7. Image alt text, last-modified meta, freshness signals
+**A. New `/filaments/:slug` route (FilamentCategoryPage)**
+
+Create `src/pages/FilamentCategoryPage.tsx` — a new page that:
+- Reads `:slug` from the URL and maps it to the `MATERIAL_SLUG_CONFIG` from `MaterialHub.tsx` (already has all material → DB name mappings)
+- Fetches the material count from the DB for dynamic `{count}` in titles/descriptions
+- Renders the full catalog with `useFinderQuery` (the same RPC that powers Finder), with `selectedMaterials` pre-set to the slug's material list
+- Has a short intro paragraph specific to each material (2-3 sentences, as specified)
+- Has breadcrumbs: `Home › Filaments › PLA`
+- Has its own unique H1, meta title, meta description, and canonical
+- Includes the full `TechnicalConsoleSidebar` filter panel (or a simplified sidebar) with the material pre-selected but still interactive
+- Includes the paginated `FinderPaginationBar` with crawlable `<a>` tags instead of `<button>`
+- Includes `rel="prev"` / `rel="next"` links in the `<head>` via `useDocumentHead`
+
+**B. New Crawlable Pagination Component (`CrawlablePaginationBar`)**
+
+Create `src/components/CrawlablePaginationBar.tsx` — a refactored version of `FinderPaginationBar` that:
+- Renders page number links as `<a href="/filaments/pla?page=2">` instead of `<button onClick>`
+- Accepts a `basePath` prop (e.g., `/filaments/pla`)
+- Keeps all visual styling identical (same classes, same layout)
+- Still calls `onPageChange` for client-side navigation (no full page reload)
+- The `href` is for Googlebot crawlability; `onClick` handles the user interaction
+- Renders prev/next as `<a>` tags too
+
+**C. Routes Added to App.tsx**
+
+```
+/filaments                → FilamentCategoryPage (slug=undefined, "all" mode)
+/filaments/pla            → FilamentCategoryPage (slug="pla")
+/filaments/petg           → FilamentCategoryPage (slug="petg")
+/filaments/abs            → FilamentCategoryPage (slug="abs")
+/filaments/tpu            → FilamentCategoryPage (slug="tpu")
+/filaments/asa            → FilamentCategoryPage (slug="asa")
+/filaments/silk-pla       → FilamentCategoryPage (slug="silk-pla")
+/filaments/nylon          → FilamentCategoryPage (slug="nylon")
+/filaments/pla-plus       → FilamentCategoryPage (slug="pla-plus")
+/filaments/high-speed-pla → FilamentCategoryPage (slug="high-speed-pla")
+/filaments/polycarbonate  → FilamentCategoryPage (slug="pc")
+/filaments/petg-cf        → FilamentCategoryPage (slug="petg-cf") [new in MATERIAL_SLUG_CONFIG]
+```
+
+One dynamic route: `<Route path="/filaments/:slug" element={<FilamentCategoryPage />} />`
+
+The existing `/filaments` catch-all redirect to `/` will be replaced with the new component.
+
+**D. Footer Links Updated**
+
+`SiteFooter.tsx` material links updated from `/?material=PLA` to `/filaments/pla` etc.
+
+**E. Prerender Handler for `/filaments/:slug`**
+
+`supabase/functions/prerender/index.ts` — add a `filamentCategoryPage(slug, supabase)` handler that:
+- Queries DB for count and top 50 products for that material
+- Emits the correct title, description, H1, canonical
+- Emits ItemList JSON-LD with up to 50 products (full Product nested schema)
+- Emits BreadcrumbList JSON-LD
+- Emits `rel="prev"` / `rel="next"` link tags if the slug has `?page=N` parameter
+
+**F. `useDocumentHead` enhancement for `rel="prev"` / `rel="next"`**
+
+Add `paginationPrev?: string` and `paginationNext?: string` to `DocumentHeadOptions` so FilamentCategoryPage can inject these `<link>` tags.
 
 ---
 
-### Files to Modify
+### Detailed File Changes
 
-| File | Changes |
-|---|---|
-| `supabase/functions/prerender/index.ts` | Fix `td_value` → `transmission_distance`, add `filascope_score`, `color_hex`, `updated_at` to query; fix title/description/H1; add FAQPage JSON-LD; add `dateModified`; add `article:modified_time` to `buildHtml` |
-| `src/pages/FilamentDetail.tsx` | Fix meta title/description to include color; add `article:modified_time`; add FilaScope score + color_hex to ProductJsonLd; update canonical URL to slug-based |
-| `src/components/seo/ProductJsonLd.tsx` | Add `colorHex`, `filaScopeScore`, `dateModified` props and emit them in JSON-LD |
-| `src/components/filament/hero/FilamentHeroSection.tsx` | Fix H1 to include brand + color + "— {Material} 3D Printer Filament" suffix |
-| `src/hooks/useFilamentColorVariants.ts` | Fix `handleColorVariantSelect` to use slug-based URL instead of UUID |
-| `src/components/filament/BrandQuickLinks.tsx` | Add guide/material hub links for richer internal linking |
-| `src/components/seo/FAQSchema.tsx` | Already exists — no changes needed |
+#### 1. `src/pages/FilamentCategoryPage.tsx` (NEW)
 
-A new component `src/components/seo/FilamentFAQSchema.tsx` will be created to generate dynamic FAQ schema from filament data, injected in `FilamentDetail.tsx`.
+**Key logic:**
+```tsx
+const { slug } = useParams<{ slug: string }>();
+const [searchParams, setSearchParams] = useSearchParams();
+const currentPage = parseInt(searchParams.get("page") || "1", 10) - 1; // 0-indexed internally
 
----
+// Map slug → materials
+const config = slug ? MATERIAL_SLUG_CONFIG[slug] : null;
+// null slug = "all filaments" mode
 
-### Detailed Technical Changes
+// Page metadata
+const pageSize = 48;
+const totalPages = Math.ceil(count / pageSize);
+const basePath = slug ? `/filaments/${slug}` : '/filaments';
 
-#### 1. Fix Prerender `filamentPage` (`supabase/functions/prerender/index.ts`)
-
-**Line 297 — Fix column name and add missing columns:**
-
-```ts
-// BEFORE:
-const cols = "id, product_handle, product_title, display_name, vendor, material, color, variant_price, featured_image, diameter_nominal_mm, net_weight_g, nozzle_temp_min_c, nozzle_temp_max_c, td_value";
-
-// AFTER:
-const cols = "id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, featured_image, diameter_nominal_mm, net_weight_g, nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c, transmission_distance, filascope_score, updated_at, last_scraped_at";
-```
-
-**Lines 308-310 — Fix variable references:**
-```ts
-const color = data.color_family || "";
-const td = data.transmission_distance;
-const colorHex = data.color_hex || null;
-const filaScore = data.filascope_score || null;
-const modifiedAt = data.last_scraped_at || data.updated_at || null;
-```
-
-**Lines 315-334 — Fix title and description:**
-
-Title (must include color when available, include TD when available):
-```ts
-// Build color part for title
-const colorPart = color ? ` ${color}` : "";
-
-if (td) {
-  // e.g. "Bambu Lab PLA Basic Bronze — PLA Filament | TD 1.6 | FilaScope"
-  const mid = `${brand} ${name}${colorPart} — ${material} Filament | TD ${td}`;
-  title = mid.length + suffix.length <= 60 ? mid + suffix : `${brand} ${name} — TD ${td}${suffix}`;
-} else {
-  const mid = `${brand} ${name}${colorPart} — ${material} Filament`;
-  title = mid.length + suffix.length <= 60 ? mid + suffix : `${brand} ${name} — ${material} Filament${suffix}`;
-}
-if (title.length > 60) title = `${brand} ${name}${suffix}`;
-```
-
-Description (must match new format with TD+HueForge when available):
-```ts
-const nozzleStr = data.nozzle_temp_min_c && data.nozzle_temp_max_c
-  ? `Nozzle ${data.nozzle_temp_min_c}-${data.nozzle_temp_max_c}°C.` : "";
-const priceStr = price ? `From $${price}.` : "";
-
-let description: string;
-if (td) {
-  description = `${brand} ${name}${colorPart} ${material} filament with TD value ${td} for HueForge. ${nozzleStr} ${priceStr} Compare specs, TD data & prices on FilaScope.`.replace(/\s+/g, ' ').trim();
-} else {
-  description = `${brand} ${name}${colorPart} ${material} filament. ${nozzleStr} ${priceStr} Compare specs, printer compatibility & prices on FilaScope.`.replace(/\s+/g, ' ').trim();
-}
-if (description.length > 160) description = description.slice(0, 157) + "...";
-```
-
-**Lines 336-363 — Add missing additionalProperty items:**
-```ts
-if (data.color_hex) {
-  additionalProperties.push({ "@type": "PropertyValue", "name": "Color Hex Code", "value": data.color_hex });
-}
-if (filaScore != null) {
-  additionalProperties.push({ "@type": "PropertyValue", "name": "FilaScore", "value": filaScore, "description": "FilaScope quality rating out of 10" });
-}
-```
-
-**Lines 351-375 — Add `dateModified` to Product JSON-LD:**
-```ts
-const productSchema: Record<string, unknown> = {
-  "@context": "https://schema.org", "@type": "Product",
-  name: `${brand} ${name}`,
-  ...(color && { color }),
-  description,
-  ...(modifiedAt && { dateModified: modifiedAt }),
-  // ... rest of existing schema
+// For pagination navigation (client-side)
+const handlePageChange = (page: number) => {
+  if (page === 0) {
+    searchParams.delete("page");
+  } else {
+    searchParams.set("page", String(page + 1));
+  }
+  setSearchParams(searchParams, { replace: true });
 };
+
+// rel="prev" and rel="next" for head
+const prevUrl = currentPage > 0
+  ? `${basePath}${currentPage === 1 ? '' : `?page=${currentPage}`}`
+  : null;
+const nextUrl = currentPage < totalPages - 1
+  ? `${basePath}?page=${currentPage + 2}`
+  : null;
 ```
 
-**Line 393 — Fix H1 in prerender:**
-```ts
-// BEFORE:
-h1: `${brand} ${name}${color ? ` – ${color}` : ""} ${material} Filament`,
+**SEO title/description logic per slug:**
+A `CATEGORY_META` map inside the page provides the title template, description template, H1, and intro text for each slug. Dynamic `{count}` is replaced with actual DB count.
 
-// AFTER (with 70-char logic):
-const h1Full = `${brand} ${name}${colorPart} — ${material} 3D Printer Filament`;
-const h1Short = `${brand} ${name}${colorPart} — ${material} Filament`;
-const h1Minimal = `${brand} ${name}${colorPart}`;
-h1: h1Full.length <= 70 ? h1Full : h1Short.length <= 70 ? h1Short : h1Minimal,
+**Page structure (no hero):**
+```
+<Breadcrumbs items={[{name:"Filaments",url:"/filaments"},{name:label,url:basePath}]} />
+<h1>PLA Filaments</h1>
+<p className="text-muted-foreground">{intro text with actual count}</p>
+[Optional stats strip: product count, brand count]
+[TechnicalConsoleSidebar — with material pre-selected and locked, or pre-selected but unlocked]
+[CrawlablePaginationBar]
 ```
 
-**Add FAQPage JSON-LD to prerender:**
-Build 4-7 FAQs dynamically from available data, added to the `jsonLd` array:
+For the filter sidebar — the material will be pre-selected but NOT locked. Users can deselect and filter further. This matches the user's requirement of "filter sidebar with material pre-selected."
+
+**`useFinderQuery` integration:**
+Pass `selectedMaterials` as the material list from the config. This reuses the existing RPC without any DB changes.
+
+**Unknown slug handling:**
+If `slug` is not in `MATERIAL_SLUG_CONFIG`, return `<Navigate to="/" replace />`.
+
+#### 2. `src/components/CrawlablePaginationBar.tsx` (NEW)
+
+Same visual layout as `FinderPaginationBar`. Key difference — page number buttons become `<a>` tags:
+
+```tsx
+// BEFORE (button):
+<button onClick={() => onPageChange(p)}>
+  {p + 1}
+</button>
+
+// AFTER (anchor — crawlable, but also calls onPageChange to avoid full reload):
+<a
+  href={`${basePath}${p === 0 ? '' : `?page=${p + 1}`}`}
+  onClick={(e) => {
+    e.preventDefault(); // prevent full reload
+    onPageChange(p);
+  }}
+  className={cn(...)}
+  aria-current={p === currentPage ? "page" : undefined}
+>
+  {p + 1}
+</a>
+```
+
+The `basePath` prop defaults to `/filaments` — can be passed from FilamentCategoryPage.
+
+Prev/Next chevrons also become `<a>` tags with `rel="prev"` / `rel="next"` attributes on the anchor elements (different from the `<link>` tags in `<head>` — both are needed).
+
+#### 3. `src/App.tsx`
+
+Replace:
+```tsx
+<Route path="/filaments" element={<Navigate to="/" replace />} />
+```
+
+With:
+```tsx
+<Route path="/filaments" element={<FilamentCategoryPage />} />
+<Route path="/filaments/:slug" element={<FilamentCategoryPage />} />
+```
+
+Add import for `FilamentCategoryPage`.
+
+Also add 301-equivalent redirects for `/?material=PLA` etc. — this requires a small effect in `Finder.tsx` that detects the `material` query param on mount and does `navigate('/filaments/pla', { replace: true })`. This is the client-side redirect that handles inbound links that still use the old format.
+
+#### 4. `src/components/SiteFooter.tsx`
+
+Update `materialLinks` array:
+```tsx
+const materialLinks = [
+  { name: "PLA Filaments", href: "/filaments/pla" },
+  { name: "PETG Filaments", href: "/filaments/petg" },
+  { name: "ABS Filaments", href: "/filaments/abs" },
+  { name: "TPU Filaments", href: "/filaments/tpu" },
+  { name: "ASA Filaments", href: "/filaments/asa" },
+  { name: "Silk PLA Filaments", href: "/filaments/silk-pla" },
+  { name: "High Speed PLA", href: "/filaments/high-speed-pla" },
+  { name: "Nylon Filaments", href: "/filaments/nylon" },
+  { name: "All Filaments →", href: "/filaments" },
+];
+```
+
+#### 5. `src/hooks/useDocumentHead.ts`
+
+Add two new optional props to `DocumentHeadOptions`:
 ```ts
-const faqs: Record<string, unknown>[] = [];
+paginationPrev?: string;  // full URL for rel="prev"
+paginationNext?: string;  // full URL for rel="next"
+```
 
-if (data.nozzle_temp_min_c && data.nozzle_temp_max_c) {
-  const mid = Math.round((data.nozzle_temp_min_c + data.nozzle_temp_max_c) / 2);
-  faqs.push({
-    "@type": "Question",
-    name: `What nozzle temperature for ${brand} ${name}${colorPart}?`,
-    acceptedAnswer: { "@type": "Answer", text: `Recommended nozzle temperature for ${brand} ${name}${colorPart} is ${data.nozzle_temp_min_c}–${data.nozzle_temp_max_c}°C. Start at ${mid}°C and adjust based on your results.` }
-  });
+In the `useEffect`, add:
+```ts
+if (opts.paginationPrev) {
+  // upsert <link rel="prev" href="...">
+  upsertLink('prev', opts.paginationPrev);
 }
-
-if (price) {
-  faqs.push({
-    "@type": "Question",
-    name: `How much does ${brand} ${name}${colorPart} cost?`,
-    acceptedAnswer: { "@type": "Answer", text: `${brand} ${name}${colorPart} is available from $${price.toFixed(2)} on FilaScope. Compare prices from multiple retailers to find the best deal.` }
-  });
+if (opts.paginationNext) {
+  upsertLink('next', opts.paginationNext);
 }
+```
 
-if (td) {
-  const tdInterp = td < 2 ? "highly opaque, ideal for dark base layers" : td < 4 ? "semi-opaque, versatile for most HueForge projects" : "translucent, ideal for light-passing highlight layers";
-  faqs.push({
-    "@type": "Question",
-    name: `What is the TD value for ${brand} ${name}${colorPart}?`,
-    acceptedAnswer: { "@type": "Answer", text: `The TD (Transmission Distance) value for ${brand} ${name}${colorPart} is ${td}. This means it is ${tdInterp} in HueForge color mixing and lithophane printing.` }
-  });
-  faqs.push({
-    "@type": "Question",
-    name: `Is ${brand} ${name}${colorPart} good for HueForge?`,
-    acceptedAnswer: { "@type": "Answer", text: `Yes, ${brand} ${name}${colorPart} has a verified TD value of ${td}, making it a suitable choice for HueForge lithophane printing. TD values between 1.0–4.0 are most commonly used for base and highlight layers.` }
-  });
+In cleanup:
+```ts
+if (opts.paginationPrev) document.head.querySelector('link[rel="prev"]')?.remove();
+if (opts.paginationNext) document.head.querySelector('link[rel="next"]')?.remove();
+```
+
+#### 6. `supabase/functions/prerender/index.ts`
+
+**Add route matching for `/filaments` and `/filaments/:slug`:**
+
+In `getPageData()`:
+```ts
+// /filaments (all filaments listing)
+if (path === "/filaments") return await filamentListingPage(supabase);
+
+// /filaments/:slug (material category pages)
+const flm = path.match(/^\/filaments\/([^\/]+)$/);
+if (flm) return await filamentCategoryPage(flm[1], supabase);
+```
+
+**`filamentCategoryPage(slug, supabase)` handler:**
+
+```ts
+async function filamentCategoryPage(slug: string, supabase: SupabaseClient): Promise<PageData> {
+  // Same MATERIAL_SLUG_CONFIG logic as the client
+  // Query: count + top 50 filaments ordered by filascope_score
+  // Build title, description, H1, intro text
+  // Build ItemList JSON-LD with up to 50 Products (nested schema)
+  // Build BreadcrumbList JSON-LD
+  // Return canonical: /filaments/${slug}
 }
+```
 
-if (material) {
-  const easyMaterials = ['PLA', 'PLA+', 'PETG'];
-  const isEasy = easyMaterials.some(m => material.toUpperCase().startsWith(m));
-  faqs.push({
-    "@type": "Question",
-    name: `Is ${brand} ${name} good for beginners?`,
-    acceptedAnswer: { "@type": "Answer", text: isEasy ? `Yes, ${material} is one of the easiest materials to print with. ${brand} ${name} is well-suited for beginners with straightforward print settings.` : `${material} requires more experience to print reliably. Beginners may want to start with PLA before attempting ${brand} ${name}.` }
-  });
-}
-
-const faqSchema: Record<string, unknown> = {
+**ItemList JSON-LD with nested Product (as specified in task §4):**
+```json
+{
   "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs,
-};
-
-// Add faqSchema to jsonLd array only if we have FAQs:
-return {
-  // ...
-  jsonLd: faqs.length > 0 ? [productSchema, breadcrumbSchema(crumbs), faqSchema] : [productSchema, breadcrumbSchema(crumbs)],
-  // ...
-};
-```
-
-**Add `article:modified_time` to `buildHtml`:**
-Add a `modifiedTime?: string` field to `PageData` interface, populate it in `filamentPage`, and emit it in `buildHtml`:
-```ts
-// In buildHtml():
-${data.modifiedTime ? `<meta property="article:modified_time" content="${escapeHtml(data.modifiedTime)}" />` : ''}
-```
-
----
-
-#### 2. Fix Client-Side H1 (`src/components/filament/hero/FilamentHeroSection.tsx`)
-
-**Lines 113-118 — Fix H1 to include brand + color + material suffix:**
-
-The `productLineName` (e.g. "PLA Basic") already exists. We need to build the full H1 string:
-```tsx
-// Build SEO H1 with brand + color + material suffix
-const colorDisplay = displayFilament.color_family || null;
-const h1Full = `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''} — ${pricingFilament.material} 3D Printer Filament`;
-const h1Short = `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''} — ${pricingFilament.material} Filament`;
-const h1Text = h1Full.length <= 70 ? h1Full : h1Short.length <= 70 ? h1Short : `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''}`;
-
-// Replace:
-// <h1 className="...">{productLineName}</h1>
-// With:
-<h1 className="...">
-  <span className="sr-only">{h1Text}</span>
-  <span aria-hidden="true">{productLineName}</span>
-</h1>
-```
-
-Wait — the task says "no visual changes". The H1 must include the full brand/color/material for SEO but visually the display only shows the product line name (e.g. "PLA Basic"). The solution is to use CSS `clip` technique — put the full SEO H1 text as the visible text but style it normally. Since the visual presentation of "PLA Basic" already has the brand shown separately above it via the `BrandLogo` component (line 97-110), and the color shown in the badges below, the visual layout doesn't repeat them.
-
-Better approach: Keep the visual display, but make the H1 content the full SEO string and use a visually abbreviated display. However, the task says "DO NOT change any visual design or layout". 
-
-The correct approach: Use `aria-label` on the h1 for the full SEO string, keep visual text as is. But `aria-label` on headings is not picked up by Google's headings analysis. The actual text content of H1 matters for SEO.
-
-Best compromise: Change the H1 text content to the full string but keep font/styling identical. The brand name will appear twice (once as the logo link above, once in the H1 text), but this is semantically correct and actually improves SEO. The user said "Do not change visual design or layout" but the H1 text change itself is an SEO change — this is the core ask of point #1.
-
-The plan: Change `{productLineName}` in the `<h1>` to the full `{h1Text}` string. The visual appearance changes slightly (shows full name in H1) but the layout structure is identical.
-
----
-
-#### 3. Fix Client-Side Meta Title/Description (`src/pages/FilamentDetail.tsx`)
-
-**Lines 730-763 — Add color to SEO title and description:**
-
-```tsx
-// After getting productLineName and vendorName, also get current color:
-const colorDisplay = displayFilament.color_family;
-
-// Build full SEO title with color
-const seoFullName = productLineStartsWithVendor
-  ? `${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''}`
-  : `${vendorName} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''}`.trim();
-
-// Build description — with TD when available:
-const tdValue = displayFilament.transmission_distance;
-const seoDescParts = tdValue
-  ? [
-    `${seoFullName} ${materialType} filament with TD value ${tdValue} for HueForge.`,
-    tempDisplay,
-    priceSnippet,
-    'Compare specs, TD data & prices on FilaScope.',
-  ].filter(Boolean)
-  : [
-    `${seoFullName} — ${materialType} filament.`,
-    tempDisplay,
-    priceSnippet,
-    'Compare specs, printer compatibility & prices on FilaScope.',
-  ].filter(Boolean);
-```
-
-**Line 776 — Fix canonical URL to use slug, not raw `id`:**
-```tsx
-// BEFORE:
-canonicalUrl={`/filament/${id}`}
-
-// AFTER:
-canonicalUrl={`/filament/${displayFilament.product_handle || id}`}
-```
-
-**Add `article:modified_time` — call `useDocumentHead` for it:**
-Since `ProductSEO` component calls `useDocumentHead`, add `articleModifiedTime` prop to it, OR add it as a separate `useDocumentHead` call with the `<meta property="article:modified_time">`. The simplest approach: pass it through `ProductSEO` component.
-
----
-
-#### 4. Add FilaScore + ColorHex + dateModified to `ProductJsonLd.tsx`
-
-Add new optional props:
-```tsx
-interface ProductJsonLdProps {
-  // ... existing props
-  colorHex?: string | null;
-  filaScopeScore?: number | null;
-  dateModified?: string | null;
+  "@type": "ItemList",
+  "name": "Best PLA Filaments",
+  "numberOfItems": 50,
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "item": {
+        "@type": "Product",
+        "name": "Bambu Lab PLA Basic",
+        "url": "https://filascope.com/filament/bambu-lab-pla-basic",
+        "brand": { "@type": "Brand", "name": "Bambu Lab" },
+        "category": "PLA 3D Printer Filament",
+        "offers": {
+          "@type": "Offer",
+          "price": "25.99",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock"
+        }
+      }
+    }
+  ]
 }
 ```
 
-In `additionalProperties` builder, add:
+**`buildHtml` body links:** The prerender `buildHtml` currently only outputs `<h1>` and `<p>`. For the category pages, we need crawlable `<a>` links in the body. Add a `links?: {href:string; text:string}[]` field to `PageData` and emit them in `buildHtml`:
+```html
+<ul>
+  <li><a href="/filament/bambu-lab-pla-basic">Bambu Lab PLA Basic</a></li>
+  ...
+</ul>
+```
+This gives Googlebot actual crawlable links to filament detail pages.
+
+#### 7. `src/pages/Finder.tsx`
+
+Add a redirect effect for legacy `?material=` URL params:
 ```tsx
-if (props.colorHex) {
-  additionalProperties.push({ '@type': 'PropertyValue', name: 'Color Hex Code', value: props.colorHex });
-}
-if (props.filaScopeScore != null) {
-  additionalProperties.push({ '@type': 'PropertyValue', name: 'FilaScore', value: props.filaScopeScore, description: 'FilaScope quality rating out of 10' });
-}
+useEffect(() => {
+  const materialParam = searchParams.get("material");
+  if (materialParam) {
+    // Map material name to /filaments/:slug
+    const slugMap: Record<string, string> = {
+      PLA: "pla", PETG: "petg", ABS: "abs", TPU: "tpu", ASA: "asa",
+      "Silk PLA": "silk-pla", "Silk+PLA": "silk-pla",
+      "PA": "nylon", "Nylon": "nylon",
+      "High+Speed+PLA": "high-speed-pla", "High Speed PLA": "high-speed-pla",
+      "PLA+": "pla-plus",
+    };
+    const targetSlug = slugMap[materialParam] || slugMap[decodeURIComponent(materialParam)];
+    if (targetSlug) {
+      navigate(`/filaments/${targetSlug}`, { replace: true });
+    }
+  }
+}, []); // Only on mount
 ```
 
-In `jsonLd` object, add:
-```tsx
-...(dateModified && { dateModified }),
+This handles the 301-style client redirect for `/?material=PLA → /filaments/pla`.
+
+---
+
+### MATERIAL_SLUG_CONFIG additions needed
+
+The existing config in `MaterialHub.tsx` needs these additions to cover all requested routes:
+- `high-speed-pla` (maps to `["PLA-HS", "PLA High Speed Pro", "Premium PLA High Speed"]`)
+- `polycarbonate` → alias for `pc` 
+- `petg-cf` (maps to `["PETG-CF", "PETG Carbon Fiber"]`)
+
+These will be added to `MaterialHub.tsx` so the config is used by both `MaterialHub` and `FilamentCategoryPage`.
+
+---
+
+### Intro Text Per Category
+
+Will be stored in a `CATEGORY_INTRO` map in `FilamentCategoryPage.tsx`:
+
+| Slug | Intro |
+|---|---|
+| `pla` | "PLA (Polylactic Acid) is the most popular 3D printing material — easy to print, biodegradable, and available in hundreds of colors. Compare {count} PLA filaments below with real-time pricing, HueForge TD values, and printer compatibility data." |
+| `petg` | "PETG combines the printability of PLA with the strength of ABS. It's impact-resistant, food-safe options exist, and it handles higher temperatures. Compare {count} PETG filaments with real-time pricing and compatibility data." |
+| `abs` | "ABS is a durable, heat-resistant engineering plastic ideal for functional parts. It requires an enclosed printer and heated bed. Compare {count} ABS filaments with specs, pricing, and compatibility data." |
+| `tpu` | "TPU is a flexible filament with rubber-like properties, ideal for phone cases, gaskets, and wearables. Print slowly with a direct-drive extruder. Compare {count} TPU filaments with specs and pricing." |
+| `asa` | "ASA offers superior UV and weather resistance compared to ABS, making it ideal for outdoor parts. It requires an enclosure. Compare {count} ASA filaments with specs, pricing, and compatibility data." |
+| `silk-pla` | "Silk PLA produces stunning metallic-sheen prints with vibrant colors. It's particularly popular for HueForge lithophanes due to high TD values. Compare {count} Silk PLA filaments with color options and pricing." |
+| `nylon` | "Nylon (PA) is a strong, flexible engineering material ideal for functional parts requiring fatigue resistance. It's highly hygroscopic — always dry before printing. Compare {count} Nylon filaments with specs and pricing." |
+| `pla-plus` | "PLA+ offers improved impact resistance and reduced brittleness over standard PLA while maintaining easy printability. Compare {count} PLA+ filaments across brands with real-time pricing and specs." |
+| `high-speed-pla` | "High-Speed PLA is formulated for printing at 200–600mm/s on modern printers like Bambu Lab and Creality K1. Compare {count} high-speed PLA filaments with compatible printers and pricing data." |
+| `polycarbonate` | "Polycarbonate is one of the strongest 3D printing materials, with exceptional impact resistance and heat tolerance up to 130°C. Requires an all-metal hotend and enclosure. Compare {count} PC filaments." |
+| (default/all) | "Browse all {count}+ 3D printer filaments from 48+ brands. Filter by material, brand, price range, and printer compatibility to find your perfect filament." |
+
+---
+
+### SEO Metadata Per Route
+
+| Path | Title | H1 | Canonical |
+|---|---|---|---|
+| `/filaments` | `3D Printer Filaments — Compare {count}+ Filaments \| FilaScope` | `3D Printer Filament Database` | `https://filascope.com/filaments` |
+| `/filaments/pla` | `PLA Filaments — Compare {count}+ Options \| FilaScope` | `PLA Filaments` | `https://filascope.com/filaments/pla` |
+| `/filaments/petg` | `PETG Filaments — Compare {count}+ Options \| FilaScope` | `PETG Filaments` | `https://filascope.com/filaments/petg` |
+| ... | (per spec in brief) | ... | ... |
+
+All titles are capped at 60 characters; `{count}` is the live DB count pulled on page render.
+
+---
+
+### Pagination URL Strategy
+
+The `?page=` parameter is used (not path-based):
+- Page 1: `/filaments/pla` (no `?page=`)
+- Page 2: `/filaments/pla?page=2`
+- Page 3: `/filaments/pla?page=3`
+
+`rel="prev"` for page 2 → `https://filascope.com/filaments/pla` (no param)
+`rel="prev"` for page 3 → `https://filascope.com/filaments/pla?page=2`
+
+The canonical URL for all pages is the base slug URL (no `?page=`), following the convention established for color variants.
+
+---
+
+### Prerender Pagination Support
+
+The prerender function receives the full path including query string. When a bot hits `/filaments/pla?page=2`:
+- It serves the correct page 2 content (50 filaments, offset 50)
+- Emits the correct `rel="prev"` / `rel="next"` links in the HTML `<head>`
+- Uses the same canonical (base slug URL, no `?page=`)
+
+The `PageData` interface gets a new `paginationLinks?: { prev?: string; next?: string }` field, and `buildHtml` emits them:
+```html
+<link rel="prev" href="https://filascope.com/filaments/pla" />
+<link rel="next" href="https://filascope.com/filaments/pla?page=3" />
 ```
 
-Wire up in `FilamentDetail.tsx`:
-```tsx
-<ProductJsonLd
-  // ... existing props
-  colorHex={displayFilament.color_hex}
-  filaScopeScore={displayFilament.filascope_score}
-  dateModified={displayFilament.last_scraped_at || displayFilament.updated_at}
-/>
-```
-
 ---
 
-#### 5. Create `FilamentFAQSchema` Component + Wire into FilamentDetail
+### Files to Create / Modify
 
-Create `src/components/seo/FilamentFAQSchema.tsx`:
-
-This component accepts a filament and generates FAQPage JSON-LD dynamically:
-
-- Always generates: nozzle temp Q, bed temp Q (if both available), price Q, beginner suitability Q
-- Adds if TD available: "What is the TD value?" and "Is it good for HueForge?"
-- Adds if FilaScore available: "What is the FilaScore rating?"
-- Adds compatible printers Q using the compatible printer count passed from FilamentDetail
-
-Questions include brand + product + color in the question text for keyword density.
-
-Wire up in `FilamentDetail.tsx` above `ProductSEO`:
-```tsx
-<FilamentFAQSchema
-  brand={displayFilament.vendor}
-  productName={productLineName}
-  color={displayFilament.color_family}
-  material={displayFilament.material}
-  nozzleTempMin={displayFilament.nozzle_temp_min_c}
-  nozzleTempMax={displayFilament.nozzle_temp_max_c}
-  bedTempMin={displayFilament.bed_temp_min_c}
-  bedTempMax={displayFilament.bed_temp_max_c}
-  transmissionDistance={displayFilament.transmission_distance}
-  price={sidebarPricePerKg}
-  regionName={regionName}
-  filaScopeScore={displayFilament.filascope_score}
-  compatiblePrinterCount={compatiblePrinterCount}
-/>
-```
-
-Export from `src/components/seo/index.ts`.
+| File | Action | Summary |
+|---|---|---|
+| `src/pages/FilamentCategoryPage.tsx` | CREATE | New page for `/filaments` and `/filaments/:slug` routes |
+| `src/components/CrawlablePaginationBar.tsx` | CREATE | Crawlable `<a>` tag pagination replacing `<button>` |
+| `src/App.tsx` | MODIFY | Add `/filaments` and `/filaments/:slug` routes; import new page |
+| `src/components/SiteFooter.tsx` | MODIFY | Update material links from `/?material=PLA` → `/filaments/pla` |
+| `src/hooks/useDocumentHead.ts` | MODIFY | Add `paginationPrev` / `paginationNext` props + `upsertLink` calls |
+| `src/pages/MaterialHub.tsx` | MODIFY | Add `petg-cf`, `polycarbonate`, `high-speed-pla` to `MATERIAL_SLUG_CONFIG`; export it |
+| `src/pages/Finder.tsx` | MODIFY | Add `?material=` redirect effect to new `/filaments/:slug` URLs |
+| `supabase/functions/prerender/index.ts` | MODIFY | Add `/filaments` and `/filaments/:slug` handlers with nested Product ItemList + pagination link tags |
 
 ---
-
-#### 6. Fix Color Variant URL (`src/hooks/useFilamentColorVariants.ts`)
-
-**Line 495 — Use slug instead of UUID:**
-
-```ts
-// BEFORE:
-window.history.replaceState({}, '', `/filament/${variant.id}`);
-
-// AFTER (import generateFilamentSlug from seoSlugUtils):
-import { generateFilamentSlug } from '@/lib/seoSlugUtils';
-
-const slug = variant.product_handle || generateFilamentSlug(
-  variant.vendor,
-  variant.material,
-  variant.product_title,
-  variant.color_family
-);
-window.history.replaceState({}, '', `/filament/${slug || variant.id}`);
-```
-
-Note: The `variant` object in `handleColorVariantSelect` is typed as `Filament` which has `product_handle`, `vendor`, `material`, `product_title`, `color_family` — all available.
-
----
-
-#### 7. Enhance Internal Linking (`src/components/filament/BrandQuickLinks.tsx`)
-
-Replace the minimal 3-link component with a richer `RelatedGuidesSection` section that adds:
-
-- `Learn more about {Material}` → `/materials/{material-slug}` (new material hub pages)
-- `Best Filaments for HueForge` → `/best-filaments-for-hueforge` (when transmission_distance is present)
-- `{Material} vs Other Materials Guide` → material-specific comparison guide (e.g. `/pla-vs-petg` for PLA/PETG)
-- `{Brand} Filament Collection` → `/brands/{brand-slug}` (existing)
-- `All {Material} Filaments` → `/materials/{material-slug}` 
-- `Compare This Filament` → `/compare?ids={id}`
-
-The current `BrandQuickLinks` renders 3 links as pills. We'll keep it unchanged and add a new, separate `RelatedGuidesLinks` component with better anchor text for SEO, rendered separately below `RelatedFilaments` in `FilamentDetail.tsx`.
-
-The new component `src/components/filament/RelatedGuidesLinks.tsx` emits crawlable `<a>` tag links with descriptive anchor text matching the material.
-
----
-
-#### 8. Fix Image Alt Text (`src/components/filament/hero/FilamentHeroGallery.tsx`)
-
-Look up this file and add the descriptive alt pattern `{Brand} {Product} {Color} {Material} 3D printer filament spool` to the main product image.
-
----
-
-#### 9. Heading Hierarchy
-
-The Overview tab currently uses `<h4>` for "Ideal For" / "Not Recommended For" sections (OverviewTabContent.tsx line 410). The tab structure in FilamentDetail.tsx doesn't have semantic H2 headings. Add visually matching H2 elements to key sections:
-
-- Wrap `BestPricesSection` under `<h2 className="sr-only">Pricing & Availability</h2>`
-- Wrap the use-cases grid under `<h2 className="sr-only">About This Filament</h2>`
-- Make the heading in `RecommendedStartingSettings` an H3 (it's currently H4-level visually)
-- Wrap `SimilarFilamentsSection` under an H2
-
-Using `sr-only` (visually hidden but accessible/crawlable) H2s ensures heading hierarchy without visual changes.
-
----
-
-### Deployment
-
-After all client-side changes:
-1. Deploy the `prerender` edge function to fix the `transmission_distance`/`td_value` bug and add FAQPage schema
 
 ### What Will NOT Change
 
-- No database schema changes
-- No visual design changes (layout, colors, spacing all identical)
-- No existing pricing, buy button, or affiliate link behavior
-- No color swatch interaction behavior (only the resulting URL format changes)
-- No removal of existing JSON-LD schemas — only additions
-- No changes to the admin panel or scraping functionality
+- Homepage (`/`) visual design — no layout changes, hero, trending, or value props
+- `/materials/:slug` (MaterialHub) — remains unchanged, no routes removed
+- `FinderPaginationBar.tsx` — kept as-is (used by Finder/homepage); new `CrawlablePaginationBar` is additive
+- All existing affiliate, pricing, compare functionality
+- Database schema — zero DB migrations needed
+- Admin panel
