@@ -16,6 +16,12 @@ const CRAWLER_AGENTS = [
   "googlebot", "bingbot", "twitterbot", "facebookexternalhit",
   "linkedinbot", "slackbot", "whatsapp", "discordbot", "applebot",
   "duckduckbot", "yandex", "archive.org_bot", "slurp",
+  // Extended Google crawler variants (URL Inspection tool, image/news/video bots, etc.)
+  "googlebot-image", "googlebot-news", "googlebot-video",
+  "google-inspectiontool", "storebot-google", "apis-google",
+  "adsbot-google", "mediapartners-google",
+  // Other major crawlers
+  "petalbot", "bytespider",
 ];
 
 const BASE_URL = "https://filascope.com";
@@ -793,8 +799,12 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const userAgent = req.headers.get("user-agent");
-    let path = url.searchParams.get("path") || "/";
-    path = path.replace(/\/+$/, "") || "/";
+    // Prefer ?path= param; fall back to URL pathname (strips /prerender prefix if called directly)
+    let path = url.searchParams.get("path")
+      || url.pathname.replace(/^\/functions\/v1\/prerender/, "").replace(/^\/prerender/, "")
+      || "/";
+    path = path.split("?")[0];          // strip any embedded query string
+    path = path.replace(/\/+$/, "") || "/"; // strip trailing slashes
 
     // --- robots.txt (served to ALL user agents) ---
     if (path === "/robots.txt") {
@@ -834,8 +844,10 @@ Deno.serve(async (req) => {
       }
 
       // Crawler prerender
+      console.log(`[PRERENDER] crawler="${userAgent}" path="${path}"`);
       const pageData = await getPageData(path, supabase);
       const is404 = pageData.type === "notfound";
+      console.log(`[PRERENDER] status=${is404 ? 404 : 200} path="${path}"`);
       const html = is404 ? build404Html(pageData) : buildHtml(pageData);
       return new Response(html, {
         status: is404 ? 404 : 200,
