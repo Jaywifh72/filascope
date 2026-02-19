@@ -695,19 +695,53 @@ async function brandPage(slug: string, supabase: SupabaseClient): Promise<PageDa
   const count = data.product_count || 0;
   const canonical = `/brands/${data.brand_slug}`;
 
-  let title = `${brandName} Filaments — ${count} Products Compared | FilaScope`;
+  // Fetch top materials for richer description and schema
+  const { data: topMats } = await supabase.from("filaments")
+    .select("material")
+    .ilike("vendor", brandName)
+    .not("material", "is", null)
+    .limit(1000);
+
+  const materialCounts: Record<string, number> = {};
+  (topMats || []).forEach((f: { material: string | null }) => {
+    if (f.material) materialCounts[f.material] = (materialCounts[f.material] || 0) + 1;
+  });
+  const topMaterials = Object.entries(materialCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([m]) => m);
+  const matList = topMaterials.join(", ");
+
+  let title = `${brandName} 3D Filaments — ${count} Products | FilaScope`;
+  if (title.length > 60) title = `${brandName} 3D Filaments | FilaScope`;
   if (title.length > 60) title = `${brandName} Filaments | FilaScope`;
 
-  const description = `Browse all ${count} ${brandName} 3D printer filaments. Compare PLA, PETG, ABS specs, TD values, prices & printer compatibility. Find your perfect ${brandName} filament on FilaScope.`;
+  const description = topMaterials.length > 0
+    ? `${brandName} 3D filaments: ${count} products across ${topMaterials.length} materials (${matList}). Compare specs, read reviews & find the best deals on FilaScope.`
+    : `Browse all ${count} ${brandName} 3D printer filaments. Compare specs, TD values, prices & printer compatibility on FilaScope.`;
+
+  const orgSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: brandName,
+    url: data.website_url || `${BASE_URL}${canonical}`,
+    ...(data.logo_url && { logo: { "@type": "ImageObject", url: data.logo_url } }),
+    ...(data.description && { description: data.description }),
+    ...(data.website_url && { sameAs: [data.website_url] }),
+    makesOffer: { "@type": "AggregateOffer", offerCount: count, priceCurrency: "USD" },
+  };
+  if (topMaterials.length > 0) {
+    orgSchema.knowsAbout = topMaterials.map(m => `${m} Filament`);
+  }
 
   const crumbs = [{ name: "Home", url: "/" }, { name: "Brands", url: "/brands" }, { name: brandName, url: canonical }];
   return {
-    type: "brand", title, description, canonical, ogImage: buildOgImageUrl({ type: "brand", title: `${brandName} Filaments`, subtitle: `${count} products`, image: data.logo_url || undefined }), ogType: "profile",
-    jsonLd: [
-      { "@context": "https://schema.org", "@type": "Organization", name: brandName, url: data.website_url || `${BASE_URL}${canonical}`, ...(data.logo_url && { logo: data.logo_url }), ...(data.description && { description: data.description }) },
-      breadcrumbSchema(crumbs),
-    ],
-    breadcrumbs: crumbs, h1: `${brandName} 3D Printer Filaments`,
+    type: "brand", title, description, canonical,
+    ogImage: buildOgImageUrl({ type: "brand", title: `${brandName} 3D Filaments`, subtitle: `${count} products`, image: data.logo_url || undefined }),
+    ogType: "profile",
+    jsonLd: [orgSchema, breadcrumbSchema(crumbs)],
+    breadcrumbs: crumbs,
+    h1: `${brandName} 3D Filaments`,
     bodyText: data.description || `Browse all ${count} ${brandName} filament products with specs, prices, and compatibility info.`,
   };
 }
