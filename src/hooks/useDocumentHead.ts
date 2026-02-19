@@ -64,6 +64,12 @@ export interface DocumentHeadOptions {
   paginationPrev?: string;
   /** rel="next" pagination link href */
   paginationNext?: string;
+  /**
+   * robots meta — e.g. "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+   * or "noindex, nofollow" for admin/settings pages.
+   * Defaults to the index.html static value when not set.
+   */
+  robots?: string;
 }
 
 // ── helpers ────────────────────────────────────────────────
@@ -147,6 +153,9 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
     if (opts.paginationPrev) upsertLink('prev', opts.paginationPrev);
     if (opts.paginationNext) upsertLink('next', opts.paginationNext);
 
+    // Robots
+    if (opts.robots) upsertMeta('name', 'robots', opts.robots);
+
     // Cleanup → only revert tags that THIS call explicitly set
     return () => {
       if (opts.title) document.title = DEFAULTS.title;
@@ -178,6 +187,8 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
       if (opts.productTransmissionDistance) removeMeta('property', 'product:transmission_distance');
       if (opts.paginationPrev) document.head.querySelector('link[rel="prev"]')?.remove();
       if (opts.paginationNext) document.head.querySelector('link[rel="next"]')?.remove();
+      // Revert robots to the default indexable value when unmounting
+      if (opts.robots) upsertMeta('name', 'robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
     };
   }, [
     opts.title, opts.description, opts.canonical,
@@ -186,6 +197,6 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
     opts.keywords, opts.rating, opts.geoRegion,
     opts.productBrand, opts.productCategory, opts.productPriceAmount, opts.productPriceCurrency,
     opts.productAvailability, opts.productTargetCountry, opts.productTransmissionDistance,
-    opts.paginationPrev, opts.paginationNext,
+    opts.paginationPrev, opts.paginationNext, opts.robots,
   ]);
 }

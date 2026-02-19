@@ -16,5 +16,6 @@ Disallow: /admin
 Disallow: /settings
 Disallow: /maintenance
 Disallow: /embed/
+Crawl-delay: 2
 
 Sitemap: https://filascope.com/sitemap.xml
