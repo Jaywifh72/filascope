@@ -4,6 +4,7 @@ import { AdminSidebar } from './AdminSidebar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
+import { DocumentHead } from '@/components/seo/DocumentHead';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -39,6 +40,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
+      <DocumentHead robots="noindex, nofollow" />
       <AdminSidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
