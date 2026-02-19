@@ -75,6 +75,10 @@ const featureOptions = [
 
 const TOP_BRANDS = ["Bambu Lab", "Creality", "Prusa Research", "FlashForge", "Elegoo", "Snapmaker", "Anycubic", "Raise3D", "UltiMaker"];
 
+function brandToSlug(brand: string): string {
+  return brand.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 type ExpandedSection = 'sort' | 'price' | 'volume' | 'brands' | 'motion' | 'speed' | 'features' | null;
 
 const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>(({
@@ -303,18 +307,22 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                   {/* Top brand pills */}
                   <div className="flex flex-wrap gap-1.5 px-1">
                     {TOP_BRANDS.map((brand) => (
-                      <button
+                      <a
                         key={brand}
-                        onClick={() => handleBrandToggle(brand)}
+                        href={`/printers/brand/${brandToSlug(brand)}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleBrandToggle(brand);
+                        }}
                         className={cn(
-                          "text-xs rounded-full px-3 py-1 transition-colors duration-150 border",
+                          "text-xs rounded-full px-3 py-1 transition-colors duration-150 border no-underline",
                           advancedFilters.brands.includes(brand)
                             ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 font-semibold"
                             : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
                         {brand}
-                      </button>
+                      </a>
                     ))}
                   </div>
                   {/* Search + remaining brands */}
