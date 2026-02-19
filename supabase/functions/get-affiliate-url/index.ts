@@ -94,11 +94,15 @@ function applyPattern(url: string, pattern: string, affiliateId: string | null):
   if (!pattern) return url;
   
   try {
+    // Strip any existing fragment from the URL before substitution to avoid double-fragments
+    // (e.g. Prusa uses fragment-based tracking: {{raw_url}}#a_aid={{id}})
+    const cleanUrl = url.split('#')[0];
+
     // Replace placeholders
     let result = pattern
-      .replace(/\{\{url\}\}/gi, encodeURIComponent(url))
+      .replace(/\{\{url\}\}/gi, encodeURIComponent(cleanUrl))
       .replace(/\{\{id\}\}/gi, affiliateId || "")
-      .replace(/\{\{raw_url\}\}/gi, url);
+      .replace(/\{\{raw_url\}\}/gi, cleanUrl);
     
     // If pattern is just parameters, append to URL
     if (pattern.startsWith("?") || pattern.startsWith("&")) {
@@ -183,6 +187,8 @@ function transformUrl(
       case "goaffpro":
       case "shareasale":
       case "direct":
+        // Direct programs: Prusa uses fragment-based tracking (#a_aid=Jay) via affiliate_url_pattern
+        // Other direct programs may use ?ref= style
         if (config.affiliate_url_pattern) {
           return applyPattern(url, config.affiliate_url_pattern, config.affiliate_id);
         } else if (config.affiliate_id) {
