@@ -1,130 +1,205 @@
 
-# SEO Content & Internal Linking Plan
+# Admin Analytics Dashboard — Implementation Plan
 
 ## Current State Analysis
 
-After reviewing all key page types:
+**Routing Architecture:**
+- `/admin` → `NewAdminPanel.tsx` (modern panel with feature flags + sync monitor)
+- `/admin/affiliate-hub` → `AdminAffiliateHub.tsx` (existing, already registered in `App.tsx`)
+- `/admin/pricing-data` → `PricingData.tsx` (already registered in `App.tsx`)
+- `/admin/*` → catches all other `/admin/` routes and redirects to `/old-admin/` equivalents
+- The plan: register `/admin/analytics` **before** the wildcard catch-all at line 256 of `App.tsx`
 
-- **Homepage (Finder.tsx):** Has `WhyFilaScope` value prop section and a "Trending" section before the catalog. No SEO content block with "What is FilaScope?" or "Popular Searches" chips above the footer.
-- **Material Pages (MaterialHub.tsx):** Already has related material links and guide links. Missing: brand-specific links, color-specific page links.
-- **Brand Pages (BrandDetail.tsx):** Has breadcrumb (`DetailBreadcrumb`) + full SEO. Missing: "Related Brands" section.
-- **Brand Listing (Brands.tsx):** Has `BreadcrumbSchema` (schema only, no visible breadcrumb trail rendered).
-- **Product Pages (FilamentDetail.tsx):** Has `RelatedFilaments` (same brand/material/color) and `RelatedGuidesLinks`. The existing `RelatedFilaments` does NOT show cross-brand alternatives — this needs a dedicated "Similar from Other Brands" section.
-- **Guide Pages (GuideDetail.tsx):** Has `GuideReadNext` (3 related guides). Missing: visible breadcrumb and "Products Mentioned" section.
-- **Guide Listing (LearningCenter.tsx):** Has `BreadcrumbSchema` only.
+**Existing Infrastructure (reuse, don't duplicate):**
+- `useAffiliateClickAnalytics.ts` — already has `useClickSummary`, `useClicksByDay`, `useRecentClicks`, `useDistinctBrandNames`, `useClicksToday`
+- `affiliate_clicks_daily` view — exists with columns: `date, brand, store, region, clicks, unique_sessions, unique_products, avg_price`
+- `search_zero_results` view — exists with: `search_term, search_count, unique_sessions, last_searched_at, most_common_region`
+- `AdminLayout` — used by many admin pages, wraps with sidebar and auth gate
+- `AdminPageHeader` — standard header component
+- Recharts — already installed and used in `AdminModuleAnalytics.tsx`
 
-## What Already Exists (Do NOT Duplicate)
+**Live Data Confirmed:**
+- `affiliate_clicks`: 35 rows, brands: Creality (17), Anycubic (14), eSUN (3), Overture (1)
+- Regions: US (21), CA (13), UK (1)
+- `search_logs`: 0 rows currently (but schema is correct and ready)
+- GA4 Measurement ID: `G-Q96R53VCKM` (hardcoded in `src/lib/analytics.ts`)
 
-- `RelatedFilaments` component — handles same-brand + similar-TD + same-color cross-brand results (already in FilamentDetail)
-- `RelatedGuidesLinks` — contextual guide pills on product pages
-- `DetailBreadcrumb` — visible breadcrumb on brand detail + filament detail pages
-- `Breadcrumbs` — visible breadcrumb on Material Hub, FilamentCategoryPage, ColorFamilyPage
-- `GuideReadNext` in guide detail page
+**GA4 Data API Decision:**
+The GA4 Data API requires a service account JSON key as a secret + an edge function to proxy requests. This is doable but complex. Instead, we will embed the GA4 Looker Studio report link + provide a direct GA4 link to Google Analytics — this keeps the dashboard focused and avoids secret management complexity. The user explicitly offered this as an option.
 
-## Changes Planned
+**Admin `/admin/analytics` Route:**
+The wildcard `<Route path="/admin/*" element={<AdminRedirect />} />` at line 256 of `App.tsx` will catch `/admin/analytics` and redirect it. We must add the new route **before** that wildcard, like `/admin/affiliate-hub` and `/admin/pricing-data` are already registered.
 
-### 1. Homepage — SEO Content Block (new component)
+---
 
-**File:** Create `src/components/HomeSEOContent.tsx`
+## New Files to Create
 
-A new section placed just before the `<SiteFooter>` in `Finder.tsx` (after the filament grid, above the footer). It will contain:
+### 1. `src/pages/admin/Analytics.tsx` — Main dashboard page
 
-- **"What is FilaScope?" paragraph** with target keywords naturally embedded: 3D printer filament comparison, filament database, HueForge TD values, filament prices
-- **"Popular Searches" chip row** — 6 linked pills using `<a>` tags (not React Router `<Link>`) for crawler discoverability:
-  - "Best PLA for beginners" → `/guides/best-filament-for-beginners-2025`
-  - "PETG vs ABS" → `/materials/compare?a=petg&b=abs`
-  - "Cheapest filament" → `/filaments?sort=price_asc`
-  - "HueForge compatible filaments" → `/best-filaments-for-hueforge`
-  - "High speed PLA" → `/filaments/pla?q=high+speed`
-  - "Best filament for Bambu Lab" → `/guides/best-pla-filaments`
+The page is organized into 5 tabbed panels using the existing `Tabs` component pattern. It uses `AdminLayout` for auth protection + sidebar.
 
-### 2. Material Pages — Add Brand & Color Links
+**Tab structure:**
+- **Affiliate** (default) — affiliate performance charts
+- **Search** — search insights
+- **Traffic** — GA4 links + embeds
+- **SEO Health** — status indicators
+- **Content Gaps** — zero-result searches + low-CTR brands
 
-**File:** `src/pages/MaterialHub.tsx`
+### 2. `src/components/admin/analytics/AffiliatePanel.tsx`
 
-Add two new content sections after the existing "Compare Related Materials" and "Relevant Guides" sections:
+Affiliate Performance Panel:
+- **KPI row** (4 cards): Clicks Today / This Week / This Month / Unique Sessions
+- **Clicks by Brand** — horizontal `BarChart` (Recharts), using `affiliate_clicks_daily` view aggregated by brand
+- **Clicks by Region** — `PieChart` with region breakdown
+- **Top Source Components** — small table of `source_component` vs click count
+- **Top Clicked Products** — table of `product_name, brand_name, clicks, sessions` with link to `/filament/${product_slug}`
 
-**a) Top Brands for This Material** — query the top 5 brands by product count for the current material (using existing `filaments` table), render as linked pills to `/brands/{brandSlug}`.
+Data queries:
+- Uses existing `useClickSummary` hook (date-range filtered)
+- New inline query for brand aggregation from `affiliate_clicks_daily`
+- New inline query for region from `affiliate_clicks` grouped by `region_code`
+- New inline query for top products from `affiliate_clicks` grouped by `product_name, brand_name`
 
-**b) Color-Specific Pages** — add a static map inside `MATERIAL_SLUG_CONFIG` for popular colors per material (e.g., PLA → White, Black, Grey, Transparent), linking to `/colors/{color}?material={slug}` or the `ColorFamilyPage` route at `/colors/{color}`.
+Date range selector: Today / 7 days / 30 days (drives all queries)
 
-### 3. Brand Pages — "Related Brands" Section
+### 3. `src/components/admin/analytics/SearchPanel.tsx`
 
-**File:** Create `src/components/brands/RelatedBrandsSection.tsx`
+Search Insights Panel:
+- **Top Search Terms** table: `search_term, searches, zero_results_count, last_seen` — from `search_logs` grouped by `search_term`
+- **Zero-Result Searches** table: from `search_zero_results` view with `search_count, unique_sessions, last_searched_at`
+- **Search Volume Trend** — `AreaChart` of daily searches over 30 days
+- Empty state: "No search data yet — searches will appear here as users interact with the site."
 
-A small component that:
-- Accepts `brandName: string`, `availableMaterials: string[]`
-- Queries `automated_brands` table for brands that share similar top materials (or uses a hardcoded similar-brands map for the main brands)
-- Renders 4-6 brand name chips with links to `/brands/{brandSlug}` and brand logos (using `getBrandLogo`)
+### 4. `src/components/admin/analytics/TrafficPanel.tsx`
 
-**Integration:** Add `<RelatedBrandsSection>` inside `BrandDetail.tsx` at the very bottom of the page (after the FAQ section, inside the main `max-w-7xl` div).
+Traffic Overview Panel (GA4):
+- **Explanation card**: "Traffic data is powered by Google Analytics 4. View detailed reports in GA4 directly or via Looker Studio."
+- **Quick Links grid**: 4 cards linking to GA4 dashboard, GA4 Audience report, GA4 Pages report, Looker Studio (user can paste their own embed URL)
+- **Looker Studio embed slot**: An `<iframe>` placeholder that the user can configure with their Looker Studio report URL — stored in `localStorage` so they can paste it in. Includes an edit button to enter the URL.
+- **Fallback**: A clean information panel explaining what GA4 tracks and linking directly to `https://analytics.google.com`
 
-### 4. Product Pages — Cross-Brand "Similar from Other Brands" Section
+### 5. `src/components/admin/analytics/SeoHealthPanel.tsx`
 
-The existing `RelatedFilaments` already shows cross-brand results via the 3-bucket system. However, the request asks for a clearer **dedicated section** showing same-material alternatives from competing brands. 
+SEO Health Panel:
+- **Status indicators grid** (using colored badges):
+  - robots.txt reachable → fetches `/robots.txt` client-side, shows ✓ or ✗
+  - Sitemap URL → links to `https://filascope.com/sitemap.xml`
+  - Prerender active → checks for `X-Prerender: true` header by fetching a test URL
+- **External tools links**: Google Search Console, Bing Webmaster Tools
+- **Site page count**: Query `filaments` count + `printers` count + guides count as total indexable pages estimate
+- **Hreflang status**: Shows the 7 supported locale tags
 
-**Assessment:** The existing `RelatedFilaments` already covers "same material, different brand" in bucket 2 and 3. Instead of duplicating, we will:
-- Ensure the section heading clearly says "Similar [Material] from Other Brands" for the cross-brand buckets (already labeled correctly)
-- The `RelatedFilaments` component already shows 6 cross-brand cards — this requirement is **already implemented**
+### 6. `src/components/admin/analytics/ContentGapsPanel.tsx`
 
-No new file needed here, but we verify the existing component is correctly wired (it is, at line 1100–1106 of FilamentDetail.tsx).
+Content Gaps Panel:
+- **Zero-Result Searches** — ranked table from `search_zero_results` view: `search_term, search_count, unique_sessions` — sorted by frequency. Each row has a "Create Guide" link hint.
+- **Brands with High Views, Low Clicks** — query `affiliate_clicks` to find brands with low click-through rates vs page view counts (using `source_page` frequency as a proxy for views)
+- **Most Viewed Source Pages with No Clicks** — from `affiliate_clicks`, group by `source_page` to find high-traffic pages where clicks happen vs pages with 0 recorded clicks
 
-### 5. Guide Pages — Breadcrumb + "Products Mentioned" Section
+---
 
-**File:** `src/pages/GuideDetail.tsx`
+## Files to Modify
 
-Two additions:
+### 1. `src/App.tsx`
+Add the new route before the wildcard:
+```
+<Route path="/admin/analytics" element={<AdminAnalytics />} />
+```
+Add the lazy import:
+```
+const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
+```
 
-**a) Visible Breadcrumb** — Add `<DetailBreadcrumb>` just above the guide header (after the sticky `<header>` block), with segments: `[{label:"Guides", href:"/learn"}, {label: guide.title, href: `/learn/${slug}`}]`
+### 2. `src/pages/NewAdminPanel.tsx`
+Add a "Analytics Dashboard" quick link card alongside the Affiliate Hub and Pricing Data cards, pointing to `/admin/analytics`.
 
-**b) Products Mentioned** — Add a new `GuideProductsMentioned` component in `src/components/guides/GuideComponents.tsx`. Since guide content is JSX (not markdown), we'll create a `productsMentioned` optional field in `GuideMetadata` with an array of filament slugs/IDs. For the 5 existing guides that have content, we add curated product mentions from the guide content. The component fetches those filaments by slug and renders linked cards.
+---
 
-### 6. Visible Breadcrumb on Brands Listing & Guide Listing
+## Data Query Strategy
 
-**Brands listing (Brands.tsx):** Currently only has `BreadcrumbSchema` (schema only). Add a visible `<Breadcrumbs>` component after the `BrandsHeroSection` with items: `[{name:"Home", url:"/"}, {name:"Brands", url:"/brands"}]` — but since this is a top-level page with only 2 items, and the `Breadcrumbs` component returns `null` for chains ≤1 item after home, we need the component to render this. The `Breadcrumbs` component shows breadcrumb only when `chain.length > 1` — this chain has 2 items so it will render.
+All panels use `@tanstack/react-query` hooks for caching. Queries that don't exist yet will be written inline within the panel components (no new hook files needed — the data is dashboard-specific).
 
-**Guide listing (LearningCenter.tsx):** Add a visible `<Breadcrumbs>` with items `[{name:"Home", url:"/"}, {name:"Guides", url:"/learn"}]`.
+Key queries by panel:
 
-## Technical Implementation Details
+**Affiliate Panel:**
+```typescript
+// Brand clicks aggregation
+supabase.from('affiliate_clicks_daily')
+  .select('brand, clicks, date')
+  .gte('date', startDate)
+  .order('date', { ascending: true })
 
-### Files to Create
-1. `src/components/HomeSEOContent.tsx` — homepage SEO block
-2. `src/components/brands/RelatedBrandsSection.tsx` — related brands for brand detail page
+// Region breakdown
+supabase.from('affiliate_clicks')
+  .select('region_code')
+  .gte('clicked_at', startDate)
+  // → group client-side by region_code
 
-### Files to Modify
-1. `src/pages/Finder.tsx` — import and add `<HomeSEOContent>` before footer close
-2. `src/pages/MaterialHub.tsx` — add top-brands query + color links sections; extend `MATERIAL_SLUG_CONFIG` with `colorSlugs` data
-3. `src/pages/BrandDetail.tsx` — import and add `<RelatedBrandsSection>` at the bottom
-4. `src/pages/GuideDetail.tsx` — add `<DetailBreadcrumb>` + `productsMentioned` rendering
-5. `src/pages/LearningCenter.tsx` — add visible `<Breadcrumbs>`
-6. `src/pages/Brands.tsx` — add visible `<Breadcrumbs>` below hero
-7. `src/components/guides/GuideComponents.tsx` — add `GuideProductsMentioned` component
-8. `src/pages/LearningCenter.tsx` — extend `GuideMetadata` with optional `productsMentioned: string[]`
+// Top products
+supabase.from('affiliate_clicks')
+  .select('product_name, brand_name, product_slug, session_id')
+  .gte('clicked_at', startDate)
+  .not('product_name', 'is', null)
+  .order('clicked_at', { ascending: false })
+  .limit(500)
+  // → group client-side by product_name
+```
 
-### Data Strategy for Related Brands
-Rather than a runtime query (which could be slow), we'll use a lightweight static adjacency map for the major brands and a live query fallback for the rest. The static map covers ~12 major brands with 4–6 curated competitors. For unknown brands, we fall back to querying the `automated_brands` table for brands that share at least one material.
+**Search Panel:**
+```typescript
+// Top terms (from search_logs table)
+supabase.from('search_logs')
+  .select('search_term, results_count, created_at')
+  .gte('created_at', last30Days)
+  .order('created_at', { ascending: false })
+  .limit(1000)
+  // → group client-side by search_term
 
-### Popular Color Slugs per Material
-We'll add a `colorSlugs` array to each `MATERIAL_SLUG_CONFIG` entry, pointing to `/colors/{slug}` routes that are already registered via `ColorFamilyPage`:
-- PLA: `["white", "black", "grey", "blue", "red", "transparent"]`
-- PETG: `["white", "black", "clear", "blue"]`
-- ABS: `["black", "white", "grey"]`
-- etc.
+// Zero-result view
+supabase.from('search_zero_results')
+  .select('*')
+  .order('search_count', { ascending: false })
+  .limit(50)
+```
 
-### Breadcrumb Consistency
-All page types will have both visible breadcrumbs and JSON-LD `BreadcrumbList` schema:
+---
+
+## Component Architecture
 
 ```text
-Page Type              Visible?    Schema?    Component
-──────────────────────────────────────────────────────
-Homepage (/)           No          Yes        BreadcrumbSchema
-Brands (/brands)       Yes (new)   Yes        Breadcrumbs
-Brand Detail           Yes         Yes        DetailBreadcrumb
-Filaments (/filaments) Yes         Yes        Breadcrumbs
-Filament Detail        Yes         Yes        DetailBreadcrumb
-Material Hub           Yes         Yes        Breadcrumbs
-Guide List (/learn)    Yes (new)   Yes        Breadcrumbs
-Guide Detail           Yes (new)   No*        DetailBreadcrumb
-Compare                No          Yes        BreadcrumbSchema
+src/pages/admin/Analytics.tsx
+  └─ AdminLayout (auth gate + sidebar)
+     └─ AdminPageHeader (title, date range selector)
+        └─ Tabs
+           ├─ AffiliatePanel.tsx
+           │   ├─ KPI cards row
+           │   ├─ BarChart (brands)
+           │   ├─ PieChart (regions)
+           │   └─ Tables (top products, source components)
+           ├─ SearchPanel.tsx
+           │   ├─ AreaChart (volume trend)
+           │   ├─ Table (top terms)
+           │   └─ Table (zero-result terms)
+           ├─ TrafficPanel.tsx
+           │   ├─ GA4 external links grid
+           │   └─ Looker Studio iframe slot (configurable)
+           ├─ SeoHealthPanel.tsx
+           │   ├─ Status checks (robots.txt, sitemap, prerender)
+           │   └─ External tool links
+           └─ ContentGapsPanel.tsx
+               ├─ Zero-result searches ranked table
+               └─ Brands low-CTR table
 ```
-*Guide detail currently has no schema breadcrumb — we'll add via `BreadcrumbSchema` when we add `DetailBreadcrumb`.
+
+---
+
+## Technical Considerations
+
+- **Auth**: `AdminLayout` handles all auth protection — no extra guards needed in the analytics page
+- **No new DB schema needed**: All required tables and views already exist
+- **GA4 integration**: Linking out (not embedding) to avoid service account complexity; Looker Studio URL stored in `localStorage` for easy configuration
+- **Chart colors**: Match existing admin chart palette (orange, blue, green, purple) from `AdminModuleAnalytics.tsx`
+- **Empty states**: All panels have graceful empty states since `search_logs` currently has 0 rows
+- **Date ranges**: Global date range selector on the page drives all Supabase panels; GA4/SEO panels are static links so they're unaffected
+- **Recharts**: Already installed — reuse `BarChart`, `PieChart`, `AreaChart`, `ResponsiveContainer` from the existing pattern in `AdminModuleAnalytics.tsx`
+- **Sidebar**: No changes needed to `AdminSidebar` since it points to `/old-admin/*` routes; the new page is accessed via `NewAdminPanel.tsx` quick link and direct URL navigation
