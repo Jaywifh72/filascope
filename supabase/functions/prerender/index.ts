@@ -1361,36 +1361,55 @@ const SITEMAP_HEADERS = {
 };
 
 const STATIC_PAGES = [
+  // Tier 1 — 1.0
   { path: "/", priority: 1.0, changefreq: "daily" },
+  // Tier 2 — 0.9 (main listing pages)
+  { path: "/filaments", priority: 0.9, changefreq: "daily" },
   { path: "/deals", priority: 0.9, changefreq: "daily" },
-  { path: "/printers", priority: 0.8, changefreq: "weekly" },
-  { path: "/brands", priority: 0.7, changefreq: "weekly" },
-  { path: "/brands/compare", priority: 0.6, changefreq: "monthly" },
-  { path: "/compare", priority: 0.6, changefreq: "monthly" },
+  { path: "/printers", priority: 0.9, changefreq: "weekly" },
+  { path: "/brands", priority: 0.9, changefreq: "weekly" },
+  // Tier 3 — 0.8 (material-filtered listings)
+  { path: "/filaments/pla", priority: 0.8, changefreq: "daily" },
+  { path: "/filaments/petg", priority: 0.8, changefreq: "daily" },
+  { path: "/filaments/abs", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/tpu", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/asa", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/silk-pla", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/pla-plus", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/nylon", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/high-speed-pla", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/polycarbonate", priority: 0.8, changefreq: "weekly" },
+  { path: "/filaments/petg-cf", priority: 0.7, changefreq: "weekly" },
+  // Tier 3 — 0.8 (material hub pages)
+  { path: "/materials/pla", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/petg", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/abs", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/tpu", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/asa", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/pla-plus", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/silk-pla", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/nylon", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/pc", priority: 0.7, changefreq: "weekly" },
+  // Tier 4 — 0.7 (tools & specialty pages)
+  { path: "/brands/compare", priority: 0.7, changefreq: "monthly" },
+  { path: "/compare", priority: 0.7, changefreq: "monthly" },
   { path: "/wizard", priority: 0.7, changefreq: "monthly" },
   { path: "/color-finder", priority: 0.7, changefreq: "monthly" },
   { path: "/hueforge-td-database", priority: 0.7, changefreq: "weekly" },
   { path: "/hueforge-filaments", priority: 0.7, changefreq: "weekly" },
-  { path: "/accessories", priority: 0.6, changefreq: "weekly" },
-  { path: "/diagnose", priority: 0.6, changefreq: "monthly" },
-  { path: "/learn", priority: 0.6, changefreq: "weekly" },
-  { path: "/matrix", priority: 0.6, changefreq: "weekly" },
+  { path: "/accessories", priority: 0.7, changefreq: "weekly" },
+  { path: "/diagnose", priority: 0.7, changefreq: "monthly" },
+  { path: "/matrix", priority: 0.7, changefreq: "weekly" },
+  // Tier 5 — 0.5 (learn / reference)
+  { path: "/learn", priority: 0.5, changefreq: "weekly" },
   { path: "/reference/slicers", priority: 0.5, changefreq: "monthly" },
   { path: "/reference/repos", priority: 0.5, changefreq: "monthly" },
-  { path: "/about", priority: 0.3, changefreq: "monthly" },
+  // Tier 6 — informational
+  { path: "/about", priority: 0.4, changefreq: "monthly" },
   { path: "/methodology", priority: 0.4, changefreq: "monthly" },
   { path: "/affiliate-disclosure", priority: 0.2, changefreq: "yearly" },
   { path: "/privacy", priority: 0.2, changefreq: "yearly" },
   { path: "/terms", priority: 0.2, changefreq: "yearly" },
-  { path: "/materials/pla", priority: 0.9, changefreq: "weekly" },
-  { path: "/materials/petg", priority: 0.8, changefreq: "weekly" },
-  { path: "/materials/abs", priority: 0.8, changefreq: "weekly" },
-  { path: "/materials/tpu", priority: 0.7, changefreq: "weekly" },
-  { path: "/materials/asa", priority: 0.7, changefreq: "weekly" },
-  { path: "/materials/pla-plus", priority: 0.7, changefreq: "weekly" },
-  { path: "/materials/silk-pla", priority: 0.6, changefreq: "weekly" },
-  { path: "/materials/nylon", priority: 0.6, changefreq: "weekly" },
-  { path: "/materials/pc", priority: 0.6, changefreq: "weekly" },
 ];
 
 const GUIDE_SLUGS = [
@@ -1459,6 +1478,20 @@ async function sitemapPrinters(supabase: SupabaseClient): Promise<string> {
   return wrapUrlset(entries);
 }
 
+async function sitemapColors(supabase: SupabaseClient): Promise<string> {
+  const today = new Date().toISOString().split("T")[0];
+  const entries: string[] = [];
+  const { data } = await supabase.from("color_families")
+    .select("name").order("display_order", { ascending: true });
+  if (data) {
+    for (const c of data) {
+      const slug = c.name.toLowerCase().replace(/\s+/g, "-");
+      entries.push(urlEntry(`${BASE_URL}/colors/${slug}`, today, "weekly", 0.7));
+    }
+  }
+  return wrapUrlset(entries);
+}
+
 function sitemapPages(): string {
   const today = new Date().toISOString().split("T")[0];
   const entries = STATIC_PAGES.map((p) => urlEntry(`${BASE_URL}${p.path}`, today, p.changefreq, p.priority));
@@ -1467,56 +1500,19 @@ function sitemapPages(): string {
 
 function sitemapGuides(): string {
   const today = new Date().toISOString().split("T")[0];
-  const entries = GUIDE_SLUGS.map((s) => urlEntry(`${BASE_URL}/guides/${s}`, today, "weekly", 0.9));
-  return wrapUrlset(entries);
-}
-
-const MATERIAL_SITEMAP_PAGES = [
-  // /filaments/* category pages (new SEO routes)
-  { path: "/filaments", priority: 0.9, changefreq: "daily" },
-  { path: "/filaments/pla", priority: 0.9, changefreq: "daily" },
-  { path: "/filaments/petg", priority: 0.8, changefreq: "daily" },
-  { path: "/filaments/abs", priority: 0.8, changefreq: "weekly" },
-  { path: "/filaments/tpu", priority: 0.7, changefreq: "weekly" },
-  { path: "/filaments/asa", priority: 0.7, changefreq: "weekly" },
-  { path: "/filaments/silk-pla", priority: 0.7, changefreq: "weekly" },
-  { path: "/filaments/pla-plus", priority: 0.7, changefreq: "weekly" },
-  { path: "/filaments/nylon", priority: 0.6, changefreq: "weekly" },
-  { path: "/filaments/high-speed-pla", priority: 0.7, changefreq: "weekly" },
-  { path: "/filaments/polycarbonate", priority: 0.6, changefreq: "weekly" },
-  { path: "/filaments/petg-cf", priority: 0.6, changefreq: "weekly" },
-  // Legacy /materials/* pages
-  { path: "/materials/pla", priority: 0.7, changefreq: "weekly" },
-  { path: "/materials/petg", priority: 0.6, changefreq: "weekly" },
-  { path: "/materials/abs", priority: 0.6, changefreq: "weekly" },
-  { path: "/materials/tpu", priority: 0.5, changefreq: "weekly" },
-  { path: "/materials/asa", priority: 0.5, changefreq: "weekly" },
-  { path: "/materials/pla-plus", priority: 0.5, changefreq: "weekly" },
-  { path: "/materials/silk-pla", priority: 0.5, changefreq: "weekly" },
-  { path: "/materials/nylon", priority: 0.5, changefreq: "weekly" },
-  { path: "/materials/pc", priority: 0.5, changefreq: "weekly" },
-  { path: "/best-filaments-for-hueforge", priority: 0.8, changefreq: "weekly" },
-  { path: "/best-white-filaments", priority: 0.8, changefreq: "weekly" },
-  { path: "/pla-vs-petg", priority: 0.8, changefreq: "monthly" },
-  { path: "/filament-database", priority: 0.8, changefreq: "weekly" },
-  { path: "/colors/white", priority: 0.7, changefreq: "weekly" },
-  { path: "/colors/black", priority: 0.7, changefreq: "weekly" },
-  { path: "/colors/blue", priority: 0.6, changefreq: "weekly" },
-  { path: "/colors/red", priority: 0.6, changefreq: "weekly" },
-  { path: "/colors/green", priority: 0.6, changefreq: "weekly" },
-  { path: "/colors/gray", priority: 0.6, changefreq: "weekly" },
-  { path: "/colors/natural", priority: 0.6, changefreq: "weekly" },
-  { path: "/colors/clear", priority: 0.6, changefreq: "weekly" },
-];
-
-function sitemapMaterials(): string {
-  const today = new Date().toISOString().split("T")[0];
-  const entries = MATERIAL_SITEMAP_PAGES.map((p) => urlEntry(`${BASE_URL}${p.path}`, today, p.changefreq, p.priority));
+  const entries = GUIDE_SLUGS.map((s) => urlEntry(`${BASE_URL}/guides/${s}`, today, "weekly", 0.7));
   return wrapUrlset(entries);
 }
 
 function sitemapIndex(): string {
-  const subs = ["sitemap-pages.xml", "sitemap-filaments.xml", "sitemap-brands.xml", "sitemap-printers.xml", "sitemap-guides.xml", "sitemap-materials.xml"];
+  const subs = [
+    "sitemap-pages.xml",
+    "sitemap-filaments.xml",
+    "sitemap-brands.xml",
+    "sitemap-printers.xml",
+    "sitemap-guides.xml",
+    "sitemap-colors.xml",
+  ];
   const items = subs.map((s) => `  <sitemap><loc>${BASE_URL}/${s}</loc></sitemap>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</sitemapindex>`;
 }
@@ -1588,12 +1584,13 @@ Deno.serve(async (req) => {
     if (path === "/sitemap-guides.xml") {
       return new Response(sitemapGuides(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
     }
+    // Legacy redirect: old sitemap-materials.xml now covered by sitemap-pages.xml
     if (path === "/sitemap-materials.xml") {
-      return new Response(sitemapMaterials(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+      return new Response(sitemapPages(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
     }
 
     // DB-backed sitemaps need Supabase client
-    const needsDb = ["/sitemap-filaments.xml", "/sitemap-brands.xml", "/sitemap-printers.xml"].includes(path);
+    const needsDb = ["/sitemap-filaments.xml", "/sitemap-brands.xml", "/sitemap-printers.xml", "/sitemap-colors.xml"].includes(path);
 
     if (needsDb || isCrawler(userAgent)) {
       const supabase = createClient(
@@ -1609,6 +1606,9 @@ Deno.serve(async (req) => {
       }
       if (path === "/sitemap-printers.xml") {
         return new Response(await sitemapPrinters(supabase), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+      }
+      if (path === "/sitemap-colors.xml") {
+        return new Response(await sitemapColors(supabase), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
       }
 
       // Crawler prerender
