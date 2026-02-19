@@ -42,7 +42,7 @@ function CompactFilamentCard({ item }: { item: BrowseHistoryItem }) {
 
   const href = isFilament
     ? `/filament/${item.product_id}`
-    : `/printers/${item.product_id}`;
+    : `/printers/${(item.printer as any)?.printer_id || item.product_id}`;
 
   const title = isFilament
     ? item.filament!.product_title

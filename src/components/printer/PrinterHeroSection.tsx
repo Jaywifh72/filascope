@@ -99,15 +99,14 @@ export function PrinterHeroSection({
 
         {/* Right Column: Product Info */}
         <div className="space-y-6">
-          {/* Brand - Not uppercase, consistent with listing cards */}
-          <div className="text-sm text-gray-400 font-medium">
-            {brand}
-          </div>
-
-          {/* Model Name + Share */}
+          {/* H1 — Brand + Model + "3D Printer" for SEO. Brand styled small above, model bold, "3D Printer" as subtle label */}
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-foreground leading-tight">
-              {printer.model_name}
+            <h1 className="leading-tight">
+              {brand && (
+                <span className="block text-sm text-gray-400 font-medium mb-1">{brand}</span>
+              )}
+              <span className="block text-3xl font-bold text-foreground">{printer.model_name}</span>
+              <span className="block text-xs text-muted-foreground/50 font-normal mt-0.5">3D Printer</span>
             </h1>
             <TooltipProvider delayDuration={300}>
               <Tooltip>

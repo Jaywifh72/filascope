@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useJsonLd } from '@/components/seo/useJsonLd';
 
 interface FAQ {
   id: string;
@@ -154,7 +155,13 @@ function generateFAQs(props: FAQSectionProps): FAQ[] {
   ];
 }
 
+// Strip HTML tags for clean schema text
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 const CATEGORIES = ['Getting Started', 'Materials & Printing', 'Maintenance & Support', 'Comparison & Value', 'Technical'];
+const INITIAL_VISIBLE = 5;
 
 export function FAQSection(props: FAQSectionProps) {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -162,12 +169,24 @@ export function FAQSection(props: FAQSectionProps) {
   const [showAll, setShowAll] = useState(false);
   
   const faqs = generateFAQs(props);
+
+  // FAQPage JSON-LD — inject ALL 20 questions for rich results eligibility
+  useJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: stripHtml(faq.answer),
+      },
+    })),
+  });
   
   const filteredFAQs = activeCategory === 'All'
     ? faqs
     : faqs.filter(faq => faq.category === activeCategory);
-
-  const visibleFAQs = showAll ? filteredFAQs : filteredFAQs.slice(0, 5);
 
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
@@ -224,13 +243,22 @@ export function FAQSection(props: FAQSectionProps) {
         ))}
       </div>
 
-      {/* FAQ List */}
+      {/* FAQ List — ALL items in DOM, extras visually hidden for crawlability */}
       <div className="flex flex-col gap-3">
-        {visibleFAQs.map(faq => {
+        {filteredFAQs.map((faq, index) => {
           const isExpanded = expandedItems.has(faq.id);
+          const isVisuallyHidden = !showAll && index >= INITIAL_VISIBLE;
           
           return (
-            <div key={faq.id} className="rounded-[10px] overflow-hidden">
+            <div
+              key={faq.id}
+              className={cn(
+                "rounded-[10px] overflow-hidden",
+                // Always in DOM, but visually collapsed extras via max-h + overflow
+                isVisuallyHidden && "max-h-0 overflow-hidden pointer-events-none"
+              )}
+              aria-hidden={isVisuallyHidden}
+            >
               <button
                 onClick={() => toggleFAQ(faq.id)}
                 aria-expanded={isExpanded}
@@ -253,6 +281,7 @@ export function FAQSection(props: FAQSectionProps) {
                 />
               </button>
               
+              {/* Answer — always in DOM (even collapsed), crawlable by Googlebot */}
               <div
                 id={`faq-answer-${faq.id}`}
                 aria-hidden={!isExpanded}
@@ -275,7 +304,7 @@ export function FAQSection(props: FAQSectionProps) {
         })}
       </div>
 
-      {filteredFAQs.length > 5 && (
+      {filteredFAQs.length > INITIAL_VISIBLE && (
         <button
           onClick={() => setShowAll(!showAll)}
           className="flex items-center gap-1 mx-auto mt-4 text-sm text-cyan-400 hover:text-cyan-300 font-mono cursor-pointer py-2 transition-colors"
