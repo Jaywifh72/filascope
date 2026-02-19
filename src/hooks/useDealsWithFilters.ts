@@ -105,8 +105,21 @@ export function useDealsWithFilters() {
           item.variant_compare_at_price > item.variant_price
       );
 
+      // Sanity check: exclude bad compare_at_price data
+      // - compare_at_price > $200 USD = almost certainly bad data (JPY stored as USD, etc.)
+      // - discount > 75%: statistically implausible for commodity filament sales
+      // - discount < 5%: too small to surface as a "deal"
+      const sanitizedDeals = onSaleItems.filter((item) => {
+        const cap = item.variant_compare_at_price!;
+        const cur = item.variant_price!;
+        const discountPct = ((cap - cur) / cap) * 100;
+        if (cap > 200) return false;
+        if (discountPct > 75 || discountPct < 5) return false;
+        return true;
+      });
+
       // Add discount calculation, urgency data, and store info
-      return onSaleItems.map((item) => {
+      return sanitizedDeals.map((item) => {
         const discount = Math.round(
           ((item.variant_compare_at_price! - item.variant_price!) / item.variant_compare_at_price!) * 100
         );

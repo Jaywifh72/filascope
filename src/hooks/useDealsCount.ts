@@ -26,6 +26,7 @@ export function useDealsCount() {
         .not("variant_compare_at_price", "is", null)
         .not("variant_price", "is", null)
         .gt("variant_compare_at_price", 0)
+        .lte("variant_compare_at_price", 200)
         .or("net_weight_g.is.null,net_weight_g.gte.300")
         .limit(1); // Only fetch 1 row, we just need the count header
 
