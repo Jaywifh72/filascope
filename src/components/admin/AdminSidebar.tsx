@@ -120,6 +120,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Analytics',
     items: [
+      { title: 'Analytics Dashboard', href: '/admin/analytics', icon: BarChart3 },
       { title: 'Module Analytics', href: '/old-admin/module-analytics', icon: BarChart3 },
       { title: 'A/B Tests', href: '/old-admin/ab-tests', icon: FlaskConical },
     ],
