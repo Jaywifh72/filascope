@@ -99,8 +99,13 @@ export function ProductSEO({
   const seoDescription = metaDesc.length > 160 ? metaDesc.substring(0, 157) + '...' : metaDesc;
 
   const baseUrl = canonicalUrl.startsWith('http') ? canonicalUrl : `https://filascope.com${canonicalUrl}`;
-  const fullUrl = baseUrl.includes('?') ? `${baseUrl}&region=${activeRegion}` : `${baseUrl}?region=${activeRegion}`;
-  const canonicalFullUrl = baseUrl;
+  // For non-US regions, include the region param in both canonical and og:url so
+  // search engines understand this is a regionally distinct URL.
+  const regionParam = `region=${activeRegion}`;
+  const canonicalFullUrl = activeRegion !== 'US'
+    ? (baseUrl.includes('?') ? `${baseUrl}&${regionParam}` : `${baseUrl}?${regionParam}`)
+    : baseUrl;
+  const fullUrl = canonicalFullUrl;
 
   const ogImageUrl = buildOgImageUrl({
     type: 'product',
