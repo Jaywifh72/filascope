@@ -1,556 +1,438 @@
 
-## SEO Overhaul: Printer Detail Pages — Complete Implementation Plan
+## SEO Overhaul: Brands Listing & Brand Detail Pages — Implementation Plan
 
-### Current State Analysis
+### Current State Summary
 
-**`PrinterHeroSection.tsx` (H1 Issue):**
-- Line 109: `<h1 className="text-3xl font-bold text-foreground leading-tight">{printer.model_name}</h1>`
-- H1 is ONLY the model name (e.g., "P1S"), with brand rendered as a separate `<div>` above it
-- Zero keyword context ("3D Printer" not in the H1)
+**Brands Listing (`/brands`, `Brands.tsx` + `BrandCard.tsx`):**
+- `BrandCard.tsx` line 85: Entire card is a `<div onClick={handleClick}>` — zero `<a>` tags
+- The "View X Filaments" at line 231 is a `<button>` with `onClick` — not a link
+- `BrandsHeroSection.tsx` line 125: `<h1>` says "Discover Trusted Brands." — no SEO keyword
+- `Brands.tsx` line 379: `DocumentHead` description is 128 chars, only references 24 brands
 
-**`PrinterDetail.tsx` (SEO/Schema Issues):**
-- Line 634–638: One `BreadcrumbSchema` injected here (3-item: Home → Printers → Name)
-- Line 674–681: `DetailBreadcrumb` injects a SECOND `BreadcrumbSchema` via `BreadcrumbSchema` component (3 items: Home → Printers → Brand → Model) — **TWO duplicate BreadcrumbList schemas confirmed**
-- Line 639–649: `ProductSEO` title is just `printerName` (e.g., "Bambu Lab P1S") with description pattern that includes price and is under 140 chars
-- Line 651–670: `ProductJsonLd` passes basic props only — no physical dimensions (weight/width/height/depth), no multi-material, enclosure, connectivity, extruder type, etc.
-- Line 553–563: The 404 state shows `<h1 className="text-2xl font-bold mb-4">Printer not found</h1>` but no `noindex` meta tag and uses whatever meta ProductSEO renders for null printer (which falls through to parent layout defaults)
-- Line 1001–1011: `FAQSection` component generates 20 dynamic FAQs, but **NO FAQPage JSON-LD schema** is emitted from it
-- Lines 824–1041: Tab content is conditionally rendered with `{activeTab === "specifications" && ...}` — Googlebot only sees the Overview tab content
+**Brand Detail (`BrandDetail.tsx` + tabs):**
+- `BrandDetail.tsx` lines 679/698/710: Tab content uses `{activeTab === "overview" && ...}` — JS conditional rendering, Googlebot only sees Overview tab
+- `BrandHeroSection.tsx` line 129: `<h1 className="text-2xl sm:text-3xl font-bold text-white">{brandName}</h1>` — just the brand name, no "3D Filaments" keyword
+- `BrandOverviewTab.tsx` lines 197/222/358: `<h3>` for Brand Highlights, Popular Products, Materials Offered — should be `<h2>`
+- `BrandOverviewTab.tsx` line 361: Materials Offered uses `<button onClick={() => onFilterByMaterial(material)}>` — not a crawlable link
+- `BrandProductsTab.tsx` lines 379/485/515: Navigate to `/filament/${product.variants[0].id}` — UUID, not slug
+- `BrandOverviewTab.tsx` lines 274/342: Same UUID issue
+- `BrandOrganizationSchema.tsx` line 60: Emits a `BreadcrumbList` schema AND `DetailBreadcrumb` (from `BrandDetail.tsx` line 593) emits another → **2 duplicate BreadcrumbList schemas**
+- `BrandOrganizationSchema.tsx` line 80: ItemList uses `p.slug` from `g.variants[0]?.product_handle || g.variants[0]?.id` — may emit UUID URLs
+- `BrandFAQSection` exists but only renders inside `{activeTab === "about" && ...}` — invisible to Googlebot
+- `BrandTabNav.tsx`: Tab buttons use `<button>` elements — no `href` for crawlers
 
-**`FAQSection.tsx` (Crawler Issues):**
-- Line 170: `const visibleFAQs = showAll ? filteredFAQs : filteredFAQs.slice(0, 5)` — only 5 of 20 FAQ questions in DOM initially
-- Line 278–286: "Show all 20 questions" is a `<button>` — answers hidden by JS state, not just CSS
-- No `FAQPage` JSON-LD emitted anywhere
-
-**`PrinterTabNav.tsx` (Crawlability):**
-- Line 84: Tab buttons use `role="tab"` `<button>` elements — Googlebot cannot follow these
-- Tab content only renders for the active tab — specifications/materials/connectivity/pricing are invisible to crawlers
-
-**`DetailBreadcrumb.tsx`:**
-- Line 77: Brand breadcrumb links to `/printers?brand=${toBrandSlug(printerBrand)}` — a query parameter, not the SEO category page `/printers/brand/bambu-lab` that was created in the previous plan
-
-**`RecentlyViewedSection.tsx` (UUID URLs):**
-- Line 44–45: The `href` for printers is `/printers/${item.product_id}` where `product_id` is the UUID from the browse history — this may serve UUID URLs
-
-**`SpecificationsTabContent.tsx`:**
-- Line 103: Section headers use `<h3 className="section-title">` — these are H3s with no H2 parent wrapper
-- Categories like "Dimensions", "Print Performance" etc. are rendered as H3 labels inside a `SpecSection` component
-
-**`PricingTabContent.tsx`:**
-- Line 43: `<h3 className="section-title">{title}</h3>` — all section headings are H3
-
-**`MaterialsTabContent.tsx`:**
-- Line 200+: Uses similar H3 patterns for section headers
-
-**Prerender Edge Function (`supabase/functions/prerender/index.ts`):**
-- Lines 728–768: `printerPage()` function EXISTS and handles `/printers/:slug` — it queries by `printer_id` slug, falling back to UUID
-- The function generates: title, description, Product schema, BreadcrumbList schema, h1 (just `full` name without "3D Printer" suffix), and bodyText
-- **Major gap**: Title at line 748 is `${full} — Specs, Compatible Filaments & Price | FilaScope` — already reasonable but missing "3D Printer" keyword
-- **Major gap**: Product schema at line 760–765 only has: name, description, brand, sku, category, url, offers — missing ALL additional specs (build volume, max speed, nozzle temp, bed temp, dimensions, connectivity, etc.)
-- **Major gap**: Only ONE `BreadcrumbList` generated in prerender (correct) but the client React renders TWO
-- **Category route gap**: The prerender `pm` match at line 450–451 does `path.match(/^\/printers\/(.+)$/)` — this will match `/printers/enclosed`, `/printers/brand/bambu-lab` etc. and call `printerPage()` with "enclosed" or "brand/bambu-lab" as the slug — these return `fallback()` because no printer has `printer_id = "enclosed"`
+**Prerender (`supabase/functions/prerender/index.ts`):**
+- `brandPage()` (line 688): EXISTS, queries `automated_brands`, emits Organization + BreadcrumbList schemas
+- `brandsListing()` (line 715): EXISTS, handles `/brands`
+- Gap: `brandPage()` emits only basic Organization schema — missing founder, sameAs, enhanced description with materials/count
 
 ---
 
-### Priority-Ordered Implementation Plan
+### Priority-Ordered Changes
 
-#### Files to Modify
+#### Priority 1 — Convert Brand Cards to Crawlable Links (`BrandCard.tsx`)
 
-| File | Changes |
-|---|---|
-| `src/components/printer/PrinterHeroSection.tsx` | Fix H1 to include brand + model + "3D Printer" |
-| `src/components/printer/FAQSection.tsx` | Render all FAQs in DOM (CSS hidden); add FAQPage JSON-LD |
-| `src/components/printer/PrinterTabNav.tsx` | Convert tab `<button>` to `<a>` tags |
-| `src/pages/PrinterDetail.tsx` | Remove duplicate BreadcrumbSchema; fix 404 noindex; enhance ProductJsonLd; fix brand breadcrumb URL; update meta title/description template |
-| `src/components/seo/ProductJsonLd.tsx` | Accept new printer-specific props (dimensions, connectivity, materials list) |
-| `src/components/printer/tabs/SpecificationsTabContent.tsx` | Change `<h3>` section titles to `<h2>` |
-| `src/components/printer/tabs/MaterialsTabContent.tsx` | Change section `<h3>` to `<h2>`; make material badges into `<a>` links |
-| `src/components/printer/tabs/PricingTabContent.tsx` | Change `<h3>` section titles to `<h2>` |
-| `src/components/printer/tabs/ConnectivityTabContent.tsx` | Change `<h3>` section titles to `<h2>` |
-| `src/components/printer/tabs/OverviewTabContent.tsx` | Change any `<h3>` top-level section titles to `<h2>` |
-| `src/pages/PrinterDetail.tsx` | Render ALL tab content in DOM (CSS hidden for inactive tabs); add "About" SEO paragraph |
-| `src/components/RecentlyViewedSection.tsx` | Fix UUID printer URLs to use slug |
-| `supabase/functions/prerender/index.ts` | Enhance `printerPage()`: richer Product schema, "3D Printer" in h1/title, category page fallback handling, 404 noindex |
+**Current:** `<div ... onClick={handleClick}>` wrapping entire card, `<button>` for "View X Filaments"
 
----
+**Fix:** Wrap the card in an `<a>` tag. This is the highest-impact change — without it, Googlebot cannot discover any of the 48 brand detail pages from the listing:
 
-### Detailed Changes
-
-#### 1. Fix H1 — `src/components/printer/PrinterHeroSection.tsx`
-
-**Current (line 103–111):**
 ```tsx
-<div className="text-sm text-gray-400 font-medium">
-  {brand}
+// Change the cardContent wrapper from <div onClick={...}> to be wrapped in <Link>
+// The outer TooltipTrigger asChild will pass through to the Link
+
+const slug = toBrandSlug(name);
+
+// Wrap entire card div in an <a> tag using React Router's Link
+<Link
+  to={`/brands/${slug}`}
+  className="block"
+  onClick={handleClick} // optional, Link handles navigation
+>
+  <div className={`...same classes...`}>
+    {/* ... all existing card content ... */}
+    
+    {/* "View Filaments" — change from <button> to <span> inside the Link */}
+    <div className="border-t border-border mt-auto pt-3">
+      <span className="w-full rounded-lg border border-border py-2 text-sm font-medium text-cyan-400 ... flex items-center justify-center gap-2 group/btn">
+        {isEmpty ? 'Notify Me' : `View ${variantCount || productLineCount} Filament${...}`}
+        <ArrowRight ... />
+      </span>
+    </div>
+  </div>
+</Link>
+```
+
+Alternatively, since `BrandCard` uses `Tooltip` conditionally, use:
+- Change `onClick={handleClick}` on the root `<div>` to an `<a href={...}>` wrapping
+- Remove `navigate` import as the card itself becomes a link
+- The "View X Filaments" inner button becomes a styled `<span>` (since it's inside an `<a>`)
+
+Import `Link` from `react-router-dom`, use `<Link to={/brands/${toBrandSlug(name)}} className="block">` as the outermost wrapper for the card content.
+
+**Also fix BrandsHeroSection dropdown (line 192):** The search dropdown suggestions currently use `<button>` → change to `<Link to={...}>` for crawlability.
+
+#### Priority 2 — Render All Tab Content in DOM (`BrandDetail.tsx`)
+
+**Current (lines 679, 698, 710):**
+```tsx
+{activeTab === "overview" && <BrandOverviewTab ... />}
+{activeTab === "products" && <BrandProductsTab ... />}
+{activeTab === "about" && <BrandAboutTab ... /><BrandFAQSection ... />}
+```
+
+**Fix:** Render ALL panels always, use `hidden` attribute for inactive tabs:
+
+```tsx
+{/* Overview Tab — always rendered */}
+<div id="tabpanel-overview" role="tabpanel" hidden={activeTab !== "overview"}>
+  <BrandOverviewTab ... />
 </div>
-<div className="flex items-center gap-3">
-  <h1 className="text-3xl font-bold text-foreground leading-tight">
-    {printer.model_name}
-  </h1>
+
+{/* Products Tab — always rendered */}
+<div id="tabpanel-products" role="tabpanel" hidden={activeTab !== "products"}>
+  <BrandProductsTab ... />
+</div>
+
+{/* About Tab — always rendered */}
+<div id="tabpanel-about" role="tabpanel" hidden={activeTab !== "about"}>
+  <BrandAboutTab ... />
+  {(filaments?.length ?? 0) > 0 && (
+    <BrandFAQSection ... />
+  )}
+</div>
 ```
 
-**New — H1 contains full keyword phrase, visual display unchanged:**
+This ensures ALL content — brand description paragraphs, company info, 40 product cards, Materials Offered, FAQs — is in the DOM for Googlebot on every page load. The `BrandFAQSection` (currently only shown on About tab) will now be present in the DOM always and will emit its `FAQPage` schema.
+
+**Note on `BrandTabContent` component:** This wrapper component (in `BrandTabNav.tsx`) currently accepts `activeTab` and `children`. Since we're moving the `hidden` logic into the parent, we'll render the tabs directly without the `BrandTabContent` wrapper, or simplify the wrapper to just be a `<div className="mt-6">`.
+
+#### Priority 3 — Fix View Details → Slugs (`BrandProductsTab.tsx` + `BrandOverviewTab.tsx`)
+
+**Current:** `navigate(`/filament/${product.variants[0].id}`)` — UUID
+
+**Fix in `BrandProductsTab.tsx` (3 occurrences, lines 379, 485, 515):**
 ```tsx
-{/* SEO H1 — visually hidden brand prefix, prominent model name */}
-<h1 className="text-3xl font-bold text-foreground leading-tight flex items-center gap-3">
-  {/* Brand shown smaller as visual context but INSIDE h1 */}
-  {brand && (
-    <span className="block text-sm text-gray-400 font-medium mb-0.5 -mt-1 leading-none">
-      {brand}
-    </span>
-  )}
-  {/* Visually dominant model name */}
-  <span className="block">{printer.model_name}</span>
-  {/* Screen-reader / SEO only */}
-  <span className="sr-only">3D Printer</span>
-</h1>
+// Add helper at top of component:
+const getFilamentHref = (variants: Filament[]) => 
+  `/filament/${variants[0]?.product_handle || variants[0]?.id}`;
+
+// Change Card onClick:
+onClick={() => navigate(getFilamentHref(product.variants))}
+
+// Change "View Details" Button onClick:
+onClick={(e) => { e.stopPropagation(); navigate(getFilamentHref(product.variants)); }}
+
+// ALSO make "View Details" into an <a> tag:
+<a
+  href={getFilamentHref(product.variants)}
+  onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate(getFilamentHref(product.variants)); }}
+  className="w-full text-xs ... inline-flex items-center justify-center ..."
+>
+  View Details
+</a>
 ```
 
-Actually, `sr-only` won't work well for SEO. The simpler and SEO-cleanest approach:
+**Fix in `BrandOverviewTab.tsx` (2 occurrences, lines 274, 342):**
+Same pattern — use `product.variants[0]?.product_handle || product.variants[0]?.id` for href.
 
+Also: the popular products card should wrap in `<Link to={href}>` so the card is clickable as a proper link, not just via JS onClick.
+
+#### Priority 4 — Fix Brand Detail H1 (`BrandHeroSection.tsx`)
+
+**Current (line 129):**
 ```tsx
-{/* H1 with full keyword phrase. Brand is styled smaller, model is bold. */}
-<h1 className="leading-tight">
-  {brand && (
-    <span className="block text-sm text-gray-400 font-medium mb-1">{brand}</span>
-  )}
-  <span className="block text-3xl font-bold text-foreground">
-    {printer.model_name}
+<h1 className="text-2xl sm:text-3xl font-bold text-white">{brandName}</h1>
+```
+
+**Fix:**
+```tsx
+<h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+  {brandName}
+  <span className="block text-base sm:text-lg font-normal text-primary/80 mt-0.5">
+    3D Filaments
   </span>
-  <span className="block text-xs text-muted-foreground/60 font-normal mt-0.5">3D Printer</span>
 </h1>
 ```
 
-This puts the full "Bambu Lab P1S 3D Printer" text into the H1 element. Brand appears as a small label above the model name; "3D Printer" appears as a subtle label below — all within the single `<h1>`.
+The H1 element now contains "{Brand Name} 3D Filaments" for Googlebot. Visually, "3D Filaments" shows as a smaller subtitle within the H1. This matches the same approach used for printer detail pages.
 
-**Remove the old separate brand `<div>` and share button row.** Move the share button outside the `<h1>` tag.
+#### Priority 5 — Fix Brands Listing H1 (`BrandsHeroSection.tsx`)
 
-#### 2. Fix Heading Hierarchy — Tab Content Files
-
-**`SpecificationsTabContent.tsx` (line 103):**
-Change `<h3 className="section-title">` → `<h2 className="section-title">` in `SpecSection`. The SubSection component (line 115) shows subcategory labels — change those to `<h3>`.
-
-**`PricingTabContent.tsx` (line 43):**
-Change `<h3 className="section-title">` → `<h2 className="section-title">` in `SectionHeader`.
-
-**`MaterialsTabContent.tsx` (line ~200):**
-Change the top-level `SectionHeader` `<h3>` → `<h2>`. Internal subsection labels (material category names like "Standard", "Engineering") → `<h3>`.
-
-**`ConnectivityTabContent.tsx`:**
-Same pattern — top-level section headers `<h3>` → `<h2>`.
-
-**`OverviewTabContent.tsx`:**
-Same pattern — top-level section headers (Quick Verdict, Advantage Cards, etc.) `<h3>` → `<h2>`.
-
-**Heading hierarchy after changes:**
-```
-H1: Bambu Lab P1S 3D Printer
-  H2: Overview (sr-only, implied by tab)
-    H2: Quick Verdict  
-    H2: Advantage Cards
-  H2: Frequently Asked Questions
-  H2: Specifications (via SpecSection)
-    H3: Speed / Acceleration (SubSection)
-    H3: Extruder / Hotend (SubSection)
-  H2: Supported Materials (MaterialsTabContent SectionHeader)
-    H3: Standard (category label)
-    H3: Engineering (category label)
-  H2: Pricing & Availability (PricingTabContent SectionHeader)
+**Current (line 124–128):**
+```tsx
+<h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-[1.1] mb-3 animate-fade-in">
+  <span className="text-foreground">Discover Trusted </span>
+  <span className="text-primary">Brands.</span>
+</h1>
 ```
 
-#### 3. Render All Tab Content in DOM (Crawlability)
+**Fix:** Keep visual styling but use keyword-optimized text:
+```tsx
+<h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-[1.1] mb-3 animate-fade-in">
+  <span className="text-foreground">3D Filament </span>
+  <span className="text-primary">Brands.</span>
+</h1>
+```
 
-**`src/pages/PrinterDetail.tsx` — Tab rendering (lines 824–1041):**
+The tagline "Discover Trusted" had zero keyword value. "3D Filament" is the high-intent keyword. Visual appearance remains identical (same font, same color split). The sub-heading `<p>` below already says "Compare {n} filament brands..." which reinforces the keyword.
 
-Change from conditional rendering to always-rendered with CSS visibility:
+#### Priority 6 — Fix Heading Hierarchy (`BrandOverviewTab.tsx`)
+
+**Current:** All section headers are `<h3>` — skipping `<h2>`.
+
+**Fix (3 changes in BrandOverviewTab.tsx):**
+- Line 197: `<h3 className="text-lg font-semibold text-white mb-4">Brand Highlights</h3>` → `<h2 ...>`
+- Line 222: `<h3 className="text-lg font-semibold text-white">Popular Products</h3>` → `<h2 ...>`
+- Line 358: `<h3 className="text-lg font-semibold text-white mb-4">Materials Offered</h3>` → `<h2 ...>`
+
+**In `BrandProductsTab.tsx` (line 315):** Already uses `<h2>` correctly.
+
+**In `BrandAboutTab.tsx`:** Section headers already correctly use `<h2>` (lines 107, 133, 231, 250).
+
+**Resulting hierarchy:**
+```
+H1: Bambu Lab / 3D Filaments
+  H2: Brand Highlights
+  H2: Popular Products
+  H2: Materials Offered
+  H2: [products count] Products (from BrandProductsTab)
+  H2: About Bambu Lab (from BrandAboutTab)
+  H2: Company Information
+  H2: Product Catalog
+  H2: Contact & Support
+  H2: Frequently Asked Questions About Bambu Lab (BrandFAQSection)
+```
+
+#### Priority 7 — Fix Duplicate BreadcrumbList (`BrandOrganizationSchema.tsx`)
+
+**Current:** `BrandOrganizationSchema` (line 60–68) emits a `BreadcrumbList` AND `DetailBreadcrumb` component (called at `BrandDetail.tsx` line 593) also emits a `BreadcrumbList` via `BreadcrumbSchema` — **2 duplicate schemas**.
+
+**Fix:** Remove the `breadcrumbJsonLd` from `BrandOrganizationSchema.tsx` and only emit the `Organization` and `ItemList` schemas. The single BreadcrumbList from `DetailBreadcrumb` remains:
 
 ```tsx
-{/* Tab Content — all panels rendered in DOM, active one shown */}
-{/* Overview Tab */}
-<div
-  id="tabpanel-overview"
-  role="tabpanel"
-  hidden={activeTab !== "overview"}
-  className={activeTab !== "overview" ? "sr-only" : ""}
->
-  {/* ... overview content ... */}
-</div>
-
-{/* Specifications Tab */}
-<div
-  id="tabpanel-specifications"
-  role="tabpanel"
-  hidden={activeTab !== "specifications"}
-  className={activeTab !== "specifications" ? "sr-only" : ""}
->
-  <SpecificationsTabContent printer={printer} />
-</div>
-
-{/* Materials Tab */}
-<div hidden={activeTab !== "materials"} className={activeTab !== "materials" ? "sr-only" : ""}>
-  <MaterialsTabContent printer={printer} accessories={accessories || []} />
-</div>
-... etc
+// BrandOrganizationSchema.tsx — remove breadcrumbJsonLd entirely
+useJsonLdMultiple([orgJsonLd, itemListJsonLd]);
+// (remove the breadcrumbJsonLd variable and its inclusion)
 ```
 
-Using the HTML `hidden` attribute hides the content from visual users but it IS still in the DOM for crawlers. `sr-only` alternatively. We use `hidden` here since it's semantically correct for inactive tab panels and Googlebot reads hidden content.
+Result: exactly ONE `BreadcrumbList` per brand detail page (from `DetailBreadcrumb`).
 
-**Important:** The `PrinterTabContent` component wraps the content — update it to NOT conditionally render children based on `activeTab`. Instead, the wrapper should always render and each panel decides its own visibility.
+#### Priority 8 — Fix ItemList UUID URLs (`BrandOrganizationSchema.tsx` + `BrandDetail.tsx`)
 
-#### 4. Convert Tab Buttons to Links — `src/components/printer/PrinterTabNav.tsx`
-
-**Current (lines 84–107):**
+**Current (`BrandDetail.tsx` line 586–589):**
 ```tsx
-<button
-  key={tab.id}
-  role="tab"
+topProducts={groupedProducts.slice(0, 10).map(g => ({
+  name: g.baseName,
+  slug: g.variants[0]?.product_handle || g.variants[0]?.id || '',
+}))}
+```
+
+The `product_handle` should be the slug, but if it's null the UUID is used. The fix: filter out products without `product_handle` OR always prefer `product_handle`:
+
+```tsx
+topProducts={groupedProducts
+  .filter(g => g.variants[0]?.product_handle) // only include if slug exists
+  .slice(0, 10)
+  .map(g => ({
+    name: g.baseName,
+    slug: g.variants[0].product_handle!, // guaranteed by filter
+  }))}
+```
+
+If no products have `product_handle`, the ItemList simply won't render (which is better than UUID URLs).
+
+**Also enhance the Organization schema** in `BrandOrganizationSchema.tsx` to include `founder` and `sameAs` from `brandInfo` (passed as new optional props):
+
+```tsx
+interface BrandOrganizationSchemaProps {
+  // ... existing props
+  founder?: string | null;
+  sameAs?: string[] | null; // the brand's website URL
+}
+
+// In the schema object:
+if (founder) orgJsonLd.founder = { '@type': 'Person', name: founder };
+if (sameAs && sameAs.length > 0) orgJsonLd.sameAs = sameAs;
+```
+
+In `BrandDetail.tsx`, pass these new props:
+```tsx
+<BrandOrganizationSchema
   ...
-  onClick={() => handleTabClick(tab)}
->
+  founder={brandInfo?.founder || brandInfo?.ceo || null}
+  sameAs={brandInfo?.website ? [brandInfo.website] : null}
+/>
 ```
 
-**New:**
+#### Priority 9 — Convert Materials Offered to Links (`BrandOverviewTab.tsx`)
+
+**Current (line 361–377):** Each material card is a `<button onClick={() => onFilterByMaterial(material)}>`.
+
+**Fix:** Convert to `<a>` tags linking to the Material Knowledge Base, while also calling `onFilterByMaterial` via onClick (SPA behavior):
+
+```tsx
+// Material slug helper
+const materialToSlug = (mat: string): string => {
+  return mat.toLowerCase()
+    .replace(/\+/g, '-plus')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+};
+
+// Change <button> to <a>:
+<a
+  key={material}
+  href={`/materials/${materialToSlug(material)}`}
+  onClick={(e) => {
+    e.preventDefault();
+    onFilterByMaterial(material); // SPA: switch to products tab filtered by material
+  }}
+  title={material}
+  className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 text-left hover:border-primary/50 hover:bg-gray-800/50 transition-all group min-h-[72px] flex flex-col justify-center"
+>
+  ...existing content...
+</a>
+```
+
+This creates crawlable internal links from brand pages to material pages while preserving the filter functionality for users.
+
+#### Priority 10 — Convert Tabs to Links (`BrandTabNav.tsx`)
+
+**Current (line ~84+):** Tab buttons use `<button role="tab">`.
+
+**Fix:** Convert to `<a>` tags with hash hrefs:
+
 ```tsx
 <a
   key={tab.id}
   role="tab"
-  href={tab.hash}
+  href={tab.hash}  // e.g., "#overview", "#products", "#about"
   aria-selected={activeTab === tab.id}
   onClick={(e) => {
     e.preventDefault();
     handleTabClick(tab);
   }}
-  className={cn(...)}
+  className={cn(...same classes...)}
 >
-```
-
-This gives Googlebot real `href` links (`#overview`, `#specifications`, `#materials`, `#connectivity`, `#pricing`) to discover section anchors.
-
-#### 5. Fix FAQPage Schema + All FAQs in DOM — `src/components/printer/FAQSection.tsx`
-
-**Two changes:**
-
-A) **Render ALL FAQs in DOM, use CSS for collapse, not JS conditional:**
-
-Change `visibleFAQs` from a slice to the full `filteredFAQs`. The "Show more" button will scroll the section or be removed. Answers are ALWAYS in the DOM (currently they're in the DOM but hidden via `max-h-0 opacity-0` CSS — this is actually already accessible to crawlers!).
-
-The real issue is `filteredFAQs.slice(0, 5)` which removes 15 items from the DOM entirely. Fix: render all but visually collapse extras with CSS.
-
-B) **Add FAQPage JSON-LD** using `useJsonLd`:
-
-```tsx
-import { useJsonLd } from '@/components/seo/useJsonLd';
-
-// In FAQSection component:
-const faqs = generateFAQs(props);
-useJsonLd({
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: faqs.map(faq => ({
-    '@type': 'Question',
-    name: faq.question,
-    acceptedAnswer: {
-      '@type': 'Answer',
-      // Strip HTML tags for clean schema text
-      text: faq.answer.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
-    },
-  })),
-});
-```
-
-#### 6. Fix Duplicate BreadcrumbList — `src/pages/PrinterDetail.tsx`
-
-**Remove** lines 634–638 (the inline `BreadcrumbSchema` with 3 items).
-
-**Keep** the `DetailBreadcrumb` component at line 674, but fix the brand href to link to the SEO category page instead of the query param:
-
-```tsx
-// Current (line 677):
-{ label: printerBrand, href: `/printers?brand=${toBrandSlug(printerBrand)}` }
-
-// New:
-{ label: printerBrand, href: `/printers/brand/${toBrandSlug(printerBrand)}` }
-```
-
-This results in exactly ONE `BreadcrumbList` with the 4-item chain: Home → Printers → [Brand] → [Model].
-
-#### 7. Enhance ProductJsonLd — `src/pages/PrinterDetail.tsx` + `ProductJsonLd.tsx`
-
-**In `PrinterDetail.tsx`**, expand the `<ProductJsonLd>` call (lines 651–670) with additional props:
-
-```tsx
-<ProductJsonLd
-  name={`${printerName} 3D Printer`}  {/* Include "3D Printer" in schema name */}
-  description={seoDescription}
-  image={seoImage}
-  brand={printerBrand}
-  sku={printer.printer_id}
-  url={`https://filascope.com/printers/${printer.printer_id || printer.id}`}
-  price={displayPrice}
-  availability={!isDiscontinued}
-  buildVolume={printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm ? {
-    x: printer.build_volume_x_mm,
-    y: printer.build_volume_y_mm,
-    z: printer.build_volume_z_mm,
-  } : null}
-  maxPrintSpeed={printer.max_print_speed_mms}
-  printerType={printer.printer_technology}
-  nozzleTempMax={printer.max_nozzle_temp_c}
-  bedTempMax={printer.bed_max_temp_c}
-  // NEW props:
-  printerWeightKg={(printer as any).machine_weight_kg}
-  printerWidthMm={(printer as any).machine_width_mm}
-  printerDepthMm={(printer as any).machine_depth_mm}
-  printerHeightMm={(printer as any).machine_height_mm}
-  hasEnclosure={printer.has_enclosure}
-  hasWifi={printer.has_wifi}
-  multiMaterialSupported={printer.multi_material_supported}
-  multiMaterialMaxSpools={printer.multi_material_max_spools}
-  extruderType={printer.extruder_type}
-  directDrive={printer.direct_drive}
-  autoBedLeveling={printer.auto_bed_leveling}
-  inputShapingSupported={(printer as any).input_shaping_supported}
-  supportedMaterials={printer.official_supported_materials}
-  ratingValue={printer.rating_community_overall}
-  ratingCount={printer.review_count_aggregated}
-/>
-```
-
-**In `ProductJsonLd.tsx`**, add these new interface props and build the additional `additionalProperty` entries. Also add physical dimension fields to the top-level schema object using `Schema.org` standard:
-
-```tsx
-// New top-level fields in jsonLd:
-...(printerWeightKg && {
-  weight: { '@type': 'QuantitativeValue', value: printerWeightKg, unitCode: 'KGM' }
-}),
-...(printerWidthMm && {
-  width: { '@type': 'QuantitativeValue', value: printerWidthMm, unitCode: 'MMT' }
-}),
-...(printerDepthMm && {
-  depth: { '@type': 'QuantitativeValue', value: printerDepthMm, unitCode: 'MMT' }
-}),
-...(printerHeightMm && {
-  height: { '@type': 'QuantitativeValue', value: printerHeightMm, unitCode: 'MMT' }
-}),
-
-// New additionalProperty entries:
-if (hasEnclosure != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Enclosure', value: hasEnclosure ? 'Enclosed' : 'Open Frame' });
-if (hasWifi != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Wi-Fi Connectivity', value: hasWifi ? 'Yes' : 'No' });
-if (multiMaterialSupported) additionalProperties.push({ '@type': 'PropertyValue', name: 'Multi-Material Support', value: multiMaterialMaxSpools ? `Yes (${multiMaterialMaxSpools} colors)` : 'Yes' });
-if (extruderType) additionalProperties.push({ '@type': 'PropertyValue', name: 'Extruder Type', value: extruderType });
-if (directDrive != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Drive Type', value: directDrive ? 'Direct Drive' : 'Bowden' });
-if (autoBedLeveling != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Auto Bed Leveling', value: autoBedLeveling ? 'Yes' : 'No' });
-if (inputShapingSupported != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Input Shaping', value: inputShapingSupported ? 'Yes' : 'No' });
-if (supportedMaterials) additionalProperties.push({ '@type': 'PropertyValue', name: 'Compatible Materials', value: supportedMaterials });
-// isRelatedTo for compatible material types:
-if (compatibleMaterials.length > 0) {
-  jsonLd.isRelatedTo = compatibleMaterials.map(mat => ({
-    '@type': 'Product',
-    name: `${mat} Filament`,
-    category: '3D Printer Filament',
-    url: `https://filascope.com/materials/${mat.toLowerCase()}`,
-  }));
-}
-```
-
-#### 8. Optimize Meta Title and Description — `src/pages/PrinterDetail.tsx`
-
-**Current title (via ProductSEO):** "Bambu Lab P1S | FilaScope" — 30 chars
-
-**New template (lines 619–626):**
-
-```tsx
-// Build optimized SEO title — target 55-60 chars
-const seoTitleBase = `${printerName} 3D Printer`;
-const seoTitleFull = `${seoTitleBase} — Specs, Price & Filaments | FilaScope`;
-const seoTitle = seoTitleFull.length <= 60 ? seoTitleFull
-  : `${seoTitleBase} — Specs & Price | FilaScope`.length <= 60 ? `${seoTitleBase} — Specs & Price | FilaScope`
-  : `${seoTitleBase} | FilaScope`;
-
-// Build keyword-rich description
-const materialList = printer.official_supported_materials 
-  ? printer.official_supported_materials.split(',').slice(0, 5).map((m: string) => m.trim()).join(', ')
-  : null;
-
-const seoDescriptionParts = [
-  `${printerName} 3D printer specs:`,
-  buildVolumeDisplay ? ` ${buildVolumeDisplay} build volume,` : '',
-  printer.max_print_speed_mms ? ` ${printer.max_print_speed_mms}mm/s max speed,` : '',
-  printer.max_nozzle_temp_c ? ` ${printer.max_nozzle_temp_c}°C nozzle temp.` : '.',
-  materialList ? ` Compatible with ${materialList}.` : '',
-  ' Compare prices, view compatible filaments & detailed specifications on FilaScope.',
-];
-const seoDescription = seoDescriptionParts.join('').replace(/\s+/g, ' ').trim();
-```
-
-Pass `title={seoTitle}` to `ProductSEO` instead of `title={printerName}`.
-
-#### 9. Fix 404 State — `src/pages/PrinterDetail.tsx`
-
-**Current (lines 553–563):** Shows a bare "Printer not found" heading with no noindex.
-
-**New:**
-```tsx
-if (!printer && !isLoading) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 p-8">
-      <DocumentHead
-        title="Printer Not Found | FilaScope"
-        description="The printer you're looking for could not be found. Browse our database of 118+ 3D printers with detailed specs, pricing, and filament compatibility."
-        noindex={true}
-      />
-      <div className="max-w-7xl mx-auto text-center pt-24">
-        <h1 className="text-2xl font-bold mb-4">Printer Not Found</h1>
-        <p className="text-muted-foreground mb-6">
-          This printer doesn't exist in our database.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Link to="/printers"><Button>Browse All Printers</Button></Link>
-          <Link to="/"><Button variant="outline">Search Filaments</Button></Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-Check if `useDocumentHead` / `DocumentHead` supports a `noindex` prop — if not, add it. The `noindex` flag should inject `<meta name="robots" content="noindex,nofollow">`.
-
-#### 10. Add "About This Printer" SEO Paragraph — `src/components/printer/PrinterHeroSection.tsx`
-
-The `generatePrinterDescription()` function (line 142–147) already generates a description paragraph and displays it. This is good — it's the "About" content. However, it needs to be inside a proper `<section>` with `aria-label` and confirm it's keyword-rich. This is already implemented via `generatePrinterDescription` so verify it generates appropriate text.
-
-#### 11. Add Material Internal Links — `src/components/printer/tabs/MaterialsTabContent.tsx`
-
-**Material temperature hints (existing — lines 113–129)** render material names. Convert to `<Link>` or `<a>` tags:
-
-```tsx
-// Current: <span>{hint.material}</span>
-// New:
-<a href={`/materials/${hint.material.toLowerCase().replace('+', '-plus')}`}
-   className="hover:text-primary hover:underline transition-colors"
-   onClick={(e) => e.stopPropagation()}>
-  {hint.material} ({hint.temp}°C)
+  {tab.label}
+  {activeTab === tab.id && <span className="..." />}
 </a>
 ```
 
-**Material category badges** in `parseMaterials` results — wrap with links to material knowledge base:
+#### Priority 11 — Update Meta Description (`Brands.tsx`)
+
+**Current (line 379):** Description is ~128 chars referencing only 24 brands.
+
+**Fix:**
 ```tsx
-// Current badge:
-<Badge>{mat}</Badge>
-// New:
-<Badge asChild>
-  <a href={`/materials/${mat.toLowerCase().replace(/\+/g, '-plus').replace(/\s+/g, '-')}`}>
-    {mat}
-  </a>
-</Badge>
+description={`Compare ${brandCount || 48}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`}
 ```
 
-#### 12. Fix UUID Links in Recently Viewed — `src/components/RecentlyViewedSection.tsx`
+This targets ~190 chars (Google shows ~155 in SERPs but indexes all).
 
-**Current (lines 43–45):**
-```tsx
-const href = isFilament
-  ? `/filament/${item.product_id}`
-  : `/printers/${item.product_id}`;
-```
+Also update `ogDescription` and `twitterDescription` to match.
 
-The `item.product_id` for printers is the UUID from browse history. Fix by using the `printer_id` slug if available:
+#### Priority 12 — Enhance Prerender `brandPage()` and `brandsListing()`
 
-```tsx
-const href = isFilament
-  ? `/filament/${item.product_id}`
-  : `/printers/${item.printer?.printer_id || item.product_id}`;
-```
+In `supabase/functions/prerender/index.ts`:
 
-Check the `BrowseHistoryItem` type to confirm `item.printer?.printer_id` is available — if not, add it to the query in `useBrowseHistory`.
-
-#### 13. Fix Breadcrumb Brand URL — `src/pages/PrinterDetail.tsx`
-
-**Current (line 677):**
-```tsx
-{ label: printerBrand, href: `/printers?brand=${toBrandSlug(printerBrand)}` }
-```
-
-**New:**
-```tsx
-{ label: printerBrand, href: `/printers/brand/${toBrandSlug(printerBrand)}` }
-```
-
-This ensures the breadcrumb link points to the new SEO category page created in the previous plan.
-
-#### 14. Enhance Prerender Edge Function — `supabase/functions/prerender/index.ts`
-
-**`printerPage()` function (lines 728–768):**
-
-A) **H1 and title — add "3D Printer":**
-```ts
-// Current h1: full = "Bambu Lab P1S"
-// New:
-const h1 = `${full} 3D Printer`;
-let title = `${full} 3D Printer — Specs, Price & Filaments | FilaScope`;
-if (title.length > 60) title = `${full} 3D Printer — Specs & Price | FilaScope`;
-if (title.length > 60) title = `${full} 3D Printer | FilaScope`;
-if (title.length > 60) title = `${full} | FilaScope`;
-```
-
-B) **Expand the SELECT cols** to include more spec fields for richer Product schema:
-```ts
-const cols = `id, printer_id, model_name, display_name, brand_id, msrp_usd, 
-  build_volume_x_mm, build_volume_y_mm, build_volume_z_mm,
-  max_print_speed_mms, max_nozzle_temp_c, bed_max_temp_c,
-  has_enclosure, has_wifi, multi_material_supported, multi_material_max_spools,
-  official_supported_materials, printer_technology,
-  machine_weight_kg, machine_width_mm, machine_depth_mm, machine_height_mm`;
-```
-
-C) **Build richer Product schema** in the prerender function to mirror the client-side schema.
-
-D) **Better description template** matching the client's new template.
-
-E) **Category page handling** — currently `/printers/enclosed` falls through `printerPage("enclosed")` and returns `fallback()`. Add detection for known category slugs to return a category listing page result instead:
+**A) `brandPage()` (line 688):** Expand Organization schema with more fields fetched from DB:
 
 ```ts
-const KNOWN_CATEGORIES = ["enclosed", "multi-color", "high-speed", "large-format", "corexy", "bed-slinger", "direct-drive", "under-300", "under-500", "under-1000"];
+// Expand SELECT to get more data:
+const { data } = await supabase.from("automated_brands")
+  .select("brand_name, display_name, brand_slug, description, logo_url, product_count, website_url, founded_year")
+  .eq("brand_slug", slug).limit(1).maybeSingle();
 
-async function printerPage(slug: string, supabase: SupabaseClient): Promise<PageData> {
-  // Check if it's a category slug first
-  if (KNOWN_CATEGORIES.includes(slug)) {
-    return await printerCategoryPage(slug, supabase);
-  }
-  // Check if it's a brand route: "brand/bambu-lab"
-  const brandMatch = slug.match(/^brand\/(.+)$/);
-  if (brandMatch) {
-    return await printerBrandPage(brandMatch[1], supabase);
-  }
-  // ... rest of individual printer logic
-}
+// Also fetch top materials for this brand:
+const { data: topMats } = await supabase.from("filaments")
+  .select("material")
+  .ilike("vendor", brandName)
+  .not("material", "is", null)
+  .limit(1000);
+
+const materialCounts: Record<string, number> = {};
+(topMats || []).forEach(f => { if (f.material) materialCounts[f.material] = (materialCounts[f.material] || 0) + 1; });
+const topMaterials = Object.entries(materialCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([m]) => m);
+const matList = topMaterials.join(", ");
+
+// Better description:
+const description = topMaterials.length > 0
+  ? `${brandName} 3D filaments: ${count} products across ${topMaterials.length} materials (${matList}). Compare specs, read reviews & find the best deals on FilaScope.`
+  : `Browse all ${count} ${brandName} 3D printer filaments. Compare specs, TD values, prices & printer compatibility on FilaScope.`;
+
+// Enhanced Organization schema with sameAs:
+const orgSchema = {
+  "@context": "https://schema.org", "@type": "Organization",
+  name: brandName,
+  url: data.website_url || `${BASE_URL}${canonical}`,
+  ...(data.logo_url && { logo: data.logo_url }),
+  ...(data.description && { description: data.description }),
+  ...(data.website_url && { sameAs: [data.website_url] }),
+  ...(data.founded_year && { foundingDate: String(data.founded_year) }),
+  makesOffer: { "@type": "AggregateOffer", offerCount: count, priceCurrency: "USD" },
+};
 ```
 
-F) **FAQPage schema in prerender** — add static FAQ Q&A pairs into the prerendered HTML for the printer page. Since the FAQs are dynamically generated on the client, add 5 generic static FAQ items in the prerender that will be replaced by the full 20-item client-side FAQPage schema when JS loads.
+**B) `brandsListing()` (line 715):** Improve title and description:
+
+```ts
+return {
+  type: "listing",
+  title: `3D Filament Brands — Compare ${n}+ Brands | FilaScope`,
+  description: `Compare ${n}+ 3D printer filament brands with live pricing, material specs, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN & more.`,
+  canonical: "/brands", ogType: "website",
+  jsonLd: [breadcrumbSchema(crumbs)],
+  breadcrumbs: crumbs,
+  h1: "3D Filament Brands — Compare & Discover",
+  bodyText: `Browse ${n} filament brands and manufacturers with live pricing and product catalogs.`,
+};
+```
+
+---
+
+### Files to Modify
+
+| File | Action | Summary |
+|---|---|---|
+| `src/components/brands/BrandCard.tsx` | MODIFY | Wrap card in `<Link>`, convert "View Filaments" button to `<span>`, import Link from react-router-dom |
+| `src/components/BrandsHeroSection.tsx` | MODIFY | Fix H1 text to "3D Filament Brands." keyword-optimized |
+| `src/pages/Brands.tsx` | MODIFY | Update meta description to 190+ chars |
+| `src/pages/BrandDetail.tsx` | MODIFY | (1) Render all tab panels always with `hidden` attribute; (2) Pass `founder` and `sameAs` to `BrandOrganizationSchema`; (3) Fix `topProducts` slug filtering to exclude UUIDs |
+| `src/components/brands/BrandHeroSection.tsx` | MODIFY | H1 includes brand name + "3D Filaments" subtitle span |
+| `src/components/brands/tabs/BrandOverviewTab.tsx` | MODIFY | (1) `<h3>` → `<h2>` for all 3 section headers; (2) Materials Offered: `<button>` → `<a href="/materials/{slug}">` with onClick; (3) Popular Products card: `onClick` nav → `<Link to={slug}>` wrapper |
+| `src/components/brands/tabs/BrandProductsTab.tsx` | MODIFY | (1) All 3 navigate calls: UUID → `product_handle \|\| id` slug; (2) "View Details" → `<a href={slug}>` tag |
+| `src/components/brands/tabs/BrandTabNav.tsx` | MODIFY | Tab `<button>` → `<a href={tab.hash}>` with `e.preventDefault()` onClick |
+| `src/components/seo/BrandOrganizationSchema.tsx` | MODIFY | (1) Remove duplicate `breadcrumbJsonLd` from `useJsonLdMultiple`; (2) Add optional `founder` and `sameAs` props |
+| `supabase/functions/prerender/index.ts` | MODIFY | Enhance `brandPage()` with richer schema and description; improve `brandsListing()` title/description/h1 |
 
 ---
 
 ### What Will NOT Change
 
-- Visual design of the printer detail page (all changes are semantic/structural)
-- Pricing display logic, affiliate link structure, admin functionality
-- The tab switching interactive behavior (SPA navigation via onClick)
-- The `PrinterDetail.tsx` data fetching and all hooks
-- The FAQSection visual design (accordion stays, just always-in-DOM)
-- The `SimilarPrintersSection` or comparison functionality
-- Any filament-side components
+- Visual design of brand cards (only underlying HTML element type changes)
+- Filter sidebar functionality (the `onFilterByMaterial` handler still fires)
+- The tab visual switching behavior for users (SPA onClick still fires)
+- The BrandFAQSection content or accordion design
+- Affiliate link handling in BrandAboutTab
+- Admin-only functionality
+- The BrandTabNav sticky behavior and scroll detection
+- Any pricing display or currency conversion logic
+- The BrandBadgesDisplay component
+- The Compare Brands page (`/brands/compare`)
 
 ---
 
 ### Technical Considerations
 
-**Tab content always-in-DOM performance:** Rendering all 4 tabs simultaneously means 4x the component tree. `SpecificationsTabContent` is compute-light (pure display). `MaterialsTabContent` is moderate. `ConnectivityTabContent` and `PricingTabContent` both call hooks (`useRegionalPriceV2`, etc.) — these will fire even for inactive tabs. Use `hidden` HTML attribute with `display:none` styling to prevent reflows.
+**Tab always-in-DOM performance:** `BrandProductsTab` calls hooks (`useRegionalStore`, `useRegion`) — these will fire even when inactive. These are lightweight context hooks, not data-fetching, so no extra network requests. `BrandAboutTab` is purely presentational. The main concern is that `BrandProductsTab` contains a filter sidebar and grid — all 40+ product cards will be in the DOM simultaneously. Performance is acceptable since these are simple card elements, not components with heavy hooks.
 
-**`sr-only` vs `hidden` for SEO:** Google crawls `display:none` content but may down-weight it. The `hidden` attribute (`display:none`) is acceptable for tab panels since this is a recognized UX pattern. Using `max-h-0 overflow-hidden` (already used in FAQSection for answers) is also crawlable. We'll use `hidden` attribute only for inactive tab panels to keep the pattern semantic and recognizable.
+**Hidden attribute vs sr-only for SEO:** We use the HTML `hidden` attribute (renders as `display:none`) for inactive tab panels. Google crawls `display:none` content in tab panel contexts as this is a recognized UX pattern.
 
-**Noindex prop on DocumentHead:** Check if `useDocumentHead` / the `DocumentHead` component already supports `noindex`. If not, add it by injecting `<meta name="robots" content="noindex,nofollow">` when the flag is true.
+**UUID filtering in ItemList:** Some filaments may not have a `product_handle` (older entries in the database). By filtering `g.variants[0]?.product_handle` in the topProducts map, we avoid emitting UUID-based schema URLs. For those brands, the ItemList schema will have fewer entries, which is acceptable.
 
-**BreadcrumbList deduplication:** After removing line 634–638's inline `BreadcrumbSchema`, there will be exactly one `BreadcrumbList` per printer page — injected by `DetailBreadcrumb`. The `useJsonLd` hook already handles cleanup on unmount.
+**Material slug generation:** The `materialToSlug` function follows the same pattern as `materialSlugUtils.ts`. PLA+ becomes `pla-plus`, TPU 95A becomes `tpu-95a`, etc. This ensures brand material links correctly resolve to the Material Knowledge Base routes.
 
-**Prerender schema accuracy:** The prerender function serves static HTML. The FAQPage and expanded additionalProperty schemas it serves will be simpler than the full client-side version — this is acceptable since Google primarily uses the first-rendered content, and the client schema (via React hydration) will then be identical or richer.
+**Breadcrumb deduplication:** After removing `breadcrumbJsonLd` from `BrandOrganizationSchema`, there will be exactly ONE `BreadcrumbList` per page — from `DetailBreadcrumb` → `BreadcrumbSchema` → `useJsonLd`. The prerender function already emits one `BreadcrumbList` in `brandPage()` and doesn't include a second one.
+
+**Prerender always-in-DOM:** Since the prerender captures the initial React render, and we're now always rendering all tab panels, the prerender HTML will include Overview, Products, and About tab content simultaneously. The `hidden` attribute will be present on inactive panels, but Google will read all the content. This directly unblocks indexing of brand descriptions and product catalogs.
