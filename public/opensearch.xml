@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>FilaScope</ShortName>
+  <Description>Search 3D printer filaments, brands, and printers</Description>
+  <Url type="text/html" template="https://filascope.com/filaments?q={searchTerms}"/>
+  <Image height="16" width="16" type="image/x-icon">https://filascope.com/favicon.ico</Image>
+</OpenSearchDescription>
