@@ -29,6 +29,7 @@ import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analyt
 import { OfflineBanner, SWUpdateNotifier } from "./components/pwa";
 import { initGA } from "./lib/analytics";
 import { GA4RouteTracker } from "./components/analytics/GA4RouteTracker";
+import { usePageTracking } from "./hooks/usePageTracking";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
 import { CanonicalLink } from "./components/seo/CanonicalLink";
