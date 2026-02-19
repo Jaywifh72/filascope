@@ -126,7 +126,10 @@ export function BrandHeroSection({
         <div className="flex-1 space-y-4 text-center lg:text-left">
           {/* Row 1: Brand Name + Verified */}
           <div className="flex flex-col sm:flex-row items-center lg:items-start gap-2 sm:gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">{brandName}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+              {brandName}
+              <span className="block text-base sm:text-lg font-normal text-primary/80 mt-0.5">3D Filaments</span>
+            </h1>
             {isVerified && (
               <span className="flex items-center gap-1 text-sm text-primary bg-primary/10 px-2 py-1 rounded-full">
                 <BadgeCheck className="w-4 h-4" />

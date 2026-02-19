@@ -717,11 +717,11 @@ async function brandsListing(supabase: SupabaseClient): Promise<PageData> {
   const n = count || 50;
   const crumbs = [{ name: "Home", url: "/" }, { name: "Brands", url: "/brands" }];
   return {
-    type: "listing", title: `3D Filament Brands — ${n} Manufacturers | FilaScope`,
-    description: `Browse ${n} 3D printer filament brands. Compare product ranges, pricing and availability.`,
+    type: "listing", title: `3D Filament Brands — Compare ${n}+ Brands | FilaScope`,
+    description: `Compare ${n}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`,
     canonical: "/brands", ogType: "website",
     jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
-    h1: "3D Printer Filament Brands", bodyText: `Browse ${n} filament brands and manufacturers.`,
+    h1: "3D Filament Brands — Compare & Discover", bodyText: `Browse ${n} filament brands and manufacturers with live pricing and product catalogs.`,
   };
 }
 

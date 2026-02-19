@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toBrandSlug } from "@/utils/brandSlug";
-import { Package, BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star, Sun } from "lucide-react";
+import { BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star, Sun } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -41,12 +41,8 @@ const BrandCard = ({
   avgTransmissionDistance,
   index = 0,
 }: BrandCardProps) => {
-  const navigate = useNavigate();
   const resolvedLogoUrl = logoUrl || getBrandLogo(name);
-
-  const handleClick = () => {
-    navigate(`/brands/${toBrandSlug(name)}`);
-  };
+  const slug = toBrandSlug(name);
 
   // Collect feature badges (max 2)
   const featureBadges: { icon: React.ReactNode; label: string; color: string }[] = [];
@@ -78,11 +74,10 @@ const BrandCard = ({
 
   const hasHoverPreview = topMaterials.length > 0 || priceIndicator;
 
-  const cardContent = (
+  const cardInner = (
     <div
-      className={`flex flex-col min-h-[260px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 animate-fade-in motion-reduce:animate-none ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
+      className={`flex flex-col min-h-[260px] rounded-xl overflow-hidden group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 animate-fade-in motion-reduce:animate-none ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
       style={{ animationDelay: `${Math.min(index * 60, 480)}ms`, animationFillMode: 'both' }}
-      onClick={handleClick}
     >
       {/* Color Accent Bar */}
       <div 
@@ -226,30 +221,30 @@ const BrandCard = ({
           </div>
         )}
 
-        {/* View Filaments Button */}
+        {/* View Filaments CTA — styled as button but inside <Link> */}
         <div className="border-t border-border mt-auto pt-3">
-          <button
-            className="w-full rounded-lg border border-border py-2 text-sm font-medium text-cyan-400 transition-all duration-200 [@media(hover:hover)]:group-hover:text-cyan-300 [@media(hover:hover)]:group-hover:border-cyan-500/30 [@media(hover:hover)]:group-hover:bg-cyan-500/5 flex items-center justify-center gap-2 group/btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClick();
-            }}
-          >
+          <span className="w-full rounded-lg border border-border py-2 text-sm font-medium text-cyan-400 transition-all duration-200 [@media(hover:hover)]:group-hover:text-cyan-300 [@media(hover:hover)]:group-hover:border-cyan-500/30 [@media(hover:hover)]:group-hover:bg-cyan-500/5 flex items-center justify-center gap-2">
             {isEmpty ? 'Notify Me' : variantCount > 0 ? `View ${variantCount} Filament${variantCount === 1 ? '' : 's'}` : `View ${productLineCount} Filament${productLineCount === 1 ? '' : 's'}`}
             <ArrowRight className="h-3.5 w-3.5 transition-transform [@media(hover:hover)]:group-hover:translate-x-1" />
-          </button>
+          </span>
         </div>
       </div>
     </div>
   );
 
-  if (!hasHoverPreview || isEmpty) return cardContent;
+  const card = (
+    <Link to={`/brands/${slug}`} className="block cursor-pointer">
+      {cardInner}
+    </Link>
+  );
+
+  if (!hasHoverPreview || isEmpty) return card;
 
   return (
     <TooltipProvider delayDuration={500}>
       <Tooltip>
         <TooltipTrigger asChild>
-          {cardContent}
+          {card}
         </TooltipTrigger>
         <TooltipContent 
           side="right" 

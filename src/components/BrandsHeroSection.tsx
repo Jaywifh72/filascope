@@ -123,7 +123,7 @@ const BrandsHeroSection = ({
 
             {/* Headline - Compact */}
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-[1.1] mb-3 animate-fade-in">
-              <span className="text-foreground">Discover Trusted </span>
+              <span className="text-foreground">3D Filament </span>
               <span className="text-primary">Brands.</span>
             </h1>
             

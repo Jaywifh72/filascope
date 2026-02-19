@@ -57,15 +57,7 @@ export function BrandOrganizationSchema({
     orgJsonLd.makesOffer = offer;
   }
 
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${BASE_URL}/` },
-      { '@type': 'ListItem', position: 2, name: 'Brands', item: `${BASE_URL}/brands` },
-      { '@type': 'ListItem', position: 3, name, item: `${BASE_URL}/brands/${slug}` },
-    ],
-  };
+  // Breadcrumb is now handled exclusively by DetailBreadcrumb — removed to avoid duplicates
 
   const itemListJsonLd =
     topProducts && topProducts.length > 0
@@ -83,7 +75,7 @@ export function BrandOrganizationSchema({
         }
       : null;
 
-  useJsonLdMultiple([orgJsonLd, breadcrumbJsonLd, itemListJsonLd]);
+  useJsonLdMultiple([orgJsonLd, itemListJsonLd]);
 
   return null;
 }

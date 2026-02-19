@@ -583,10 +583,13 @@ const BrandDetail = () => {
           return { country: parts[0] };
         })() : null}
         founded={brandInfo?.founded || null}
-        topProducts={groupedProducts.slice(0, 10).map(g => ({
-          name: g.baseName,
-          slug: g.variants[0]?.product_handle || g.variants[0]?.id || '',
-        }))}
+        topProducts={groupedProducts
+          .filter(g => g.variants[0]?.product_handle)
+          .slice(0, 10)
+          .map(g => ({
+            name: g.baseName,
+            slug: g.variants[0].product_handle!,
+          }))}
       />
 
       <div className="max-w-7xl mx-auto">
@@ -673,10 +676,10 @@ const BrandDetail = () => {
           productCount={groupedProducts.length}
         />
 
-        {/* Tab Content */}
-        <BrandTabContent activeTab={activeTab}>
+        {/* Tab Content — all panels always in DOM for crawler discoverability */}
+        <div className="mt-6">
           {/* Overview Tab */}
-          {activeTab === "overview" && (
+          <div id="tabpanel-overview" role="tabpanel" aria-labelledby="tab-overview" hidden={activeTab !== "overview"}>
             <BrandOverviewTab
               brandName={displayName}
               brandLogo={brandLogo}
@@ -692,10 +695,10 @@ const BrandDetail = () => {
                 setActiveTab("products");
               }}
             />
-          )}
+          </div>
 
           {/* Products Tab */}
-          {activeTab === "products" && (
+          <div id="tabpanel-products" role="tabpanel" aria-labelledby="tab-products" hidden={activeTab !== "products"}>
             <BrandProductsTab
               brandName={displayName}
               brandLogo={brandLogo}
@@ -704,18 +707,17 @@ const BrandDetail = () => {
               initialMaterialFilter={selectedMaterial}
               onMaterialFilterChange={setSelectedMaterial}
             />
-          )}
+          </div>
 
-          {/* About Tab */}
-          {activeTab === "about" && (
-            <>
+          {/* About Tab — always rendered so Googlebot indexes brand descriptions, FAQs, company info */}
+          <div id="tabpanel-about" role="tabpanel" aria-labelledby="tab-about" hidden={activeTab !== "about"}>
             <BrandAboutTab
               brandName={displayName}
               brandInfo={brandInfo}
               productCount={groupedProducts.length}
               materialsCount={availableMaterials.length}
             />
-            {/* FAQ Section for SEO - only show when brand has products */}
+            {/* FAQ Section for SEO - always in DOM */}
             {(filaments?.length ?? 0) > 0 && <BrandFAQSection
               brandName={displayName}
               productCount={filaments?.length ?? 0}
@@ -724,9 +726,8 @@ const BrandDetail = () => {
               isPremium={isPremium}
               isBudgetFriendly={isBudgetFriendly}
             />}
-            </>
-          )}
-        </BrandTabContent>
+          </div>
+        </div>
       </div>
     </div>
   );

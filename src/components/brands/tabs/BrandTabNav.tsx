@@ -75,12 +75,16 @@ export function BrandTabNav({ activeTab, onTabChange, productCount }: BrandTabNa
           aria-label="Brand details tabs"
         >
           {TABS.map((tab) => (
-            <button
+            <a
               key={tab.id}
               role="tab"
+              href={tab.hash}
               aria-selected={activeTab === tab.id}
               aria-controls={`tabpanel-${tab.id}`}
-              onClick={() => handleTabClick(tab)}
+              onClick={(e) => {
+                e.preventDefault();
+                handleTabClick(tab);
+              }}
               className={cn(
                 "relative px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation",
                 "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
@@ -95,7 +99,7 @@ export function BrandTabNav({ activeTab, onTabChange, productCount }: BrandTabNa
               {activeTab === tab.id && (
                 <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
               )}
-            </button>
+            </a>
           ))}
         </nav>
       </div>
