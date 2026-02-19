@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, ItemListSchema } from "@/components/seo";
+import { BreadcrumbSchema, ItemListSchema, FAQSection } from "@/components/seo";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, ChevronDown, Download, Loader2, X, Database as DatabaseIcon, GitCompareArrows, Sparkles, Tag } from "lucide-react";
+import { ArrowUp, Download, Loader2, X, Database as DatabaseIcon, GitCompareArrows, Sparkles, Tag } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersLeftSidebar, { type AdvancedFilters } from "@/components/printers/PrintersLeftSidebar";
@@ -28,7 +28,6 @@ import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService"
 import { QuizAnswers } from "@/lib/printerQuizData";
 import { exportPrinterDatabaseCSV } from "@/lib/printerExportUtils";
 import ActiveFilterChips from "@/components/printers/ActiveFilterChips";
-import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { PrinterQuickFilterChips, type PrinterQuickFilter } from "@/components/printers/PrinterQuickFilterChips";
 
 const PRINTERS_PER_PAGE = 24;
@@ -92,8 +91,7 @@ export default function Printers() {
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
   
-  // Scroll restoration for back/forward navigation
-  const { savePaginationState, restorePaginationState } = useScrollRestoration('printers');
+  // Scroll restoration hook (kept for potential future use)
   
   // Search analytics tracking
   const { startSearchTimer, trackSearch } = useFilterAnalytics();
@@ -113,11 +111,7 @@ export default function Printers() {
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
   
   
-  // Progressive disclosure state - restore from session on back navigation
-  const [displayedCount, setDisplayedCount] = useState(() =>
-    restorePaginationState(PRINTERS_PER_PAGE)
-  );
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
   
   // Quiz state
   const [isQuizOpen, setIsQuizOpen] = useState(false);
@@ -223,18 +217,7 @@ export default function Printers() {
     setActiveQuickFilters([]);
     setActiveChip(null);
     setSearchTerm('');
-    setDisplayedCount(PRINTERS_PER_PAGE);
   };
-  
-  // Reset displayed count when filters change
-  useEffect(() => {
-    setDisplayedCount(PRINTERS_PER_PAGE);
-  }, [activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, searchTerm, activeQuickFilters, activeChip]);
-  
-  // Save pagination state for scroll restoration
-  useEffect(() => {
-    savePaginationState(displayedCount);
-  }, [displayedCount, savePaginationState]);
   
   // Track search analytics - start timer on search change
   useEffect(() => {
@@ -528,18 +511,8 @@ export default function Printers() {
     }
   }, [searchTerm, isLoading, printers, filteredPrinters, activeCategory, priceRangeFilter, advancedFilters, trackSearch]);
 
-  // Progressive disclosure computed values
-  const displayedPrinters = filteredPrinters.slice(0, displayedCount);
-  const hasMore = displayedCount < filteredPrinters.length;
-  const remaining = filteredPrinters.length - displayedCount;
-
-  // Load more function
-  const loadMore = async () => {
-    setIsLoadingMore(true);
-    await new Promise(resolve => setTimeout(resolve, 300)); // Smooth UX
-    setDisplayedCount(prev => Math.min(prev + PRINTERS_PER_PAGE, filteredPrinters.length));
-    setIsLoadingMore(false);
-  };
+  // Render all printers (no load-more for full SEO crawlability)
+  const displayedPrinters = filteredPrinters;
 
   // Scroll to top helper
   const scrollToTop = () => {
@@ -640,19 +613,19 @@ export default function Printers() {
   return (
     <>
       <DocumentHead
-        title="3D Printer Database — Specs, Filament Compatibility | FilaScope"
-        description={`Browse ${printers?.length || 118}+ 3D printers with detailed specs. Check filament compatibility, temperature ranges, build volumes & find the perfect printer for your materials.`}
-        ogTitle="3D Printer Database — Specs, Filament Compatibility | FilaScope"
-        ogDescription={`Browse ${printers?.length || 118}+ 3D printers with detailed specs. Check filament compatibility, temperature ranges, build volumes & find the perfect printer for your materials.`}
+        title={`3D Printer Database — Compare ${printers?.length || 118}+ Printers | FilaScope`}
+        description={`Compare ${printers?.length || 118}+ 3D printers from ${brands?.length || 17}+ brands. Filter by build volume, speed, features, and price. Find compatible filaments for your printer on FilaScope.`}
+        ogTitle={`3D Printer Database — Compare ${printers?.length || 118}+ Printers | FilaScope`}
+        ogDescription={`Compare ${printers?.length || 118}+ 3D printers from ${brands?.length || 17}+ brands. Filter by build volume, speed, features, and price. Find compatible filaments for your printer on FilaScope.`}
       />
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Printers', url: 'https://filascope.com/printers' },
+        { name: '3D Printers', url: 'https://filascope.com/printers' },
       ]} />
       <ItemListSchema
         name="3D Printer Database"
-        description="Browse 3D printers with filament compatibility information"
-        items={(printers || []).slice(0, 20).map((p, i) => ({
+        description={`Compare ${printers?.length || 118}+ 3D printers from ${brands?.length || 17}+ brands with detailed specs and filament compatibility.`}
+        items={(printers || []).slice(0, 50).map((p, i) => ({
           name: `${p.brand?.brand || ''} ${p.model_name}`.trim(),
           url: `https://filascope.com/printers/${p.printer_id || p.id}`,
           position: i + 1,
@@ -972,44 +945,11 @@ export default function Printers() {
                   })}
                 </div>
 
-                {/* Load More / End State */}
-                {hasMore ? (
-                  <div className="flex flex-col items-center gap-4 py-12">
-                    <Button
-                      onClick={loadMore}
-                      disabled={isLoadingMore}
-                      variant="outline"
-                      className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 rounded-full px-8 py-2 text-sm font-medium transition-colors"
-                    >
-                      {isLoadingMore ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          Load {Math.min(remaining, PRINTERS_PER_PAGE)} more printers
-                          <ChevronDown className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Showing {displayedCount} of {filteredPrinters.length} printers
-                    </p>
-                    <div className="w-48 h-1 bg-gray-800 rounded-full mx-auto mt-3">
-                      <div
-                        className="h-1 bg-cyan-500/60 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min((displayedCount / filteredPrinters.length) * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ) : filteredPrinters.length > PRINTERS_PER_PAGE && (
-                  <div className="flex flex-col items-center gap-4 py-12">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center">
-                      <Check className="h-6 w-6 text-emerald-500" />
-                    </div>
-                    <p className="font-mono text-sm uppercase tracking-[0.1em]">
-                      Registry Complete — {filteredPrinters.length} Units
+                {/* Footer — all printers shown */}
+                {filteredPrinters.length > 0 && (
+                  <div className="flex flex-col items-center gap-4 py-8">
+                    <p className="font-mono text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                      {filteredPrinters.length} printers listed
                     </p>
                     <Button variant="ghost" onClick={scrollToTop} className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-primary">
                       <ArrowUp className="mr-2 h-4 w-4" />
@@ -1019,6 +959,33 @@ export default function Printers() {
                 )}
               </>
             )}
+
+            {/* FAQ Section — FAQPage schema + visible accordion */}
+            <FAQSection
+              title="3D Printer FAQ"
+              faqs={[
+                {
+                  question: "What is the best 3D printer for beginners in 2026?",
+                  answer: "For beginners, popular choices include the Bambu Lab A1 Mini (from ~$199) and Creality Ender 3 V3 SE (from ~$179), both offering easy setup and reliable printing. Use FilaScope's Hardware Quiz to find the best printer for your specific needs.",
+                },
+                {
+                  question: "How many 3D printers does FilaScope track?",
+                  answer: `FilaScope tracks ${printers?.length || 118}+ 3D printers from ${brands?.length || 17}+ brands with detailed specifications including build volume, print speed, nozzle temperature, motion system type, and connectivity options. We also show filament compatibility and real-time pricing.`,
+                },
+                {
+                  question: "What 3D printer features should I look for?",
+                  answer: "Key features to consider include build volume (print size), print speed, enclosed chamber (essential for ABS/PETG), multi-color capability, and connectivity (Wi-Fi, USB). FilaScope lets you filter printers by all these features to find the perfect match.",
+                },
+                {
+                  question: "Which 3D printers work best with HueForge filaments?",
+                  answer: "For HueForge lithophanes, you need a printer with precise temperature control and consistent layer heights. Bambu Lab printers (P1S, X1C, A1) are popular choices due to their accuracy and multi-color AMS support. FilaScope shows filament compatibility for each printer to help you find the right match.",
+                },
+                {
+                  question: "Do I need an enclosed 3D printer?",
+                  answer: `An enclosed printer is recommended if you plan to print ABS, ASA, or engineering materials like Nylon and Polycarbonate. These materials require consistent ambient temperature to prevent warping. PLA and most PETG print fine on open-frame printers. FilaScope tracks ${printers?.filter(p => p.has_enclosure).length || 40}+ enclosed printers you can compare.`,
+                },
+              ]}
+            />
           </div>
         </div>
 

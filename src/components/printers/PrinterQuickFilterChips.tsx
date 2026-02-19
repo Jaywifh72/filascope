@@ -9,6 +9,17 @@ export type PrinterQuickFilter =
   | "large"
   | "new";
 
+// Crawlable hrefs for each chip — Googlebot follows these to category pages
+const CHIP_HREFS: Record<PrinterQuickFilter, string> = {
+  popular:    "/printers?sort=popular",
+  under500:   "/printers/under-500",
+  enclosed:   "/printers/enclosed",
+  multicolor: "/printers/multi-color",
+  highspeed:  "/printers/high-speed",
+  large:      "/printers/large-format",
+  new:        "/printers?sort=newest",
+};
+
 interface ChipDef {
   id: PrinterQuickFilter;
   emoji: string;
@@ -36,11 +47,15 @@ export function PrinterQuickFilterChips({ active, onChange }: PrinterQuickFilter
       {CHIPS.map((chip) => {
         const isActive = active === chip.id;
         return (
-          <button
+          <a
             key={chip.id}
-            onClick={() => onChange(isActive ? null : chip.id)}
+            href={CHIP_HREFS[chip.id]}
+            onClick={(e) => {
+              e.preventDefault();
+              onChange(isActive ? null : chip.id);
+            }}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border flex-shrink-0",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border flex-shrink-0 no-underline",
               isActive
                 ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
                 : "bg-gray-800/60 text-gray-400 border-gray-700 [@media(hover:hover)]:hover:border-gray-600"
@@ -48,7 +63,7 @@ export function PrinterQuickFilterChips({ active, onChange }: PrinterQuickFilter
           >
             <span>{chip.emoji}</span>
             {chip.label}
-          </button>
+          </a>
         );
       })}
     </div>

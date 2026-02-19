@@ -115,6 +115,7 @@ const SharedWishlist = lazy(() => import("./pages/SharedWishlist"));
 const PublicCollection = lazy(() => import("./pages/PublicCollection"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Printers = lazy(() => import("./pages/Printers"));
+const PrinterCategoryPage = lazy(() => import("./pages/PrinterCategoryPage"));
 const PrinterCompare = lazy(() => import("./pages/PrinterCompare"));
 const PrinterDetail = lazy(() => import("./pages/PrinterDetail"));
 const Accessories = lazy(() => import("./pages/Accessories"));
@@ -223,8 +224,20 @@ const App = () => (
                   <Route path="/materials/compare" element={<MaterialCompare />} />
                   <Route path="/materials/:slug" element={<MaterialHub />} />
                   <Route path="/printers" element={<Printers />} />
-                  <Route path="/printers/:id" element={<PrinterDetail />} />
+                  {/* Category routes MUST come before :id wildcard */}
                   <Route path="/printers/compare" element={<PrinterCompare />} />
+                  <Route path="/printers/brand/:brand" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/enclosed" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/multi-color" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/high-speed" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/large-format" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/corexy" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/bed-slinger" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/direct-drive" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/under-300" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/under-500" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/under-1000" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/:id" element={<PrinterDetail />} />
                   <Route path="/accessories" element={<Accessories />} />
                   <Route path="/hotends/:id" element={<HotendDetail />} />
                   <Route path="/build-plates/:id" element={<BuildPlateDetail />} />

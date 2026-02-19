@@ -327,9 +327,9 @@ export default function MediumStandardPrinterCard({
             {/* Printer Name + Kinematics */}
             <div>
               <div className="flex items-start gap-1.5">
-                <h3 className="text-sm sm:text-lg font-semibold text-foreground leading-snug line-clamp-2">
+                <p className="text-sm sm:text-lg font-semibold text-foreground leading-snug line-clamp-2">
                   {printer.model_name}
-                </h3>
+                </p>
                 {kinematics && (
                   <span className="hidden sm:inline-flex flex-shrink-0 mt-0.5 text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded">
                     {kinematics}

@@ -38,8 +38,14 @@ const PrintersHeroSection = ({
               </span>
             </div>
 
-            {/* Headline - Responsive sizing */}
-            <h1 
+            {/* SEO H1 — keyword-optimized, first heading in DOM */}
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-3 animate-fade-in">
+              3D Printer Database — Compare {printerCount > 0 ? printerCount.toLocaleString() : '118'}+ Printers
+            </h1>
+
+            {/* Decorative tagline — visually dominant brand design, NOT the H1 */}
+            <p
+              aria-hidden="true"
               className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-light tracking-[0.1em] sm:tracking-[0.15em] leading-[1.15] mb-4 sm:mb-6 animate-fade-in uppercase"
             >
               <span className="text-foreground">Deploy</span>
@@ -47,7 +53,7 @@ const PrintersHeroSection = ({
               <span className="text-muted-foreground font-light">Fabrication</span>
               <br />
               <span className="font-black italic text-primary">Hardware.</span>
-            </h1>
+            </p>
             
             {/* Sub-text */}
             <p 
