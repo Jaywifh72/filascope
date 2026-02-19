@@ -784,6 +784,187 @@ function filamentDatabasePage(): PageData {
   };
 }
 
+// ============================================================
+// Programmatic page handlers
+// ============================================================
+
+const MATERIAL_SLUG_MAP: Record<string, { label: string; materials: string[]; ilike?: string }> = {
+  pla:       { label: "PLA",      materials: ["PLA", "PLA+", "PLA-HS", "HTPLA", "PLA Pro", "PLA-CF", "Matte PLA", "Marble PLA", "Wood PLA", "Rainbow PLA"] },
+  petg:      { label: "PETG",     materials: ["PETG", "PCTG", "PETG-CF", "PETG+", "Co-Polyester"] },
+  abs:       { label: "ABS",      materials: ["ABS", "ABS+", "ABS-CF", "ABS Pro"] },
+  asa:       { label: "ASA",      materials: ["ASA", "ASA+", "ASA-CF"] },
+  tpu:       { label: "TPU",      materials: ["TPU", "TPU-95A", "TPU-98A", "TPE", "Flexible"] },
+  "pla-plus":  { label: "PLA+",    materials: ["PLA+", "PLA Pro", "PLA-HS"] },
+  "silk-pla":  { label: "Silk PLA", materials: ["Silk PLA", "Silk PLA+", "Silk"], ilike: "%silk%" },
+  nylon:     { label: "Nylon",    materials: ["PA", "PA-CF", "PA-GF", "PA6", "PA12", "Nylon", "Nylon-CF"] },
+  pc:        { label: "PC",       materials: ["PC", "PC-CF", "PC-ABS", "PCTG", "Polycarbonate"] },
+};
+
+const COLOR_SLUG_MAP: Record<string, { label: string; families: string[]; hueforgeRelevant?: boolean }> = {
+  white:   { label: "White",   families: ["White"],                               hueforgeRelevant: true },
+  black:   { label: "Black",   families: ["Black"] },
+  blue:    { label: "Blue",    families: ["Blue"] },
+  red:     { label: "Red",     families: ["Red"] },
+  green:   { label: "Green",   families: ["Green"] },
+  gray:    { label: "Gray",    families: ["Gray", "Grey", "Light Grey", "Dark Grey", "Silver Gray"] },
+  yellow:  { label: "Yellow",  families: ["Yellow"] },
+  orange:  { label: "Orange",  families: ["Orange"] },
+  purple:  { label: "Purple",  families: ["Purple", "Violet"] },
+  brown:   { label: "Brown",   families: ["Brown", "Tan", "Beige"] },
+  natural: { label: "Natural", families: ["Natural", "Beige", "Cream"],           hueforgeRelevant: true },
+  pink:    { label: "Pink",    families: ["Pink", "Rose", "Magenta"] },
+  clear:   { label: "Clear",   families: ["Clear", "Transparent", "Natural Clear"], hueforgeRelevant: true },
+  gold:    { label: "Gold",    families: ["Gold", "Bronze"] },
+  silver:  { label: "Silver",  families: ["Silver", "Chrome", "Metallic"] },
+};
+
+async function materialPage(slug: string, supabase: SupabaseClient): Promise<PageData> {
+  const config = MATERIAL_SLUG_MAP[slug];
+  if (!config) return fallback(`/materials/${slug}`);
+
+  // Count + avg price + brand count
+  const { data, count } = await (supabase as unknown as { from: (t: string) => any })
+    .from("filaments")
+    .select("vendor, variant_price", { count: "exact" })
+    .in("material", config.materials)
+    .limit(1000);
+
+  const n = count ?? 0;
+  if (n < 3) return fallback(`/materials/${slug}`);
+
+  const rows = (data ?? []) as { vendor: string | null; variant_price: number | null }[];
+  const prices = rows.map((r) => r.variant_price).filter(Boolean) as number[];
+  const brandCount = new Set(rows.map((r) => r.vendor).filter(Boolean)).size;
+
+  const { label } = config;
+  const canonical = `/materials/${slug}`;
+
+  let title = `${label} Filament — Compare ${n.toLocaleString()} Products | FilaScope`;
+  if (title.length > 60) title = `${label} Filament — ${n.toLocaleString()} Products | FilaScope`;
+  if (title.length > 60) title = `${label} Filament | FilaScope`;
+
+  const description = `Browse ${n.toLocaleString()} ${label} 3D printer filaments from ${brandCount}+ brands. Compare specs, prices, and HueForge TD values on FilaScope.`;
+
+  const crumbs = [
+    { name: "Home", url: "/" },
+    { name: "Materials", url: "/reference/materials" },
+    { name: `${label} Filaments`, url: canonical },
+  ];
+
+  return {
+    type: "material",
+    title,
+    description,
+    canonical,
+    ogType: "website",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "ItemList", name: `Best ${label} Filaments`, description, url: `${BASE_URL}${canonical}` },
+      breadcrumbSchema(crumbs),
+    ],
+    breadcrumbs: crumbs,
+    h1: `${label} Filament — Compare ${n.toLocaleString()} Products`,
+    bodyText: `Browse ${n.toLocaleString()} ${label} 3D printer filaments from ${brandCount}+ brands. Compare specs, prices, TD values, and printer compatibility on FilaScope.`,
+  };
+}
+
+async function colorFamilyPage(slug: string, supabase: SupabaseClient): Promise<PageData> {
+  const config = COLOR_SLUG_MAP[slug];
+  if (!config) return fallback(`/colors/${slug}`);
+
+  const { count } = await supabase
+    .from("filaments")
+    .select("id", { count: "exact", head: true })
+    .in("color_family", config.families);
+
+  const n = count ?? 0;
+  if (n < 3) return fallback(`/colors/${slug}`);
+
+  const { label } = config;
+  const canonical = `/colors/${slug}`;
+
+  let description: string;
+  if (config.hueforgeRelevant) {
+    description = `Compare ${n.toLocaleString()} ${label.toLowerCase()} 3D printer filaments ranked by TD value, brand, and price. Essential for HueForge lithophanes — find your perfect ${label.toLowerCase()} filament on FilaScope.`;
+  } else {
+    description = `Browse ${n.toLocaleString()} ${label.toLowerCase()} 3D printer filaments from top brands. Compare prices, materials, and HueForge TD values. Find the best ${label.toLowerCase()} filament for your next print.`;
+  }
+
+  let title = `${label} 3D Printer Filaments — Compare ${n.toLocaleString()} Options | FilaScope`;
+  if (title.length > 60) title = `${label} 3D Printer Filaments — ${n.toLocaleString()} Options | FilaScope`;
+
+  const crumbs = [
+    { name: "Home", url: "/" },
+    { name: "Color Finder", url: "/colors" },
+    { name: `${label} Filaments`, url: canonical },
+  ];
+
+  return {
+    type: "color",
+    title,
+    description,
+    canonical,
+    ogType: "website",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "ItemList", name: `${label} 3D Printer Filaments`, description, url: `${BASE_URL}${canonical}` },
+      breadcrumbSchema(crumbs),
+    ],
+    breadcrumbs: crumbs,
+    h1: `${label} 3D Printer Filaments — ${n.toLocaleString()} Options`,
+    bodyText: description,
+  };
+}
+
+async function brandMaterialPage(brandSlug: string, materialSlug: string, supabase: SupabaseClient): Promise<PageData> {
+  const config = MATERIAL_SLUG_MAP[materialSlug];
+  if (!config) return fallback(`/brands/${brandSlug}/${materialSlug}`);
+
+  const { data: brandData } = await supabase
+    .from("automated_brands")
+    .select("brand_name, display_name, brand_slug")
+    .eq("brand_slug", brandSlug)
+    .maybeSingle();
+
+  if (!brandData) return fallback(`/brands/${brandSlug}/${materialSlug}`);
+
+  const brandName = (brandData.display_name || brandData.brand_name) as string;
+
+  const { count } = await (supabase as unknown as { from: (t: string) => any })
+    .from("filaments")
+    .select("id", { count: "exact", head: true })
+    .in("material", config.materials)
+    .ilike("vendor", brandData.brand_name);
+
+  const n = count ?? 0;
+  if (n < 3) return fallback(`/brands/${brandSlug}/${materialSlug}`);
+
+  const { label } = config;
+  const canonical = `/brands/${brandSlug}/${materialSlug}`;
+
+  let title = `${brandName} ${label} Filaments — ${n} Products | FilaScope`;
+  if (title.length > 60) title = `${brandName} ${label} Filaments | FilaScope`;
+
+  const description = `Browse all ${n} ${brandName} ${label} filaments. Compare colors, specs, TD values, and prices. Find the right ${brandName} ${label} for your printer on FilaScope.`;
+
+  const crumbs = [
+    { name: "Home", url: "/" },
+    { name: "Brands", url: "/brands" },
+    { name: brandName, url: `/brands/${brandSlug}` },
+    { name: `${label} Filaments`, url: canonical },
+  ];
+
+  return {
+    type: "brand-material",
+    title,
+    description,
+    canonical,
+    ogType: "website",
+    jsonLd: [breadcrumbSchema(crumbs)],
+    breadcrumbs: crumbs,
+    h1: `${brandName} ${label} Filaments`,
+    bodyText: `Browse ${n} ${brandName} ${label} filaments. Compare colors, specs, TD values, and prices on FilaScope.`,
+  };
+}
+
 function fallback(path: string): PageData {
   return {
     type: "notfound", title: "Page Not Found | FilaScope",
