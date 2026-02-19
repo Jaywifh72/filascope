@@ -77,6 +77,7 @@ export function BrandTabNav({ activeTab, onTabChange, productCount }: BrandTabNa
           {TABS.map((tab) => (
             <a
               key={tab.id}
+              id={`tab-${tab.id}`}
               role="tab"
               href={tab.hash}
               aria-selected={activeTab === tab.id}

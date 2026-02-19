@@ -185,12 +185,13 @@ const BrandsHeroSection = ({
                     className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden"
                   >
                     <div className="p-2">
-                      {topSuggestions.map((brand) => {
+                    {topSuggestions.map((brand) => {
                         const logoUrl = brand.logoUrl || getBrandLogo(brand.name);
                         return (
-                          <button
+                          <a
                             key={brand.name}
-                            onClick={() => handleBrandClick(brand.name)}
+                            href={`/brands/${toBrandSlug(brand.name)}`}
+                            onClick={(e) => { e.preventDefault(); handleBrandClick(brand.name); }}
                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition-colors text-left group"
                           >
                             <BrandLogo src={logoUrl} brandName={brand.name} size="sm" />
@@ -201,7 +202,7 @@ const BrandsHeroSection = ({
                               <p className="text-xs text-gray-400">{brand.count.toLocaleString()} variants</p>
                             </div>
                             <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-primary transition-colors" />
-                          </button>
+                          </a>
                         );
                       })}
                     </div>
