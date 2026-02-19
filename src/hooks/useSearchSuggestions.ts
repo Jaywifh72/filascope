@@ -9,6 +9,7 @@ export interface SearchSuggestion {
   displayText: string;
   subtitle?: string;
   count?: number;
+  variantCount?: number; // How many color/size variants share this base product
   id?: string;           // Product ID for navigation
   productHandle?: string; // SEO slug for navigation
 }
@@ -135,7 +136,7 @@ export function useSearchSuggestions(
     staleTime: 30000,
   });
 
-  // Fetch product title suggestions
+  // Fetch product title suggestions (fetch more so we can group variants)
   const { data: productSuggestions = [] } = useQuery({
     queryKey: ["search-suggestions-products", debouncedQuery, context],
     queryFn: async () => {
@@ -144,20 +145,49 @@ export function useSearchSuggestions(
       if (context === "filaments" || context === "all") {
         const { data, error } = await supabase
           .from("filaments")
-          .select("id, product_title, vendor, product_handle")
+          .select("id, product_title, vendor, product_handle, material")
           .ilike("product_title", `%${debouncedQuery}%`)
-          .limit(5);
+          .limit(30); // Fetch more so grouping is effective
 
         if (error) throw error;
 
-        return (data || []).map((item) => ({
-          type: "product" as const,
-          value: item.product_title,
-          displayText: item.product_title,
-          subtitle: item.vendor || undefined,
-          id: item.id,
-          productHandle: item.product_handle,
-        }));
+        // Group by (vendor + base product name) to deduplicate color/size variants.
+        // Base name = product_title stripped of trailing "- ColorName" or "/ ColorName" suffix.
+        const stripColorSuffix = (title: string) =>
+          title
+            .replace(/\s*[-–/|]\s*[^-–/|]+$/, "") // strip last " - Color" segment
+            .trim();
+
+        type GroupEntry = {
+          id: string;
+          product_title: string;
+          vendor: string | null;
+          product_handle: string | null;
+          material: string | null;
+        };
+        const groups: Record<string, GroupEntry[]> = {};
+
+        (data || []).forEach((item) => {
+          const base = stripColorSuffix(item.product_title || "");
+          const key = `${item.vendor || ""}||${base}`;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(item as GroupEntry);
+        });
+
+        return Object.values(groups).map((variants) => {
+          const rep = variants[0]; // representative item
+          const base = stripColorSuffix(rep.product_title || "");
+          const variantCount = variants.length;
+          return {
+            type: "product" as const,
+            value: base,
+            displayText: base,
+            subtitle: rep.vendor || undefined,
+            id: rep.id,
+            productHandle: rep.product_handle || undefined,
+            variantCount: variantCount > 1 ? variantCount : undefined,
+          };
+        });
       }
 
       if (context === "printers") {
@@ -200,7 +230,7 @@ export function useSearchSuggestions(
     return getSimilarSuggestions(debouncedQuery, 3);
   }, [debouncedQuery, brandSuggestions, materialSuggestions, productSuggestions]);
 
-  // Combine all suggestions
+  // Combine all suggestions with diversity: max 1 brand, 1 material, 4 products
   const suggestions: SearchSuggestion[] = useMemo(() => {
     const all: SearchSuggestion[] = [];
 
@@ -214,14 +244,14 @@ export function useSearchSuggestions(
       });
     }
 
-    // Add brands
-    all.push(...brandSuggestions);
+    // Add top brand match (max 2 for diversity)
+    all.push(...brandSuggestions.slice(0, 2));
 
-    // Add materials
-    all.push(...materialSuggestions);
+    // Add top material match (max 1 for diversity)
+    all.push(...materialSuggestions.slice(0, 1));
 
-    // Add products (limit to avoid overwhelming)
-    all.push(...productSuggestions.slice(0, 3));
+    // Add deduplicated products (already grouped by base title, cap at 4)
+    all.push(...productSuggestions.slice(0, 4));
 
     // Add similar suggestions if we have few results
     if (all.length < 3 && similarSuggestions.length > 0) {
@@ -242,11 +272,14 @@ export function useSearchSuggestions(
 
   const isLoading = debouncedQuery !== query;
   const hasQuery = query.length >= 2;
+  // Total unique product groups found — used for "See all" footer
+  const totalProductGroups = productSuggestions.length;
 
   return {
     suggestions,
     isLoading,
     hasQuery,
     typoCorrection: typoSuggestion,
+    totalProductGroups,
   };
 }
