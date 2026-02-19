@@ -1,8 +1,9 @@
 /**
  * Google Analytics 4 tracking library for FilaScope.
  *
- * Measurement ID placeholder: G-PLACEHOLDER
- * Replace with your real GA4 Measurement ID before going live.
+ * The gtag.js script is loaded directly in index.html (ONE script tag only).
+ * This file provides typed wrappers for all custom event tracking.
+ * Do NOT call initGA() — it is intentionally removed to prevent double-loading.
  */
 
 declare global {
@@ -14,37 +15,6 @@ declare global {
 
 const GA_MEASUREMENT_ID = 'G-Q96R53VCKM';
 
-let initialized = false;
-
-// ── Initialisation ────────────────────────────────────────────────────
-
-/** Inject the GA4 <script> tags and initialise gtag. Call once on app mount. */
-export function initGA() {
-  if (initialized || typeof window === 'undefined') return;
-
-  // Don't initialise if the measurement ID is missing
-  if (!GA_MEASUREMENT_ID) {
-    console.warn('[GA4] Measurement ID is not set – skipping initialisation.');
-    return;
-  }
-
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-  document.head.appendChild(script);
-
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer.push(args);
-  };
-  window.gtag('js', new Date());
-  window.gtag('config', GA_MEASUREMENT_ID, {
-    send_page_view: false, // we send page views manually on route change
-  });
-
-  initialized = true;
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────
 
 function gtag(...args: unknown[]) {
@@ -52,6 +22,11 @@ function gtag(...args: unknown[]) {
     window.gtag(...args);
   }
 }
+
+/** Generic event firing — safe to call anywhere. */
+export const trackEvent = (eventName: string, params?: Record<string, unknown>) => {
+  gtag('event', eventName, params);
+};
 
 // ── User Properties ───────────────────────────────────────────────────
 
@@ -68,7 +43,8 @@ export function setUserProperties(region: string, currency: string, userType: 'a
 export function trackPageView(url: string) {
   gtag('event', 'page_view', {
     page_path: url,
-    page_location: window.location.origin + url,
+    page_location: typeof window !== 'undefined' ? window.location.origin + url : url,
+    send_to: GA_MEASUREMENT_ID,
   });
 }
 
@@ -98,6 +74,7 @@ export function trackAffiliateClick(params: AffiliateClickParams) {
     currency: params.currency,
     discount_code: params.discountCode,
     link_type: params.linkType,
+    source_page: typeof window !== 'undefined' ? window.location.pathname : undefined,
   });
 
   // Also fire begin_checkout for e-commerce funnel tracking
@@ -162,6 +139,16 @@ export function trackComparison(params: ComparisonParams) {
   });
 }
 
+/** Fired when a single item is added to the comparison tray. */
+export function trackComparisonAdd(productId: string, productType: string) {
+  trackEvent('comparison_add', { product_id: productId, product_type: productType });
+}
+
+/** Fired when user navigates to the compare page with 2+ items. */
+export function trackComparisonComplete(productCount: number) {
+  trackEvent('comparison_complete', { product_count: productCount });
+}
+
 // ── Filter Usage ──────────────────────────────────────────────────────
 
 export function trackFilter(filterType: string, filterValue: string, resultsCount: number) {
@@ -170,6 +157,17 @@ export function trackFilter(filterType: string, filterValue: string, resultsCoun
     filter_value: filterValue,
     results_count: resultsCount,
   });
+}
+
+/** Simplified filter tracking (no results count required). */
+export function trackFilterApply(filterType: string, filterValue: string) {
+  trackEvent('filter_apply', { filter_type: filterType, filter_value: filterValue });
+}
+
+// ── Region/Currency Change ─────────────────────────────────────────────
+
+export function trackRegionChange(fromRegion: string, toRegion: string) {
+  trackEvent('region_change', { from_region: fromRegion, to_region: toRegion });
 }
 
 // ── HueForge TD Search ───────────────────────────────────────────────
@@ -199,4 +197,10 @@ export function trackSearch(searchTerm: string, resultsCount: number) {
     search_term: searchTerm,
     results_count: resultsCount,
   });
+}
+
+// ── Deals ─────────────────────────────────────────────────────────────
+
+export function trackDealView(productId: string, discount: string) {
+  trackEvent('deal_view', { product_id: productId, discount });
 }
