@@ -50,6 +50,8 @@ import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { cleanFilamentDisplayName, getProductLineName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
+import { RelatedFilaments } from "@/components/filament/RelatedFilaments";
+import { BrandQuickLinks } from "@/components/filament/BrandQuickLinks";
 import { QuickSummaryBar } from "@/components/filament/QuickSummaryBar";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
@@ -1047,6 +1049,20 @@ const FilamentDetail = () => {
             is_nozzle_abrasive: displayFilament.is_nozzle_abrasive,
             diameter_nominal_mm: displayFilament.diameter_nominal_mm,
           }}
+        />
+
+        {/* Brand Quick Links + Related Filaments for internal linking / SEO */}
+        <BrandQuickLinks
+          brand={displayFilament.vendor}
+          material={displayFilament.material}
+          filamentId={displayFilament.id}
+        />
+        <RelatedFilaments
+          filamentId={displayFilament.id}
+          brand={displayFilament.vendor}
+          material={displayFilament.material}
+          colorFamily={displayFilament.color_family}
+          transmissionDistance={(displayFilament as any).transmission_distance ?? null}
         />
       </div>
 

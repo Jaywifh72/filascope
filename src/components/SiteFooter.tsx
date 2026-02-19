@@ -132,8 +132,10 @@ export function SiteFooter() {
     { name: "ABS Filaments", href: "/?material=ABS" },
     { name: "TPU Filaments", href: "/?material=TPU" },
     { name: "ASA Filaments", href: "/?material=ASA" },
+    { name: "Silk PLA Filaments", href: "/?material=Silk+PLA" },
+    { name: "High Speed PLA", href: "/?material=High+Speed+PLA" },
     { name: "Nylon Filaments", href: "/?material=PA" },
-    { name: "All Materials", href: "/learn" },
+    { name: "All Materials →", href: "/filament-database" },
   ];
 
   const brandLinks = [
@@ -143,25 +145,28 @@ export function SiteFooter() {
     { name: "Prusament", href: "/brands/prusament" },
     { name: "Overture", href: "/brands/overture" },
     { name: "Hatchbox", href: "/brands/hatchbox" },
-    { name: "All Brands", href: "/brands" },
+    { name: "ColorFabb", href: "/brands/colorfabb" },
+    { name: "All Brands →", href: "/brands" },
   ];
 
   const guideLinks = [
+    { name: "Best Filaments for HueForge", href: "/best-filaments-for-hueforge" },
+    { name: "Best White Filaments", href: "/best-white-filaments" },
+    { name: "PLA vs PETG", href: "/pla-vs-petg" },
     { name: "Best PLA Filaments", href: "/guides/best-pla-filaments" },
     { name: "Best PETG Filaments", href: "/guides/best-petg-filaments" },
-    { name: "PLA vs PETG", href: "/guides/pla-vs-petg" },
-    { name: "Best for HueForge", href: "/guides/best-filaments-for-hueforge-lithophanes" },
-    { name: "HueForge TD Database", href: "/hueforge-td-database" },
     { name: "Beginner's Guide", href: "/guides/beginners-guide" },
-    { name: "All Guides", href: "/learn" },
+    { name: "All Guides →", href: "/learn" },
   ];
 
   const toolLinks = [
-    { name: "Filament Finder", href: "/" },
+    { name: "Filament Database", href: "/filament-database" },
+    { name: "HueForge TD Database", href: "/hueforge-td-database" },
     { name: "Color Finder", href: "/color-finder" },
     { name: "Filament Compare", href: "/compare" },
+    { name: "Filament Wizard", href: "/wizard" },
+    { name: "Diagnose My Print", href: "/diagnose" },
     { name: "Today's Deals", href: "/deals" },
-    { name: "Printer Database", href: "/printers" },
   ];
 
   const aboutLinks: { name: string; href: string; external?: boolean; badge?: string; icon?: React.ComponentType<{ className?: string }> }[] = [
