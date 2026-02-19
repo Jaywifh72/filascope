@@ -85,6 +85,10 @@ export function RetailerCard({
                 src={retailer.logo_url} 
                 alt={retailer.name}
                 className="h-8 w-8 object-contain"
+                loading="lazy"
+                width={32}
+                height={32}
+                decoding="async"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}

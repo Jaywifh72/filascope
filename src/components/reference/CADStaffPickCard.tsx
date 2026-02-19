@@ -213,6 +213,10 @@ export function CADStaffPickCard({ pick, onViewDetails }: CADStaffPickCardProps)
                 "w-full h-full object-contain",
                 needsBrightness(pick.name) && "brightness-150 invert"
               )}
+              loading="lazy"
+              width={52}
+              height={52}
+              decoding="async"
             />
           )}
         </div>

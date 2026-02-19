@@ -70,6 +70,10 @@ export function ComparisonQuickPicks({ currentFilamentId, suggestions }: Compari
                   src={suggestion.featured_image} 
                   alt={suggestion.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  width={48}
+                  height={48}
+                  decoding="async"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
