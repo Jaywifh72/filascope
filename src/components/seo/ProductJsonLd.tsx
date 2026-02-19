@@ -334,25 +334,22 @@ export function ProductJsonLd({
       };
     }
 
-    // Single offer fallback
-    if (price) {
-      return {
-        '@type': 'Offer',
-        priceCurrency: activeCurrency,
-        price: price.toFixed(2),
-        availability: availability
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-        url,
-        areaServed: {
-          '@type': 'Country',
-          name: REGION_COUNTRY_NAMES[userRegion as RegionCode] || 'United States',
-          identifier: REGION_COUNTRY_CODES[userRegion as RegionCode] || 'US',
-        },
-      };
-    }
-
-    return undefined;
+    // Single offer — always emit at least an availability/url offer so
+    // Google doesn't flag the Product schema as missing 'offers'.
+    return {
+      '@type': 'Offer',
+      priceCurrency: activeCurrency,
+      ...(price != null && { price: price.toFixed(2) }),
+      availability: availability
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      url,
+      areaServed: {
+        '@type': 'Country',
+        name: REGION_COUNTRY_NAMES[userRegion as RegionCode] || 'United States',
+        identifier: REGION_COUNTRY_CODES[userRegion as RegionCode] || 'US',
+      },
+    };
   };
 
   const offers = buildOffers();
