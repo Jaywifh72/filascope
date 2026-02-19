@@ -204,3 +204,67 @@ export function trackSearch(searchTerm: string, resultsCount: number) {
 export function trackDealView(productId: string, discount: string) {
   trackEvent('deal_view', { product_id: productId, discount });
 }
+
+/** GA4 view_item fired when a deal card becomes visible. */
+export function trackDealItemView(params: {
+  productId: string;
+  productName: string;
+  brand: string;
+  price?: number;
+  currency?: string;
+  discountPercent?: number;
+}) {
+  gtag('event', 'view_item', {
+    currency: params.currency || 'USD',
+    value: params.price,
+    items: [{
+      item_id: params.productId,
+      item_name: params.productName,
+      item_brand: params.brand,
+      item_category: 'deal',
+      price: params.price,
+      discount: params.discountPercent,
+      quantity: 1,
+    }],
+  });
+}
+
+// ── Guide Read ────────────────────────────────────────────────────────
+
+/** Fired when a user spends 30+ seconds on a guide page. */
+export function trackGuideRead(guideTitle: string, guideSlug: string, readTimeSeconds: number) {
+  gtag('event', 'guide_read', {
+    guide_title: guideTitle,
+    guide_slug: guideSlug,
+    read_time_seconds: readTimeSeconds,
+  });
+}
+
+// ── Wizard Complete ───────────────────────────────────────────────────
+
+/** Fired when WizardResults are shown (quiz completed). */
+export function trackWizardComplete(params: {
+  topMaterial: string;
+  useCase?: string;
+  printer?: string;
+  priority?: string;
+}) {
+  gtag('event', 'wizard_complete', {
+    recommended_material: params.topMaterial,
+    use_case: params.useCase,
+    printer: params.printer,
+    priority: params.priority,
+  });
+}
+
+// ── Outbound Click ────────────────────────────────────────────────────
+
+/** Fired for all external link opens (affiliate + non-affiliate). */
+export function trackOutboundClick(destinationUrl: string, label?: string) {
+  gtag('event', 'click', {
+    event_category: 'outbound',
+    event_label: label || destinationUrl,
+    link_url: destinationUrl,
+    transport_type: 'beacon',
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import { GuideRelatedProducts, GuideReadNext } from '@/components/guides/GuideCo
 import { BUYING_GUIDE_SLUGS } from '@/components/guides/guideConfigs';
 import { ArticleSchema } from '@/components/seo/ArticleSchema';
 import { DetailBreadcrumb } from '@/components/navigation/DetailBreadcrumb';
+import { trackGuideRead } from '@/lib/analytics';
 
 // Guide content components - will be imported dynamically
 import GuidePLAvsPETGvsABS from '@/components/guides/content/GuidePLAvsPETGvsABS';
@@ -109,10 +110,29 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
   const [tocItems, setTocItems] = useState<TOCItem[]>([]);
   const [activeSection, setActiveSection] = useState('');
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const entryTimeRef = useRef<number>(Date.now());
+  const guideReadFiredRef = useRef(false);
 
   // Find guide metadata
   const guide = GUIDES.find(g => g.slug === slug);
   const GuideContent = slug ? GUIDE_CONTENT_MAP[slug] : null;
+
+  // 30-second guide_read tracking
+  useEffect(() => {
+    if (!guide) return;
+    entryTimeRef.current = Date.now();
+    guideReadFiredRef.current = false;
+
+    const timer = setTimeout(() => {
+      if (!guideReadFiredRef.current) {
+        guideReadFiredRef.current = true;
+        const elapsed = Math.round((Date.now() - entryTimeRef.current) / 1000);
+        trackGuideRead(guide.title, guide.slug, elapsed);
+      }
+    }, 30_000);
+
+    return () => clearTimeout(timer);
+  }, [slug, guide]);
 
   // Get related guides
   const relatedGuides = GUIDES

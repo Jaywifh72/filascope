@@ -1,10 +1,12 @@
 import { useNavigate, Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy, Lightbulb, Check, RefreshCw, Filter, AlertCircle, ArrowRight } from 'lucide-react';
 import { useWizardRecommendations, type WizardAnswers } from '@/hooks/useWizardRecommendations';
 import { WizardProductCard } from '@/components/wizard/WizardProductCard';
+import { trackWizardComplete } from '@/lib/analytics';
 
 interface WizardResultsProps {
   answers: WizardAnswers;
@@ -37,6 +39,19 @@ function LoadingSkeleton() {
 export function WizardResults({ answers, onRefine }: WizardResultsProps) {
   const navigate = useNavigate();
   const { results, isLoading, error } = useWizardRecommendations(answers);
+
+  // Fire wizard_complete once results are loaded
+  useEffect(() => {
+    if (!isLoading && results.length > 0) {
+      trackWizardComplete({
+        topMaterial: results[0]?.material ?? '',
+        useCase: answers.use_case as string | undefined,
+        printer: answers.printer as string | undefined,
+        priority: answers.priority as string | undefined,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
 
   if (isLoading) {
     return (

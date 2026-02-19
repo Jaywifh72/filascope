@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useSearchContext } from "@/hooks/useSearchContext";
 import { useSearchSuggestions, SearchSuggestion } from "@/hooks/useSearchSuggestions";
 import { SearchSuggestionItemSkeleton } from "@/components/skeletons/SearchSuggestionsSkeleton";
+import { trackSearch as trackGA4Search } from "@/lib/analytics";
 
 interface SearchInputWithHistoryProps {
   value: string;
@@ -104,6 +105,7 @@ export function SearchInputWithHistory({
           handleSelect(allItems[selectedIndex], selectedSuggestion);
         } else if (value) {
           trackSearch(value);
+          trackGA4Search(value, totalProductGroups ?? 0);
           setShowDropdown(false);
         }
         break;
@@ -284,6 +286,7 @@ export function SearchInputWithHistory({
               <button
                 onClick={() => {
                   trackSearch(value);
+                  trackGA4Search(value, totalProductGroups ?? 0);
                   setShowDropdown(false);
                   onSelect?.(value);
                   inputRef.current?.blur();
