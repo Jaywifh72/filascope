@@ -3492,7 +3492,12 @@ async function fetchTreeDPrice(productUrl: string, targetWeightGrams?: number | 
   try {
     const apiResp = await fetch("https://web-gateway.treedfilaments.com/v1/product", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Origin": "https://treedfilaments.com",
+        "Referer": "https://treedfilaments.com/shop/product/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
       body: JSON.stringify({ sku, email: "", token: "" }),
       signal: AbortSignal.timeout(15000),
     });
