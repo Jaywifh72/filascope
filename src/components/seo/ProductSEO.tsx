@@ -98,13 +98,11 @@ export function ProductSEO({
   }
   const seoDescription = metaDesc.length > 160 ? metaDesc.substring(0, 157) + '...' : metaDesc;
 
-  const baseUrl = canonicalUrl.startsWith('http') ? canonicalUrl : `https://filascope.com${canonicalUrl}`;
-  // For non-US regions, include the region param in both canonical and og:url so
-  // search engines understand this is a regionally distinct URL.
-  const regionParam = `region=${activeRegion}`;
-  const canonicalFullUrl = activeRegion !== 'US'
-    ? (baseUrl.includes('?') ? `${baseUrl}&${regionParam}` : `${baseUrl}?${regionParam}`)
-    : baseUrl;
+  // Always use the clean path (no query params) as the canonical URL.
+  // hreflang tags handle regional variants via ?region= separately (in HreflangTags.tsx).
+  const rawUrl = canonicalUrl.startsWith('http') ? canonicalUrl : `https://filascope.com${canonicalUrl}`;
+  // Strip any query parameters that may have been passed in
+  const canonicalFullUrl = rawUrl.split('?')[0];
   const fullUrl = canonicalFullUrl;
 
   const ogImageUrl = buildOgImageUrl({
