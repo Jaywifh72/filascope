@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Clock, X, ArrowUpRight, Package, Tag, Sparkles } from "lucide-react";
+import { Search, Clock, X, ArrowUpRight, Package, Tag, Sparkles, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchContext } from "@/hooks/useSearchContext";
 import { useSearchSuggestions, SearchSuggestion } from "@/hooks/useSearchSuggestions";
@@ -33,7 +33,7 @@ export function SearchInputWithHistory({
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   const { recentSearches, trackSearch } = useSearchContext();
-  const { suggestions, isLoading, typoCorrection } = useSearchSuggestions(value, { context });
+  const { suggestions, isLoading, typoCorrection, totalProductGroups } = useSearchSuggestions(value, { context });
 
   // Filter recent searches to not duplicate current value
   const filteredRecentSearches = recentSearches
@@ -254,7 +254,7 @@ export function SearchInputWithHistory({
                     {getIcon(suggestion.type)}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="truncate">
+                    <div className="truncate text-sm">
                       {highlightMatch(suggestion.displayText, value)}
                     </div>
                     {suggestion.subtitle && (
@@ -263,11 +263,38 @@ export function SearchInputWithHistory({
                       </div>
                     )}
                   </div>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider px-2 py-0.5 bg-muted/50 rounded">
-                    {suggestion.type}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {suggestion.variantCount && suggestion.variantCount > 1 && (
+                      <span className="text-[10px] text-primary/80 font-medium px-1.5 py-0.5 bg-primary/10 rounded-full whitespace-nowrap">
+                        {suggestion.variantCount} variants
+                      </span>
+                    )}
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider px-2 py-0.5 bg-muted/50 rounded">
+                      {suggestion.type}
+                    </span>
+                  </div>
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* "See all results" footer */}
+          {value.length >= 2 && suggestions.length > 0 && (
+            <div className="border-t border-border/50">
+              <button
+                onClick={() => {
+                  trackSearch(value);
+                  setShowDropdown(false);
+                  onSelect?.(value);
+                  inputRef.current?.blur();
+                }}
+                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors rounded-b-xl"
+              >
+                <span>
+                  See all results for <span className="font-medium text-foreground">"{value}"</span>
+                </span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
