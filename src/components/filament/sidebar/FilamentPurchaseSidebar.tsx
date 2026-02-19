@@ -310,17 +310,12 @@ export function FilamentPurchaseSidebar({
             {!isLocalStore && storeRegionCode && (
               <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1.5 rounded-md">
                 <Globe className="w-3.5 h-3.5 flex-shrink-0" />
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-0.5">
                   <span className="font-medium">
-                    {storeRegionFlag} {REGIONS[storeRegionCode]?.name || storeRegionCode} store
+                    Ships from: {storeRegionFlag} {REGIONS[storeRegionCode]?.name || storeRegionCode}
                   </span>
-                  {regionalPriceResult?.store?.shipsFrom && (
-                    <span className="text-amber-400/80">
-                      Ships from {regionalPriceResult.store.shipsFrom}
-                    </span>
-                  )}
                   <span className="text-amber-400/60 text-[10px]">
-                    International shipping • Duties may apply
+                    Duties &amp; import fees may apply
                   </span>
                 </div>
               </div>
@@ -424,20 +419,28 @@ export function FilamentPurchaseSidebar({
           />
           {storeRegionCode && (
             <div className="flex items-center justify-center">
-              <div className={cn(
-                "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium",
-                isLocalStore 
-                  ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                  : "bg-muted/50 border border-border/60 text-muted-foreground"
-              )}>
-                <span className="text-base">{storeRegionFlag}</span>
-                <span>{REGIONS[storeRegionCode]?.name || storeRegionCode} Store</span>
-                {isLocalStore && (
+              {isLocalStore ? (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  <span className="text-base">{storeRegionFlag}</span>
+                  <span>{REGIONS[storeRegionCode]?.name || storeRegionCode} Store</span>
                   <span className="text-xs bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">
                     Local
                   </span>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-3 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border/60 text-muted-foreground divide-x divide-border/40">
+                  <span className="flex items-center gap-1">
+                    <span>Your region:</span>
+                    <span>{REGIONS[userRegion]?.flag}</span>
+                    <span className="font-mono">{userRegion}</span>
+                  </span>
+                  <span className="flex items-center gap-1 pl-3">
+                    <span>Ships from:</span>
+                    <span>{storeRegionFlag}</span>
+                    <span className="font-mono">{storeRegionCode}</span>
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
