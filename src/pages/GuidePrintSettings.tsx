@@ -142,7 +142,7 @@ const GuidePrintSettings = () => {
                     Full guide with per-filament profiles coming soon. In the meantime, check our Material Knowledge Base for detailed specs on hundreds of filaments.
                   </p>
                   <Link 
-                    to="/compare"
+                    to="/reference/materials"
                     className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
                   >
                     Browse Material Knowledge Base

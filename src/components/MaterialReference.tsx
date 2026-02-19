@@ -920,8 +920,8 @@ const MaterialReference = ({ onMaterialSelect }: MaterialReferenceProps = {}) =>
   const handleAddToCompare = useCallback((materialName: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (addedToCompare.has(materialName)) {
-      // Already added — navigate to comparison tab
-      navigate('/compare?tab=comparison');
+      // Already added — navigate to comparison tool
+      navigate('/compare');
       return;
     }
     const result = addMaterialToCompare(materialName);

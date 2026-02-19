@@ -146,7 +146,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const Methodology = lazy(() => import("./pages/Methodology"));
-// MaterialEncyclopedia route redirects to /compare
+const MaterialKnowledgeBase = lazy(() => import("./pages/MaterialKnowledgeBase"));
 const CompatibilityMatrix = lazy(() => import("./pages/CompatibilityMatrix"));
 const SlicerDirectory = lazy(() => import("./pages/SlicerDirectory"));
 const ModelRepositories = lazy(() => import("./pages/ModelRepositories"));
@@ -297,7 +297,8 @@ const App = () => (
                   <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/methodology" element={<Methodology />} />
-                  <Route path="/material-encyclopedia" element={<Navigate to="/compare" replace />} />
+                  <Route path="/reference/materials" element={<MaterialKnowledgeBase />} />
+                  <Route path="/material-encyclopedia" element={<Navigate to="/reference/materials" replace />} />
                   <Route path="/compatibility-matrix" element={<CompatibilityMatrix />} />
                   <Route path="/slicer-directory" element={<SlicerDirectory />} />
                   <Route path="/model-repositories" element={<ModelRepositories />} />
@@ -308,7 +309,7 @@ const App = () => (
                   {/* Public user profile */}
                   <Route path="/user/:userId" element={<UserProfile />} />
                   {/* Redirects for legacy/broken links */}
-                  <Route path="/knowledge-base" element={<Navigate to="/compare" replace />} />
+                  <Route path="/knowledge-base" element={<Navigate to="/reference/materials" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

@@ -79,7 +79,7 @@ const Navbar = () => {
   const { data: dealsData, isLoading: dealsLoading } = useDealsCount();
 
   // Check if Learn dropdown should be active
-  const isLearnActive = ['/accessories', '/reference', '/learn', '/compare', '/guides', '/resources/profiles'].some(path => location.pathname.startsWith(path));
+  const isLearnActive = ['/accessories', '/reference', '/learn', '/guides', '/resources/profiles'].some(path => location.pathname.startsWith(path));
 
   // Check active nav link
   const isActive = (path: string) => {
@@ -223,7 +223,7 @@ const Navbar = () => {
       title: 'Guides & References',
       icon: BookOpen,
       items: [
-        { to: '/compare', label: 'Material Knowledge Base', icon: BookOpen },
+        { to: '/reference/materials', label: 'Material Knowledge Base', icon: BookOpen },
       ]
     },
     {
@@ -437,7 +437,7 @@ const Navbar = () => {
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
                 <button 
-                  onClick={() => compareCount > 0 ? navigate('/compare?tab=comparison') : undefined} 
+                  onClick={() => compareCount > 0 ? navigate('/compare') : undefined} 
                   className={cn(
                     "relative border rounded-lg px-4 py-2",
                     "text-xs font-bold uppercase tracking-widest",
@@ -533,7 +533,7 @@ const Navbar = () => {
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
                 <button 
-                  onClick={() => compareCount > 0 ? navigate('/compare?tab=comparison') : undefined}
+                  onClick={() => compareCount > 0 ? navigate('/compare') : undefined}
                   className={cn(
                     "relative border rounded-lg px-3 py-1.5",
                     "text-xs font-bold uppercase tracking-widest",
@@ -669,7 +669,7 @@ const Navbar = () => {
             {/* Compare Button - Prominent at top */}
             <div className="px-4 pb-4">
               <button onClick={() => {
-              navigate('/compare?tab=comparison');
+              navigate('/compare');
               setMobileMenuOpen(false);
             }} className={cn("relative w-full border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-3", "text-sm font-bold uppercase tracking-widest", "flex items-center justify-center gap-2", "transition-all duration-200", "text-teal-400")}>
                 <GitCompareArrows className="w-4 h-4" />
