@@ -428,14 +428,14 @@ export function FilamentPurchaseSidebar({
                   </span>
                 </div>
               ) : (
-                <div className="inline-flex items-center gap-3 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border/60 text-muted-foreground divide-x divide-border/40">
-                  <span className="flex items-center gap-1">
-                    <span>Your region:</span>
+                <div className="inline-flex items-center gap-0 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border/60 text-muted-foreground divide-x divide-border/40">
+                  <span className="flex items-center gap-1 pr-3">
+                    <span className="text-muted-foreground/60">Your region:</span>
                     <span>{REGIONS[userRegion]?.flag}</span>
                     <span className="font-mono">{userRegion}</span>
                   </span>
                   <span className="flex items-center gap-1 pl-3">
-                    <span>Ships from:</span>
+                    <span className="text-muted-foreground/60">Ships from:</span>
                     <span>{storeRegionFlag}</span>
                     <span className="font-mono">{storeRegionCode}</span>
                   </span>
