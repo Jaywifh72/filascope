@@ -36,17 +36,18 @@ function generateSeoTitle(
   }
 
   const matShort = material || (productType === 'printer' ? '' : 'Filament');
-  const colorPart = color ? ` ${color}` : '';
+  // Note: `title` already includes the color (passed as seoFullName from FilamentDetail),
+  // so we do NOT append colorPart here to avoid duplication like "Bronze Bronze".
   const matFull = matShort ? ` — ${matShort} Filament` : '';
   const matNoFilament = matShort ? ` — ${matShort}` : '';
 
-  let candidate = `${title}${colorPart}${matFull}${SUFFIX}`;
-  if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
-
-  candidate = `${title}${colorPart}${matNoFilament}${SUFFIX}`;
+  let candidate = `${title}${matFull}${SUFFIX}`;
   if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
 
   candidate = `${title}${matNoFilament}${SUFFIX}`;
+  if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
+
+  candidate = `${title}${SUFFIX}`;
   if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
 
   candidate = `${title}${SUFFIX}`;
