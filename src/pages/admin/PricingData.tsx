@@ -1209,20 +1209,37 @@ export default function PricingData() {
     if (!store.productUrl) return { status: 'failed', error: 'No product URL' };
     if (store.linkStatus === 'broken') return { status: 'failed', error: 'Link is broken' };
 
-    // Guard: skip bare base-domain URLs (no product path configured).
-    // This happens when product_url_pattern is null and we fell back to the store base URL.
-    // Syncing a homepage URL will never yield a valid product price.
+    // Guard: skip bare/incomplete URLs that can never yield a valid product price.
+    // Cases caught:
+    //   (a) Homepage URL: path is "/" and no query string
+    //   (b) Pattern-based URL where the store's pattern requires a query param (contains "?")
+    //       but the resolved URL has no query string — slug substitution silently failed.
     try {
       const urlObj = new URL(store.productUrl);
       const hasProductPath = urlObj.pathname.length > 1; // more than just "/"
       const hasProductQuery = urlObj.search.length > 0;
+
+      // Case (a): completely bare domain
       if (!hasProductPath && !hasProductQuery) {
-        console.warn(
-          `Skipping sync for ${store.storeName} (${store.region}): ` +
-          `no product_url_pattern configured and no existing product_url — ` +
-          `URL "${store.productUrl}" appears to be a bare domain`
-        );
+        console.warn(`Skipping sync for ${store.storeName} (${store.region}): bare domain URL "${store.productUrl}"`);
         return { status: 'failed', error: 'No product_url_pattern configured and no existing product_url' };
+      }
+
+      // Case (b): URL has a trailing-slash path but NO query string, AND it looks like
+      // a query-param-based product page (path ends with a directory-style segment like
+      // /shop/product/ or /product/). This fingerprint indicates the {sku} or {slug}
+      // substitution produced an empty token and the URL is unusable for price extraction.
+      const pathEndsWithSlash = urlObj.pathname.endsWith('/') && urlObj.pathname.length > 1;
+      if (pathEndsWithSlash && !hasProductQuery) {
+        // Heuristic: if the path contains "product" it's almost certainly meant to have a
+        // query or slug after it. Skip rather than sending a bare product-directory URL.
+        if (urlObj.pathname.toLowerCase().includes('product')) {
+          console.warn(
+            `Skipping sync for ${store.storeName} (${store.region}): ` +
+            `URL "${store.productUrl}" looks like an incomplete product URL (no query string / slug)`
+          );
+          return { status: 'failed', error: 'Incomplete product URL — slug/SKU substitution likely failed' };
+        }
       }
     } catch {
       // If URL parsing fails, proceed and let the edge function handle it
