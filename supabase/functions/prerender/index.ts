@@ -245,6 +245,10 @@ async function getPageData(path: string, supabase: SupabaseClient): Promise<Page
   if (path === "/wizard") return wizardPage();
   if (path === "/diagnose") return diagnosePage();
   if (path === "/accessories") return accessoriesPage();
+  if (path === "/best-filaments-for-hueforge") return bestFilamentsForHueforgePage();
+  if (path === "/pla-vs-petg") return plaVsPetgPage();
+  if (path === "/best-white-filaments") return bestWhiteFilamentsPage();
+  if (path === "/filament-database") return filamentDatabasePage();
 
   return fallback(path);
 }
@@ -619,6 +623,113 @@ function brandComparePage(): PageData {
     description: "Compare 3D printing filament brands side-by-side. Analyze product variety, pricing, material options, and ratings to find the best brand for your needs.",
     canonical: "/brands/compare", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
     h1: "Compare Filament Brands", bodyText: "Compare 3D printing filament brands side-by-side across product variety, pricing, materials, and ratings.",
+  };
+}
+
+function faqSchema(faqs: { q: string; a: string }[]): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+}
+
+function bestFilamentsForHueforgePage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Best Filaments for HueForge", url: "/best-filaments-for-hueforge" }];
+  return {
+    type: "article",
+    title: "Best Filaments for HueForge 2026 — TD-Ranked | FilaScope",
+    description: "Find the best filaments for HueForge lithophanes. TD-ranked picks across PLA, silk, and translucent materials. Compare TD values, prices & buy links.",
+    canonical: "/best-filaments-for-hueforge",
+    ogType: "article",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "ItemList", name: "Best Filaments for HueForge 2026", description: "Top-ranked filaments for HueForge lithophane printing sorted by TD value.", url: `${BASE_URL}/best-filaments-for-hueforge` },
+      breadcrumbSchema(crumbs),
+      faqSchema([
+        { q: "What is the best TD value for HueForge?", a: "TD values between 1.0–3.0mm work best for lithophanes. Lower TD is more opaque (anchor layers), higher TD is more translucent (highlight layers)." },
+        { q: "Can I use any PLA for HueForge?", a: "Technically yes, but filaments need measured TD values for accurate HueForge profiles. Use community-verified filaments for best results." },
+        { q: "How do I find TD values for my filament?", a: "FilaScope maintains the largest public TD value database with 500+ filaments. Search by brand, color, or material on the HueForge TD Database page." },
+        { q: "What is silk PLA's TD value?", a: "Silk PLA typically has high TD values (5.0+), making it more translucent — excellent for highlight layers in HueForge stacks." },
+        { q: "Do I need special HueForge settings per filament?", a: "Yes. Each filament needs its own TD profile in HueForge to calculate accurate opacity gradients for lithophane printing." },
+      ]),
+    ],
+    breadcrumbs: crumbs,
+    h1: "Best Filaments for HueForge in 2026 — TD-Ranked Picks",
+    bodyText: "HueForge lithophanes rely on Transmission Distance (TD) values. We rank the top filaments from 48+ brands by verified TD data for perfect lithophane stacks.",
+  };
+}
+
+function plaVsPetgPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "PLA vs PETG", url: "/pla-vs-petg" }];
+  return {
+    type: "article",
+    title: "PLA vs PETG — 3D Filament Comparison Guide | FilaScope",
+    description: "PLA vs PETG compared: strength, flexibility, print settings, price & HueForge TD values. Data-driven comparison from 1,080+ filaments on FilaScope.",
+    canonical: "/pla-vs-petg",
+    ogType: "article",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "Article", headline: "PLA vs PETG — Which 3D Printer Filament Is Right for You?", description: "Data-driven PLA vs PETG comparison covering print settings, strength, TD values and price.", publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL }, url: `${BASE_URL}/pla-vs-petg` },
+      breadcrumbSchema(crumbs),
+      faqSchema([
+        { q: "Is PLA or PETG easier to print?", a: "PLA is significantly easier — lower temps (190–220°C), minimal warping, no enclosure needed. PETG needs 230–250°C and benefits from an enclosure." },
+        { q: "Is PETG stronger than PLA?", a: "PETG is more impact-resistant and flexible. PLA is stiffer with higher tensile strength but more brittle. PETG handles repeated stress better." },
+        { q: "Which is better for HueForge, PLA or PETG?", a: "PLA is strongly preferred. It has a wider TD range (0.5–6.0mm) and far more community-verified data, enabling more precise lithophane results." },
+        { q: "Can I mix PLA and PETG in the same print?", a: "Generally not recommended — incompatible temperatures and poor interlayer adhesion make mixing PLA and PETG impractical for most printers." },
+      ]),
+    ],
+    breadcrumbs: crumbs,
+    h1: "PLA vs PETG — Which 3D Printer Filament Is Right for You?",
+    bodyText: "PLA vs PETG: print settings, strength, flexibility, HueForge TD values, and price compared using data from FilaScope's 1,080+ filament database.",
+  };
+}
+
+function bestWhiteFilamentsPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Best White Filaments", url: "/best-white-filaments" }];
+  return {
+    type: "article",
+    title: "Best White Filaments for 3D Printing & HueForge | FilaScope",
+    description: "Compare white 3D printer filaments ranked by TD value, print quality & price. Find the perfect white PLA for HueForge lithophanes and general printing.",
+    canonical: "/best-white-filaments",
+    ogType: "article",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "ItemList", name: "Best White 3D Printer Filaments — Ranked by TD Value", description: "White and natural filaments ranked by TD value for HueForge lithophane printing.", url: `${BASE_URL}/best-white-filaments` },
+      breadcrumbSchema(crumbs),
+      faqSchema([
+        { q: "Why do white filaments matter for HueForge?", a: "White filaments are the critical base layer in HueForge lithophane stacks. Their TD value controls how much light passes through, affecting brightness and contrast." },
+        { q: "What is the difference between white and natural filament?", a: "White contains TiO₂ pigment (lower TD, more opaque). Natural is unpigmented (higher TD, more translucent, slight yellow tint). Both serve different roles in HueForge stacks." },
+        { q: "What TD value should my white filament have?", a: "For most lithophane projects, TD 1.5–4.0mm is ideal. Start with a tested white PLA in the 2.0–3.0mm range for balanced opacity and detail." },
+      ]),
+    ],
+    breadcrumbs: crumbs,
+    h1: "Best White Filaments for 3D Printing & HueForge",
+    bodyText: "White filaments are the cornerstone of HueForge lithophanes. Ranked by TD value from 48+ brands to help you find the perfect base layer filament.",
+  };
+}
+
+function filamentDatabasePage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Filament Database", url: "/filament-database" }];
+  return {
+    type: "website",
+    title: "3D Filament Database — Compare 1,080+ Products | FilaScope",
+    description: "The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across 48+ brands. Filter by specs, price, TD value & compatibility.",
+    canonical: "/filament-database",
+    ogType: "website",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "WebApplication", name: "FilaScope 3D Filament Database", url: `${BASE_URL}/filament-database`, applicationCategory: "UtilitiesApplication", description: "The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across 48+ brands." },
+      breadcrumbSchema(crumbs),
+      faqSchema([
+        { q: "How many filaments are in the FilaScope database?", a: "FilaScope indexes 1,080+ 3D printer filaments across 48+ brands, covering PLA, PETG, ABS, TPU, ASA, Nylon, PC, and specialty materials with specs, pricing, and TD values." },
+        { q: "How do I filter filaments by material or brand?", a: "Use the main FilaScope catalog to filter by material, brand, diameter, color, price range, TD value, nozzle temperature, and FilaScope quality score." },
+        { q: "How often is FilaScope's filament data updated?", a: "Pricing is updated frequently through automated scraping. Specs and TD values are verified manually. New products are typically added within days of brand announcements." },
+      ]),
+    ],
+    breadcrumbs: crumbs,
+    h1: "3D Printer Filament Database — 1,080+ Products Compared",
+    bodyText: "The most comprehensive free 3D printer filament database. Compare PLA, PETG, ABS & more across 48+ brands by specs, price, TD value, and printer compatibility.",
   };
 }
 

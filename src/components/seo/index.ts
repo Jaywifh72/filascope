@@ -14,3 +14,4 @@ export { BrandOrganizationSchema } from './BrandOrganizationSchema';
 export { ArticleSchema } from './ArticleSchema';
 export { DefinedTermSetSchema } from './DefinedTermSetSchema';
 export { HreflangTags } from './HreflangTags';
+export { FAQSection } from './FAQSection';

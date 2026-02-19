@@ -152,6 +152,10 @@ const SlicerDirectory = lazy(() => import("./pages/SlicerDirectory"));
 const ModelRepositories = lazy(() => import("./pages/ModelRepositories"));
 const Roadmap = lazy(() => import("./pages/Roadmap"));
 const RequestFeature = lazy(() => import("./pages/RequestFeature"));
+const BestFilamentsForHueForge = lazy(() => import("./pages/BestFilamentsForHueForge"));
+const PLAVsPETG = lazy(() => import("./pages/PLAVsPETG"));
+const BestWhiteFilaments = lazy(() => import("./pages/BestWhiteFilaments"));
+const FilamentDatabase = lazy(() => import("./pages/FilamentDatabase"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -310,6 +314,10 @@ const App = () => (
                   <Route path="/user/:userId" element={<UserProfile />} />
                   {/* Redirects for legacy/broken links */}
                   <Route path="/knowledge-base" element={<Navigate to="/reference/materials" replace />} />
+                  <Route path="/best-filaments-for-hueforge" element={<BestFilamentsForHueForge />} />
+                  <Route path="/pla-vs-petg" element={<PLAVsPETG />} />
+                  <Route path="/best-white-filaments" element={<BestWhiteFilaments />} />
+                  <Route path="/filament-database" element={<FilamentDatabase />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
