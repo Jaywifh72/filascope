@@ -162,6 +162,9 @@ const FilamentDatabase = lazy(() => import("./pages/FilamentDatabase"));
 const MaterialHub = lazy(() => import("./pages/MaterialHub"));
 const BrandMaterialPage = lazy(() => import("./pages/BrandMaterialPage"));
 const ColorFamilyPage = lazy(() => import("./pages/ColorFamilyPage"));
+const BestFilamentsForBeginners = lazy(() => import("./pages/BestFilamentsForBeginners"));
+const FilamentTemperatureGuide = lazy(() => import("./pages/FilamentTemperatureGuide"));
+const FilamentStorageGuide = lazy(() => import("./pages/FilamentStorageGuide"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -341,6 +344,11 @@ const App = () => (
                   <Route path="/pla-vs-petg" element={<PLAVsPETG />} />
                   <Route path="/best-white-filaments" element={<BestWhiteFilaments />} />
                   <Route path="/filament-database" element={<FilamentDatabase />} />
+                  <Route path="/best-filaments-for-beginners" element={<BestFilamentsForBeginners />} />
+                  <Route path="/filament-temperature-guide" element={<FilamentTemperatureGuide />} />
+                  <Route path="/filament-storage-guide" element={<FilamentStorageGuide />} />
+                  <Route path="/best-filament-for-ender-3" element={<Navigate to="/guides/best-filament-for-ender-3" replace />} />
+                  <Route path="/best-filament-for-bambu-lab-a1" element={<Navigate to="/guides/best-filament-for-bambu-lab-a1" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

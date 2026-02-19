@@ -35,6 +35,8 @@ export interface GuideMetadata {
   image?: string;
   /** If set, link goes to /guides/:slug instead of /learn/:slug */
   isBuyingGuide?: boolean;
+  /** Override the default link — used for standalone pages not in either /learn or /guides */
+  customUrl?: string;
 }
 
 // All guides data

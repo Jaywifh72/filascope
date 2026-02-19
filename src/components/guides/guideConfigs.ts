@@ -546,6 +546,99 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     ],
     relatedSlugs: ['best-abs-filaments', 'best-petg-filaments', 'best-filament-for-bambu-lab-p1s'],
   },
+
+  'best-filament-for-ender-3': {
+    slug: 'best-filament-for-ender-3',
+    title: 'Best Filaments for Creality Ender 3 in 2026',
+    seoTitle: 'Best Filament for Ender 3 — Compatible Picks 2026 | FilaScope',
+    seoDescription: 'Top filaments tested and ranked for Creality Ender 3. PLA, PETG, and TPU recommendations with print settings, AMS compatibility notes, and pricing.',
+    description: 'Curated filament recommendations for Creality Ender 3 owners — PLA, PETG, and TPU picks ranked by FilaScore with print settings and brand comparisons.',
+    category: 'buying-guide',
+    readTime: 10,
+    publishedAt: '2026-02-19',
+    updatedAt: '2026-02-19',
+    keywords: ['best filament for ender 3', 'ender 3 filament', 'creality ender 3 filament', 'ender 3 PLA', 'ender 3 PETG'],
+    filters: { materials: ['PLA', 'PETG', 'TPU'], sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Creality Ender 3 — Filament Compatibility Specs',
+        content: `<p>The <strong>Creality Ender 3</strong> is the world's best-selling 3D printer, and for good reason: it's affordable, reliable, and compatible with a wide range of filaments. Key specs that affect filament choice:</p>
+<ul>
+<li><strong>Max nozzle temp:</strong> 260°C on stock hotend — supports PLA, PLA+, PETG, and TPU. Nylon and PC require an all-metal hotend upgrade.</li>
+<li><strong>Max bed temp:</strong> 110°C — adequate for PLA and PETG. ABS technically possible but warping is challenging without enclosure mods.</li>
+<li><strong>Bowden extruder:</strong> The stock Ender 3 uses a Bowden setup. Flexible filaments (TPU) require slowing to 20–30mm/s or upgrading to a direct drive.</li>
+<li><strong>Build volume:</strong> 220×220×250mm — plenty of room for most prints.</li>
+</ul>
+<p><strong>Recommended starting point:</strong> Standard PLA at 200–210°C nozzle, 55°C bed, 100% fan. This works reliably on stock Ender 3 hardware.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Getting the Best Results from Your Ender 3',
+        content: `<ul>
+<li><strong>Level your bed:</strong> The Ender 3 uses a manual bed leveling system. Level carefully before every few prints — a properly leveled bed makes PLA print perfectly.</li>
+<li><strong>PLA settings:</strong> 200–215°C nozzle, 55°C bed, 100% fan, 50–60mm/s. Start slow, increase speed once you're confident.</li>
+<li><strong>PETG settings:</strong> 235–245°C nozzle, 75–80°C bed, 30–40% fan. PETG sticks aggressively to glass — use a release agent or switch to a textured PEI sheet.</li>
+<li><strong>TPU settings:</strong> 220–230°C nozzle, 45°C bed, slow to 25–35mm/s for the Bowden setup. Reduce retraction distance significantly.</li>
+<li><strong>Upgrades worth it:</strong> PEI magnetic spring steel build plate is the single best upgrade — prints release perfectly and bed leveling stays consistent longer.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'Can the Ender 3 print PETG?', answer: 'Yes. The stock Ender 3 prints PETG well at 235–245°C nozzle and 75–80°C bed. Use a release agent or PEI sheet — PETG can bond aggressively to glass. Add a 5–10mm brim for better first layer adhesion.' },
+      { question: 'Can the Ender 3 print TPU?', answer: 'Yes, but slowly. The Bowden extruder setup makes TPU tricky — reduce speed to 25–35mm/s and minimize retraction. A direct drive extruder upgrade (like the Sprite or Micro Swiss) dramatically improves TPU results.' },
+      { question: 'Does the Ender 3 need an enclosure for PETG?', answer: 'No, PETG does not require an enclosure. The Ender 3 prints PETG well open-air. An enclosure can help in drafty rooms but is not mandatory like it is for ABS.' },
+    ],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'beginners-guide', 'best-filament-for-bambu-lab-a1'],
+  },
+
+  'best-filament-for-bambu-lab-a1': {
+    slug: 'best-filament-for-bambu-lab-a1',
+    title: 'Best Filaments for Bambu Lab A1 Mini & A1',
+    seoTitle: 'Best Filament for Bambu Lab A1 & A1 Mini — 2026 Guide | FilaScope',
+    seoDescription: 'Top filaments for Bambu Lab A1 and A1 Mini with AMS Lite compatibility notes. PLA, PETG picks with print settings, brand rankings and pricing.',
+    description: 'Curated filament recommendations for Bambu Lab A1 and A1 Mini owners — with AMS Lite compatibility notes, print settings, and FilaScore rankings.',
+    category: 'buying-guide',
+    readTime: 10,
+    publishedAt: '2026-02-19',
+    updatedAt: '2026-02-19',
+    keywords: ['bambu lab a1 filament', 'best filament for bambu lab a1', 'bambu a1 mini filament', 'AMS lite filament'],
+    filters: { materials: ['PLA', 'PETG', 'TPU'], sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Bambu Lab A1 & A1 Mini — Quick Specs',
+        content: `<p>The <strong>Bambu Lab A1</strong> and <strong>A1 Mini</strong> are open-frame bed-slinger printers with excellent print quality out of the box. Key filament compatibility specs:</p>
+<ul>
+<li><strong>Max nozzle temp:</strong> 300°C — supports PLA, PETG, TPU, and most engineering materials.</li>
+<li><strong>Max bed temp:</strong> 100°C — suitable for PLA, PETG, and most non-engineering filaments.</li>
+<li><strong>Direct drive extruder:</strong> Unlike the Ender 3, the A1 series uses direct drive — excellent for TPU and flexible filaments.</li>
+<li><strong>AMS Lite:</strong> Both models support the optional AMS Lite for multi-color printing with PLA and PLA+. TPU is not compatible with AMS Lite.</li>
+<li><strong>Max speed:</strong> 500mm/s — benefits from high-speed PLA formulations for fast printing.</li>
+</ul>`,
+        position: 'before',
+      },
+      {
+        heading: 'AMS Lite Compatibility — What Works and What Doesn\'t',
+        content: `<p>The <strong>AMS Lite</strong> (bundled with A1/A1 Mini combos) enables multi-color printing but has stricter filament requirements than the full AMS:</p>
+<ul>
+<li><strong>Best for AMS Lite:</strong> Standard PLA, PLA+, and Silk PLA from major brands. Consistent ±0.02mm diameter tolerance is critical.</li>
+<li><strong>Works with care:</strong> PETG works in the AMS Lite but requires drying. Moisture causes jams in the buffer tubes.</li>
+<li><strong>Do not use in AMS Lite:</strong> TPU (too flexible), carbon-fiber or abrasive filaments (damages internal components), or filaments on non-standard spool sizes.</li>
+<li><strong>A1 Mini vs A1 difference:</strong> Filament compatibility is identical between the two — the only differences are build volume (180×180×180mm for Mini vs 256×256×256mm for A1).</li>
+</ul>
+<p>For best AMS Lite reliability, stick to Bambu Lab certified filaments or verified third-party brands with known consistent quality.</p>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What filament works best with the Bambu Lab A1 Mini?', answer: 'Standard PLA from verified brands (Bambu Lab, Polymaker, eSUN, Hatchbox) works best. For AMS Lite multi-color printing, choose PLA with consistent diameter tolerance (±0.02mm) and smooth spool winding.' },
+      { question: 'Can the Bambu A1 print TPU?', answer: 'Yes. The A1\'s direct drive extruder handles TPU well. However, do NOT feed TPU through the AMS Lite — the flexible filament cannot reliably travel through the buffer system. Use TPU from an external spool directly.' },
+      { question: 'Is third-party filament safe for the Bambu A1?', answer: 'Yes. The A1 works excellently with any quality third-party PLA or PETG. Use Bambu Studio\'s "Generic" profiles as a starting point. For AMS Lite printing, prioritize brands with consistent diameter and smooth winding.' },
+    ],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-filament-for-bambu-lab-p1s', 'best-filament-for-ender-3'],
+  },
 };
 
 export const BUYING_GUIDE_SLUGS = Object.keys(BUYING_GUIDE_CONFIGS);
