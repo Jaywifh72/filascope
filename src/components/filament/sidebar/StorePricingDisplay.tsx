@@ -165,12 +165,16 @@ export function StorePricingDisplay({
               : "bg-muted/50 border border-border/60 text-muted-foreground"
           )}>
             <span className="text-base">{regionConfig?.flag || '🌐'}</span>
-            <span>{regionConfig?.name || storePrice.storeRegion} Store</span>
-            {storePrice.isLocalStore && (
-              <span className="text-xs bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                Local
-              </span>
+            {storePrice.isLocalStore ? (
+              <>
+                <span>{regionConfig?.name || storePrice.storeRegion} Store</span>
+                <span className="text-xs bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Local
+                </span>
+              </>
+            ) : (
+              <span>Ships from {regionConfig?.name || storePrice.storeRegion}</span>
             )}
           </div>
         </div>
