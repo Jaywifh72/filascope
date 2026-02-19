@@ -3673,6 +3673,42 @@ export type Database = {
         }
         Relationships: []
       }
+      indexnow_submissions: {
+        Row: {
+          batch_type: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          response_code: number | null
+          status: string
+          submitted_at: string
+          url_count: number
+          urls_sample: string[] | null
+        }
+        Insert: {
+          batch_type?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          response_code?: number | null
+          status?: string
+          submitted_at?: string
+          url_count: number
+          urls_sample?: string[] | null
+        }
+        Update: {
+          batch_type?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          response_code?: number | null
+          status?: string
+          submitted_at?: string
+          url_count?: number
+          urls_sample?: string[] | null
+        }
+        Relationships: []
+      }
       listing_price_history: {
         Row: {
           available: boolean | null
