@@ -1,0 +1,39 @@
+# Cache-Control rules for Cloudflare Pages / Netlify / Vercel edge caching
+
+# Hashed JS/CSS assets — immutable, cache 1 year
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Font files — hashed filenames, immutable
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# PWA icons — long cache (change filenames to bust)
+/pwa-icons/*
+  Cache-Control: public, max-age=604800
+
+# Static brand/slicer images — long cache
+/brands/*
+  Cache-Control: public, max-age=604800
+
+/slicers/*
+  Cache-Control: public, max-age=604800
+
+# index.html — always revalidate (SPA entry point)
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Service worker — never cache (must always fetch latest)
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Manifest — short cache
+/manifest.json
+  Cache-Control: public, max-age=3600
+
+# Robots / sitemap — short cache
+/robots.txt
+  Cache-Control: public, max-age=86400
