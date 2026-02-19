@@ -964,8 +964,38 @@ function sitemapGuides(): string {
   return wrapUrlset(entries);
 }
 
+const MATERIAL_SITEMAP_PAGES = [
+  { path: "/materials/pla", priority: 0.9, changefreq: "weekly" },
+  { path: "/materials/petg", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/abs", priority: 0.8, changefreq: "weekly" },
+  { path: "/materials/tpu", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/asa", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/pla-plus", priority: 0.7, changefreq: "weekly" },
+  { path: "/materials/silk-pla", priority: 0.6, changefreq: "weekly" },
+  { path: "/materials/nylon", priority: 0.6, changefreq: "weekly" },
+  { path: "/materials/pc", priority: 0.6, changefreq: "weekly" },
+  { path: "/best-filaments-for-hueforge", priority: 0.8, changefreq: "weekly" },
+  { path: "/best-white-filaments", priority: 0.8, changefreq: "weekly" },
+  { path: "/pla-vs-petg", priority: 0.8, changefreq: "monthly" },
+  { path: "/filament-database", priority: 0.8, changefreq: "weekly" },
+  { path: "/colors/white", priority: 0.7, changefreq: "weekly" },
+  { path: "/colors/black", priority: 0.7, changefreq: "weekly" },
+  { path: "/colors/blue", priority: 0.6, changefreq: "weekly" },
+  { path: "/colors/red", priority: 0.6, changefreq: "weekly" },
+  { path: "/colors/green", priority: 0.6, changefreq: "weekly" },
+  { path: "/colors/gray", priority: 0.6, changefreq: "weekly" },
+  { path: "/colors/natural", priority: 0.6, changefreq: "weekly" },
+  { path: "/colors/clear", priority: 0.6, changefreq: "weekly" },
+];
+
+function sitemapMaterials(): string {
+  const today = new Date().toISOString().split("T")[0];
+  const entries = MATERIAL_SITEMAP_PAGES.map((p) => urlEntry(`${BASE_URL}${p.path}`, today, p.changefreq, p.priority));
+  return wrapUrlset(entries);
+}
+
 function sitemapIndex(): string {
-  const subs = ["sitemap-pages.xml", "sitemap-filaments.xml", "sitemap-brands.xml", "sitemap-printers.xml", "sitemap-guides.xml"];
+  const subs = ["sitemap-pages.xml", "sitemap-filaments.xml", "sitemap-brands.xml", "sitemap-printers.xml", "sitemap-guides.xml", "sitemap-materials.xml"];
   const items = subs.map((s) => `  <sitemap><loc>${BASE_URL}/${s}</loc></sitemap>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</sitemapindex>`;
 }
@@ -1004,6 +1034,9 @@ Deno.serve(async (req) => {
     }
     if (path === "/sitemap-guides.xml") {
       return new Response(sitemapGuides(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+    }
+    if (path === "/sitemap-materials.xml") {
+      return new Response(sitemapMaterials(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
     }
 
     // DB-backed sitemaps need Supabase client
