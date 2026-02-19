@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from "react";
+import { trackComparisonAdd } from "@/lib/analytics";
 import { toast } from "sonner";
 
 export interface CompareItem {
@@ -266,6 +267,7 @@ export function CompareProvider({ children }: { children: ReactNode }) {
         return prev;
       }
       
+      trackComparisonAdd(item.id, 'filament');
       toast.success(`Added to comparison`, {
         description: item.product_title,
       });

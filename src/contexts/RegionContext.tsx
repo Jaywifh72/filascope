@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { trackRegionChange } from '@/lib/analytics';
 import { RegionCode, CurrencyCode } from '@/types/regional';
 import { REGIONS, detectRegionFromLocale, REGION_FALLBACK_ORDER } from '@/config/regions';
 import { CURRENCIES, formatPrice as formatPriceUtil } from '@/config/currencies';
@@ -293,6 +294,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     setCurrencyState(newCurrency);
     savePrefsToStorage(newRegion, newCurrency);
     setRegionInUrl(newRegion);
+    trackRegionChange(region, newRegion);
     // Sync to profile in background
     syncRegionToProfile(newRegion, newCurrency);
     profileSyncRef.current = false; // Allow re-sync on next manual change
