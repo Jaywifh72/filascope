@@ -1,5 +1,5 @@
 // Filament comparison page
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { BreadcrumbSchema, WebApplicationSchema } from "@/components/seo";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, RefreshCcw, ShoppingCart, ExternalLink, Lightbulb, X, Eye, BookOpen, ArrowRight } from "lucide-react";
+import { AlertTriangle, RefreshCcw, ShoppingCart, ExternalLink, Lightbulb, X, Eye, BookOpen, ArrowRight, ChevronDown } from "lucide-react";
 import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
 import { SharePopover } from "@/components/sharing/SharePopover";
 import { FilamentComparisonEmptyState } from "@/components/compare/FilamentComparisonEmptyState";
@@ -47,6 +47,49 @@ import {
 type Filament = Tables<"filaments">;
 
 type CompareMode = "higher" | "lower" | "none";
+
+function CollapsibleSectionCard({
+  title,
+  isEmpty,
+  children,
+}: {
+  title: string;
+  isEmpty: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(!isEmpty);
+  return (
+    <Card className="mb-6">
+      <CardHeader
+        className={cn(
+          "pb-4",
+          isEmpty && "cursor-pointer select-none hover:bg-muted/30 transition-colors rounded-t-lg"
+        )}
+        onClick={isEmpty ? () => setOpen(o => !o) : undefined}
+      >
+        <div className="flex items-center justify-between">
+          <CardTitle className={cn("flex items-center gap-2", isEmpty && "text-muted-foreground")}>
+            {title}
+            {isEmpty && (
+              <span className="text-xs font-normal text-muted-foreground/60 ml-1">
+                — No data available
+              </span>
+            )}
+          </CardTitle>
+          {isEmpty && (
+            <ChevronDown
+              className={cn(
+                "w-4 h-4 text-muted-foreground/50 transition-transform duration-200 flex-shrink-0",
+                open && "rotate-180"
+              )}
+            />
+          )}
+        </div>
+      </CardHeader>
+      {open && <CardContent>{children}</CardContent>}
+    </Card>
+  );
+}
 
 const Compare = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -722,190 +765,134 @@ const Compare = () => {
           </CardContent>
         </Card>
 
-        {/* Material Properties - Desktop only */}
-        <Card className="mb-6 hidden md:block">
-          <CardHeader>
-            <CardTitle>Material Properties</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ComparisonRow 
-              label="Transmission Distance (TD)" 
-              values={filaments.map(f => f.transmission_distance)} 
-              unit=" mm"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Tensile Strength (XY)" 
-              values={filaments.map(f => f.tensile_strength_xy_mpa)} 
-              unit=" MPa"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Tensile Modulus (XY)" 
-              values={filaments.map(f => f.tensile_modulus_xy_mpa)} 
-              unit=" MPa"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Elongation at Break" 
-              values={filaments.map(f => f.elongation_break_xy_percent)} 
-              unit="%"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Flexural Strength" 
-              values={filaments.map(f => f.flexural_strength_mpa)} 
-              unit=" MPa"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Shore Hardness D" 
-              values={filaments.map(f => f.shore_hardness_d)} 
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Glass Transition Temp" 
-              values={filaments.map(f => f.tg_c)} 
-              unit="°C"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Density" 
-              values={filaments.map(f => f.density_g_cm3)} 
-              unit=" g/cm³"
-              compareMode="lower"
-            />
-          </CardContent>
-        </Card>
+        {/* Dynamically ordered & collapsible sections */}
+        {(() => {
+          const isAllEmpty = (vals: (unknown | null)[]) =>
+            vals.every(v => v === null || v === undefined || v === '');
 
-        {/* Scores & Ratings */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Performance Scores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ComparisonRow 
-              label="Ease of Printing" 
-              values={filaments.map(f => f.ease_of_printing_score)} 
-              unit="/10"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Dimensional Accuracy" 
-              values={filaments.map(f => f.dimensional_accuracy_score)} 
-              unit="/10"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Strength Index" 
-              values={filaments.map(f => f.strength_index)} 
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Printability Index" 
-              values={filaments.map(f => f.printability_index)} 
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Value Score" 
-              values={filaments.map(f => f.value_score)} 
-              compareMode="higher"
-            />
-          </CardContent>
-        </Card>
+          const materialPropValues = [
+            ...filaments.map(f => f.transmission_distance),
+            ...filaments.map(f => f.tensile_strength_xy_mpa),
+            ...filaments.map(f => f.tensile_modulus_xy_mpa),
+            ...filaments.map(f => f.elongation_break_xy_percent),
+            ...filaments.map(f => f.flexural_strength_mpa),
+            ...filaments.map(f => f.shore_hardness_d),
+            ...filaments.map(f => f.tg_c),
+            ...filaments.map(f => f.density_g_cm3),
+          ];
+          const perfScoreValues = [
+            ...filaments.map(f => f.ease_of_printing_score),
+            ...filaments.map(f => f.dimensional_accuracy_score),
+            ...filaments.map(f => f.strength_index),
+            ...filaments.map(f => f.printability_index),
+            ...filaments.map(f => f.value_score),
+          ];
+          const spoolValues = [
+            ...filaments.map(f => f.net_weight_g),
+            ...filaments.map(f => f.diameter_nominal_mm),
+            ...filaments.map(f => f.spool_outer_d_mm),
+            ...filaments.map(f => f.spool_width_mm),
+            ...filaments.map(f => f.spool_ams_fit),
+          ];
+          const careValues = [
+            ...filaments.map(f => f.is_nozzle_abrasive),
+            ...filaments.map(f => f.recommended_nozzle_type),
+            ...filaments.map(f => f.food_contact_rating),
+            ...filaments.map(f => f.drying_temp_c),
+            ...filaments.map(f => f.drying_time_hours),
+            ...filaments.map(f => f.moisture_sensitivity_level),
+          ];
 
-        {/* Spool Specifications */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Spool Specifications</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ComparisonRow 
-              label="Net Weight" 
-              values={filaments.map(f => f.net_weight_g)} 
-              unit="g"
-              compareMode="higher"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Diameter" 
-              values={filaments.map(f => f.diameter_nominal_mm)} 
-              unit=" mm"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Spool Outer Diameter" 
-              values={filaments.map(f => f.spool_outer_d_mm)} 
-              unit=" mm"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Spool Width" 
-              values={filaments.map(f => f.spool_width_mm)} 
-              unit=" mm"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="AMS Compatible" 
-              values={filaments.map(f => f.spool_ams_fit)} 
-              compareMode="higher"
-            />
-          </CardContent>
-        </Card>
+          const materialPropEmpty = isAllEmpty(materialPropValues);
+          const perfScoreEmpty = isAllEmpty(perfScoreValues);
+          const spoolEmpty = isAllEmpty(spoolValues);
+          const careEmpty = isAllEmpty(careValues);
+          const anyEmpty = materialPropEmpty || perfScoreEmpty || spoolEmpty || careEmpty;
 
-        {/* Compatibility & Care */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Compatibility & Care</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ComparisonRow 
-              label="Nozzle Abrasive" 
-              values={filaments.map(f => f.is_nozzle_abrasive)} 
-              compareMode="lower"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Recommended Nozzle" 
-              values={filaments.map(f => f.recommended_nozzle_type)} 
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Food Contact Rating" 
-              values={filaments.map(f => f.food_contact_rating)} 
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Drying Temperature" 
-              values={filaments.map(f => f.drying_temp_c)} 
-              unit="°C"
-              compareMode="lower"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Drying Time" 
-              values={filaments.map(f => f.drying_time_hours)} 
-              unit=" hours"
-              compareMode="lower"
-            />
-            <Separator />
-            <ComparisonRow 
-              label="Moisture Sensitivity" 
-              values={filaments.map(f => f.moisture_sensitivity_level)} 
-            />
-          </CardContent>
-        </Card>
+          const orderedSections = [
+            { key: 'material', title: 'Material Properties', isEmpty: materialPropEmpty, mdOnly: true },
+            { key: 'scores',   title: 'Performance Scores', isEmpty: perfScoreEmpty,    mdOnly: false },
+            { key: 'spool',    title: 'Spool Specifications', isEmpty: spoolEmpty,      mdOnly: false },
+            { key: 'care',     title: 'Compatibility & Care', isEmpty: careEmpty,       mdOnly: false },
+          ].sort((a, b) => (a.isEmpty ? 1 : 0) - (b.isEmpty ? 1 : 0));
+
+          return (
+            <>
+              {orderedSections.map(s => (
+                <div key={s.key} className={s.mdOnly ? 'hidden md:block' : undefined}>
+                  <CollapsibleSectionCard title={s.title} isEmpty={s.isEmpty}>
+                    {s.key === 'material' && (
+                      <>
+                        <ComparisonRow label="Transmission Distance (TD)" values={filaments.map(f => f.transmission_distance)} unit=" mm" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Tensile Strength (XY)" values={filaments.map(f => f.tensile_strength_xy_mpa)} unit=" MPa" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Tensile Modulus (XY)" values={filaments.map(f => f.tensile_modulus_xy_mpa)} unit=" MPa" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Elongation at Break" values={filaments.map(f => f.elongation_break_xy_percent)} unit="%" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Flexural Strength" values={filaments.map(f => f.flexural_strength_mpa)} unit=" MPa" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Shore Hardness D" values={filaments.map(f => f.shore_hardness_d)} compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Glass Transition Temp" values={filaments.map(f => f.tg_c)} unit="°C" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Density" values={filaments.map(f => f.density_g_cm3)} unit=" g/cm³" compareMode="lower" />
+                      </>
+                    )}
+                    {s.key === 'scores' && (
+                      <>
+                        <ComparisonRow label="Ease of Printing" values={filaments.map(f => f.ease_of_printing_score)} unit="/10" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Dimensional Accuracy" values={filaments.map(f => f.dimensional_accuracy_score)} unit="/10" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Strength Index" values={filaments.map(f => f.strength_index)} compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Printability Index" values={filaments.map(f => f.printability_index)} compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Value Score" values={filaments.map(f => f.value_score)} compareMode="higher" />
+                      </>
+                    )}
+                    {s.key === 'spool' && (
+                      <>
+                        <ComparisonRow label="Net Weight" values={filaments.map(f => f.net_weight_g)} unit="g" compareMode="higher" />
+                        <Separator />
+                        <ComparisonRow label="Diameter" values={filaments.map(f => f.diameter_nominal_mm)} unit=" mm" />
+                        <Separator />
+                        <ComparisonRow label="Spool Outer Diameter" values={filaments.map(f => f.spool_outer_d_mm)} unit=" mm" />
+                        <Separator />
+                        <ComparisonRow label="Spool Width" values={filaments.map(f => f.spool_width_mm)} unit=" mm" />
+                        <Separator />
+                        <ComparisonRow label="AMS Compatible" values={filaments.map(f => f.spool_ams_fit)} compareMode="higher" />
+                      </>
+                    )}
+                    {s.key === 'care' && (
+                      <>
+                        <ComparisonRow label="Nozzle Abrasive" values={filaments.map(f => f.is_nozzle_abrasive)} compareMode="lower" />
+                        <Separator />
+                        <ComparisonRow label="Recommended Nozzle" values={filaments.map(f => f.recommended_nozzle_type)} />
+                        <Separator />
+                        <ComparisonRow label="Food Contact Rating" values={filaments.map(f => f.food_contact_rating)} />
+                        <Separator />
+                        <ComparisonRow label="Drying Temperature" values={filaments.map(f => f.drying_temp_c)} unit="°C" compareMode="lower" />
+                        <Separator />
+                        <ComparisonRow label="Drying Time" values={filaments.map(f => f.drying_time_hours)} unit=" hours" compareMode="lower" />
+                        <Separator />
+                        <ComparisonRow label="Moisture Sensitivity" values={filaments.map(f => f.moisture_sensitivity_level)} />
+                      </>
+                    )}
+                  </CollapsibleSectionCard>
+                </div>
+              ))}
+              {anyEmpty && (
+                <p className="text-xs text-muted-foreground/60 text-center mb-6 px-4">
+                  Some sections are collapsed because data isn't available yet for these products.
+                  Data is added as manufacturers provide it.
+                </p>
+              )}
+            </>
+          );
+        })()}
 
         {/* Overall Winner Summary */}
         <Card className="mb-6 border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-transparent">
@@ -1141,7 +1128,7 @@ const Compare = () => {
           </CardContent>
         </Card>
               </>
-            )}
+           )}
         </div>
       </div>
     </div>
