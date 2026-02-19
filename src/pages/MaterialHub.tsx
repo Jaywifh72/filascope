@@ -2,13 +2,15 @@ import { useParams, Navigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FAQSection } from "@/components/seo/FAQSection";
 import { ItemListSchema } from "@/components/seo/ItemListSchema";
+import { ArticleSchema } from "@/components/seo/ArticleSchema";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
 import { FilamentCard } from "@/components/FilamentCard";
-import { Thermometer, Scale, Tag, Layers } from "lucide-react";
+import { Thermometer, Scale, Tag, Layers, Wind, Droplets, CheckCircle, XCircle, ExternalLink } from "lucide-react";
+import { getMaterialReference } from "@/lib/materialReferenceData";
+import { slugToMaterialName, slugToMaterialNames } from "@/lib/materialSlugUtils";
 
 // ──────────────────────────────────────────────────────────────
 // Slug → DB materials mapping
@@ -16,7 +18,7 @@ import { Thermometer, Scale, Tag, Layers } from "lucide-react";
 interface SlugConfig {
   label: string;
   materials: string[];
-  ilike?: string; // optional ILIKE pattern (e.g. '%silk%')
+  ilike?: string;
   relatedSlugs: string[];
   relatedMaterials: string[];
   guides: { label: string; href: string }[];
@@ -127,63 +129,545 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
 };
 
 // ──────────────────────────────────────────────────────────────
-// FAQ helper
+// Build dynamic config for slugs not in MATERIAL_SLUG_CONFIG
 // ──────────────────────────────────────────────────────────────
-function getMaterialFAQs(slug: string): { question: string; answer: string }[] {
-  const base = [
-    {
-      question: "How should I store this filament?",
-      answer:
-        "Store filament in a cool, dry place away from direct sunlight. Use an airtight container with desiccant packets to prevent moisture absorption. Hygroscopic materials like Nylon, PETG, and TPU require especially careful storage.",
-    },
-    {
-      question: "What nozzle should I use?",
-      answer:
-        "Standard brass nozzles work for most non-abrasive filaments. For carbon-fiber, glass-fiber, or metal-filled variants, use hardened steel, ruby, or tungsten carbide nozzles to prevent wear.",
-    },
-  ];
+function buildDynamicConfig(slug: string): SlugConfig | null {
+  const names = slugToMaterialNames(slug);
+  if (names.length === 0) return null;
+  const materialName = slugToMaterialName(slug);
+  return {
+    label: materialName || names[0],
+    materials: names,
+    relatedSlugs: [],
+    relatedMaterials: [],
+    guides: [],
+  };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Enhanced FAQ helper with material-specific questions
+// ──────────────────────────────────────────────────────────────
+function getMaterialFAQs(slug: string, label: string, count: number, brandCount: number, reference: any): { question: string; answer: string }[] {
+  const isPlaFamily = slug === "pla" || slug === "pla-plus" || slug === "silk-pla" || slug === "high-speed-pla";
+
+  const nozzleTemp = reference?.printSettings?.nozzleTemp
+    ? `${reference.printSettings.nozzleTemp.min}–${reference.printSettings.nozzleTemp.max}°C`
+    : null;
+  const bedTemp = reference?.printSettings?.bedTemp
+    ? `${reference.printSettings.bedTemp.min}–${reference.printSettings.bedTemp.max}°C`
+    : null;
+  const tempStr = nozzleTemp ? `Print at ${nozzleTemp} nozzle${bedTemp ? ` and ${bedTemp} bed` : ""}.` : "";
 
   const matFaqs: Record<string, { question: string; answer: string }[]> = {
     pla: [
-      { question: "What temperature should I print PLA at?", answer: "Most PLA prints well between 190–220 °C nozzle and 50–60 °C bed. Start at 210 °C and adjust based on your brand's datasheet." },
-      { question: "Can PLA parts be used outdoors?", answer: "PLA has a low glass-transition temperature (~60 °C) and will deform in hot environments. For outdoor or heat-exposed parts, use PETG, ASA, or ABS instead." },
-      { question: "Is PLA food safe?", answer: "PLA is generally food-safe as a material, but FDM layer lines can harbor bacteria. Use food-safe coatings for food-contact applications." },
+      {
+        question: "What temperature should I print PLA filament at?",
+        answer: `PLA filament prints best at a nozzle temperature of 190–220°C and bed temperature of 35–60°C. Use 100% cooling fan speed. PLA does not require an enclosed printer. Start at 205°C nozzle and 50°C bed, then adjust for your specific filament brand.`,
+      },
+      {
+        question: "Is PLA filament good for HueForge lithophanes?",
+        answer: `Yes, PLA is the most popular material for HueForge lithophanes. Standard PLA has TD values ranging from 0.5–6.0mm, giving excellent control over light transmission. FilaScope tracks TD values for hundreds of PLA filaments to help you find the perfect match for your HueForge project.`,
+      },
+      {
+        question: "What are the strengths of PLA filament?",
+        answer: `PLA is biodegradable, has low warping, produces a pleasant smell when printing, and offers excellent detail reproduction. It's the easiest material to print with — no heated bed required (though recommended), no enclosure needed, and a wide color selection available.`,
+      },
+      {
+        question: "Can PLA parts be used outdoors?",
+        answer: `PLA is not recommended for outdoor use. It has poor UV resistance and a low heat deflection temperature (~60°C), meaning it can soften and deform in direct sunlight. For outdoor applications, consider ASA or PETG instead.`,
+      },
+      {
+        question: "Is PLA food safe for 3D printing?",
+        answer: `While PLA is derived from plant-based materials and is technically food-safe as a raw material, 3D printed PLA objects are generally NOT considered food safe. The layer lines create microscopic gaps where bacteria can grow, and many PLA filaments contain additives and colorants that are not food-grade.`,
+      },
+      {
+        question: "How do I store PLA filament properly?",
+        answer: `PLA is hygroscopic and absorbs moisture from the air. Store PLA filament in airtight containers or vacuum-sealed bags with desiccant packets. If PLA becomes brittle or produces popping sounds during printing, dry it at 40–50°C for 4–6 hours before use.`,
+      },
+      {
+        question: "What is the difference between PLA and PLA+?",
+        answer: `PLA+ (also called PLA Pro) is a modified PLA with improved impact resistance and flexibility. It's slightly tougher than standard PLA while maintaining similar ease of printing. PLA+ typically has a slightly higher price point. Compare PLA and PLA+ filaments side by side on FilaScope.`,
+      },
+      {
+        question: `How many PLA filaments does FilaScope track?`,
+        answer: `FilaScope currently tracks ${count.toLocaleString()} PLA filaments from ${brandCount}+ brands with real-time pricing from 15+ retailers. We also track HueForge TD values for PLA filaments to help with lithophane and color mixing projects.`,
+      },
     ],
     petg: [
-      { question: "Why does PETG string so much?", answer: "PETG is prone to stringing. Increase retraction distance (4–6 mm for Bowden, 1–2 mm for direct drive), lower printing temperature by 5 °C, and enable coasting in your slicer." },
-      { question: "Does PETG need an enclosure?", answer: "PETG prints well without an enclosure. Avoid drafts, but full enclosure is not required unlike ABS. Bed temp of 70–85 °C and a PEI sheet work well." },
+      {
+        question: "What temperature should I print PETG filament at?",
+        answer: `PETG filament typically prints at 230–250°C nozzle temperature and 70–85°C bed temperature. ${tempStr} An enclosure is not required but helps with consistency. Use a PEI or glass bed for best adhesion.`,
+      },
+      {
+        question: "Why does PETG stick too strongly to the print bed?",
+        answer: `PETG adheres extremely well to PEI sheets and can rip the coating on removal. Use a thin layer of glue stick, hairspray, or Windex on PEI to create a release layer. This prevents PETG from over-adhering and damaging your build plate.`,
+      },
+      {
+        question: "Is PETG stronger than PLA?",
+        answer: `PETG is more impact-resistant and has better layer adhesion than PLA. PLA is stiffer (higher tensile modulus) but more brittle. PETG handles repeated stress and flexing better, making it preferred for functional mechanical parts.`,
+      },
+      {
+        question: "Can PETG be used outdoors?",
+        answer: `PETG has better UV resistance than PLA but is not ideal for prolonged outdoor use. For outdoor applications in direct sunlight or extreme temperatures, ASA is the recommended material due to its excellent UV stability.`,
+      },
+      {
+        question: "Why does my PETG string so much?",
+        answer: `PETG is prone to stringing due to its high viscosity and oozing. Increase retraction settings (4–6mm for Bowden, 1–2mm for direct drive), lower temperature by 5°C, and enable coasting in your slicer. Drying wet filament also significantly reduces stringing.`,
+      },
+      {
+        question: `How many PETG filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} PETG filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
     ],
     abs: [
-      { question: "Do I need an enclosure to print ABS?", answer: "Yes, an enclosure is highly recommended for ABS to maintain consistent chamber temperature, prevent warping, and reduce fume emissions." },
-      { question: "Is ABS safe to print at home?", answer: "ABS emits styrene fumes. Always print in a well-ventilated area or use an enclosure with a HEPA/activated-carbon filter." },
+      {
+        question: "Do I need an enclosure to print ABS filament?",
+        answer: `Yes, an enclosure is highly recommended for ABS. It maintains consistent chamber temperature (40–50°C), prevents warping from thermal shock, and reduces styrene fume emissions. Even a simple cardboard enclosure significantly improves print success.`,
+      },
+      {
+        question: "What temperature does ABS filament print at?",
+        answer: `ABS filament typically prints at 220–260°C nozzle temperature and 100–110°C bed temperature. ${tempStr} Higher nozzle temps (240–260°C) improve layer adhesion. An enclosed printer with a heated chamber is strongly recommended.`,
+      },
+      {
+        question: "Is ABS safe to print at home?",
+        answer: `ABS emits styrene fumes and ultrafine particles when printing. Always print ABS in a well-ventilated area or in an enclosed printer with a HEPA/activated-carbon filtration system. Avoid prolonged exposure, especially in small rooms.`,
+      },
+      {
+        question: "Why does my ABS keep warping?",
+        answer: `ABS warping is caused by uneven cooling and thermal stress. Solutions: use an enclosure, increase bed temperature to 100–110°C, use ABS slurry or glue stick for adhesion, add a brim to small parts, and ensure no drafts hit the print. Draft shields in your slicer also help.`,
+      },
+      {
+        question: "Can ABS be post-processed with acetone?",
+        answer: `Yes — acetone smoothing is one of ABS's best features. Exposure to acetone vapors melts the outer layer slightly, creating a glossy, smooth surface and strengthening the part. ABS can also be acetone-welded and machined, drilled, or threaded.`,
+      },
+      {
+        question: `How many ABS filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} ABS filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
     ],
     asa: [
-      { question: "What makes ASA better than ABS outdoors?", answer: "ASA has significantly better UV resistance than ABS, making it ideal for outdoor functional parts like enclosures, brackets, and automotive components." },
-      { question: "Do I need an enclosure for ASA?", answer: "Yes, like ABS, ASA benefits greatly from an enclosure to prevent warping. Chamber temps of 40–50 °C improve layer adhesion." },
+      {
+        question: "What makes ASA better than ABS for outdoor use?",
+        answer: `ASA has significantly better UV resistance than ABS — it won't yellow, become brittle, or degrade in direct sunlight. ASA is ideal for outdoor functional parts like enclosures, car parts, brackets, and garden hardware. It also has similar mechanical properties to ABS.`,
+      },
+      {
+        question: "What temperature does ASA filament print at?",
+        answer: `ASA typically prints at 230–260°C nozzle and 90–110°C bed temperature. ${tempStr} An enclosure is strongly recommended to prevent warping. ASA has slightly more warping than ABS and benefits from a draft shield.`,
+      },
+      {
+        question: "Do I need an enclosure for ASA?",
+        answer: `Yes — ASA warps significantly without an enclosure. A heated chamber of 40–50°C is recommended. ASA also emits fumes similar to ABS, so ensure good ventilation or use an enclosed printer with a filtration system.`,
+      },
+      {
+        question: `How many ASA filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} ASA filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
     ],
     tpu: [
-      { question: "How fast can I print TPU?", answer: "Print TPU at 15–30 mm/s. Faster speeds cause the flexible filament to buckle, especially in Bowden setups. Direct drive extruders handle TPU much better." },
-      { question: "Should I use retraction with TPU?", answer: "Minimize or disable retraction for TPU. Flexible filaments jam easily when retracted. If needed, limit retraction to 0.5–2 mm at low speed." },
+      {
+        question: "What print speed should I use for TPU filament?",
+        answer: `Print TPU slowly — typically 15–30mm/s. Faster speeds cause the flexible filament to buckle and jam, especially in Bowden tube setups. Direct drive extruders handle TPU significantly better than Bowden systems. Start slow and increase only if needed.`,
+      },
+      {
+        question: "Should I use retraction with TPU?",
+        answer: `Minimize or completely disable retraction for TPU. Flexible filaments compress and buckle in retraction, causing jams and blobs. If retraction is needed, use very short distances (0.5–2mm) at low speed. Coasting in your slicer can help reduce oozing instead.`,
+      },
+      {
+        question: "What is the difference between TPU 85A, 90A, and 95A?",
+        answer: `Shore hardness indicates flexibility: 85A is softer (very flexible), 90A is medium-flex, and 95A is semi-rigid. Softer TPU is harder to print but more elastic. 95A is the most common and easiest to print while still offering good flexibility and durability.`,
+      },
+      {
+        question: `How many TPU filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} TPU and flexible filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
     ],
     nylon: [
-      { question: "Why do my nylon prints come out weak?", answer: "Nylon is highly hygroscopic. Wet filament produces weak, brittle prints with visible bubbling. Always dry nylon at 70–80 °C for 4–6 hours before printing." },
-      { question: "What bed adhesion works for nylon?", answer: "Nylon adheres well to Garolite (G10), glue stick on glass, or specialized adhesives like Magigoo PA. PEI alone usually provides insufficient adhesion." },
+      {
+        question: "Why do my nylon prints come out weak?",
+        answer: `Nylon is highly hygroscopic and absorbs moisture rapidly from air. Wet nylon produces weak, brittle prints with visible bubbling, popping sounds, and poor layer adhesion. Always dry nylon at 70–80°C for 4–6 hours before printing, even with freshly opened spools.`,
+      },
+      {
+        question: "What temperature does nylon filament print at?",
+        answer: `Nylon typically prints at 230–270°C nozzle and 70–90°C bed temperature. ${tempStr} An enclosure is strongly recommended to prevent warping and maintain consistent temperatures.`,
+      },
+      {
+        question: "What bed surface works best for nylon?",
+        answer: `Nylon adheres best to Garolite (G10) sheets, glue stick on glass, or specialized adhesives like Magigoo PA. Standard PEI often provides insufficient adhesion for nylon. Some nylon formulas also work well with hairspray on glass.`,
+      },
+      {
+        question: `How many nylon filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} nylon and PA filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
     ],
     pc: [
-      { question: "What temperature does PC require?", answer: "Polycarbonate typically requires 260–310 °C nozzle and 100–120 °C bed temperatures. An all-metal hotend and enclosure are necessary." },
-      { question: "Why is PC so difficult to print?", answer: "PC warps severely without an enclosure and requires very high temperatures. Use a hardened nozzle for CF-filled variants and ensure your printer can reach 300 °C+" },
+      {
+        question: "What temperature does polycarbonate filament print at?",
+        answer: `Polycarbonate requires 260–310°C nozzle and 100–120°C bed temperature. ${tempStr} An all-metal hotend is essential — PTFE-lined hotends cannot safely reach these temperatures. A fully enclosed heated chamber is strongly recommended.`,
+      },
+      {
+        question: "Why is polycarbonate so difficult to print?",
+        answer: `PC warps severely, requires extreme temperatures, and is highly hygroscopic. Always dry PC at 80–90°C for 4–8 hours before printing. Use a fully enclosed printer, all-metal hotend, and hardened nozzle for CF-filled variants. Chamber temps of 50–80°C significantly improve results.`,
+      },
+      {
+        question: `How many PC filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} polycarbonate filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
     ],
     "pla-plus": [
-      { question: "Is PLA+ actually stronger than PLA?", answer: "PLA+ typically offers higher impact resistance and reduced brittleness vs standard PLA, but the difference varies significantly by brand. Check our specs comparison for actual tensile data." },
-      { question: "Can I use the same settings as PLA?", answer: "PLA+ generally prints 5–10 °C hotter than standard PLA and may need slightly higher bed temps (60–65 °C). Check your brand's recommended settings." },
+      {
+        question: "Is PLA+ actually stronger than PLA?",
+        answer: `PLA+ typically offers higher impact resistance and reduced brittleness vs standard PLA, but the improvement varies significantly by brand. Many PLA+ products have 20–30% better impact strength. Check the FilaScope specs comparison for actual tensile data per brand.`,
+      },
+      {
+        question: "What temperature should I print PLA+ at?",
+        answer: `PLA+ generally prints 5–10°C hotter than standard PLA. Most brands recommend 205–230°C nozzle and 55–65°C bed. ${tempStr} Check your brand's specific datasheet as formulations vary considerably.`,
+      },
+      {
+        question: "Is PLA+ good for HueForge?",
+        answer: `PLA+ works for HueForge, though its TD values can differ from standard PLA. FilaScope tracks TD values for PLA+ filaments to help you build accurate HueForge profiles.`,
+      },
+      {
+        question: `How many PLA+ filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} PLA+ filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
     ],
     "silk-pla": [
-      { question: "Why does my silk PLA look dull?", answer: "Silk PLA needs a slightly higher print temp (215–230 °C) for best sheen. Slow down outer wall speed to 30–40 mm/s and reduce cooling for a glossy finish." },
-      { question: "Can silk PLA be used for functional parts?", answer: "Silk PLA is primarily aesthetic. It's slightly more brittle than standard PLA and not ideal for structural or load-bearing applications." },
+      {
+        question: "Why does my silk PLA look dull?",
+        answer: `Silk PLA needs a slightly higher print temperature (215–230°C) for best sheen. Slow down outer wall speed to 30–40mm/s and reduce cooling fan to 50–80% for a more glossy finish. Very high fan speeds or low temps prevent the material from developing its characteristic shimmer.`,
+      },
+      {
+        question: "Is silk PLA good for HueForge lithophanes?",
+        answer: `Yes — silk PLA typically has high TD values (often 5.0+mm), making it highly translucent. It's excellent for highlight and accent layers in HueForge stacks. FilaScope tracks TD values for hundreds of silk PLA filaments for precise HueForge profiling.`,
+      },
+      {
+        question: "Can silk PLA be used for functional parts?",
+        answer: `Silk PLA is primarily aesthetic. It's slightly more brittle than standard PLA due to its additive formulation and not ideal for load-bearing or structural applications. Use standard PLA or PLA+ for functional parts.`,
+      },
+      {
+        question: `How many silk PLA filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} silk PLA filaments from ${brandCount}+ brands with real-time pricing and TD values.`,
+      },
+    ],
+    "high-speed-pla": [
+      {
+        question: "What makes high-speed PLA different from regular PLA?",
+        answer: `High-speed PLA is formulated with additives that allow printing at 200–600mm/s without significant quality loss. It maintains better flow at high speeds and bonds well at faster print speeds. It's optimized for modern fast printers like Bambu Lab X1/P1 series and Creality K1.`,
+      },
+      {
+        question: "Can I print high-speed PLA on a standard printer?",
+        answer: `Yes — high-speed PLA works at regular speeds too. You won't get the speed benefits but quality should be similar to standard PLA. Consider it if you're planning to upgrade to a faster printer in the future.`,
+      },
+      {
+        question: `How many high-speed PLA filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} high-speed PLA filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
+    ],
+    "petg-cf": [
+      {
+        question: "Do I need a hardened nozzle for PETG-CF?",
+        answer: `Yes — PETG-CF (carbon fiber reinforced PETG) is highly abrasive. Standard brass nozzles will wear out within a few hundred grams. Use hardened steel, ruby, or tungsten carbide nozzles. Stainless steel nozzles are not hard enough for CF composites.`,
+      },
+      {
+        question: "What temperature does PETG-CF print at?",
+        answer: `PETG-CF typically prints at 240–260°C nozzle and 70–85°C bed temperature. ${tempStr} An enclosure is not required but helps with layer adhesion. Slow down print speeds slightly vs regular PETG for better mechanical properties.`,
+      },
+      {
+        question: `How many PETG-CF filaments does FilaScope track?`,
+        answer: `FilaScope tracks ${count.toLocaleString()} PETG-CF filaments from ${brandCount}+ brands with real-time pricing.`,
+      },
     ],
   };
 
+  const base = [
+    {
+      question: `How should I store ${label} filament?`,
+      answer: `Store ${label} filament in a cool, dry place away from direct sunlight. Use an airtight container with desiccant packets (silica gel) to prevent moisture absorption.${isPlaFamily ? " While PLA is less sensitive than engineering materials, proper storage significantly extends shelf life and print quality." : " This material is particularly hygroscopic — always re-seal immediately after use and consider a dry box for active printing."}`,
+    },
+    {
+      question: `What nozzle should I use for ${label}?`,
+      answer: slug === "petg-cf" || label.includes("CF") || label.includes("Carbon Fiber")
+        ? `${label} is abrasive and requires a hardened steel, ruby, or tungsten carbide nozzle. Standard brass nozzles will wear out rapidly. Never use brass nozzles with fiber-reinforced composites.`
+        : `Standard brass nozzles work well for ${label}. For ${label} variants that include carbon fiber or glass fiber additives, use hardened steel, ruby, or tungsten carbide nozzles to prevent accelerated wear.`,
+    },
+  ];
+
   return [...(matFaqs[slug] || []), ...base];
+}
+
+// ──────────────────────────────────────────────────────────────
+// Knowledge Base Sections — rendered expanded for SEO
+// ──────────────────────────────────────────────────────────────
+
+function KBSection({ title, id, children }: { title: string; id: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-10" aria-labelledby={id}>
+      <h2 id={id} className="text-xl font-semibold mb-4 text-foreground">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function KBSubSection({ title }: { title: string }) {
+  return <h3 className="text-base font-semibold mb-2 text-foreground/90">{title}</h3>;
+}
+
+function KBList({ items }: { items?: string[] }) {
+  if (!items || items.length === 0) return <p className="text-sm text-muted-foreground italic">No data available.</p>;
+  return (
+    <ul className="space-y-1 mb-4">
+      {items.map((item, i) => (
+        <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary/60 flex-shrink-0" />
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PrintSettingsSection({ reference, label }: { reference: any; label: string }) {
+  const ps = reference.printSettings;
+  if (!ps) return null;
+  return (
+    <KBSection title={`Quick Start — ${label} Print Settings`} id="print-settings-h2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {ps.nozzleTemp && (
+          <div className="bg-card border border-border rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Thermometer className="w-4 h-4 text-red-500" />
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Nozzle Temp</span>
+            </div>
+            <p className="text-base font-bold text-foreground">{ps.nozzleTemp.min}–{ps.nozzleTemp.max}°C</p>
+            {ps.nozzleTemp.optimal && <p className="text-xs text-muted-foreground">Optimal: {ps.nozzleTemp.optimal}°C</p>}
+          </div>
+        )}
+        {ps.bedTemp && (
+          <div className="bg-card border border-border rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Thermometer className="w-4 h-4 text-orange-500" />
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Bed Temp</span>
+            </div>
+            <p className="text-base font-bold text-foreground">{ps.bedTemp.min}–{ps.bedTemp.max}°C</p>
+            {ps.bedTemp.optimal && <p className="text-xs text-muted-foreground">Optimal: {ps.bedTemp.optimal}°C</p>}
+          </div>
+        )}
+        {ps.coolingFan && (
+          <div className="bg-card border border-border rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Wind className="w-4 h-4 text-blue-400" />
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Cooling Fan</span>
+            </div>
+            <p className="text-base font-bold text-foreground">{typeof ps.coolingFan === 'object' ? `${ps.coolingFan.min ?? 0}–${ps.coolingFan.max ?? 100}%` : ps.coolingFan}</p>
+          </div>
+        )}
+        {ps.enclosure !== undefined && (
+          <div className="bg-card border border-border rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Enclosure</span>
+            </div>
+            <p className="text-base font-bold text-foreground flex items-center gap-1.5">
+              {ps.enclosure === false || ps.enclosure === 'not_required'
+                ? <><XCircle className="w-4 h-4 text-muted-foreground" /> Not required</>
+                : ps.enclosure === true || ps.enclosure === 'required'
+                ? <><CheckCircle className="w-4 h-4 text-green-500" /> Required</>
+                : <><CheckCircle className="w-4 h-4 text-yellow-500" /> Recommended</>
+              }
+            </p>
+          </div>
+        )}
+      </div>
+
+      {ps.drying && (
+        <div className="mb-4">
+          <KBSubSection title="Drying Instructions" />
+          <div className="bg-card border border-border rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Droplets className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm font-medium text-foreground">
+                {ps.drying.recommended === false ? `${label} does not typically require drying` : `Dry at ${ps.drying.tempC || '60'}°C for ${ps.drying.hours || '4–8'} hours`}
+              </span>
+            </div>
+            {ps.drying.notes && <p className="text-sm text-muted-foreground">{ps.drying.notes}</p>}
+          </div>
+        </div>
+      )}
+
+      {ps.bedSurfaces && ps.bedSurfaces.length > 0 && (
+        <div>
+          <KBSubSection title="Bed Surface Compatibility" />
+          <div className="flex flex-wrap gap-2">
+            {ps.bedSurfaces.map((s: string, i: number) => (
+              <span key={i} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">{s}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </KBSection>
+  );
+}
+
+function StrengthsSection({ reference, label }: { reference: any; label: string }) {
+  const s = reference.strengths;
+  if (!s) return null;
+  return (
+    <KBSection title={`${label} Strengths`} id="strengths-h2">
+      {s.uniqueProperties && s.uniqueProperties.length > 0 && (
+        <div className="mb-4">
+          <KBSubSection title="Unique Properties" />
+          <KBList items={s.uniqueProperties} />
+        </div>
+      )}
+      {s.bestUseScenarios && s.bestUseScenarios.length > 0 && (
+        <div className="mb-4">
+          <KBSubSection title="Best Use Scenarios" />
+          <KBList items={s.bestUseScenarios} />
+        </div>
+      )}
+      {s.advantagesOverCompetitors && s.advantagesOverCompetitors.length > 0 && (
+        <div className="mb-4">
+          <KBSubSection title="Advantages Over Alternatives" />
+          <KBList items={s.advantagesOverCompetitors} />
+        </div>
+      )}
+    </KBSection>
+  );
+}
+
+function WeaknessesSection({ reference, label }: { reference: any; label: string }) {
+  const w = reference.weaknesses;
+  if (!w) return null;
+  return (
+    <KBSection title={`${label} Weaknesses`} id="weaknesses-h2">
+      {w.limitations && w.limitations.length > 0 && (
+        <div className="mb-4">
+          <KBSubSection title="Limitations" />
+          <KBList items={w.limitations} />
+        </div>
+      )}
+      {w.avoidFor && w.avoidFor.length > 0 && (
+        <div className="mb-4">
+          <KBSubSection title={`Avoid Using ${label} For`} />
+          <KBList items={w.avoidFor} />
+        </div>
+      )}
+    </KBSection>
+  );
+}
+
+function TechnicalSpecsSection({ reference, label }: { reference: any; label: string }) {
+  const tds = reference.technicalData;
+  const adhesion = reference.adhesion;
+  if (!tds && !adhesion) return null;
+
+  return (
+    <KBSection title="Technical Specifications" id="tech-specs-h2">
+      {tds && (
+        <div className="mb-6">
+          <KBSubSection title="Technical Data Sheet Profile" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {tds.tensileStrength && (
+              <div className="bg-card border border-border rounded-xl p-3">
+                <div className="text-xs text-muted-foreground">Tensile Strength</div>
+                <div className="font-semibold text-foreground">{tds.tensileStrength}</div>
+              </div>
+            )}
+            {tds.flexuralStrength && (
+              <div className="bg-card border border-border rounded-xl p-3">
+                <div className="text-xs text-muted-foreground">Flexural Strength</div>
+                <div className="font-semibold text-foreground">{tds.flexuralStrength}</div>
+              </div>
+            )}
+            {tds.heatDeflection && (
+              <div className="bg-card border border-border rounded-xl p-3">
+                <div className="text-xs text-muted-foreground">Heat Deflection Temp</div>
+                <div className="font-semibold text-foreground">{tds.heatDeflection}</div>
+              </div>
+            )}
+            {tds.glassTg && (
+              <div className="bg-card border border-border rounded-xl p-3">
+                <div className="text-xs text-muted-foreground">Glass Transition (Tg)</div>
+                <div className="font-semibold text-foreground">{tds.glassTg}</div>
+              </div>
+            )}
+            {tds.density && (
+              <div className="bg-card border border-border rounded-xl p-3">
+                <div className="text-xs text-muted-foreground">Density</div>
+                <div className="font-semibold text-foreground">{tds.density}</div>
+              </div>
+            )}
+            {tds.elongationAtBreak && (
+              <div className="bg-card border border-border rounded-xl p-3">
+                <div className="text-xs text-muted-foreground">Elongation at Break</div>
+                <div className="font-semibold text-foreground">{tds.elongationAtBreak}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {adhesion && (
+        <div>
+          <KBSubSection title={`Adhesion & Multi-Material Compatibility`} />
+          {adhesion.bedSurfaceRatings && (
+            <div className="mb-3">
+              <p className="text-sm text-muted-foreground mb-2">Recommended bed surfaces:</p>
+              <KBList items={Object.entries(adhesion.bedSurfaceRatings).map(([s, r]: [string, any]) => `${s}: ${r}`)} />
+            </div>
+          )}
+          {adhesion.compatibleWith && adhesion.compatibleWith.length > 0 && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Compatible multi-material combinations:</p>
+              <div className="flex flex-wrap gap-2">
+                {adhesion.compatibleWith.map((m: string, i: number) => (
+                  <Link key={i} to={`/materials/${m.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="px-3 py-1 rounded-full bg-card border border-border text-sm hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                    {m}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </KBSection>
+  );
+}
+
+function PracticalGuideSection({ reference, label }: { reference: any; label: string }) {
+  const practical = reference.practicalContext;
+  const postProc = reference.postProcessing;
+  const safety = reference.safety;
+  if (!practical && !postProc && !safety) return null;
+
+  return (
+    <KBSection title={`${label} Practical Guide`} id="practical-guide-h2">
+      {practical && (
+        <div className="mb-6">
+          <KBSubSection title="Practical Context" />
+          {practical.whenToUse && <p className="text-sm text-muted-foreground mb-2">{practical.whenToUse}</p>}
+          {practical.commonUses && practical.commonUses.length > 0 && (
+            <KBList items={practical.commonUses} />
+          )}
+        </div>
+      )}
+      {postProc && (
+        <div className="mb-6">
+          <KBSubSection title="Post-Processing" />
+          {postProc.methods && postProc.methods.length > 0 && (
+            <KBList items={postProc.methods} />
+          )}
+          {postProc.notes && <p className="text-sm text-muted-foreground">{postProc.notes}</p>}
+        </div>
+      )}
+      {safety && (
+        <div>
+          <KBSubSection title="Safety & Sustainability" />
+          {safety.fumesRisk && <p className="text-sm text-muted-foreground mb-1"><strong>Fumes:</strong> {safety.fumesRisk}</p>}
+          {safety.ventilationRequired && <p className="text-sm text-muted-foreground mb-1"><strong>Ventilation:</strong> {safety.ventilationRequired ? "Required" : "Not required"}</p>}
+          {safety.recyclable !== undefined && <p className="text-sm text-muted-foreground"><strong>Recyclable:</strong> {safety.recyclable ? "Yes" : "Not widely recyclable"}</p>}
+        </div>
+      )}
+    </KBSection>
+  );
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -191,7 +675,7 @@ function getMaterialFAQs(slug: string): { question: string; answer: string }[] {
 // ──────────────────────────────────────────────────────────────
 export default function MaterialHub() {
   const { slug } = useParams<{ slug: string }>();
-  const config = slug ? MATERIAL_SLUG_CONFIG[slug] : null;
+  const config = slug ? (MATERIAL_SLUG_CONFIG[slug] ?? buildDynamicConfig(slug)) : null;
 
   // Stats query: count, avg price, brand count, TD range
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -202,17 +686,17 @@ export default function MaterialHub() {
       const materials = config.materials;
       const db = supabase as any;
       let q = db.from("filaments")
-        .select("id, vendor, variant_price, td_value", { count: "exact" })
+        .select("id, vendor, variant_price, transmission_distance", { count: "exact" })
         .in("material", materials);
       if (config.ilike) {
         q = db.from("filaments")
-          .select("id, vendor, variant_price, td_value", { count: "exact" })
+          .select("id, vendor, variant_price, transmission_distance", { count: "exact" })
           .or(materials.map((m: string) => `material.eq.${m}`).join(",") + `,material.ilike.${config.ilike}`);
       }
       const { data, count } = await q.limit(1000);
       if (!data) return null;
       const prices = (data as any[]).map((d: any) => d.variant_price).filter(Boolean) as number[];
-      const tds = (data as any[]).map((d: any) => d.td_value).filter(Boolean) as number[];
+      const tds = (data as any[]).map((d: any) => d.transmission_distance).filter(Boolean) as number[];
       const brands = new Set((data as any[]).map((d: any) => d.vendor).filter(Boolean));
       return {
         count: count ?? data.length,
@@ -232,7 +716,7 @@ export default function MaterialHub() {
       if (!config) return [] as any[];
       const { data } = await (supabase as any)
         .from("filaments")
-        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, featured_image, td_value, filascope_score, diameter_nominal_mm")
+        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, featured_image, transmission_distance, filascope_score, diameter_nominal_mm")
         .in("material", config.materials)
         .not("filascope_score", "is", null)
         .order("filascope_score", { ascending: false })
@@ -249,7 +733,7 @@ export default function MaterialHub() {
       if (!config) return [] as any[];
       const { data } = await (supabase as any)
         .from("filaments")
-        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, featured_image, td_value, filascope_score, diameter_nominal_mm, variant_available")
+        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, featured_image, transmission_distance, filascope_score, diameter_nominal_mm, variant_available")
         .in("material", config.materials)
         .order("filascope_score", { ascending: false, nullsFirst: false })
         .limit(24);
@@ -269,8 +753,30 @@ export default function MaterialHub() {
 
   const count = stats?.count ?? 0;
   const label = config.label;
-  const title = `${label} Filament — Compare ${count.toLocaleString()} Products | FilaScope`;
-  const description = `Browse ${count.toLocaleString()} ${label} 3D printer filaments from ${stats?.brandCount ?? ""}+ brands. Compare specs, prices, and HueForge TD values on FilaScope.`;
+
+  // Get Knowledge Base reference data
+  const materialName = config.materials[0];
+  const reference = getMaterialReference(materialName);
+
+  // Build enhanced meta with temperature data when available
+  const nozzleRange = reference?.printSettings?.nozzleTemp
+    ? `${reference.printSettings.nozzleTemp.min}–${reference.printSettings.nozzleTemp.max}°C`
+    : null;
+  const bedRange = reference?.printSettings?.bedTemp
+    ? `${reference.printSettings.bedTemp.min}–${reference.printSettings.bedTemp.max}°C`
+    : null;
+
+  const title = reference
+    ? `${label} Filament Guide — Print Settings, Specs & ${count.toLocaleString()} Products | FilaScope`
+    : `${label} Filament — Compare ${count.toLocaleString()} Products | FilaScope`;
+
+  let description: string;
+  if (reference && nozzleRange) {
+    description = `${label} 3D printing filament guide. Nozzle temp ${nozzleRange}${bedRange ? `, bed ${bedRange}` : ""}. Compare ${count.toLocaleString()} ${label} filaments with specs, TD values, and pricing on FilaScope.`;
+  } else {
+    description = `Browse ${count.toLocaleString()} ${label} 3D printer filaments from ${stats?.brandCount ?? ""}+ brands. Compare specs, prices, and HueForge TD values on FilaScope.`;
+  }
+  if (description.length > 160) description = description.slice(0, 157) + "...";
 
   const breadcrumbItems = [
     { name: "Home", url: "/" },
@@ -286,7 +792,10 @@ export default function MaterialHub() {
     position: i + 1,
   }));
 
-  const faqs = getMaterialFAQs(slug ?? "");
+  const faqs = getMaterialFAQs(slug ?? "", label, count, stats?.brandCount ?? 0, reference);
+
+  // Filament listing link for this material
+  const filamentListingSlug = slug === "pc" ? "polycarbonate" : slug;
 
   return (
     <>
@@ -295,7 +804,14 @@ export default function MaterialHub() {
         description={description}
         canonical={`https://filascope.com/materials/${slug}`}
       />
-      <BreadcrumbSchema items={breadcrumbItems} />
+      {reference && (
+        <ArticleSchema
+          headline={`${label} Filament — Complete Guide & ${count} Products`}
+          description={description}
+          datePublished="2025-01-01T00:00:00Z"
+          url={`/materials/${slug}`}
+        />
+      )}
       {itemListItems.length > 0 && (
         <ItemListSchema
           name={`Best ${label} Filaments`}
@@ -309,10 +825,10 @@ export default function MaterialHub() {
 
         {/* H1 */}
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          {label} Filament — Compare {count.toLocaleString()} Products
+          {label} Filament — Complete Guide & {count.toLocaleString()} Products
         </h1>
         <p className="text-muted-foreground mb-6 max-w-2xl">
-          Browse all {count.toLocaleString()} {label} filaments from {stats?.brandCount}+ brands. Compare prices, specs, and HueForge TD values to find the best {label} for your printer.
+          Browse {count.toLocaleString()} {label} filaments from {stats?.brandCount}+ brands. Compare prices, specs, and HueForge TD values to find the best {label} for your printer.
         </p>
 
         {/* Stats bar */}
@@ -354,13 +870,25 @@ export default function MaterialHub() {
             </div>
             <div className="mt-6 text-center">
               <Link
-                to={`/?material=${slug}`}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-border bg-card hover:bg-accent transition-colors text-sm font-medium"
+                to={`/filaments/${filamentListingSlug}`}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary transition-colors text-sm font-medium"
               >
-                Browse all {count.toLocaleString()} {label} filaments →
+                Browse all {count.toLocaleString()} {label} filaments
+                <ExternalLink className="w-4 h-4" />
               </Link>
             </div>
           </section>
+        )}
+
+        {/* Knowledge Base content sections — always expanded for SEO */}
+        {reference && (
+          <>
+            <PrintSettingsSection reference={reference} label={label} />
+            <StrengthsSection reference={reference} label={label} />
+            <WeaknessesSection reference={reference} label={label} />
+            <TechnicalSpecsSection reference={reference} label={label} />
+            <PracticalGuideSection reference={reference} label={label} />
+          </>
         )}
 
         {/* Compare related materials */}
@@ -390,7 +918,7 @@ export default function MaterialHub() {
         {/* Relevant guides */}
         {config.guides.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">Relevant Guides</h2>
+            <h2 className="text-xl font-semibold mb-4">Relevant {label} Guides</h2>
             <div className="flex flex-wrap gap-3">
               {config.guides.map((g) => (
                 <Link

@@ -79,24 +79,24 @@ export default function MaterialKnowledgeBase() {
 
               {/* Title */}
               <h1 className="text-4xl font-bold text-foreground mb-3">
-                Material <span className="text-primary">Knowledge Base</span>
+                3D Printing Material <span className="text-primary">Knowledge Base</span>
               </h1>
 
               {/* Subtitle */}
               <p className="text-muted-foreground text-lg mb-4">
-                Deep-dive reference for every 3D printing material — from PLA basics to advanced engineering polymers.
+                Deep-dive reference for every 3D printing material — from PLA basics to advanced engineering polymers. 236+ material types with print settings, strengths, weaknesses, and technical data.
               </p>
 
               {/* Quick Stats */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  45+ Material Types
+                  236+ Material Types
                 </span>
                 <span className="text-border">•</span>
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  12 Property Categories
+                  15+ Property Categories
                 </span>
                 <span className="text-border">•</span>
                 <span className="flex items-center gap-1.5">
@@ -113,18 +113,20 @@ export default function MaterialKnowledgeBase() {
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {MATERIAL_CATEGORIES.map((cat) => {
                     const shortName = cat.name.replace(/ Family$/i, '');
+                    const slug = shortName.toLowerCase().replace(/\+/g, '-plus').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
                     return (
-                      <button
+                      <a
                         key={cat.id}
-                        onClick={() => handleFamilyClick(cat.name)}
+                        href={`/materials/${slug}`}
+                        onClick={(e) => { e.preventDefault(); handleFamilyClick(cat.name); }}
                         className="text-xs px-2.5 py-1 rounded-full bg-slate-700/50 text-slate-300 hover:bg-cyan-500/20 hover:text-cyan-300 cursor-pointer transition-colors"
                       >
                         {shortName}
-                      </button>
+                      </a>
                     );
                   })}
                 </div>
-                <p className="text-xs text-slate-500">45+ materials · 12 categories</p>
+                <p className="text-xs text-slate-500">236+ materials · 15+ categories</p>
               </div>
 
               {/* Compare CTA */}
