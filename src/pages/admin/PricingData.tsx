@@ -881,8 +881,12 @@ export default function PricingData() {
         // Skip only if there's no URL (database or derived) AND no price
         if (!url && price == null) continue;
 
-        // Strip variant/tracking params but preserve product-identity query params (e.g. ?sku= for TreeD)
-        const baseUrl = url ? (/[?&]sku=|[?&]id=/.test(url) ? url.replace(/#.*$/, '') : url.replace(/[?#].*$/, '')) : null;
+        // Preserve product-identity query params (e.g. ?sku= for TreeD, ?id=), strip only fragments and tracking
+        const baseUrl = url
+          ? (url.includes('?sku=') || url.includes('?id='))
+            ? url.replace(/#.*$/, '')
+            : url.replace(/[?#].*$/, '')
+          : null;
 
         const rc = REGION_CONFIG[region];
         const storeKey = `${productLineId}::${region}`;
@@ -1084,8 +1088,10 @@ export default function PricingData() {
     const startTime = Date.now();
     setTestResults(prev => new Map(prev).set(storeKey, { status: 'testing' }));
 
-    // Strip variant/tracking params but preserve product-identity query params (e.g. ?sku= for TreeD)
-    const baseUrl = /[?&]sku=|[?&]id=/.test(url) ? url.replace(/#.*$/, '') : url.replace(/[?#].*$/, '');
+    // Preserve product-identity query params (e.g. ?sku= for TreeD, ?id=), strip only fragments and tracking
+    const baseUrl = (url.includes('?sku=') || url.includes('?id='))
+      ? url.replace(/#.*$/, '')
+      : url.replace(/[?#].*$/, '');
 
     try {
       const { data, error } = await supabase.functions.invoke('test-url', { body: { url: baseUrl, region } });
@@ -1141,7 +1147,7 @@ export default function PricingData() {
       };
       setTestResults(prev => new Map(prev).set(storeKey, result));
 
-      const baseUrl2 = /[?&]sku=|[?&]id=/.test(url) ? url.replace(/#.*$/, '') : url.replace(/[?#].*$/, '');
+      const baseUrl2 = (url.includes('?sku=') || url.includes('?id=')) ? url.replace(/#.*$/, '') : url.replace(/[?#].*$/, '');
       await supabase.from('url_validation_cache').upsert({
         url: baseUrl2,
         status: 'invalid',
