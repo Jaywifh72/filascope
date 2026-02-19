@@ -362,7 +362,8 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
   return (
     <div className="space-y-6 md:space-y-6">
       {/* ── Group 1: Pricing ── */}
-      <BestPricesSection 
+      <h2 className="sr-only">Pricing &amp; Availability</h2>
+      <BestPricesSection
         filamentId={filament.id} 
         onViewAllPrices={onNavigateToPricing}
         candidates={priceCandidates}
@@ -401,30 +402,33 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
 
       {/* ── Group 3: Use cases ── */}
       {(idealEntries.length > 0 || notRecEntries.length > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-          {idealEntries.length > 0 && (
-            <Card className="bg-emerald-500/5 border-emerald-500/20 h-fit">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  <h4 className="font-semibold text-emerald-400">Ideal For</h4>
-                </div>
-                <UseCaseList entries={idealEntries} materialFamily={materialFamily} variant="ideal" />
-              </CardContent>
-            </Card>
-          )}
+        <div>
+          <h2 className="sr-only">About This Filament</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+            {idealEntries.length > 0 && (
+              <Card className="bg-emerald-500/5 border-emerald-500/20 h-fit">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    <h4 className="font-semibold text-emerald-400">Ideal For</h4>
+                  </div>
+                  <UseCaseList entries={idealEntries} materialFamily={materialFamily} variant="ideal" />
+                </CardContent>
+              </Card>
+            )}
 
-          {notRecEntries.length > 0 && (
-            <Card className="bg-amber-500/5 border-amber-500/20 h-fit">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
-                  <h4 className="font-semibold text-amber-400">Not Recommended For</h4>
-                </div>
-                <UseCaseList entries={notRecEntries} materialFamily={materialFamily} variant="notRecommended" />
-              </CardContent>
-            </Card>
-          )}
+            {notRecEntries.length > 0 && (
+              <Card className="bg-amber-500/5 border-amber-500/20 h-fit">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    <h4 className="font-semibold text-amber-400">Not Recommended For</h4>
+                  </div>
+                  <UseCaseList entries={notRecEntries} materialFamily={materialFamily} variant="notRecommended" />
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       )}
 
@@ -432,6 +436,7 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
       <div className="border-t border-gray-800/50" />
 
       {/* ── Group 4: Technical / actionable data ── */}
+      <h2 className="sr-only">Print Settings &amp; Specifications</h2>
       <RecommendedStartingSettings filament={filament} />
 
       {features.length > 0 && (

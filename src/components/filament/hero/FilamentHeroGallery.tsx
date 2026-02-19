@@ -6,6 +6,9 @@ interface FilamentHeroGalleryProps {
   images: (string | null | undefined)[];
   productTitle: string;
   colorHex?: string | null;
+  brand?: string | null;
+  material?: string | null;
+  colorFamily?: string | null;
   colorVariants?: Array<{
     id: string;
     color_hex: string | null;
@@ -20,6 +23,9 @@ export function FilamentHeroGallery({
   images, 
   productTitle, 
   colorHex,
+  brand,
+  material,
+  colorFamily,
   colorVariants,
   onSelectColor,
   selectedColorHex,
@@ -27,10 +33,18 @@ export function FilamentHeroGallery({
   // Filter out null/undefined images
   const validImages = images.filter((img): img is string => !!img);
   
+  // Build descriptive alt text for SEO
+  const altText = [brand, productTitle, colorFamily, material, '3D printer filament spool']
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 125);
+
   // Convert to gallery image format
   const galleryImages = validImages.map(url => ({
     url,
-    alt: productTitle,
+    alt: altText || productTitle,
   }));
 
   // Build color swatches from variants
