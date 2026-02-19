@@ -193,29 +193,47 @@ export function BrandAffiliateSettings({ brandId, brandName, brandSlug }: BrandA
     notes: null,
   });
 
-  // Fetch existing config
+  // Always-on query for badge status (cheap: select only needed fields)
+  const { data: badgeConfig } = useQuery({
+    queryKey: ["affiliate-config-badge", brandId, brandName],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("affiliate_configs")
+        .select("id, affiliate_network, is_active")
+        .eq("brand_id", brandId)
+        .maybeSingle();
+      if (data) return data;
+      // Fallback: vendor_name match (for rows without brand_id set)
+      const { data: fallback } = await supabase
+        .from("affiliate_configs")
+        .select("id, affiliate_network, is_active")
+        .ilike("vendor_name", brandName)
+        .is("brand_id", null)
+        .maybeSingle();
+      return fallback ?? null;
+    },
+  });
+
+  // Fetch existing config (full record, only when panel is open)
   const { data: existingConfig, isLoading } = useQuery({
     queryKey: ["affiliate-config", brandId, brandName],
     queryFn: async () => {
-      // Try to find by brand_id first, then by vendor_name
-      let { data, error } = await supabase
+      // Try by brand_id first (preferred), then vendor_name fallback
+      const { data: byId } = await supabase
         .from("affiliate_configs")
         .select("*")
         .eq("brand_id", brandId)
         .maybeSingle();
+      if (byId) return byId as AffiliateConfig;
 
-      if (!data) {
-        const result = await supabase
-          .from("affiliate_configs")
-          .select("*")
-          .ilike("vendor_name", brandName)
-          .maybeSingle();
-        data = result.data;
-        error = result.error;
-      }
-
+      const { data: byName, error } = await supabase
+        .from("affiliate_configs")
+        .select("*")
+        .ilike("vendor_name", brandName)
+        .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
-      return data as AffiliateConfig | null;
+      return (byName as AffiliateConfig) ?? null;
     },
     enabled: isOpen,
   });
@@ -301,8 +319,8 @@ export function BrandAffiliateSettings({ brandId, brandName, brandSlug }: BrandA
     }
   };
 
-  const hasConfig = existingConfig || formData.affiliate_network;
-  const isConfigured = hasConfig && formData.is_active;
+  // Badge uses the always-on lightweight query so it shows correctly without opening the panel
+  const isConfigured = !!(badgeConfig?.affiliate_network && badgeConfig?.is_active);
   const knownInfo = BRAND_AFFILIATE_INFO[brandSlug];
 
   return (
