@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LibraryProduct, InteractionType } from "@/hooks/useFilamentLibrary";
+import { getFilamentHref } from "@/lib/filamentUrl";
 
 const INTERACTION_ICONS: Record<InteractionType, { icon: typeof Heart; color: string }> = {
   wishlist: { icon: Heart, color: "text-pink-400" },
@@ -93,7 +94,7 @@ export function LibraryProductDetail({ product }: LibraryProductDetailProps) {
 
       {/* View Product Link */}
       <Link
-        to={`/filament/${product.filament_id}`}
+        to={getFilamentHref(product.filament_id, (product as any).product_handle)}
         className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
       >
         View Product Page

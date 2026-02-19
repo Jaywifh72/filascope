@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { getFilamentUrl } from "@/lib/filamentUrl";
 import { supabase } from "@/integrations/supabase/client";
 import { useRegion } from "@/contexts/RegionContext";
 import { ScrollCarousel, ScrollCarouselItem } from "@/components/ui/scroll-carousel";
@@ -17,6 +18,7 @@ interface TrendingFilament {
   featured_image: string | null;
   product_url: string | null;
   net_weight_g: number | null;
+  product_handle?: string | null;
 }
 
 function useTrendingFilaments(regionCode: string) {
@@ -31,7 +33,8 @@ function useTrendingFilaments(regionCode: string) {
           current_price,
           filaments!inner (
             id, product_title, vendor, material, color_hex,
-            variant_price, featured_image, product_url, net_weight_g
+            variant_price, featured_image, product_url, net_weight_g,
+            product_handle
           )
         `)
         .eq("region", regionCode)
@@ -68,7 +71,7 @@ function useTrendingFilaments(regionCode: string) {
       const { data, error } = await supabase
         .from("filaments")
         .select(
-          "id, product_title, vendor, material, color_hex, variant_price, featured_image, product_url, net_weight_g"
+          "id, product_title, vendor, material, color_hex, variant_price, featured_image, product_url, net_weight_g, product_handle"
         )
         .not("variant_price", "is", null)
         .not("color_hex", "is", null)
@@ -95,7 +98,7 @@ function TrendingCard({ filament }: { filament: TrendingFilament }) {
 
   return (
     <Link
-      to={`/filament/${filament.id}`}
+      to={getFilamentUrl(filament)}
       className="group/card block shrink-0 w-[220px] bg-card/60 border border-border/40 rounded-xl p-3 hover:bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-black/20 transition-all duration-150 ease-out cursor-pointer"
     >
       <div className="flex gap-3">

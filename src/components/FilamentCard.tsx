@@ -42,6 +42,7 @@ import { Tooltip as ScoreTooltip, TooltipContent as ScoreTooltipContent, Tooltip
 import { REGIONS } from "@/config/regions";
 import { usePriceFreshness } from "@/hooks/usePriceFreshness";
 import { useUserPrinterPreference } from "@/hooks/useUserPrinterPreference";
+import { getFilamentHref } from "@/lib/filamentUrl";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -416,6 +417,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
   const isDeal = priceTrend != null && priceTrend < 0;
   const ctaText = isOutOfStock ? 'Check Availability' : isDeal ? 'View Deal' : 'View Prices';
   const ctaTab = isOutOfStock ? '' : '?tab=pricing';
+  const filamentHref = getFilamentHref(filament.id, (filament as any).product_handle);
 
   return (
     <div
@@ -898,7 +900,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
-                to={`/filament/${filament.id}?tab=community`}
+                to={`${filamentHref}?tab=community`}
                 className="inline-flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
               >
                 <Star className="w-3 h-3 fill-primary text-primary" aria-hidden="true" />
@@ -1036,7 +1038,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
               "active:scale-[0.98]"
             )}
           >
-            <Link to={`/filament/${filament.id}${ctaTab}`} aria-label={`${ctaText} for ${filament.product_title}`}>
+            <Link to={`${filamentHref}${ctaTab}`} aria-label={`${ctaText} for ${filament.product_title}`}>
               {ctaText}
               <ArrowRight className="w-[18px] h-[18px] ml-2" />
             </Link>
@@ -1068,7 +1070,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         {/* Watch Price link for out-of-stock */}
         {isOutOfStock && (
           <Link 
-            to={`/filament/${filament.id}`} 
+            to={filamentHref} 
             className="text-xs text-slate-500 underline hover:text-slate-400 transition-colors text-center"
           >
             Watch Price
@@ -1077,7 +1079,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         {/* Multi-store indicator or direct store link */}
         {!isOutOfStock && retailerCount != null && retailerCount > 1 ? (
           <Link
-            to={`/filament/${filament.id}?tab=pricing`}
+            to={`${filamentHref}?tab=pricing`}
             className="inline-flex items-center justify-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
           >
             <Store className="w-3 h-3" />

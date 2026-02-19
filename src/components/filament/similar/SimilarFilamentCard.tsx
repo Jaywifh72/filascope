@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { getFilamentHref } from "@/lib/filamentUrl";
 import { Star, ThermometerSun, Check, Plus, TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export interface SimilarFilamentData {
   ease_of_printing_score: number | null;
   similarityReason?: SimilarityReason;
   isCurrent?: boolean;
+  product_handle?: string | null;
 }
 
 interface SimilarFilamentCardProps {
@@ -345,7 +347,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
   }
 
   return (
-    <Link to={`/filament/${filament.id}`} className="block">
+    <Link to={getFilamentHref(filament.id, filament.product_handle)} className="block">
       {cardContent}
     </Link>
   );

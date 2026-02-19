@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { DealQualityDots } from "./DealQualityBadge";
 import { Link, useNavigate } from "react-router-dom";
+import { getFilamentHref } from "@/lib/filamentUrl";
 import { TrendingDown, Share2, ExternalLink, Package, Clock, Ship, BadgeCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";

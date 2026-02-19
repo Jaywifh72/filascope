@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { WishlistItem, WishlistStats } from "@/hooks/useWishlist";
 import { useWishlist } from "@/hooks/useWishlist";
 import { Link } from "react-router-dom";
+import { getFilamentHref } from "@/lib/filamentUrl";
 
 interface WishlistDropdownProps {
   items: WishlistItem[];
@@ -75,7 +76,7 @@ export function WishlistDropdown({
           return (
             <Link
               key={item.id}
-              to={`/filament/${item.filament_id}`}
+              to={getFilamentHref(item.filament_id, (item.filament as any)?.product_handle)}
               onClick={onClose}
               className="flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors group"
             >
