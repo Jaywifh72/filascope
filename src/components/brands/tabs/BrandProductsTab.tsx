@@ -372,11 +372,13 @@ export function BrandProductsTab({
         {/* Products Grid */}
         {sortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {sortedProducts.map((product) => (
+            {sortedProducts.map((product) => {
+              const filamentHref = `/filament/${product.variants[0]?.product_handle || product.variants[0]?.id}`;
+              return (
               <Card
                 key={product.baseName}
                 className="bg-card border-border hover:border-primary/50 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer group"
-                onClick={() => navigate(`/filament/${product.variants[0].id}`)}
+                onClick={() => window.location.href = filamentHref}
               >
                 <CardContent className="p-6">
                   <div className="space-y-4">
@@ -476,17 +478,13 @@ export function BrandProductsTab({
                       {/* View buttons */}
                       {product.variants.length > 1 ? (
                         <div className="pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/filament/${product.variants[0].id}`);
-                            }}
+                          <a
+                            href={filamentHref}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.location.href = filamentHref; }}
+                            className="w-full text-xs inline-flex items-center justify-center rounded-md border border-border py-1.5 hover:border-primary hover:bg-primary/10 transition-colors"
                           >
                             View Details
-                          </Button>
+                          </a>
 
                           {product.categoryUrl && (
                             <Button
@@ -507,22 +505,20 @@ export function BrandProductsTab({
                           )}
                         </div>
                       ) : (
-                        <Button
-                          variant="outline"
-                          className="w-full mt-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/filament/${product.variants[0].id}`);
-                          }}
+                        <a
+                          href={filamentHref}
+                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.location.href = filamentHref; }}
+                          className="w-full mt-2 text-sm inline-flex items-center justify-center rounded-md border border-border py-2 hover:border-primary hover:bg-primary/10 transition-colors"
                         >
                           View Details
-                        </Button>
+                        </a>
                       )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <Card>

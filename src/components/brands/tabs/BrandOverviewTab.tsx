@@ -2,16 +2,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Zap, Leaf, Cpu, Package, Layers, ArrowRight, 
-  Award, DollarSign, Globe, Shield, Sparkles, Target,
-  ChevronLeft, ChevronRight, Star, BadgeCheck, TrendingUp
+  ChevronLeft, ChevronRight, BadgeCheck, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import { useMemo, useRef, useState, useCallback } from "react";
 import { useRegion } from "@/contexts/RegionContext";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
+
+// Helper: convert material name to URL slug (matches materialSlugUtils.ts pattern)
+const materialToSlug = (mat: string): string =>
+  mat.toLowerCase().replace(/\+/g, '-plus').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
 type Filament = Tables<"filaments">;
 
@@ -194,7 +197,7 @@ export function BrandOverviewTab({
     <div className="space-y-8">
       {/* Brand Highlights Section - only show with 2+ highlights */}
       {highlights.length >= 2 && <div>
-        <h3 className="text-lg font-semibold text-white mb-4">Brand Highlights</h3>
+        <h2 className="text-lg font-semibold text-white mb-4">Brand Highlights</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {highlights.map((highlight, idx) => (
             <div
@@ -219,7 +222,7 @@ export function BrandOverviewTab({
       {popularProducts.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Popular Products</h3>
+            <h2 className="text-lg font-semibold text-white">Popular Products</h2>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -267,12 +270,17 @@ export function BrandOverviewTab({
               onScroll={updateScrollButtons}
               className="flex gap-4 overflow-x-auto overflow-y-hidden scrollbar-hide pb-2 -mx-1 px-1"
             >
-              {popularProducts.map((product) => (
-                <Card
+              {popularProducts.map((product) => {
+                const filamentHref = `/filament/${product.variants[0]?.product_handle || product.variants[0]?.id}`;
+                return (
+                <Link
                   key={product.baseName}
-                  className="flex-shrink-0 w-[200px] bg-gray-800/30 border-gray-700 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer group/card"
-                  onClick={() => navigate(`/filament/${product.variants[0].id}`)}
+                  to={filamentHref}
+                  className="flex-shrink-0 w-[200px] block"
                 >
+                  <Card
+                    className="bg-gray-800/30 border-gray-700 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 h-full"
+                  >
                   <CardContent className="p-4">
                     {/* Product Image */}
                     <div className="aspect-square rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center mb-3">
@@ -332,21 +340,15 @@ export function BrandOverviewTab({
                       <div className="text-xs text-muted-foreground/60 italic mb-3">Price unavailable</div>
                     )}
                     
-                    {/* View Details Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs h-8 border-gray-600 hover:border-primary hover:bg-primary/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/filament/${product.variants[0].id}`);
-                      }}
-                    >
+                    {/* View Details Link */}
+                    <span className="w-full text-xs h-8 border border-border rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-colors">
                       View Details
-                    </Button>
+                    </span>
                   </CardContent>
-                </Card>
-              ))}
+                  </Card>
+                </Link>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -355,12 +357,16 @@ export function BrandOverviewTab({
       {/* Materials Offered Section */}
       {availableMaterials.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Materials Offered</h3>
+          <h2 className="text-lg font-semibold text-white mb-4">Materials Offered</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {availableMaterials.map((material) => (
-              <button
+              <a
                 key={material}
-                onClick={() => onFilterByMaterial(material)}
+                href={`/materials/${materialToSlug(material)}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onFilterByMaterial(material);
+                }}
                 title={material}
                 className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 text-left hover:border-primary/50 hover:bg-gray-800/50 transition-all group min-h-[72px] flex flex-col justify-center"
               >
@@ -373,7 +379,7 @@ export function BrandOverviewTab({
                 <div className="text-xs text-gray-400">
                   {(materialCounts[material] || 0) === 1 ? '1 product' : `${materialCounts[material] || 0} products`}
                 </div>
-              </button>
+              </a>
             ))}
           </div>
         </div>
