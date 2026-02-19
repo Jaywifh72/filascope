@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, ItemListSchema, FAQSection } from "@/components/seo";
+import { BreadcrumbSchema, ItemListSchema, FAQSection, PrinterListProductSchema } from "@/components/seo";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -631,6 +631,7 @@ export default function Printers() {
           position: i + 1,
         }))}
       />
+      <PrinterListProductSchema printers={filteredPrinters} />
       <div className="min-h-screen bg-background pb-16">
       {/* Hero Section */}
       <PrintersHeroSection

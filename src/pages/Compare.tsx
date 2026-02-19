@@ -1,7 +1,7 @@
 // Filament comparison page
 import React, { useEffect, useState, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema } from "@/components/seo";
+import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema, HowToSchema } from "@/components/seo";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -463,6 +463,24 @@ const Compare = () => {
         applicationCategory="Utility"
         description="Compare 3D printer filaments side by side. Specs, prices, TD values, and printer compatibility."
         offers={{ price: "0", priceCurrency: "USD" }}
+      />
+      <HowToSchema
+        name="How to Compare 3D Printer Filaments"
+        description="Use the FilaScope comparison tool to find the best filament for your needs by comparing specs, prices, and compatibility side by side."
+        steps={[
+          {
+            name: "Select Filaments to Compare",
+            text: "Browse the FilaScope catalog and add 2 to 4 filaments using the Compare button on each product card.",
+          },
+          {
+            name: "Review Specs Side-by-Side",
+            text: "Compare temperature settings, TD values, tensile strength, price, and 20+ other specifications across all selected filaments.",
+          },
+          {
+            name: "Choose the Best Option",
+            text: "Click the buy button to purchase from the best retailer for your region, with affiliate-linked pricing.",
+          },
+        ]}
       />
       {filaments.length >= 2 && (
         <CompareActionSchema

@@ -18,4 +18,6 @@ export { FAQSection } from './FAQSection';
 export { Breadcrumbs } from './Breadcrumbs';
 export { FilamentFAQSchema } from './FilamentFAQSchema';
 export { CompareActionSchema } from './CompareActionSchema';
+export { TrendingItemListSchema } from './TrendingItemListSchema';
+export { PrinterListProductSchema } from './PrinterListProductSchema';
 
