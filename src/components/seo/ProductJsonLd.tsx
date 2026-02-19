@@ -50,6 +50,20 @@ interface ProductJsonLdProps {
   buildVolume?: { x: number; y: number; z: number } | null;
   maxPrintSpeed?: number | null;
   printerType?: string | null;
+  // Extended printer specs
+  hasEnclosure?: boolean | null;
+  hasWifi?: boolean | null;
+  multiMaterialSupported?: boolean | null;
+  multiMaterialMaxSpools?: number | null;
+  extruderType?: string | null;
+  directDrive?: boolean | null;
+  autoBedLeveling?: boolean | null;
+  inputShapingSupported?: boolean | null;
+  supportedMaterials?: string | null;
+  printerWeightKg?: number | null;
+  printerWidthMm?: number | null;
+  printerDepthMm?: number | null;
+  printerHeightMm?: number | null;
 }
 
 const REGION_COUNTRY_CODES: Record<RegionCode, string> = {
@@ -96,6 +110,19 @@ export function ProductJsonLd({
   buildVolume,
   maxPrintSpeed,
   printerType,
+  hasEnclosure,
+  hasWifi,
+  multiMaterialSupported,
+  multiMaterialMaxSpools,
+  extruderType,
+  directDrive,
+  autoBedLeveling,
+  inputShapingSupported,
+  supportedMaterials,
+  printerWeightKg,
+  printerWidthMm,
+  printerDepthMm,
+  printerHeightMm,
 }: ProductJsonLdProps) {
   const { currency: userCurrency, region: userRegion } = useRegion();
   
@@ -226,6 +253,16 @@ export function ProductJsonLd({
     });
   }
 
+  // Extended printer-specific properties
+  if (hasEnclosure != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Enclosure', value: hasEnclosure ? 'Enclosed' : 'Open Frame' });
+  if (hasWifi != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Wi-Fi Connectivity', value: hasWifi ? 'Yes' : 'No' });
+  if (multiMaterialSupported) additionalProperties.push({ '@type': 'PropertyValue', name: 'Multi-Material Support', value: multiMaterialMaxSpools ? `Yes (${multiMaterialMaxSpools} colors)` : 'Yes' });
+  if (extruderType) additionalProperties.push({ '@type': 'PropertyValue', name: 'Extruder Type', value: extruderType });
+  if (directDrive != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Drive Type', value: directDrive ? 'Direct Drive' : 'Bowden' });
+  if (autoBedLeveling != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Auto Bed Leveling', value: autoBedLeveling ? 'Yes' : 'No' });
+  if (inputShapingSupported != null) additionalProperties.push({ '@type': 'PropertyValue', name: 'Input Shaping', value: inputShapingSupported ? 'Yes' : 'No' });
+  if (supportedMaterials) additionalProperties.push({ '@type': 'PropertyValue', name: 'Compatible Materials', value: supportedMaterials });
+
   // Color hex and FilaScore
   if (colorHex) {
     additionalProperties.push({
@@ -237,7 +274,7 @@ export function ProductJsonLd({
   if (filaScopeScore != null) {
     additionalProperties.push({
       '@type': 'PropertyValue',
-      name: 'FilaScore',
+      name: 'FilaScope',
       value: filaScopeScore,
       description: 'FilaScope quality rating out of 10',
     });
@@ -328,8 +365,37 @@ export function ProductJsonLd({
     ...(gtin && { gtin13: gtin }),
     ...(mpn && { mpn }),
     url,
-    // Weight as QuantitativeValue (Schema.org standard)
-    ...(weightGrams && {
+    // Physical dimensions for printers (Schema.org standard)
+    ...(printerWeightKg && {
+      weight: {
+        '@type': 'QuantitativeValue',
+        value: printerWeightKg,
+        unitCode: 'KGM',
+      },
+    }),
+    ...(printerWidthMm && {
+      width: {
+        '@type': 'QuantitativeValue',
+        value: printerWidthMm,
+        unitCode: 'MMT',
+      },
+    }),
+    ...(printerDepthMm && {
+      depth: {
+        '@type': 'QuantitativeValue',
+        value: printerDepthMm,
+        unitCode: 'MMT',
+      },
+    }),
+    ...(printerHeightMm && {
+      height: {
+        '@type': 'QuantitativeValue',
+        value: printerHeightMm,
+        unitCode: 'MMT',
+      },
+    }),
+    // Weight as QuantitativeValue for filaments (Schema.org standard)
+    ...(weightGrams && !printerWeightKg && {
       weight: {
         '@type': 'QuantitativeValue',
         value: weightGrams >= 1000 ? +(weightGrams / 1000).toFixed(2) : weightGrams,

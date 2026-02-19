@@ -97,6 +97,7 @@ import {
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { toBrandSlug } from "@/utils/brandSlug";
 
 const PrinterDetail = () => {
@@ -553,11 +554,21 @@ const PrinterDetail = () => {
   if (!printer) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 p-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">Printer not found</h1>
-          <Link to="/printers">
-            <Button>Back to Printers</Button>
-          </Link>
+        <DocumentHead
+          title="Printer Not Found | FilaScope"
+          description="The printer you're looking for could not be found. Browse our database of 118+ 3D printers with detailed specs, pricing, and filament compatibility."
+          ogType="website"
+          keywords="noindex"
+        />
+        <div className="max-w-7xl mx-auto text-center pt-24">
+          <h1 className="text-2xl font-bold mb-4">Printer Not Found</h1>
+          <p className="text-muted-foreground mb-6">
+            This printer doesn't exist in our database.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link to="/printers"><Button>Browse All Printers</Button></Link>
+            <Link to="/"><Button variant="outline">Search Filaments</Button></Link>
+          </div>
         </div>
       </div>
     );
@@ -606,7 +617,7 @@ const PrinterDetail = () => {
     </Card>
   );
 
-  // Build SEO description
+  // Build SEO title — keyword-rich, target 55-60 chars
   const printerModel = printer.model_name || printer.printer_id || 'Unknown Printer';
   const printerName = `${printerBrand || ''} ${printerModel}`.trim();
   const isDiscontinued = printer.discontinued === true;
@@ -614,31 +625,36 @@ const PrinterDetail = () => {
   const buildVolumeDisplay = printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
     ? `${printer.build_volume_x_mm}×${printer.build_volume_y_mm}×${printer.build_volume_z_mm}mm`
     : null;
-  const speedDisplay = printer.max_print_speed_mms ? `up to ${printer.max_print_speed_mms}mm/s` : null;
-  const printerPriceDisplay = displayPrice ? `from ${formatPrice(displayPrice)}` : null;
-  const seoDescParts = [
-    `Buy ${printerName} 3D printer`,
-    buildVolumeDisplay || speedDisplay ? ' — ' : '',
-    [buildVolumeDisplay, speedDisplay].filter(Boolean).join(', '),
-    printerPriceDisplay ? `, ${printerPriceDisplay}` : '',
-    '. Detailed specs and price comparison on FilaScope.',
+
+  // SEO title: "{Brand} {Model} 3D Printer — Specs, Price & Filaments | FilaScope" 
+  const seoTitleBase = `${printerName} 3D Printer`;
+  const seoTitleFull = `${seoTitleBase} — Specs, Price & Filaments | FilaScope`;
+  const seoTitle = seoTitleFull.length <= 65 ? seoTitleFull
+    : `${seoTitleBase} — Specs & Price | FilaScope`.length <= 65 ? `${seoTitleBase} — Specs & Price | FilaScope`
+    : `${seoTitleBase} | FilaScope`;
+
+  // SEO description: keyword-rich with specs
+  const materialList = printer.official_supported_materials
+    ? printer.official_supported_materials.split(',').slice(0, 5).map((m: string) => m.trim()).join(', ')
+    : null;
+  const seoDescriptionParts = [
+    `${printerName} 3D printer specs:`,
+    buildVolumeDisplay ? ` ${buildVolumeDisplay} build volume,` : '',
+    printer.max_print_speed_mms ? ` ${printer.max_print_speed_mms}mm/s max speed,` : '',
+    printer.max_nozzle_temp_c ? ` ${printer.max_nozzle_temp_c}°C nozzle temp.` : '.',
+    materialList ? ` Compatible with ${materialList}.` : '',
+    ' Compare prices, view compatible filaments & detailed specifications on FilaScope.',
   ];
-  const seoDescription = seoDescParts.join('').replace(/\s+/g, ' ').trim();
+  const seoDescription = seoDescriptionParts.join('').replace(/\s+/g, ' ').trim();
 
   // Get primary image for SEO
   const seoImage = productImages[0] || null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-20 lg:pb-0">
-      {/* Breadcrumb Schema */}
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Printers', url: 'https://filascope.com/printers' },
-        { name: printerName, url: `https://filascope.com/printers/${printer.printer_id || id}` },
-      ]} />
-      {/* SEO Meta Tags */}
+      {/* SEO Meta Tags — single ProductSEO (no duplicate BreadcrumbSchema here) */}
       <ProductSEO
-        title={printerName}
+        title={seoTitle}
         description={seoDescription}
         canonicalUrl={`/printers/${printer.printer_id || id}`}
         image={seoImage}
@@ -648,9 +664,9 @@ const PrinterDetail = () => {
         productType="printer"
       />
       
-      {/* JSON-LD Structured Data */}
+      {/* JSON-LD Structured Data — enhanced with additional printer specs */}
       <ProductJsonLd
-        name={printerName}
+        name={`${printerName} 3D Printer`}
         description={seoDescription}
         image={seoImage}
         brand={printerBrand}
@@ -667,14 +683,29 @@ const PrinterDetail = () => {
         printerType={printer.printer_technology}
         nozzleTempMax={printer.max_nozzle_temp_c}
         bedTempMax={printer.bed_max_temp_c}
+        hasEnclosure={(printer as any).has_enclosure}
+        hasWifi={(printer as any).has_wifi}
+        multiMaterialSupported={(printer as any).multi_material_supported}
+        multiMaterialMaxSpools={(printer as any).multi_material_max_spools}
+        extruderType={(printer as any).extruder_type}
+        directDrive={(printer as any).direct_drive}
+        autoBedLeveling={(printer as any).auto_bed_leveling}
+        inputShapingSupported={(printer as any).input_shaping_supported}
+        supportedMaterials={(printer as any).official_supported_materials}
+        printerWeightKg={(printer as any).machine_weight_kg}
+        printerWidthMm={(printer as any).machine_width_mm}
+        printerDepthMm={(printer as any).machine_depth_mm}
+        printerHeightMm={(printer as any).machine_height_mm}
+        ratingValue={printer.rating_community_overall}
+        ratingCount={printer.review_count_aggregated}
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
-        {/* Navigation */}
+        {/* Navigation — DetailBreadcrumb provides the single BreadcrumbList schema */}
         <DetailBreadcrumb
           segments={[
             { label: "Printers", href: "/printers" },
-            ...(printerBrand ? [{ label: printerBrand, href: `/printers?brand=${toBrandSlug(printerBrand)}` }] : []),
+            ...(printerBrand ? [{ label: printerBrand, href: `/printers/brand/${toBrandSlug(printerBrand)}` }] : []),
             { label: printerModel, href: `/printers/${printer.printer_id || printer.id}` },
           ]}
           mobileBackLabel="Printers"
@@ -820,10 +851,12 @@ const PrinterDetail = () => {
               );
             })()}
 
-            {/* Tab Content Area */}
+            {/* Tab Content Area — all panels always rendered in DOM for crawlability */}
             <PrinterTabContent activeTab={activeTab}>
-              {activeTab === "overview" && (
+              {/* Overview tab panel */}
+              <div className={activeTab !== "overview" ? "sr-only" : ""}>
                 <>
+
                   {/* Mobile Social Proof Accordion - Shows on smaller screens */}
                   {(() => {
                     // Generate staff pick reasons based on printer features
@@ -1010,21 +1043,25 @@ const PrinterDetail = () => {
                     hasEnclosure={printer.has_enclosure || undefined}
                   />
                 </>
-              )}
+              </div>
 
-              {activeTab === "specifications" && (
+              {/* Specifications Tab — always in DOM for crawlability, hidden when inactive */}
+              <div className={activeTab !== "specifications" ? "sr-only" : ""}>
                 <SpecificationsTabContent printer={printer} />
-              )}
+              </div>
 
-              {activeTab === "materials" && (
+              {/* Materials Tab — always in DOM for crawlability */}
+              <div className={activeTab !== "materials" ? "sr-only" : ""}>
                 <MaterialsTabContent printer={printer} accessories={accessories || []} />
-              )}
+              </div>
 
-              {activeTab === "connectivity" && (
+              {/* Connectivity Tab — always in DOM for crawlability */}
+              <div className={activeTab !== "connectivity" ? "sr-only" : ""}>
                 <ConnectivityTabContent printer={printer} brand={brand} />
-              )}
+              </div>
 
-              {activeTab === "pricing" && (
+              {/* Pricing Tab — always in DOM for crawlability */}
+              <div className={activeTab !== "pricing" ? "sr-only" : ""}>
                 <PricingTabContent 
                   printer={printer} 
                   brand={brand} 
@@ -1037,7 +1074,7 @@ const PrinterDetail = () => {
                   regionalDisplayPrice={unifiedPricing.displayPrice}
                   isRegionalConverted={unifiedPricing.isConverted}
                 />
-              )}
+              </div>
             </PrinterTabContent>
           </div>
 

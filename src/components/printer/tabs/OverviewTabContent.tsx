@@ -41,7 +41,7 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: 
       <div className="section-header-icon">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <h3 className="section-title">{title}</h3>
+      <h2 className="section-title">{title}</h2>
     </div>
   );
 }
@@ -277,7 +277,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
         <div className="bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl p-5 border border-border/30">
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-teal-400" />
-            <h3 className="text-base font-semibold text-foreground">Quick Verdict</h3>
+            <h2 className="text-base font-semibold text-foreground">Quick Verdict</h2>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed mt-2">
             {verdictSummary}

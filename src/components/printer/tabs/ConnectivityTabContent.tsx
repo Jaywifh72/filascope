@@ -31,7 +31,7 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: 
       <div className="section-header-icon">
         <Icon className="w-5 h-5 text-primary" />
       </div>
-      <h3 className="section-title">{title}</h3>
+      <h2 className="section-title">{title}</h2>
     </div>
   );
 }
@@ -183,7 +183,7 @@ function CollapsibleSection({
                 <div className="section-header-icon">
                   <Icon className="w-5 h-5 text-muted-foreground/50" />
                 </div>
-                <h3 className="section-title text-muted-foreground/70">{title}</h3>
+                <h2 className="section-title text-muted-foreground/70">{title}</h2>
                 <span className="text-xs text-muted-foreground/50 italic">— Data pending</span>
               </div>
               <ChevronDown className={cn("h-4 w-4 text-muted-foreground/50 transition-transform", isOpen && "rotate-180")} />
