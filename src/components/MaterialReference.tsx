@@ -262,7 +262,7 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
 
       {/* Browse Filaments CTA */}
       <Link
-        to={`/?material=${encodeURIComponent(reference.name)}`}
+        to={`/filaments/${reference.name.toLowerCase().replace(/\+/g, '-plus').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}`}
         className="inline-flex items-center gap-2 text-sm font-medium text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/15 border border-cyan-500/20 rounded-lg px-4 py-2 transition-all duration-150 mt-4"
       >
         Browse {reference.name} Filaments
@@ -1157,14 +1157,15 @@ const MaterialReference = ({ onMaterialSelect }: MaterialReferenceProps = {}) =>
                         const isBase = BASE_MATERIALS.has(name);
                         const isInCompare = addedToCompare.has(name);
                         return (
-                        <button
+                        <a
                           key={name}
+                          href={`/materials/${name.toLowerCase().replace(/\+/g, '-plus').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}`}
                           ref={(el) => {
                             if (selectedMaterial === name && el) {
                               el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                             }
                           }}
-                          onClick={() => selectMaterialAndExpand(name)}
+                          onClick={(e) => { e.preventDefault(); selectMaterialAndExpand(name); }}
                           className={cn(
                             "w-full flex items-center justify-between gap-2 py-2.5 px-3 rounded-md cursor-pointer transition-colors duration-150 text-left group/item",
                             selectedMaterial === name
@@ -1218,7 +1219,7 @@ const MaterialReference = ({ onMaterialSelect }: MaterialReferenceProps = {}) =>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
-                        </button>
+                        </a>
                         );
                       })}
                     </div>
