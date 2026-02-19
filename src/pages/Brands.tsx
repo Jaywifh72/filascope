@@ -11,6 +11,7 @@ import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ItemListSchema, BreadcrumbSchema } from "@/components/seo";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { toBrandSlug } from "@/utils/brandSlug";
 import {
   Select,
@@ -407,6 +408,11 @@ const Brands = () => {
         onOpenQuiz={handleOpenQuiz}
         brandSuggestions={brandSuggestions}
       />
+
+      {/* Visible breadcrumb trail */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-1">
+        <Breadcrumbs items={[{ name: "Brands", url: "/brands" }]} />
+      </div>
 
       {/* Quick Action Cards */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 my-6">

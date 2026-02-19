@@ -40,6 +40,7 @@ import { useCompare } from "@/hooks/useCompare";
 import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import { BRAND_SPECIFIC_FUNCTIONS } from "@/lib/brand-sync-config";
 import { DocumentHead } from "@/components/seo/DocumentHead";
+import { HomeSEOContent } from "@/components/HomeSEOContent";
 import HeroSection from "@/components/HeroSection";
 import { WebSiteSchema, OrganizationSchema, ItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
@@ -1638,6 +1639,9 @@ const Finder = () => {
       {/* Mobile Quick Match Prompt */}
       <MobileQuickMatchPrompt />
       <ScrollToTopButton />
+
+      {/* SEO content block — above implicit footer, discoverable by crawlers */}
+      <HomeSEOContent />
     </div>
   );
 };

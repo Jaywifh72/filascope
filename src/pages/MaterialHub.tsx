@@ -22,6 +22,8 @@ interface SlugConfig {
   relatedSlugs: string[];
   relatedMaterials: string[];
   guides: { label: string; href: string }[];
+  /** Popular color family slugs for this material (links to /colors/:slug) */
+  colorSlugs?: string[];
 }
 
 export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
@@ -30,6 +32,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["PLA", "PLA+", "PLA-HS", "HTPLA", "PLA Pro", "PLA-CF", "Matte PLA", "Marble PLA", "Wood PLA", "Rainbow PLA"],
     relatedSlugs: ["petg", "abs", "silk-pla", "pla-plus"],
     relatedMaterials: ["PETG", "ABS", "Silk PLA", "PLA+"],
+    colorSlugs: ["white", "black", "grey", "blue", "red", "transparent"],
     guides: [
       { label: "Best PLA Filaments", href: "/guides/best-pla-filaments" },
       { label: "PLA vs PETG", href: "/pla-vs-petg" },
@@ -41,6 +44,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["PETG", "PCTG", "PETG-CF", "PETG+", "Co-Polyester"],
     relatedSlugs: ["pla", "abs", "asa"],
     relatedMaterials: ["PLA", "ABS", "ASA"],
+    colorSlugs: ["white", "black", "clear", "blue", "red"],
     guides: [
       { label: "Best PETG Filaments", href: "/guides/best-petg-filaments" },
       { label: "PLA vs PETG", href: "/pla-vs-petg" },
@@ -51,6 +55,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["ABS", "ABS+", "ABS-CF", "ABS Pro"],
     relatedSlugs: ["asa", "petg", "pc"],
     relatedMaterials: ["ASA", "PETG", "PC"],
+    colorSlugs: ["black", "white", "grey", "red"],
     guides: [
       { label: "Best ABS Filaments", href: "/guides/best-abs-filaments" },
       { label: "ASA vs ABS Outdoor Printing", href: "/guides/asa-vs-abs-outdoor-printing" },
@@ -61,6 +66,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["ASA", "ASA+", "ASA-CF"],
     relatedSlugs: ["abs", "petg", "pla"],
     relatedMaterials: ["ABS", "PETG", "PLA"],
+    colorSlugs: ["black", "white", "grey"],
     guides: [
       { label: "ASA vs ABS for Outdoor Printing", href: "/guides/asa-vs-abs-outdoor-printing" },
     ],
@@ -70,6 +76,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["TPU", "TPU-95A", "TPU-98A", "TPE", "Flexible"],
     relatedSlugs: ["pla", "petg", "nylon"],
     relatedMaterials: ["PLA", "PETG", "Nylon"],
+    colorSlugs: ["black", "white", "blue", "red"],
     guides: [],
   },
   "pla-plus": {
@@ -77,6 +84,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["PLA+", "PLA Pro", "PLA-HS"],
     relatedSlugs: ["pla", "petg"],
     relatedMaterials: ["PLA", "PETG"],
+    colorSlugs: ["white", "black", "grey", "blue"],
     guides: [
       { label: "PLA+ vs PLA Pro", href: "/guides/pla-plus-vs-pla-pro" },
     ],
@@ -87,6 +95,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     ilike: "%silk%",
     relatedSlugs: ["pla", "pla-plus"],
     relatedMaterials: ["PLA", "PLA+"],
+    colorSlugs: ["gold", "silver", "blue", "red"],
     guides: [
       { label: "Silk PLA Comparison", href: "/guides/silk-pla-comparison" },
     ],
@@ -96,6 +105,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["PA", "PA-CF", "PA-GF", "PA6", "PA12", "Nylon", "Nylon-CF"],
     relatedSlugs: ["petg", "pc", "abs"],
     relatedMaterials: ["PETG", "PC", "ABS"],
+    colorSlugs: ["black", "white", "natural"],
     guides: [],
   },
   pc: {
@@ -103,6 +113,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["PC", "PC-CF", "PC-ABS", "PCTG", "Polycarbonate"],
     relatedSlugs: ["abs", "asa", "nylon"],
     relatedMaterials: ["ABS", "ASA", "Nylon"],
+    colorSlugs: ["clear", "black", "white"],
     guides: [],
   },
   polycarbonate: {
@@ -110,6 +121,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["PC", "PC-CF", "PC-ABS", "PCTG", "Polycarbonate"],
     relatedSlugs: ["abs", "asa", "nylon"],
     relatedMaterials: ["ABS", "ASA", "Nylon"],
+    colorSlugs: ["clear", "black", "white"],
     guides: [],
   },
   "high-speed-pla": {
@@ -117,6 +129,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["PLA-HS", "PLA High Speed", "High Speed PLA", "Premium PLA High Speed"],
     relatedSlugs: ["pla", "pla-plus", "petg"],
     relatedMaterials: ["PLA", "PLA+", "PETG"],
+    colorSlugs: ["white", "black", "grey"],
     guides: [],
   },
   "petg-cf": {
@@ -124,6 +137,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     materials: ["PETG-CF", "PETG-GF", "Carbon Fiber PETG"],
     relatedSlugs: ["petg", "abs", "nylon"],
     relatedMaterials: ["PETG", "ABS", "Nylon"],
+    colorSlugs: ["black", "dark-grey"],
     guides: [],
   },
 };
@@ -741,6 +755,30 @@ export default function MaterialHub() {
     },
   });
 
+  // Top brands by product count for this material
+  const { data: topBrands } = useQuery({
+    queryKey: ["material-hub-top-brands", slug],
+    enabled: !!config,
+    queryFn: async () => {
+      if (!config) return [] as { vendor: string; count: number }[];
+      const { data } = await (supabase as any)
+        .from("filaments")
+        .select("vendor")
+        .in("material", config.materials)
+        .not("vendor", "is", null)
+        .limit(500);
+      if (!data) return [];
+      const counts: Record<string, number> = {};
+      for (const row of data as any[]) {
+        if (row.vendor) counts[row.vendor] = (counts[row.vendor] || 0) + 1;
+      }
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([vendor, count]) => ({ vendor, count }));
+    },
+  });
+
   const isLoading = statsLoading || topLoading || productsLoading;
 
   // noindex / redirect for unknown slugs
@@ -929,6 +967,45 @@ export default function MaterialHub() {
                   {g.label}
                 </Link>
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* Top brands for this material */}
+        {topBrands && topBrands.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-xl font-semibold mb-4">Top {label} Brands</h2>
+            <div className="flex flex-wrap gap-3">
+              {topBrands.map(({ vendor }) => (
+                <Link
+                  key={vendor}
+                  to={`/brands/${vendor.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`}
+                  className="px-4 py-2 rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors text-sm font-medium"
+                >
+                  {vendor}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Color-specific pages for this material */}
+        {config.colorSlugs && config.colorSlugs.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-xl font-semibold mb-4">Shop by Color</h2>
+            <div className="flex flex-wrap gap-3">
+              {config.colorSlugs.map((colorSlug) => {
+                const colorLabel = colorSlug.charAt(0).toUpperCase() + colorSlug.slice(1).replace(/-/g, ' ');
+                return (
+                  <Link
+                    key={colorSlug}
+                    to={`/colors/${colorSlug}`}
+                    className="px-4 py-2 rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors text-sm font-medium"
+                  >
+                    {colorLabel} {label}
+                  </Link>
+                );
+              })}
             </div>
           </section>
         )}
