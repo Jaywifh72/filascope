@@ -4,9 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  ArrowLeft, Clock, Calendar, ChevronRight, 
-  BookOpen, Sparkles, ShoppingBag 
+import {
+  ArrowLeft, Clock, Calendar, ChevronRight,
+  BookOpen, Sparkles, ShoppingBag, List
 } from 'lucide-react';
 import { useGuideFilaments } from '@/hooks/useGuideFilaments';
 import { type GuideConfig } from './guideConfigs';
@@ -18,6 +18,7 @@ import { BreadcrumbSchema } from '@/components/seo/BreadcrumbSchema';
 import { FAQSchema } from '@/components/seo/FAQSchema';
 import { BUYING_GUIDE_CONFIGS } from './guideConfigs';
 import { useDocumentHead } from '@/hooks/useDocumentHead';
+import { useRelatedFilaments } from '@/hooks/useRelatedFilaments';
 
 function getCategoryBadgeStyle(category: string) {
   switch (category) {
@@ -35,6 +36,10 @@ function getCategoryLabel(category: string) {
     case 'beginner': return 'Beginner';
     default: return category;
   }
+}
+
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 function LoadingSkeleton() {
@@ -60,6 +65,8 @@ function LoadingSkeleton() {
 
 export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
   const { data: filaments, isLoading } = useGuideFilaments(config.filters);
+  const primaryMaterial = config.filters.material ?? config.filters.materials?.[0];
+  const { data: relatedFilaments } = useRelatedFilaments({ material: primaryMaterial, limit: 6 });
 
   useDocumentHead({
     title: config.seoTitle,
@@ -92,9 +99,22 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
     { name: config.title, url: `https://filascope.com/guides/${config.slug}` },
   ];
 
+  // Build ToC from editorial sections + fixed sections
+  const tocItems: { label: string; anchor: string }[] = [
+    ...beforeSections.map(s => ({ label: s.heading, anchor: slugify(s.heading) })),
+    ...(config.layout === 'ranked-list' ? [{ label: config.filters.requireTD ? 'Top Filaments by TD' : 'Full Rankings', anchor: 'rankings' }] : []),
+    ...(config.layout === 'vs-comparison' ? [{ label: 'Side-by-Side Comparison', anchor: 'comparison' }] : []),
+    ...(config.layout === 'editorial' ? [{ label: 'Our Top Picks for Beginners', anchor: 'picks' }] : []),
+    ...afterSections.map(s => ({ label: s.heading, anchor: slugify(s.heading) })),
+    ...(config.faqs.length > 0 ? [{ label: 'Frequently Asked Questions', anchor: 'faq' }] : []),
+    ...(relatedConfigs.length > 0 ? [{ label: 'Related Guides', anchor: 'related-guides' }] : []),
+  ];
+
+  const updatedLabel = new Date(config.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      {/* Structured Data (these use direct DOM injection, not Helmet) */}
+      {/* Structured Data */}
       <ArticleSchema
         headline={config.title}
         description={config.seoDescription}
@@ -119,7 +139,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
 
       <div className="max-w-5xl mx-auto px-4 py-8 lg:py-12">
         {/* Hero */}
-        <div className="mb-10">
+        <div className="mb-8">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <Badge variant="outline" className={getCategoryBadgeStyle(config.category)}>
               <ShoppingBag className="w-3 h-3 mr-1" />
@@ -130,10 +150,10 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
                 <Clock className="w-3.5 h-3.5" />
                 {config.readTime} min read
               </span>
-              <span className="flex items-center gap-1">
+              <time dateTime={config.updatedAt} className="flex items-center gap-1 font-medium text-foreground/80">
                 <Calendar className="w-3.5 h-3.5" />
-                Updated {new Date(config.updatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-              </span>
+                Updated {updatedLabel}
+              </time>
             </div>
           </div>
 
@@ -145,11 +165,38 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           </p>
         </div>
 
+        {/* Table of Contents */}
+        {tocItems.length > 2 && (
+          <nav aria-label="Table of contents" className="mb-10">
+            <Card className="bg-card/60 border-border">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-foreground">
+                  <List className="w-4 h-4 text-primary" />
+                  In This Guide
+                </div>
+                <ol className="space-y-1.5 list-none">
+                  {tocItems.map((item, i) => (
+                    <li key={item.anchor} className="flex items-baseline gap-2">
+                      <span className="text-xs text-muted-foreground/60 font-mono w-4 shrink-0">{i + 1}.</span>
+                      <a
+                        href={`#${item.anchor}`}
+                        className="text-sm text-primary/80 hover:text-primary underline-offset-2 hover:underline transition-colors"
+                      >
+                        {item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </CardContent>
+            </Card>
+          </nav>
+        )}
+
         {/* Editorial: Before Sections */}
         {beforeSections.map((section, i) => (
-          <section key={i} className="mb-8">
+          <section key={i} id={slugify(section.heading)} className="mb-8 scroll-mt-24">
             <h2 className="text-xl font-bold mb-3">{section.heading}</h2>
-            <div 
+            <div
               className="prose prose-invert prose-sm max-w-none text-muted-foreground [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content, { ALLOWED_TAGS: ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'h3', 'h4'], ALLOWED_ATTR: ['href', 'class', 'target', 'rel'] }) }}
             />
@@ -162,7 +209,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         )}
 
         {/* Product List / VS Comparison */}
-        <section className="mb-12">
+        <section id={config.layout === 'ranked-list' ? 'rankings' : config.layout === 'vs-comparison' ? 'comparison' : 'picks'} className="mb-12 scroll-mt-24">
           {isLoading ? (
             <LoadingSkeleton />
           ) : config.layout === 'vs-comparison' && filaments ? (
@@ -193,9 +240,9 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
 
         {/* Editorial: After Sections */}
         {afterSections.map((section, i) => (
-          <section key={i} className="mb-8">
+          <section key={i} id={slugify(section.heading)} className="mb-8 scroll-mt-24">
             <h2 className="text-xl font-bold mb-3">{section.heading}</h2>
-            <div 
+            <div
               className="prose prose-invert prose-sm max-w-none text-muted-foreground [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content, { ALLOWED_TAGS: ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'h3', 'h4'], ALLOWED_ATTR: ['href', 'class', 'target', 'rel'] }) }}
             />
@@ -204,7 +251,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
 
         {/* FAQ Section */}
         {config.faqs.length > 0 && (
-          <section className="mb-12">
+          <section id="faq" className="mb-12 scroll-mt-24">
             <h2 className="text-xl font-bold mb-4">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {config.faqs.map((faq, i) => (
@@ -219,13 +266,67 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           </section>
         )}
 
+        {/* Related Filaments */}
+        {relatedFilaments && relatedFilaments.length > 0 && (
+          <section id="related-filaments" className="mb-12 scroll-mt-24">
+            <h2 className="text-xl font-bold mb-4">
+              {primaryMaterial ? `Popular ${primaryMaterial} Filaments` : 'Related Filaments'}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {relatedFilaments.map((f) => (
+                <a
+                  key={f.id}
+                  href={`/filament/${f.product_handle || f.id}`}
+                  className="group block"
+                >
+                  <Card className="bg-card/50 border-border hover:border-primary/50 transition-colors h-full">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        {f.color_hex && (
+                          <span
+                            className="w-5 h-5 rounded-full border border-border shrink-0"
+                            style={{ backgroundColor: f.color_hex }}
+                            aria-hidden="true"
+                          />
+                        )}
+                        {f.transmission_distance && (
+                          <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-400 border-purple-500/20 shrink-0">
+                            TD {f.transmission_distance}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{f.vendor}</p>
+                      <p className="text-sm font-medium group-hover:text-primary transition-colors line-clamp-2 leading-snug mt-0.5">
+                        {f.product_title}
+                      </p>
+                      {f.variant_price && (
+                        <p className="text-xs text-primary mt-1.5 font-semibold">
+                          ${f.variant_price.toFixed(2)}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </a>
+              ))}
+            </div>
+            <div className="mt-3 text-right">
+              <a
+                href={primaryMaterial ? `/?material=${encodeURIComponent(primaryMaterial)}` : '/'}
+                className="text-sm text-primary hover:underline"
+              >
+                Browse all {primaryMaterial} filaments →
+              </a>
+            </div>
+          </section>
+        )}
+
         {/* Related Guides */}
         {relatedConfigs.length > 0 && (
-          <section className="mb-12">
+          <section id="related-guides" className="mb-12 scroll-mt-24">
             <h2 className="text-xl font-bold mb-4">Related Guides</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {relatedConfigs.map(related => (
-                <Link key={related.slug} to={`/guides/${related.slug}`} className="group">
+                <a key={related.slug} href={`/guides/${related.slug}`} className="group block">
                   <Card className="bg-card/50 border-border hover:border-primary/50 transition-colors h-full">
                     <CardContent className="p-5">
                       <Badge variant="outline" className={`mb-3 text-xs ${getCategoryBadgeStyle(related.category)}`}>
@@ -237,7 +338,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
                       <p className="text-xs text-muted-foreground line-clamp-2">{related.description}</p>
                     </CardContent>
                   </Card>
-                </Link>
+                </a>
               ))}
             </div>
           </section>
