@@ -3470,7 +3470,10 @@ async function fetchTreeDPrice(productUrl: string, targetWeightGrams?: number | 
   let sku: string | null = null;
   try {
     const u = new URL(productUrl);
-    sku = u.searchParams.get("sku");
+    // Use raw search string to preserve literal '+' characters (URLSearchParams decodes '+' as space)
+    const rawSku = u.search.match(/[?&]sku=([^&]+)/)?.[1];
+    sku = rawSku ? decodeURIComponent(rawSku) : u.searchParams.get("sku");
+    if (sku) sku = sku.trim();
   } catch {
     sku = null;
   }
