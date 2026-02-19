@@ -17,7 +17,7 @@ interface AffiliateConfig {
 // In-memory cache for configs — include a version key so updates to affiliate_configs bust it
 let cachedConfigs: AffiliateConfig[] | null = null;
 let configsFetchPromise: Promise<AffiliateConfig[]> | null = null;
-const CACHE_VERSION = "v2"; // bump when affiliate_configs data changes
+const CACHE_VERSION = "v3"; // bump when affiliate_configs data changes
 
 
 /**
@@ -68,6 +68,11 @@ async function fetchAffiliateProgramsBridge(
         awin_advertiser = prog.awin_merchant_id;
         awin_affiliate = prog.awin_publisher_id;
         network = "awin";
+      } else if (prog.link_generation_method === "redirect_link" && prog.link_template) {
+        // e.g. Elegoo: https://elegoo.sjv.io/QYPW6x — use the template as the full redirect URL
+        // Store as a special pattern: "redirect:{{template}}"
+        url_pattern = `redirect:${prog.link_template}`;
+        network = "redirect_link";
       }
 
       bridged.push({
@@ -215,6 +220,11 @@ function transformUrlSync(
     ) {
       const encodedUrl = encodeURIComponent(fixedUrl);
       return `https://www.awin1.com/cread.php?awinmid=${config.awin_advertiser_id}&awinaffid=${config.awin_affiliate_id}&clickref=filascope&ued=${encodedUrl}`;
+    }
+
+    // Handle redirect_link — use the template URL directly (e.g. Elegoo Impact/SJ links)
+    if (config?.affiliate_network === "redirect_link" && config?.affiliate_url_pattern?.startsWith("redirect:")) {
+      return config.affiliate_url_pattern.slice("redirect:".length);
     }
 
     if (config?.affiliate_url_pattern) {
