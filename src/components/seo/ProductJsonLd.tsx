@@ -76,6 +76,17 @@ const REGION_COUNTRY_CODES: Record<RegionCode, string> = {
   CN: 'CN',
 };
 
+/** ISO 3166-1 alpha-2 country name for schema.org Country type */
+const REGION_COUNTRY_NAMES: Record<RegionCode, string> = {
+  US: 'United States',
+  CA: 'Canada',
+  UK: 'United Kingdom',
+  EU: 'Germany',
+  AU: 'Australia',
+  JP: 'Japan',
+  CN: 'China',
+};
+
 export function ProductJsonLd({
   name,
   description,
@@ -299,7 +310,7 @@ export function ProductJsonLd({
           : 'https://schema.org/OutOfStock',
         offers: regionalOffers.map(offer => ({
           '@type': 'Offer',
-          priceCurrency: activeCurrency,
+          priceCurrency: offer.currency || activeCurrency,
           price: offer.price.toFixed(2),
           availability: offer.availability !== false
             ? 'https://schema.org/InStock'
@@ -311,10 +322,12 @@ export function ProductJsonLd({
               name: offer.sellerName,
             },
           }),
+          // Use areaServed + Country for proper regional structured data
           ...(offer.region && {
-            eligibleRegion: {
-              '@type': 'Place',
-              name: REGION_COUNTRY_CODES[offer.region],
+            areaServed: {
+              '@type': 'Country',
+              name: REGION_COUNTRY_NAMES[offer.region] || REGION_COUNTRY_CODES[offer.region],
+              identifier: REGION_COUNTRY_CODES[offer.region],
             },
           }),
         })),
@@ -331,9 +344,10 @@ export function ProductJsonLd({
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
         url,
-        eligibleRegion: {
-          '@type': 'Place',
-          name: REGION_COUNTRY_CODES[userRegion as RegionCode] || 'US',
+        areaServed: {
+          '@type': 'Country',
+          name: REGION_COUNTRY_NAMES[userRegion as RegionCode] || 'United States',
+          identifier: REGION_COUNTRY_CODES[userRegion as RegionCode] || 'US',
         },
       };
     }
