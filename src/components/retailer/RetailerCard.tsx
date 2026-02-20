@@ -12,6 +12,7 @@ import { ShippingEstimate, formatDeliveryRange } from "@/lib/shippingZones";
 import { useUserShipping } from "@/hooks/useUserShipping";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
+import { trackAffiliateClick as trackSupabaseAffiliateClick } from "@/utils/affiliateLinks";
 import { useBrokenUrlCheck } from "@/hooks/useBrokenUrlCheck";
 
 interface RetailerCardProps {
@@ -61,12 +62,18 @@ export function RetailerCard({
         currency,
         linkType: isAmazon ? 'amazon' : 'affiliate',
       });
-      // DEBUG: Verify Creality URLs are using direct product links, not search
-      if (retailer.name.toLowerCase().includes('creality') || affiliateUrl.includes('creality')) {
-        console.log('🔗 Creality Buy Now URL:', affiliateUrl);
-        console.log('   Expected: Direct product URL (e.g., /products/hyper-rainbow-pla...)');
-        console.log('   Should NOT be: Search URL (/search?keyword=...)');
-      }
+
+      // Supabase logging — fire-and-forget
+      trackSupabaseAffiliateClick('', affiliateUrl, {
+        brandName: retailer.name,
+        regionCode: preferences.country || 'US',
+        productName: retailer.name,
+        sourcePage: window.location.pathname,
+        sourceComponent: 'retailer_card',
+        price,
+        currency,
+      }).catch(() => {});
+
       window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
     }
   };

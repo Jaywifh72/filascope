@@ -5,6 +5,7 @@ import { OptimizedImage } from '@/components/ui/optimized-image';
 import { getBrandLogo } from '@/lib/brandLogos';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { trackAffiliateClick as trackGA4AffiliateClick } from '@/lib/analytics';
+import { trackAffiliateClick as trackSupabaseAffiliateClick } from '@/utils/affiliateLinks';
 import type { WizardProduct } from '@/hooks/useWizardRecommendations';
 
 interface WizardProductCardProps {
@@ -88,6 +89,16 @@ export function WizardProductCard({ product }: WizardProductCardProps) {
                     productId: product.id || '',
                     linkType: 'affiliate',
                   });
+                  // Supabase logging — fire-and-forget
+                  trackSupabaseAffiliateClick('', product.buyUrl!, {
+                    brandName: product.vendor,
+                    regionCode: 'US',
+                    productName: product.productTitle,
+                    productId: product.id,
+                    productType: 'filament',
+                    sourcePage: window.location.pathname,
+                    sourceComponent: 'wizard_card',
+                  }).catch(() => {});
                 }}
               >
                 Buy
