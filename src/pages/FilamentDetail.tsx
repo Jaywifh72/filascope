@@ -36,7 +36,7 @@ import {
   type FilamentTab 
 } from "@/components/filament/tabs";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { trackProductView as trackGA4ProductView } from "@/lib/analytics";
+import { trackProductView as trackGA4ProductView, trackEcommerceViewItem } from "@/lib/analytics";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 import { useRegionalStore, getRegionDisplayName } from "@/hooks/useRegionalStore";
 import { useUnifiedRegionalPricing, type UnifiedRegionalPricingResult } from "@/hooks/useUnifiedRegionalPricing";
@@ -382,7 +382,7 @@ const { id } = useParams();
         type: "filament",
       });
 
-      // GA4 product view
+      // GA4 product view (legacy custom event — preserved for Explore reports)
       trackGA4ProductView({
         productId: filament.id,
         productName: filament.product_title || 'Unknown',
@@ -390,6 +390,16 @@ const { id } = useParams();
         category: filament.material || undefined,
         price: filament.variant_price ?? undefined,
         currency: 'USD',
+      });
+
+      // GA4 Enhanced E-commerce: view_item — feeds built-in Monetization reports
+      trackEcommerceViewItem({
+        slug: canonicalSlug,
+        name: filament.product_title || 'Unknown',
+        brand: filament.vendor || 'Unknown',
+        material: filament.material || 'Filament',
+        price: detailPricing?.bestPrice?.spoolPrice ?? filament.variant_price ?? undefined,
+        currency: userCurrency,
       });
     }
   }, [filament?.id]);

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRegion } from "@/contexts/RegionContext";
 import { buildAffiliateLinkLocal, trackAffiliateClick } from "@/utils/affiliateLinks";
-import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
+import { trackAffiliateClick as trackGA4AffiliateClick, trackEcommerceSelectItem } from "@/lib/analytics";
 import type { AffiliateProgram, AffiliateDiscountCode } from "@/types/affiliate";
 
 export interface ClickMetadata {
@@ -13,6 +13,8 @@ export interface ClickMetadata {
   sourceComponent?: string;
   price?: number;
   currency?: string;
+  /** item_category for GA4 select_item — filament material type (PLA, PETG…) */
+  material?: string;
 }
 
 interface UseAffiliateLinkResult {
@@ -153,6 +155,17 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
         price: metadata.price,
         currency: metadata.currency,
         linkType: 'product_page',
+      });
+
+      // GA4 Enhanced E-commerce: select_item — feeds built-in Monetization funnel
+      trackEcommerceSelectItem({
+        slug: metadata.productSlug || metadata.productName?.toLowerCase().replace(/\s+/g, '-') || '',
+        name: metadata.productName || '',
+        brand: program?.brand_name || brandName || '',
+        material: metadata.material || 'Filament',
+        storeName: program?.brand_name || brandName || 'Store',
+        price: metadata.price,
+        currency: metadata.currency,
       });
 
       if (program) {

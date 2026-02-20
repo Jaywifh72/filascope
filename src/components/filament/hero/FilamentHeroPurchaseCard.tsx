@@ -114,6 +114,7 @@ export function FilamentHeroPurchaseCard({
     if (hasAffiliate) {
       trackAndOpen(affiliateUrl, {
         productName: finalRetailerName,
+        productSlug: filamentId,  // id as slug fallback — no product_handle in this component's props
         sourceComponent: 'hero_purchase_card',
       });
     } else {

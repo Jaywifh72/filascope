@@ -19,6 +19,10 @@ interface PrimaryBuyButtonProps {
   compareAtPrice?: number | null;
   onClick?: () => void;
   vendor?: string | null;
+  /** SEO slug for GA4 select_item item_id */
+  productSlug?: string;
+  /** Material type for GA4 select_item item_category */
+  material?: string;
 }
 
 export function PrimaryBuyButton({
@@ -35,6 +39,8 @@ export function PrimaryBuyButton({
   compareAtPrice,
   onClick,
   vendor,
+  productSlug,
+  material,
 }: PrimaryBuyButtonProps) {
   const { formatPrice, formatRegionalPrice } = useCurrency();
   const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(vendor);
@@ -89,7 +95,7 @@ export function PrimaryBuyButton({
         onClick={(e) => {
           if (hasAffiliate) {
             e.preventDefault();
-            trackAndOpen(url, { productName: retailerName, sourcePage: window.location.pathname, sourceComponent: 'primary_buy_button' });
+            trackAndOpen(url, { productName: retailerName, productSlug, material: material || undefined, sourcePage: window.location.pathname, sourceComponent: 'primary_buy_button' });
           }
           onClick?.();
         }}
