@@ -232,7 +232,7 @@ export default function AdminLinkHealth() {
     setIsScanning(true);
     try {
       const { data, error } = await supabase.functions.invoke("validate-product-links", {
-        body: { limit: 100 },
+        body: { limit: 500 },
       });
       if (error) throw error;
       toast({

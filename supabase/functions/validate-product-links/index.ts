@@ -8,7 +8,7 @@ const corsHeaders = {
 const USER_AGENT = 'Mozilla/5.0 (compatible; FilaScopeBot/1.0; +https://filascope.com/bot)';
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_REDIRECTS = 5;
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 20; // Smaller concurrent batches to avoid edge function timeout per batch
 
 // Paths that indicate a "soft 404" landing page
 const SOFT_404_PATHS = ['/', '/collections/', '/search', '/search?', '/404', '/not-found', '/products?'];
@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json().catch(() => ({}));
-    const { region, retailer, brand, limit = 200, offset = 0, batchId } = body;
+    const { region, retailer, brand, limit = 500, offset = 0, batchId } = body;
 
     const scanBatchId = batchId || `scan_${Date.now()}`;
 
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
       filters: { region, retailer, brand, limit, offset },
     }, { onConflict: 'batch_id' });
 
-    // Build query for filament_listings
+    // Build query for filament_listings — fetch all active listings with URLs
     let query = supabase
       .from('filament_listings')
       .select(`
@@ -177,16 +177,15 @@ Deno.serve(async (req) => {
         region,
         filament_id,
         retailer_id,
-        filaments!inner(product_title, vendor),
-        retailers!inner(name, slug)
+        filaments(product_title, vendor),
+        retailers(name, slug)
       `)
       .not('product_url', 'is', null)
       .eq('available', true)
-      .range(offset, offset + limit - 1);
+      .limit(limit);
 
+    if (offset > 0) query = query.range(offset, offset + limit - 1);
     if (region) query = query.eq('region', region);
-    if (retailer) query = query.eq('retailers.slug', retailer);
-    if (brand) query = (query as any).eq('filaments.vendor', brand);
 
     const { data: listings, error: listingsError } = await query;
 
@@ -234,14 +233,17 @@ Deno.serve(async (req) => {
         };
       }));
 
-      // Upsert broken links and remove resolved ones
+      // Upsert broken links and resolve healthy ones
       for (const r of results) {
         checked++;
         if (r.breakType) {
           brokenFound++;
           byType[r.breakType] = (byType[r.breakType] || 0) + 1;
 
-          await supabase.from('broken_links').upsert({
+          const filaments = Array.isArray(r.listing.filaments) ? r.listing.filaments[0] : r.listing.filaments;
+          const retailers = Array.isArray(r.listing.retailers) ? r.listing.retailers[0] : r.listing.retailers;
+
+          const upsertResult = await supabase.from('broken_links').upsert({
             listing_id: r.listing.id,
             filament_id: r.listing.filament_id,
             retailer_id: r.listing.retailer_id,
@@ -251,15 +253,19 @@ Deno.serve(async (req) => {
             break_type: r.breakType,
             http_status: r.statusCode || null,
             final_url: r.finalUrl !== r.url ? r.finalUrl : null,
-            redirect_chain: r.redirectChain,
+            redirect_chain: r.redirectChain || [],
             error_message: r.error,
             status: 'open',
             last_checked_at: new Date().toISOString(),
             scan_batch_id: scanBatchId,
-            retailer_name: r.listing.retailers?.name || null,
-            filament_name: r.listing.filaments?.product_title || null,
-            brand_name: r.listing.filaments?.vendor || null,
-          }, { onConflict: 'listing_id' });
+            retailer_name: retailers?.name || null,
+            filament_name: filaments?.product_title || null,
+            brand_name: filaments?.vendor || null,
+          }, { onConflict: 'listing_id', ignoreDuplicates: false });
+
+          if (upsertResult.error) {
+            console.error('Upsert error for listing', r.listing.id, ':', JSON.stringify(upsertResult.error));
+          }
         } else {
           // Link is healthy — if previously broken, mark as fixed
           await supabase.from('broken_links')

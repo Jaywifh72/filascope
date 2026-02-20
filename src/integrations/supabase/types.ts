@@ -1623,14 +1623,14 @@ export type Database = {
           {
             foreignKeyName: "broken_links_listing_id_fkey"
             columns: ["listing_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "filament_listings"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "broken_links_listing_id_fkey"
             columns: ["listing_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "v_filament_listings"
             referencedColumns: ["listing_id"]
           },
