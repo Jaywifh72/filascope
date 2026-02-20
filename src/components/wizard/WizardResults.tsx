@@ -40,7 +40,7 @@ export function WizardResults({ answers, onRefine }: WizardResultsProps) {
   const navigate = useNavigate();
   const { results, isLoading, error } = useWizardRecommendations(answers);
 
-  // Fire wizard_complete once results are loaded
+  // Fire quick_match_complete once results are loaded
   useEffect(() => {
     if (!isLoading && results.length > 0) {
       trackWizardComplete({
@@ -48,6 +48,7 @@ export function WizardResults({ answers, onRefine }: WizardResultsProps) {
         useCase: answers.use_case as string | undefined,
         printer: answers.printer as string | undefined,
         priority: answers.priority as string | undefined,
+        recommendedCount: results.length,
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
