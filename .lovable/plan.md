@@ -1,54 +1,103 @@
 
 ## Root Cause
 
-The `public/_redirects` file has two problems that together cause `filascope.com/sitemap.xml` to serve the React SPA 404 page instead of XML:
+The `canonicalSlug` in `FilamentDetail.tsx` is computed from `location.pathname` (React Router's `useLocation()`):
 
-1. **Missing SPA catch-all rule.** The file contains only sitemap redirect rules with no `/* /index.html 200` at the bottom. On Cloudflare Pages (which Lovable uses), when a redirect rule silently fails, there is no fallback — the request falls through to Cloudflare's native 404, which the PWA service worker then intercepts and renders as the React app's 404 component.
-
-2. **`301` status is not supported for cross-origin redirects on this host.** Cloudflare Pages `_redirects` only supports `301`/`302` for same-origin redirects. For external URLs (like `cfqfavmhdbyjzejipiwa.supabase.co`), the redirect must use `302`. The previous comment in `_redirects` even says "200 proxy rewrites are not supported on this host" — but `301` to external URLs is also silently ignored.
-
-**Confirmed working:** `robots.txt` is ✅ fine — it's served directly from the `public/robots.txt` static file on the CDN before `_redirects` is consulted. The edge function itself is ✅ confirmed working and returns correct XML with `Content-Type: application/xml`.
-
----
-
-## Fix: One File Change to `public/_redirects`
-
-**Change `301` to `302` on all 7 sitemap redirect lines, and add the `/* /index.html 200` SPA catch-all at the end.**
-
-```text
-# Sitemap routes — 302 redirect to edge function
-# (Cloudflare Pages does not support 301 for cross-origin external URLs)
-/sitemap.xml           https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml           302
-/sitemap-pages.xml     https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml     302
-/sitemap-filaments.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-filaments.xml 302
-/sitemap-brands.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-brands.xml    302
-/sitemap-printers.xml  https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-printers.xml  302
-/sitemap-guides.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-guides.xml    302
-/sitemap-colors.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-colors.xml    302
-
-# SPA catch-all — MUST be last
-/* /index.html 200
+```typescript
+const canonicalSlug = location.pathname.replace(/^\/filament\//, '') || id || '';
 ```
 
+React Router's `useLocation()` is **not updated** by `window.history.replaceState()` calls. These are two separate state stores.
+
+**The exact failure sequence when a user visits via UUID:**
+
+1. User navigates to `/filament/39aad56f-03d8-4005-bf52-d7f6204df18b`
+2. React renders `FilamentDetail` — `location.pathname` is `/filament/39aad56f-...`
+3. `canonicalSlug` = `"39aad56f-03d8-4005-bf52-d7f6204df18b"` (UUID)
+4. `useFilamentBySlug` fetches the filament, then calls `window.history.replaceState(null, '', '/filament/numakers-pla-pure-white')` — the browser bar updates
+5. React Router's `location.pathname` **does NOT update** — replaceState bypasses the Router entirely
+6. `ProductSEO` renders `canonicalUrl="/filament/39aad56f-..."` — UUID in canonical
+
+**When a user visits via slug directly:**
+
+1. User navigates to `/filament/numakers-pla-pure-white`
+2. `location.pathname` = `/filament/numakers-pla-pure-white`
+3. `canonicalSlug` = `"numakers-pla-pure-white"` ✅
+4. But if the slug-to-product lookup resolves to a slightly different canonical slug (e.g. the hook regenerates `"numakers-pla-pure-white"` via `generateFilamentSlug`), the canonical still uses whatever was in the URL — which may differ from the canonical slug
+
+The fix must derive `canonicalSlug` from the **resolved filament object** using `generateFilamentSlug` (the same function `useFilamentBySlug` already uses internally), not from the URL pathname. This guarantees the canonical always matches the vendor-prefixed slug, regardless of how the user arrived.
+
 ---
 
-## Why `302` Works for Google
+## Fix: One File Change — `src/pages/FilamentDetail.tsx`
 
-Google Search Console and Google's crawler **follow 302 redirects**. The `sitemap.xml` will redirect to the Supabase edge function URL, which returns valid `application/xml`. Google will index the final XML content correctly. The sub-sitemaps already use `filascope.com` domain `<loc>` entries (confirmed via live edge function call), so Google's same-domain requirement is satisfied.
+### Before (lines 99–110)
+
+```typescript
+const { id } = useParams();
+const location = useLocation();
+// Use the actual URL pathname slug — the hook updates it via history.replaceState
+// so this is always the SEO-friendly slug, never a UUID after resolution.
+const canonicalSlug = location.pathname.replace(/^\/filament\//, '') || id || '';
+const navigate = useNavigate();
+...
+const { filament, loading, error: fetchError, isRedirecting, refetch } = useFilamentBySlug(id);
+```
+
+### After
+
+1. Keep `const { id } = useParams()` and `const location = useLocation()` (location is still used for the tab-hash fragment state)
+2. Remove the `canonicalSlug` derivation from `location.pathname`
+3. After the `useFilamentBySlug` call, derive `canonicalSlug` from the resolved filament:
+
+```typescript
+const { id } = useParams();
+const location = useLocation();
+const navigate = useNavigate();
+...
+const { filament, loading, error: fetchError, isRedirecting, refetch } = useFilamentBySlug(id);
+
+// Derive canonical slug from the RESOLVED filament object, not the URL pathname.
+// location.pathname is NOT updated by history.replaceState() — using it would
+// produce UUID-based canonicals when users land via UUID URLs.
+const canonicalSlug = useMemo(() => {
+  if (filament) {
+    return generateFilamentSlug(
+      filament.vendor,
+      filament.material,
+      filament.product_title,
+      filament.color_family,
+    ) || filament.id;
+  }
+  // Fallback while loading: use pathname slug if it's not a UUID, else id param
+  const pathSlug = location.pathname.replace(/^\/filament\//, '');
+  return isUuid(pathSlug) ? (id || '') : pathSlug;
+}, [filament, location.pathname, id]);
+```
+
+This needs two imports added at the top of `FilamentDetail.tsx`:
+- `generateFilamentSlug` from `@/lib/seoSlugUtils`
+- `isUuid` from `@/lib/seoSlugUtils`
+- `useMemo` is already imported
 
 ---
 
-## No Other Changes Required
+## Files Changed
 
-- `public/robots.txt` — ✅ Already correct, already live
-- `supabase/functions/prerender/index.ts` — ✅ Already returns `Content-Type: application/xml` for sitemaps and `text/plain` for robots.txt
-- `supabase/functions/sitemap-xml/index.ts` — ✅ Already uses `filascope.com` domain `<loc>` entries
-- No database changes needed
+| File | Change |
+|---|---|
+| `src/pages/FilamentDetail.tsx` | Replace `canonicalSlug` derivation (3 lines → useMemo using resolved filament) + add `generateFilamentSlug` and `isUuid` imports |
 
----
+## No Other Files Changed
 
-## Technical Notes
+- `useFilamentBySlug.ts` — no change, it already does the right thing for URL display
+- `ProductSEO.tsx` — no change, it correctly uses `canonicalUrl` as passed
+- `useDocumentHead.ts` — no change
+- No database changes
 
-- The `/* /index.html 200` rule is the standard Cloudflare Pages SPA catch-all. Its absence is the secondary bug — it means the SPA itself only loads because the PWA service worker intercepts unmatched routes, but direct navigation to `/sitemap.xml` on a cold load (no SW installed yet) would 404 natively anyway.
-- `200` proxy rewrites to external URLs are not supported by Cloudflare Pages `_redirects` — only same-origin rewrites work with `200`. Since the edge function is on a different domain, `302` is the only option.
-- Both Googlebot and Bingbot follow `302` redirects for sitemaps submitted via Search Console.
+## Why This Is Complete
+
+- When user arrives via **slug**: filament resolves → `generateFilamentSlug` produces the same vendor-prefixed slug → canonical correct ✅
+- When user arrives via **UUID**: filament resolves → `generateFilamentSlug` produces the slug → canonical uses slug, not UUID ✅
+- During **loading** (before filament resolved): falls back to the pathname slug if it isn't a UUID, avoiding a flash of UUID canonical ✅
+- The `history.replaceState` in `useFilamentBySlug` continues to work for the browser address bar — this fix is independent of that mechanism ✅
