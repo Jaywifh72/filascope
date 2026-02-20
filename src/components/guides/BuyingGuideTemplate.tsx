@@ -19,6 +19,7 @@ import { FAQSchema } from '@/components/seo/FAQSchema';
 import { ItemListSchema } from '@/components/seo/ItemListSchema';
 import { generateFilamentSlug } from '@/lib/seoSlugUtils';
 import { BUYING_GUIDE_CONFIGS } from './guideConfigs';
+import { AiSnippetZone } from './AiSnippetZone';
 import { useDocumentHead } from '@/hooks/useDocumentHead';
 import { useRelatedFilaments } from '@/hooks/useRelatedFilaments';
 
@@ -186,6 +187,16 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
             {config.description}
           </p>
         </div>
+
+        {/* AI Snippet Zone — only if guide config provides snippet data */}
+        {config.aiSnippet && (
+          <AiSnippetZone
+            summaryText={config.aiSnippet.summaryText}
+            topPick={config.aiSnippet.topPick}
+            runnerUp={config.aiSnippet.runnerUp}
+            budgetPick={config.aiSnippet.budgetPick}
+          />
+        )}
 
         {/* Table of Contents */}
         {tocItems.length > 2 && (

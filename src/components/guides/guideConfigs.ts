@@ -11,6 +11,13 @@ export interface FAQItem {
   answer: string;
 }
 
+export interface AiSnippetData {
+  summaryText: string;
+  topPick: { name: string; brand: string; reason: string };
+  runnerUp: { name: string; brand: string; reason: string };
+  budgetPick?: { name: string; brand: string; reason: string };
+}
+
 export interface GuideConfig {
   slug: string;
   title: string;
@@ -28,6 +35,7 @@ export interface GuideConfig {
   editorialSections: EditorialSection[];
   faqs: FAQItem[];
   relatedSlugs: string[];
+  aiSnippet?: AiSnippetData;
 }
 
 export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
@@ -69,6 +77,12 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can PLA be used outdoors?', answer: 'PLA has low heat resistance (~60°C glass transition) and will deform in direct sunlight. For outdoor use, consider PETG or ASA instead.' },
     ],
     relatedSlugs: ['best-petg-filaments', 'pla-vs-petg', 'beginners-guide', 'pla-plus-vs-pla-pro', 'silk-pla-comparison'],
+    aiSnippet: {
+      summaryText: "PLA is the best filament for most beginners and casual users in 2026 — it's easy to print, low-odor, and available from dozens of reliable brands. Our top picks are ranked using FilaScope's data-driven scoring across quality, pricing, and documentation.",
+      topPick: { name: 'PolySonic PLA Pro', brand: 'Polymaker', reason: 'fastest print speed support with excellent surface quality' },
+      runnerUp: { name: 'PLA Basic', brand: 'Bambu Lab', reason: 'best consistency spool-to-spool at a competitive price' },
+      budgetPick: { name: 'PLA Filament', brand: 'Hatchbox', reason: 'proven reliability at under $20/kg' },
+    },
   },
 
   'best-petg-filaments': {
@@ -108,6 +122,12 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is PETG food safe?', answer: 'PETG itself is FDA-approved for food contact. However, printed parts have micro-gaps. For food-safe applications, use a food-safe sealant.' },
     ],
     relatedSlugs: ['best-pla-filaments', 'best-abs-filaments', 'pla-vs-petg', 'best-filament-for-bambu-lab-p1s', 'asa-vs-abs-outdoor-printing'],
+    aiSnippet: {
+      summaryText: "PETG is the ideal upgrade from PLA when you need functional parts with better heat resistance and impact strength. In 2026 it remains the most versatile filament for mechanical applications — easy to print, chemical-resistant, and widely available. Rankings use FilaScope's data-driven scoring.",
+      topPick: { name: 'PETG HF', brand: 'Bambu Lab', reason: 'high-flow formula with outstanding layer adhesion for functional parts' },
+      runnerUp: { name: 'PolyLite PETG', brand: 'Polymaker', reason: 'excellent dimensional accuracy with broad printer compatibility' },
+      budgetPick: { name: 'PETG Filament', brand: 'Hatchbox', reason: 'reliable workhorse PETG at an entry-level price point' },
+    },
   },
 
   'best-abs-filaments': {
