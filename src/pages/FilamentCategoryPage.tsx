@@ -118,22 +118,7 @@ function useCategorySchemas(
   const label = slug ? (MATERIAL_SLUG_CONFIG[slug]?.label ?? slug) : "All";
   const category = label + " 3D Printer Filament";
 
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: slug
-      ? [
-          { "@type": "ListItem", position: 1, name: "Home", item: `${BASE_URL}/` },
-          { "@type": "ListItem", position: 2, name: "Filaments", item: `${BASE_URL}/filaments` },
-          { "@type": "ListItem", position: 3, name: label, item: `${BASE_URL}${canonical}` },
-        ]
-      : [
-          { "@type": "ListItem", position: 1, name: "Home", item: `${BASE_URL}/` },
-          { "@type": "ListItem", position: 2, name: "Filaments", item: `${BASE_URL}/filaments` },
-        ],
-  };
-
-  const itemListSchema = groups.length > 0
+  const itemList = groups.length > 0
     ? {
         "@context": "https://schema.org",
         "@type": "ItemList",
@@ -168,8 +153,17 @@ function useCategorySchemas(
       }
     : null;
 
-  useJsonLd(breadcrumbSchema);
-  useJsonLd(itemListSchema);
+  const collectionPageSchema = itemList
+    ? {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: h1,
+        url: `${BASE_URL}${canonical}`,
+        mainEntity: itemList,
+      }
+    : null;
+
+  useJsonLd(collectionPageSchema);
 }
 
 // ─────────────────────────────────────────────

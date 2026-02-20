@@ -21,4 +21,5 @@ export { CompareActionSchema } from './CompareActionSchema';
 export { TrendingItemListSchema } from './TrendingItemListSchema';
 export { PrinterListProductSchema } from './PrinterListProductSchema';
 export { RelatedSearchesSection } from './RelatedSearchesSection';
+export { CollectionPageSchema } from './CollectionPageSchema';
 

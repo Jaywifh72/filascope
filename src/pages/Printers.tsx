@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, ItemListSchema, FAQSection, PrinterListProductSchema } from "@/components/seo";
+import { BreadcrumbSchema, ItemListSchema, FAQSection, PrinterListProductSchema, CollectionPageSchema } from "@/components/seo";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -632,6 +632,12 @@ export default function Printers() {
         }))}
       />
       <PrinterListProductSchema printers={filteredPrinters} />
+      <CollectionPageSchema
+        name="3D Printer Database"
+        description={`Compare ${printers?.length || 118}+ 3D printers from ${brands?.length || 17}+ brands. Filter by build volume, speed, features, and price.`}
+        url="https://filascope.com/printers"
+        numberOfItems={printers?.length || 0}
+      />
       <div className="min-h-screen bg-background pb-16">
       {/* Hero Section */}
       <PrintersHeroSection

@@ -70,11 +70,11 @@ export default function ColorFinder() {
       />
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Color Finder', url: 'https://filascope.com/color-finder' },
+        { name: 'Color Finder', url: 'https://filascope.com/colors' },
       ]} />
       <WebApplicationSchema
         name="FilaScope Color Finder"
-        url="https://filascope.com/color-finder"
+        url="https://filascope.com/colors"
         applicationCategory="Utility"
         description="Match any color to 3D printer filaments. Search by hex code, color name, or visual match."
       />
