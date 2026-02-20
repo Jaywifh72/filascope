@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { pingIndexNow, indexNowUrl } from '@/lib/indexnow';
 
 export interface PrinterInsertData {
   product_url: string;
@@ -74,6 +75,8 @@ export function useCreatePrinter() {
       toast.success('Printer created successfully', {
         description: result.model_name || result.display_name,
       });
+      const slug = result.printer_id || result.id;
+      if (slug) pingIndexNow(indexNowUrl.printer(slug));
     },
     onError: (err) => {
       toast.error('Failed to create printer', {

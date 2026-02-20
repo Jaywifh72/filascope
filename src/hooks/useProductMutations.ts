@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { pingIndexNow, indexNowUrl } from '@/lib/indexnow';
 
 export interface FilamentUpdateData {
   id: string;
@@ -79,8 +80,10 @@ export function useUpdateFilament() {
         description: err instanceof Error ? err.message : 'Unknown error',
       });
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       toast.success('Filament updated successfully');
+      const slug = (result as any).product_handle || result.id;
+      if (slug) pingIndexNow(indexNowUrl.filament(slug));
     },
     onSettled: () => {
       // Invalidate all relevant queries to ensure consistency
@@ -135,8 +138,10 @@ export function useUpdatePrinter() {
         description: err instanceof Error ? err.message : 'Unknown error',
       });
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       toast.success('Printer updated successfully');
+      const slug = result.printer_id || result.id;
+      if (slug) pingIndexNow(indexNowUrl.printer(slug));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-printers'] });
