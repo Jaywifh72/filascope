@@ -1,193 +1,180 @@
 
-## New SEO Landing Pages — Implementation Plan
+## Google Search Console Integration — Admin Analytics Dashboard
 
-### What Exists vs. What's Needed
+### Architecture Overview
 
-The codebase has two distinct page patterns for content pages:
-1. **`BuyingGuide` template** (`/guides/:slug`): Data-driven, pulls live filaments from the database via `useGuideFilaments`. Configured via `BUYING_GUIDE_CONFIGS` in `guideConfigs.ts`. This is the system to extend.
-2. **Standalone pages** (`/pla-vs-petg`, `/best-filaments-for-hueforge`, etc.): Custom React pages with bespoke UI, registered directly in `App.tsx`.
+The Google Search Console (GSC) API requires OAuth 2.0 with a **service account** — there is no simpler approach. The plan handles the credential complexity gracefully: the database table and full UI are built first, the edge function supports both "connected" and "no credentials" states, and a clear setup card guides credential entry. The dashboard degrades gracefully to an empty state until data arrives.
 
-**Request #2 (`/pla-vs-petg`)**: This page already exists as both a standalone page (`src/pages/PLAVsPETG.tsx`) and in the guide system (`guideConfigs.ts` has `pla-vs-petg` config, `App.tsx` has route `/guides/:slug` that would render a BuyingGuide version). The standalone page at `/pla-vs-petg` already has its own full comparison table, FAQs, and schema — it is complete and requires no changes. No `/pla-vs-petg` redirect is needed; the route already works.
+### Credential Strategy
 
-### Summary of New Items Required
-
-| # | URL | Approach | Status |
-|---|-----|----------|--------|
-| 1 | `/best-filaments-for-beginners` | New standalone page (like `PLAVsPETG.tsx`) | New |
-| 2 | `/pla-vs-petg` | Already exists | No change |
-| 3 | `/best-filament-for-ender-3` | New BuyingGuide config entry → `/guides/best-filament-for-ender-3` + redirect | New |
-| 4 | `/best-filament-for-bambu-lab-a1` | New BuyingGuide config entry → `/guides/best-filament-for-bambu-lab-a1` + redirect | New |
-| 5 | `/filament-temperature-guide` | New standalone page (rich temperature chart for all materials) | New |
-| 6 | `/filament-storage-guide` | New standalone page (storage tips, drying, humidity) | New |
-
-**Rationale for approach split**: Pages #3 and #4 are "best filaments for X printer" guides that naturally fit the BuyingGuide template (live product database, ranked list, editorial sections, FAQs). Pages #1, #5, and #6 need unique non-database content (temperature charts, storage tips) so they follow the standalone page pattern used by `PLAVsPETG.tsx` and `BestFilamentsForHueForge.tsx`.
+GSC's API requires a **service account JSON key** (not a simple API key). The edge function will read this from a Supabase secret called `GSC_SERVICE_ACCOUNT_JSON`. The UI will show a "Connect Google Search Console" card when the secret is missing or when the table has no data. Setup instructions will be embedded directly in the panel so no external documentation is needed.
 
 ---
 
-### Detailed Changes
+### Part 1 — Database Migration
 
-#### 1. New Standalone Page: `/best-filaments-for-beginners`
+Create the `search_console_data` table exactly as specified, plus a `search_console_config` table to store the site URL and sync metadata, and enable RLS (read-only for authenticated users, no public access since this is admin-only data):
 
-**File**: `src/pages/BestFilamentsForBeginners.tsx`
+```sql
+CREATE TABLE public.search_console_data (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  date        DATE NOT NULL,
+  query       TEXT,
+  page        TEXT,
+  clicks      INTEGER DEFAULT 0,
+  impressions INTEGER DEFAULT 0,
+  ctr         DECIMAL(5,4),
+  position    DECIMAL(5,2),
+  country     TEXT,
+  device      TEXT,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
 
-- H1: "Best 3D Printer Filaments for Beginners in 2026"
-- Meta title: "Best Filaments for Beginners 2026 — Easiest to Print | FilaScope"
-- Meta description: "The best 3D printer filaments for beginners in 2026. Start with easy-to-print PLA picks from 48+ brands, with tips, temperature guides, and storage advice."
-- Structured data: `ArticleSchema` + `FAQSchema` + `BreadcrumbSchema`
-- Content: Intro, "Why PLA for Beginners" section, live query for top 6 PLA filaments by `filascope_score` (same pattern as `PLAVsPETG.tsx`), beginner tips section, FAQ
-- Internal links: `/materials/pla`, `/guides/beginners-guide`, `/wizard`, `/filament-temperature-guide`, `/filament-storage-guide`, `/guides/pla-vs-petg`
-- Keywords targeted: best filament for beginners, easiest filament to print
+CREATE UNIQUE INDEX search_console_data_unique 
+  ON search_console_data(date, query, page, country, device);
 
-#### 2. New BuyingGuide Config Entry: `best-filament-for-ender-3`
+ALTER TABLE search_console_data ENABLE ROW LEVEL SECURITY;
 
-**File**: `src/components/guides/guideConfigs.ts`
+CREATE POLICY "Admin read search_console_data"
+  ON search_console_data FOR SELECT
+  USING (has_role(auth.uid(), 'admin'));
 
-- Add to `BUYING_GUIDE_CONFIGS`:
-  - `slug: 'best-filament-for-ender-3'`
-  - Title: "Best Filaments for Creality Ender 3 in 2026"
-  - SEO title: "Best Filament for Ender 3 — Compatible Picks 2026 | FilaScope"
-  - SEO description: "Top filaments tested and ranked for Creality Ender 3. PLA, PETG, and TPU recommendations with print settings, AMS compatibility notes, and pricing."
-  - Category: `'buying-guide'`
-  - Filters: `{ materials: ['PLA', 'PETG', 'TPU'], sortBy: 'score', limit: 10 }`
-  - Layout: `'ranked-list'`
-  - Editorial sections: "Ender 3 Specs Quick Reference" (nozzle 260°C, bed 110°C, direct upgrade path), "Getting the Best Results" (common PLA settings, upgrade tips)
-  - FAQs: 3 FAQs about Ender 3 filament compatibility, TPU printing, PETG upgrade
-  - Related slugs: `['best-pla-filaments', 'best-petg-filaments', 'beginners-guide', 'best-filament-for-bambu-lab-a1']`
-
-The page will live at `/guides/best-filament-for-ender-3` via the existing `BuyingGuide` template. A short redirect page at `src/pages/BestFilamentEnder3.tsx` maps `/best-filament-for-ender-3` → `/guides/best-filament-for-ender-3` using `<Navigate replace />`.
-
-#### 3. New BuyingGuide Config Entry: `best-filament-for-bambu-lab-a1`
-
-**File**: `src/components/guides/guideConfigs.ts`
-
-- Add to `BUYING_GUIDE_CONFIGS`:
-  - `slug: 'best-filament-for-bambu-lab-a1'`
-  - Title: "Best Filaments for Bambu Lab A1 Mini & A1"
-  - SEO title: "Best Filament for Bambu Lab A1 & A1 Mini — 2026 Guide | FilaScope"
-  - SEO description: "Top filaments for Bambu Lab A1 and A1 Mini with AMS Lite compatibility notes. PLA, PETG picks with print settings, brand rankings and pricing."
-  - Category: `'buying-guide'`
-  - Filters: `{ materials: ['PLA', 'PETG', 'TPU'], sortBy: 'score', limit: 10 }`
-  - Layout: `'ranked-list'`
-  - Editorial sections: "Bambu Lab A1 & A1 Mini — Quick Specs" (max 300°C nozzle, 100°C bed, AMS Lite), "AMS Lite vs Full AMS" (differences, TPU warning)
-  - FAQs: 3 FAQs about A1 vs A1 Mini filament differences, AMS Lite compatibility, third-party brands
-  - Related slugs: `['best-pla-filaments', 'best-petg-filaments', 'best-filament-for-bambu-lab-p1s', 'best-filament-for-ender-3']`
-
-Redirect page: `src/pages/BestFilamentBambuA1.tsx` maps `/best-filament-for-bambu-lab-a1` → `/guides/best-filament-for-bambu-lab-a1`.
-
-#### 4. New Standalone Page: `/filament-temperature-guide`
-
-**File**: `src/pages/FilamentTemperatureGuide.tsx`
-
-- H1: "3D Printer Filament Temperature Guide — Every Material"
-- Meta title: "Filament Temperature Guide 2026 — PLA, PETG, ABS & More | FilaScope"
-- Meta description: "Complete 3D printer filament temperature chart. Nozzle and bed temperatures for PLA, PETG, ABS, ASA, TPU, Nylon, PC and more. Includes print speed and enclosure requirements."
-- Structured data: `ArticleSchema` + `FAQSchema` + `BreadcrumbSchema` + `HowToSchema`
-- Content: 
-  - Intro paragraph
-  - Full temperature reference table (static) with columns: Material | Nozzle Temp | Bed Temp | Fan | Enclosure | Difficulty — covering PLA, PLA+, PETG, ABS, ASA, TPU, Nylon, PC, Silk PLA
-  - "What happens if temperature is wrong?" callout section
-  - Tips for dialing in temperatures (temperature tower, incremental tuning)
-  - FAQ section
-- Internal links: `/materials/pla`, `/materials/petg`, `/materials/abs`, `/materials/asa`, `/materials/tpu`, `/diagnose`, `/filament-storage-guide`
-- Keywords targeted: filament temperature, 3D printer temperature settings, PLA temperature
-
-#### 5. New Standalone Page: `/filament-storage-guide`
-
-**File**: `src/pages/FilamentStorageGuide.tsx`
-
-- H1: "How to Store 3D Printer Filament — Complete Guide"
-- Meta title: "Filament Storage Guide — How to Store & Dry Filament | FilaScope"
-- Meta description: "Complete guide to storing 3D printer filament. Proper humidity control, drying instructions for PLA, PETG, Nylon & more. Prevent moisture damage and extend filament life."
-- Structured data: `ArticleSchema` + `FAQSchema` + `BreadcrumbSchema` + `HowToSchema`
-- Content:
-  - Intro: why moisture is the enemy
-  - Signs of wet filament (popping, stringing, bubbles) — visual card grid
-  - Storage recommendations by material (which need airtight containers, desiccant)
-  - Drying temperatures table (static) — PLA: 45-50°C for 4-6h, PETG: 65°C for 4-6h, etc.
-  - Step-by-step drying instructions (HowTo schema)
-  - Product recommendations sidebar linking to `/accessories` (filament dryers)
-  - FAQ section
-- Internal links: `/accessories`, `/diagnose`, `/materials/nylon`, `/best-filaments-for-beginners`, `/filament-temperature-guide`
-- Keywords targeted: filament storage, how to dry filament, filament dryer
-
----
-
-### LearningCenter Registration
-
-Both BuyingGuide configs (`best-filament-for-ender-3`, `best-filament-for-bambu-lab-a1`) and standalone pages need to appear in the Learning Center guide list.
-
-**File**: `src/pages/LearningCenter.tsx` — add 4 new entries to the `GUIDES` array:
-
-```
-{ slug: 'best-filaments-for-beginners', title: 'Best Filaments for Beginners 2026', category: 'beginner', readTime: 8, isBuyingGuide: false (custom URL: /best-filaments-for-beginners) }
-{ slug: 'best-filament-for-ender-3', title: 'Best Filaments for Creality Ender 3', category: 'buying-guide', readTime: 10, isBuyingGuide: true }
-{ slug: 'best-filament-for-bambu-lab-a1', title: 'Best Filaments for Bambu Lab A1 & A1 Mini', category: 'buying-guide', readTime: 10, isBuyingGuide: true }
-{ slug: 'filament-temperature-guide', title: 'Complete Filament Temperature Guide', category: 'materials', readTime: 8, isBuyingGuide: false (custom URL: /filament-temperature-guide) }
-{ slug: 'filament-storage-guide', title: 'How to Store 3D Printer Filament', category: 'beginner', readTime: 6, isBuyingGuide: false (custom URL: /filament-storage-guide) }
-```
-
-Note: The `LearningCenter` already has a `link` pattern for `isBuyingGuide: true` → `/guides/slug` and non-buying-guide → `/learn/slug`. The 3 standalone pages need a `customUrl` property added to the `GuideMetadata` type, or they link to their direct URL rather than `/learn/:slug`.
-
----
-
-### App.tsx Routes (6 new)
-
-```tsx
-// New landing pages
-const BestFilamentsForBeginners = lazy(() => import("./pages/BestFilamentsForBeginners"));
-const FilamentTemperatureGuide = lazy(() => import("./pages/FilamentTemperatureGuide"));
-const FilamentStorageGuide = lazy(() => import("./pages/FilamentStorageGuide"));
-
-// Redirect shims
-<Route path="/best-filaments-for-beginners" element={<BestFilamentsForBeginners />} />
-<Route path="/best-filament-for-ender-3" element={<Navigate to="/guides/best-filament-for-ender-3" replace />} />
-<Route path="/best-filament-for-bambu-lab-a1" element={<Navigate to="/guides/best-filament-for-bambu-lab-a1" replace />} />
-<Route path="/filament-temperature-guide" element={<FilamentTemperatureGuide />} />
-<Route path="/filament-storage-guide" element={<FilamentStorageGuide />} />
+CREATE POLICY "Service role all search_console_data"
+  ON search_console_data FOR ALL
+  USING (auth.role() = 'service_role');
 ```
 
 ---
 
-### Sitemap Updates
+### Part 2 — Edge Function: `search-console-sync`
 
-Two files need updating:
+**File**: `supabase/functions/search-console-sync/index.ts`
 
-**`supabase/functions/prerender/index.ts`** — in `STATIC_PAGES` array and `GUIDE_SLUGS`:
-- Add to `STATIC_PAGES` (Tier 4 — 0.7): `/best-filaments-for-beginners`, `/filament-temperature-guide`, `/filament-storage-guide`
-- Add to `GUIDE_SLUGS`: `"best-filament-for-ender-3"`, `"best-filament-for-bambu-lab-a1"`
-- Add prerender `PageData` handlers for the 3 new standalone pages (following the same pattern as `bestFilamentsForHueforgePage()`, `plaVsPetgPage()` etc.)
-- Add to `GUIDE_META` for the 2 new guide slugs
+The function handles three concerns:
 
-**`supabase/functions/sitemap-xml/index.ts`** (the secondary sitemap function) — also update its `STATIC_PAGES` and `GUIDE_SLUGS` arrays to match.
+**A. Authentication with GSC API (OAuth 2.0 service account)**
 
-**Redeploy** `prerender` and `sitemap-xml` edge functions after changes.
+Service accounts use a signed JWT to get an access token. The function will:
+1. Read `GSC_SERVICE_ACCOUNT_JSON` secret (contains `client_email`, `private_key`, `token_uri`)
+2. Construct and sign a JWT using the service account's private key via the Web Crypto API (available in Deno/edge runtime — no external JWT library needed)
+3. Exchange the JWT for a short-lived Bearer token from `https://oauth2.googleapis.com/token`
+4. Use the Bearer token in all GSC API calls
 
----
+**B. Data fetching from GSC API**
 
-### Internal Linking Updates
+Endpoint: `POST https://searchconsoleapi.googleapis.com/webmasters/v3/sites/{siteUrl}/searchAnalytics/query`
 
-**`src/components/SiteFooter.tsx`** — add 3 new entries to `guideLinks`:
-```tsx
-{ name: "Best Filaments for Beginners", href: "/best-filaments-for-beginners" },
-{ name: "Filament Temperature Guide", href: "/filament-temperature-guide" },
-{ name: "Filament Storage Guide", href: "/filament-storage-guide" },
-```
+Two requests per sync run:
+1. **Query + page dimensions** (clicks, impressions, CTR, position by query + page)
+2. **Device + country breakdown** (same metrics split by device and country)
 
-**`src/components/guides/content/GuideBestFilamentBeginners.tsx`** — this existing file is a legacy guide served under `/learn/best-filament-for-beginners-2025`. No change needed; the new page is at a separate URL.
+Date range: yesterday (always syncs the previous day since GSC data has a 2-3 day lag; the function will fetch the last 3 days on first run to backfill).
 
----
+Row limit: 25,000 per request (GSC maximum).
 
-### Prerender Handlers
+**C. Upsert to database**
 
-For the 3 new standalone pages, add these functions in `prerender/index.ts` (same pattern as existing):
+Uses `INSERT ... ON CONFLICT DO UPDATE` via the `search_console_data_unique` index so re-runs are idempotent.
+
+**Function structure:**
 
 ```typescript
-function bestFilamentsForBeginnersPage(): PageData { ... }
-function filamentTemperatureGuidePage(): PageData { ... }
-function filamentStorageGuidePage(): PageData { ... }
+Deno.serve(async (req) => {
+  // 1. Check for credentials
+  const credJson = Deno.env.get('GSC_SERVICE_ACCOUNT_JSON');
+  if (!credJson) return { error: 'GSC_SERVICE_ACCOUNT_JSON not configured', status: 400 };
+  
+  // 2. Get OAuth token via service account JWT
+  const accessToken = await getGscAccessToken(JSON.parse(credJson));
+  
+  // 3. Determine date range (default: last 3 days for backfill, or yesterday for cron)
+  const body = await req.json().catch(() => ({}));
+  const startDate = body.start_date || getDateDaysAgo(3);
+  const endDate = body.end_date || getDateDaysAgo(1);
+  
+  // 4. Fetch from GSC API (query+page, device breakdowns)
+  const rows = await fetchGscData(accessToken, siteUrl, startDate, endDate);
+  
+  // 5. Upsert to search_console_data
+  const { count } = await supabase.from('search_console_data').upsert(rows, { onConflict: '...' });
+  
+  return { synced: count, date_range: `${startDate} to ${endDate}` };
+});
 ```
 
-And wire them into `getPageData()` (the main routing switch) alongside existing entries.
+**Cron setup**: Will be registered via the SQL cron insert tool (runs daily at 06:00 UTC, after GSC data settles):
+
+```sql
+SELECT cron.schedule(
+  'search-console-sync-daily',
+  '0 6 * * *',
+  $$ SELECT net.http_post(...) $$
+);
+```
+
+**Config**: `supabase/config.toml` — `verify_jwt = false` (validates admin auth in code).
+
+---
+
+### Part 3 — UI: New "Search Performance" Tab
+
+**File**: `src/components/admin/analytics/SearchConsolePanel.tsx`
+
+The panel has three states:
+1. **Not connected** — shows a "Connect Google Search Console" setup card with step-by-step instructions
+2. **Connected but loading** — skeleton cards
+3. **Connected with data** — full dashboard
+
+**Sub-sections:**
+
+**A. Overview KPI row** (4 stat cards, 28-day totals):
+- Total clicks | Total impressions | Average CTR | Average position
+
+**B. Top Queries by Impressions** (table)
+- Columns: Query | Impressions | Clicks | CTR | Avg Position
+- Color-coded position column: green ≤3, yellow 4–10, orange 11–20, red >20
+- Sortable by any column
+
+**C. Top Pages by Clicks** (table)
+- Columns: Page (truncated URL) | Clicks | Impressions | CTR
+- Links open the page in a new tab
+
+**D. CTR Trend Over Time** (line chart, 28 days)
+- X: date, Y: daily average CTR
+- Uses existing Recharts pattern from SearchPanel
+
+**E. Position Distribution** (bar chart or stat grid)
+- Top 3 | Top 10 | Top 11–20 | 20+
+- Shows query counts in each bracket
+
+**F. "Content Opportunities" section** (3 sub-cards):
+- **Missing pages**: `impressions > 100 AND position IS NULL` (query has no dedicated landing page) — suggests creating content
+- **Quick wins**: `position BETWEEN 4 AND 20` — suggests optimizing existing page
+- **CTR underperformers**: `position < 10 AND ctr < 0.02` — suggests improving title/description
+
+All queries run against `search_console_data` via Supabase client. React Query with 5-minute stale time.
+
+---
+
+### Part 4 — Analytics Page Updates
+
+**File**: `src/pages/admin/Analytics.tsx`
+
+- Add new import: `SearchConsolePanel`
+- Add `<TabsTrigger value="gsc">Search Console</TabsTrigger>` to `TabsList`
+- Add `<TabsContent value="gsc"><SearchConsolePanel /></TabsContent>`
+- Update page description to mention Search Console
+
+---
+
+### Part 5 — Secret Configuration
+
+Will request the `GSC_SERVICE_ACCOUNT_JSON` secret. The setup card in the UI will include the exact steps to create and download the service account key:
+1. Go to Google Cloud Console → IAM & Admin → Service Accounts
+2. Create a service account
+3. Grant it "Search Console API" permissions
+4. Add it as a user in Search Console for `https://filascope.com`
+5. Create JSON key → download → paste entire JSON into the secret field
 
 ---
 
@@ -195,14 +182,24 @@ And wire them into `getPageData()` (the main routing switch) alongside existing 
 
 | File | Action |
 |------|--------|
-| `src/pages/BestFilamentsForBeginners.tsx` | Create new standalone page |
-| `src/pages/FilamentTemperatureGuide.tsx` | Create new standalone page |
-| `src/pages/FilamentStorageGuide.tsx` | Create new standalone page |
-| `src/components/guides/guideConfigs.ts` | Add 2 new BuyingGuide configs (Ender 3, Bambu A1) |
-| `src/pages/LearningCenter.tsx` | Add 5 new GUIDES entries + `customUrl` field to `GuideMetadata` type |
-| `src/App.tsx` | Add 5 new routes + lazy imports |
-| `src/components/SiteFooter.tsx` | Add 3 links to `guideLinks` |
-| `supabase/functions/prerender/index.ts` | Add static pages, guide slugs, prerender handlers + deploy |
-| `supabase/functions/sitemap-xml/index.ts` | Add static pages + guide slugs |
+| Database migration | Create `search_console_data` table + RLS + unique index |
+| `supabase/functions/search-console-sync/index.ts` | Create edge function |
+| `supabase/config.toml` | Add `[functions.search-console-sync]` entry |
+| `src/components/admin/analytics/SearchConsolePanel.tsx` | Create full UI panel |
+| `src/pages/admin/Analytics.tsx` | Add "Search Console" tab |
+| Cron SQL (via insert tool) | Schedule daily sync at 06:00 UTC |
 
-No database changes required.
+No existing files are broken. The new tab appears alongside current tabs. The `GSC_SERVICE_ACCOUNT_JSON` secret must be added before data will flow.
+
+---
+
+### Google Search Console API — JWT Flow Detail
+
+The Web Crypto API in Deno can sign RS256 JWTs natively. The flow:
+```
+service_account.json → extract private_key (PEM) → import as CryptoKey
+→ build JWT header.payload → sign with RS256 → base64url encode
+→ POST to token_uri → get { access_token, expires_in }
+→ use "Bearer {access_token}" for all GSC API calls
+```
+This avoids any external JWT library dependency, keeping the function self-contained and fast to cold-start.
