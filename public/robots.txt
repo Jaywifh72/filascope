@@ -17,4 +17,4 @@ Disallow: /settings
 Disallow: /maintenance
 Disallow: /embed/
 
-Sitemap: https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml
+Sitemap: https://filascope.com/sitemap.xml
