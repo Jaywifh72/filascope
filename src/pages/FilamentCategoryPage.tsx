@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { useJsonLd } from "@/components/seo/useJsonLd";
+import { FAQSection } from "@/components/seo";
 import { MATERIAL_SLUG_CONFIG } from "@/pages/MaterialHub";
 import { materialNameToSlug } from "@/lib/materialSlugUtils";
 import { useFinderQuery, DEFAULT_PAGE_SIZE } from "@/hooks/useFinderQuery";
@@ -258,6 +259,147 @@ const MATERIAL_NAME_TO_SLUG: Record<string, string> = (() => {
   return map;
 })();
 
+// ─────────────────────────────────────────────
+// Per-material FAQ static knowledge
+// ─────────────────────────────────────────────
+interface MaterialKnowledge {
+  nozzle: string;
+  bed: string;
+  beginner: boolean;
+  enclosure: boolean;
+  beginnerReason: string;
+  enclosureReason: string;
+}
+
+const MATERIAL_KNOWLEDGE: Record<string, MaterialKnowledge> = {
+  pla: {
+    nozzle: "190–220°C", bed: "0–60°C (unheated bed works)",
+    beginner: true, enclosure: false,
+    beginnerReason: "PLA is the most beginner-friendly filament — it prints at low temperatures, requires no enclosure, and has very low warping.",
+    enclosureReason: "No, PLA does not require an enclosure. It prints fine on open-frame printers and even benefits from good airflow for cooling.",
+  },
+  petg: {
+    nozzle: "220–250°C", bed: "70–90°C",
+    beginner: true, enclosure: false,
+    beginnerReason: "PETG is relatively beginner-friendly, though it's slightly more finicky than PLA. It benefits from a heated bed and good part cooling.",
+    enclosureReason: "PETG generally does not need an enclosure, though a draft shield can help in cold environments.",
+  },
+  abs: {
+    nozzle: "230–260°C", bed: "90–110°C",
+    beginner: false, enclosure: true,
+    beginnerReason: "ABS is not recommended for beginners. It is prone to warping and cracking, requires precise temperature control, and needs an enclosure for reliable results.",
+    enclosureReason: "Yes, ABS absolutely requires an enclosure. Without one, rapid cooling causes layer delamination and warping, especially on larger prints.",
+  },
+  tpu: {
+    nozzle: "220–240°C", bed: "30–60°C",
+    beginner: false, enclosure: false,
+    beginnerReason: "TPU is moderately difficult. It requires a direct-drive extruder and slow print speeds. Bowden setups struggle with flexible materials.",
+    enclosureReason: "No enclosure is needed for TPU, but print slowly (20–35 mm/s) to avoid stringing and jams.",
+  },
+  asa: {
+    nozzle: "230–260°C", bed: "90–110°C",
+    beginner: false, enclosure: true,
+    beginnerReason: "ASA is not recommended for beginners. Like ABS, it is prone to warping and requires careful environmental control.",
+    enclosureReason: "Yes, ASA requires an enclosure to prevent warping and layer cracking, especially for large prints.",
+  },
+  "silk-pla": {
+    nozzle: "200–230°C", bed: "25–60°C",
+    beginner: true, enclosure: false,
+    beginnerReason: "Silk PLA prints almost identically to standard PLA, making it beginner-friendly. You may need slightly higher temperatures for best shine.",
+    enclosureReason: "No enclosure needed for Silk PLA. It behaves like standard PLA and prints on open-frame machines.",
+  },
+  nylon: {
+    nozzle: "240–270°C", bed: "70–90°C (PEI or Garolite recommended)",
+    beginner: false, enclosure: true,
+    beginnerReason: "Nylon is challenging for beginners. It is highly hygroscopic (absorbs moisture), prone to warping, and needs an all-metal hotend.",
+    enclosureReason: "Yes, an enclosure is strongly recommended for Nylon to maintain ambient temperature and prevent warping.",
+  },
+  "pla-plus": {
+    nozzle: "195–230°C", bed: "25–60°C",
+    beginner: true, enclosure: false,
+    beginnerReason: "PLA+ prints just like standard PLA with the same easy settings, making it a great beginner upgrade for more durable prints.",
+    enclosureReason: "No enclosure needed. PLA+ is as easy to print as standard PLA.",
+  },
+  "high-speed-pla": {
+    nozzle: "220–240°C", bed: "35–65°C",
+    beginner: false, enclosure: false,
+    beginnerReason: "High-Speed PLA is best on modern CoreXY printers like Bambu Lab X1C or Creality K1. It requires higher flow rates and proper cooling — intermediate skill recommended.",
+    enclosureReason: "An enclosure is not required, but consistent part cooling is critical at high speeds.",
+  },
+  polycarbonate: {
+    nozzle: "260–310°C", bed: "100–130°C",
+    beginner: false, enclosure: true,
+    beginnerReason: "Polycarbonate is one of the most difficult materials to print. It requires an all-metal hotend, high-temperature bed, and enclosure — recommended for advanced users only.",
+    enclosureReason: "Yes, PC absolutely requires an enclosed printer to maintain a high ambient temperature and prevent severe warping.",
+  },
+  "petg-cf": {
+    nozzle: "240–260°C", bed: "70–90°C",
+    beginner: false, enclosure: false,
+    beginnerReason: "PETG-CF requires a hardened steel nozzle and careful settings. Not recommended for beginners.",
+    enclosureReason: "An enclosure is not strictly required for PETG-CF, but it helps with print consistency.",
+  },
+};
+
+function generateMaterialCategoryFAQs(
+  slug: string,
+  label: string,
+  intro: string,
+  materialStats: { minPrice: number | null; maxPrice: number | null; topBrands: string[] } | null | undefined,
+): { question: string; answer: string }[] {
+  const knowledge = MATERIAL_KNOWLEDGE[slug];
+  const faqs: { question: string; answer: string }[] = [];
+
+  // 1. What is {Material}?
+  faqs.push({
+    question: `What is ${label} filament?`,
+    answer: intro.replace(/<[^>]+>/g, '').split('.').slice(0, 3).join('.') + '.',
+  });
+
+  // 2. Temperature FAQ
+  if (knowledge) {
+    faqs.push({
+      question: `What temperature does ${label} filament need?`,
+      answer: `${label} filament typically prints at a nozzle temperature of ${knowledge.nozzle} and a bed temperature of ${knowledge.bed}. Exact settings vary by brand and color — always check the manufacturer's datasheet.`,
+    });
+  }
+
+  // 3. Beginner FAQ
+  if (knowledge) {
+    faqs.push({
+      question: `Is ${label} filament good for beginners?`,
+      answer: knowledge.beginnerReason,
+    });
+  }
+
+  // 4. Price FAQ (from DB data)
+  if (materialStats?.minPrice && materialStats?.maxPrice) {
+    const minStr = `$${materialStats.minPrice.toFixed(2)}`;
+    const maxStr = `$${materialStats.maxPrice.toFixed(2)}`;
+    faqs.push({
+      question: `How much does ${label} filament cost?`,
+      answer: `${label} filament typically ranges from ${minStr} to ${maxStr} per spool in the US market. Price varies by brand, color type, and spool weight. FilaScope tracks live pricing from 48+ brands to help you find the best deal.`,
+    });
+  }
+
+  // 5. Enclosure FAQ
+  if (knowledge) {
+    faqs.push({
+      question: `Does ${label} filament require an enclosure?`,
+      answer: knowledge.enclosureReason,
+    });
+  }
+
+  // 6. Brands FAQ (from DB data)
+  if (materialStats?.topBrands && materialStats.topBrands.length > 0) {
+    faqs.push({
+      question: `What brands make ${label} filament?`,
+      answer: `Popular ${label} filament brands include ${materialStats.topBrands.join(', ')}, and many more. FilaScope indexes ${label} filaments from 48+ manufacturers so you can compare specs and prices side by side.`,
+    });
+  }
+
+  return faqs;
+}
+
 export default function FilamentCategoryPage() {
   const { slug } = useParams<{ slug?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -310,6 +452,36 @@ export default function FilamentCategoryPage() {
     staleTime: 1000 * 60 * 10,
   });
 
+  // Fetch price range + top brands for FAQ generation
+  const { data: materialStats } = useQuery({
+    queryKey: ["filament-category-stats", slug],
+    enabled: !!slug && !!config,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("filaments")
+        .select("vendor, variant_price")
+        .in("material", config!.materials)
+        .not("variant_price", "is", null)
+        .limit(500);
+      if (!data) return null;
+      const prices = (data as any[]).map((d: any) => d.variant_price).filter(Boolean) as number[];
+      const brandCounts: Record<string, number> = {};
+      for (const row of data as any[]) {
+        if (row.vendor) brandCounts[row.vendor] = (brandCounts[row.vendor] || 0) + 1;
+      }
+      const topBrands = Object.entries(brandCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([v]) => v);
+      return {
+        minPrice: prices.length ? Math.min(...prices) : null,
+        maxPrice: prices.length ? Math.max(...prices) : null,
+        topBrands,
+      };
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
   const count = materialCount ?? 0;
 
   // Paginated products
@@ -358,6 +530,11 @@ export default function FilamentCategoryPage() {
     : [{ name: "Filaments", url: "/filaments" }];
 
   useCategorySchemas(slug, metaConfig.h1, canonical, groups, displayCount);
+
+  // Generate FAQs for material category pages (plain function call, not hook)
+  const materialFaqs = slug && config
+    ? generateMaterialCategoryFAQs(slug, config.label, intro, materialStats)
+    : [];
 
   return (
     <>
@@ -470,6 +647,15 @@ export default function FilamentCategoryPage() {
               </a>
             </div>
           </nav>
+        )}
+
+        {/* FAQ Section — emits FAQPage JSON-LD + visible accordion for Google */}
+        {slug && materialFaqs.length > 0 && (
+          <FAQSection
+            faqs={materialFaqs}
+            title={`${config?.label ?? label} Filament — Frequently Asked Questions`}
+            className="mt-10"
+          />
         )}
 
         {/* Related Searches for SEO discoverability */}
