@@ -7,6 +7,7 @@ import { SearchPanel } from "@/components/admin/analytics/SearchPanel";
 import { TrafficPanel } from "@/components/admin/analytics/TrafficPanel";
 import { SeoHealthPanel } from "@/components/admin/analytics/SeoHealthPanel";
 import { ContentGapsPanel } from "@/components/admin/analytics/ContentGapsPanel";
+import { SearchConsolePanel } from "@/components/admin/analytics/SearchConsolePanel";
 
 export default function Analytics() {
   return (

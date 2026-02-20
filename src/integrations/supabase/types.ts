@@ -7524,6 +7524,48 @@ export type Database = {
         }
         Relationships: []
       }
+      search_console_data: {
+        Row: {
+          clicks: number | null
+          country: string | null
+          created_at: string | null
+          ctr: number | null
+          date: string
+          device: string | null
+          id: string
+          impressions: number | null
+          page: string | null
+          position: number | null
+          query: string | null
+        }
+        Insert: {
+          clicks?: number | null
+          country?: string | null
+          created_at?: string | null
+          ctr?: number | null
+          date: string
+          device?: string | null
+          id?: string
+          impressions?: number | null
+          page?: string | null
+          position?: number | null
+          query?: string | null
+        }
+        Update: {
+          clicks?: number | null
+          country?: string | null
+          created_at?: string | null
+          ctr?: number | null
+          date?: string
+          device?: string | null
+          id?: string
+          impressions?: number | null
+          page?: string | null
+          position?: number | null
+          query?: string | null
+        }
+        Relationships: []
+      }
       search_logs: {
         Row: {
           created_at: string | null
