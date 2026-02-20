@@ -22,7 +22,6 @@ const STATIC_PAGES: Array<{
   { path: "/brands/compare", priority: 0.6, changefreq: "monthly" },
   { path: "/compare", priority: 0.6, changefreq: "monthly" },
   { path: "/wizard", priority: 0.7, changefreq: "monthly" },
-  { path: "/color-finder", priority: 0.7, changefreq: "monthly" },
   { path: "/colors", priority: 0.7, changefreq: "weekly" },
   { path: "/hueforge-td-database", priority: 0.7, changefreq: "weekly" },
   { path: "/hueforge-filaments", priority: 0.7, changefreq: "weekly" },
