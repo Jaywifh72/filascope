@@ -807,9 +807,44 @@ const FilamentDetail = () => {
         description={seoDescription}
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
-        sku={displayFilament.variant_sku}
+        sku={
+          displayFilament.variant_sku ||
+          // Generated fallback: BRAND-MATERIAL-COLOR e.g. "BAMBULAB-PLA-WHITE"
+          [
+            displayFilament.vendor,
+            displayFilament.material,
+            displayFilament.color_family,
+          ]
+            .filter(Boolean)
+            .join('-')
+            .toUpperCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^A-Z0-9-]/g, '') || null
+        }
         gtin={displayFilament.gtin || displayFilament.ean || displayFilament.upc}
-        mpn={displayFilament.mpn}
+        mpn={
+          displayFilament.mpn ||
+          displayFilament.variant_sku ||
+          // Generated fallback: BRAND-MATERIAL-COLOR-DIAMETER-WEIGHT e.g. "BAMBULAB-PLA-WHITE-175-1KG"
+          [
+            displayFilament.vendor,
+            displayFilament.material,
+            displayFilament.color_family,
+            displayFilament.diameter_nominal_mm
+              ? String(displayFilament.diameter_nominal_mm).replace('.', '')
+              : null,
+            displayFilament.net_weight_g
+              ? displayFilament.net_weight_g >= 1000
+                ? `${displayFilament.net_weight_g / 1000}KG`
+                : `${displayFilament.net_weight_g}G`
+              : null,
+          ]
+            .filter(Boolean)
+            .join('-')
+            .toUpperCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^A-Z0-9-]/g, '') || null
+        }
         material={displayFilament.material}
         color={displayFilament.color_family}
         url={`https://filascope.com/filament/${canonicalSlug}`}
@@ -840,11 +875,12 @@ const FilamentDetail = () => {
               }))
             : undefined
         }
-        // ── Community rating (enables Google star rating snippets) ──
+        // ── Community rating (enables Google star rating snippets — real data only) ──
         ratingValue={communityReviewStats?.avgRating ?? null}
         ratingCount={communityReviewStats?.reviewCount ?? null}
         bestRating={5}
         worstRating={1}
+        hasReturnPolicy={true}
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
