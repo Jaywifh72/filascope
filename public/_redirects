@@ -1,6 +1,8 @@
-# Static files — served directly from public/ (robots.txt, llms.txt)
-# No redirects needed — Vite/hosting serves public/ files before the SPA catch-all
-/a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key           302
+# Static SEO files — explicit redirects BEFORE the SPA catch-all
+# These must come first so the CDN intercepts them before /* /index.html kicks in
+/robots.txt                              https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots                                302
+/llms.txt                                https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms                      302
+/a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key              302
 
 # Sitemap routes — 302 redirect to Supabase edge function
 # (Cloudflare Pages does not support 301 for cross-origin external URLs)
