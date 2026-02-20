@@ -217,7 +217,11 @@ const RecommendationCard = ({
           <img 
             src={imageUrl || '/placeholder.svg'} 
             alt={printer.model_name || 'Printer'} 
+            width={112}
+            height={112}
             className="max-w-full max-h-full object-contain"
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder.svg';
             }}

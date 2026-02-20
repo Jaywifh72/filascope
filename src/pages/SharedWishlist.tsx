@@ -122,7 +122,11 @@ const SharedWishlist = () => {
                       <img
                         src={item.filament.featured_image}
                         alt={item.filament.product_title}
+                        width={400}
+                        height={160}
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div

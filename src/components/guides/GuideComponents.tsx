@@ -66,7 +66,11 @@ export function GuideRelatedProducts({
                     <img 
                       src={product.image} 
                       alt={product.name}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                 )}

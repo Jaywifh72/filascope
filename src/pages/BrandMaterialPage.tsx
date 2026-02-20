@@ -130,8 +130,11 @@ export default function BrandMaterialPage() {
             <img
               src={brandData.logo_url}
               alt={`${brandName} logo`}
+              width={120}
+              height={40}
               className="h-10 w-auto object-contain"
               loading="eager"
+              decoding="async"
             />
           )}
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">

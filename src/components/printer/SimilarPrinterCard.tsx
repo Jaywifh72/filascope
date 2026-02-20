@@ -236,8 +236,11 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
           <img
             src={printer.imageUrl}
             alt={`${printer.brand} ${printer.model}`}
+            width={120}
+            height={120}
             className="max-w-full max-h-full object-contain"
             loading={isCurrent ? "eager" : "lazy"}
+            decoding="async"
             fetchPriority={isCurrent ? "high" : undefined}
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/placeholder.svg";
