@@ -219,6 +219,8 @@ const Wizard = () => {
       />
       <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}>
       <div className="max-w-2xl mx-auto w-full flex flex-col">
+        {/* SEO H1 — visually hidden but readable by crawlers and screen readers */}
+        <h1 className="sr-only">Quick Match — Find Your Perfect 3D Printer Filament</h1>
         <Card ref={wizardCardRef} className="p-4 sm:p-6 md:p-8 min-h-0 flex flex-col">
           {/* Header */}
           <div className="mb-8">

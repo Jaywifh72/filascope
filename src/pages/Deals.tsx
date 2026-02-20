@@ -214,7 +214,7 @@ const Deals = () => {
 
             {/* Headline */}
             <h1 className="text-2xl md:text-4xl font-bold text-center mb-2">
-              Best Prices <span className="text-emerald-400">We Found</span>
+              3D Printer Filament <span className="text-emerald-400">Deals & Discounts</span>
             </h1>
 
             {/* Dynamic stat pills + Deal Alerts CTA */}
