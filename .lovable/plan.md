@@ -1,103 +1,123 @@
 
-## Root Cause
+## Structured Data Audit — Five Page Fixes
 
-The `canonicalSlug` in `FilamentDetail.tsx` is computed from `location.pathname` (React Router's `useLocation()`):
+### What's Wrong (Confirmed via Code Inspection)
 
-```typescript
-const canonicalSlug = location.pathname.replace(/^\/filament\//, '') || id || '';
-```
+**1. Material pages (`FilamentCategoryPage.tsx`) — Duplicate BreadcrumbList + Missing CollectionPage**
+- `useCategorySchemas()` calls `useJsonLd(breadcrumbSchema)` → emits a `BreadcrumbList`
+- The visible `<Breadcrumbs>` component (line 304) also calls `useJsonLd()` internally → emits a second `BreadcrumbList`
+- There is no `CollectionPage` schema anywhere
+- Fix: Remove the manually-built `breadcrumbSchema` and `useJsonLd(breadcrumbSchema)` from `useCategorySchemas()`. Wrap the existing `ItemList` inside a `CollectionPage` schema instead.
 
-React Router's `useLocation()` is **not updated** by `window.history.replaceState()` calls. These are two separate state stores.
+**2. Learn page (`LearningCenter.tsx`) — Only a BreadcrumbList, missing CollectionPage + ItemList**
+- The page imports `BreadcrumbSchema` and renders it (lines 369-372)
+- The visible `<Breadcrumbs>` component (line 376) adds a second BreadcrumbList (same duplicate issue)
+- No `CollectionPage` or `ItemList` schema for the guide listing
+- Fix: Remove the duplicate `BreadcrumbSchema` import/component (keep only the visible `<Breadcrumbs>`). Add a `CollectionPage` + nested `ItemList` representing the guide index.
 
-**The exact failure sequence when a user visits via UUID:**
+**3. Colors page (`ColorFinder.tsx`) — Wrong URL in existing `WebApplicationSchema`**
+- `WebApplicationSchema` already exists (line 75-80) ✅ — but the URL is `https://filascope.com/color-finder` (the old route)
+- The actual route is `/colors` (confirmed in `App.tsx` line 314)
+- The `BreadcrumbSchema` also uses `color-finder` URL (line 73)
+- Fix: Update both schema URLs from `color-finder` to `colors`.
 
-1. User navigates to `/filament/39aad56f-03d8-4005-bf52-d7f6204df18b`
-2. React renders `FilamentDetail` — `location.pathname` is `/filament/39aad56f-...`
-3. `canonicalSlug` = `"39aad56f-03d8-4005-bf52-d7f6204df18b"` (UUID)
-4. `useFilamentBySlug` fetches the filament, then calls `window.history.replaceState(null, '', '/filament/numakers-pla-pure-white')` — the browser bar updates
-5. React Router's `location.pathname` **does NOT update** — replaceState bypasses the Router entirely
-6. `ProductSEO` renders `canonicalUrl="/filament/39aad56f-..."` — UUID in canonical
+**4. Deals page (`Deals.tsx`) — Already has OfferCatalogSchema ✅**
+- `OfferCatalogSchema` is already rendered (lines 180-187)
+- `ItemListSchema` already rendered (lines 188-195)
+- `BreadcrumbSchema` already rendered (lines 176-179)
+- This page is actually COMPLETE — no changes needed here.
 
-**When a user visits via slug directly:**
-
-1. User navigates to `/filament/numakers-pla-pure-white`
-2. `location.pathname` = `/filament/numakers-pla-pure-white`
-3. `canonicalSlug` = `"numakers-pla-pure-white"` ✅
-4. But if the slug-to-product lookup resolves to a slightly different canonical slug (e.g. the hook regenerates `"numakers-pla-pure-white"` via `generateFilamentSlug`), the canonical still uses whatever was in the URL — which may differ from the canonical slug
-
-The fix must derive `canonicalSlug` from the **resolved filament object** using `generateFilamentSlug` (the same function `useFilamentBySlug` already uses internally), not from the URL pathname. This guarantees the canonical always matches the vendor-prefixed slug, regardless of how the user arrived.
-
----
-
-## Fix: One File Change — `src/pages/FilamentDetail.tsx`
-
-### Before (lines 99–110)
-
-```typescript
-const { id } = useParams();
-const location = useLocation();
-// Use the actual URL pathname slug — the hook updates it via history.replaceState
-// so this is always the SEO-friendly slug, never a UUID after resolution.
-const canonicalSlug = location.pathname.replace(/^\/filament\//, '') || id || '';
-const navigate = useNavigate();
-...
-const { filament, loading, error: fetchError, isRedirecting, refetch } = useFilamentBySlug(id);
-```
-
-### After
-
-1. Keep `const { id } = useParams()` and `const location = useLocation()` (location is still used for the tab-hash fragment state)
-2. Remove the `canonicalSlug` derivation from `location.pathname`
-3. After the `useFilamentBySlug` call, derive `canonicalSlug` from the resolved filament:
-
-```typescript
-const { id } = useParams();
-const location = useLocation();
-const navigate = useNavigate();
-...
-const { filament, loading, error: fetchError, isRedirecting, refetch } = useFilamentBySlug(id);
-
-// Derive canonical slug from the RESOLVED filament object, not the URL pathname.
-// location.pathname is NOT updated by history.replaceState() — using it would
-// produce UUID-based canonicals when users land via UUID URLs.
-const canonicalSlug = useMemo(() => {
-  if (filament) {
-    return generateFilamentSlug(
-      filament.vendor,
-      filament.material,
-      filament.product_title,
-      filament.color_family,
-    ) || filament.id;
-  }
-  // Fallback while loading: use pathname slug if it's not a UUID, else id param
-  const pathSlug = location.pathname.replace(/^\/filament\//, '');
-  return isUuid(pathSlug) ? (id || '') : pathSlug;
-}, [filament, location.pathname, id]);
-```
-
-This needs two imports added at the top of `FilamentDetail.tsx`:
-- `generateFilamentSlug` from `@/lib/seoSlugUtils`
-- `isUuid` from `@/lib/seoSlugUtils`
-- `useMemo` is already imported
+**5. Printers list (`Printers.tsx`) — PrinterListProductSchema fires 10 separate Product schemas alongside an ItemList**
+- `ItemListSchema` wraps 50 printers (lines 625-633) ✅
+- `PrinterListProductSchema` additionally fires up to 10 separate top-level `Product` schemas (line 634)
+- The 10 Product schemas are not wrapped in a CollectionPage
+- Fix: Add a `CollectionPage` schema that wraps the existing `ItemList` data. The `PrinterListProductSchema` stays for product-level signals, but should be contained within a `CollectionPage` context. A new `CollectionPageSchema` component handles this.
 
 ---
 
-## Files Changed
+### New Component: `src/components/seo/CollectionPageSchema.tsx`
+
+A reusable component (like `BrandOrganizationSchema.tsx` uses internally) that emits a `CollectionPage` JSON-LD block. Used by Printers and LearningCenter pages:
+
+```typescript
+// Props
+interface CollectionPageSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  numberOfItems?: number;
+  image?: string;
+}
+```
+
+---
+
+### Files to Modify
 
 | File | Change |
 |---|---|
-| `src/pages/FilamentDetail.tsx` | Replace `canonicalSlug` derivation (3 lines → useMemo using resolved filament) + add `generateFilamentSlug` and `isUuid` imports |
+| `src/components/seo/CollectionPageSchema.tsx` | **Create new** — reusable CollectionPage schema component |
+| `src/components/seo/index.ts` | Export `CollectionPageSchema` |
+| `src/pages/FilamentCategoryPage.tsx` | Remove duplicate BreadcrumbList from `useCategorySchemas()`. Change `useJsonLd(itemListSchema)` to emit a `CollectionPage` wrapping the ItemList instead |
+| `src/pages/LearningCenter.tsx` | Remove duplicate `BreadcrumbSchema` component. Add `CollectionPageSchema` + `ItemListSchema` for guides |
+| `src/pages/ColorFinder.tsx` | Fix URL in `WebApplicationSchema` and `BreadcrumbSchema` from `/color-finder` to `/colors` |
+| `src/pages/Printers.tsx` | Add `CollectionPageSchema` wrapping the printer listing |
 
-## No Other Files Changed
+---
 
-- `useFilamentBySlug.ts` — no change, it already does the right thing for URL display
-- `ProductSEO.tsx` — no change, it correctly uses `canonicalUrl` as passed
-- `useDocumentHead.ts` — no change
-- No database changes
+### Detailed Per-Page Changes
 
-## Why This Is Complete
+**FilamentCategoryPage.tsx**
+- In `useCategorySchemas()`: delete the `breadcrumbSchema` const and the `useJsonLd(breadcrumbSchema)` call. The `<Breadcrumbs>` component already handles the breadcrumb schema.
+- Change `useJsonLd(itemListSchema)` to `useJsonLd(collectionPageSchema)` where `collectionPageSchema` wraps the itemList as `mainEntity`.
 
-- When user arrives via **slug**: filament resolves → `generateFilamentSlug` produces the same vendor-prefixed slug → canonical correct ✅
-- When user arrives via **UUID**: filament resolves → `generateFilamentSlug` produces the slug → canonical uses slug, not UUID ✅
-- During **loading** (before filament resolved): falls back to the pathname slug if it isn't a UUID, avoiding a flash of UUID canonical ✅
-- The `history.replaceState` in `useFilamentBySlug` continues to work for the browser address bar — this fix is independent of that mechanism ✅
+**LearningCenter.tsx**
+- Remove `BreadcrumbSchema` import and its JSX call (the `<Breadcrumbs>` component on line 376 already handles the breadcrumb schema).
+- Add `CollectionPageSchema` with `name="3D Printing Guides & Learning Center"`, the existing meta description, `url="https://filascope.com/learn"`, `numberOfItems={GUIDES.length}`.
+- Add `ItemListSchema` with the top 20 guides (by `publishedAt` date descending) as list items.
+
+**ColorFinder.tsx**
+- `BreadcrumbSchema` line 73: change `url: 'https://filascope.com/color-finder'` → `url: 'https://filascope.com/colors'`
+- `WebApplicationSchema` line 77: change `url="https://filascope.com/color-finder"` → `url="https://filascope.com/colors"`
+
+**Printers.tsx**
+- After the existing `ItemListSchema` (line 633), add `<CollectionPageSchema>` with name, description, URL, and `numberOfItems` from the printer count.
+
+---
+
+### Schema Structure After Fix
+
+**Material pages** (e.g. `/filaments/pla`):
+```text
+BreadcrumbList     ← from <Breadcrumbs> component (single, correct)
+CollectionPage     ← NEW, wrapping ItemList as mainEntity
+```
+
+**Learn page** (`/learn`):
+```text
+BreadcrumbList     ← from <Breadcrumbs> component (was duplicate, now single)
+CollectionPage     ← NEW
+ItemList           ← NEW (top guides)
+```
+
+**Colors page** (`/colors`):
+```text
+BreadcrumbList     ← FIXED URL (was /color-finder, now /colors)
+WebApplication     ← FIXED URL (was /color-finder, now /colors)
+```
+
+**Deals page** (`/deals`):
+```text
+BreadcrumbList     ← Already correct ✅
+OfferCatalog       ← Already present ✅
+ItemList           ← Already present ✅
+```
+
+**Printers page** (`/printers`):
+```text
+BreadcrumbList         ← Already correct ✅
+CollectionPage         ← NEW
+ItemList               ← Already present ✅
+Product × 10           ← Already present (PrinterListProductSchema) ✅
+FAQPage                ← Already present ✅
+```
