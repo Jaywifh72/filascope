@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { AlertCircle, Clock, ArrowLeft, Wrench } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ArticleSchema, BreadcrumbSchema, HowToSchema, Breadcrumbs } from "@/components/seo";
 
 const COMMON_ISSUES = [
   {
@@ -43,6 +44,8 @@ const COMMON_ISSUES = [
   },
 ];
 
+const BASE_URL = 'https://filascope.com';
+
 const GuideTroubleshooting = () => {
   return (
     <>
@@ -50,8 +53,41 @@ const GuideTroubleshooting = () => {
         title="Troubleshooting Guide | FilaScope"
         description="Diagnose and fix common 3D printing problems. Solutions for stringing, warping, layer adhesion, and more."
       />
+      <ArticleSchema
+        headline="3D Printing Troubleshooting Guide"
+        description="Diagnose and fix common 3D printing problems. Solutions for stringing, warping, layer adhesion, under-extrusion, clogged nozzles, and more."
+        datePublished="2024-11-01"
+        url="/troubleshooting"
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: BASE_URL },
+          { name: 'Guides', url: `${BASE_URL}/learn` },
+          { name: 'Troubleshooting Guide', url: `${BASE_URL}/troubleshooting` },
+        ]}
+      />
+      <HowToSchema
+        name="How to Diagnose and Fix Common 3D Printing Problems"
+        description="Step-by-step troubleshooting for the most common 3D printing issues including stringing, bed adhesion, warping, layer shifting, under-extrusion, and clogged nozzles."
+        totalTime="PT30M"
+        tool={['3D Printer']}
+        supply={['Filament']}
+        steps={COMMON_ISSUES.map((issue) => ({
+          name: `Fix ${issue.title}`,
+          text: issue.quickFix,
+        }))}
+      />
 
       <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 pt-4">
+          <Breadcrumbs
+            items={[
+              { name: 'Guides', url: '/learn' },
+              { name: 'Troubleshooting Guide', url: '/troubleshooting' },
+            ]}
+          />
+        </div>
+
         {/* Hero Section */}
         <section className="relative py-16 md:py-24 overflow-hidden">
           {/* Background effects */}
