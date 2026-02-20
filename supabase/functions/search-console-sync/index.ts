@@ -107,7 +107,7 @@ async function fetchGscRows(
   dimensions: string[]
 ): Promise<GscRow[]> {
   const encodedSite = encodeURIComponent(siteUrl);
-  const url = `https://searchconsoleapi.googleapis.com/webmasters/v3/sites/${encodedSite}/searchAnalytics/query`;
+  const url = `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodedSite}/searchAnalytics/query`;
 
   const body = {
     startDate,

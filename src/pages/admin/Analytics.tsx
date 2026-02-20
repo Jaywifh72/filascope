@@ -15,7 +15,7 @@ export default function Analytics() {
       <div className="p-6 space-y-6">
         <AdminPageHeader
           title="Analytics Dashboard"
-          description="Affiliate performance, search insights, SEO health, and content gaps"
+          description="Affiliate performance, search insights, SEO health, content gaps, and Search Console data"
           icon={BarChart3}
         />
 
@@ -26,6 +26,7 @@ export default function Analytics() {
             <TabsTrigger value="traffic">Traffic (GA4)</TabsTrigger>
             <TabsTrigger value="seo">SEO Health</TabsTrigger>
             <TabsTrigger value="gaps">Content Gaps</TabsTrigger>
+            <TabsTrigger value="gsc">Search Console</TabsTrigger>
           </TabsList>
 
           <TabsContent value="affiliate">
@@ -46,6 +47,10 @@ export default function Analytics() {
 
           <TabsContent value="gaps">
             <ContentGapsPanel />
+          </TabsContent>
+
+          <TabsContent value="gsc">
+            <SearchConsolePanel />
           </TabsContent>
         </Tabs>
       </div>
