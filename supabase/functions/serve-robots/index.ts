@@ -28,12 +28,39 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
 User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /settings
 Disallow: /maintenance
-Disallow: /embed
+Disallow: /embed/
 
 Sitemap: https://filascope.com/sitemap.xml
 
