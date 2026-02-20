@@ -1,61 +1,105 @@
 
-# Root Cause: CONFIRMED AND FINAL
+# Add ItemList JSON-LD Schema to Guide Pages
 
-## What is actually happening (verified by live tests 2026-02-20)
+## What This Does
 
-Lovable's hosting platform generates `/robots.txt` at the **infrastructure/CDN level** — it is hardcoded and served before any static file in `public/` is considered.
+Guide pages (`/guides/best-pla-filaments`, `/guides/best-filament-for-creality-k1`, etc.) already emit three structured-data blocks via `<script type="application/ld+json">`:
+- `Article` — via `<ArticleSchema>`
+- `BreadcrumbList` — via `<BreadcrumbSchema>`
+- `FAQPage` — via `<FAQSchema>`
 
-**Proof:**
-- `https://filascope.com/robots.txt` → Returns Lovable's default (`Googlebot`, `Bingbot` etc.) — NOT our `public/robots.txt`
-- `https://filascope.lovable.app/robots.txt` → Same Lovable default  
-- `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots` → Returns our correct content ✅
-- `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/robots.txt` → Returns our correct content ✅
+This adds a fourth block: **`ItemList`**, containing one `ListItem` per ranked filament, each embedding a `Product` object with brand, material, price, and a canonical FilaScope URL. This helps Google display the ranked list directly in search results (ListCarousel rich result).
 
-**What Lovable's default robots.txt contains (currently served live):**
+---
+
+## Files to Change
+
+### 1. `src/components/seo/ItemListSchema.tsx` — Extend the item shape
+
+The existing `ItemListItem` interface only supports `name`, `url`, `image`, `description`. The requirements ask for richer `Product` data: `brand` (as a `Brand` typed object), `material`, and `offers` (with `price` and `priceCurrency`).
+
+The component's `useJsonLd` call will be updated to emit these additional fields when present:
+
 ```
-User-agent: Googlebot
-Allow: /
-User-agent: Bingbot
-Allow: /
-User-agent: Twitterbot
-Allow: /
-User-agent: facebookexternalhit
-Allow: /
-User-agent: *
-Allow: /
-Disallow: /admin
-Disallow: /settings
-Disallow: /maintenance
-Disallow: /embed/
-Sitemap: https://filascope.com/sitemap.xml
+itemListElement: items.map((item, index) => ({
+  '@type': 'ListItem',
+  position: item.position || index + 1,
+  name: item.name,
+  url: item.url,
+  item: {
+    '@type': 'Product',
+    name: item.name,
+    url: item.url,
+    ...(item.image && { image: item.image }),
+    ...(item.description && { description: item.description }),
+    ...(item.brand && { brand: { '@type': 'Brand', name: item.brand } }),
+    ...(item.material && { material: item.material }),
+    ...(item.price != null && item.priceCurrency && {
+      offers: {
+        '@type': 'Offer',
+        price: item.price,
+        priceCurrency: item.priceCurrency,
+        availability: 'https://schema.org/InStock',
+      },
+    }),
+  },
+}))
 ```
 
-## What does NOT work
+New fields added to `ItemListItem`:
+- `brand?: string` — vendor name (e.g., `"Bambu Lab"`)
+- `material?: string` — material type (e.g., `"PLA"`)
+- `price?: number` — numeric price (e.g., `24.99`)
+- `priceCurrency?: string` — ISO currency code (e.g., `"USD"`)
 
-| Approach | Why it fails |
-|---|---|
-| `public/robots.txt` | Lovable CDN ignores it — serves its own hardcoded version |
-| `_redirects` 302 | Redirect fires AFTER CDN serves robots.txt — CDN intercepts first |
-| `_worker.js` robots handler | Cloudflare Workers feature — not supported on Lovable hosting |
-| `serve-robots` edge function | Only works when called directly, nothing routes to it on Lovable |
+The `name` field also moves up to the `ListItem` level alongside the nested `item` object (both the Google docs and the existing component have `name` only inside `item` — adding it at the `ListItem` level too is correct per schema.org spec for `ListItem`).
 
-## Attempted fix: `_redirects` 200 proxy rewrite
+### 2. `src/components/guides/BuyingGuideTemplate.tsx` — Wire it in
 
-Updated `_redirects` to use `200` status (transparent proxy rewrite) instead of `302`:
+**Import** `ItemListSchema` at the top.
+
+**Add** the `<ItemListSchema>` component in the Structured Data block (lines 117–126), right after the existing three schemas, conditioned on:
+- `layout === 'ranked-list'` (only ranked guides get an ItemList — VS-comparison and editorial layouts don't produce a clean ordered list)
+- `filaments` is loaded and non-empty
+
+The items array is built inline by mapping the `filaments` array:
+
+```tsx
+{config.layout === 'ranked-list' && filaments && filaments.length > 0 && (
+  <ItemListSchema
+    name={config.title}
+    description={config.seoDescription}
+    itemListOrder="Descending"
+    items={filaments.map((f, i) => {
+      const slug = f.product_handle || generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
+      return {
+        position: i + 1,
+        name: f.product_title,
+        url: `https://filascope.com/filament/${slug}`,
+        image: f.featured_image ?? undefined,
+        brand: f.vendor ?? undefined,
+        material: f.material ?? undefined,
+        price: f.variant_price ?? undefined,
+        priceCurrency: 'USD',
+      };
+    })}
+  />
+)}
 ```
-/robots.txt  https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/robots.txt  200
-```
 
-This may work if Lovable's hosting layer processes `_redirects` before the CDN-level robots.txt override. Requires publish to test.
+**Key decisions:**
+- URL uses `product_handle` first (the stored SEO slug, e.g. `bambu-lab-pla-basic-black`), falling back to `generateFilamentSlug` — this matches how `GuideProductCard` and `GuideComparisonTable` both build their `/filament/` links
+- `itemListOrder="Descending"` — because position 1 is the best/highest-scoring item
+- `priceCurrency` hardcoded to `"USD"` — `variant_price` in the DB is in USD; the `useResolvedPrice` hook converts regionally at render time but USD is the canonical source for schema data
+- `image` is optional and only included when `featured_image` is present, consistent with the existing `ItemListSchema` logic
+- No UI changes — the component returns `null`
 
-## Is the current situation actually a problem?
+---
 
-The Lovable default robots.txt has `User-agent: * Allow: /` which ALREADY allows all bots including AI bots. 
-The only thing missing is the explicit per-bot directives (GPTBot, ClaudeBot etc.) and `Crawl-delay`.
-Search engines and AI crawlers will still crawl the site correctly.
+## No Changes To
 
-## Permanent fix options
-
-1. **Contact Lovable support** — request ability to override `/robots.txt` via `public/robots.txt`
-2. **Move to Cloudflare Pages hosting** — where `_worker.js` and `_redirects` work natively
-3. **Accept current state** — `User-agent: * Allow: /` covers all bots, site is fully crawlable
+- `ArticleSchema`, `BreadcrumbSchema`, `FAQSchema` — untouched
+- `GuideProductCard`, `GuideComparisonTable` — untouched
+- `useJsonLd` hook — untouched
+- VS-comparison or editorial layout guide pages — no ItemList is emitted for those layouts
+- Any database queries or data fetching logic
