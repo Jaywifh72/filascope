@@ -34,6 +34,6 @@
 /manifest.json
   Cache-Control: public, max-age=3600
 
-# Robots / sitemap — short cache
+# Robots / sitemap — short cache (1 hour to allow rapid updates)
 /robots.txt
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=3600, must-revalidate

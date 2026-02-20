@@ -1,5 +1,5 @@
 # FilaScope robots.txt — AI & Search Engine Crawler Policy
-# Updated: 2026-02-20
+# Updated: 2026-02-20 (v2 — cache bust)
 
 User-agent: *
 Allow: /

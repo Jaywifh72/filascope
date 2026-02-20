@@ -1328,7 +1328,7 @@ function isCrawler(ua: string | null): boolean {
 // Robots.txt content
 // ============================================================
 const ROBOTS_TXT = `# FilaScope robots.txt — AI & Search Engine Crawler Policy
-# Updated: 2026-02-20
+# Updated: 2026-02-20 (v2 — cache bust)
 
 User-agent: *
 Allow: /
@@ -1687,7 +1687,7 @@ Deno.serve(async (req) => {
       const ua = req.headers.get("User-Agent") || "unknown";
       console.log(`[ROBOTS] Serving robots.txt to UA: ${ua}`);
       return new Response(ROBOTS_TXT, {
-        headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=86400" },
+        headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600, must-revalidate" },
       });
     }
 
