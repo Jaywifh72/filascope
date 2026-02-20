@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -222,6 +223,37 @@ const PrinterDetail = () => {
       price_jpy: (printer as any)?.current_price_jpy_store,
     },
   });
+
+  // Build regional offers from printer's stored regional prices for AggregateOffer JSON-LD
+  const printerRegionalOffers = useMemo(() => {
+    if (!printer) return undefined;
+
+    const offers: Array<{
+      region: 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP';
+      price: number;
+      currency: 'USD' | 'CAD' | 'EUR' | 'GBP' | 'AUD' | 'JPY';
+      url?: string;
+      availability: boolean;
+    }> = [];
+
+    const storeUrl = printer.official_store_url || undefined;
+    const available = !(printer as any).discontinued;
+
+    if (printer.current_price_usd_store && printer.current_price_usd_store > 0)
+      offers.push({ region: 'US', price: printer.current_price_usd_store, currency: 'USD', url: storeUrl, availability: available });
+    if ((printer as any).current_price_cad_store && (printer as any).current_price_cad_store > 0)
+      offers.push({ region: 'CA', price: (printer as any).current_price_cad_store, currency: 'CAD', url: storeUrl, availability: available });
+    if ((printer as any).current_price_eur_store && (printer as any).current_price_eur_store > 0)
+      offers.push({ region: 'EU', price: (printer as any).current_price_eur_store, currency: 'EUR', url: storeUrl, availability: available });
+    if ((printer as any).current_price_gbp_store && (printer as any).current_price_gbp_store > 0)
+      offers.push({ region: 'UK', price: (printer as any).current_price_gbp_store, currency: 'GBP', url: storeUrl, availability: available });
+    if ((printer as any).current_price_aud_store && (printer as any).current_price_aud_store > 0)
+      offers.push({ region: 'AU', price: (printer as any).current_price_aud_store, currency: 'AUD', url: storeUrl, availability: available });
+    if ((printer as any).current_price_jpy_store && (printer as any).current_price_jpy_store > 0)
+      offers.push({ region: 'JP', price: (printer as any).current_price_jpy_store, currency: 'JPY', url: storeUrl, availability: available });
+
+    return offers.length >= 2 ? offers : undefined;
+  }, [printer]);
 
   // Fetch brandId from automated_brands for regional store lookups
   useEffect(() => {
@@ -717,6 +749,7 @@ const PrinterDetail = () => {
         printerWidthMm={(printer as any).machine_width_mm}
         printerDepthMm={(printer as any).machine_depth_mm}
         printerHeightMm={(printer as any).machine_height_mm}
+        regionalOffers={printerRegionalOffers}
         ratingValue={printer.rating_community_overall}
         ratingCount={printer.review_count_aggregated}
         bestRating={5}
