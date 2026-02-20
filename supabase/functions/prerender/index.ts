@@ -1428,7 +1428,7 @@ const STATIC_PAGES = [
 // Guide slug → publish date (ISO date strings, updated when content changes)
 // Key = URL path suffix, Value = publish date
 // Canonical top-level pages use their full path; /guides/* pages use their slug
-const GUIDE_DATES: Record<string, { date: string; isTopLevel?: boolean }> = {
+const GUIDE_DATES: Record<string, { date: string; isTopLevel?: boolean; isLearn?: boolean }> = {
   "best-pla-filaments":                    { date: "2026-01-10" },
   "best-petg-filaments":                   { date: "2026-01-10" },
   "best-abs-filaments":                    { date: "2026-01-10" },
@@ -1440,7 +1440,8 @@ const GUIDE_DATES: Record<string, { date: string; isTopLevel?: boolean }> = {
   "pla-vs-petg":                           { date: "2026-01-15",  isTopLevel: true },
   "best-filaments-for-beginners":          { date: "2026-01-08",  isTopLevel: true },
   "best-filaments-for-hueforge":           { date: "2026-01-20",  isTopLevel: true },
-  // HueForge TD topical authority cluster
+  // HueForge topical authority cluster
+  "hueforge":                              { date: "2026-02-20", isLearn: true },
   "what-is-hueforge-td":                   { date: "2026-02-20" },
   "best-white-filaments-for-hueforge":     { date: "2026-02-20" },
   "how-to-measure-filament-td":            { date: "2026-02-20" },
@@ -1555,10 +1556,12 @@ function sitemapPages(): string {
 
 function sitemapGuides(): string {
   const today = new Date().toISOString().split("T")[0];
-  const entries = Object.entries(GUIDE_DATES).map(([slug, { date, isTopLevel }]) => {
+  const entries = Object.entries(GUIDE_DATES).map(([slug, { date, isTopLevel, isLearn }]) => {
     const url = isTopLevel
       ? `${BASE_URL}/${slug}`          // canonical top-level: /best-filaments-for-beginners
-      : `${BASE_URL}/guides/${slug}`;  // guide sub-path:       /guides/best-pla-filaments
+      : isLearn
+        ? `${BASE_URL}/learn/${slug}`  // learn hub pages:     /learn/hueforge
+        : `${BASE_URL}/guides/${slug}`;// guide sub-path:       /guides/best-pla-filaments
     return urlEntry(url, date || today, "monthly", 0.7);
   });
   return wrapUrlset(entries);
