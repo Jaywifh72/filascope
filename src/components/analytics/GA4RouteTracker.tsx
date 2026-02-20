@@ -1,21 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { trackPageView, setUserProperties } from '@/lib/analytics';
+import { setUserProperties } from '@/lib/analytics';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { useRegion } from '@/contexts/RegionContext';
 
 /**
- * Tracks GA4 page views on every route change.
- * Also sets user properties (region, currency, user_type) on mount.
+ * Handles GA4 tracking for the SPA:
+ * - page_view on every client-side route change (via usePageTracking)
+ * - user_properties set once per session on mount
  * Place inside <BrowserRouter>.
  */
 export function GA4RouteTracker() {
   const location = useLocation();
-  const prevPath = useRef(location.pathname);
   const { region, currency } = useRegion();
   const hasSetUserProps = useRef(false);
 
-  // gtag('config', ...) route tracking for native GA4 SPA support
+  // Fires gtag('config', ...) with page_path + page_title on every route change
   usePageTracking();
 
   // Set user properties once per session on mount
@@ -32,13 +32,6 @@ export function GA4RouteTracker() {
   // Run once on mount — intentionally not re-running on region/currency changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    const url = location.pathname + location.search;
-    // Avoid duplicate fire on initial mount vs. route change
-    trackPageView(url);
-    prevPath.current = location.pathname;
-  }, [location.pathname, location.search]);
 
   return null;
 }
