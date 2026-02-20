@@ -21,6 +21,7 @@ interface Person {
 interface OrganizationSchemaProps {
   name?: string;
   alternateName?: string;
+  slogan?: string;
   url?: string;
   logo?: string;
   logoWidth?: number;
@@ -41,6 +42,7 @@ interface OrganizationSchemaProps {
 export function OrganizationSchema({
   name = 'FilaScope',
   alternateName,
+  slogan,
   url = 'https://filascope.com',
   logo = 'https://filascope.com/logo.png',
   logoWidth,
@@ -81,6 +83,7 @@ export function OrganizationSchema({
     '@type': 'Organization',
     name,
     ...(alternateName && { alternateName }),
+    ...(slogan && { slogan }),
     url,
     logo: logoObject,
     ...(image && { image }),
