@@ -23,72 +23,120 @@ interface CategoryMeta {
   introTemplate: string;
 }
 
+// Related material sentence shown above the grid (inline prose cross-links)
+const RELATED_PROSE: Record<string, { intro: string; links: { label: string; slug: string }[] }> = {
+  pla: {
+    intro: "Need more strength or heat resistance?",
+    links: [{ label: "PETG", slug: "petg" }, { label: "ABS", slug: "abs" }, { label: "PLA+", slug: "pla-plus" }],
+  },
+  petg: {
+    intro: "Want easier printing or outdoor durability?",
+    links: [{ label: "PLA", slug: "pla" }, { label: "ASA", slug: "asa" }, { label: "ABS", slug: "abs" }],
+  },
+  abs: {
+    intro: "Want UV resistance or easier printing?",
+    links: [{ label: "ASA", slug: "asa" }, { label: "PETG", slug: "petg" }, { label: "PC", slug: "polycarbonate" }],
+  },
+  asa: {
+    intro: "Looking for indoor or flexible options?",
+    links: [{ label: "ABS", slug: "abs" }, { label: "PETG", slug: "petg" }, { label: "TPU", slug: "tpu" }],
+  },
+  tpu: {
+    intro: "Want rigid or high-strength alternatives?",
+    links: [{ label: "PLA", slug: "pla" }, { label: "PETG", slug: "petg" }, { label: "Nylon", slug: "nylon" }],
+  },
+  "pla-plus": {
+    intro: "Need even more strength or easier printing?",
+    links: [{ label: "PETG", slug: "petg" }, { label: "Standard PLA", slug: "pla" }],
+  },
+  "silk-pla": {
+    intro: "Want more practical materials?",
+    links: [{ label: "Standard PLA", slug: "pla" }, { label: "PLA+", slug: "pla-plus" }],
+  },
+  nylon: {
+    intro: "Need high-temp or rigid engineering materials?",
+    links: [{ label: "PC", slug: "polycarbonate" }, { label: "PETG", slug: "petg" }, { label: "ABS", slug: "abs" }],
+  },
+  polycarbonate: {
+    intro: "Need something easier to print?",
+    links: [{ label: "ABS", slug: "abs" }, { label: "ASA", slug: "asa" }, { label: "Nylon", slug: "nylon" }],
+  },
+  "high-speed-pla": {
+    intro: "Want standard or stronger options?",
+    links: [{ label: "PLA", slug: "pla" }, { label: "PLA+", slug: "pla-plus" }, { label: "PETG", slug: "petg" }],
+  },
+  "petg-cf": {
+    intro: "Looking for lighter or more flexible options?",
+    links: [{ label: "PETG", slug: "petg" }, { label: "PLA", slug: "pla" }, { label: "Nylon", slug: "nylon" }],
+  },
+};
+
 const CATEGORY_META: Record<string, CategoryMeta> = {
   pla: {
     titleTemplate: "PLA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PLA 3D printer filaments by price, brand, TD value, and printer compatibility. Find the best PLA for your printer with real-time pricing.",
     h1: "PLA Filaments",
-    introTemplate: "PLA (Polylactic Acid) is the most popular 3D printing material — easy to print, biodegradable, and available in hundreds of colors. Compare {count} PLA filaments below with real-time pricing, HueForge TD values, and printer compatibility data.",
+    introTemplate: "PLA (Polylactic Acid) is the most popular 3D printing filament, known for its ease of use, low warping, and wide color selection. It prints at 190–220°C with minimal bed adhesion issues, making it ideal for beginners and detailed decorative prints. Compare {count}+ PLA filaments below from brands like Bambu Lab, Polymaker, and eSUN — with real-time pricing, HueForge TD values, and printer compatibility data.",
   },
   petg: {
     titleTemplate: "PETG Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PETG 3D printer filaments. Stronger than PLA with better heat resistance. Filter by brand, price, TD value, and printer compatibility.",
     h1: "PETG Filaments",
-    introTemplate: "PETG combines the printability of PLA with the strength of ABS. It's impact-resistant, food-safe options exist, and it handles higher temperatures. Compare {count} PETG filaments with real-time pricing and compatibility data.",
+    introTemplate: "PETG (Polyethylene Terephthalate Glycol) bridges the gap between PLA's ease of use and ABS's strength. It's impact-resistant, food-safe options exist, and it tolerates temperatures up to 80°C without deforming — ideal for functional enclosures, brackets, and mechanical parts. Compare {count}+ PETG filaments below with real-time pricing, regional availability, and compatibility data.",
   },
   abs: {
     titleTemplate: "ABS Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ ABS 3D printer filaments. Heat-resistant and durable for functional parts. Filter by brand, price, and printer compatibility on FilaScope.",
     h1: "ABS Filaments",
-    introTemplate: "ABS is a durable, heat-resistant engineering plastic ideal for functional parts. It requires an enclosed printer and heated bed. Compare {count} ABS filaments with specs, pricing, and compatibility data.",
+    introTemplate: "ABS (Acrylonitrile Butadiene Styrene) is a durable, heat-resistant engineering plastic used in everything from LEGO bricks to automotive parts. It resists temperatures up to 100°C but requires an enclosed printer and heated bed to prevent warping. Compare {count}+ ABS filaments with specs, pricing, and printer compatibility data.",
   },
   tpu: {
     titleTemplate: "TPU Flexible Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ TPU and flexible 3D printer filaments. Find the right shore hardness for your project. Filter by brand, price, and printer compatibility.",
     h1: "TPU & Flexible Filaments",
-    introTemplate: "TPU is a flexible filament with rubber-like properties, ideal for phone cases, gaskets, and wearables. Print slowly with a direct-drive extruder. Compare {count} TPU filaments with specs and pricing.",
+    introTemplate: "TPU (Thermoplastic Polyurethane) is a rubber-like filament ideal for phone cases, gaskets, shoe insoles, and wearables — anything that needs to bend and return to shape. Shore hardness (95A being common) controls stiffness; softer grades require a direct-drive extruder. Compare {count}+ TPU filaments with shore hardness specs, brand options, and pricing.",
   },
   asa: {
     titleTemplate: "ASA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ ASA 3D printer filaments. UV-resistant and weatherproof for outdoor use. Filter by brand, price, and printer compatibility on FilaScope.",
     h1: "ASA Filaments",
-    introTemplate: "ASA offers superior UV and weather resistance compared to ABS, making it ideal for outdoor parts. It requires an enclosure. Compare {count} ASA filaments with specs, pricing, and compatibility data.",
+    introTemplate: "ASA (Acrylonitrile Styrene Acrylate) is ABS's weatherproof sibling — with superior UV and moisture resistance, making it ideal for outdoor signs, garden tools, and automotive trim. It prints similarly to ABS (230–260°C) and requires an enclosure to prevent warping. Compare {count}+ ASA filaments with specs, pricing, and compatibility data.",
   },
   "silk-pla": {
     titleTemplate: "Silk PLA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ Silk PLA 3D printer filaments with shimmery metallic finish. High TD values ideal for HueForge. Filter by brand, color, price, and TD value.",
     h1: "Silk PLA Filaments",
-    introTemplate: "Silk PLA produces stunning metallic-sheen prints with vibrant colors. It's particularly popular for HueForge lithophanes due to high TD values. Compare {count} Silk PLA filaments with color options and pricing.",
+    introTemplate: "Silk PLA produces stunning metallic-sheen prints with a satin finish that catches the light from every angle. It shares PLA's easy printability (200–230°C) and is especially popular for HueForge multi-color lithophanes thanks to characteristically high TD values. Compare {count}+ Silk PLA filaments with color swatches, TD data, and pricing.",
   },
   nylon: {
     titleTemplate: "Nylon/PA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ Nylon and PA 3D printer filaments. Strong, flexible engineering material. Filter by brand, price, and printer compatibility on FilaScope.",
     h1: "Nylon (PA) Filaments",
-    introTemplate: "Nylon (PA) is a strong, flexible engineering material ideal for functional parts requiring fatigue resistance. It's highly hygroscopic — always dry before printing. Compare {count} Nylon filaments with specs and pricing.",
+    introTemplate: "Nylon (PA — Polyamide) is a tough, flexible engineering material with excellent fatigue resistance and impact strength — ideal for gears, hinges, snap-fits, and functional prototypes. It's highly hygroscopic, so always dry your spool before printing and use a dry box during long prints. Compare {count}+ Nylon filaments from PA6, PA12, and carbon-fiber reinforced variants with specs and pricing.",
   },
   "pla-plus": {
     titleTemplate: "PLA+ Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PLA+ 3D printer filaments. Improved impact resistance over standard PLA. Filter by brand, price, and printer compatibility on FilaScope.",
     h1: "PLA+ Filaments",
-    introTemplate: "PLA+ offers improved impact resistance and reduced brittleness over standard PLA while maintaining easy printability. Compare {count} PLA+ filaments across brands with real-time pricing and specs.",
+    introTemplate: "PLA+ (also called PLA Pro) delivers improved toughness and reduced brittleness over standard PLA while keeping the same easy print settings (195–230°C). It's a popular upgrade for functional prints that need more abuse resistance without the complexity of PETG or ABS. Compare {count}+ PLA+ filaments across brands with real-time pricing and specs.",
   },
   "high-speed-pla": {
     titleTemplate: "High Speed PLA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ High Speed PLA filaments for fast 3D printing. Compatible with Bambu Lab, Creality K1, and more. Filter by brand and price on FilaScope.",
     h1: "High Speed PLA Filaments",
-    introTemplate: "High-Speed PLA is formulated for printing at 200–600mm/s on modern printers like Bambu Lab and Creality K1. Compare {count} high-speed PLA filaments with compatible printers and pricing data.",
+    introTemplate: "High-Speed PLA is specially formulated for printing at 200–600 mm/s on modern CoreXY printers like the Bambu Lab X1C, A1, and Creality K1 — enabling dramatically shorter print times without layer delamination. It requires higher flow rates and nozzle temperatures (220–240°C) than standard PLA. Compare {count}+ high-speed PLA filaments with printer compatibility and pricing data.",
   },
   polycarbonate: {
     titleTemplate: "Polycarbonate Filaments — Compare {count}+ PC Options | FilaScope",
     descTemplate: "Compare {count}+ PC and Polycarbonate 3D printer filaments. Strongest print material with high heat tolerance. Filter by brand and printer compatibility.",
     h1: "Polycarbonate (PC) Filaments",
-    introTemplate: "Polycarbonate is one of the strongest 3D printing materials, with exceptional impact resistance and heat tolerance up to 130°C. Requires an all-metal hotend and enclosure. Compare {count} PC filaments.",
+    introTemplate: "Polycarbonate is one of the strongest and most heat-tolerant 3D printing materials — used in bulletproof glass, eyeglass lenses, and aerospace components. It handles temperatures up to 130°C and resists impacts that shatter PLA or ABS. Printing requires an all-metal hotend, enclosure, and nozzle temperatures of 260–310°C. Compare {count}+ PC filaments with specs and pricing.",
   },
   "petg-cf": {
     titleTemplate: "PETG Carbon Fiber Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PETG-CF carbon fiber 3D printer filaments. Stiff, lightweight, and strong. Filter by brand, price, and printer compatibility on FilaScope.",
     h1: "PETG Carbon Fiber Filaments",
-    introTemplate: "PETG-CF (Carbon Fiber) combines PETG's printability with the rigidity of carbon fiber reinforcement. Ideal for lightweight structural parts. Compare {count} PETG-CF filaments with specs and pricing.",
+    introTemplate: "PETG-CF (Carbon Fiber reinforced PETG) combines PETG's chemical resistance and printability with dramatically increased stiffness from short-strand carbon fibers — ideal for lightweight structural parts, brackets, and drone frames. It requires a hardened steel nozzle (0.4mm+) to prevent wear. Compare {count}+ PETG-CF filaments with specs, pricing, and compatibility data.",
   },
 };
 
@@ -301,7 +349,25 @@ export default function FilamentCategoryPage() {
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           {metaConfig.h1}
         </h1>
-        <p className="text-muted-foreground mb-6 max-w-2xl leading-relaxed">{intro}</p>
+        <p className="text-muted-foreground mb-3 max-w-2xl leading-relaxed">{intro}</p>
+
+        {/* Inline related-material cross-links — prose-style, above the grid */}
+        {slug && RELATED_PROSE[slug] && (
+          <p className="text-sm text-muted-foreground mb-5 max-w-2xl">
+            {RELATED_PROSE[slug].intro}{" "}
+            {RELATED_PROSE[slug].links.map((link, i) => (
+              <span key={link.slug}>
+                <a
+                  href={`/filaments/${link.slug}`}
+                  className="text-primary hover:underline underline-offset-4 decoration-primary/50 font-medium transition-colors"
+                >
+                  {link.label} Filaments
+                </a>
+                {i < RELATED_PROSE[slug].links.length - 1 ? ", " : "."}
+              </span>
+            ))}
+          </p>
+        )}
 
         {/* Stats strip */}
         {displayCount > 0 && (

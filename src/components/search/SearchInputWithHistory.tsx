@@ -6,6 +6,7 @@ import { useSearchContext } from "@/hooks/useSearchContext";
 import { useSearchSuggestions, SearchSuggestion } from "@/hooks/useSearchSuggestions";
 import { SearchSuggestionItemSkeleton } from "@/components/skeletons/SearchSuggestionsSkeleton";
 import { trackSearch as trackGA4Search } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SearchInputWithHistoryProps {
   value: string;
@@ -32,6 +33,7 @@ export function SearchInputWithHistory({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const zeroResultLoggedRef = useRef<string>("");
   
   const { recentSearches, trackSearch } = useSearchContext();
   const { suggestions, isLoading, typoCorrection, totalProductGroups } = useSearchSuggestions(value, { context });
@@ -54,6 +56,33 @@ export function SearchInputWithHistory({
   useEffect(() => {
     setSelectedIndex(-1);
   }, [suggestions, filteredRecentSearches, value]);
+
+  // Log zero-result searches to search_logs (feeds search_zero_results view)
+  useEffect(() => {
+    if (
+      value.length >= 2 &&
+      !isLoading &&
+      (totalProductGroups ?? 1) === 0 &&
+      suggestions.length === 0 &&
+      zeroResultLoggedRef.current !== value.trim().toLowerCase()
+    ) {
+      const term = value.trim().toLowerCase();
+      zeroResultLoggedRef.current = term;
+      const sessionId = sessionStorage.getItem("analytics_session_id") || undefined;
+      supabase.from("search_logs").insert({
+        search_term: term,
+        results_count: 0,
+        has_results: false,
+        session_id: sessionId ?? null,
+        source_page: window.location.pathname,
+        created_at: new Date().toISOString(),
+      }).then(() => {});
+    }
+    // Reset tracker when value changes substantially
+    if (value.length < 2) {
+      zeroResultLoggedRef.current = "";
+    }
+  }, [value, isLoading, totalProductGroups, suggestions.length]);
 
   // Get all items for keyboard navigation
   const allItems = value.length >= 2 
