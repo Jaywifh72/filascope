@@ -64,6 +64,7 @@ import { useFilamentDetailPricing } from "@/hooks/useFilamentDetailPricing";
 import { useBrowseHistory } from "@/hooks/useBrowseHistory";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useCommunityReviewStats } from "@/hooks/useCommunityReviewStats";
+import { calculateUnifiedScore, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -185,6 +186,14 @@ const { id } = useParams();
   
   // IMPORTANT: Use the BASE filament (not selected variant) for pricing, URLs, and regional availability
   const pricingFilament = filament;
+
+  // FilaScore fallback for aggregateRating (used when no community reviews exist)
+  const { score: filaScoreValue, dataPointCount: filaScoreDataPoints } = useMemo(
+    () => pricingFilament
+      ? calculateUnifiedScore(pricingFilament as unknown as FilamentForScoring)
+      : { score: null, dataPointCount: 0 },
+    [pricingFilament]
+  );
   
   // currentRegionCode already defined above from useRegion()
   
@@ -891,11 +900,23 @@ const { id } = useParams();
               }))
             : undefined
         }
-        // ── Community rating (enables Google star rating snippets — real data only) ──
-        ratingValue={communityReviewStats?.avgRating ?? null}
-        ratingCount={communityReviewStats?.reviewCount ?? null}
-        bestRating={5}
-        worstRating={1}
+        // ── Community reviews take priority; FilaScore is the fallback for star snippet eligibility ──
+        ratingValue={
+          communityReviewStats && communityReviewStats.reviewCount > 0
+            ? communityReviewStats.avgRating
+            : filaScoreValue
+        }
+        ratingCount={
+          communityReviewStats && communityReviewStats.reviewCount > 0
+            ? communityReviewStats.reviewCount
+            : filaScoreValue != null ? filaScoreDataPoints : null
+        }
+        bestRating={
+          communityReviewStats && communityReviewStats.reviewCount > 0 ? 5 : 10
+        }
+        worstRating={
+          communityReviewStats && communityReviewStats.reviewCount > 0 ? 1 : 0
+        }
         hasReturnPolicy={true}
       />
 
