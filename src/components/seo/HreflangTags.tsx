@@ -15,9 +15,7 @@ const REGIONAL_HREFLANGS = [
   { hreflang: 'en-CA', regionParam: 'CA' },
   { hreflang: 'en-GB', regionParam: 'UK' },
   { hreflang: 'en-AU', regionParam: 'AU' },
-  { hreflang: 'de',    regionParam: 'EU' },
-  { hreflang: 'ja',    regionParam: 'JP' },
-  { hreflang: 'zh',    regionParam: 'CN' },
+  { hreflang: 'en',    regionParam: 'EU' }, // generic English for EU (no en-EU code exists)
 ] as const;
 
 export const HreflangTags = () => {

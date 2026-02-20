@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
-const HREFLANGS = ["en-US", "en-CA", "en-GB", "en-AU", "de", "ja", "zh", "x-default"];
+const HREFLANGS = ["en-US", "en-CA", "en-GB", "en-AU", "en", "x-default"];
 
 type StatusResult = "loading" | "ok" | "error";
 
