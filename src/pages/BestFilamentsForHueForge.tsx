@@ -267,7 +267,7 @@ export default function BestFilamentsForHueForge() {
               Use{' '}
               <Link to="/hueforge-td-database" className="text-purple-400 hover:text-purple-300">FilaScope's TD Database</Link>{' '}
               to find exact values, or check the{' '}
-              <Link to="/guides/hueforge-filaments" className="text-purple-400 hover:text-purple-300">HueForge Filaments Guide</Link>{' '}
+              <Link to="/best-filaments-for-hueforge" className="text-purple-400 hover:text-purple-300">HueForge Filaments Guide</Link>{' '}
               for a complete setup walkthrough.
             </p>
           </div>

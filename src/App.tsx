@@ -364,6 +364,10 @@ const App = () => (
                   <Route path="/filament-storage-guide" element={<FilamentStorageGuide />} />
                   <Route path="/best-filament-for-ender-3" element={<Navigate to="/guides/best-filament-for-ender-3" replace />} />
                   <Route path="/best-filament-for-bambu-lab-a1" element={<Navigate to="/guides/best-filament-for-bambu-lab-a1" replace />} />
+                  {/* Redirects: old guide slugs → canonical top-level pages */}
+                  <Route path="/guides/best-filament-for-beginners-2025" element={<Navigate to="/best-filaments-for-beginners" replace />} />
+                  <Route path="/guides/beginners-guide" element={<Navigate to="/best-filaments-for-beginners" replace />} />
+                  <Route path="/guides/hueforge-filaments" element={<Navigate to="/best-filaments-for-hueforge" replace />} />
                   {/* Sitemap routes — _redirects 302s aren't honoured on Lovable hosting, so redirect here */}
                   <Route path="/sitemap.xml"           element={<SitemapRedirect path="/sitemap.xml" />} />
                   <Route path="/sitemap-pages.xml"     element={<SitemapRedirect path="/sitemap-pages.xml" />} />

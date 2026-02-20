@@ -62,7 +62,7 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
 
   // 3. HueForge guide — always shown, highlighted when TD data exists
   links.push({
-    href: '/guides/hueforge-filaments',
+    href: '/best-filaments-for-hueforge',
     label: hasTransmissionDistance
       ? 'Best Filaments for HueForge — TD Value Guide'
       : 'Best Filaments for HueForge Lithophanes',

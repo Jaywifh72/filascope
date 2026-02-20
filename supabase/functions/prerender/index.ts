@@ -1426,18 +1426,20 @@ const STATIC_PAGES = [
 ];
 
 // Guide slug → publish date (ISO date strings, updated when content changes)
-const GUIDE_DATES: Record<string, string> = {
-  "best-pla-filaments":                    "2026-01-10",
-  "best-petg-filaments":                   "2026-01-10",
-  "best-abs-filaments":                    "2026-01-10",
-  "pla-vs-petg":                           "2026-01-15",
-  "beginners-guide":                       "2026-01-08",
-  "hueforge-filaments":                    "2026-01-20",
-  "best-filaments-for-hueforge-lithophanes":"2026-01-20",
-  "pla-plus-vs-pla-pro":                   "2026-01-12",
-  "best-filament-for-bambu-lab-p1s":       "2026-01-14",
-  "silk-pla-comparison":                   "2026-01-18",
-  "asa-vs-abs-outdoor-printing":           "2026-01-16",
+// Key = URL path suffix, Value = publish date
+// Canonical top-level pages use their full path; /guides/* pages use their slug
+const GUIDE_DATES: Record<string, { date: string; isTopLevel?: boolean }> = {
+  "best-pla-filaments":                    { date: "2026-01-10" },
+  "best-petg-filaments":                   { date: "2026-01-10" },
+  "best-abs-filaments":                    { date: "2026-01-10" },
+  "best-filament-for-bambu-lab-p1s":       { date: "2026-01-14" },
+  "silk-pla-comparison":                   { date: "2026-01-18" },
+  "asa-vs-abs-outdoor-printing":           { date: "2026-01-16" },
+  "pla-plus-vs-pla-pro":                   { date: "2026-01-12" },
+  // Canonical top-level pages (not under /guides/)
+  "pla-vs-petg":                           { date: "2026-01-15",  isTopLevel: true },
+  "best-filaments-for-beginners":          { date: "2026-01-08",  isTopLevel: true },
+  "best-filaments-for-hueforge":           { date: "2026-01-20",  isTopLevel: true },
 };
 
 // Fixed lastmod for static informational pages (update when content changes)
@@ -1549,9 +1551,12 @@ function sitemapPages(): string {
 
 function sitemapGuides(): string {
   const today = new Date().toISOString().split("T")[0];
-  const entries = Object.entries(GUIDE_DATES).map(([slug, date]) =>
-    urlEntry(`${BASE_URL}/guides/${slug}`, date || today, "monthly", 0.7)
-  );
+  const entries = Object.entries(GUIDE_DATES).map(([slug, { date, isTopLevel }]) => {
+    const url = isTopLevel
+      ? `${BASE_URL}/${slug}`          // canonical top-level: /best-filaments-for-beginners
+      : `${BASE_URL}/guides/${slug}`;  // guide sub-path:       /guides/best-pla-filaments
+    return urlEntry(url, date || today, "monthly", 0.7);
+  });
   return wrapUrlset(entries);
 }
 
@@ -1641,6 +1646,20 @@ Deno.serve(async (req) => {
     // Legacy redirect: old sitemap-materials.xml now covered by sitemap-pages.xml
     if (path === "/sitemap-materials.xml") {
       return new Response(sitemapPages(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+    }
+
+    // 301 redirects for old guide paths → canonical URLs (for bots & crawlers)
+    const GUIDE_REDIRECTS: Record<string, string> = {
+      "/guides/beginners-guide":                    `${BASE_URL}/best-filaments-for-beginners`,
+      "/guides/best-filament-for-beginners-2025":   `${BASE_URL}/best-filaments-for-beginners`,
+      "/guides/hueforge-filaments":                 `${BASE_URL}/best-filaments-for-hueforge`,
+      "/guides/best-filaments-for-hueforge-lithophanes": `${BASE_URL}/best-filaments-for-hueforge`,
+    };
+    if (GUIDE_REDIRECTS[path]) {
+      return new Response(null, {
+        status: 301,
+        headers: { ...corsHeaders, Location: GUIDE_REDIRECTS[path], "Cache-Control": "public, max-age=86400" },
+      });
     }
 
     // DB-backed sitemaps need Supabase client
