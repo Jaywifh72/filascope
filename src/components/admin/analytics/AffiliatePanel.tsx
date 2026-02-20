@@ -238,6 +238,64 @@ export function AffiliatePanel() {
     },
   });
 
+  // Source component breakdown
+  const { data: sourceData } = useQuery({
+    queryKey: ["analytics-source-component", range],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("affiliate_clicks")
+        .select("source_component")
+        .gte("clicked_at", startDate)
+        .not("source_component", "is", null)
+        .limit(2000);
+      if (error) throw error;
+      const LABELS: Record<string, string> = {
+        sidebar_purchase: "Sidebar",
+        best_prices_section: "Best Prices",
+        product_card: "Product Card",
+        sticky_buy_bar: "Sticky Buy Bar",
+        comparison_table: "Comparison",
+        deal_card: "Deal Card",
+        guide_cta: "Guide CTA",
+      };
+      const map: Record<string, number> = {};
+      for (const row of data || []) {
+        const key = row.source_component || "other";
+        const label = LABELS[key] || key;
+        map[label] = (map[label] || 0) + 1;
+      }
+      return Object.entries(map)
+        .map(([source, clicks]) => ({ source, clicks }))
+        .sort((a, b) => b.clicks - a.clicks);
+    },
+  });
+
+  // Conversion funnel: product views → affiliate clicks (last 30 days)
+  const { data: funnelData } = useQuery({
+    queryKey: ["analytics-conversion-funnel"],
+    queryFn: async () => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const since = thirtyDaysAgo.toISOString();
+
+      const [{ count: pageViews }, { data: clickRows }] = await Promise.all([
+        supabase.from("user_browse_history").select("*", { count: "exact", head: true }).gte("viewed_at", since),
+        supabase.from("affiliate_clicks").select("session_id").gte("clicked_at", since),
+      ]);
+
+      const clickSessions = new Set((clickRows || []).map((r) => r.session_id).filter(Boolean));
+      const clickCount = clickRows?.length ?? 0;
+      const rate = pageViews && pageViews > 0 ? ((clickCount / pageViews) * 100).toFixed(1) : "0";
+
+      return {
+        pageViews: pageViews ?? 0,
+        clickCount,
+        clickSessions: clickSessions.size,
+        conversionRate: rate,
+      };
+    },
+  });
+
   // Fixed KPI cards (always show totals)
   const weekFilters: ClickFilters = { ...getDateRange("7d"), brandNames: null, regionCodes: null };
   const { data: weekSummary } = useClickSummary(weekFilters);
@@ -424,7 +482,65 @@ export function AffiliatePanel() {
             )}
           </CardContent>
         </Card>
+        {/* Clicks by Source Component */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Clicks by Source Component</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!sourceData || sourceData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No source data for this period</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={sourceData} layout="vertical" margin={{ left: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis
+                    type="category"
+                    dataKey="source"
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    width={90}
+                  />
+                  <Tooltip {...tooltipStyle} />
+                  <Bar dataKey="clicks" fill="#a855f7" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Conversion Funnel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Conversion Funnel (Last 30 Days)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!funnelData ? (
+            <div className="grid grid-cols-3 gap-4">
+              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex flex-col items-center gap-1 p-4 rounded-lg bg-primary/5 border border-primary/20 text-center">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Product Page Views</p>
+                <p className="text-3xl font-bold text-foreground">{funnelData.pageViews.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Step 1 — Engagement</p>
+              </div>
+              <div className="flex flex-col items-center gap-1 p-4 rounded-lg bg-muted/40 border border-border text-center">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Affiliate Clicks</p>
+                <p className="text-3xl font-bold text-foreground">{funnelData.clickCount.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Step 2 — Conversion</p>
+              </div>
+              <div className="flex flex-col items-center gap-1 p-4 rounded-lg bg-muted/40 border border-border text-center">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Click-Through Rate</p>
+                <p className="text-3xl font-bold text-foreground">{funnelData.conversionRate}%</p>
+                <p className="text-xs text-muted-foreground">Views → Clicks</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Top Clicked Products (20) */}
       <Card>
