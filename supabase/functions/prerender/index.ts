@@ -1404,21 +1404,42 @@ const STATIC_PAGES = [
   { path: "/learn", priority: 0.5, changefreq: "weekly" },
   { path: "/reference/slicers", priority: 0.5, changefreq: "monthly" },
   { path: "/reference/repos", priority: 0.5, changefreq: "monthly" },
-  // Tier 6 — informational
-  { path: "/about", priority: 0.4, changefreq: "monthly" },
-  { path: "/methodology", priority: 0.4, changefreq: "monthly" },
-  { path: "/affiliate-disclosure", priority: 0.2, changefreq: "yearly" },
-  { path: "/privacy", priority: 0.2, changefreq: "yearly" },
-  { path: "/terms", priority: 0.2, changefreq: "yearly" },
+  // Tier 6 — 0.3 (static informational)
+  { path: "/about", priority: 0.3, changefreq: "monthly" },
+  { path: "/methodology", priority: 0.3, changefreq: "monthly" },
+  { path: "/affiliate-disclosure", priority: 0.3, changefreq: "monthly" },
+  { path: "/privacy", priority: 0.3, changefreq: "monthly" },
+  { path: "/terms", priority: 0.3, changefreq: "monthly" },
 ];
 
-const GUIDE_SLUGS = [
-  "best-pla-filaments", "best-petg-filaments", "best-abs-filaments",
-  "pla-vs-petg", "beginners-guide", "hueforge-filaments",
-  "best-filaments-for-hueforge-lithophanes", "pla-plus-vs-pla-pro",
-  "best-filament-for-bambu-lab-p1s", "silk-pla-comparison",
-  "asa-vs-abs-outdoor-printing",
-];
+// Guide slug → publish date (ISO date strings, updated when content changes)
+const GUIDE_DATES: Record<string, string> = {
+  "best-pla-filaments":                    "2026-01-10",
+  "best-petg-filaments":                   "2026-01-10",
+  "best-abs-filaments":                    "2026-01-10",
+  "pla-vs-petg":                           "2026-01-15",
+  "beginners-guide":                       "2026-01-08",
+  "hueforge-filaments":                    "2026-01-20",
+  "best-filaments-for-hueforge-lithophanes":"2026-01-20",
+  "pla-plus-vs-pla-pro":                   "2026-01-12",
+  "best-filament-for-bambu-lab-p1s":       "2026-01-14",
+  "silk-pla-comparison":                   "2026-01-18",
+  "asa-vs-abs-outdoor-printing":           "2026-01-16",
+};
+
+// Fixed lastmod for static informational pages (update when content changes)
+const STATIC_LASTMOD: Record<string, string> = {
+  "/":                       new Date().toISOString().split("T")[0], // always fresh
+  "/filaments":              new Date().toISOString().split("T")[0],
+  "/deals":                  new Date().toISOString().split("T")[0],
+  "/printers":               new Date().toISOString().split("T")[0],
+  "/brands":                 new Date().toISOString().split("T")[0],
+  "/about":                  "2026-01-01",
+  "/methodology":            "2026-01-01",
+  "/affiliate-disclosure":   "2025-11-01",
+  "/privacy":                "2025-11-01",
+  "/terms":                  "2025-11-01",
+};
 
 async function sitemapFilaments(supabase: SupabaseClient): Promise<string> {
   const entries: string[] = [];
@@ -1427,12 +1448,17 @@ async function sitemapFilaments(supabase: SupabaseClient): Promise<string> {
   let hasMore = true;
   while (hasMore) {
     const { data, error } = await supabase.from("filaments")
-      .select("product_handle, id, updated_at")
+      .select("product_handle, id, updated_at, last_scraped_at")
       .not("product_handle", "is", null)
       .order("id").range(offset, offset + BATCH - 1);
     if (error || !data || data.length === 0) { hasMore = false; break; }
     for (const f of data) {
-      entries.push(urlEntry(`${BASE_URL}/filament/${f.product_handle || f.id}`, toW3CDate(f.updated_at), "weekly", 0.7));
+      // Use the most recent of last_scraped_at (price change) or updated_at (data change)
+      const bestDate = [f.last_scraped_at, f.updated_at]
+        .filter(Boolean)
+        .sort()
+        .pop();
+      entries.push(urlEntry(`${BASE_URL}/filament/${f.product_handle || f.id}`, toW3CDate(bestDate), "daily", 0.8));
     }
     hasMore = data.length >= BATCH;
     offset += BATCH;
@@ -1446,12 +1472,19 @@ async function sitemapBrands(supabase: SupabaseClient): Promise<string> {
   const BATCH = 1000;
   let hasMore = true;
   while (hasMore) {
+    // Fetch the brand's own updated_at plus the most recent filament updated_at for that brand
     const { data, error } = await supabase.from("automated_brands")
-      .select("brand_slug, updated_at").eq("is_visible", true)
+      .select("brand_slug, brand_name, updated_at, last_scrape_at")
+      .eq("is_visible", true)
       .order("brand_slug").range(offset, offset + BATCH - 1);
     if (error || !data || data.length === 0) { hasMore = false; break; }
     for (const b of data) {
-      entries.push(urlEntry(`${BASE_URL}/brands/${b.brand_slug}`, toW3CDate(b.updated_at), "monthly", 0.8));
+      // Best lastmod = most recent of: brand updated_at or last_scrape_at (reflects product updates)
+      const bestDate = [b.last_scrape_at, b.updated_at]
+        .filter(Boolean)
+        .sort()
+        .pop();
+      entries.push(urlEntry(`${BASE_URL}/brands/${b.brand_slug}`, toW3CDate(bestDate), "weekly", 0.8));
     }
     hasMore = data.length >= BATCH;
     offset += BATCH;
@@ -1470,7 +1503,7 @@ async function sitemapPrinters(supabase: SupabaseClient): Promise<string> {
       .order("id").range(offset, offset + BATCH - 1);
     if (error || !data || data.length === 0) { hasMore = false; break; }
     for (const p of data) {
-      entries.push(urlEntry(`${BASE_URL}/printers/${p.printer_id || p.id}`, toW3CDate(p.updated_at), "weekly", 0.6));
+      entries.push(urlEntry(`${BASE_URL}/printers/${p.printer_id || p.id}`, toW3CDate(p.updated_at), "weekly", 0.8));
     }
     hasMore = data.length >= BATCH;
     offset += BATCH;
@@ -1494,13 +1527,18 @@ async function sitemapColors(supabase: SupabaseClient): Promise<string> {
 
 function sitemapPages(): string {
   const today = new Date().toISOString().split("T")[0];
-  const entries = STATIC_PAGES.map((p) => urlEntry(`${BASE_URL}${p.path}`, today, p.changefreq, p.priority));
+  const entries = STATIC_PAGES.map((p) => {
+    const lastmod = STATIC_LASTMOD[p.path] ?? today;
+    return urlEntry(`${BASE_URL}${p.path}`, lastmod, p.changefreq, p.priority);
+  });
   return wrapUrlset(entries);
 }
 
 function sitemapGuides(): string {
   const today = new Date().toISOString().split("T")[0];
-  const entries = GUIDE_SLUGS.map((s) => urlEntry(`${BASE_URL}/guides/${s}`, today, "weekly", 0.7));
+  const entries = Object.entries(GUIDE_DATES).map(([slug, date]) =>
+    urlEntry(`${BASE_URL}/guides/${slug}`, date || today, "monthly", 0.7)
+  );
   return wrapUrlset(entries);
 }
 
