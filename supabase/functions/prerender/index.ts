@@ -1327,26 +1327,71 @@ function isCrawler(ua: string | null): boolean {
 // ============================================================
 // Robots.txt content
 // ============================================================
-const ROBOTS_TXT = `User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+const ROBOTS_TXT = `# FilaScope robots.txt — AI & Search Engine Crawler Policy
+# Updated: 2026-02-20
 
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /settings
-Disallow: /maintenance
-Disallow: /embed/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /_/
 
-Sitemap: ${FUNCTIONS_URL}/prerender?path=/sitemap.xml
+# Sitemaps
+Sitemap: https://filascope.com/sitemap.xml
+
+# AI Crawlers - Explicitly Allowed
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: FacebookExternalHit
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+# Crawl-delay for AI bots (be polite)
+User-agent: GPTBot
+Crawl-delay: 2
+
+User-agent: ClaudeBot
+Crawl-delay: 2
+
+User-agent: PerplexityBot
+Crawl-delay: 2
 `;
 
 // ============================================================
@@ -1639,6 +1684,8 @@ Deno.serve(async (req) => {
 
     // --- robots.txt (served to ALL user agents) ---
     if (path === "/robots.txt") {
+      const ua = req.headers.get("User-Agent") || "unknown";
+      console.log(`[ROBOTS] Serving robots.txt to UA: ${ua}`);
       return new Response(ROBOTS_TXT, {
         headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=86400" },
       });
