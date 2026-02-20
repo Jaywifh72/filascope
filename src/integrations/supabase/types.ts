@@ -11386,6 +11386,22 @@ export type Database = {
       }
       is_at_all_time_low: { Args: { p_filament_id: string }; Returns: boolean }
       link_filaments_to_brands: { Args: never; Returns: undefined }
+      log_affiliate_click: {
+        Args: {
+          p_brand?: string
+          p_currency?: string
+          p_material?: string
+          p_price?: number
+          p_product_id?: string
+          p_product_name?: string
+          p_region?: string
+          p_session_id?: string
+          p_source_page?: string
+          p_store?: string
+          p_store_url?: string
+        }
+        Returns: undefined
+      }
       record_scrape_result: {
         Args: {
           p_brand_slug: string
