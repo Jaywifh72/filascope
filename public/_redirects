@@ -1,6 +1,5 @@
-# Static files — served via edge function (SPA catch-all would otherwise intercept these)
-# robots.txt is served directly as a static file from public/robots.txt (no redirect needed)
-/llms.txt                                https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms                    302
+# Static files — served directly from public/ (robots.txt, llms.txt)
+# No redirects needed — Vite/hosting serves public/ files before the SPA catch-all
 /a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key           302
 
 # Sitemap routes — 302 redirect to Supabase edge function

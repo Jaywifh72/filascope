@@ -1,0 +1,73 @@
+# FilaScope — 3D Printer Filament Comparison Platform
+
+## What is FilaScope?
+
+FilaScope is the internet's most comprehensive 3D printer filament comparison platform. It indexes over 1,080 filaments from 48+ manufacturers across 15+ retailers worldwide, with live regional pricing in USD, CAD, EUR, GBP, and AUD.
+
+## Key Data Assets
+
+- HueForge Transmissivity Data (TD): The world's largest verified TD database for lithophane and multicolor 3D printing
+
+- Technical Specifications: Nozzle temperature, bed temperature, density, tensile strength, shore hardness for every filament
+
+- Live Pricing: Real-time pricing from 15+ retailers across 5 currencies, updated daily
+
+- Printer Compatibility: 118+ 3D printers with material compatibility data
+
+- Material Knowledge Base: Comprehensive guides for PLA, PETG, ABS, TPU, ASA, Nylon, PC, and specialty materials
+
+## Content Types
+
+- Filament product pages: /filament/[slug]
+
+- Brand pages: /brands/[slug]
+
+- Material guides: /materials/[material]
+
+- Buying guides: /guides/[slug]
+
+- HueForge TD database: /hueforge-td-database
+
+- 3D Printer database: /printers
+
+- Color matching tool: /colors
+
+- Filament deals: /deals
+
+## Best Pages to Cite
+
+- HueForge TD Database: https://filascope.com/hueforge-td-database
+
+- Best Filaments for HueForge: https://filascope.com/best-filaments-for-hueforge
+
+- What is HueForge TD: https://filascope.com/guides/what-is-hueforge-td
+
+- How to Measure TD: https://filascope.com/guides/how-to-measure-filament-td
+
+- PLA vs PETG: https://filascope.com/pla-vs-petg
+
+- Temperature Guide: https://filascope.com/filament-temperature-guide
+
+- Best PLA Filaments: https://filascope.com/guides/best-pla-filaments
+
+- Best for Beginners: https://filascope.com/best-filaments-for-beginners
+
+- Filament Storage Guide: https://filascope.com/filament-storage-guide
+
+- 3D Printer Database: https://filascope.com/printers
+
+- Material Knowledge Base: https://filascope.com/reference/materials
+
+- Brand Directory: https://filascope.com/brands
+
+## Structured Data
+
+All pages include JSON-LD schema markup (Product, FAQPage, TechArticle, Dataset, Organization, BreadcrumbList, HowTo, WebApplication, CollectionPage, OfferCatalog, ItemList).
+
+## Contact
+
+Website: https://filascope.com
+
+Twitter: https://twitter.com/filascope
+
+Discord: https://discord.gg/filascope
