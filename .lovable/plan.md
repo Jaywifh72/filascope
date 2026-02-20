@@ -1,106 +1,157 @@
 
-## Add Homepage FAQ Section with FAQPage JSON-LD Schema
+## Add AISummaryBlock to Every Filament Detail Page
 
-### What We're Doing
+### What We're Building
 
-Adding a visible "Frequently Asked Questions" accordion section between the existing `HomeSEOContent` ("What is FilaScope?" / "Popular Searches") block and the footer. The `FAQSchema` component will automatically inject the corresponding `FAQPage` JSON-LD `<script>` tag into `<head>` via the existing `useJsonLd` hook — no manual script tag needed.
+A new `AISummaryBlock` component that renders:
+1. A subtle card with a dynamically-generated natural-language summary paragraph
+2. A horizontal "Quick Specs" grid with 4–6 key spec pills
+3. A `sr-only` hidden paragraph for AI engine ingestion
 
-### Current Homepage Bottom Structure
+This is inserted in `FilamentDetail.tsx` immediately after the `FilamentHeroSection` (which contains the H1) and before the tab navigation — satisfying the "below H1, above pricing section" requirement.
 
-```text
-<Finder.tsx>
-  ...
-  <MobileQuickMatchPrompt />
-  <ScrollToTopButton />
-  <HomeSEOContent />        ← "What is FilaScope?" + "Popular Searches"
-</Finder.tsx>
-<SiteFooter />              ← rendered in App.tsx
-```
+---
 
-### Target Structure After Change
+### Layout & Insertion Point
 
 ```text
-<Finder.tsx>
+<div className="flex-1 min-w-0">       ← main content column
+  <div ref={heroSectionRef}>
+    <FilamentHeroSection … />           ← H1 lives here
+  </div>
+
+  ← INSERT <AISummaryBlock /> HERE ←
+
+  <RetailersModal … />
+  <div ref={heroSentinelRef} />
+  <FilamentTabNav … />                 ← tab navigation / "pricing section"
   ...
-  <MobileQuickMatchPrompt />
-  <ScrollToTopButton />
-  <HomeSEOContent />        ← unchanged
-  <HomeFAQSection />        ← NEW: FAQ accordion + FAQPage schema
-</Finder.tsx>
-<SiteFooter />
+</div>
 ```
 
 ---
 
 ### Technical Plan
 
-#### File 1: `src/components/HomeFAQSection.tsx` (NEW)
+#### File 1: `src/components/filament/AISummaryBlock.tsx` (NEW)
 
-Create a new self-contained component that:
-
-- Defines the 8 FAQ items as a static array
-- Renders a `<section>` wrapper with `max-w-7xl mx-auto` layout (matching `HomeSEOContent`)
-- Uses `border-t border-border/50` to match the existing separator style
-- Renders `<FAQSection>` from `src/components/seo/FAQSection.tsx` — this automatically:
-  - Renders the `<h2>Frequently Asked Questions</h2>` heading
-  - Renders the shadcn/ui `Accordion` with all 8 items
-  - Renders `<FAQSchema>` which injects the `FAQPage` JSON-LD via `useJsonLd`
-
-The 8 FAQs:
-1. What is FilaScope?
-2. What is HueForge Transmissivity Distance (TD)?
-3. How does FilaScope track filament prices?
-4. What filament types does FilaScope cover?
-5. How do I find the best filament for my 3D printer?
-6. What makes FilaScope different from other filament databases?
-7. Is FilaScope free to use?
-8. How often is FilaScope data updated?
-
-```tsx
-import { FAQSection } from '@/components/seo/FAQSection';
-
-const HOME_FAQS = [
-  { question: "What is FilaScope?", answer: "FilaScope is..." },
-  // ...all 8 pairs
-];
-
-export function HomeFAQSection() {
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-      <FAQSection
-        faqs={HOME_FAQS}
-        className="border-border/50"  // match existing section border opacity
-      />
-    </div>
-  );
+**Component interface:**
+```typescript
+interface AISummaryBlockProps {
+  brand: string | null | undefined;
+  productName: string;                  // product line name (e.g. "PLA Basic")
+  color: string | null | undefined;
+  material: string | null | undefined;
+  nozzleTempMin: number | null | undefined;
+  nozzleTempMax: number | null | undefined;
+  bedTempMin: number | null | undefined;
+  bedTempMax: number | null | undefined;
+  transmissionDistance: number | null | undefined;
+  formattedPrice: string | null;        // pre-formatted (e.g. "$19.99/kg")
+  regionName: string;                   // e.g. "United States"
+  netWeightG: number | null | undefined;
 }
 ```
 
-#### File 2: `src/pages/Finder.tsx` (EDIT — 1 line change)
+**Natural-language paragraph logic:**
 
-Add the import and render `<HomeFAQSection />` directly after `<HomeSEOContent />`:
+The paragraph is built from string template parts, each conditionally included:
 
+1. **Opening**: `"The [Brand] [ProductName] is a [Material] 3D printer filament in [Color]."`
+2. **Temps** (uses `resolveNozzleTemp` / `resolveBedTemp` from `@/lib/materialDefaults`): `"It prints at a nozzle temperature of [range]°C with a bed temperature of [range]°C."`
+3. **TD block** (only when `transmissionDistance` is present): TD range thresholds determine the use-case descriptor:
+   - TD < 2: `"opaque base layers in multicolor HueForge prints"`
+   - TD 2–4: `"opaque base layers in multicolor HueForge prints"`
+   - TD 4–6: `"standard lithophanes with good contrast"`
+   - TD ≥ 6: `"translucent effects and backlit projects"`
+   - Text: `"Its HueForge Transmissivity Distance (TD) value is [TD], making it suitable for [descriptor]."`
+4. **Price** (only when `formattedPrice` present): `"Available from [price] in [region]."`
+5. **Weight** (only when `netWeightG` present): `"Weight: [formatted weight]."`
+
+**Quick Specs grid:**
+
+A `flex flex-wrap gap-2` row of pill-shaped `<span>` elements, each showing `Label: Value`. Specs rendered when value is non-null:
+- Material
+- Nozzle Temp (from resolved value)
+- Bed Temp (from resolved value)
+- TD Value (or "N/A" always shown if material data exists)
+- Price (from `formattedPrice`)
+- Weight (formatted: 1000g → "1kg")
+
+**Hidden SR paragraph:**
 ```tsx
-// Before (line 1648):
-<HomeSEOContent />
-
-// After:
-<HomeSEOContent />
-<HomeFAQSection />
+<p className="sr-only">
+  Summary: The [full sentence]. This product is indexed on FilaScope, the world's largest 3D printer filament database.
+</p>
 ```
+
+**Visual styling** (subtle, not competing with hero):
+- Outer `<section>`: `mt-4 mb-2`
+- Card: `bg-muted/30 border border-border/40 rounded-lg px-4 py-3`
+- Summary paragraph: `text-sm text-muted-foreground leading-relaxed`
+- Specs row: `mt-2.5 flex flex-wrap gap-2`
+- Each spec pill: `text-xs bg-background/60 border border-border/50 rounded-md px-2 py-1 text-muted-foreground`
+- Label part: `font-medium text-foreground/70`
+
+No heading — the card is intentionally quiet and supplementary.
 
 ---
 
-### Why This Approach
+#### File 2: `src/pages/FilamentDetail.tsx` (EDIT — 3 changes)
 
-- **Reuses existing components**: `FAQSection` and `FAQSchema` are already used on brand, filament, and guide pages — no new accordion or schema logic needed
-- **JSON-LD is automatic**: `FAQSchema` uses `useJsonLd` which injects `<script type="application/ld+json">` directly into `<head>` without going through react-helmet (avoiding deduplication issues)
-- **Zero styling changes**: The `FAQSection` component uses the site's existing dark-theme-compatible classes (`bg-card`, `border-border`, `text-muted-foreground`)
-- **No changes to hero, catalog, trending, or feature cards**: Only the bottom of `Finder.tsx` is touched (one new element)
+**Change 1** — Add import at top:
+```tsx
+import { AISummaryBlock } from "@/components/filament/AISummaryBlock";
+```
+
+**Change 2** — Insert component after the closing `</div>` of `heroSectionRef` (currently line ~997):
+
+```tsx
+            </div>  {/* closes heroSectionRef */}
+
+            {/* AI Summary Block — factual paragraph for AI engine indexing */}
+            <AISummaryBlock
+              brand={displayFilament.vendor}
+              productName={productLineName}
+              color={displayFilament.color_family}
+              material={displayFilament.material}
+              nozzleTempMin={displayFilament.nozzle_temp_min_c}
+              nozzleTempMax={displayFilament.nozzle_temp_max_c}
+              bedTempMin={displayFilament.bed_temp_min_c}
+              bedTempMax={displayFilament.bed_temp_max_c}
+              transmissionDistance={displayFilament.transmission_distance}
+              formattedPrice={
+                sidebarPricePerKg
+                  ? `${formatPrice(sidebarPricePerKg)}/kg`
+                  : sidebarPricePerSpool
+                    ? formatPrice(sidebarPricePerSpool)
+                    : null
+              }
+              regionName={regionName}
+              netWeightG={displayFilament.net_weight_g}
+            />
+
+            {/* Retailers Modal */}
+            <RetailersModal …
+```
+
+All variables used (`displayFilament`, `productLineName`, `sidebarPricePerKg`, `sidebarPricePerSpool`, `formatPrice`, `regionName`) are already in scope at this point in `FilamentDetail.tsx`.
+
+---
+
+### What Is NOT Changed
+
+- `FilamentHeroSection.tsx` — untouched (H1 stays exactly as-is)
+- `FilamentTabNav` and all tab content — untouched
+- All pricing, schema, sidebar, sticky bar logic — untouched
+- `QuickSummaryBar` and `QuickSummaryCard` — untouched
+- No styling changes to any existing component
+
+---
 
 ### Files to Edit
 
 | File | Change |
 |---|---|
-| `src/components/HomeFAQSection.tsx` | CREATE — new component with 8 FAQs |
-| `src/pages/Finder.tsx` | ADD — import + render `<HomeFAQSection />` after `<HomeSEOContent />` |
+| `src/components/filament/AISummaryBlock.tsx` | CREATE — new component |
+| `src/pages/FilamentDetail.tsx` | ADD — import + render `<AISummaryBlock />` after `heroSectionRef` closes |
