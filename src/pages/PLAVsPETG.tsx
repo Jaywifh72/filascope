@@ -173,7 +173,7 @@ export default function PLAVsPETG() {
             </CardHeader>
             <CardContent className="space-y-2">
               {plaLoading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />) : plaFilaments?.map(f => <FilamentMiniCard key={f.id} f={f} />)}
-              <Link to="/?material=PLA" className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground pt-1 transition-colors">
+              <Link to="/filaments/pla" className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground pt-1 transition-colors">
                 Browse all PLA filaments <ArrowRight className="w-3 h-3" />
               </Link>
             </CardContent>
@@ -187,7 +187,7 @@ export default function PLAVsPETG() {
             </CardHeader>
             <CardContent className="space-y-2">
               {petgLoading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />) : petgFilaments?.map(f => <FilamentMiniCard key={f.id} f={f} />)}
-              <Link to="/?material=PETG" className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground pt-1 transition-colors">
+              <Link to="/filaments/petg" className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground pt-1 transition-colors">
                 Browse all PETG filaments <ArrowRight className="w-3 h-3" />
               </Link>
             </CardContent>

@@ -6,6 +6,7 @@ import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { useJsonLd } from "@/components/seo/useJsonLd";
 import { MATERIAL_SLUG_CONFIG } from "@/pages/MaterialHub";
+import { materialNameToSlug } from "@/lib/materialSlugUtils";
 import { useFinderQuery, DEFAULT_PAGE_SIZE } from "@/hooks/useFinderQuery";
 import { FilamentCard } from "@/components/FilamentCard";
 import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
@@ -239,13 +240,41 @@ const DEFAULT_FILTERS = {
   hasTdData: false,
 };
 
+// Build a reverse-lookup: material name (case-insensitive) → slug
+// e.g. "PLA" → "pla", "Silk PLA" → "silk-pla", "PLA+" → "pla-plus"
+const MATERIAL_NAME_TO_SLUG: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  for (const [slug, cfg] of Object.entries(MATERIAL_SLUG_CONFIG)) {
+    // Index by label (e.g. "PLA", "PETG")
+    map[cfg.label.toLowerCase()] = slug;
+    // Index by each material variant
+    for (const mat of cfg.materials) {
+      map[mat.toLowerCase()] = slug;
+    }
+    // Also index by the slug itself and its materialNameToSlug form
+    map[slug.toLowerCase()] = slug;
+    map[materialNameToSlug(cfg.label).toLowerCase()] = slug;
+  }
+  return map;
+})();
+
 export default function FilamentCategoryPage() {
   const { slug } = useParams<{ slug?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // ?material=PLA → redirect to /filaments/pla (Option A)
+  // Must be after all hooks to satisfy Rules of Hooks
+  const materialParam = searchParams.get("material");
+  const redirectSlug = (!slug && materialParam)
+    ? MATERIAL_NAME_TO_SLUG[materialParam.toLowerCase()]
+    : null;
+  if (redirectSlug) {
+    return <Navigate to={`/filaments/${redirectSlug}`} replace />;
+  }
 
   // 0-indexed page
   const currentPage = Math.max(0, parseInt(searchParams.get("page") || "1", 10) - 1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const config = slug ? MATERIAL_SLUG_CONFIG[slug] : null;
 
