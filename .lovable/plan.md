@@ -1,181 +1,54 @@
 
-## Admin Analytics Dashboard — Precise Gap Analysis & Enhancement Plan
+## Root Cause
 
-### What Already Exists (Do Not Re-implement)
+The `public/_redirects` file has two problems that together cause `filascope.com/sitemap.xml` to serve the React SPA 404 page instead of XML:
 
-The `/admin/analytics` page is fully wired: route ✅, `AdminLayout` auth guard ✅, 6 tabs ✅. Here is a panel-by-panel audit:
+1. **Missing SPA catch-all rule.** The file contains only sitemap redirect rules with no `/* /index.html 200` at the bottom. On Cloudflare Pages (which Lovable uses), when a redirect rule silently fails, there is no fallback — the request falls through to Cloudflare's native 404, which the PWA service worker then intercepts and renders as the React app's 404 component.
 
-**Tab 1: Affiliate Performance (`AffiliatePanel.tsx`)** — PARTIALLY DONE
-- KPI cards: Today / Week / Month clicks + Unique Sessions ✅
-- Clicks by Brand (horizontal bar chart) ✅
-- Clicks by Region (pie chart) ✅
-- Top Clicked Products table (10 rows) ✅
-- Missing: **Clicks by store** (bar chart) — `affiliate_clicks_daily` has a `store` column
-- Missing: **Clicks by material type** — `affiliate_clicks` has no material column, but `product_type` exists
-- Missing: **Top 20 products** (currently limited to 10; need to expand to 20)
-- Missing: **Click trend over time** (line/area chart by day)
-- Missing: **90d / All Time** date range options (currently only Today / 7d / 30d)
+2. **`301` status is not supported for cross-origin redirects on this host.** Cloudflare Pages `_redirects` only supports `301`/`302` for same-origin redirects. For external URLs (like `cfqfavmhdbyjzejipiwa.supabase.co`), the redirect must use `302`. The previous comment in `_redirects` even says "200 proxy rewrites are not supported on this host" — but `301` to external URLs is also silently ignored.
 
-**Tab 2: Content Metrics** — DOES NOT EXIST (no "Content Metrics" tab anywhere)
-- Needs: product totals (8,297 total; 7,537 with price; 7,862 with image; 5,562 with TDS URL)
-- Needs: products by material breakdown (chart)
-- Needs: recently added products list
-- Needs: deals count + discount distribution
-
-**Tab 3: Search Analytics (`SearchPanel.tsx`)** — MOSTLY DONE ✅
-- Top search terms ✅ (20 rows)
-- Zero-result searches ✅
-- Search volume trend (30-day area chart) ✅
-- Missing: **Search → product view → affiliate click funnel** — requires correlating `search_logs.session_id` with `affiliate_clicks.session_id`
-
-**Tab 4: SEO Health (`SeoHealthPanel.tsx`)** — PARTIAL
-- robots.txt check ✅
-- Sitemap configured ✅
-- Prerender check ✅
-- Hreflang badges ✅
-- Indexable page counts (filaments + printers) ✅
-- Missing: **Sitemap URL count by type** (currently shows total filament+printer count but not broken by type)
-- Missing: **Pages with missing meta descriptions** — would need DB query
-- Missing: **Pages with missing H1s** — needs DB query
-- Note: Structured data validation is already covered by `SeoHealthPanel` + `SearchConsolePanel`
-
-**Tab 5: Content Gaps (`ContentGapsPanel.tsx`)** — EXISTS under separate tab ✅
-
-**Tab 6: Search Console (`SearchConsolePanel.tsx`)** — COMPREHENSIVE ✅
-
-**Date Range** — The `AffiliatePanel` only supports Today/7d/30d. The user requests 7d/30d/90d/All Time.
+**Confirmed working:** `robots.txt` is ✅ fine — it's served directly from the `public/robots.txt` static file on the CDN before `_redirects` is consulted. The edge function itself is ✅ confirmed working and returns correct XML with `Content-Type: application/xml`.
 
 ---
 
-### What Needs to Be Built
+## Fix: One File Change to `public/_redirects`
 
-#### Priority 1 — Add `ContentMetricsPanel` (entirely new panel)
+**Change `301` to `302` on all 7 sitemap redirect lines, and add the `/* /index.html 200` SPA catch-all at the end.**
 
-New file: `src/components/admin/analytics/ContentMetricsPanel.tsx`
+```text
+# Sitemap routes — 302 redirect to edge function
+# (Cloudflare Pages does not support 301 for cross-origin external URLs)
+/sitemap.xml           https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml           302
+/sitemap-pages.xml     https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml     302
+/sitemap-filaments.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-filaments.xml 302
+/sitemap-brands.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-brands.xml    302
+/sitemap-printers.xml  https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-printers.xml  302
+/sitemap-guides.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-guides.xml    302
+/sitemap-colors.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-colors.xml    302
 
-Queries:
-```typescript
-// Product completeness
-SELECT 
-  COUNT(*) as total,
-  COUNT(variant_price) as with_price,
-  COUNT(featured_image) as with_image,
-  COUNT(tds_url) as with_tds,
-  COUNT(color_hex) as with_color,
-  COUNT(transmission_distance) as with_td  -- only 3 rows but still shown
-FROM filaments
-
-// Material breakdown
-SELECT material, COUNT(*) as count FROM filaments 
-WHERE material IS NOT NULL GROUP BY material ORDER BY count DESC LIMIT 12
-
-// Recently added
-SELECT product_title, vendor, material, variant_price, created_at 
-FROM filaments ORDER BY created_at DESC LIMIT 10
-
-// Deals
-SELECT COUNT(*) as deals, 
-  AVG((variant_compare_at_price - variant_price) / variant_compare_at_price * 100) as avg_discount
-FROM filaments 
-WHERE variant_compare_at_price > variant_price AND variant_price > 0
+# SPA catch-all — MUST be last
+/* /index.html 200
 ```
-
-Sections:
-1. **5 KPI cards**: Total Products (8,297) / With Price (7,537 = 90.8%) / With Image (7,862 = 94.8%) / With TDS (5,562 = 67.0%) / Active Deals (914)
-2. **Material breakdown** — horizontal bar chart (top 12 materials with counts)
-3. **Recently Added Products** — table with product name, brand, material, price, date
-4. **Deals & Discounts** — count + a small bar chart of discount brackets (10–20%, 20–30%, 30%+)
-
-#### Priority 2 — Upgrade `AffiliatePanel` date range + missing charts
-
-**File: `src/components/admin/analytics/AffiliatePanel.tsx`**
-
-Changes:
-1. **Date range**: Add `90d` and `all` options. Change `DateRange` type to `"today" | "7d" | "30d" | "90d" | "all"`. For `all`, use `startDate = "2020-01-01"`.
-
-2. **Clicks by Store** — new bar chart querying `affiliate_clicks_daily.store`:
-```typescript
-const { data: storeData } = useQuery({
-  queryKey: ["analytics-store-clicks", range],
-  queryFn: async () => {
-    const { data } = await supabase
-      .from("affiliate_clicks_daily")
-      .select("store, clicks")
-      .gte("date", startDate);
-    // aggregate by store, sort desc, top 10
-  }
-});
-```
-
-3. **Clicks by product_type** (material proxy) — from `affiliate_clicks.product_type`:
-```typescript
-.from("affiliate_clicks")
-.select("product_type")
-.gte("clicked_at", startDate)
-// aggregate by product_type
-```
-
-4. **Click trend over time** — line chart using `useClicksByDay` hook (already exists! just needs to be rendered):
-```typescript
-const { data: clicksByDay } = useClicksByDay(filters);
-// render as LineChart with date on X axis, sum of click_count on Y
-```
-
-5. **Top products expanded to 20** — change `.slice(0, 10)` to `.slice(0, 20)` and `.limit(500)` to `.limit(1000)`.
-
-#### Priority 3 — Add Search Funnel to `SearchPanel`
-
-**File: `src/components/admin/analytics/SearchPanel.tsx`**
-
-Add a "Search → Click Funnel" section. Correlate `search_logs.session_id` with `affiliate_clicks.session_id`:
-```typescript
-// Sessions that searched (30d)
-const searchSessions = new Set(searchLogs.map(r => r.session_id));
-// Sessions that also clicked affiliate
-const clickSessions = new Set(affiliateClicks.map(r => r.session_id));
-// Overlap
-const converted = [...searchSessions].filter(s => clickSessions.has(s)).length;
-const conversionRate = searchSessions.size > 0 ? (converted / searchSessions.size * 100).toFixed(1) : 0;
-```
-
-Render as 3 funnel steps:
-- Searches: N sessions
-- Product Views: N/A (would need page view tracking — render as "—" placeholder)
-- Affiliate Clicks: N sessions with rate %
-
-#### Priority 4 — Add "Content" tab to the Analytics page
-
-**File: `src/pages/admin/Analytics.tsx`**
-
-Add a new `TabsTrigger value="content"` between "affiliate" and "search", and a matching `TabsContent`.
 
 ---
 
-### Summary of Files to Change
+## Why `302` Works for Google
 
-| File | Change |
-|---|---|
-| `src/components/admin/analytics/ContentMetricsPanel.tsx` | **CREATE** — new content metrics tab |
-| `src/components/admin/analytics/AffiliatePanel.tsx` | **EDIT** — add 90d/all range, store chart, material chart, trend chart, expand top products to 20 |
-| `src/components/admin/analytics/SearchPanel.tsx` | **EDIT** — add search→click funnel section |
-| `src/pages/admin/Analytics.tsx` | **EDIT** — add Content Metrics tab + import |
+Google Search Console and Google's crawler **follow 302 redirects**. The `sitemap.xml` will redirect to the Supabase edge function URL, which returns valid `application/xml`. Google will index the final XML content correctly. The sub-sitemaps already use `filascope.com` domain `<loc>` entries (confirmed via live edge function call), so Google's same-domain requirement is satisfied.
 
-### No Database Changes Required
+---
 
-All data is already in the database. The `affiliate_clicks`, `affiliate_clicks_daily`, `filaments`, `search_logs`, and `search_zero_results` tables are all readable by authenticated admin users via existing RLS policies.
+## No Other Changes Required
 
-### No New Routes Required
+- `public/robots.txt` — ✅ Already correct, already live
+- `supabase/functions/prerender/index.ts` — ✅ Already returns `Content-Type: application/xml` for sitemaps and `text/plain` for robots.txt
+- `supabase/functions/sitemap-xml/index.ts` — ✅ Already uses `filascope.com` domain `<loc>` entries
+- No database changes needed
 
-`/admin/analytics` already exists, is lazy-loaded, and is behind `AdminLayout`'s auth guard.
+---
 
-### Data Notes from Live DB
+## Technical Notes
 
-From querying the actual database:
-- Total filaments: **8,297**
-- With price: **7,537** (90.8%)
-- With image: **7,862** (94.8%)
-- With TDS URL: **5,562** (67.0%)
-- With TD (HueForge `transmission_distance`): **3** (shown as near-zero)
-- Active deals: **914**
-- Affiliate clicks in DB: **35** (still early, limited data for charts — handled with empty-state UI)
-- Top materials: PLA (3,141), PETG (834), PLA+ (743), ABS (501), HTPLA (329)
+- The `/* /index.html 200` rule is the standard Cloudflare Pages SPA catch-all. Its absence is the secondary bug — it means the SPA itself only loads because the PWA service worker intercepts unmatched routes, but direct navigation to `/sitemap.xml` on a cold load (no SW installed yet) would 404 natively anyway.
+- `200` proxy rewrites to external URLs are not supported by Cloudflare Pages `_redirects` — only same-origin rewrites work with `200`. Since the edge function is on a different domain, `302` is the only option.
+- Both Googlebot and Bingbot follow `302` redirects for sitemaps submitted via Search Console.
