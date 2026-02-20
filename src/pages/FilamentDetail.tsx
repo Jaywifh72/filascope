@@ -194,6 +194,11 @@ const { id } = useParams();
       : { score: null, dataPointCount: 0 },
     [pricingFilament]
   );
+  // Convert 0–10 FilaScore to 1–5 scale for Google aggregateRating
+  // Formula: ((score / 10) * 4) + 1 maps 0→1, 5→3, 10→5
+  const filaScoreRating5 = filaScoreValue != null
+    ? Math.round(((filaScoreValue / 10) * 4 + 1) * 10) / 10
+    : null;
   
   // currentRegionCode already defined above from useRegion()
   
@@ -900,23 +905,19 @@ const { id } = useParams();
               }))
             : undefined
         }
-        // ── Community reviews take priority; FilaScore is the fallback for star snippet eligibility ──
+        // ── Community reviews take priority; FilaScore (scaled 1–5) is the fallback ──
         ratingValue={
           communityReviewStats && communityReviewStats.reviewCount > 0
             ? communityReviewStats.avgRating
-            : filaScoreValue
+            : filaScoreRating5
         }
         ratingCount={
           communityReviewStats && communityReviewStats.reviewCount > 0
             ? communityReviewStats.reviewCount
-            : filaScoreValue != null ? filaScoreDataPoints : null
+            : filaScoreRating5 != null ? filaScoreDataPoints : null
         }
-        bestRating={
-          communityReviewStats && communityReviewStats.reviewCount > 0 ? 5 : 10
-        }
-        worstRating={
-          communityReviewStats && communityReviewStats.reviewCount > 0 ? 1 : 0
-        }
+        bestRating={5}
+        worstRating={1}
         hasReturnPolicy={true}
       />
 
