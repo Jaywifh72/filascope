@@ -283,6 +283,9 @@ export default function BestFilamentsForHueForge() {
             { label: 'Best White Filaments', href: '/best-white-filaments', description: 'Essential base layer filaments for HueForge' },
             { label: 'Filament Temperature Guide', href: '/filament-temperature-guide', description: 'Print settings for every material type' },
             { label: 'Best PLA Filaments', href: '/guides/best-pla-filaments', description: 'Top PLA picks across all categories' },
+            { label: 'What Is HueForge TD?', href: '/guides/what-is-hueforge-td', description: 'Complete beginner guide to TD values' },
+            { label: 'How to Measure Filament TD', href: '/guides/how-to-measure-filament-td', description: 'Measure your own filament TD values' },
+            { label: 'Best White Filaments for HueForge', href: '/guides/best-white-filaments-for-hueforge', description: 'Top white filaments ranked by TD' },
           ]}
         />
       </div>
