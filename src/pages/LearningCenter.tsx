@@ -19,7 +19,9 @@ import {
   Target,
   ArrowRight,
   Calendar,
-  ShoppingBag
+  ShoppingBag,
+  Layers,
+  Printer,
 } from 'lucide-react';
 
 // Guide metadata type
@@ -27,7 +29,7 @@ export interface GuideMetadata {
   slug: string;
   title: string;
   description: string;
-  category: 'beginner' | 'materials' | 'troubleshooting' | 'advanced' | 'buying-guide';
+  category: 'beginner' | 'materials' | 'troubleshooting' | 'advanced' | 'buying-guide' | 'hueforge' | 'printer-specific';
   readTime: number; // in minutes
   publishedAt: string;
   updatedAt?: string;
@@ -146,6 +148,23 @@ export const GUIDES: GuideMetadata[] = [
     publishedAt: '2026-02-14',
     isBuyingGuide: true,
   },
+  // ─── NEW GUIDES (2026-02-20) ──────────────────────────────────────────────
+  { slug: 'best-tpu-filaments', title: 'Best TPU Filaments in 2026', description: 'Flexible filament ranked by Shore hardness, print quality, and compatibility with Bambu Lab, Ender 3, and Prusa printers.', category: 'buying-guide', readTime: 11, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-asa-filaments', title: 'Best ASA Filaments in 2026', description: 'UV-resistant filament for outdoor applications — ranked by weathering performance, printability, and brand quality.', category: 'buying-guide', readTime: 11, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-nylon-filaments', title: 'Best Nylon Filaments in 2026', description: 'PA6, PA12, and carbon-fiber nylon ranked for engineering applications requiring maximum strength and fatigue resistance.', category: 'buying-guide', readTime: 13, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-pc-filaments', title: 'Best Polycarbonate (PC) Filaments in 2026', description: 'The strongest common FDM filaments ranked — polycarbonate for high heat resistance and extreme impact performance.', category: 'buying-guide', readTime: 12, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-budget-filaments', title: 'Best Budget Filaments Under $15/kg in 2026', description: 'The best cheap 3D printer filaments ranked by quality and consistency — because affordable doesn\'t have to mean bad.', category: 'buying-guide', readTime: 10, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-high-speed-pla-filaments', title: 'Best High-Speed PLA Filaments in 2026', description: 'PLA filaments optimized for 150–600mm/s printing on Bambu Lab, Voron, and RatRig printers — ranked by flow rate and quality.', category: 'buying-guide', readTime: 11, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'petg-vs-abs', title: 'PETG vs ABS: Which Should You Choose?', description: 'A data-driven comparison of PETG and ABS for functional parts — strength, heat resistance, ease of printing, and fumes.', category: 'buying-guide', readTime: 10, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'tpu-vs-petg', title: 'TPU vs PETG: Flexible vs Rigid Filament Compared', description: 'When to use flexible TPU vs rigid PETG — key property differences and use-case recommendations.', category: 'buying-guide', readTime: 9, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-filaments-for-miniatures', title: 'Best Filaments for Miniatures & Detailed Prints in 2026', description: 'Top PLA filaments for tabletop miniatures ranked by surface finish, detail resolution, and 0.2mm nozzle compatibility.', category: 'buying-guide', readTime: 11, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-filaments-for-functional-parts', title: 'Best Filaments for Functional Parts in 2026', description: 'PETG, ABS, ASA, and Nylon ranked for mechanical and structural applications by strength, heat resistance, and printability.', category: 'buying-guide', readTime: 13, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-filaments-for-outdoor-use', title: 'Best Filaments for Outdoor Use in 2026', description: 'UV-resistant and weatherproof filament materials ranked for outdoor 3D printing durability — ASA, PETG, and ABS compared.', category: 'buying-guide', readTime: 10, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'hueforge-beginners-guide', title: 'Complete HueForge Guide for Beginners', description: 'Everything you need to start creating HueForge lithophanes — TD values, software setup, filament selection, and first print.', category: 'hueforge', readTime: 16, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'understanding-td-values', title: 'Understanding TD Values: What They Mean and Why They Matter', description: 'A complete explanation of Transmission Distance values — what they measure, how they\'re calibrated, and how to get accurate HueForge prints.', category: 'hueforge', readTime: 12, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'hueforge-color-selection', title: 'HueForge Color Selection: How to Pick the Right Filaments', description: 'How to build a balanced TD stack and match filament colors to your HueForge image tones for stunning results.', category: 'hueforge', readTime: 13, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-filament-for-prusa-mk4', title: 'Best Filaments for Prusa MK4 in 2026', description: 'PLA, PETG, ASA, and specialty filament recommendations for Prusa MK4 with MMU3 compatibility notes and PrusaSlicer guidance.', category: 'printer-specific', readTime: 11, publishedAt: '2026-02-20', isBuyingGuide: true },
+  { slug: 'best-filament-for-creality-k1', title: 'Best Filaments for Creality K1 & K1 Max in 2026', description: 'High-speed PLA, PETG, and ABS recommendations for Creality K1 and K1 Max with settings for 300–600mm/s printing.', category: 'printer-specific', readTime: 10, publishedAt: '2026-02-20', isBuyingGuide: true },
   // Existing editorial guides
   {
     slug: 'pla-vs-petg-vs-abs',
@@ -192,6 +211,8 @@ export const GUIDES: GuideMetadata[] = [
 const CATEGORIES = [
   { id: 'all', label: 'All Guides', icon: BookOpen },
   { id: 'buying-guide', label: 'Buying Guides', icon: ShoppingBag },
+  { id: 'hueforge', label: 'HueForge', icon: Layers },
+  { id: 'printer-specific', label: 'Printer Guides', icon: Printer },
   { id: 'beginner', label: 'Beginner Basics', icon: GraduationCap },
   { id: 'materials', label: 'Material Guides', icon: Flame },
   { id: 'troubleshooting', label: 'Troubleshooting', icon: Wrench },
@@ -201,15 +222,19 @@ const CATEGORIES = [
 const getCategoryConfig = (category: string) => {
   switch (category) {
     case 'beginner':
-      return { label: 'Beginner', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+      return { label: 'Beginner', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' };
     case 'materials':
-      return { label: 'Materials', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' };
+      return { label: 'Materials', color: 'bg-primary/10 text-primary border-primary/20' };
     case 'troubleshooting':
-      return { label: 'Troubleshooting', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
+      return { label: 'Troubleshooting', color: 'bg-destructive/10 text-destructive border-destructive/20' };
     case 'advanced':
-      return { label: 'Advanced', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' };
+      return { label: 'Advanced', color: 'bg-secondary text-secondary-foreground border-border' };
     case 'buying-guide':
-      return { label: 'Buying Guide', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
+      return { label: 'Buying Guide', color: 'bg-primary/10 text-primary border-primary/20' };
+    case 'hueforge':
+      return { label: 'HueForge', color: 'bg-accent text-accent-foreground border-border' };
+    case 'printer-specific':
+      return { label: 'Printer Guide', color: 'bg-muted text-muted-foreground border-border' };
     default:
       return { label: category, color: 'bg-primary/10 text-primary border-primary/20' };
   }
@@ -364,7 +389,7 @@ export default function LearningCenter() {
               LEARNING CENTER
             </Badge>
             
-            <h1 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
               Learn 3D Printing
             </h1>
             
