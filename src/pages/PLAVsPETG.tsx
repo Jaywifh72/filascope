@@ -121,8 +121,11 @@ export default function PLAVsPETG() {
         headline="PLA vs PETG — Which 3D Printer Filament Is Right for You?"
         description="PLA vs PETG compared: strength, flexibility, print settings, price & HueForge TD values."
         datePublished="2026-01-01"
-        dateModified={new Date().toISOString().split('T')[0]}
+        dateModified="2026-02-20"
         url="/pla-vs-petg"
+        articleType="TechArticle"
+        about={{ '@type': 'Thing', name: 'PLA vs PETG 3D Printing Filament Comparison' }}
+        proficiencyLevel="Beginner"
       />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
