@@ -13,18 +13,31 @@ const corsHeaders = {
 // Constants
 // ============================================================
 const CRAWLER_AGENTS = [
-  "googlebot", "bingbot", "twitterbot", "facebookexternalhit",
-  "linkedinbot", "slackbot", "whatsapp", "discordbot", "applebot",
-  "duckduckbot", "yandex", "archive.org_bot", "slurp",
-  // Extended Google crawler variants (URL Inspection tool, image/news/video bots, etc.)
+  // Search engines
+  "googlebot", "bingbot", "slurp", "duckduckbot", "yandex", "baiduspider",
+  "applebot", "petalbot", "bytespider", "archive.org_bot", "msnbot",
+  "sogou", "exabot", "seznambot",
+  // Extended Google crawler variants
   "googlebot-image", "googlebot-news", "googlebot-video",
   "google-inspectiontool", "storebot-google", "apis-google",
   "adsbot-google", "mediapartners-google",
-  // Other major crawlers
-  "petalbot", "bytespider",
   // Social / messaging crawlers
-  "telegrambot", "whatsappbot", "ia_archiver", "semrushbot", "ahrefsbot",
-  "msnbot", "baiduspider", "sogou", "exabot", "seznambot",
+  "twitterbot", "facebookexternalhit", "linkedinbot", "slackbot",
+  "discordbot", "telegrambot", "whatsappbot", "ia_archiver",
+  // SEO tools
+  "semrushbot", "ahrefsbot",
+  // AI crawlers
+  "gptbot",           // OpenAI GPTBot
+  "chatgpt-user",     // ChatGPT browsing
+  "claudebot",        // Anthropic Claude
+  "anthropic-ai",     // Anthropic generic
+  "perplexitybot",    // Perplexity AI
+  "google-extended",  // Google AI training
+  "ccbot",            // Common Crawl (used for AI training)
+  "amazonbot",        // Amazon Alexa / AI
+  "cohere-ai",        // Cohere AI
+  "diffbot",          // Diffbot
+  "youbot",           // You.com
 ];
 
 const BASE_URL = "https://filascope.com";
