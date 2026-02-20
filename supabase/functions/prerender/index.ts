@@ -27,17 +27,18 @@ const CRAWLER_AGENTS = [
   // SEO tools
   "semrushbot", "ahrefsbot",
   // AI crawlers
-  "gptbot",           // OpenAI GPTBot
-  "chatgpt-user",     // ChatGPT browsing
-  "claudebot",        // Anthropic Claude
-  "anthropic-ai",     // Anthropic generic
-  "perplexitybot",    // Perplexity AI
-  "google-extended",  // Google AI training
-  "ccbot",            // Common Crawl (used for AI training)
-  "amazonbot",        // Amazon Alexa / AI
-  "cohere-ai",        // Cohere AI
-  "diffbot",          // Diffbot
-  "youbot",           // You.com
+  "gptbot",              // OpenAI GPTBot
+  "chatgpt-user",        // ChatGPT browsing
+  "claudebot",           // Anthropic Claude
+  "anthropic-ai",        // Anthropic generic
+  "perplexitybot",       // Perplexity AI
+  "google-extended",     // Google AI training
+  "applebot-extended",   // Apple AI extended crawler
+  "ccbot",               // Common Crawl (used for AI training)
+  "amazonbot",           // Amazon Alexa / AI
+  "cohere-ai",           // Cohere AI
+  "diffbot",             // Diffbot
+  "youbot",              // You.com
 ];
 
 const BASE_URL = "https://filascope.com";
