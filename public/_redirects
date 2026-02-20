@@ -1,5 +1,6 @@
 # Static files — served via edge function (SPA catch-all would otherwise intercept these)
 /robots.txt                              https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots                              302
+/llms.txt                                https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms                    302
 /a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key           302
 
 # Sitemap routes — 302 redirect to Supabase edge function
