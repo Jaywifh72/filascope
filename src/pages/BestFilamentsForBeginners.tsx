@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, ArticleSchema, FAQSection } from '@/components/seo';
+import { ArticleSchema, FAQSection } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -113,11 +113,6 @@ export default function BestFilamentsForBeginners() {
         about={{ '@type': 'Thing', name: '3D Printer Filament for Beginners' }}
         proficiencyLevel="Beginner"
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Guides', url: 'https://filascope.com/learn' },
-        { name: 'Best Filaments for Beginners', url: 'https://filascope.com/best-filaments-for-beginners' },
-      ]} />
 
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 py-6">

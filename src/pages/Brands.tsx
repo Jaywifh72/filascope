@@ -10,7 +10,7 @@ import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ItemListSchema, BreadcrumbSchema } from "@/components/seo";
+import { ItemListSchema } from "@/components/seo";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { toBrandSlug } from "@/utils/brandSlug";
 import {
@@ -383,10 +383,6 @@ const Brands = () => {
         twitterTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
         twitterDescription={`Compare ${brandCount || 48}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`}
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Brands', url: 'https://filascope.com/brands' },
-      ]} />
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}
       <ItemListSchema

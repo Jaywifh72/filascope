@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, ArticleSchema, FAQSection, HowToSchema } from '@/components/seo';
+import { ArticleSchema, FAQSection, HowToSchema } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -78,11 +78,6 @@ export default function FilamentTemperatureGuide() {
         about={{ '@type': 'Thing', name: '3D Printer Filament Temperature Settings' }}
         proficiencyLevel="Beginner"
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Guides', url: 'https://filascope.com/learn' },
-        { name: 'Filament Temperature Guide', url: 'https://filascope.com/filament-temperature-guide' },
-      ]} />
       <HowToSchema
         name="How to Find the Right 3D Printing Temperature for Any Filament"
         description="A step-by-step process for dialing in the optimal nozzle and bed temperature for any 3D printing filament."

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, ArticleSchema } from '@/components/seo';
+import { ArticleSchema } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -130,11 +130,6 @@ export default function HueForgeHub() {
         about={{ '@type': 'Thing', name: 'HueForge 3D Printing' }}
         proficiencyLevel="Beginner"
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Learn', url: 'https://filascope.com/learn' },
-        { name: 'HueForge Hub', url: canonicalUrl },
-      ]} />
 
       <div className="min-h-screen bg-background">
         {/* Breadcrumb */}
