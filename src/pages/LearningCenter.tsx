@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema } from '@/components/seo';
+import { CollectionPageSchema, ItemListSchema } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -366,10 +366,21 @@ export default function LearningCenter() {
       ogTitle="3D Printing Guides & Tutorials — Learn | FilaScope"
       ogDescription="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever."
     />
-    <BreadcrumbSchema items={[
-      { name: 'Home', url: 'https://filascope.com/' },
-      { name: 'Learning Center', url: 'https://filascope.com/learn' },
-    ]} />
+    <CollectionPageSchema
+      name="3D Printing Guides & Learning Center"
+      description={lcMetaDesc}
+      url="https://filascope.com/learn"
+      numberOfItems={GUIDES.length}
+    />
+    <ItemListSchema
+      name="3D Printing Guides"
+      items={[...GUIDES].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 20).map((g, i) => ({
+        position: i + 1,
+        name: g.title,
+        url: `https://filascope.com${g.isBuyingGuide ? '/guides' : '/learn'}/${g.slug}`,
+        description: g.description,
+      }))}
+    />
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Visible breadcrumb trail */}
       <div className="max-w-7xl mx-auto px-4 pt-4">
