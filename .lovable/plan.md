@@ -1,86 +1,135 @@
 
-# Add FilaScore + `data-ai-summary` to AISummaryBlock
+# Add AiSnippetZone to Guide Pages
 
-## What Already Works
+## What Gets Added
 
-The `AISummaryBlock` component already exists at `src/components/filament/AISummaryBlock.tsx` and is correctly placed in `FilamentDetail.tsx` — positioned between the hero section and the tab navigation, exactly where the requirements specify. It already:
-
-- Generates the prose paragraph from brand, product name, material, color
-- Includes nozzle/bed temperature sentences
-- Includes the HueForge TD sentence when `transmissionDistance` is present
-- Includes price and weight
-
-## What Is Missing
-
-Two things need to be added:
-
-1. **`data-ai-summary="true"` attribute** — The outer container `<div>` inside the `<section>` does not have this attribute. The requirements call for it on the container div so AI crawlers can select the block directly.
-
-2. **FilaScore sentence** — The requirements template ends with `"FilaScore: [Score]/10."` but `AISummaryBlock` has no `filaScopeScore` prop and the sentence is absent from both the visible paragraph and the quick-specs pills. The `filaScopeScore` is available at `displayFilament.filascope_score` in `FilamentDetail.tsx` (already passed to `ProductJsonLd`) but was never forwarded to `AISummaryBlock`.
+A new "Quick Answer" block rendered between the guide subtitle and the Table of Contents on every guide page. It only appears when the guide config provides snippet data — all existing guides without snippet data are unaffected.
 
 ---
 
-## Files to Change
+## Layout Position
 
-### 1. `src/components/filament/AISummaryBlock.tsx`
+```text
+H1 title
+subtitle (description paragraph)
+──────────────────────────────────  ← INSERT HERE
+[ Quick Answer block ]
+──────────────────────────────────
+[ In This Guide TOC ]
+editorial sections / product list
+FAQs / Related Guides
+```
 
-**Add prop** `filaScopeScore?: number | null` to the `AISummaryBlockProps` interface.
+---
 
-**Add sentence** to the paragraph-building logic, after the weight sentence:
+## Files to Create / Modify
 
+### 1. `src/components/guides/AiSnippetZone.tsx` — New component
+
+**Props interface:**
 ```ts
-if (filaScopeScore != null) {
-  parts.push(`FilaScore: ${filaScopeScore.toFixed(1)}/10.`);
+interface PickItem {
+  name: string;
+  brand: string;
+  reason: string;
+}
+
+interface AiSnippetZoneProps {
+  summaryText: string;
+  topPick: PickItem;
+  runnerUp: PickItem;
+  budgetPick?: PickItem;
 }
 ```
 
-**Add pill** to the quick-specs pills, after the Weight pill:
+**Rendered structure:**
+```
+<div role="region" aria-label="Quick answer summary">
+  <div [card container]>
+    <header>
+      <Zap icon />  "Quick Answer"  label
+    </header>
+    <p>{summaryText}</p>
+    <ul>
+      <li>🏆 Our top pick: <strong>name</strong> by <em>brand</em> — reason</li>
+      <li>🥈 Runner-up: <strong>name</strong> by <em>brand</em> — reason</li>
+      <li>💰 Budget pick: ... (conditional)</li>
+    </ul>
+  </div>
+</div>
+```
 
+**Styling:** Uses the site's existing dark card pattern — `bg-card/60 border-border` with a cyan `border-l-2 border-l-primary` left accent stripe. Label uses `text-primary text-xs font-semibold uppercase tracking-wider`. Pick labels use distinct colored icon glyphs (gold/silver/green) rendered as `<span aria-hidden>` so screen readers skip the decorative emoji.
+
+**Semantic HTML:** `<p>` for the summary, `<ul>/<li>` for the picks list, `<strong>` for product names, `<em>` for brand names. The outer wrapper carries `role="region"` and `aria-label="Quick answer summary"`.
+
+### 2. `src/components/guides/guideConfigs.ts` — Extend `GuideConfig` interface
+
+Add an optional `aiSnippet` field to the `GuideConfig` interface:
 ```ts
-if (filaScopeScore != null) {
-  specs.push({ label: "FilaScore", value: `${filaScopeScore.toFixed(1)}/10` });
+export interface AiSnippetData {
+  summaryText: string;
+  topPick: { name: string; brand: string; reason: string };
+  runnerUp: { name: string; brand: string; reason: string };
+  budgetPick?: { name: string; brand: string; reason: string };
+}
+
+export interface GuideConfig {
+  // ... existing fields ...
+  aiSnippet?: AiSnippetData;  // ← new optional field
 }
 ```
 
-**Add `data-ai-summary="true"`** to the container `<div>`:
+Then add `aiSnippet` data to two representative guides (`best-pla-filaments` and `best-petg-filaments`) as examples. All other guides remain untouched and will simply not render the block.
 
-```tsx
-<div
-  className="bg-muted/30 border border-border/40 rounded-lg px-4 py-3"
-  data-ai-summary="true"
->
+**Example data for `best-pla-filaments`:**
+```ts
+aiSnippet: {
+  summaryText: "PLA is the best filament for most beginners and casual users in 2026 — it's easy to print, low-odor, and available from dozens of reliable brands. Our top picks are ranked using FilaScope's data-driven scoring across quality, pricing, and documentation.",
+  topPick: { name: "PolySonic PLA Pro", brand: "Polymaker", reason: "fastest print speed support with excellent surface quality" },
+  runnerUp: { name: "PLA Basic", brand: "Bambu Lab", reason: "best consistency spool-to-spool at a competitive price" },
+  budgetPick: { name: "PLA Filament", brand: "Hatchbox", reason: "proven reliability at under $20/kg" },
+}
 ```
 
-### 2. `src/pages/FilamentDetail.tsx`
+### 3. `src/components/guides/BuyingGuideTemplate.tsx` — Render the block
 
-**Pass the new prop** to `<AISummaryBlock>`:
-
-```tsx
-<AISummaryBlock
-  ...existing props...
-  filaScopeScore={displayFilament.filascope_score}
-/>
+**Import** the new component:
+```ts
+import { AiSnippetZone } from './AiSnippetZone';
 ```
 
-This is a one-line addition at line 1033 (after `netWeightG`).
+**Insert** between the closing `</p>` of the subtitle (line 187) and the `{/* Table of Contents */}` block (line 190), inside the hero `<div>`:
+
+```tsx
+{/* AI Snippet Zone — only if guide config provides snippet data */}
+{config.aiSnippet && (
+  <AiSnippetZone
+    summaryText={config.aiSnippet.summaryText}
+    topPick={config.aiSnippet.topPick}
+    runnerUp={config.aiSnippet.runnerUp}
+    budgetPick={config.aiSnippet.budgetPick}
+  />
+)}
+```
+
+This goes **after** the closing `</div>` of the hero block (line 188) and **before** the TOC `<nav>` (line 192), so it sits between the subtitle and the TOC — exactly as specified.
 
 ---
 
-## Result
+## What Does NOT Change
 
-After these changes, the rendered paragraph on a page like `/filament/geeetech-petg-black` will read:
-
-> The Geeetech PETG is a PETG 3D printer filament in Black. It prints at a nozzle temperature of 230–250°C with a bed temperature of 70–80°C. Its HueForge Transmissivity Distance (TD) value is 5.2, making it suitable for standard lithophanes with good contrast. Available from $18.99/kg in United States. Weight: 1kg. FilaScore: 7.4/10.
-
-The FilaScore pill will also appear in the quick-specs pill row at the end.
-
-The container div will carry `data-ai-summary="true"` for AI-crawler selection.
+- Existing `GuideConfig` data for all guides (no existing guide has `aiSnippet` today — only the two example guides will get populated snippet data)
+- The TOC structure, editorial sections, product lists, FAQ sections, related guides, or CTA
+- All existing schema markup (Article, Breadcrumb, FAQ, ItemList schemas)
+- Any other page or component
 
 ---
 
-## No Changes To
+## Technical Notes
 
-- Tab navigation, hero section, spec badges, pricing sidebar — untouched
-- Product JSON-LD schema — untouched
-- Any other component or page — untouched
-- The `sr-only` hidden paragraph already present — it inherits the updated `summaryText` automatically since it reuses the same variable
+- `aiSnippet` is `optional` (`?`) on `GuideConfig`, so TypeScript enforces that all existing guide objects remain valid without it.
+- The render is a simple conditional `{config.aiSnippet && <AiSnippetZone ... />}` — zero runtime cost for guides without snippet data.
+- No new dependencies — uses only existing `lucide-react` icons and Tailwind classes already in the project.
+- The `role="region"` + `aria-label` satisfies WCAG 2.1 landmark requirements for assistive technologies.
+- The `data-ai-summary` attribute pattern used in `AISummaryBlock` on filament detail pages can optionally be added to the container for consistency with the AI crawler strategy documented in the memory notes.
