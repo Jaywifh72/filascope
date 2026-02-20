@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
 import { useRegion } from "@/contexts/RegionContext";
 import { WizardResults } from "@/components/wizard/WizardResults";
+import { trackQuickMatchStart } from "@/lib/analytics";
 
 interface Question {
   id: string;
@@ -91,6 +92,9 @@ const Wizard = () => {
   const { convertPrice, formatPrice, hasRates, currencyConfig } = useRegion();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+
+  // Fire quick_match_start once on mount
+  useEffect(() => { trackQuickMatchStart(); }, []);
   const [showResults, setShowResults] = useState(false);
   const wizardCardRef = useRef<HTMLDivElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);

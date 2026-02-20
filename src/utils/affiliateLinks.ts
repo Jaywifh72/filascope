@@ -110,6 +110,10 @@ export async function trackAffiliateClick(
     regionCode: string;
     productName?: string;
     productSlug?: string;
+    /** UUID of the product (filament or printer id) */
+    productId?: string;
+    /** 'filament' | 'printer' | 'accessory' */
+    productType?: string;
     sourcePage?: string;
     sourceComponent?: string;
     price?: number;
@@ -118,14 +122,20 @@ export async function trackAffiliateClick(
 ): Promise<void> {
   const sessionId = sessionStorage.getItem('analytics_session_id') || crypto.randomUUID();
   const referrer = typeof document !== 'undefined' ? document.referrer || null : null;
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null;
+
+  // Ensure session ID is persisted for funnel attribution
+  try { sessionStorage.setItem('analytics_session_id', sessionId); } catch { /* ignore */ }
 
   const { error } = await supabase.from("affiliate_clicks").insert({
     program_id: programId,
     destination_url: destinationUrl,
     brand_name: metadata.brandName,
     region_code: metadata.regionCode,
+    product_id: metadata.productId || null,
     product_name: metadata.productName || null,
     product_slug: metadata.productSlug || null,
+    product_type: metadata.productType || null,
     source_page: metadata.sourcePage || (typeof window !== 'undefined' ? window.location.pathname : "unknown"),
     source_component: metadata.sourceComponent || null,
     session_id: sessionId,
@@ -134,6 +144,7 @@ export async function trackAffiliateClick(
     price: metadata.price ?? null,
     currency: metadata.currency || null,
     referrer: referrer,
+    user_agent: userAgent,
   });
 
   if (error) {

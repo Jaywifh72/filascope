@@ -266,8 +266,9 @@ export function CompareProvider({ children }: { children: ReactNode }) {
         setTimeout(() => setDuplicatePulseId(null), 600);
         return prev;
       }
-      
-      trackComparisonAdd(item.id, 'filament');
+
+      const newCount = prev.length + 1;
+      trackComparisonAdd(item.id, 'filament', item.product_title, newCount);
       toast.success(`Added to comparison`, {
         description: item.product_title,
       });

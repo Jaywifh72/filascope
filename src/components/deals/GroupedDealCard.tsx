@@ -263,6 +263,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             brand: group.representativeDeal.vendor || '',
             price: group.priceRange.min ?? undefined,
             discountPercent: group.bestDiscount,
+            originalPrice: group.representativeDeal.variant_compare_at_price ?? undefined,
           });
         }
       },

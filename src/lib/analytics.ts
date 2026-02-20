@@ -54,6 +54,10 @@ export interface AffiliateClickParams {
   brand: string;
   productName: string;
   productId: string;
+  /** Store / retailer name (e.g. "Amazon", "Bambu Lab Store") */
+  store?: string;
+  /** Material type (e.g. "PLA", "PETG") */
+  material?: string;
   affiliateProgram?: string;
   region?: string;
   price?: number;
@@ -65,13 +69,15 @@ export interface AffiliateClickParams {
 export function trackAffiliateClick(params: AffiliateClickParams) {
   // Custom event for detailed attribution
   gtag('event', 'affiliate_click', {
-    brand: params.brand,
-    product_name: params.productName,
     product_id: params.productId,
-    affiliate_program: params.affiliateProgram,
+    product_name: params.productName,
+    brand: params.brand,
+    material: params.material,
+    store: params.store,
     region: params.region,
     price: params.price,
     currency: params.currency,
+    affiliate_program: params.affiliateProgram,
     discount_code: params.discountCode,
     link_type: params.linkType,
     source_page: typeof window !== 'undefined' ? window.location.pathname : undefined,
@@ -87,6 +93,7 @@ export function trackAffiliateClick(params: AffiliateClickParams) {
           item_id: params.productId,
           item_name: params.productName,
           item_brand: params.brand,
+          item_category: params.material,
           price: params.price,
           quantity: 1,
         },
@@ -140,11 +147,29 @@ export function trackComparison(params: ComparisonParams) {
 }
 
 /** Fired when a single item is added to the comparison tray. */
-export function trackComparisonAdd(productId: string, productType: string) {
-  trackEvent('comparison_add', { product_id: productId, product_type: productType });
+export function trackComparisonAdd(
+  productId: string,
+  productType: string,
+  productName?: string,
+  comparisonCount?: number
+) {
+  trackEvent('comparison_add', {
+    product_id: productId,
+    product_name: productName,
+    product_type: productType,
+    comparison_count: comparisonCount,
+  });
 }
 
 /** Fired when user navigates to the compare page with 2+ items. */
+export function trackComparisonView(productCount: number, productIds: string[]) {
+  trackEvent('comparison_view', {
+    product_count: productCount,
+    product_ids: productIds.join(','),
+  });
+}
+
+/** @deprecated Use trackComparisonView */
 export function trackComparisonComplete(productCount: number) {
   trackEvent('comparison_complete', { product_count: productCount });
 }
@@ -159,9 +184,14 @@ export function trackFilter(filterType: string, filterValue: string, resultsCoun
   });
 }
 
-/** Simplified filter tracking (no results count required). */
-export function trackFilterApply(filterType: string, filterValue: string) {
-  trackEvent('filter_apply', { filter_type: filterType, filter_value: filterValue });
+/** Full filter_apply event with page and results count. */
+export function trackFilterApply(filterType: string, filterValue: string, resultsCount?: number) {
+  trackEvent('filter_apply', {
+    filter_type: filterType,
+    filter_value: filterValue,
+    page: typeof window !== 'undefined' ? window.location.pathname : undefined,
+    results_count: resultsCount,
+  });
 }
 
 // ── Region/Currency Change ─────────────────────────────────────────────
@@ -201,8 +231,34 @@ export function trackSearch(searchTerm: string, resultsCount: number) {
 
 // ── Deals ─────────────────────────────────────────────────────────────
 
-export function trackDealView(productId: string, discount: string) {
-  trackEvent('deal_view', { product_id: productId, discount });
+export function trackDealView(params: {
+  productId: string;
+  productName?: string;
+  brand?: string;
+  discountPercent?: number;
+  originalPrice?: number;
+  salePrice?: number;
+  currency?: string;
+}): void;
+/** @deprecated Use the object form */
+export function trackDealView(productId: string, discount: string): void;
+export function trackDealView(
+  paramsOrId: string | { productId: string; productName?: string; brand?: string; discountPercent?: number; originalPrice?: number; salePrice?: number; currency?: string },
+  discount?: string
+) {
+  if (typeof paramsOrId === 'string') {
+    trackEvent('deal_view', { product_id: paramsOrId, discount });
+    return;
+  }
+  trackEvent('deal_view', {
+    product_id: paramsOrId.productId,
+    product_name: paramsOrId.productName,
+    brand: paramsOrId.brand,
+    discount_percent: paramsOrId.discountPercent,
+    original_price: paramsOrId.originalPrice,
+    sale_price: paramsOrId.salePrice,
+    currency: paramsOrId.currency,
+  });
 }
 
 /** GA4 view_item fired when a deal card becomes visible. */
@@ -213,7 +269,19 @@ export function trackDealItemView(params: {
   price?: number;
   currency?: string;
   discountPercent?: number;
+  originalPrice?: number;
 }) {
+  // Also fire the deal_view event with full params
+  trackEvent('deal_view', {
+    product_id: params.productId,
+    product_name: params.productName,
+    brand: params.brand,
+    discount_percent: params.discountPercent,
+    original_price: params.originalPrice,
+    sale_price: params.price,
+    currency: params.currency || 'USD',
+  });
+
   gtag('event', 'view_item', {
     currency: params.currency || 'USD',
     value: params.price,
@@ -240,7 +308,14 @@ export function trackGuideRead(guideTitle: string, guideSlug: string, readTimeSe
   });
 }
 
-// ── Wizard Complete ───────────────────────────────────────────────────
+// ── Quick Match (Wizard) ───────────────────────────────────────────────
+
+/** Fired when user lands on the Wizard/Quick Match page. */
+export function trackQuickMatchStart() {
+  trackEvent('quick_match_start', {
+    source_page: typeof window !== 'undefined' ? window.location.pathname : undefined,
+  });
+}
 
 /** Fired when WizardResults are shown (quiz completed). */
 export function trackWizardComplete(params: {
@@ -248,7 +323,16 @@ export function trackWizardComplete(params: {
   useCase?: string;
   printer?: string;
   priority?: string;
+  recommendedCount?: number;
 }) {
+  gtag('event', 'quick_match_complete', {
+    recommended_count: params.recommendedCount,
+    recommended_material: params.topMaterial,
+    use_case: params.useCase,
+    printer: params.printer,
+    priority: params.priority,
+  });
+  // Also fire the legacy event name for backwards compat
   gtag('event', 'wizard_complete', {
     recommended_material: params.topMaterial,
     use_case: params.useCase,
