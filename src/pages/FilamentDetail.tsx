@@ -67,6 +67,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useCommunityReviewStats } from "@/hooks/useCommunityReviewStats";
 import { useFilamentReviewsForSchema } from "@/hooks/useFilamentReviewsForSchema";
 import { calculateUnifiedScore, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
+import { useCompatiblePrintersForSchema } from "@/hooks/useCompatiblePrintersForSchema";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -155,6 +156,12 @@ const { id } = useParams();
 
   // Individual reviews for Product JSON-LD schema (up to 5, only when they have body text)
   const { data: schemaReviews } = useFilamentReviewsForSchema(filament?.id);
+
+  // Compatible printers for Product JSON-LD isRelatedTo schema field
+  const compatiblePrintersForSchema = useCompatiblePrintersForSchema(
+    filament?.nozzle_temp_max_c,
+    filament?.id
+  );
   // Compatible printer count for tab badge
   const { data: compatiblePrinterCount } = useQuery({
     queryKey: ['compatible-printer-count', filament?.nozzle_temp_max_c],
@@ -934,6 +941,8 @@ const { id } = useParams();
         worstRating={1}
         hasReturnPolicy={true}
         reviews={schemaReviews ?? undefined}
+        compatiblePrinters={compatiblePrintersForSchema}
+        editorialReviewBody={seoDescription}
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">

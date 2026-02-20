@@ -12,6 +12,8 @@ interface RegionalOffer {
 }
 
 interface ProductJsonLdProps {
+  compatiblePrinters?: Array<{ modelName: string; brandName: string | null }>;
+  editorialReviewBody?: string | null;
   name: string;
   description: string;
   image?: string | null;
@@ -148,6 +150,8 @@ export function ProductJsonLd({
   printerWidthMm,
   printerDepthMm,
   printerHeightMm,
+  compatiblePrinters,
+  editorialReviewBody,
 }: ProductJsonLdProps) {
   const { currency: userCurrency, region: userRegion } = useRegion();
   
@@ -159,6 +163,7 @@ export function ProductJsonLd({
     name: string;
     value: string | number;
     unitCode?: string;
+    unitText?: string;
     description?: string;
   }> = [];
 
@@ -166,9 +171,10 @@ export function ProductJsonLd({
   if (transmissionDistance) {
     additionalProperties.push({
       '@type': 'PropertyValue',
-      name: 'HueForge Transmission Distance (TD)',
+      name: 'HueForge Transmissivity Distance (TD)',
       value: transmissionDistance,
       unitCode: 'MMT',
+      unitText: 'mm',
       description: 'Light transmission value for HueForge lithophane and multicolor printing',
     });
     
@@ -492,22 +498,50 @@ export function ProductJsonLd({
         ...(reviews && reviews.length > 0 && { reviewCount: reviews.length.toString() }),
       },
     }),
-    // Individual review entries (up to 5) — required for Google Review rich results
-    ...(reviews && reviews.length > 0 && {
-      review: reviews.map((r) => ({
-        '@type': 'Review',
-        author: { '@type': 'Person', name: r.authorName },
-        datePublished: r.datePublished,
-        reviewRating: {
-          '@type': 'Rating',
-          ratingValue: r.ratingValue.toString(),
-          bestRating: bestRating?.toString() ?? '5',
-          worstRating: worstRating?.toString() ?? '1',
-        },
-        ...(r.headline && { name: r.headline }),
-        ...(r.reviewBody && { reviewBody: r.reviewBody }),
+    // Compatible printers as isRelatedTo — schema-only, no UI
+    ...(compatiblePrinters && compatiblePrinters.length > 0 && {
+      isRelatedTo: compatiblePrinters.map((p) => ({
+        '@type': 'Product',
+        name: p.modelName,
+        category: '3D Printer',
+        ...(p.brandName && { brand: { '@type': 'Brand', name: p.brandName } }),
       })),
     }),
+    // Build combined review array: editorial (FilaScope org) first, then community
+    ...(() => {
+      const allReviews: object[] = [];
+      if (editorialReviewBody && filaScopeScore != null) {
+        allReviews.push({
+          '@type': 'Review',
+          author: { '@type': 'Organization', name: 'FilaScope' },
+          reviewRating: {
+            '@type': 'Rating',
+            ratingValue: filaScopeScore.toFixed(1),
+            bestRating: '10',
+            worstRating: '1',
+          },
+          reviewBody: editorialReviewBody,
+        });
+      }
+      if (reviews && reviews.length > 0) {
+        allReviews.push(
+          ...reviews.map((r) => ({
+            '@type': 'Review',
+            author: { '@type': 'Person', name: r.authorName },
+            datePublished: r.datePublished,
+            reviewRating: {
+              '@type': 'Rating',
+              ratingValue: r.ratingValue.toString(),
+              bestRating: bestRating?.toString() ?? '5',
+              worstRating: worstRating?.toString() ?? '1',
+            },
+            ...(r.headline && { name: r.headline }),
+            ...(r.reviewBody && { reviewBody: r.reviewBody }),
+          }))
+        );
+      }
+      return allReviews.length > 0 ? { review: allReviews } : {};
+    })(),
   };
 
   useJsonLd(jsonLd);
