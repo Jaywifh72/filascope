@@ -17,32 +17,38 @@ import {
   Pie,
   Cell,
   Legend,
+  LineChart,
+  Line,
 } from "recharts";
 import {
   useClickSummary,
   useClicksToday,
+  useClicksByDay,
   type ClickFilters,
 } from "@/hooks/useAffiliateClickAnalytics";
 import { MousePointerClick, Users, TrendingUp, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
-type DateRange = "today" | "7d" | "30d";
+type DateRange = "today" | "7d" | "30d" | "90d" | "all";
 
-const COLORS = ["hsl(var(--primary))", "#3b82f6", "#22c55e", "#a855f7", "#f59e0b", "#ef4444"];
+const RANGE_LABELS: Record<DateRange, string> = {
+  today: "Today",
+  "7d": "7 Days",
+  "30d": "30 Days",
+  "90d": "90 Days",
+  all: "All Time",
+};
+
+const COLORS = ["hsl(var(--primary))", "#3b82f6", "#22c55e", "#a855f7", "#f59e0b", "#ef4444", "#0ea5e9", "#ec4899"];
 
 function getDateRange(range: DateRange): { startDate: string; endDate: string } {
   const now = new Date();
   const end = now.toISOString().slice(0, 10);
-  let start: Date;
-  if (range === "today") {
-    start = now;
-  } else if (range === "7d") {
-    start = new Date(now);
-    start.setDate(start.getDate() - 7);
-  } else {
-    start = new Date(now);
-    start.setDate(start.getDate() - 30);
-  }
+  if (range === "all") return { startDate: "2020-01-01", endDate: end };
+  if (range === "today") return { startDate: end, endDate: end };
+  const start = new Date(now);
+  const days = range === "7d" ? 7 : range === "30d" ? 30 : 90;
+  start.setDate(start.getDate() - days);
   return { startDate: start.toISOString().slice(0, 10), endDate: end };
 }
 
@@ -101,7 +107,6 @@ export function AffiliatePanel() {
         .select("brand, clicks")
         .gte("date", startDate);
       if (error) throw error;
-      // Aggregate by brand
       const map: Record<string, number> = {};
       for (const row of data || []) {
         const b = row.brand || "Unknown";
@@ -109,6 +114,50 @@ export function AffiliatePanel() {
       }
       return Object.entries(map)
         .map(([brand, clicks]) => ({ brand, clicks }))
+        .sort((a, b) => b.clicks - a.clicks)
+        .slice(0, 10);
+    },
+  });
+
+  // Clicks by Store from affiliate_clicks_daily.store
+  const { data: storeData } = useQuery({
+    queryKey: ["analytics-store-clicks", range],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("affiliate_clicks_daily")
+        .select("store, clicks")
+        .gte("date", startDate);
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      for (const row of data || []) {
+        const s = (row as any).store || "Unknown";
+        map[s] = (map[s] || 0) + (row.clicks || 0);
+      }
+      return Object.entries(map)
+        .map(([store, clicks]) => ({ store, clicks }))
+        .sort((a, b) => b.clicks - a.clicks)
+        .slice(0, 10);
+    },
+  });
+
+  // Clicks by product_type (material proxy)
+  const { data: materialData } = useQuery({
+    queryKey: ["analytics-material-clicks", range],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("affiliate_clicks")
+        .select("product_type")
+        .gte("clicked_at", startDate)
+        .not("product_type", "is", null)
+        .limit(2000);
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      for (const row of data || []) {
+        const m = row.product_type || "Unknown";
+        map[m] = (map[m] || 0) + 1;
+      }
+      return Object.entries(map)
+        .map(([material, clicks]) => ({ material, clicks }))
         .sort((a, b) => b.clicks - a.clicks)
         .slice(0, 10);
     },
@@ -134,7 +183,21 @@ export function AffiliatePanel() {
     },
   });
 
-  // Top products
+  // Click trend over time (day-by-day)
+  const { data: clicksByDay } = useClicksByDay(filters);
+  const trendData = (() => {
+    if (!clicksByDay) return [];
+    const map: Record<string, number> = {};
+    for (const row of clicksByDay) {
+      const day = row.click_date;
+      map[day] = (map[day] || 0) + Number(row.click_count);
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, clicks]) => ({ date, clicks }));
+  })();
+
+  // Top products (expanded to 20)
   const { data: productData } = useQuery({
     queryKey: ["analytics-product-clicks", range],
     queryFn: async () => {
@@ -143,7 +206,7 @@ export function AffiliatePanel() {
         .select("product_name, brand_name, product_slug, session_id")
         .gte("clicked_at", startDate)
         .not("product_name", "is", null)
-        .limit(500);
+        .limit(1000);
       if (error) throw error;
       const map: Record<
         string,
@@ -171,29 +234,38 @@ export function AffiliatePanel() {
           unique_sessions: d.sessions.size,
         }))
         .sort((a, b) => b.clicks - a.clicks)
-        .slice(0, 10);
+        .slice(0, 20);
     },
   });
 
-  // Weekly clicks (7-day window)
+  // Fixed KPI cards (always show totals)
   const weekFilters: ClickFilters = { ...getDateRange("7d"), brandNames: null, regionCodes: null };
   const { data: weekSummary } = useClickSummary(weekFilters);
   const monthFilters: ClickFilters = { ...getDateRange("30d"), brandNames: null, regionCodes: null };
   const { data: monthSummary } = useClickSummary(monthFilters);
 
+  const tooltipStyle = {
+    contentStyle: {
+      background: "hsl(var(--card))",
+      border: "1px solid hsl(var(--border))",
+      borderRadius: 6,
+    },
+    labelStyle: { color: "hsl(var(--foreground))" },
+  };
+
   return (
     <div className="space-y-6">
       {/* Date range selector */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <span className="text-sm text-muted-foreground">Date range:</span>
-        {(["today", "7d", "30d"] as DateRange[]).map((r) => (
+        {(["today", "7d", "30d", "90d", "all"] as DateRange[]).map((r) => (
           <Button
             key={r}
             variant={range === r ? "default" : "outline"}
             size="sm"
             onClick={() => setRange(r)}
           >
-            {r === "today" ? "Today" : r === "7d" ? "7 Days" : "30 Days"}
+            {RANGE_LABELS[r]}
           </Button>
         ))}
       </div>
@@ -205,6 +277,38 @@ export function AffiliatePanel() {
         <KpiCard label="Clicks This Month" value={monthSummary?.total_clicks ?? 0} icon={TrendingUp} loading={summaryLoading} />
         <KpiCard label="Unique Sessions" value={summary?.unique_sessions ?? 0} icon={Users} loading={summaryLoading} />
       </div>
+
+      {/* Click Trend Over Time */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Click Trend Over Time</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {trendData.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No trend data for this period</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip {...tooltipStyle} />
+                <Line
+                  type="monotone"
+                  dataKey="clicks"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Clicks by Brand */}
@@ -226,10 +330,7 @@ export function AffiliatePanel() {
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                     width={70}
                   />
-                  <Tooltip
-                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 6 }}
-                    labelStyle={{ color: "hsl(var(--foreground))" }}
-                  />
+                  <Tooltip {...tooltipStyle} />
                   <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -262,21 +363,73 @@ export function AffiliatePanel() {
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 6 }}
-                  />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 6 }} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
+
+        {/* Clicks by Store */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Clicks by Store</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!storeData || storeData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No store data for this period</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={storeData} layout="vertical" margin={{ left: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis
+                    type="category"
+                    dataKey="store"
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    width={70}
+                  />
+                  <Tooltip {...tooltipStyle} />
+                  <Bar dataKey="clicks" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Clicks by Material Type */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Clicks by Material Type</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!materialData || materialData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No material data for this period</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={materialData} layout="vertical" margin={{ left: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis
+                    type="category"
+                    dataKey="material"
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    width={70}
+                  />
+                  <Tooltip {...tooltipStyle} />
+                  <Bar dataKey="clicks" fill="#22c55e" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Top Clicked Products */}
+      {/* Top Clicked Products (20) */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Top Clicked Products</CardTitle>
+          <CardTitle className="text-base">Top 20 Clicked Products</CardTitle>
         </CardHeader>
         <CardContent>
           {!productData || productData.length === 0 ? (
@@ -286,6 +439,7 @@ export function AffiliatePanel() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
+                    <th className="text-left py-2 pr-2 font-medium text-muted-foreground w-6">#</th>
                     <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Product</th>
                     <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Brand</th>
                     <th className="text-right py-2 pr-4 font-medium text-muted-foreground">Clicks</th>
@@ -295,6 +449,7 @@ export function AffiliatePanel() {
                 <tbody>
                   {productData.map((row, i) => (
                     <tr key={i} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                      <td className="py-2 pr-2 text-muted-foreground text-xs">{i + 1}</td>
                       <td className="py-2 pr-4">
                         {row.product_slug ? (
                           <Link to={`/filament/${row.product_slug}`} className="text-primary hover:underline truncate max-w-[200px] block">
