@@ -1,134 +1,150 @@
 
-## Goal
+## Fix /materials/compare to Read ?a= & ?b= Query Parameters
 
-Add 4 dynamically-generated FAQ Q&A pairs — based on actual filament data — to **both** the visible FAQ accordion and the FAQPage JSON-LD schema on filament detail pages. The two must stay in sync.
+### Problem Diagnosis
 
----
+The `/materials/compare?a=petg&b=abs` URL shows the "Reference" tab (default) instead of a comparison. There are two separate issues:
 
-## Current Architecture (How Things Work Today)
+1. **Wrong default tab**: The `MaterialCompare` component defaults to `tab=reference`. When visiting with `?a=petg&b=abs`, no tab switching occurs.
+2. **No param ingestion**: The `ComparisonContent` component reads from a localStorage store (`getMaterialCompareList`) but never reads `?a=` / `?b=` query params to pre-populate the comparison.
+3. **No dedicated comparison routes**: The clean URLs `/petg-vs-abs`, `/asa-vs-abs`, etc. don't exist yet.
 
-There are two entirely separate FAQ systems on `FilamentDetail.tsx`:
+### Solution Overview
 
-**System 1 — Visible FAQ Accordion** (`CollapsibleContentContainer` → `FAQContent`)
-- Located inside the "Frequently Asked Questions" expandable panel in the Overview tab.
-- Receives only `material` as a prop.
-- Renders generic, material-specific tips (e.g. "Why is my PLA warping?", "Should I use retraction with TPU?").
-- Has no awareness of the specific filament's brand, temperature range, price, or TD value.
+We'll fix `MaterialCompare.tsx` to:
+- Detect `?a=` and `?b=` params and auto-switch to the "comparison" tab
+- Pre-populate the material selector with the materials from those params
+- Generate dynamic SEO metadata (`<title>`, description, JSON-LD) based on the selected materials
+- Show a Verdict section and comparison-specific FAQs when exactly 2 materials are being compared
 
-**System 2 — JSON-LD Schema** (`FilamentFAQSchema`)
-- Invisible SEO component rendered directly in `FilamentDetail.tsx`.
-- Receives full filament data (brand, temps, TD, price, etc.) as props.
-- Auto-generates questions like "What nozzle temperature should I use for [Brand] [Product]?" and "What is the TD value of...?".
-- These questions appear in Google rich results but are **not shown to users in the UI**.
-
-**The Problem**: The visible accordion and the JSON-LD are disconnected. The dynamic, product-specific Q&As only exist in the schema — not on the visible page.
+We'll also add new redirect routes in `App.tsx` for clean comparison URLs.
 
 ---
 
-## What Will Change
+### Technical Plan
 
-### Step 1 — Create a shared FAQ generation utility
+#### 1. Update `MaterialCompare.tsx`
 
-Create a new file: **`src/lib/generateFilamentFAQs.ts`**
+**A. Read `?a=` and `?b=` params in the top-level `MaterialCompare` component**
 
-This utility exports a single function `generateDynamicFAQs(params)` that takes filament data and returns the 4 Q&A pairs specified in the request:
+In the `MaterialCompare` component (lines 1410–1502), read `a` and `b` from `useSearchParams()`. When they exist:
+- Set `activeTab` to `"comparison"` by default (override the `tab` param default)
+- Pass the resolved materials down to `ComparisonContent`
 
-- **Temperature question** — only if `nozzleTempMin` AND `nozzleTempMax` are non-null. Includes bed temp in the answer if both bed temp values exist.
-- **TD question** — always generated. Answer varies: if TD exists → opaque/balanced/translucent interpretation based on range; if no TD → points to the HueForge TD Database.
-- **Beginner question** — always generated. Answer varies by material: PLA/PLA+ (easy), PETG (slightly advanced), ABS/ASA/Nylon/PC (requires experience), TPU (direct-drive needed), default fallback.
-- **Price question** — only if `price` is non-null and > 0.
+```typescript
+const aParam = searchParams.get("a")?.toUpperCase() || null;
+const bParam = searchParams.get("b")?.toUpperCase() || null;
+const hasCompareParams = !!(aParam && bParam);
 
-The function signature:
-```ts
-generateDynamicFAQs({
-  brand, productName, material,
-  nozzleTempMin, nozzleTempMax, bedTempMin, bedTempMax,
-  transmissionDistance, price
-}): { question: string; answer: string }[]
+// Default tab: if ?a and ?b present, default to "comparison"
+const activeTab = searchParams.get("tab") || (hasCompareParams ? "comparison" : "reference");
 ```
 
-This shared utility is the single source of truth — both the visible accordion and the JSON-LD will call it.
+**B. Pass pre-selected materials to `ComparisonContent`**
+
+`ComparisonContent` will accept an optional `initialMaterials?: string[]` prop. When provided (from URL params), it initializes `selectedMaterials` state with those values instead of (or merged with) the localStorage store.
+
+The material name lookup will normalize the param (e.g., `"petg"` → `"PETG"`, `"abs"` → `"ABS"`) against `allMaterials` from `MATERIAL_CATEGORIES` to find the exact name used in the data.
+
+**C. Dynamic SEO metadata in `MaterialCompare`**
+
+When `?a=` and `?b=` are present, replace the generic `<DocumentHead>` with material-specific metadata:
+```typescript
+const matA = aParam ? normalizeMaterialName(aParam) : null;
+const matB = bParam ? normalizeMaterialName(bParam) : null;
+
+const title = matA && matB
+  ? `${matA} vs ${matB} — 3D Filament Comparison | FilaScope`
+  : "Material Knowledge Base — Filament Reference & Comparison | FilaScope";
+
+const description = matA && matB
+  ? `${matA} vs ${matB} compared: strength, flexibility, print settings, price & more. Data-driven comparison from FilaScope's database of 1,080+ filaments.`
+  : "Compare 3D printing material properties side by side...";
+```
+
+**D. JSON-LD Schema for compare pages**
+
+When `?a=` and `?b=` params are present with 2 materials, emit:
+- `BreadcrumbList` schema: Home > Materials > `{A} vs {B}`
+- `TechArticle` schema via the existing `ArticleSchema` component
+- `FAQPage` schema via the existing `FAQSchema` component
+
+**E. Verdict section (shown when exactly 2 materials are selected)**
+
+Add a verdict card inside `ComparisonContent` (after the Use Cases card) that generates a brief paragraph based on the two materials' qualitative properties. The verdict logic will use the existing `weightedScores` to determine the overall winner and generate text like:
+
+> "For most users, **PETG** is the better choice when you need a balance of strength and ease of print. **ABS** is preferred when heat resistance above 80°C or acetone smoothing is required."
+
+This is generated client-side from the existing `MaterialInfo` and `MaterialReferenceInfo` data.
+
+**F. Comparison-specific FAQs (shown when exactly 2 materials are selected)**
+
+A new helper function `generateMaterialComparisonFAQs(materialA, materialB)` will produce 3–5 data-driven questions from the existing reference data. For example:
+- "Is {A} stronger than {B}?" — answered using TDS tensile strength data
+- "Which is easier to print, {A} or {B}?" — answered using printability ratings
+- "What temperature does {A} vs {B} print at?" — from `printSettings`
+- "When should I use {A} vs {B}?" — from `strengths.whyChooseThis`
+
+This FAQ output is also fed into the `FAQSchema` for the JSON-LD.
 
 ---
 
-### Step 2 — Update `FAQContent` to accept filament data and render dynamic FAQs
+#### 2. Add Clean URL Routes in `App.tsx`
 
-**File: `src/components/filament/sections/FAQContent.tsx`**
+Add these new `<Route>` entries before the catch-all `*` route:
 
-- Extend the `FAQContentProps` interface to accept the same filament fields the utility needs:
-  ```ts
-  brand?: string | null;
-  productName?: string | null;
-  nozzleTempMin?: number | null;
-  nozzleTempMax?: number | null;
-  bedTempMin?: number | null;
-  bedTempMax?: number | null;
-  transmissionDistance?: number | null;
-  price?: number | null;
-  ```
-- Import and call `generateDynamicFAQs()` inside the component.
-- Append the returned Q&As **after** the existing material-specific items (preserving all existing questions).
-- No visual design changes — the new items use exactly the same accordion item markup as existing ones.
+```tsx
+<Route path="/petg-vs-abs" element={<Navigate to="/materials/compare?a=petg&b=abs" replace />} />
+<Route path="/pla-vs-abs" element={<Navigate to="/materials/compare?a=pla&b=abs" replace />} />
+<Route path="/asa-vs-abs" element={<Navigate to="/materials/compare?a=asa&b=abs" replace />} />
+<Route path="/tpu-vs-pla" element={<Navigate to="/materials/compare?a=tpu&b=pla" replace />} />
+<Route path="/nylon-vs-petg" element={<Navigate to="/materials/compare?a=nylon&b=petg" replace />} />
+```
+
+Note: `/pla-vs-petg` already has its own dedicated page (`PLAVsPETG.tsx`) and must NOT be changed.
 
 ---
 
-### Step 3 — Update `CollapsibleContentContainer` to pass filament data to `FAQContent`
+#### 3. Material Name Normalization Utility
 
-**File: `src/components/filament/sections/CollapsibleContentContainer.tsx`**
+A small helper added within `MaterialCompare.tsx`:
 
-- The component already has the full `filament` object available.
-- Pass the required fields as props to `<FAQContent />`:
-  ```tsx
-  component: <FAQContent
-    material={filament.material}
-    brand={filament.vendor}
-    productName={filament.product_title}
-    nozzleTempMin={filament.nozzle_temp_min_c}
-    nozzleTempMax={filament.nozzle_temp_max_c}
-    bedTempMin={filament.bed_temp_min_c}
-    bedTempMax={filament.bed_temp_max_c}
-    transmissionDistance={(filament as any).transmission_distance}
-    price={filament.variant_price}
-  />
-  ```
+```typescript
+function normalizeMaterialParam(param: string, allMaterials: {name: string}[]): string | null {
+  const upper = param.toUpperCase();
+  // Exact match first
+  const exact = allMaterials.find(m => m.name.toUpperCase() === upper);
+  if (exact) return exact.name;
+  // Partial match (e.g., "nylon" matches "Nylon")
+  const partial = allMaterials.find(m => m.name.toUpperCase().startsWith(upper));
+  return partial?.name || null;
+}
+```
+
+Special aliases: `"abs"` → `"ABS"`, `"petg"` → `"PETG"`, `"nylon"` → `"Nylon"` (or closest match in the hierarchy).
 
 ---
 
-### Step 4 — Update `FilamentFAQSchema` to use the shared utility
+### Files to Edit
 
-**File: `src/components/seo/FilamentFAQSchema.tsx`**
+1. **`src/pages/MaterialCompare.tsx`** — Primary changes:
+   - Read `?a=` / `?b=` params in `MaterialCompare` component
+   - Auto-switch to "comparison" tab when params exist
+   - Update `<DocumentHead>` to use dynamic title/description
+   - Add `BreadcrumbSchema`, `ArticleSchema`, `FAQSchema` when comparing 2 materials
+   - Pass `initialMaterials` prop to `ComparisonContent`
+   - Update `ComparisonContent` to accept and use `initialMaterials`
+   - Add Verdict section (after Use Cases card)
+   - Add `generateMaterialComparisonFAQs()` helper and FAQ display
 
-- Import `generateDynamicFAQs` from the shared utility.
-- **Replace** the inline temperature/beginner/TD/price question logic in the component with a call to `generateDynamicFAQs()`.
-- **Keep** the existing questions that are unique to `FilamentFAQSchema` and are NOT part of the dynamic set: the compatible-printers Q&A and the FilaScope score Q&A. These only belong in the schema (they have no equivalent in `FAQContent`).
-- The final schema `faqs` array = `generateDynamicFAQs(...)` + printers Q&A (if data exists) + FilaScore Q&A (if data exists).
-- The HueForge-specific Q&As currently in `FilamentFAQSchema` (TD interpretation, "Is it good for HueForge?") will be consolidated into `generateDynamicFAQs`. The TD question in the spec covers the HueForge angle in the answer.
-
----
-
-## Files Modified (summary)
-
-| File | Change |
-|---|---|
-| `src/lib/generateFilamentFAQs.ts` | **New file** — shared FAQ generation utility |
-| `src/components/filament/sections/FAQContent.tsx` | Accept new props; append dynamic FAQs after static ones |
-| `src/components/filament/sections/CollapsibleContentContainer.tsx` | Pass filament fields to `FAQContent` |
-| `src/components/seo/FilamentFAQSchema.tsx` | Use shared utility; retain schema-only Q&As |
-
-No other files are touched. The page layout, pricing section, specifications section, existing accordion UI, and all other pages are unchanged.
+2. **`src/App.tsx`** — Add 5 new comparison redirect routes
 
 ---
 
-## Technical Details
+### What Is NOT Changed
 
-**TD interpretation ranges** (matching the exact logic requested):
-- TD ≤ 2 → "very opaque, ideal for dark/base layers in HueForge prints"
-- TD 2–4 → "balanced opacity, good for mid-tone layers in HueForge prints"  
-- TD 4–6 → "moderately translucent, suitable for highlight layers in HueForge and lithophane printing"
-- TD > 6 → "highly translucent, excellent for light-transmitting layers in lithophanes and HueForge projects"
-
-**Price field**: `CollapsibleContentContainer` will pass `filament.variant_price` as the price; `FilamentFAQSchema` already receives `price` as a prop from `FilamentDetail.tsx` (which passes `sidebarPricePerKg`). The utility accepts a generic `price` parameter, so both contexts work correctly.
-
-**`transmission_distance` type**: The filament DB type uses `(filament as any).transmission_distance` in several places in the codebase — the same pattern will be used in `CollapsibleContentContainer`.
-
-**No duplicate questions**: The `FilamentFAQSchema` currently has a separate "What is the TD value for...?" question AND a "Is [product] good for HueForge?" question. After this change, the shared utility will produce a single combined TD/HueForge question. The schema will be cleaner and the visible accordion will also show it.
+- `/pla-vs-petg` dedicated page (`PLAVsPETG.tsx`) — untouched
+- `MaterialKnowledgeBase.tsx` — untouched
+- All existing UI styling, layouts, and component designs
+- The `/reference/materials` route behavior
+- The localStorage compare store behavior
