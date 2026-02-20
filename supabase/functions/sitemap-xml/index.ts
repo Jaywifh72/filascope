@@ -15,23 +15,28 @@ const STATIC_PAGES: Array<{
   changefreq: string;
 }> = [
   { path: "/", priority: 1.0, changefreq: "daily" },
+  { path: "/filaments", priority: 0.9, changefreq: "daily" },
+  { path: "/printers", priority: 0.9, changefreq: "weekly" },
+  { path: "/brands", priority: 0.9, changefreq: "weekly" },
   { path: "/deals", priority: 0.9, changefreq: "daily" },
-  { path: "/printers", priority: 0.8, changefreq: "weekly" },
-  { path: "/brands", priority: 0.7, changefreq: "weekly" },
   { path: "/brands/compare", priority: 0.6, changefreq: "monthly" },
   { path: "/compare", priority: 0.6, changefreq: "monthly" },
   { path: "/wizard", priority: 0.7, changefreq: "monthly" },
   { path: "/color-finder", priority: 0.7, changefreq: "monthly" },
+  { path: "/colors", priority: 0.7, changefreq: "weekly" },
   { path: "/hueforge-td-database", priority: 0.7, changefreq: "weekly" },
   { path: "/hueforge-filaments", priority: 0.7, changefreq: "weekly" },
-  { path: "/accessories", priority: 0.6, changefreq: "weekly" },
+  { path: "/accessories", priority: 0.7, changefreq: "weekly" },
   { path: "/diagnose", priority: 0.6, changefreq: "monthly" },
+  { path: "/matrix", priority: 0.6, changefreq: "weekly" },
+  { path: "/learn", priority: 0.5, changefreq: "weekly" },
   { path: "/reference/slicers", priority: 0.5, changefreq: "monthly" },
   { path: "/reference/repos", priority: 0.5, changefreq: "monthly" },
-  { path: "/matrix", priority: 0.6, changefreq: "weekly" },
-  { path: "/about", priority: 0.3, changefreq: "monthly" },
+  { path: "/reference/cad", priority: 0.5, changefreq: "monthly" },
+  { path: "/reference/influencers", priority: 0.5, changefreq: "monthly" },
+  { path: "/reference/specialty", priority: 0.5, changefreq: "monthly" },
+  { path: "/about", priority: 0.5, changefreq: "monthly" },
   { path: "/methodology", priority: 0.4, changefreq: "monthly" },
-  { path: "/learn", priority: 0.6, changefreq: "weekly" },
   { path: "/affiliate-disclosure", priority: 0.2, changefreq: "yearly" },
   { path: "/privacy", priority: 0.2, changefreq: "yearly" },
   { path: "/terms", priority: 0.2, changefreq: "yearly" },
@@ -51,6 +56,34 @@ const GUIDE_SLUGS = [
   "silk-pla-comparison",
   "asa-vs-abs-outdoor-printing",
 ];
+
+/**
+ * Convert a material name to a URL-safe slug.
+ * Mirrors the logic used in the front-end FilamentCategoryPage / MaterialHub.
+ * e.g. "PLA+" → "pla-plus", "ABS-CF" → "abs-cf", "PETG" → "petg"
+ */
+function materialToSlug(material: string): string {
+  return material
+    .toLowerCase()
+    .replace(/\+/g, "-plus")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Convert a color family name to a URL-safe slug.
+ * e.g. "Glow in the Dark" → "glow-in-the-dark"
+ */
+function colorToSlug(color: string): string {
+  return color
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 function escapeXml(str: string): string {
   return str
@@ -116,7 +149,84 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3. Filament detail pages — fetch slugs in batches
+    // 3. Dynamic /filaments/{material-slug} and /materials/{material-slug}
+    // Fetch all distinct materials with product counts to filter thin content
+    const { data: materials, error: materialsError } = await supabase
+      .from("filaments")
+      .select("material")
+      .not("material", "is", null)
+      .not("material", "eq", "Unknown")
+      .not("material", "eq", "Other");
+
+    if (materialsError) {
+      console.error("Materials query error:", materialsError.message);
+    } else if (materials) {
+      // Aggregate counts per material
+      const materialCounts = new Map<string, number>();
+      for (const row of materials) {
+        const m = row.material as string;
+        materialCounts.set(m, (materialCounts.get(m) ?? 0) + 1);
+      }
+
+      // Only include materials with >= 3 products to avoid thin content
+      const validMaterials = Array.from(materialCounts.entries())
+        .filter(([, count]) => count >= 3)
+        .map(([material]) => material)
+        .sort();
+
+      // Deduplicate slugs (different material names can produce the same slug)
+      const seenSlugs = new Set<string>();
+      for (const material of validMaterials) {
+        const slug = materialToSlug(material);
+        if (!slug || seenSlugs.has(slug)) continue;
+        seenSlugs.add(slug);
+
+        // /filaments/{material} — filtered listing page
+        entries.push(
+          buildUrlEntry(
+            `${BASE_URL}/filaments/${escapeXml(slug)}`,
+            today,
+            "weekly",
+            0.8
+          )
+        );
+
+        // /materials/{material} — material hub page
+        entries.push(
+          buildUrlEntry(
+            `${BASE_URL}/materials/${escapeXml(slug)}`,
+            today,
+            "weekly",
+            0.8
+          )
+        );
+      }
+    }
+
+    // 4. Dynamic /colors/{color} pages from color_families table
+    const { data: colorFamilies, error: colorsError } = await supabase
+      .from("color_families")
+      .select("name")
+      .order("display_order");
+
+    if (colorsError) {
+      console.error("Color families query error:", colorsError.message);
+    } else if (colorFamilies) {
+      for (const cf of colorFamilies) {
+        const slug = colorToSlug(cf.name as string);
+        if (!slug) continue;
+        entries.push(
+          buildUrlEntry(
+            `${BASE_URL}/colors/${escapeXml(slug)}`,
+            today,
+            "weekly",
+            0.7
+          )
+        );
+      }
+    }
+
+    // 5. Filament detail pages — fetch slugs in batches
     let filamentOffset = 0;
     const BATCH = 1000;
     let hasMore = true;
@@ -158,7 +268,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Printer detail pages
+    // 6. Printer detail pages
     let printerOffset = 0;
     hasMore = true;
 
@@ -198,7 +308,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 5. Brand pages
+    // 7. Brand pages
     let brandOffset = 0;
     hasMore = true;
 
