@@ -1,136 +1,86 @@
 
-# Enhance Product JSON-LD Schema on Filament Detail Pages
+# Add FilaScore + `data-ai-summary` to AISummaryBlock
 
-## What Changes
+## What Already Works
 
-Three additions to the Product JSON-LD schema on `/filament/:slug` pages — all schema-only, no UI changes:
+The `AISummaryBlock` component already exists at `src/components/filament/AISummaryBlock.tsx` and is correctly placed in `FilamentDetail.tsx` — positioned between the hero section and the tab navigation, exactly where the requirements specify. It already:
 
-1. **TD property name fix** — Update the existing `"HueForge Transmission Distance (TD)"` to `"HueForge Transmissivity Distance (TD)"` to match the exact terminology used in HueForge and the rest of the app. Also add `unitText: "mm"` alongside the existing `unitCode: 'MMT'`.
+- Generates the prose paragraph from brand, product name, material, color
+- Includes nozzle/bed temperature sentences
+- Includes the HueForge TD sentence when `transmissionDistance` is present
+- Includes price and weight
 
-2. **`isRelatedTo` — compatible printers** — A new hook fetches up to 5 printers compatible with the filament (based on `max_nozzle_temp_c >= filament.nozzle_temp_max_c`), joined with `printer_brands`. The result is passed as a new prop to `ProductJsonLd` and emitted as an `isRelatedTo` array of nested `Product` objects.
+## What Is Missing
 
-3. **FilaScope editorial `review`** — A new optional editorial review object is added to the schema. It uses `"Organization"` as the author (not `"Person"` like community reviews) and uses the `seoDescription` string as the `reviewBody`. The `filaScopeScore` (0–10 scale, already a prop) is used directly as `ratingValue` with `bestRating: "10"`. This is merged alongside community reviews in the `review` array.
+Two things need to be added:
+
+1. **`data-ai-summary="true"` attribute** — The outer container `<div>` inside the `<section>` does not have this attribute. The requirements call for it on the container div so AI crawlers can select the block directly.
+
+2. **FilaScore sentence** — The requirements template ends with `"FilaScore: [Score]/10."` but `AISummaryBlock` has no `filaScopeScore` prop and the sentence is absent from both the visible paragraph and the quick-specs pills. The `filaScopeScore` is available at `displayFilament.filascope_score` in `FilamentDetail.tsx` (already passed to `ProductJsonLd`) but was never forwarded to `AISummaryBlock`.
 
 ---
 
 ## Files to Change
 
-### 1. `src/hooks/useCompatiblePrintersForSchema.ts` — New hook
+### 1. `src/components/filament/AISummaryBlock.tsx`
 
-A lightweight read-only hook that fetches compatible printers for schema purposes. It reuses the same query pattern as `CompatiblePrintersLinks.tsx` but also joins `printer_brands` to get the brand name:
+**Add prop** `filaScopeScore?: number | null` to the `AISummaryBlockProps` interface.
 
-```ts
-export interface PrinterForSchema {
-  modelName: string;
-  brandName: string | null;
-}
-
-export function useCompatiblePrintersForSchema(
-  nozzleTempMaxC: number | null | undefined,
-  filamentId: string | undefined
-): PrinterForSchema[]
-```
-
-Query:
-```sql
-SELECT p.model_name, p.display_name, pb.brand
-FROM printers p
-LEFT JOIN printer_brands pb ON pb.id = p.brand_id
-WHERE p.max_nozzle_temp_c >= nozzleTempMaxC
-ORDER BY p.model_name
-LIMIT 5
-```
-
-Stale time: 30 minutes (same as `CompatiblePrintersLinks`). Only enabled when `filamentId` exists.
-
-### 2. `src/components/seo/ProductJsonLd.tsx` — Extend interface + schema output
-
-**New prop:**
-```ts
-compatiblePrinters?: Array<{ modelName: string; brandName: string | null }>;
-editorialReviewBody?: string | null;
-```
-
-**TD property name fix (line 169):** Change `'HueForge Transmission Distance (TD)'` → `'HueForge Transmissivity Distance (TD)'` and add `unitText: 'mm'`.
-
-**`isRelatedTo` block** (added to the `jsonLd` object after `additionalProperty`):
-```ts
-...(compatiblePrinters && compatiblePrinters.length > 0 && {
-  isRelatedTo: compatiblePrinters.map(p => ({
-    '@type': 'Product',
-    name: p.modelName,
-    category: '3D Printer',
-    ...(p.brandName && { brand: { '@type': 'Brand', name: p.brandName } }),
-  })),
-}),
-```
-
-**Editorial review** — merged into the existing `review` field. The current code builds the review array from community reviews. The editorial review from FilaScope is prepended to that array when `editorialReviewBody` is provided and `filaScopeScore` is non-null:
+**Add sentence** to the paragraph-building logic, after the weight sentence:
 
 ```ts
-// Build combined review array: editorial first, then community reviews
-const allReviews: object[] = [];
-
-if (editorialReviewBody && filaScopeScore != null) {
-  allReviews.push({
-    '@type': 'Review',
-    author: { '@type': 'Organization', name: 'FilaScope' },
-    reviewRating: {
-      '@type': 'Rating',
-      ratingValue: filaScopeScore.toFixed(1),
-      bestRating: '10',
-      worstRating: '1',
-    },
-    reviewBody: editorialReviewBody,
-  });
-}
-
-if (reviews && reviews.length > 0) {
-  // existing community review mapping...
-  allReviews.push(...reviews.map(r => ({ ... })));
+if (filaScopeScore != null) {
+  parts.push(`FilaScore: ${filaScopeScore.toFixed(1)}/10.`);
 }
 ```
 
-Then in `jsonLd`: `...(allReviews.length > 0 && { review: allReviews })`.
+**Add pill** to the quick-specs pills, after the Weight pill:
 
-**Important:** The existing `aggregateRating` block uses `bestRating`/`worstRating` passed in as props (currently `bestRating=5, worstRating=1` from FilamentDetail). That remains unchanged — it represents community star ratings. The new editorial review intentionally uses the 0–10 scale natively to match `filaScopeScore`.
-
-### 3. `src/pages/FilamentDetail.tsx` — Wire in the new hook + pass new props
-
-**Import** `useCompatiblePrintersForSchema`.
-
-**Add hook call** near the other schema-related hooks (around line 157):
 ```ts
-const compatiblePrintersForSchema = useCompatiblePrintersForSchema(
-  filament?.nozzle_temp_max_c,
-  filament?.id
-);
+if (filaScopeScore != null) {
+  specs.push({ label: "FilaScore", value: `${filaScopeScore.toFixed(1)}/10` });
+}
 ```
 
-**Pass two new props to `<ProductJsonLd>`**:
+**Add `data-ai-summary="true"`** to the container `<div>`:
+
 ```tsx
-compatiblePrinters={compatiblePrintersForSchema}
-editorialReviewBody={seoDescription}
+<div
+  className="bg-muted/30 border border-border/40 rounded-lg px-4 py-3"
+  data-ai-summary="true"
+>
 ```
 
-`seoDescription` is already computed at line 822 — it contains the TD value when present, temperature info, and pricing. This reuses existing data with zero duplication.
+### 2. `src/pages/FilamentDetail.tsx`
+
+**Pass the new prop** to `<AISummaryBlock>`:
+
+```tsx
+<AISummaryBlock
+  ...existing props...
+  filaScopeScore={displayFilament.filascope_score}
+/>
+```
+
+This is a one-line addition at line 1033 (after `netWeightG`).
 
 ---
 
-## What Does NOT Change
+## Result
 
-- Existing `additionalProperty` fields (Nozzle Temp, Bed Temp, Net Weight, Diameter, Color Hex, FilaScope score) — untouched
-- Community user `review` entries — still emitted, unchanged, just appended after the editorial review
-- `aggregateRating` — unchanged (still community-first, FilaScore fallback, on 1–5 scale)
-- `ProductSEO` component — untouched
-- `FilamentFAQSchema` — untouched
-- All visual UI components — zero changes
+After these changes, the rendered paragraph on a page like `/filament/geeetech-petg-black` will read:
+
+> The Geeetech PETG is a PETG 3D printer filament in Black. It prints at a nozzle temperature of 230–250°C with a bed temperature of 70–80°C. Its HueForge Transmissivity Distance (TD) value is 5.2, making it suitable for standard lithophanes with good contrast. Available from $18.99/kg in United States. Weight: 1kg. FilaScore: 7.4/10.
+
+The FilaScore pill will also appear in the quick-specs pill row at the end.
+
+The container div will carry `data-ai-summary="true"` for AI-crawler selection.
 
 ---
 
-## Technical Notes
+## No Changes To
 
-- The printers query (`max_nozzle_temp_c >= filament.nozzle_temp_max_c`) mirrors the exact logic in `CompatiblePrintersLinks.tsx` and the `compatible-printer-count` query already in `FilamentDetail.tsx`.
-- When `nozzle_temp_max_c` is null, the hook is disabled and no `isRelatedTo` is emitted (safe default).
-- `printer_brands` join uses `pb.id = p.brand_id` — same foreign key used in `get_brand_region_coverage` DB function.
-- The editorial review uses `"Organization"` author type per schema.org guidelines for institutional reviews vs. `"Person"` for user reviews — this distinction prevents Google from conflating the FilaScope rating with a user submission.
+- Tab navigation, hero section, spec badges, pricing sidebar — untouched
+- Product JSON-LD schema — untouched
+- Any other component or page — untouched
+- The `sr-only` hidden paragraph already present — it inherits the updated `summaryText` automatically since it reuses the same variable
