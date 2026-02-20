@@ -1,103 +1,124 @@
 
-## Root Cause — Confirmed by Live Testing
+## aggregateRating Fix — FilaScope Score Scaled to 1–5 for Google Rich Results
 
-Fetching `https://filascope.com/sitemap.xml` returns the SPA's 404 page. Fetching the edge function directly (`https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml`) returns valid XML immediately.
-
-The `_redirects` file already has all the correct 302 rules at lines 3–9, above the SPA catch-all. **The rules are correct but Lovable's hosting infrastructure does not process `_redirects` cross-origin 302 redirects** — only the SPA catch-all `/* /index.html 200` takes effect. Adding `/robots.txt /robots.txt 200` to `_redirects` would also be a no-op for static files (they're already served directly).
-
-The `robots.txt` file itself **already works** — confirmed by live fetch. No change needed there.
-
----
-
-## The Correct Fix
-
-Since `_redirects` 302s aren't honoured, the redirect must happen **inside the React application** itself, via React Router routes that fire a `window.location.replace()` immediately on mount.
-
-Add explicit routes in `App.tsx` for all sitemap paths **before** the catch-all `*` NotFound route. Each route renders a tiny redirect component that immediately sends the browser to the edge function URL.
-
-This works because:
-1. Lovable's hosting serves `index.html` for all non-static paths (the SPA catch-all)
-2. React Router picks up `/sitemap.xml` as a client-side route
-3. The redirect component fires synchronously and replaces the URL with the edge function endpoint
-4. Google/Bing crawlers following 302s will land at the edge function and get valid XML
+### What's Already Wired (No Changes Needed Here)
+`ProductJsonLd.tsx` already emits `aggregateRating` correctly (lines 475–483):
+```json
+"aggregateRating": {
+  "@type": "AggregateRating",
+  "ratingValue": "<ratingValue>.toFixed(1)",
+  "bestRating": "<bestRating>.toString()",
+  "worstRating": "<worstRating>.toString()",
+  "ratingCount": "<ratingCount>.toString()"
+}
+```
+It guards on `ratingValue != null && ratingCount != null && ratingCount > 0` — so it only emits when there is real data. The component interface is already correct.
 
 ---
 
-## Files to Change
+### The Bug — Wrong Scale for FilaScore Fallback
 
-### 1. `src/App.tsx`
+In `FilamentDetail.tsx` lines 904–919, there are **two paths** for the fallback rating:
 
-Add a `SitemapRedirect` component at the top of the file (before `App`), then add 8 routes before the `*` catch-all:
+**Path A — Community reviews (correct):**
+- `avgRating` from `product_reviews.overall_rating` → 1–5 scale ✅
+- `bestRating: 5`, `worstRating: 1` ✅
+
+**Path B — FilaScore fallback (broken):**
+- `filaScoreValue` is passed raw: 0–10 scale ❌ (e.g., `7.4` instead of `3.7`)
+- `bestRating: 10` ❌ (Google expects standard 5-star)
+- `worstRating: 0` ❌ (should be 1)
+
+Google's Rich Results guidelines require the rating scale to be internally consistent. While any scale is technically allowed, passing `ratingValue: 7.4` with `bestRating: 10` produces no star snippet because Google normalises to 5 internally and deprioritises non-standard scales. Passing it on the 5-star scale is the standard practice that actually triggers snippets.
+
+---
+
+### The Fix — One File: `FilamentDetail.tsx`
+
+**Change 1 — Derive scaled FilaScore (1–5) in the memo:**
+
+The existing memo at lines 191–195 returns `{ score: filaScoreValue, dataPointCount: filaScoreDataPoints }`. Add one more derived variable:
 
 ```typescript
-// Sitemap redirect component — redirects crawlers and browsers to the edge function
-function SitemapRedirect({ path }: { path: string }) {
-  const EDGE_BASE = "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=";
-  useEffect(() => {
-    window.location.replace(EDGE_BASE + path);
-  }, [path]);
-  // Render nothing — redirect fires immediately
-  return null;
+// Convert 0-10 FilaScore to 1-5 scale for Google aggregateRating
+// Formula: ((score / 10) * 4) + 1 maps 0→1, 5→3, 10→5
+const filaScoreRating5 = filaScoreValue != null
+  ? Math.round(((filaScoreValue / 10) * 4 + 1) * 10) / 10
+  : null;
+```
+
+Why `((score / 10) * 4) + 1` instead of `(score / 10) * 5`?
+- `(score / 10) * 5` maps 0→0, which means a product with ANY data would get `0` — below Google's `worstRating: 1`, triggering a schema error.
+- `((score / 10) * 4) + 1` maps 0→1 (worst) and 10→5 (best), fitting cleanly within `worstRating: 1, bestRating: 5`. This is the correct linear interpolation for a 1–5 scale.
+
+**Change 2 — Pass normalised values to `<ProductJsonLd>`:**
+
+```tsx
+// BEFORE (lines 904–919):
+ratingValue={
+  communityReviewStats?.reviewCount > 0
+    ? communityReviewStats.avgRating  // 1-5 ✅
+    : filaScoreValue                  // 0-10 ❌
+}
+ratingCount={...}
+bestRating={communityReviewStats?.reviewCount > 0 ? 5 : 10}   // 10 ❌ for fallback
+worstRating={communityReviewStats?.reviewCount > 0 ? 1 : 0}   // 0 ❌ for fallback
+
+// AFTER:
+ratingValue={
+  communityReviewStats?.reviewCount > 0
+    ? communityReviewStats.avgRating  // 1-5 ✅
+    : filaScoreRating5                // 1-5 ✅ (scaled)
+}
+ratingCount={...}  // unchanged
+bestRating={5}     // always 5 ✅
+worstRating={1}    // always 1 ✅
+```
+
+This collapses four conditional expressions into two fixed values — cleaner and correct.
+
+---
+
+### Guard Condition Audit
+
+`ProductJsonLd` emits `aggregateRating` only when:
+```
+ratingValue != null && ratingCount != null && ratingCount > 0
+```
+
+With the fix:
+- **Community reviews exist:** `avgRating` (1–5), `reviewCount > 0` → emits ✅
+- **No reviews, FilaScore exists:** `filaScoreRating5` (1–5), `filaScoreDataPoints > 0` → emits ✅  
+- **No reviews, no FilaScore:** `filaScoreRating5 = null` → blocked by guard → no emission ✅
+- **FilaScore = 0:** `filaScoreRating5 = 1.0`, `filaScoreDataPoints` likely 0 or very low → blocked by `ratingCount > 0` guard ✅
+
+Edge case: `filaScoreDataPoints` could theoretically be 0 even when `filaScoreValue` is non-null. The guard `ratingCount > 0` handles this correctly — no `aggregateRating` is emitted.
+
+---
+
+### Files Changed
+
+| File | Lines | Change |
+|---|---|---|
+| `src/pages/FilamentDetail.tsx` | ~193 | Add `filaScoreRating5` derived value after existing memo |
+| `src/pages/FilamentDetail.tsx` | 904–919 | Use `filaScoreRating5`, set `bestRating={5}`, `worstRating={1}` unconditionally |
+
+No changes to `ProductJsonLd.tsx` — its interface is already correct.
+
+---
+
+### Expected Outcome
+
+After this fix, every filament page with a FilaScore and at least 1 data point will emit valid JSON-LD like:
+
+```json
+"aggregateRating": {
+  "@type": "AggregateRating",
+  "ratingValue": "3.7",
+  "bestRating": "5",
+  "worstRating": "1",
+  "ratingCount": "8"
 }
 ```
 
-Then add these 8 routes immediately before `<Route path="*" element={<NotFound />} />`:
-
-```tsx
-{/* Sitemap routes — redirect to edge function since _redirects 302s aren't processed */}
-<Route path="/sitemap.xml"           element={<SitemapRedirect path="/sitemap.xml" />} />
-<Route path="/sitemap-pages.xml"     element={<SitemapRedirect path="/sitemap-pages.xml" />} />
-<Route path="/sitemap-filaments.xml" element={<SitemapRedirect path="/sitemap-filaments.xml" />} />
-<Route path="/sitemap-brands.xml"    element={<SitemapRedirect path="/sitemap-brands.xml" />} />
-<Route path="/sitemap-printers.xml"  element={<SitemapRedirect path="/sitemap-printers.xml" />} />
-<Route path="/sitemap-guides.xml"    element={<SitemapRedirect path="/sitemap-guides.xml" />} />
-<Route path="/sitemap-colors.xml"    element={<SitemapRedirect path="/sitemap-colors.xml" />} />
-```
-
-### 2. `public/_redirects`
-
-Add an explicit `/robots.txt /robots.txt 200` rule at the very top, before the sitemap rules. Even though `robots.txt` already works (it's a static file), the explicit rule makes the intent clear and future-proofs it if the platform's static file resolution order ever changes:
-
-```
-/robots.txt    /robots.txt    200
-```
-
----
-
-## What Changes and Why
-
-| Path | Before | After |
-|---|---|---|
-| `/robots.txt` | ✅ Works (static file) | ✅ Still works + explicit rule |
-| `/sitemap.xml` | ❌ Returns SPA 404 page | ✅ React route → `window.location.replace` → edge function XML |
-| `/sitemap-filaments.xml` | ❌ Returns SPA 404 page | ✅ Same pattern |
-| `/sitemap-pages.xml` | ❌ Returns SPA 404 page | ✅ Same pattern |
-| (all other sitemap-*.xml) | ❌ Returns SPA 404 page | ✅ Same pattern |
-
----
-
-## Why Not Other Approaches
-
-- **`_redirects` 302s** — Already present, confirmed not working on Lovable's hosting for cross-origin redirects
-- **A new static `sitemap.xml` file in `/public/`** — Would serve a static XML file, but the sitemap needs to be dynamically generated from the live database (1,078+ filament URLs). The edge function handles this correctly.
-- **Vite `publicDir` config** — Already defaults to `public/`, already correct, not the issue
-- **New edge function as a proxy** — Unnecessary; the existing `sitemap-xml` and `prerender` functions already work perfectly when hit directly
-
----
-
-## Technical Notes
-
-- `useEffect` with `window.location.replace()` fires synchronously after mount — no visible flash or loading state
-- `replace()` (not `href`) avoids adding a history entry so the back button doesn't loop
-- Googlebot handles JavaScript redirects — it will follow the redirect and index the XML
-- For the initial millisecond before the redirect fires, the component renders `null` (blank page) — crawlers won't see any HTML from the SPA during this window
-- The `_redirects` change (adding `/robots.txt /robots.txt 200`) is safe — it reinforces static file serving and is processed first if the platform does honour `_redirects` for same-origin rules
-
----
-
-## Files Changed
-
-| File | Change |
-|---|---|
-| `src/App.tsx` | Add `SitemapRedirect` component + 7 sitemap routes before `*` catch-all |
-| `public/_redirects` | Add `/robots.txt /robots.txt 200` at top (defensive hardening) |
+Google Search Console → Rich Results Test will validate this. Star snippets typically appear in SERPs within 1–4 weeks of indexation for pages with valid `aggregateRating`.
