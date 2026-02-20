@@ -6,6 +6,41 @@
  * Do NOT call initGA() — it is intentionally removed to prevent double-loading.
  */
 
+/*
+ * GA4 AI Referral Traffic Channel Group Configuration
+ *
+ * Create a Custom Channel Group in GA4 called "AI Referral" with these rules:
+ *
+ * Source matches regex:
+ *   chatgpt\.com|chat\.openai\.com|claude\.ai|perplexity\.ai|you\.com|
+ *   bing\.com/chat|copilot\.microsoft\.com|gemini\.google\.com|
+ *   deepseek\.com|phind\.com
+ *
+ * This allows tracking how much traffic comes from AI assistant citations
+ * vs organic search. FilaScope's AIReferralTracker component (src/components/)
+ * fires an 'ai_referral' GA4 event with 'ai_source' and 'landing_page'
+ * parameters for matching referrers — these appear in GA4 under
+ * Reports → Engagement → Events → ai_referral.
+ *
+ * Additionally, monitor these server-log User-Agents for crawl activity:
+ *   - GPTBot           (OpenAI)
+ *   - ClaudeBot        (Anthropic)
+ *   - PerplexityBot    (Perplexity)
+ *   - Google-Extended  (Google AI / Gemini)
+ *   - Applebot-Extended(Apple Intelligence)
+ *   - Bytespider       (ByteDance / TikTok)
+ *   - CCBot            (Common Crawl)
+ *   - Amazonbot        (Amazon)
+ *
+ * These bots are handled by the 'prerender' Supabase Edge Function, which
+ * returns full HTML snapshots and sets X-Prerender: true response headers.
+ *
+ * Recommended AI visibility monitoring tools:
+ *   - HubSpot AEO Grader        (free — answer engine optimisation score)
+ *   - Profound.ai               (AI visibility tracker)
+ *   - ScrunchAI                 (brand mention tracker across AI engines)
+ */
+
 declare global {
   interface Window {
     gtag: (...args: unknown[]) => void;
