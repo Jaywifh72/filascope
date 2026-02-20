@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { ShoppingCart, ExternalLink, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
+import { trackAffiliateClick as trackGA4AffiliateClick, trackEcommerceSelectItem } from "@/lib/analytics";
 import { trackAffiliateClick as trackSupabaseAffiliateClick } from "@/utils/affiliateLinks";
 import { useRegion } from "@/contexts/RegionContext";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,8 @@ interface StickyBuyBarProps {
     id: string;
     product_title: string;
     vendor: string | null;
+    material?: string | null;
+    product_handle?: string | null;
     featured_image: string | null;
     variant_price: number | null;
     net_weight_g: number | null;
@@ -120,6 +122,16 @@ export function StickyBuyBar({
       price: pricePerKg ?? undefined,
       region: userRegion,
       linkType: 'product_page',
+    });
+
+    // GA4 Enhanced E-commerce: select_item
+    trackEcommerceSelectItem({
+      slug: filament.product_handle || filament.id,
+      name: filament.product_title,
+      brand: filament.vendor || '',
+      material: filament.material || 'Filament',
+      storeName: displayStoreName,
+      price: pricePerKg ?? undefined,
     });
 
     // Supabase logging — fire-and-forget

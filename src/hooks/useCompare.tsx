@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from "react";
-import { trackComparisonAdd } from "@/lib/analytics";
+import { trackComparisonAdd, trackEcommerceAddToCart } from "@/lib/analytics";
 import { toast } from "sonner";
 
 export interface CompareItem {
@@ -269,6 +269,14 @@ export function CompareProvider({ children }: { children: ReactNode }) {
 
       const newCount = prev.length + 1;
       trackComparisonAdd(item.id, 'filament', item.product_title, newCount, item.vendor || undefined);
+
+      // GA4 Enhanced E-commerce: add_to_cart — feeds built-in Monetization funnel
+      trackEcommerceAddToCart({
+        slug: item.id,   // UUID fallback — slug not stored in CompareItem
+        name: item.product_title,
+        brand: item.vendor || 'Unknown',
+        material: item.material || 'Filament',
+      });
       toast.success(`Added to comparison`, {
         description: item.product_title,
       });

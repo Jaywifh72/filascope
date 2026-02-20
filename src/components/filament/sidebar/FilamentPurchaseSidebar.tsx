@@ -42,6 +42,8 @@ interface FilamentPurchaseSidebarProps {
   vendor: string | null;
   material: string | null;
   productTitle?: string | null; // Product name for search fallback on 404
+  /** SEO slug for GA4 select_item item_id */
+  productSlug?: string;
   pricePerKg: number | null;
   pricePerSpool: number | null;
   weightGrams: number | null;
@@ -91,6 +93,7 @@ export function FilamentPurchaseSidebar({
   vendor,
   material,
   productTitle,
+  productSlug,
   pricePerKg,
   pricePerSpool,
   weightGrams,
@@ -167,6 +170,8 @@ export function FilamentPurchaseSidebar({
     if (hasAffiliate) {
       trackAndOpen(affiliateUrl, {
         productName: productTitle || undefined,
+        productSlug: productSlug,
+        material: material || undefined,
         sourceComponent: 'sidebar_purchase',
       });
     } else {

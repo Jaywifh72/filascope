@@ -379,6 +379,91 @@ export function trackWizardComplete(params: {
   });
 }
 
+// ── GA4 Enhanced E-commerce ──────────────────────────────────────────
+
+export interface EcommerceItem {
+  item_id: string;       // canonical slug, e.g. "bambu-lab-pla-matte-charcoal"
+  item_name: string;
+  item_brand: string;
+  item_category: string; // material type
+  price?: number;
+  affiliation?: string;  // store name, for select_item
+}
+
+/**
+ * GA4 Enhanced E-commerce: view_item
+ * Fire on filament detail page load. Uses SEO slug as item_id so
+ * GA4's built-in Monetization reports show readable product names.
+ */
+export function trackEcommerceViewItem(params: {
+  slug: string;
+  name: string;
+  brand: string;
+  material: string;
+  price?: number;
+  currency?: string;
+}) {
+  gtag('event', 'view_item', {
+    currency: params.currency || 'USD',
+    value: params.price ?? 0,
+    items: [{
+      item_id: params.slug,
+      item_name: params.name,
+      item_brand: params.brand,
+      item_category: params.material,
+      price: params.price ?? 0,
+      quantity: 1,
+    }],
+  });
+}
+
+/**
+ * GA4 Enhanced E-commerce: add_to_cart
+ * Fire when a filament is added to the compare tray.
+ */
+export function trackEcommerceAddToCart(params: {
+  slug: string;
+  name: string;
+  brand: string;
+  material: string;
+}) {
+  gtag('event', 'add_to_cart', {
+    items: [{
+      item_id: params.slug,
+      item_name: params.name,
+      item_brand: params.brand,
+      item_category: params.material,
+      quantity: 1,
+    }],
+  });
+}
+
+/**
+ * GA4 Enhanced E-commerce: select_item
+ * Fire when user clicks an affiliate buy button.
+ */
+export function trackEcommerceSelectItem(params: {
+  slug: string;
+  name: string;
+  brand: string;
+  material: string;
+  storeName: string;
+  price?: number;
+  currency?: string;
+}) {
+  gtag('event', 'select_item', {
+    items: [{
+      item_id: params.slug,
+      item_name: params.name,
+      item_brand: params.brand,
+      item_category: params.material,
+      affiliation: params.storeName,
+      price: params.price ?? 0,
+      quantity: 1,
+    }],
+  });
+}
+
 // ── Outbound Click ────────────────────────────────────────────────────
 
 /** Fired for all external link opens (affiliate + non-affiliate). */
