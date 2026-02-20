@@ -1505,6 +1505,10 @@ function sitemapGuides(): string {
 }
 
 function sitemapIndex(): string {
+  // Sub-sitemap <loc> entries point directly to the edge function so crawlers
+  // can fetch them without any host-level redirect (Lovable hosting doesn't
+  // support _redirects / server-side proxy rules).
+  const EDGE_BASE = "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=";
   const subs = [
     "sitemap-pages.xml",
     "sitemap-filaments.xml",
@@ -1513,7 +1517,7 @@ function sitemapIndex(): string {
     "sitemap-guides.xml",
     "sitemap-colors.xml",
   ];
-  const items = subs.map((s) => `  <sitemap><loc>${BASE_URL}/${s}</loc></sitemap>`).join("\n");
+  const items = subs.map((s) => `  <sitemap><loc>${EDGE_BASE}/${s}</loc></sitemap>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</sitemapindex>`;
 }
 
