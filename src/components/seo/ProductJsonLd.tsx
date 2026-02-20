@@ -32,6 +32,14 @@ interface ProductJsonLdProps {
   ratingCount?: number | null;
   bestRating?: number;
   worstRating?: number;
+  // Individual review entries for Product rich results
+  reviews?: {
+    authorName: string;
+    datePublished: string;
+    ratingValue: number;
+    reviewBody: string | null;
+    headline: string | null;
+  }[];
   // Shipping & return policy for Merchant Center eligibility
   shippingRegions?: RegionCode[];
   hasReturnPolicy?: boolean;
@@ -109,6 +117,7 @@ export function ProductJsonLd({
   ratingCount,
   bestRating,
   worstRating,
+  reviews,
   shippingRegions,
   hasReturnPolicy = true,
   transmissionDistance,
@@ -479,7 +488,25 @@ export function ProductJsonLd({
         bestRating: bestRating.toString(),
         worstRating: worstRating.toString(),
         ratingCount: ratingCount.toString(),
+        // reviewCount = number of actual written reviews (subset of ratingCount)
+        ...(reviews && reviews.length > 0 && { reviewCount: reviews.length.toString() }),
       },
+    }),
+    // Individual review entries (up to 5) — required for Google Review rich results
+    ...(reviews && reviews.length > 0 && {
+      review: reviews.map((r) => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: r.authorName },
+        datePublished: r.datePublished,
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.ratingValue.toString(),
+          bestRating: bestRating?.toString() ?? '5',
+          worstRating: worstRating?.toString() ?? '1',
+        },
+        ...(r.headline && { name: r.headline }),
+        ...(r.reviewBody && { reviewBody: r.reviewBody }),
+      })),
     }),
   };
 
