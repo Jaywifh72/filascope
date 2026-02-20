@@ -1,87 +1,61 @@
 
-# Root Cause: Complete Diagnosis
+# Root Cause: CONFIRMED AND FINAL
 
-## What is actually happening
+## What is actually happening (verified by live tests 2026-02-20)
 
-Three separate systems exist and they are in conflict:
+Lovable's hosting platform generates `/robots.txt` at the **infrastructure/CDN level** — it is hardcoded and served before any static file in `public/` is considered.
 
-```text
-Request: https://filascope.com/robots.txt
-         ↓
-         Lovable Cloud hosting (filascope.lovable.app custom domain)
-         ↓
-  Is it a known static file in public/? → YES → serve public/robots.txt
-         ↓
-  BUT... something is intercepting before this
+**Proof:**
+- `https://filascope.com/robots.txt` → Returns Lovable's default (`Googlebot`, `Bingbot` etc.) — NOT our `public/robots.txt`
+- `https://filascope.lovable.app/robots.txt` → Same Lovable default  
+- `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots` → Returns our correct content ✅
+- `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/robots.txt` → Returns our correct content ✅
+
+**What Lovable's default robots.txt contains (currently served live):**
 ```
-
-When `https://filascope.com/robots.txt` was fetched live, it returned the **old generic robots.txt content** — the exact same content that is hardcoded at line 1330 of `supabase/functions/prerender/index.ts`. This is the definitive proof: **the prerender function is being called for `/robots.txt`** and it is returning its own stale, outdated copy.
-
-This happens because the `_worker.js` checks `isStaticAsset(pathname)` — and `.txt` files match the `STATIC_EXTENSIONS` regex — so robots.txt should go to `env.ASSETS.fetch()`. BUT: `_worker.js` is a Cloudflare Pages Workers feature. **Lovable's hosting is NOT Cloudflare Pages.** The `_worker.js` and `_redirects` files are completely ignored on Lovable hosting.
-
-Meanwhile, Google's crawler (Googlebot) is a bot. The Lovable hosting platform's own bot detection may be forwarding bot requests to the prerender function — which then hits the `/robots.txt` path and returns the old hardcoded content from line 1330–1350.
-
-## What needs to be fixed (two changes, one file)
-
-The single source of truth for robots.txt served to crawlers is **`supabase/functions/prerender/index.ts`** at lines 1330–1350.
-
-### Fix 1 — Update `prerender/index.ts` ROBOTS_TXT constant (lines 1330–1350)
-
-Replace the old, generic 10-line robots.txt with the full FilaScope policy including all 13 AI bot directives. This is the content that crawlers actually receive.
-
-```text
-const ROBOTS_TXT = `# FilaScope robots.txt — AI & Search Engine Crawler Policy
-# Updated: 2026-02-20
-
+User-agent: Googlebot
+Allow: /
+User-agent: Bingbot
+Allow: /
+User-agent: Twitterbot
+Allow: /
+User-agent: facebookexternalhit
+Allow: /
 User-agent: *
 Allow: /
-Disallow: /api/
-Disallow: /auth/
-Disallow: /admin/
-Disallow: /_/
-
+Disallow: /admin
+Disallow: /settings
+Disallow: /maintenance
+Disallow: /embed/
 Sitemap: https://filascope.com/sitemap.xml
-
-User-agent: GPTBot
-Allow: /
-
-... (all 13 AI bot directives)
 ```
 
-The `Sitemap:` line also needs to point to `https://filascope.com/sitemap.xml` (not the raw Supabase function URL as it currently does via `${FUNCTIONS_URL}/prerender?path=/sitemap.xml`).
+## What does NOT work
 
-### Fix 2 — Add diagnostic logging to the robots.txt handler
-
-To confirm delivery going forward, add a `console.log` in the prerender function's robots.txt handler so every serve is visible in edge function logs:
-
-```typescript
-if (path === "/robots.txt") {
-  console.log(`[ROBOTS] Serving robots.txt to UA: ${userAgent}`);
-  return new Response(ROBOTS_TXT, { ... });
-}
-```
-
-### Fix 3 — Update `public/robots.txt` Sitemap line
-
-The `public/robots.txt` (served to non-bot human visitors via Lovable hosting) currently has `Sitemap: https://filascope.com/sitemap.xml` which is correct, but this is a secondary file. The primary one is inside `prerender`.
-
-## Why previous fixes did not work
-
-| Attempt | Why it failed |
+| Approach | Why it fails |
 |---|---|
-| `public/robots.txt` file added | Lovable hosting serves it to humans fine — but crawlers hit the prerender function first |
-| `_redirects` with 302 to serve-robots | `_redirects` is a Cloudflare Pages feature — Lovable hosting ignores it |
-| `_worker.js` robots.txt handler | `_worker.js` is a Cloudflare Pages Worker feature — Lovable hosting ignores it |
-| `serve-robots` edge function | Works correctly if called directly, but nothing routes to it on Lovable hosting |
+| `public/robots.txt` | Lovable CDN ignores it — serves its own hardcoded version |
+| `_redirects` 302 | Redirect fires AFTER CDN serves robots.txt — CDN intercepts first |
+| `_worker.js` robots handler | Cloudflare Workers feature — not supported on Lovable hosting |
+| `serve-robots` edge function | Only works when called directly, nothing routes to it on Lovable |
 
-The entire fix is **one change in one file: `supabase/functions/prerender/index.ts`**, lines 1330–1350.
+## Attempted fix: `_redirects` 200 proxy rewrite
 
-## Technical implementation steps
+Updated `_redirects` to use `200` status (transparent proxy rewrite) instead of `302`:
+```
+/robots.txt  https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/robots.txt  200
+```
 
-1. Update `ROBOTS_TXT` constant in `prerender/index.ts` (lines 1330–1350) with the full FilaScope AI-crawler policy.
-2. Fix the `Sitemap:` line to point to `https://filascope.com/sitemap.xml` (canonical URL, not the raw Supabase function URL).
-3. Add a `console.log` to the robots.txt serve path for ongoing diagnostics.
-4. Redeploy the `prerender` edge function.
-5. Verify by fetching `https://filascope.com/robots.txt` — it should now return the full FilaScope policy with all AI bot directives.
+This may work if Lovable's hosting layer processes `_redirects` before the CDN-level robots.txt override. Requires publish to test.
 
-No changes to `_worker.js`, `_redirects`, `serve-robots`, or any other file are needed.
+## Is the current situation actually a problem?
+
+The Lovable default robots.txt has `User-agent: * Allow: /` which ALREADY allows all bots including AI bots. 
+The only thing missing is the explicit per-bot directives (GPTBot, ClaudeBot etc.) and `Crawl-delay`.
+Search engines and AI crawlers will still crawl the site correctly.
+
+## Permanent fix options
+
+1. **Contact Lovable support** — request ability to override `/robots.txt` via `public/robots.txt`
+2. **Move to Cloudflare Pages hosting** — where `_worker.js` and `_redirects` work natively
+3. **Accept current state** — `User-agent: * Allow: /` covers all bots, site is fully crawlable
