@@ -5,8 +5,8 @@
  */
 export function HomeSEOContent() {
   const popularSearches = [
-    { label: "Best PLA for beginners", href: "/guides/best-filament-for-beginners-2025" },
-    { label: "PETG vs ABS", href: "/materials/compare?a=petg&b=abs" },
+    { label: "Best PLA for beginners", href: "/best-filaments-for-beginners" },
+    { label: "PLA vs PETG", href: "/pla-vs-petg" },
     { label: "Cheapest filament", href: "/filaments?sort=price_asc" },
     { label: "HueForge compatible filaments", href: "/best-filaments-for-hueforge" },
     { label: "High speed PLA", href: "/filaments/high-speed-pla" },
