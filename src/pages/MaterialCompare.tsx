@@ -1,5 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
+import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
+import { ArticleSchema } from "@/components/seo/ArticleSchema";
+import { FAQSection } from "@/components/seo/FAQSection";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -371,7 +374,103 @@ const ComparisonRow = ({
   );
 };
 
-const ComparisonContent = () => {
+// Helper to normalize a URL param (e.g. "petg") to the canonical material name (e.g. "PETG")
+function normalizeMaterialParam(param: string, allMaterials: { name: string }[]): string | null {
+  const upper = param.toUpperCase();
+  const exact = allMaterials.find(m => m.name.toUpperCase() === upper);
+  if (exact) return exact.name;
+  const partial = allMaterials.find(m => m.name.toUpperCase().startsWith(upper));
+  return partial?.name || null;
+}
+
+// Generate data-driven comparison FAQs for exactly 2 materials
+function generateMaterialComparisonFAQs(
+  matA: { name: string; info: MaterialInfo | null; refData?: MaterialReferenceInfo },
+  matB: { name: string; info: MaterialInfo | null; refData?: MaterialReferenceInfo }
+): { question: string; answer: string }[] {
+  const faqs: { question: string; answer: string }[] = [];
+  const A = matA.name;
+  const B = matB.name;
+
+  // 1. Strength comparison
+  const tensileA = getTensileStrength(matA.refData);
+  const tensileB = getTensileStrength(matB.refData);
+  if (tensileA || tensileB) {
+    const aVal = tensileA ? extractNumericFromString(tensileA) : null;
+    const bVal = tensileB ? extractNumericFromString(tensileB) : null;
+    let answer: string;
+    if (aVal !== null && bVal !== null) {
+      const stronger = aVal >= bVal ? A : B;
+      const weaker = stronger === A ? B : A;
+      answer = `${stronger} is generally stronger with a tensile strength of ${stronger === A ? tensileA : tensileB} MPa, compared to ${weaker}'s ${stronger === A ? tensileB : tensileA} MPa. ${stronger === A ? B : A} may still be preferred depending on the application requirements.`;
+    } else {
+      const strengthA = matA.info?.properties.strength || 'Medium';
+      const strengthB = matB.info?.properties.strength || 'Medium';
+      answer = `${A} has ${strengthA.toLowerCase()} strength while ${B} has ${strengthB.toLowerCase()} strength. ${getPropertyValue(strengthA) >= getPropertyValue(strengthB) ? A : B} edges ahead for structural applications.`;
+    }
+    faqs.push({ question: `Is ${A} stronger than ${B}?`, answer });
+  }
+
+  // 2. Ease of printing
+  const printA = matA.info?.properties.printability;
+  const printB = matB.info?.properties.printability;
+  if (printA && printB) {
+    const nozzleA = getNozzleTempRange(matA.refData);
+    const nozzleB = getNozzleTempRange(matB.refData);
+    const easier = getPropertyValue(printA) >= getPropertyValue(printB) ? A : B;
+    const harder = easier === A ? B : A;
+    let tempNote = '';
+    if (nozzleA && nozzleB) {
+      tempNote = ` ${A} prints at ${nozzleA}°C and ${B} at ${nozzleB}°C.`;
+    }
+    faqs.push({
+      question: `Which is easier to print, ${A} or ${B}?`,
+      answer: `${easier} is generally easier to print (rated ${easier === A ? printA : printB}), while ${harder} is rated ${harder === A ? printA : printB} and may require more tuning.${tempNote} ${harder} often benefits from an enclosure and heated bed.`,
+    });
+  }
+
+  // 3. Heat resistance
+  const tgA = getGlassTransition(matA.refData);
+  const tgB = getGlassTransition(matB.refData);
+  const heatA = matA.info?.properties.heatResistance;
+  const heatB = matB.info?.properties.heatResistance;
+  if (tgA || tgB || heatA || heatB) {
+    const tgAVal = tgA ? extractNumericFromString(tgA) : null;
+    const tgBVal = tgB ? extractNumericFromString(tgB) : null;
+    let answer: string;
+    if (tgAVal !== null && tgBVal !== null) {
+      const hotter = tgAVal >= tgBVal ? A : B;
+      const cooler = hotter === A ? B : A;
+      answer = `${hotter} has a higher glass transition temperature (${hotter === A ? tgA : tgB}°C vs ${cooler === A ? tgA : tgB}°C), making it better suited for high-temperature environments.`;
+    } else {
+      answer = `${A} has ${(heatA || 'medium').toLowerCase()} heat resistance and ${B} has ${(heatB || 'medium').toLowerCase()} heat resistance. Choose the one with higher heat resistance for functional parts exposed to elevated temperatures.`;
+    }
+    faqs.push({ question: `Which handles heat better, ${A} or ${B}?`, answer });
+  }
+
+  // 4. When to use each
+  const useCasesA = matA.info?.useCases?.slice(0, 3).join(', ') || 'general-purpose printing';
+  const useCasesB = matB.info?.useCases?.slice(0, 3).join(', ') || 'general-purpose printing';
+  faqs.push({
+    question: `When should I use ${A} vs ${B}?`,
+    answer: `Choose ${A} for: ${useCasesA}. Choose ${B} for: ${useCasesB}. The best material depends on your specific requirements for strength, temperature, printability, and application environment.`,
+  });
+
+  // 5. Cost
+  const costA = matA.refData?.practicalContext?.costPosition;
+  const costB = matB.refData?.practicalContext?.costPosition;
+  if (costA || costB) {
+    faqs.push({
+      question: `Is ${A} or ${B} more affordable?`,
+      answer: `${A} is typically ${(costA || 'standard').toLowerCase()} cost, while ${B} is ${(costB || 'standard').toLowerCase()} cost. Budget-conscious users should factor in not just filament price but also waste from failed prints due to difficulty.`,
+    });
+  }
+
+  return faqs;
+}
+
+const ComparisonContent = ({ initialMaterials }: { initialMaterials?: string[] }) => {
+  const hasInitial = useRef(false);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -402,6 +501,17 @@ const ComparisonContent = () => {
     window.addEventListener('material-compare-changed', syncFromStore);
     return () => window.removeEventListener('material-compare-changed', syncFromStore);
   }, []);
+
+  // Apply initialMaterials from URL params (once, on mount)
+  useEffect(() => {
+    if (!hasInitial.current && initialMaterials && initialMaterials.length > 0) {
+      hasInitial.current = true;
+      setSelectedMaterials(prev => {
+        const merged = [...new Set([...initialMaterials, ...prev])].slice(0, 4);
+        return merged;
+      });
+    }
+  }, [initialMaterials]);
 
   const allMaterials = useMemo(() => {
     const materials: { name: string; category: string; info: MaterialInfo }[] = [];
@@ -1400,6 +1510,57 @@ const ComparisonContent = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Verdict — only when exactly 2 materials are selected */}
+            {selectedMaterialInfos.length === 2 && (() => {
+              const [mA, mB] = selectedMaterialInfos;
+              const scoreA = weightedScores.find(s => s.name === mA.name)?.score ?? 0;
+              const scoreB = weightedScores.find(s => s.name === mB.name)?.score ?? 0;
+              const winner = scoreA >= scoreB ? mA : mB;
+              const loser = winner === mA ? mB : mA;
+              const winnerStrengths = winner.info?.useCases?.slice(0, 2).join(' and ') || 'general use';
+              const loserStrengths = loser.info?.useCases?.slice(0, 2).join(' and ') || 'specific applications';
+              return (
+                <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-amber-500" />
+                      Verdict
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      For most users, <strong className="text-foreground">{winner.name}</strong> is the better all-around choice,
+                      scoring {scoreA >= scoreB ? scoreA : scoreB}/100 vs {scoreA >= scoreB ? scoreB : scoreA}/100 across all criteria.
+                      It excels at <strong className="text-foreground">{winnerStrengths}</strong>.{" "}
+                      <strong className="text-foreground">{loser.name}</strong> is preferred when your project specifically
+                      requires {loserStrengths}.
+                    </p>
+                    {winner.info?.properties.heatResistance && loser.info?.properties.heatResistance &&
+                      getPropertyValue(loser.info.properties.heatResistance) > getPropertyValue(winner.info.properties.heatResistance) && (
+                      <p className="text-sm text-muted-foreground leading-relaxed mt-2">
+                        In particular, <strong className="text-foreground">{loser.name}</strong> has
+                        better heat resistance ({loser.info.properties.heatResistance}), making it the right pick
+                        for parts exposed to elevated temperatures.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
+            {/* Comparison FAQs — only when exactly 2 materials are selected */}
+            {selectedMaterialInfos.length === 2 && (() => {
+              const [mA, mB] = selectedMaterialInfos;
+              const faqs = generateMaterialComparisonFAQs(mA, mB);
+              return (
+                <FAQSection
+                  faqs={faqs}
+                  title={`${mA.name} vs ${mB.name} — Frequently Asked Questions`}
+                  className="mt-0 border-none pt-0"
+                />
+              );
+            })()}
           </>
         )}
       </div>
@@ -1409,8 +1570,41 @@ const ComparisonContent = () => {
 
 const MaterialCompare = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "reference";
+
+  // Read ?a= and ?b= comparison params
+  const aRaw = searchParams.get("a");
+  const bRaw = searchParams.get("b");
+
+  // Build allMaterials list for normalization (same logic as ComparisonContent)
+  const allMaterialNames = useMemo(() => {
+    const list: { name: string }[] = [];
+    MATERIAL_CATEGORIES.forEach(cat => cat.materials.forEach(n => list.push({ name: n })));
+    return list;
+  }, []);
+
+  const matA = useMemo(() => aRaw ? normalizeMaterialParam(aRaw, allMaterialNames) : null, [aRaw, allMaterialNames]);
+  const matB = useMemo(() => bRaw ? normalizeMaterialParam(bRaw, allMaterialNames) : null, [bRaw, allMaterialNames]);
+  const hasCompareParams = !!(matA && matB);
+
+  // If ?a and ?b are present, default to comparison tab; otherwise reference
+  const activeTab = searchParams.get("tab") || (hasCompareParams ? "comparison" : "reference");
   const selectedMaterialParam = searchParams.get("material") || null;
+
+  // Build initialMaterials to pass into ComparisonContent
+  const initialMaterials = useMemo(() => {
+    const mats: string[] = [];
+    if (matA) mats.push(matA);
+    if (matB) mats.push(matB);
+    return mats;
+  }, [matA, matB]);
+
+  // SEO: dynamic title/description based on params
+  const pageTitle = matA && matB
+    ? `${matA} vs ${matB} — 3D Filament Comparison | FilaScope`
+    : "Material Knowledge Base — Filament Reference & Comparison | FilaScope";
+  const pageDescription = matA && matB
+    ? `${matA} vs ${matB} compared: strength, flexibility, print settings, price & more. Data-driven comparison from FilaScope's database of 1,080+ filaments.`
+    : "Compare 3D printing material properties side by side. Explore strength, flexibility, temperature resistance, and printability across PLA, PETG, ABS, TPU, and more.";
 
   const handleTabChange = (value: string) => {
     setSearchParams(prev => {
@@ -1438,10 +1632,28 @@ const MaterialCompare = () => {
 
   return (
     <>
-      <DocumentHead
-        title="Material Knowledge Base — Filament Reference & Comparison | FilaScope"
-        description="Compare 3D printing material properties side by side. Explore strength, flexibility, temperature resistance, and printability across PLA, PETG, ABS, TPU, and more."
-      />
+      <DocumentHead title={pageTitle} description={pageDescription} />
+      {/* JSON-LD schemas for comparison pages */}
+      {hasCompareParams && matA && matB && (
+        <>
+          <BreadcrumbSchema
+            items={[
+              { name: "Home", url: "https://filascope.com/" },
+              { name: "Materials", url: "https://filascope.com/materials/compare" },
+              { name: `${matA} vs ${matB}`, url: `https://filascope.com/materials/compare?a=${aRaw}&b=${bRaw}` },
+            ]}
+          />
+          <ArticleSchema
+            headline={pageTitle}
+            description={pageDescription}
+            datePublished="2025-01-01"
+            url={`/materials/compare?a=${aRaw}&b=${bRaw}`}
+            articleType="TechArticle"
+            about={{ '@type': 'Thing', name: `${matA} vs ${matB} 3D printing filament comparison` }}
+            proficiencyLevel="Beginner"
+          />
+        </>
+      )}
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
@@ -1464,15 +1676,30 @@ const MaterialCompare = () => {
               <span className="text-slate-600">/</span>
               <span className="text-foreground font-medium">{selectedMaterialParam}</span>
             </>
+          ) : hasCompareParams && matA && matB ? (
+            <>
+              <button
+                onClick={() => handleMaterialSelect(null)}
+                className="text-slate-400 hover:text-cyan-400 transition-colors"
+              >
+                Material Knowledge Base
+              </button>
+              <span className="text-slate-600">/</span>
+              <span className="text-foreground font-medium">{matA} vs {matB}</span>
+            </>
           ) : (
             <span className="text-foreground font-medium">Material Knowledge Base</span>
           )}
         </nav>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Materials</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {hasCompareParams && matA && matB ? `${matA} vs ${matB}` : 'Materials'}
+          </h1>
           <p className="text-muted-foreground">
-            Compare materials side-by-side or explore comprehensive reference information.
+            {hasCompareParams && matA && matB
+              ? `Side-by-side comparison of ${matA} and ${matB} — properties, print settings, strengths, and use cases.`
+              : 'Compare materials side-by-side or explore comprehensive reference information.'}
           </p>
         </div>
 
@@ -1489,7 +1716,7 @@ const MaterialCompare = () => {
           </TabsList>
 
           <TabsContent value="comparison">
-            <ComparisonContent />
+            <ComparisonContent initialMaterials={initialMaterials} />
           </TabsContent>
 
           <TabsContent value="reference">
