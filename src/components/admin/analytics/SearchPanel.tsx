@@ -11,12 +11,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Search, AlertCircle } from "lucide-react";
+import { Search, AlertCircle, ArrowRight } from "lucide-react";
 
 export function SearchPanel() {
   const last30Days = new Date();
   last30Days.setDate(last30Days.getDate() - 30);
   const startDate = last30Days.toISOString();
+  const startDateStr = last30Days.toISOString().slice(0, 10);
 
   // Top search terms aggregated
   const { data: topTerms, isLoading: termsLoading } = useQuery({
@@ -79,6 +80,41 @@ export function SearchPanel() {
     },
   });
 
+  // Search → Click Funnel: correlate search_logs.session_id with affiliate_clicks.session_id
+  const { data: funnelData } = useQuery({
+    queryKey: ["analytics-search-funnel"],
+    queryFn: async () => {
+      const [{ data: searchData }, { data: clickData }] = await Promise.all([
+        supabase
+          .from("search_logs")
+          .select("session_id")
+          .gte("created_at", startDate)
+          .not("session_id", "is", null)
+          .limit(5000),
+        supabase
+          .from("affiliate_clicks")
+          .select("session_id")
+          .gte("clicked_at", startDateStr)
+          .not("session_id", "is", null)
+          .limit(5000),
+      ]);
+
+      const searchSessions = new Set((searchData || []).map((r) => r.session_id!));
+      const clickSessions = new Set((clickData || []).map((r) => r.session_id!));
+      const converted = [...searchSessions].filter((s) => clickSessions.has(s)).length;
+      const conversionRate =
+        searchSessions.size > 0
+          ? ((converted / searchSessions.size) * 100).toFixed(1)
+          : "0.0";
+
+      return {
+        searchSessions: searchSessions.size,
+        converted,
+        conversionRate,
+      };
+    },
+  });
+
   const isEmpty = !termsLoading && (!topTerms || topTerms.length === 0);
 
   if (isEmpty) {
@@ -124,6 +160,59 @@ export function SearchPanel() {
               </AreaChart>
             </ResponsiveContainer>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Search → Click Funnel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Search → Affiliate Click Funnel (30 Days)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Step 1: Searches */}
+            <div className="flex-1 min-w-[120px] rounded-lg bg-primary/10 border border-primary/20 p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Search Sessions</p>
+              <p className="text-2xl font-bold text-foreground">
+                {funnelData ? funnelData.searchSessions.toLocaleString() : "—"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">unique sessions w/ search</p>
+            </div>
+
+            <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+
+            {/* Step 2: Product Views (placeholder) */}
+            <div className="flex-1 min-w-[120px] rounded-lg bg-muted/40 border border-border p-4 text-center opacity-50">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Product Views</p>
+              <p className="text-2xl font-bold text-foreground">—</p>
+              <p className="text-xs text-muted-foreground mt-0.5">page view tracking needed</p>
+            </div>
+
+            <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
+
+            {/* Step 3: Affiliate Clicks */}
+            <div className="flex-1 min-w-[120px] rounded-lg bg-primary/10 border border-primary/20 p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Affiliate Clicks</p>
+              <p className="text-2xl font-bold text-foreground">
+                {funnelData ? funnelData.converted.toLocaleString() : "—"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {funnelData ? (
+                  <>
+                    <span className="text-foreground font-semibold">
+                      {funnelData.conversionRate}%
+                    </span>{" "}
+                    conversion rate
+                  </>
+                ) : (
+                  "sessions that also clicked"
+                )}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Funnel correlates <code>session_id</code> across search logs and affiliate clicks within the same 30-day window.
+          </p>
         </CardContent>
       </Card>
 
