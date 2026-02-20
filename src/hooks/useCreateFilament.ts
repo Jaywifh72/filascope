@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { pingIndexNow, indexNowUrl } from '@/lib/indexnow';
 
 export interface FilamentInsertData {
   product_url: string;
@@ -63,6 +64,8 @@ export function useCreateFilament() {
       toast.success('Filament created successfully', {
         description: result.product_title || result.display_name,
       });
+      const slug = (result as any).product_handle || result.id;
+      if (slug) pingIndexNow(indexNowUrl.filament(slug));
     },
     onError: (err) => {
       toast.error('Failed to create filament', {
