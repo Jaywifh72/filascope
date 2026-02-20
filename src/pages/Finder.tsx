@@ -7,7 +7,7 @@ import { useFinderQuery, type FinderFilters, DEFAULT_PAGE_SIZE } from "@/hooks/u
 import { useFilterCounts } from "@/hooks/useFilterCounts";
 import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
 import { useSearchContext } from "@/hooks/useSearchContext";
-import { trackSearch as trackGA4Search, trackFilter as trackGA4Filter } from "@/lib/analytics";
+import { trackSearch as trackGA4Search, trackFilterApply as trackGA4Filter } from "@/lib/analytics";
 import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

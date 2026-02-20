@@ -111,13 +111,14 @@ export function StickyBuyBar({
       entityType: 'filament',
     });
 
-    // GA4 tracking
+    // GA4 tracking — param names match configured custom dimensions
     trackGA4AffiliateClick({
       brand: filament.vendor || '',
       productName: filament.product_title,
       productId: filament.id,
       price: pricePerKg ?? undefined,
-      linkType: 'affiliate',
+      region: userRegion,
+      linkType: 'product_page',
     });
 
     if (affiliateUrl) {
