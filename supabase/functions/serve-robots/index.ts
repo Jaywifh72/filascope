@@ -1,9 +1,9 @@
 /**
- * serve-robots edge function
+ * serve-robots edge function v2
  *
  * Serves two static files that Lovable's hosting doesn't serve from /public:
  *   - robots.txt  (Content-Type: text/plain)
- *   - IndexNow key file (via ?file=indexnow-key)
+ *   - IndexNow key file (via ?file=indexnow-key or ?file=indexnow)
  *
  * Reached via _redirects rules:
  *   /robots.txt                            → this function
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   const file = url.searchParams.get("file");
 
-  if (file === "indexnow-key") {
+  if (file === "indexnow-key" || file === "indexnow") {
     return new Response(INDEXNOW_KEY, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
