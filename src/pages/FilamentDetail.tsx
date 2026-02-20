@@ -56,6 +56,7 @@ import { BrandQuickLinks } from "@/components/filament/BrandQuickLinks";
 import { RelatedGuidesLinks } from "@/components/filament/RelatedGuidesLinks";
 import { CompatiblePrintersLinks } from "@/components/filament/CompatiblePrintersLinks";
 import { QuickSummaryBar } from "@/components/filament/QuickSummaryBar";
+import { AISummaryBlock } from "@/components/filament/AISummaryBlock";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
 import { generateFilamentSlug, isUuid } from "@/lib/seoSlugUtils";
@@ -995,6 +996,28 @@ const { id } = useParams();
                 onNavigateToCommunity={() => setActiveTab("community")}
               />
             </div>
+
+            {/* AI Summary Block — factual paragraph for AI engine indexing */}
+            <AISummaryBlock
+              brand={displayFilament.vendor}
+              productName={productLineName}
+              color={displayFilament.color_family}
+              material={displayFilament.material}
+              nozzleTempMin={displayFilament.nozzle_temp_min_c}
+              nozzleTempMax={displayFilament.nozzle_temp_max_c}
+              bedTempMin={displayFilament.bed_temp_min_c}
+              bedTempMax={displayFilament.bed_temp_max_c}
+              transmissionDistance={displayFilament.transmission_distance}
+              formattedPrice={
+                sidebarPricePerKg
+                  ? `${formatPrice(sidebarPricePerKg)}/kg`
+                  : sidebarPricePerSpool
+                    ? formatPrice(sidebarPricePerSpool)
+                    : null
+              }
+              regionName={regionName}
+              netWeightG={displayFilament.net_weight_g}
+            />
 
             {/* Retailers Modal */}
             <RetailersModal
