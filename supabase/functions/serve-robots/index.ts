@@ -1,13 +1,13 @@
 /**
- * serve-robots edge function v2
+ * serve-robots edge function
  *
- * Serves two static files that Lovable's hosting doesn't serve from /public:
+ * Serves two static files that Lovable's SPA hosting cannot serve natively:
  *   - robots.txt  (Content-Type: text/plain)
- *   - IndexNow key file (via ?file=indexnow-key or ?file=indexnow)
+ *   - IndexNow key file (via ?file=indexnow-key)
  *
  * Reached via _redirects rules:
- *   /robots.txt                            → this function
- *   /a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt → this function?file=indexnow-key
+ *   /robots.txt                            → this function (302)
+ *   /a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt → this function?file=indexnow-key (302)
  */
 
 const corsHeaders = {
@@ -16,18 +16,20 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const ROBOTS_TXT = `User-agent: Googlebot
-Allow: /
+const ROBOTS_TXT = `# FilaScope robots.txt — AI & Search Engine Crawler Policy
+# Updated: 2026-02-20
 
-User-agent: Bingbot
+User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /_/
 
-User-agent: Twitterbot
-Allow: /
+# Sitemaps
+Sitemap: https://filascope.com/sitemap.xml
 
-User-agent: facebookexternalhit
-Allow: /
-
+# AI Crawlers - Explicitly Allowed
 User-agent: GPTBot
 Allow: /
 
@@ -37,13 +39,16 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
+User-agent: anthropic-ai
+Allow: /
+
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: Google-Extended
+User-agent: Applebot-Extended
 Allow: /
 
-User-agent: Applebot-Extended
+User-agent: Google-Extended
 Allow: /
 
 User-agent: Bytespider
@@ -55,17 +60,27 @@ Allow: /
 User-agent: Amazonbot
 Allow: /
 
-User-agent: *
+User-agent: cohere-ai
 Allow: /
-Disallow: /admin
-Disallow: /settings
-Disallow: /maintenance
-Disallow: /embed/
 
-Sitemap: https://filascope.com/sitemap.xml
+User-agent: Diffbot
+Allow: /
 
-# IndexNow - instant Bing/Yandex notification on content changes
-# Key: a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c`;
+User-agent: FacebookExternalHit
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+# Crawl-delay for AI bots (be polite)
+User-agent: GPTBot
+Crawl-delay: 2
+
+User-agent: ClaudeBot
+Crawl-delay: 2
+
+User-agent: PerplexityBot
+Crawl-delay: 2`;
 
 const INDEXNOW_KEY = "a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c";
 
@@ -91,7 +106,7 @@ Deno.serve(async (req) => {
   return new Response(ROBOTS_TXT, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
+      "Cache-Control": "public, max-age=3600, s-maxage=3600",
       ...corsHeaders,
     },
   });
