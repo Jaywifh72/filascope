@@ -520,7 +520,7 @@ const Compare = () => {
               <GitCompare className="w-4 h-4" />
               <span>COMPARE TOOL</span>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Filament Comparison</h1>
+            <h1 className="text-3xl font-bold text-foreground">Compare 3D Printer Filaments Side by Side</h1>
             <p className="text-muted-foreground mt-1">Compare up to 4 filaments side-by-side. Select products from the catalog to begin.</p>
           </div>
           <Link
