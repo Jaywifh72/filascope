@@ -34,6 +34,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
+import { HowToSchema } from '@/components/seo/HowToSchema';
 import { useCurrency } from '@/hooks/useCurrency';
 import { trackTDSearch as trackGA4TDSearch } from '@/lib/analytics';
 
@@ -251,6 +252,32 @@ export default function HueForgeTDDatabase() {
         license="https://filascope.com/terms"
       />
       <FAQSchema faqs={faqData} />
+      <HowToSchema
+        name="How to Use TD Values for Better Lithophanes"
+        description="Learn how to select the right filament transmissivity distance (TD) value for HueForge lithophane and multicolor 3D printing projects."
+        steps={[
+          {
+            name: 'Determine your project type',
+            text: 'Decide whether you are creating a lithophane, a multicolor HueForge print, or a standard print. Lithophanes and HueForge projects require specific TD values for optimal results.',
+          },
+          {
+            name: 'Choose TD value for your layer role',
+            text: 'For dark/base layers (black anchor), select filaments with TD 0.5–1.5 (very opaque). For mid-tone layers, use TD 1.5–3.0 (balanced opacity). For light/highlight layers (white, natural), use TD 3.0–5.0. For silk PLA or special effects, use TD 5.0+ (highly translucent).',
+          },
+          {
+            name: "Search FilaScope's TD Database",
+            text: "Use FilaScope's HueForge TD Database to filter filaments by TD value, material type, color, and brand. Compare prices and availability across retailers in your region.",
+          },
+          {
+            name: 'Verify and test print',
+            text: 'Once you find a candidate filament, click through to its detail page for printing temperature recommendations, community photos, and pricing. Print a small test to confirm the TD value matches your expectations before committing to a full project.',
+          },
+        ]}
+        tool={[
+          'HueForge software',
+          '3D printer with 1.75mm filament support',
+        ]}
+      />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* ── Hero ──────────────────────────────────────────────────── */}
