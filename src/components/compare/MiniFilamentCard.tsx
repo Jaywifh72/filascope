@@ -231,7 +231,7 @@ export function MiniFilamentCard({
             <a
               href={affiliateUrl}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow sponsored noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               draggable={false}
               className="opacity-0 group-hover/mini:opacity-100 transition-opacity p-1.5 rounded-md bg-primary/20 hover:bg-primary/30 text-primary"

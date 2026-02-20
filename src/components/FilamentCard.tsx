@@ -803,11 +803,11 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             {/* Store domain link */}
             {(() => {
               const storeDomain = extractStoreDomain(filament.product_url);
-              return storeDomain ? (
+                return storeDomain ? (
                 <a 
                   href={filament.product_url!}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="nofollow sponsored noopener noreferrer"
                   className="text-xs text-primary hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1089,9 +1089,9 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           const domain = extractStoreDomain(regionalUrl);
           return domain ? (
             <a
-              href={affiliateUrl || regionalUrl}
+            href={affiliateUrl || regionalUrl}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow sponsored noopener noreferrer"
               className="text-xs text-cyan-400/70 hover:text-cyan-400 transition-colors text-center"
               onClick={(e) => e.stopPropagation()}
             >

@@ -320,7 +320,7 @@ export default function BuildPlateDetail() {
                   <a 
                     href={getAffiliateUrl(buildPlate.product_url, buildPlate.brand) || buildPlate.product_url} 
                     target="_blank" 
-                    rel="noopener noreferrer"
+                    rel="nofollow sponsored noopener noreferrer"
                   >
                     <Button size="sm" className="gap-2">
                       <ExternalLink className="h-3.5 w-3.5" />

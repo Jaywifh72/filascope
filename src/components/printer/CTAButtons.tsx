@@ -62,7 +62,7 @@ export function CTAButtons({
           <a
             href={affiliateUrl}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="nofollow sponsored noopener noreferrer"
             className="block w-full"
             onClick={handleBuyClick}
           >
