@@ -1,287 +1,221 @@
 
-## GA4 Enhanced E-commerce Event Tracking for the Affiliate Funnel
+## SEO Landing Page Expansion Plan
 
-### Current State Assessment
+### Audit Summary: What Already Exists vs. What Needs Building
 
-The existing analytics infrastructure in `src/lib/analytics.ts` is mature but incomplete for GA4's built-in E-commerce reports. Here is exactly what already exists and what is missing:
+Before detailing the plan, here is the exact current state of each requested URL:
 
-**Already implemented:**
-- `trackProductView()` → fires `view_item`, but uses `productId` (UUID) instead of the SEO slug, misses the `item_list_id` grouping, and uses a hardcoded `currency: 'USD'` instead of the user's actual currency
-- `trackAffiliateClick()` → fires `affiliate_click` + `begin_checkout`, but `begin_checkout` is not the correct funnel event for "click affiliate buy button"
-- `trackComparisonAdd()` → fires `comparison_add` (custom), but does NOT fire GA4's standard `add_to_cart` ecommerce event
-
-**Missing:**
-1. `view_item` is using `productId` (UUID) — GA4 E-commerce needs the canonical slug (e.g. `bambu-lab-pla-matte-charcoal`) as `item_id`
-2. `add_to_cart` standard ecommerce event is never fired when items enter the compare tray
-3. `select_item` standard ecommerce event is never fired when a user clicks a buy button
-
-**Why this matters for GA4 reports:** GA4's built-in "Monetization > E-commerce purchases" funnel report only aggregates `view_item`, `add_to_cart`, `select_item`, and `purchase`. Without these standard event names, the funnel shows zero data in those built-in reports.
-
----
-
-### Affected Files and Changes
-
-#### File 1: `src/lib/analytics.ts`
-
-**New function: `trackEcommerceViewItem()`**
-
-Replace the existing `trackProductView()` call sites with a proper ecommerce-shaped `view_item`. The existing function fires the event, but we need to also add a new typed function that accepts the canonical slug for `item_id`.
-
-Add three new exported functions below the existing ones:
-
-```typescript
-// New interface for ecommerce-compliant view_item
-export interface EcommerceItem {
-  item_id: string;        // canonical slug, e.g. "bambu-lab-pla-matte-charcoal"
-  item_name: string;
-  item_brand: string;
-  item_category: string;  // material type
-  price?: number;
-  affiliation?: string;   // store name, for select_item
-}
-
-/** GA4 Enhanced E-commerce: view_item — fires on filament detail page load */
-export function trackEcommerceViewItem(params: {
-  slug: string;
-  name: string;
-  brand: string;
-  material: string;
-  price?: number;
-  currency?: string;
-}) {
-  gtag('event', 'view_item', {
-    currency: params.currency || 'USD',
-    value: params.price ?? 0,
-    items: [{
-      item_id: params.slug,
-      item_name: params.name,
-      item_brand: params.brand,
-      item_category: params.material,
-      price: params.price ?? 0,
-      quantity: 1,
-    }],
-  });
-}
-
-/** GA4 Enhanced E-commerce: add_to_cart — fires when item is added to compare tray */
-export function trackEcommerceAddToCart(params: {
-  slug: string;
-  name: string;
-  brand: string;
-  material: string;
-}) {
-  gtag('event', 'add_to_cart', {
-    items: [{
-      item_id: params.slug,
-      item_name: params.name,
-      item_brand: params.brand,
-      item_category: params.material,
-      quantity: 1,
-    }],
-  });
-}
-
-/** GA4 Enhanced E-commerce: select_item — fires when user clicks an affiliate buy button */
-export function trackEcommerceSelectItem(params: {
-  slug: string;
-  name: string;
-  brand: string;
-  material: string;
-  storeName: string;
-  price?: number;
-  currency?: string;
-}) {
-  gtag('event', 'select_item', {
-    items: [{
-      item_id: params.slug,
-      item_name: params.name,
-      item_brand: params.brand,
-      item_category: params.material,
-      affiliation: params.storeName,
-      price: params.price ?? 0,
-      quantity: 1,
-    }],
-  });
-}
-```
+| # | Requested URL | Current Status | Action Needed |
+|---|---|---|---|
+| 1 | `/filaments/high-speed-pla` | ✅ **Exists with full SEO** — `CATEGORY_META` + `MATERIAL_SLUG_CONFIG` entries, intro, FAQ, related links | Verify only — no change |
+| 2 | `/best-3d-printer-filament` | ❌ **Does not exist** | Build new standalone page |
+| 3 | `/pla-vs-petg` | ✅ **Exists as standalone page** at `/pla-vs-petg` with ArticleSchema + BreadcrumbSchema + FAQPage. Also duplicated in `guideConfigs.ts` at `/guides/pla-vs-petg`. | Add canonical redirect `/guides/pla-vs-petg` → `/pla-vs-petg` to consolidate authority |
+| 4 | `/filaments/wood` | ❌ **Does not exist** — `MATERIAL_SLUG_CONFIG` has no `wood` entry, so `FilamentCategoryPage` redirects it to `/` | Add `MATERIAL_SLUG_CONFIG` + `CATEGORY_META` + `MATERIAL_KNOWLEDGE` + `RELATED_PROSE` entries |
+| 5 | `/filaments/carbon-fiber` | ❌ **Does not exist** — same situation | Add entries |
+| 6 | `/filaments/glow-in-the-dark` | ❌ **Does not exist** | Add entries |
+| 7 | `/3d-printer-compatibility` | ❌ **Does not exist** (note: `/compatibility-matrix` exists as a Coming Soon stub) | Build new standalone page |
+| 8 | `/hueforge-filament-guide` | ❌ **Does not exist** as this URL. `/best-filaments-for-hueforge` exists (good content), `/guides/hueforge-filaments` exists via `BuyingGuide` template. `/guides/hueforge-beginners-guide` also exists. | Create `/hueforge-filament-guide` route redirecting to the canonical at `/best-filaments-for-hueforge`, then strengthen that page's SEO for "hueforge filament" keywords |
+| 9 | `/cheapest-filament` | ❌ **Does not exist** — `/guides/best-budget-filaments` exists but `/cheapest-filament` does not | Build new standalone page |
+| 10 | `/filament-types` | ❌ **Does not exist** | Build new standalone page |
 
 ---
 
-#### File 2: `src/pages/FilamentDetail.tsx`
+### Architecture Decision: Three Approaches Used
 
-**Hook point: `view_item` on page load**
+**Approach A — New Material Category Slugs (items 4, 5, 6):**
+`FilamentCategoryPage` already handles all slug-based routes at `/filaments/:slug`. It reads config from `MATERIAL_SLUG_CONFIG` (in `MaterialHub.tsx`) and `CATEGORY_META` + `MATERIAL_KNOWLEDGE` + `RELATED_PROSE` (in `FilamentCategoryPage.tsx`). Adding a new slug requires entries in **all four** of these data structures — then the route works automatically because `<Route path="/filaments/:slug" element={<FilamentCategoryPage />} />` is already registered.
 
-At line 385–393, the existing `trackGA4ProductView()` call is already there. We replace/supplement it with the new `trackEcommerceViewItem()` call, using `canonicalSlug` (which is already derived at line 114–126 from the filament object) instead of `filament.id`.
+**Approach B — New Standalone Pages (items 2, 7, 9, 10):**
+Build dedicated React page files following the pattern established by `BestFilamentsForBeginners.tsx` and `PLAVsPETG.tsx`: query Supabase for live data, compose editorial content, add schemas. Register new `<Route>` entries in `App.tsx`.
 
-Current code:
-```typescript
-// GA4 product view
-trackGA4ProductView({
-  productId: filament.id,
-  productName: filament.product_title || 'Unknown',
-  brand: filament.vendor || 'Unknown',
-  category: filament.material || undefined,
-  price: filament.variant_price ?? undefined,
-  currency: 'USD',
-});
-```
-
-New code (add alongside, not replace, to preserve backward compat):
-```typescript
-// GA4 product view (legacy custom event — preserved for Explore reports)
-trackGA4ProductView({ ... });  // keep as-is
-
-// GA4 Enhanced E-commerce: view_item (feeds built-in Monetization reports)
-trackEcommerceViewItem({
-  slug: canonicalSlug,                           // SEO slug, not UUID
-  name: filament.product_title || 'Unknown',
-  brand: filament.vendor || 'Unknown',
-  material: filament.material || 'Filament',
-  price: detailPricing?.bestPrice?.spoolPrice ?? filament.variant_price ?? undefined,
-  currency: userCurrency,                        // from REGIONS[currentRegionCode].defaultCurrency
-});
-```
-
-The `userCurrency` variable is already defined at line 238: `const userCurrency = REGIONS[currentRegionCode as RegionCode]?.defaultCurrency || 'USD';`
-
-The `canonicalSlug` is already defined at line 114.
-
-One new import line: `import { trackProductView as trackGA4ProductView, trackEcommerceViewItem } from "@/lib/analytics";`
+**Approach C — Redirects (items 3, 8):**
+Add `<Navigate>` route entries in `App.tsx` to consolidate duplicate/alternative URL patterns to canonical destinations.
 
 ---
 
-#### File 3: `src/hooks/useCompare.tsx`
+### Detailed Changes
 
-**Hook point: `add_to_cart` when item enters compare tray**
+#### Group 1: New Material Category Pages (Approach A)
+**Files changed:** `src/pages/MaterialHub.tsx` (MATERIAL_SLUG_CONFIG), `src/pages/FilamentCategoryPage.tsx` (CATEGORY_META + MATERIAL_KNOWLEDGE + RELATED_PROSE)
 
-At line 253–288, the `addItem()` function calls `trackComparisonAdd()` at line 271. We add `trackEcommerceAddToCart()` directly after it.
+**Three new slugs added:**
 
-The `CompareItem` interface (line 5–15) already has `product_title`, `vendor`, `material` fields. The slug is not stored in `CompareItem`, so we use `product_title` as `item_name` and fall back gracefully.
+**`wood`** — Wood PLA:
+- `MATERIAL_SLUG_CONFIG`: label "Wood PLA", materials `["Wood PLA", "Wood Fill", "Wood Filled PLA", "PLA-Wood", "Woodfill"]`, relatedSlugs `["pla", "silk-pla", "pla-plus"]`, guides `[{ label: "Best Wood Filaments", href: "/guides/best-wood-pla-filaments" }]`
+- `CATEGORY_META`: title "Wood PLA Filaments — Realistic Wood Texture | FilaScope", h1 "Wood PLA Filaments", 300+ word intro about wood powder additive (typically 10–30%), sanding/staining capability, print temp 190–220°C (standard PLA settings), popular for cosplay props, furniture models, realistic decor
+- `MATERIAL_KNOWLEDGE`: nozzle "190–220°C", bed "25–60°C", beginner false (clogs finer nozzles), enclosure false
+- `RELATED_PROSE`: "Want standard PLA or specialty finishes?" → links to PLA, Silk PLA, PLA+
 
-Challenge: `CompareItem` does not have a `slug` field — only `id` (UUID) and `product_title`. We have two options:
+**`carbon-fiber`** — Carbon Fiber Filaments (multi-material):
+- `MATERIAL_SLUG_CONFIG`: label "Carbon Fiber", materials `["PLA-CF", "PETG-CF", "ABS-CF", "ASA-CF", "PA-CF", "Nylon-CF", "Carbon Fiber PLA", "Carbon Fiber PETG", "Carbon Fiber Nylon"]`, relatedSlugs `["petg-cf", "nylon", "petg", "abs"]`, guides `[{ label: "Best Carbon Fiber Filaments", href: "/guides/best-carbon-fiber-filaments" }]`
+- `CATEGORY_META`: title "Carbon Fiber Filaments — Lightweight & Stiff | FilaScope", h1 "Carbon Fiber 3D Printing Filaments", intro explaining short-strand CF reinforcement, stiffness-to-weight ratio, hardened steel nozzle requirement, applications in drones, RC cars, structural parts
+- `MATERIAL_KNOWLEDGE`: nozzle "230–270°C (varies by base material)", bed "60–100°C", beginner false (requires hardened nozzle), enclosure false (varies)
+- `RELATED_PROSE`: "Need a softer or easier base material?" → links to PETG, Nylon, PLA+
 
-**Option A (preferred):** Add an optional `slug?: string` field to `CompareItem`. All call sites that construct `CompareItem` in the compare-button handlers would pass the slug when available.
-
-**Option B (simpler):** Use the `id` field as `item_id` in the ecommerce event. Not ideal for GA4 readability but works immediately without touching all call sites.
-
-**Recommendation:** Use Option B for `add_to_cart` in `useCompare.tsx` (fires from many call sites across the app — 18 files use `addItem`). Then use the correct slug in `select_item` (only fired from buy-button components where slug is already in scope).
-
-Changes inside `addItem` callback (line 253–288), after line 271:
-```typescript
-trackComparisonAdd(item.id, 'filament', item.product_title, newCount, item.vendor || undefined);
-
-// GA4 Enhanced E-commerce: add_to_cart (feeds built-in funnel reports)
-trackEcommerceAddToCart({
-  slug: item.id,                        // using id — slug not carried in CompareItem
-  name: item.product_title,
-  brand: item.vendor || 'Unknown',
-  material: item.material || 'Filament',
-});
-```
-
-Import to add at line 2: `import { trackComparisonAdd, trackEcommerceAddToCart } from "@/lib/analytics";`
+**`glow-in-the-dark`** — Glow in the Dark:
+- `MATERIAL_SLUG_CONFIG`: label "Glow in the Dark", materials `["Glow in the Dark PLA", "Glow PLA", "Photoluminescent PLA", "Glow in Dark"]`, ilike `"%glow%"`, relatedSlugs `["silk-pla", "pla", "pla-plus"]`, colorSlugs `["green", "blue", "yellow"]`, guides `[]`
+- `CATEGORY_META`: title "Glow in the Dark Filaments — Photoluminescent PLA | FilaScope", h1 "Glow in the Dark 3D Printer Filaments", intro covering strontium aluminate phosphor additive, glow duration (6–12 hours), recommended layer height (0.15mm+ for best glow), print settings same as standard PLA, use cases for safety markers/cosplay/night prints
+- `MATERIAL_KNOWLEDGE`: nozzle "190–220°C", bed "25–60°C", beginner true (same settings as PLA), enclosure false
+- `RELATED_PROSE`: "Interested in other specialty finishes?" → links to Silk PLA, PLA
 
 ---
 
-#### File 4: `src/hooks/useAffiliateLink.ts`
+#### Group 2: New Standalone Pages (Approach B)
 
-**Hook point: `select_item` when affiliate buy button is clicked**
+**Item 2: `/best-3d-printer-filament`**
+**New file:** `src/pages/BestFilament.tsx`
+**New route in App.tsx:** `<Route path="/best-3d-printer-filament" element={<BestFilament />} />`
+**Lazy import added:** `const BestFilament = lazy(() => import("./pages/BestFilament"));`
 
-The `trackAndOpen()` function at line 142–174 is the single centralised point where all affiliate clicks flow through (used by `PrimaryBuyButton`, `FilamentPurchaseSidebar`, `FilamentHeroPurchaseCard`, `QuickSummaryBar`, `BestPricesSection`, `FilamentMobileBottomBar`).
-
-The `ClickMetadata` interface (line 9–16) already has `productName`, `productSlug`, `price`, `currency` fields. We extend it with the filament's material:
-
-Add `material?: string` to `ClickMetadata`:
-```typescript
-export interface ClickMetadata {
-  productName?: string;
-  productSlug?: string;
-  sourcePage?: string;
-  sourceComponent?: string;
-  price?: number;
-  currency?: string;
-  material?: string;  // ADD THIS for GA4 select_item item_category
-}
-```
-
-In `trackAndOpen()` (line 142–174), after the `trackGA4AffiliateClick()` call at line 147:
-```typescript
-// GA4 Enhanced E-commerce: select_item (user clicked an affiliate buy button)
-import { trackEcommerceSelectItem } from "@/lib/analytics";
-
-trackEcommerceSelectItem({
-  slug: metadata.productSlug || metadata.productName?.toLowerCase().replace(/\s+/g, '-') || '',
-  name: metadata.productName || '',
-  brand: program?.brand_name || brandName || '',
-  material: metadata.material || 'Filament',
-  storeName: program?.brand_name || brandName || 'Store',
-  price: metadata.price,
-  currency: metadata.currency,
-});
-```
+Page content structure (following `BestFilamentsForBeginners.tsx` pattern):
+- `DocumentHead`: title "Best 3D Printer Filament 2026 — Top Picks Across All Materials | FilaScope", description targeting "best 3d printer filament" (very high volume keyword)
+- `ArticleSchema`: datePublished 2026-01-01
+- `BreadcrumbSchema` + visible `<Breadcrumbs>`: Home > Best 3D Printer Filament
+- `ItemListSchema`: populated with top-scored filaments from DB
+- **H1**: "Best 3D Printer Filament in 2026 — Every Material Ranked"
+- **300+ word intro** covering: why filament choice matters, how FilaScope ranks (FilaScore algorithm), overview of major material tiers (PLA/PETG/ABS/ASA/TPU), quick decision guide
+- **Supabase query**: top 12 filaments by `filascope_score` DESC, not null, with `variant_price` and `product_handle`
+- **Ranked list UI** similar to `BestFilamentsForBeginners` using `FilamentCard`/rank display
+- **Material category grid**: 6 clickable cards linking to `/filaments/pla`, `/filaments/petg`, etc. with brief one-liner per material
+- **Internal links section**: links to `/best-filaments-for-beginners`, `/guides/best-pla-filaments`, `/pla-vs-petg`, `/filament-types`, `/deals`
+- **FAQSection** with 5 targeted questions: "What is the best 3d printer filament overall?", "What is the best filament for beginners?", "Is PLA or PETG better?", "What filament is the strongest?", "What is the cheapest good filament?"
+- **FAQPage JSON-LD** via `FAQSection`
 
 ---
 
-#### File 5: Call-site updates (buy button components)
+**Item 7: `/3d-printer-compatibility`**
+**New file:** `src/pages/FilamentPrinterCompatibility.tsx`
+**New route:** `<Route path="/3d-printer-compatibility" element={<FilamentPrinterCompatibility />} />`
+**Lazy import added**
 
-The `trackAndOpen()` metadata needs `productSlug` and `material` passed through. Currently, most call sites pass `productName` and `sourceComponent` but not `productSlug`. We update the four main buy-button components to pass these:
-
-**`src/components/filament/PrimaryBuyButton.tsx`** — add `slug` and `material` props, pass them in `trackAndOpen()` metadata:
-```typescript
-// Current:
-trackAndOpen(url, { productName: retailerName, sourcePage: ..., sourceComponent: 'primary_buy_button' });
-
-// New:
-trackAndOpen(url, { productName: retailerName, productSlug: slug, material: material, sourcePage: ..., sourceComponent: 'primary_buy_button' });
-```
-
-**`src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`** — `productTitle` and `material` already exist as props. Add `productSlug` prop and pass it through:
-```typescript
-// Current:
-trackAndOpen(affiliateUrl, { productName: productTitle || undefined, sourceComponent: 'sidebar_purchase' });
-
-// New (productSlug prop added to interface):
-trackAndOpen(affiliateUrl, { productName: productTitle || undefined, productSlug: productSlug, material: material || undefined, sourceComponent: 'sidebar_purchase' });
-```
-
-**`src/components/filament/hero/FilamentHeroPurchaseCard.tsx`** — already has `vendor` and `productTitle` in scope; add `slug` and `material` props.
-
-**`src/components/filament/StickyBuyBar.tsx`** — this component fires `trackGA4AffiliateClick` directly (not via `trackAndOpen`). We add `trackEcommerceSelectItem` here directly, using `filament.id` as the slug fallback since it only has the filament object (not the canonical slug). The filament object would need a `product_handle` field which is already on the filament type.
-
----
-
-### Summary of Changes
-
-| File | Change |
-|---|---|
-| `src/lib/analytics.ts` | Add 3 new functions: `trackEcommerceViewItem`, `trackEcommerceAddToCart`, `trackEcommerceSelectItem` |
-| `src/pages/FilamentDetail.tsx` | Upgrade `view_item` call to use canonical slug + user currency |
-| `src/hooks/useCompare.tsx` | Fire `add_to_cart` inside `addItem()` |
-| `src/hooks/useAffiliateLink.ts` | Fire `select_item` inside `trackAndOpen()`, extend `ClickMetadata` with `material` |
-| `src/components/filament/PrimaryBuyButton.tsx` | Pass `productSlug` + `material` to `trackAndOpen()` metadata |
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Add `productSlug` prop, pass to `trackAndOpen()` metadata |
-| `src/components/filament/hero/FilamentHeroPurchaseCard.tsx` | Add `productSlug` + `material` props, pass to `trackAndOpen()` metadata |
-| `src/components/filament/StickyBuyBar.tsx` | Add direct `trackEcommerceSelectItem` call in `handleBuyClick()` |
-
-### GA4 Funnel After This Change
+Page content structure:
+- `DocumentHead`: title "3D Printer Filament Compatibility — Which Filaments Work With Your Printer | FilaScope", description targeting "3d printer compatibility", "which filaments work with", etc.
+- `ArticleSchema` + `BreadcrumbSchema` + `Breadcrumbs`
+- **H1**: "3D Printer Filament Compatibility — Which Filaments Work With Your Printer?"
+- **300+ word intro** explaining: why compatibility matters (max nozzle temp, heated bed, enclosure requirement, direct vs Bowden drive, hardened nozzle for CF), why different printers have different capabilities
+- **Static compatibility table** (no DB query needed — this is reference content):
 
 ```text
-BROWSE (page_view)
-    ↓
-VIEW (view_item)        ← FilamentDetail.tsx on load, with canonical slug + live currency
-    ↓
-COMPARE (add_to_cart)  ← useCompare.tsx addItem(), from any compare button across the app
-    ↓
-CLICK (select_item)    ← useAffiliateLink.ts trackAndOpen() — single choke point for all buy buttons
-    ↓
-(external — user purchases on retailer site)
+| Printer | Max Temp | Enclosure | PLA | PETG | ABS | ASA | TPU | CF | Nylon | PC |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Bambu Lab A1 Mini | 300°C | No | ✓ | ✓ | Limited | Limited | ✓ | ✓* | Limited | — |
+| Bambu Lab X1C | 300°C | Yes | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Bambu Lab P1S | 300°C | Yes | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Creality Ender 3 V3 | 260°C | No | ✓ | ✓ | Limited | Limited | ✓ | — | — | — |
+| Creality K1 / K1 Max | 300°C | Yes | ✓ | ✓ | ✓ | ✓ | ✓ | ✓* | ✓ | Limited |
+| Prusa MK4 | 290°C | Optional | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Limited |
+| Prusa XL | 290°C | No | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Limited |
+| Bambu Lab A1 | 300°C | No | ✓ | ✓ | Limited | Limited | ✓ | ✓* | — | — |
+```
+(* = requires hardened nozzle)
+
+- **Material requirements section**: H2 for each major material explaining what printer specs are required
+- **Internal links**: to `/printers`, `/guides/best-filament-for-bambu-lab-p1s`, `/guides/best-filament-for-ender-3`, `/filament-types`
+- **FAQSection** with questions: "What filaments work on the Bambu Lab A1 Mini?", "Can an Ender 3 print PETG?", "What is the most compatible 3D printing filament?", etc.
+- **Schema**: `Table` entity (no specific Table schema type; the Article + FAQ combination is sufficient)
+
+---
+
+**Item 9: `/cheapest-filament`**
+**New file:** `src/pages/CheapestFilament.tsx`
+**New route:** `<Route path="/cheapest-filament" element={<CheapestFilament />} />`
+**Lazy import added**
+
+Page content structure:
+- `DocumentHead`: title "Cheapest 3D Printer Filament 2026 — Best Budget PLA & PETG | FilaScope", description targeting "cheap 3d printer filament", "cheapest PLA", "best budget filament"
+- `ArticleSchema` + `BreadcrumbSchema` + `Breadcrumbs`
+- `ItemListSchema` populated from DB query
+- **H1**: "Cheapest 3D Printer Filament in 2026 — Budget Picks That Don't Sacrifice Quality"
+- **300+ word intro**: covers how the filament market has matured (budget ≠ bad), what to watch for in cheap filament (diameter tolerance, tangle reports, brand history), which materials have the most competitive pricing (PLA most competitive, PETG second), regional pricing note
+- **Supabase query**: filaments sorted by `variant_price` ASC where `variant_price IS NOT NULL`, limit 15. Secondary query for "best budget PLA" — PLA only, sorted by `filascope_score` DESC, limit 8
+- Two ranked lists:
+  - "Cheapest 3D Printer Filaments Right Now" (by raw price)
+  - "Best Cheap PLA Filaments by Quality Score" (budget PLA ranked by FilaScore)
+- **"When to spend more" section**: brief editorial on when cheap filament is risky (specialty materials, CF, engineering grade)
+- **Internal links**: `/deals`, `/guides/best-budget-filaments`, `/filaments/pla`, `/best-filaments-for-beginners`
+- **FAQSection**: "What is the cheapest PLA filament?", "Is cheap filament bad for your printer?", "How much should 3D printer filament cost?", "Where can I get the cheapest filament?", "Is eSUN good filament?"
+
+---
+
+**Item 10: `/filament-types`**
+**New file:** `src/pages/FilamentTypes.tsx`
+**New route:** `<Route path="/filament-types" element={<FilamentTypes />} />`
+**Lazy import added**
+
+Page content structure:
+- `DocumentHead`: title "3D Printer Filament Types — Complete Guide to All Materials | FilaScope", description targeting "3d printer filament types", "types of 3d printing filament", "different filament materials"
+- `ArticleSchema` + `BreadcrumbSchema` + `Breadcrumbs`
+- `ItemListSchema` (pointing to each material category page)
+- **H1**: "3D Printer Filament Types — Complete Guide to Every Material"
+- **300+ word intro**: why material choice is the most important printer setting, the difference between the big three categories (easy/engineering/specialty), how to use this guide
+- **Big comparison table** (static reference):
+
+```text
+| Material | Nozzle Temp | Enclosure | Strength | Difficulty | Best For | Price |
+|---|---|---|---|---|---|---|
+| PLA | 190–220°C | No | Medium | Beginner | Prototypes, decor | $ |
+| PLA+ | 195–230°C | No | Medium+ | Beginner | Stronger PLA prints | $ |
+| PETG | 220–250°C | No | High | Intermediate | Functional parts | $$ |
+| ABS | 230–260°C | Required | High | Intermediate | Heat resistant parts | $$ |
+| ASA | 230–260°C | Required | High | Intermediate | Outdoor/UV | $$ |
+| TPU | 220–240°C | No | Flexible | Intermediate | Flexible parts | $$ |
+| Nylon/PA | 240–270°C | Recommended | Very High | Advanced | Gears, engineering | $$$ |
+| PC | 260–310°C | Required | Extreme | Advanced | Maximum strength | $$$ |
+| Carbon Fiber | 230–270°C | Varies | Stiff | Advanced | Lightweight structural | $$$ |
+| Wood PLA | 190–220°C | No | Medium | Beginner | Realistic textures | $$ |
+| Silk PLA | 200–230°C | No | Medium | Beginner | Decorative, HueForge | $$ |
+| Glow in Dark | 190–220°C | No | Medium | Beginner | Specialty/cosplay | $$ |
 ```
 
-This maps directly to GA4's "Monetization → E-commerce purchases" funnel report, with no additional GA4 configuration needed because `view_item`, `add_to_cart`, and `select_item` are automatically recognised event names.
+- **Individual material sections** (H2 per material): one paragraph per major type with link to its category page and material knowledge base page
+- **"Which filament should I start with?"** decision guide section (quick 3-question flowchart in prose)
+- **Internal links**: All `/filaments/:slug` pages, `/materials/:slug` pages, `/pla-vs-petg`, `/best-filaments-for-beginners`
+- **FAQSection** + **FAQPage schema**: "What are the main types of 3D printer filament?", "What is the difference between PLA and PETG?", "What is the strongest 3D printing filament?", "Is 1.75mm or 2.85mm filament better?", "What filament type is best for outdoor use?"
+- **HowToSchema** NOT added here — this is a reference/comparison page, not procedural. Article + FAQ is correct.
 
-### What is intentionally NOT changed
+---
 
-- `trackProductView()` and `trackAffiliateClick()` in `analytics.ts` — kept for backward compat (custom Explore reports, Supabase `affiliate_clicks` table logging)
-- `trackComparisonAdd()` in `useCompare.tsx` — kept alongside `add_to_cart` (powers the `comparison_add` custom dimension already in GA4 config)
-- `begin_checkout` in `trackAffiliateClick()` — kept as-is; it fires on every affiliate click and is used for the existing revenue estimation in GA4 Explore
-- No changes to the `PurchaseSection`, `QuickSummaryBar`, `BestPricesSection`, or `FilamentMobileBottomBar` buy buttons — these all route through `useAffiliateLink.trackAndOpen()` which will automatically get `select_item` from File 4's change
+#### Group 3: Canonical Redirects (Approach C)
+
+**Item 3: `/guides/pla-vs-petg`**
+Currently, `guideConfigs.ts` has a `pla-vs-petg` entry but the canonical standalone page is `/pla-vs-petg` (PLAVsPETG.tsx — richer, bespoke page).
+`/guides/:slug` renders `BuyingGuide` which uses the template — thin duplicate of the richer standalone.
+
+**Change:** In `App.tsx`, add before the `/guides/:slug` wildcard:
+```tsx
+<Route path="/guides/pla-vs-petg" element={<Navigate to="/pla-vs-petg" replace />} />
+```
+This prevents the thin `BuyingGuideTemplate` version from competing with the richer standalone for the "pla vs petg" keyword.
+
+**Item 8: `/hueforge-filament-guide`**
+The canonical HueForge content is at `/best-filaments-for-hueforge` (standalone BestFilamentsForHueForge.tsx — richer than the guide template). The `/guides/hueforge-filaments` template version should also redirect.
+
+**Changes in App.tsx:**
+```tsx
+<Route path="/hueforge-filament-guide" element={<Navigate to="/best-filaments-for-hueforge" replace />} />
+<Route path="/guides/hueforge-filaments" element={<Navigate to="/best-filaments-for-hueforge" replace />} />
+```
+
+Additionally, strengthen `/best-filaments-for-hueforge` SEO by updating its `DocumentHead` title and description to explicitly target "hueforge filament" and "best filament for hueforge" — the page content already covers these topics well but the meta title doesn't fully capture the primary keywords.
+
+---
+
+### Files Changed Summary
+
+| File | Type | Changes |
+|---|---|---|
+| `src/pages/MaterialHub.tsx` | Edit | Add `wood`, `carbon-fiber`, `glow-in-the-dark` entries to `MATERIAL_SLUG_CONFIG` |
+| `src/pages/FilamentCategoryPage.tsx` | Edit | Add `wood`, `carbon-fiber`, `glow-in-the-dark` entries to `CATEGORY_META`, `MATERIAL_KNOWLEDGE`, `RELATED_PROSE` |
+| `src/pages/BestFilament.tsx` | Create | New mega-comparison page for `/best-3d-printer-filament` |
+| `src/pages/FilamentPrinterCompatibility.tsx` | Create | New compatibility guide for `/3d-printer-compatibility` |
+| `src/pages/CheapestFilament.tsx` | Create | New budget-focused page for `/cheapest-filament` |
+| `src/pages/FilamentTypes.tsx` | Create | New educational overview for `/filament-types` |
+| `src/pages/BestFilamentsForHueForge.tsx` | Edit | Strengthen `DocumentHead` meta targeting "hueforge filament" keywords |
+| `src/App.tsx` | Edit | 6 new `<Route>` entries + 4 new `lazy()` imports |
+
+### What is Intentionally NOT Changed
+
+- `/filaments/high-speed-pla` — already complete with intro, FAQ, MaterialKnowledge entries, and RELATED_PROSE. No changes needed.
+- `PLAVsPETG.tsx` — `/pla-vs-petg` is already excellent. A redirect from `/guides/pla-vs-petg` consolidates it without rebuilding.
+- All existing guide configs in `guideConfigs.ts` — no modifications. The BuyingGuideTemplate pages for comparison guides (`pla-vs-petg`, `hueforge-filaments`) will redirect to richer standalone pages instead.
+- The `CompatibilityMatrix.tsx` page at `/compatibility-matrix` — kept as-is (different from `/3d-printer-compatibility`; the former is a planned data feature, the latter is the new editorial page).
