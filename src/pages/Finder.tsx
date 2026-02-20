@@ -41,6 +41,7 @@ import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import { BRAND_SPECIFIC_FUNCTIONS } from "@/lib/brand-sync-config";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
+import { HomeFAQSection } from "@/components/HomeFAQSection";
 import HeroSection from "@/components/HeroSection";
 import { WebSiteSchema, OrganizationSchema, TrendingItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
@@ -1646,6 +1647,7 @@ const Finder = () => {
 
       {/* SEO content block — above implicit footer, discoverable by crawlers */}
       <HomeSEOContent />
+      <HomeFAQSection />
     </div>
   );
 };
