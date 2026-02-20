@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/accordion';
 import { FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
 import { HowToSchema } from '@/components/seo/HowToSchema';
+import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { useCurrency } from '@/hooks/useCurrency';
 import { trackTDSearch as trackGA4TDSearch } from '@/lib/analytics';
 
@@ -623,6 +624,17 @@ export default function HueForgeTDDatabase() {
             </Link>
           </Button>
         </section>
+
+        <RelatedContentBlock
+          title="Related HueForge Resources"
+          className="max-w-7xl mx-auto px-4 py-8"
+          links={[
+            { label: 'Best Filaments for HueForge', href: '/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane and multicolor printing' },
+            { label: 'Best White Filaments', href: '/best-white-filaments', description: 'Top white filaments for HueForge base layers' },
+            { label: 'Find by Color', href: '/colors', description: 'Match any color to real filaments with TD data' },
+            { label: 'PLA vs PETG', href: '/pla-vs-petg', description: 'Compare the two most popular lithophane materials' },
+          ]}
+        />
       </div>
     </div>
   );
