@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, TrendingDown } from "lucide-react";
+import { AlertTriangle, TrendingDown, Eye, GitCompare } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function ContentGapsPanel() {
   const last30Days = new Date();
@@ -87,6 +88,45 @@ export function ContentGapsPanel() {
         }))
         .sort((a, b) => b.clicks - a.clicks)
         .slice(0, 10);
+    },
+  });
+
+  // Most viewed products WITHOUT affiliate clicks (UX gap detector)
+  const { data: noClickProducts, isLoading: noClickLoading } = useQuery({
+    queryKey: ["content-gaps-no-click-products"],
+    queryFn: async () => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const since = thirtyDaysAgo.toISOString();
+
+      const [{ data: browseRows }, { data: clickRows }] = await Promise.all([
+        supabase.from("user_browse_history").select("filament_id").gte("viewed_at", since).not("filament_id", "is", null),
+        supabase.from("affiliate_clicks").select("product_id").gte("clicked_at", since).not("product_id", "is", null),
+      ]);
+
+      const clickedIds = new Set((clickRows || []).map((r) => r.product_id));
+      const viewMap: Record<string, number> = {};
+      for (const row of browseRows || []) {
+        if (row.filament_id && !clickedIds.has(row.filament_id)) {
+          viewMap[row.filament_id] = (viewMap[row.filament_id] || 0) + 1;
+        }
+      }
+
+      const topIds = Object.entries(viewMap)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 15)
+        .map(([id]) => id);
+
+      if (topIds.length === 0) return [];
+
+      const { data: filaments } = await supabase
+        .from("filaments")
+        .select("id, product_title, vendor, product_handle, variant_price")
+        .in("id", topIds);
+
+      return (filaments || [])
+        .map((f) => ({ ...f, views: viewMap[f.id] || 0 }))
+        .sort((a, b) => b.views - a.views);
     },
   });
 
@@ -244,6 +284,71 @@ export function ContentGapsPanel() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Most Viewed Products WITHOUT Affiliate Clicks */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Eye className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <CardTitle className="text-base">Viewed But Never Clicked (30 Days)</CardTitle>
+              <CardDescription>Products with page views but zero affiliate clicks — potential UX or affiliate link issues</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {noClickLoading ? (
+            <p className="text-sm text-muted-foreground py-4">Loading…</p>
+          ) : !noClickProducts || noClickProducts.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              All viewed products have received at least one affiliate click 🎉
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 pr-2 font-medium text-muted-foreground w-6">#</th>
+                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Product</th>
+                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Brand</th>
+                    <th className="text-right py-2 pr-4 font-medium text-muted-foreground">Views</th>
+                    <th className="text-right py-2 font-medium text-muted-foreground">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {noClickProducts.map((row, i) => (
+                    <tr key={row.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                      <td className="py-2 pr-2 text-muted-foreground text-xs">{i + 1}</td>
+                      <td className="py-2 pr-4">
+                        {row.product_handle ? (
+                          <Link
+                            to={`/filament/${row.product_handle}`}
+                            className="text-primary hover:underline text-xs truncate max-w-[180px] block"
+                          >
+                            {row.product_title}
+                          </Link>
+                        ) : (
+                          <span className="text-xs truncate max-w-[180px] block">{row.product_title}</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <Badge variant="secondary" className="text-xs">{row.vendor}</Badge>
+                      </td>
+                      <td className="py-2 pr-4 text-right">
+                        <Badge variant="outline" className="text-xs">{row.views}</Badge>
+                      </td>
+                      <td className="py-2 text-right text-muted-foreground text-xs">
+                        {row.variant_price ? `$${row.variant_price}` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
