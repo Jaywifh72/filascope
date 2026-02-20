@@ -3,7 +3,16 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+
+// Sitemap redirect — sends browsers and crawlers to the edge function that generates dynamic XML
+const SITEMAP_EDGE_BASE = "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=";
+function SitemapRedirect({ path }: { path: string }) {
+  useEffect(() => {
+    window.location.replace(SITEMAP_EDGE_BASE + encodeURIComponent(path));
+  }, [path]);
+  return null;
+}
 
 // Redirect /admin/* to /old-admin/*
 function AdminRedirect() {
@@ -349,6 +358,14 @@ const App = () => (
                   <Route path="/filament-storage-guide" element={<FilamentStorageGuide />} />
                   <Route path="/best-filament-for-ender-3" element={<Navigate to="/guides/best-filament-for-ender-3" replace />} />
                   <Route path="/best-filament-for-bambu-lab-a1" element={<Navigate to="/guides/best-filament-for-bambu-lab-a1" replace />} />
+                  {/* Sitemap routes — _redirects 302s aren't honoured on Lovable hosting, so redirect here */}
+                  <Route path="/sitemap.xml"           element={<SitemapRedirect path="/sitemap.xml" />} />
+                  <Route path="/sitemap-pages.xml"     element={<SitemapRedirect path="/sitemap-pages.xml" />} />
+                  <Route path="/sitemap-filaments.xml" element={<SitemapRedirect path="/sitemap-filaments.xml" />} />
+                  <Route path="/sitemap-brands.xml"    element={<SitemapRedirect path="/sitemap-brands.xml" />} />
+                  <Route path="/sitemap-printers.xml"  element={<SitemapRedirect path="/sitemap-printers.xml" />} />
+                  <Route path="/sitemap-guides.xml"    element={<SitemapRedirect path="/sitemap-guides.xml" />} />
+                  <Route path="/sitemap-colors.xml"    element={<SitemapRedirect path="/sitemap-colors.xml" />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

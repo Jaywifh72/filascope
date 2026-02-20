@@ -1,3 +1,6 @@
+# Static files — serve directly (must be before SPA catch-all)
+/robots.txt    /robots.txt    200
+
 # Sitemap routes — 302 redirect to Supabase edge function
 # (Cloudflare Pages does not support 301 for cross-origin external URLs)
 /sitemap.xml           https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml           302
