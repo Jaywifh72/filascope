@@ -297,7 +297,7 @@ export function PricingTabContent({
             <a 
               href={getAffiliateUrl(printer.official_store_url, brand) || printer.official_store_url}
               target="_blank" 
-              rel="noopener noreferrer"
+              rel="nofollow sponsored noopener noreferrer"
               className="block"
             >
               <Button size="lg" className="w-full h-auto py-5 gap-4 text-base">
@@ -320,7 +320,7 @@ export function PricingTabContent({
             <a 
               href={getAmazonUrl(printer.amazon_link_us || printer.amazon_link_uk || printer.amazon_link_de) || printer.amazon_link_us}
               target="_blank" 
-              rel="noopener noreferrer"
+              rel="nofollow sponsored noopener noreferrer"
               className="block"
             >
               <Button size="lg" variant="amazon" className="w-full h-auto py-5 gap-4 text-base">
@@ -351,7 +351,7 @@ export function PricingTabContent({
               <a 
                 href={getAmazonUrl(printer.amazon_link_uk) || printer.amazon_link_uk}
                 target="_blank" 
-                rel="noopener noreferrer"
+                rel="nofollow sponsored noopener noreferrer"
               >
                 <Button variant="outline" size="sm" className="gap-2">
                   Amazon UK <ExternalLink className="h-3 w-3" />
@@ -362,7 +362,7 @@ export function PricingTabContent({
               <a 
                 href={getAmazonUrl(printer.amazon_link_de) || printer.amazon_link_de}
                 target="_blank" 
-                rel="noopener noreferrer"
+                rel="nofollow sponsored noopener noreferrer"
               >
                 <Button variant="outline" size="sm" className="gap-2">
                   Amazon DE <ExternalLink className="h-3 w-3" />

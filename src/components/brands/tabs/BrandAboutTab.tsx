@@ -179,7 +179,7 @@ export function BrandAboutTab({
                     <a
                       href={hasAffiliate ? buildLink(brandInfo.website) : brandInfo.website}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="nofollow noopener noreferrer"
                       className="text-base text-primary hover:underline font-medium inline-flex items-center gap-1"
                       onClick={(e) => {
                         if (hasAffiliate) {

@@ -119,7 +119,7 @@ export function MobileBottomBar({
           <a 
             href={affiliateUrl}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="nofollow sponsored noopener noreferrer"
             className="flex-shrink-0"
           >
             <Button size="lg" className="gap-2 px-6">
