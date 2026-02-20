@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { ArticleSchema, BreadcrumbSchema, HowToSchema, FAQSection } from '@/components/seo';
+import { ArticleSchema, HowToSchema, FAQSection } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { Badge } from '@/components/ui/badge';
@@ -118,11 +118,6 @@ export default function HowToMeasureFilamentTD() {
         about={{ '@type': 'Thing', name: 'HueForge Transmissivity Distance Measurement' }}
         proficiencyLevel="Intermediate"
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Learn', url: 'https://filascope.com/learn' },
-        { name: 'How to Measure Filament TD', url: canonicalUrl },
-      ]} />
       <HowToSchema
         name="How to Measure Filament TD Value for HueForge"
         description="A step-by-step process for measuring a filament's Transmissivity Distance (TD) value for use in HueForge lithophane and multicolor printing."

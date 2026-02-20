@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { ArticleSchema, BreadcrumbSchema, ItemListSchema, FAQSection, Breadcrumbs } from '@/components/seo';
+import { ArticleSchema, ItemListSchema, FAQSection, Breadcrumbs } from '@/components/seo';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
@@ -127,7 +127,6 @@ export default function FilamentTypes() {
         dateModified="2026-02-20"
         url="/filament-types"
       />
-      <BreadcrumbSchema items={breadcrumbs.map(b => ({ name: b.name, url: `https://filascope.com${b.url}` }))} />
       <ItemListSchema
         name="3D Printer Filament Types"
         description="Complete guide to all 3D printer filament materials"

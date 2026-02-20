@@ -2,7 +2,6 @@ import { useParams, Navigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FAQSection } from "@/components/seo/FAQSection";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
@@ -119,7 +118,6 @@ export default function BrandMaterialPage() {
         description={description}
         canonical={`https://filascope.com/brands/${brandSlug}/${materialSlug}`}
       />
-      <BreadcrumbSchema items={breadcrumbItems} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Breadcrumbs items={breadcrumbItems.slice(1)} className="mb-4" />

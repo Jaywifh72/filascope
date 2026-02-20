@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { ArticleSchema, BreadcrumbSchema, ItemListSchema, FAQSection, Breadcrumbs } from '@/components/seo';
+import { ArticleSchema, ItemListSchema, FAQSection, Breadcrumbs } from '@/components/seo';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -134,7 +134,6 @@ export default function CheapestFilament() {
         dateModified="2026-02-20"
         url="/cheapest-filament"
       />
-      <BreadcrumbSchema items={breadcrumbs.map(b => ({ name: b.name, url: `https://filascope.com${b.url}` }))} />
       <ItemListSchema
         name="Cheapest 3D Printer Filament 2026"
         description="Budget 3D printer filaments sorted by price with quality scores"

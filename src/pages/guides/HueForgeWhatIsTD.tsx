@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { ArticleSchema, BreadcrumbSchema, HowToSchema, FAQSection } from '@/components/seo';
+import { ArticleSchema, HowToSchema, FAQSection } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { Badge } from '@/components/ui/badge';
@@ -76,11 +76,6 @@ export default function HueForgeWhatIsTD() {
         about={{ '@type': 'Thing', name: 'HueForge Transmissivity Distance' }}
         proficiencyLevel="Beginner"
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Learn', url: 'https://filascope.com/learn' },
-        { name: 'What Is HueForge TD?', url: canonicalUrl },
-      ]} />
       <HowToSchema
         name="How to Choose the Right TD Value for HueForge Printing"
         description="A step-by-step guide to selecting and verifying the correct Transmissivity Distance (TD) value for your HueForge lithophane or multicolor project."

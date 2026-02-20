@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { AlertCircle, Clock, ArrowLeft, Wrench } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArticleSchema, BreadcrumbSchema, HowToSchema, Breadcrumbs } from "@/components/seo";
+import { ArticleSchema, HowToSchema, Breadcrumbs } from "@/components/seo";
 
 const COMMON_ISSUES = [
   {
@@ -58,13 +58,6 @@ const GuideTroubleshooting = () => {
         description="Diagnose and fix common 3D printing problems. Solutions for stringing, warping, layer adhesion, under-extrusion, clogged nozzles, and more."
         datePublished="2024-11-01"
         url="/troubleshooting"
-      />
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: BASE_URL },
-          { name: 'Guides', url: `${BASE_URL}/learn` },
-          { name: 'Troubleshooting Guide', url: `${BASE_URL}/troubleshooting` },
-        ]}
       />
       <HowToSchema
         name="How to Diagnose and Fix Common 3D Printing Problems"

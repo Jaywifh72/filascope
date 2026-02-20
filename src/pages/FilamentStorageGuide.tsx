@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, ArticleSchema, FAQSection, HowToSchema } from '@/components/seo';
+import { ArticleSchema, FAQSection, HowToSchema } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -77,11 +77,6 @@ export default function FilamentStorageGuide() {
         about={{ '@type': 'Thing', name: '3D Printer Filament Storage' }}
         proficiencyLevel="Beginner"
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Guides', url: 'https://filascope.com/learn' },
-        { name: 'Filament Storage Guide', url: 'https://filascope.com/filament-storage-guide' },
-      ]} />
       <HowToSchema
         name="How to Dry and Store 3D Printer Filament"
         description="Step-by-step guide to drying wet filament and storing it properly to prevent moisture damage."

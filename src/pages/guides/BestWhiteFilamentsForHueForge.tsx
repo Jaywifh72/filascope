@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { ArticleSchema, BreadcrumbSchema, FAQSection } from '@/components/seo';
+import { ArticleSchema, FAQSection } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { Badge } from '@/components/ui/badge';
@@ -135,11 +135,6 @@ export default function BestWhiteFilamentsForHueForge() {
         about={{ '@type': 'Thing', name: 'White Filament for HueForge Lithophanes' }}
         proficiencyLevel="Beginner"
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Learn', url: 'https://filascope.com/learn' },
-        { name: 'Best White Filaments for HueForge', url: canonicalUrl },
-      ]} />
 
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 py-6">
