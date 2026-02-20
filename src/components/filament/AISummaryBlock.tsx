@@ -13,6 +13,7 @@ interface AISummaryBlockProps {
   formattedPrice: string | null;
   regionName: string;
   netWeightG: number | null | undefined;
+  filaScopeScore?: number | null;
 }
 
 function getTdDescriptor(td: number): string {
@@ -40,6 +41,7 @@ export function AISummaryBlock({
   formattedPrice,
   regionName,
   netWeightG,
+  filaScopeScore,
 }: AISummaryBlockProps) {
   const nozzle = resolveNozzleTemp(nozzleTempMin, nozzleTempMax, material);
   const bed = resolveBedTemp(bedTempMin, bedTempMax, material);
@@ -80,6 +82,11 @@ export function AISummaryBlock({
     parts.push(`Weight: ${formatWeight(netWeightG)}.`);
   }
 
+  // FilaScore
+  if (filaScopeScore != null) {
+    parts.push(`FilaScore: ${filaScopeScore.toFixed(1)}/10.`);
+  }
+
   const summaryText = parts.join(" ");
 
   // Quick specs pills
@@ -97,12 +104,13 @@ export function AISummaryBlock({
   }
   if (formattedPrice) specs.push({ label: "Price", value: formattedPrice });
   if (netWeightG) specs.push({ label: "Weight", value: formatWeight(netWeightG) });
+  if (filaScopeScore != null) specs.push({ label: "FilaScore", value: `${filaScopeScore.toFixed(1)}/10` });
 
   if (parts.length === 0) return null;
 
   return (
     <section className="mt-4 mb-2" aria-label="Product summary">
-      <div className="bg-muted/30 border border-border/40 rounded-lg px-4 py-3">
+      <div className="bg-muted/30 border border-border/40 rounded-lg px-4 py-3" data-ai-summary="true">
         {/* Visible summary paragraph */}
         <p className="text-sm text-muted-foreground leading-relaxed">
           {summaryText}
