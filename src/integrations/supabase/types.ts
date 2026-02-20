@@ -1491,6 +1491,158 @@ export type Database = {
           },
         ]
       }
+      broken_links: {
+        Row: {
+          affiliate_url: string | null
+          brand_name: string | null
+          break_type: string
+          created_at: string
+          error_message: string | null
+          filament_id: string | null
+          filament_name: string | null
+          final_url: string | null
+          first_detected_at: string
+          fix_method: string | null
+          fixed_at: string | null
+          fixed_by: string | null
+          http_status: number | null
+          id: string
+          last_checked_at: string
+          listing_id: string | null
+          product_url: string
+          redirect_chain: Json | null
+          region: string
+          retailer_id: string | null
+          retailer_name: string | null
+          scan_batch_id: string | null
+          status: string
+          suggested_url: string | null
+        }
+        Insert: {
+          affiliate_url?: string | null
+          brand_name?: string | null
+          break_type: string
+          created_at?: string
+          error_message?: string | null
+          filament_id?: string | null
+          filament_name?: string | null
+          final_url?: string | null
+          first_detected_at?: string
+          fix_method?: string | null
+          fixed_at?: string | null
+          fixed_by?: string | null
+          http_status?: number | null
+          id?: string
+          last_checked_at?: string
+          listing_id?: string | null
+          product_url: string
+          redirect_chain?: Json | null
+          region?: string
+          retailer_id?: string | null
+          retailer_name?: string | null
+          scan_batch_id?: string | null
+          status?: string
+          suggested_url?: string | null
+        }
+        Update: {
+          affiliate_url?: string | null
+          brand_name?: string | null
+          break_type?: string
+          created_at?: string
+          error_message?: string | null
+          filament_id?: string | null
+          filament_name?: string | null
+          final_url?: string | null
+          first_detected_at?: string
+          fix_method?: string | null
+          fixed_at?: string | null
+          fixed_by?: string | null
+          http_status?: number | null
+          id?: string
+          last_checked_at?: string
+          listing_id?: string | null
+          product_url?: string
+          redirect_chain?: Json | null
+          region?: string
+          retailer_id?: string | null
+          retailer_name?: string | null
+          scan_batch_id?: string | null
+          status?: string
+          suggested_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broken_links_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "broken_links_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broken_links_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broken_links_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "broken_links_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "broken_links_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broken_links_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broken_links_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "filament_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broken_links_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_filament_listings"
+            referencedColumns: ["listing_id"]
+          },
+          {
+            foreignKeyName: "broken_links_retailer_id_fkey"
+            columns: ["retailer_id"]
+            isOneToOne: false
+            referencedRelation: "retailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       broken_product_urls: {
         Row: {
           created_at: string | null
@@ -3706,6 +3858,51 @@ export type Database = {
           submitted_at?: string
           url_count?: number
           urls_sample?: string[] | null
+        }
+        Relationships: []
+      }
+      link_scan_runs: {
+        Row: {
+          batch_id: string
+          broken_found: number | null
+          checked: number | null
+          completed_at: string | null
+          error_message: string | null
+          filters: Json | null
+          fixed_auto: number | null
+          id: string
+          scan_type: string | null
+          started_at: string
+          status: string
+          total_links: number | null
+        }
+        Insert: {
+          batch_id: string
+          broken_found?: number | null
+          checked?: number | null
+          completed_at?: string | null
+          error_message?: string | null
+          filters?: Json | null
+          fixed_auto?: number | null
+          id?: string
+          scan_type?: string | null
+          started_at?: string
+          status?: string
+          total_links?: number | null
+        }
+        Update: {
+          batch_id?: string
+          broken_found?: number | null
+          checked?: number | null
+          completed_at?: string | null
+          error_message?: string | null
+          filters?: Json | null
+          fixed_auto?: number | null
+          id?: string
+          scan_type?: string | null
+          started_at?: string
+          status?: string
+          total_links?: number | null
         }
         Relationships: []
       }

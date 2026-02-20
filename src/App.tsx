@@ -117,6 +117,7 @@ const AdminStores = lazy(() => import("./pages/AdminStores"));
 const AdminAffiliateHub = lazy(() => import("./pages/AdminAffiliateHub"));
 const AdminPricingData = lazy(() => import("./pages/admin/PricingData"));
 const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
+const AdminLinkHealth = lazy(() => import("./pages/AdminLinkHealth"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const FilamentCategoryPage = lazy(() => import("./pages/FilamentCategoryPage"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
@@ -277,6 +278,7 @@ const App = () => (
                   <Route path="/admin/affiliate-hub" element={<AdminAffiliateHub />} />
                   <Route path="/admin/pricing-data" element={<AdminPricingData />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/link-health" element={<AdminLinkHealth />} />
                   <Route path="/admin/*" element={<AdminRedirect />} />
                   <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
                   <Route path="/old-admin/dashboard" element={<AdminDashboard />} />
