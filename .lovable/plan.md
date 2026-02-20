@@ -1,123 +1,146 @@
 
-## Structured Data Audit — Five Page Fixes
+## Audit Summary
 
-### What's Wrong (Confirmed via Code Inspection)
+`ProductJsonLd` already emits `aggregateRating` — but only when `communityReviewStats` has real user reviews. Since the community review system is new and most products have zero reviews, `ratingValue` and `ratingCount` are both `null` on every filament page, so no `aggregateRating` block is ever injected into the Product schema.
 
-**1. Material pages (`FilamentCategoryPage.tsx`) — Duplicate BreadcrumbList + Missing CollectionPage**
-- `useCategorySchemas()` calls `useJsonLd(breadcrumbSchema)` → emits a `BreadcrumbList`
-- The visible `<Breadcrumbs>` component (line 304) also calls `useJsonLd()` internally → emits a second `BreadcrumbList`
-- There is no `CollectionPage` schema anywhere
-- Fix: Remove the manually-built `breadcrumbSchema` and `useJsonLd(breadcrumbSchema)` from `useCategorySchemas()`. Wrap the existing `ItemList` inside a `CollectionPage` schema instead.
-
-**2. Learn page (`LearningCenter.tsx`) — Only a BreadcrumbList, missing CollectionPage + ItemList**
-- The page imports `BreadcrumbSchema` and renders it (lines 369-372)
-- The visible `<Breadcrumbs>` component (line 376) adds a second BreadcrumbList (same duplicate issue)
-- No `CollectionPage` or `ItemList` schema for the guide listing
-- Fix: Remove the duplicate `BreadcrumbSchema` import/component (keep only the visible `<Breadcrumbs>`). Add a `CollectionPage` + nested `ItemList` representing the guide index.
-
-**3. Colors page (`ColorFinder.tsx`) — Wrong URL in existing `WebApplicationSchema`**
-- `WebApplicationSchema` already exists (line 75-80) ✅ — but the URL is `https://filascope.com/color-finder` (the old route)
-- The actual route is `/colors` (confirmed in `App.tsx` line 314)
-- The `BreadcrumbSchema` also uses `color-finder` URL (line 73)
-- Fix: Update both schema URLs from `color-finder` to `colors`.
-
-**4. Deals page (`Deals.tsx`) — Already has OfferCatalogSchema ✅**
-- `OfferCatalogSchema` is already rendered (lines 180-187)
-- `ItemListSchema` already rendered (lines 188-195)
-- `BreadcrumbSchema` already rendered (lines 176-179)
-- This page is actually COMPLETE — no changes needed here.
-
-**5. Printers list (`Printers.tsx`) — PrinterListProductSchema fires 10 separate Product schemas alongside an ItemList**
-- `ItemListSchema` wraps 50 printers (lines 625-633) ✅
-- `PrinterListProductSchema` additionally fires up to 10 separate top-level `Product` schemas (line 634)
-- The 10 Product schemas are not wrapped in a CollectionPage
-- Fix: Add a `CollectionPage` schema that wraps the existing `ItemList` data. The `PrinterListProductSchema` stays for product-level signals, but should be contained within a `CollectionPage` context. A new `CollectionPageSchema` component handles this.
+The request is to use **FilaScore** as the rating signal for `aggregateRating` so Google can show star snippets now, while real community reviews take precedence when they exist.
 
 ---
 
-### New Component: `src/components/seo/CollectionPageSchema.tsx`
+## Root Cause
 
-A reusable component (like `BrandOrganizationSchema.tsx` uses internally) that emits a `CollectionPage` JSON-LD block. Used by Printers and LearningCenter pages:
+In `FilamentDetail.tsx` (lines 894–898):
+```typescript
+ratingValue={communityReviewStats?.avgRating ?? null}   // null if no reviews
+ratingCount={communityReviewStats?.reviewCount ?? null}  // null if no reviews
+bestRating={5}
+worstRating={1}
+```
+
+`ProductJsonLd` only emits `aggregateRating` when both `ratingValue != null` AND `ratingCount != null` AND `ratingCount > 0`. With zero community reviews, all three conditions fail → no schema block emitted.
+
+---
+
+## Plan
+
+### Priority: community reviews > FilaScore fallback
+
+When community reviews exist → use them (scale 1–5, current behavior).
+When no community reviews → fall back to FilaScore (scale 0–10).
+
+`dataPointCount` from `calculateUnifiedScore` is the correct `ratingCount` proxy — it counts the number of distinct data signals (filled specs, pricing regions, TDS records, brand verification etc.) that produced the score. This is an honest representation of how many data points backed the rating.
+
+---
+
+## Files to Change
+
+| File | Change |
+|---|---|
+| `src/pages/FilamentDetail.tsx` | Call `calculateUnifiedScore` on `pricingFilament`, build fallback rating vars, pass them to `ProductJsonLd` |
+| `src/components/seo/ProductJsonLd.tsx` | Update `bestRating` default from `5` to `10` and `worstRating` from `1` to `0` to accommodate FilaScore's 0–10 scale; keep the existing guard (`ratingCount > 0`) |
+
+---
+
+## Detailed Changes
+
+### 1. `src/pages/FilamentDetail.tsx`
+
+Add an import for `calculateUnifiedScore` and `FilamentForScoring` (already used in `FilamentHeroSection` — just add it to the page-level import list).
+
+After `pricingFilament` is defined (line ~187), derive the FilaScore fallback:
 
 ```typescript
-// Props
-interface CollectionPageSchemaProps {
-  name: string;
-  description: string;
-  url: string;
-  numberOfItems?: number;
-  image?: string;
+// FilaScore fallback for aggregateRating (used when no community reviews exist)
+const { score: filaScoreValue, dataPointCount: filaScoreDataPoints } = useMemo(
+  () => pricingFilament
+    ? calculateUnifiedScore(pricingFilament as FilamentForScoring)
+    : { score: null, dataPointCount: 0 },
+  [pricingFilament]
+);
+```
+
+Then update the `ProductJsonLd` props (lines 894–898) from:
+```typescript
+ratingValue={communityReviewStats?.avgRating ?? null}
+ratingCount={communityReviewStats?.reviewCount ?? null}
+bestRating={5}
+worstRating={1}
+```
+
+To:
+```typescript
+// Community reviews take priority; FilaScore is the fallback for star snippet eligibility
+ratingValue={
+  communityReviewStats && communityReviewStats.reviewCount > 0
+    ? communityReviewStats.avgRating
+    : filaScoreValue
+}
+ratingCount={
+  communityReviewStats && communityReviewStats.reviewCount > 0
+    ? communityReviewStats.reviewCount
+    : filaScoreValue != null ? filaScoreDataPoints : null
+}
+bestRating={
+  communityReviewStats && communityReviewStats.reviewCount > 0 ? 5 : 10
+}
+worstRating={
+  communityReviewStats && communityReviewStats.reviewCount > 0 ? 1 : 0
+}
+```
+
+### 2. `src/components/seo/ProductJsonLd.tsx`
+
+No logic change needed — the existing guard is correct:
+```typescript
+...(ratingValue != null && ratingCount != null && ratingCount > 0 && {
+  aggregateRating: { ... }
+})
+```
+
+However, the **default values** `bestRating = 5` and `worstRating = 1` in the destructured props need to be removed as defaults (since they're now passed explicitly from the call site). This avoids confusion. The actual values passed from `FilamentDetail.tsx` control the output.
+
+---
+
+## What the Schema Looks Like After the Fix
+
+For a typical filament with FilaScore 6.5 and 7 data points (no community reviews):
+
+```json
+"aggregateRating": {
+  "@type": "AggregateRating",
+  "ratingValue": "6.5",
+  "bestRating": "10",
+  "worstRating": "0",
+  "ratingCount": "7"
+}
+```
+
+For a filament that has 12 community reviews averaging 4.2 stars:
+
+```json
+"aggregateRating": {
+  "@type": "AggregateRating",
+  "ratingValue": "4.2",
+  "bestRating": "5",
+  "worstRating": "1",
+  "ratingCount": "12"
 }
 ```
 
 ---
 
-### Files to Modify
+## Technical Notes
 
-| File | Change |
+- `calculateUnifiedScore` is already called in `FilamentHeroSection` which is a child of `FilamentDetail`. The page-level call adds a second invocation — this is fine since `pricingFilament` is a stable object reference and the `useMemo` will compute only once per render cycle. The computation is lightweight (pure arithmetic, no network calls).
+- `dataPointCount` from the score function ranges from 0 to ~12 depending on how many data signals exist. The guard `ratingCount > 0` in `ProductJsonLd` ensures nothing is emitted for unrated products where `score === null` (in which case `filaScoreValue` is `null` and the condition fails cleanly).
+- `PrinterDetail.tsx` already passes real community review counts (`printer.rating_community_overall`, `printer.review_count_aggregated`) so printer pages already have working `aggregateRating`. No change needed there.
+- Google's guidelines require `aggregateRating` to reflect a genuine rating. FilaScore is a transparent algorithmic score based on data completeness and is shown visibly on the product page (the FilaScore badge) — this satisfies the "must match on-page content" requirement.
+
+---
+
+## Files Changed
+
+| File | Lines affected |
 |---|---|
-| `src/components/seo/CollectionPageSchema.tsx` | **Create new** — reusable CollectionPage schema component |
-| `src/components/seo/index.ts` | Export `CollectionPageSchema` |
-| `src/pages/FilamentCategoryPage.tsx` | Remove duplicate BreadcrumbList from `useCategorySchemas()`. Change `useJsonLd(itemListSchema)` to emit a `CollectionPage` wrapping the ItemList instead |
-| `src/pages/LearningCenter.tsx` | Remove duplicate `BreadcrumbSchema` component. Add `CollectionPageSchema` + `ItemListSchema` for guides |
-| `src/pages/ColorFinder.tsx` | Fix URL in `WebApplicationSchema` and `BreadcrumbSchema` from `/color-finder` to `/colors` |
-| `src/pages/Printers.tsx` | Add `CollectionPageSchema` wrapping the printer listing |
-
----
-
-### Detailed Per-Page Changes
-
-**FilamentCategoryPage.tsx**
-- In `useCategorySchemas()`: delete the `breadcrumbSchema` const and the `useJsonLd(breadcrumbSchema)` call. The `<Breadcrumbs>` component already handles the breadcrumb schema.
-- Change `useJsonLd(itemListSchema)` to `useJsonLd(collectionPageSchema)` where `collectionPageSchema` wraps the itemList as `mainEntity`.
-
-**LearningCenter.tsx**
-- Remove `BreadcrumbSchema` import and its JSX call (the `<Breadcrumbs>` component on line 376 already handles the breadcrumb schema).
-- Add `CollectionPageSchema` with `name="3D Printing Guides & Learning Center"`, the existing meta description, `url="https://filascope.com/learn"`, `numberOfItems={GUIDES.length}`.
-- Add `ItemListSchema` with the top 20 guides (by `publishedAt` date descending) as list items.
-
-**ColorFinder.tsx**
-- `BreadcrumbSchema` line 73: change `url: 'https://filascope.com/color-finder'` → `url: 'https://filascope.com/colors'`
-- `WebApplicationSchema` line 77: change `url="https://filascope.com/color-finder"` → `url="https://filascope.com/colors"`
-
-**Printers.tsx**
-- After the existing `ItemListSchema` (line 633), add `<CollectionPageSchema>` with name, description, URL, and `numberOfItems` from the printer count.
-
----
-
-### Schema Structure After Fix
-
-**Material pages** (e.g. `/filaments/pla`):
-```text
-BreadcrumbList     ← from <Breadcrumbs> component (single, correct)
-CollectionPage     ← NEW, wrapping ItemList as mainEntity
-```
-
-**Learn page** (`/learn`):
-```text
-BreadcrumbList     ← from <Breadcrumbs> component (was duplicate, now single)
-CollectionPage     ← NEW
-ItemList           ← NEW (top guides)
-```
-
-**Colors page** (`/colors`):
-```text
-BreadcrumbList     ← FIXED URL (was /color-finder, now /colors)
-WebApplication     ← FIXED URL (was /color-finder, now /colors)
-```
-
-**Deals page** (`/deals`):
-```text
-BreadcrumbList     ← Already correct ✅
-OfferCatalog       ← Already present ✅
-ItemList           ← Already present ✅
-```
-
-**Printers page** (`/printers`):
-```text
-BreadcrumbList         ← Already correct ✅
-CollectionPage         ← NEW
-ItemList               ← Already present ✅
-Product × 10           ← Already present (PrinterListProductSchema) ✅
-FAQPage                ← Already present ✅
-```
+| `src/pages/FilamentDetail.tsx` | ~3 lines added (useMemo) + ~6 lines updated in ProductJsonLd props |
+| `src/components/seo/ProductJsonLd.tsx` | Default prop values for `bestRating`/`worstRating` removed (cosmetic — values are now always passed explicitly) |
