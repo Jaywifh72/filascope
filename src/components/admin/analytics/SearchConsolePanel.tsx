@@ -191,6 +191,10 @@ export function SearchConsolePanel() {
   const [syncing, setSyncing] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("impressions");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  // Track whether a sync has succeeded in this session (covers the case where
+  // the service account is now authorised but GSC hasn't returned data yet for
+  // the requested date range — we still want to hide the "Action Required" banner)
+  const [syncedSuccessfully, setSyncedSuccessfully] = useState(false);
 
   // Check if we have any data
   const { data: hasData, isLoading: checkingData } = useQuery({
@@ -458,7 +462,14 @@ export function SearchConsolePanel() {
           toast.error(`Sync failed: ${json.error}`);
         }
       } else {
-        toast.success(`Synced ${json.synced} rows from ${json.date_range}`);
+        // Mark as successfully connected — even if 0 rows returned (GSC may not
+        // have data for very recent date ranges; the service account IS authorised)
+        setSyncedSuccessfully(true);
+        if (json.synced > 0) {
+          toast.success(`Synced ${json.synced} rows from ${json.date_range}`);
+        } else {
+          toast.info(`Connected! No data yet for ${json.date_range} — GSC data typically has a 2–3 day delay. Try syncing again tomorrow.`);
+        }
       }
     } catch (e) {
       toast.error(`Sync error: ${e instanceof Error ? e.message : String(e)}`);
@@ -508,10 +519,45 @@ export function SearchConsolePanel() {
 
   // ─── Not connected state ───────────────────────────────────────────────────
 
-  if (!hasData) {
+  if (!hasData && !syncedSuccessfully) {
     return (
       <div className="space-y-6">
         <SetupCard onSync={handleSync} syncing={syncing} />
+      </div>
+    );
+  }
+
+  // Synced successfully but no data yet (GSC data lag)
+  if (!hasData && syncedSuccessfully) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Search className="w-6 h-6 text-primary" />
+              <CardTitle>Google Search Console — Connected</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 flex gap-3">
+              <Star className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-medium text-sm text-primary">
+                  Service account authorised successfully!
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Google Search Console data typically has a <strong>2–3 day processing delay</strong>.
+                  No rows were returned for the most recent date range — this is normal for a new connection.
+                  Try syncing again tomorrow.
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" onClick={handleSync} disabled={syncing} className="gap-2">
+              <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Syncing…" : "Try Sync Again"}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
