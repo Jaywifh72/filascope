@@ -1,82 +1,87 @@
 
-## Fix: Hreflang Tags — Remove Non-English Locales & Correct Regional Mapping
+## IndexNow: Status Audit & Gap Fix
 
-### Problem Summary
+### What Already Exists (Do Not Re-implement)
 
-The current `HreflangTags.tsx` has three incorrect entries that can cause Google to distrust **all** hreflang signals site-wide:
+The IndexNow protocol is fully implemented on this project:
 
-| Current (wrong) | Issue |
-|---|---|
-| `hreflang="de" ?region=EU` | `de` = German language — but the page is English. Signal mismatch. |
-| `hreflang="ja" ?region=JP` | `ja` = Japanese language — same mismatch. |
-| `hreflang="zh" ?region=CN` | `zh` = Chinese language — same mismatch. |
-
-Google's hreflang spec requires the language tag to match the **actual language of the page content**, not the target market. Tagging English pages as German/Japanese/Chinese is a spec violation.
-
-### The Correct Set
-
-| hreflang | href | Why |
+| Component | Status | Location |
 |---|---|---|
-| `en-US` | `…?region=US` | English, US market |
-| `en-CA` | `…?region=CA` | English, Canada market |
-| `en-GB` | `…?region=UK` | English, UK market |
-| `en-AU` | `…?region=AU` | English, Australia market |
-| `en` | `…?region=EU` | Generic English for EU region (no en-EU code exists) |
-| `x-default` | `…` (no region param) | Fallback for all other visitors |
+| API key secret | Configured | `INDEXNOW_API_KEY` env secret |
+| Key verification file | Deployed | `public/a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt` |
+| `indexnow` edge function | Deployed | `supabase/functions/indexnow/index.ts` |
+| `indexnow-batch` edge function | Deployed | `supabase/functions/indexnow-batch/index.ts` |
+| `pingIndexNow()` client utility | Exists | `src/lib/indexnow.ts` |
+| `indexNowUrl` URL builders | Exists | `src/lib/indexnow.ts` |
+| `indexnow_submissions` log table | Exists | Database |
+| DB trigger on filament price change | Exists | `ping_indexnow_on_filament_price_change()` function |
+| DB trigger on new brand insert | Exists | `ping_indexnow_on_brand_insert()` function |
 
-JP and CN are dropped entirely — the site has no Japanese or Chinese content so hreflang signals for those regions provide no value and create noise.
+### The Real Gap: `pingIndexNow` is Never Called from the App
 
-### Technical Changes
+`pingIndexNow()` exists in `src/lib/indexnow.ts` but is **never imported or called** anywhere in `src/`. The DB triggers cover price changes and new brands, but the following events have no IndexNow ping:
 
-**File 1: `src/components/seo/HreflangTags.tsx`**
+| Event | Current Hook | Missing ping |
+|---|---|---|
+| New filament created | `useCreateFilament.ts → onSuccess` | No IndexNow call |
+| New printer created | `useCreatePrinter.ts → onSuccess` | No IndexNow call |
+| Filament metadata updated | `useProductMutations.ts → useUpdateFilament → onSuccess` | No IndexNow call |
+| Printer metadata updated | `useProductMutations.ts → useUpdatePrinter → onSuccess` | No IndexNow call |
 
-Replace the `REGIONAL_HREFLANGS` array:
+### Fix: Wire `pingIndexNow` into the Four Mutation Hooks
 
+**1. `src/hooks/useCreateFilament.ts`** — In `onSuccess`, after the toast, call:
 ```typescript
-// BEFORE (incorrect)
-const REGIONAL_HREFLANGS = [
-  { hreflang: 'en-US', regionParam: 'US' },
-  { hreflang: 'en-CA', regionParam: 'CA' },
-  { hreflang: 'en-GB', regionParam: 'UK' },
-  { hreflang: 'en-AU', regionParam: 'AU' },
-  { hreflang: 'de',    regionParam: 'EU' },  // ❌ wrong language code
-  { hreflang: 'ja',    regionParam: 'JP' },  // ❌ wrong language code
-  { hreflang: 'zh',    regionParam: 'CN' },  // ❌ wrong language code
-] as const;
+import { pingIndexNow, indexNowUrl } from '@/lib/indexnow';
 
-// AFTER (correct)
-const REGIONAL_HREFLANGS = [
-  { hreflang: 'en-US', regionParam: 'US' },
-  { hreflang: 'en-CA', regionParam: 'CA' },
-  { hreflang: 'en-GB', regionParam: 'UK' },
-  { hreflang: 'en-AU', regionParam: 'AU' },
-  { hreflang: 'en',    regionParam: 'EU' },  // ✅ generic English for EU
-  // JP and CN removed — no Japanese/Chinese content
-] as const;
+// inside onSuccess:
+if (result.product_handle || result.id) {
+  pingIndexNow(indexNowUrl.filament(result.product_handle || result.id));
+}
 ```
 
-No other logic changes needed — the `useEffect` that injects the `<link>` tags, the `x-default` entry, and the cleanup on route change all remain identical.
-
-**File 2: `src/components/admin/analytics/SeoHealthPanel.tsx`**
-
-Update the `HREFLANGS` display array to match the new set (so the admin SEO health panel shows the correct tags):
-
+**2. `src/hooks/useCreatePrinter.ts`** — In `onSuccess`, after the toast, call:
 ```typescript
-// BEFORE
-const HREFLANGS = ["en-US", "en-CA", "en-GB", "en-AU", "de", "ja", "zh", "x-default"];
+import { pingIndexNow, indexNowUrl } from '@/lib/indexnow';
 
-// AFTER
-const HREFLANGS = ["en-US", "en-CA", "en-GB", "en-AU", "en", "x-default"];
+// inside onSuccess:
+if (result.printer_id || result.id) {
+  pingIndexNow(indexNowUrl.printer(result.printer_id || result.id));
+}
 ```
 
-### What Stays the Same
+**3. `src/hooks/useProductMutations.ts → useUpdateFilament`** — In `onSuccess(result)`:
+```typescript
+import { pingIndexNow, indexNowUrl } from '@/lib/indexnow';
 
-- `HreflangTags` is already mounted globally in `App.tsx` → applies to every page automatically.
-- The `x-default` logic (pointing to the clean canonical path, no `?region=` param) is already correct.
-- The route exclusion list (`/admin`, `/settings`, `/auth`, `/maintenance`) is already correct.
-- The canonical URL stripping in `ProductSEO.tsx` is unaffected.
+// inside onSuccess:
+if (result.product_handle || result.id) {
+  pingIndexNow(indexNowUrl.filament(result.product_handle || result.id));
+}
+```
 
-### Files Changed
+**4. `src/hooks/useProductMutations.ts → useUpdatePrinter`** — In `onSuccess(result)`:
+```typescript
+import { pingIndexNow, indexNowUrl } from '@/lib/indexnow';
 
-1. `src/components/seo/HreflangTags.tsx` — update `REGIONAL_HREFLANGS` constant (5 entries instead of 7)
-2. `src/components/admin/analytics/SeoHealthPanel.tsx` — update `HREFLANGS` display array
+// inside onSuccess:
+if (result.printer_id || result.id) {
+  pingIndexNow(indexNowUrl.printer(result.printer_id || result.id));
+}
+```
+
+### What Does NOT Change
+
+- No new edge functions — `indexnow` already handles everything.
+- No new key file — `a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt` already exists at the root.
+- No new DB triggers — price-change and brand-insert triggers already exist.
+- No new secrets — `INDEXNOW_API_KEY` is already configured.
+- The `indexnow-batch` scheduled function covers the remaining content types (guides, static pages, materials, colors) through its full-site crawl.
+
+### Files to Change
+
+1. `src/hooks/useCreateFilament.ts` — add `pingIndexNow` call in `onSuccess`
+2. `src/hooks/useCreatePrinter.ts` — add `pingIndexNow` call in `onSuccess`
+3. `src/hooks/useProductMutations.ts` — add `pingIndexNow` call in both `useUpdateFilament` and `useUpdatePrinter` `onSuccess` handlers
+
+These are the only three files that need touching — 3–4 lines of change per file.
