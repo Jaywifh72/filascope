@@ -1,110 +1,197 @@
 
-## Audit Result — Most Is Already Implemented
+## Adding FAQPage JSON-LD to Material Category & Brand Pages
 
-After a thorough audit of `PrinterDetail.tsx` and `ProductJsonLd.tsx`, the Product JSON-LD and BreadcrumbList are **already emitted** on every printer detail page. What the user is requesting is substantially already present.
+### What's Already Working (No Changes Needed)
 
-### What Already Exists (No Changes Needed)
+- `/materials/pla`, `/materials/petg`, etc. — `MaterialHub.tsx` already emits a rich `FAQPage` JSON-LD with 6-8 material-specific questions via `getMaterialFAQs()` + renders a visible accordion via `<FAQSection>`.
+- `/filament/:slug` — `FilamentFAQSchema` emits per-product FAQPage JSON-LD.
+- `/brands/bambu-lab` — `BrandFAQSection` emits `FAQPage` JSON-LD + visible accordion, but answers are largely generic with no live DB data.
 
-- `<ProductJsonLd>` at line 671 emits a complete `Product` schema with:
-  - `name`, `description`, `image`, `brand`, `sku`, `mpn`, `url` (slug-based canonical)
-  - `category` → resolves to `"3D Printer - {technology}"` (e.g., `"3D Printer - FDM"`)
-  - `additionalProperty` array covering Build Volume, Max Print Speed, Enclosure, Wi-Fi, Multi-Material, Extruder Type, Drive Type, Auto Bed Leveling, Input Shaping, Compatible Materials, and physical dimensions
-  - `offers` (single Offer with USD price, availability, shipping details, return policy)
-  - `aggregateRating` from `printer.rating_community_overall` (community reviews)
-  - Machine dimensions (`width`, `depth`, `height`, `weight`)
-- `<DetailBreadcrumb>` at line 729 emits BreadcrumbList JSON-LD: **Home > Printers > [Brand] > [Printer Name]**
+### The Two Real Gaps
 
-### The Two Real Gaps to Fix
+**Gap 1 — `/filaments/pla` material listing pages have NO FAQPage JSON-LD**
 
-**Gap 1 — Single `Offer` instead of `AggregateOffer` with regional pricing**
+`FilamentCategoryPage.tsx` (the `/filaments/pla` route) emits a `CollectionPage` + `ItemList` JSON-LD but no `FAQPage`. The `CATEGORY_META` record already has per-material intro text, and the page already fetches `materialCount`. It needs:
+- A DB query to fetch `avgPrice`, `brandCount`, and `topBrands` for the material
+- A `generateMaterialCategoryFAQs()` function producing 5-6 dynamic questions per material slug
+- A `<FAQSchema>` injection + a visible `<FAQSection>` accordion below the product grid
 
-The printer record has multi-regional prices stored directly in columns (`current_price_usd_store`, `current_price_cad_store`, `current_price_eur_store`, `current_price_gbp_store`, `current_price_aud_store`, `current_price_jpy_store`) and also MSRP variants. These are not assembled into `regionalOffers`, so `ProductJsonLd` emits a single `Offer` with just the USD price instead of an `AggregateOffer` with `lowPrice`/`highPrice`.
+**Gap 2 — `/brands/bambu-lab` FAQ answers are mostly hardcoded boilerplate**
 
-The filament page does this correctly by passing `detailPricing.allCandidates` into `regionalOffers`. The printer page needs equivalent logic.
+`BrandFAQSection` gets `brandName`, `productCount`, `materials`, `isVerified`, `isPremium`, `isBudgetFriendly`. But the parent `BrandDetail.tsx` already has live data that isn't passed down:
+- `filaments[]` — can derive avg price, regional price columns (`price_cad`, `price_eur`, `price_gbp`), and retailer domains from `product_url`
+- `automatedBrand` — has `website`, `display_name`, price coverage info
+- These should be derived and passed as props to get answers like: actual price range, which regions have prices, which retailer domains are linked
 
-**Gap 2 — No FilaScore fallback for `aggregateRating`**
-
-The printer page passes `ratingValue={printer.rating_community_overall}` directly. For printers with no community reviews (where `rating_community_overall` is null), `aggregateRating` is suppressed entirely. The filament page has a `filaScoreRating5` fallback that scales the internal score. Printers don't have a `filascope_score` column, but they do have `printer.rating_community_overall` — this is the correct primary source. If null, the schema correctly omits `aggregateRating` (the right behavior for printers since there's no internal scoring equivalent).
-
-**Only Gap 1 needs fixing.** Gap 2 is acceptable behavior — printers without community reviews should not emit a fabricated rating.
+### Implementation Plan
 
 ---
 
-## Implementation Plan
+#### Change 1 — `FilamentCategoryPage.tsx`
 
-### File Changed: `src/pages/PrinterDetail.tsx`
-
-**Change: Build `printerRegionalOffers` from known regional price columns and pass to `ProductJsonLd`**
-
-After the `unifiedPricing` hook call (around line 207), add a `useMemo` that assembles the regional offers array from the printer's stored price columns. This mirrors the pattern from `FilamentDetail.tsx`.
+**Add a `useQuery` for material stats** (avg price, brand count, top brand names):
 
 ```typescript
-// Build regional offers from printer's stored regional prices for AggregateOffer JSON-LD
-const printerRegionalOffers = useMemo(() => {
-  if (!printer) return undefined;
-
-  const offers: Array<{
-    region: 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP';
-    price: number;
-    currency: 'USD' | 'CAD' | 'EUR' | 'GBP' | 'AUD' | 'JPY';
-    url?: string;
-    availability: boolean;
-  }> = [];
-
-  const storeUrl = printer.official_store_url || undefined;
-  const available = !isDiscontinued;  // ← defined later, so use !(printer.discontinued === true)
-
-  if (printer.current_price_usd_store && printer.current_price_usd_store > 0)
-    offers.push({ region: 'US', price: printer.current_price_usd_store, currency: 'USD', url: storeUrl, availability: available });
-  if ((printer as any).current_price_cad_store && (printer as any).current_price_cad_store > 0)
-    offers.push({ region: 'CA', price: (printer as any).current_price_cad_store, currency: 'CAD', url: storeUrl, availability: available });
-  if ((printer as any).current_price_eur_store && (printer as any).current_price_eur_store > 0)
-    offers.push({ region: 'EU', price: (printer as any).current_price_eur_store, currency: 'EUR', url: storeUrl, availability: available });
-  if ((printer as any).current_price_gbp_store && (printer as any).current_price_gbp_store > 0)
-    offers.push({ region: 'UK', price: (printer as any).current_price_gbp_store, currency: 'GBP', url: storeUrl, availability: available });
-  if ((printer as any).current_price_aud_store && (printer as any).current_price_aud_store > 0)
-    offers.push({ region: 'AU', price: (printer as any).current_price_aud_store, currency: 'AUD', url: storeUrl, availability: available });
-  if ((printer as any).current_price_jpy_store && (printer as any).current_price_jpy_store > 0)
-    offers.push({ region: 'JP', price: (printer as any).current_price_jpy_store, currency: 'JPY', url: storeUrl, availability: available });
-
-  return offers.length >= 2 ? offers : undefined; // Only emit AggregateOffer if 2+ prices exist
-}, [printer]);
+const { data: materialStats } = useQuery({
+  queryKey: ["filament-category-stats", slug],
+  enabled: !!slug && !!config,
+  queryFn: async () => {
+    const { data } = await (supabase as any)
+      .from("filaments")
+      .select("vendor, variant_price")
+      .in("material", config!.materials)
+      .not("variant_price", "is", null)
+      .limit(500);
+    if (!data) return null;
+    const prices = (data as any[]).map((d: any) => d.variant_price).filter(Boolean) as number[];
+    const brandCounts: Record<string, number> = {};
+    for (const row of data as any[]) {
+      if (row.vendor) brandCounts[row.vendor] = (brandCounts[row.vendor] || 0) + 1;
+    }
+    const topBrands = Object.entries(brandCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([v]) => v);
+    return {
+      avgPrice: prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : null,
+      minPrice: prices.length ? Math.min(...prices) : null,
+      maxPrice: prices.length ? Math.max(...prices) : null,
+      topBrands,
+    };
+  },
+  staleTime: 1000 * 60 * 10,
+});
 ```
 
-Note: `isDiscontinued` is computed at line 626, which is inside the render path after the early returns. The `useMemo` needs to be placed before the early returns use it, or replicate the logic inline as `printer?.discontinued === true`. The memo will be placed in the pre-return section (before line 540, where the loading/not-found early returns are) using `printer?.discontinued === true`.
+**Add a `generateMaterialCategoryFAQs()` function** producing 5-6 questions:
 
-Then update the `<ProductJsonLd>` call to add:
+| Question | Answer Source |
+|---|---|
+| "What is {Material} filament?" | Pull from `CATEGORY_META[slug].introTemplate` (already present) |
+| "What temperature does {Material} print at?" | Material-specific nozzle/bed ranges hardcoded per slug (mirroring `MaterialHub.tsx` data) |
+| "Is {Material} good for beginners?" | Derived: PLA/PLA+/Silk PLA → Yes; TPU/Nylon/PC/ABS/ASA → No/Intermediate |
+| "How much does {Material} filament cost?" | `materialStats.minPrice`–`materialStats.maxPrice` from DB |
+| "Does {Material} need an enclosure?" | Per-material flag (ABS/ASA/Nylon/PC → Yes; PLA/PETG/TPU → No) |
+| "What brands make {Material} filament?" | `materialStats.topBrands.join(', ')` from DB |
+
+**Add `<FAQSchema>` and `<FAQSection>`** below the product grid (above `RelatedSearchesSection`):
+
 ```tsx
-regionalOffers={printerRegionalOffers}
+{slug && materialFaqs.length > 0 && (
+  <FAQSection faqs={materialFaqs} title={`${label} Filament FAQ`} />
+)}
 ```
 
-This will cause `ProductJsonLd` to emit an `AggregateOffer` with:
-```json
-{
-  "@type": "AggregateOffer",
-  "priceCurrency": "USD",
-  "lowPrice": "299.00",
-  "highPrice": "999.00",
-  "offerCount": 4,
-  "availability": "https://schema.org/InStock",
-  "offers": [...]
+`FAQSchema` is already imported via `FAQSection`. No new schema injection needed — `FAQSection` calls it internally.
+
+**Imports to add**: `FAQSection` from `@/components/seo`.
+
+---
+
+#### Change 2 — `BrandFAQSection.tsx` — Upgrade Props + Answers
+
+**Extend the props interface** to accept richer data:
+
+```typescript
+interface BrandFAQSectionProps {
+  brandName: string;
+  productCount: number;
+  materials: string[];
+  avgPrice?: string;        // existing
+  // NEW:
+  priceRange?: { min: number; max: number } | null;
+  topRetailers?: string[];  // e.g. ["Official Store", "Amazon"]
+  regionsCovered?: string[]; // e.g. ["US", "CA", "EU", "UK"]
+  isVerified?: boolean;
+  isPremium?: boolean;
+  isBudgetFriendly?: boolean;
 }
 ```
 
-**Note on `priceCurrency` in `AggregateOffer`:** `ProductJsonLd` sets `priceCurrency` to the user's active regional currency. The individual child `Offer` objects each carry their own `priceCurrency` matching the regional currency. This is the same pattern already working on filament pages.
+**Upgrade the four existing FAQ answers** to be data-driven:
+1. **Quality FAQ** — unchanged (already has premium/budget branching)
+2. **Where to buy** — use `topRetailers` list if available; otherwise fall back to current text
+3. **Materials FAQ** — unchanged (already lists materials)
+4. **Price FAQ** — use `priceRange` to show `$X.XX–$Y.YY per kg` instead of a vague `avgPrice` string
+5. **ADD: Regional shipping FAQ** — if `regionsCovered.length > 1`: "Does {Brand} ship internationally? → {Brand} products are available in {regions.join(', ')}. FilaScope tracks regional pricing and availability for all listed regions."
+
+**In `BrandDetail.tsx`**, derive and pass the new props:
+
+```tsx
+// Derive price range
+const brandPriceRange = useMemo(() => {
+  if (!filaments || filaments.length === 0) return null;
+  const prices = filaments.map(f => f.variant_price).filter((p): p is number => p !== null && p > 0);
+  if (prices.length === 0) return null;
+  return { min: Math.min(...prices), max: Math.max(...prices) };
+}, [filaments]);
+
+// Derive top retailer domain names from product URLs
+const topRetailers = useMemo(() => {
+  if (!filaments) return [];
+  const domainCounts: Record<string, number> = {};
+  for (const f of filaments) {
+    if (!f.product_url) continue;
+    try {
+      const domain = new URL(f.product_url).hostname.replace(/^www\./, '');
+      domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+    } catch {}
+  }
+  return Object.entries(domainCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([domain]) => {
+      if (domain.includes('amazon')) return 'Amazon';
+      // Capitalize brand's own domain into "Official Store"
+      if (domain.includes(brandSlug.replace(/-/g, ''))) return 'Official Store';
+      return domain.replace(/\.(com|net|org|store|shop).*$/, '').replace(/-/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+    });
+}, [filaments, brandSlug]);
+
+// Derive which regions have price data
+const regionsCovered = useMemo(() => {
+  if (!filaments) return ['US'];
+  const regions: string[] = [];
+  if (filaments.some(f => f.variant_price && f.variant_price > 0)) regions.push('US');
+  if (filaments.some(f => (f as any).price_cad && (f as any).price_cad > 0)) regions.push('CA');
+  if (filaments.some(f => (f as any).price_eur && (f as any).price_eur > 0)) regions.push('EU');
+  if (filaments.some(f => (f as any).price_gbp && (f as any).price_gbp > 0)) regions.push('UK');
+  if (filaments.some(f => (f as any).price_aud && (f as any).price_aud > 0)) regions.push('AU');
+  if (filaments.some(f => (f as any).price_jpy && (f as any).price_jpy > 0)) regions.push('JP');
+  return regions;
+}, [filaments]);
+```
+
+Update the `<BrandFAQSection>` call in `BrandDetail.tsx`:
+
+```tsx
+<BrandFAQSection
+  brandName={displayName}
+  productCount={filaments?.length ?? 0}
+  materials={availableMaterials}
+  priceRange={brandPriceRange}
+  topRetailers={topRetailers}
+  regionsCovered={regionsCovered}
+  isVerified={automatedBrand?.is_visible ?? false}
+  isPremium={isPremium}
+  isBudgetFriendly={isBudgetFriendly}
+/>
+```
 
 ---
 
-## Summary of Changes
+### Files Changed
 
-| File | Change | Lines |
-|---|---|---|
-| `src/pages/PrinterDetail.tsx` | Add `printerRegionalOffers` useMemo | After line ~224 (post `useUnifiedRegionalPricing`) |
-| `src/pages/PrinterDetail.tsx` | Pass `regionalOffers={printerRegionalOffers}` to `<ProductJsonLd>` | Line ~725 |
+| File | Change |
+|---|---|
+| `src/pages/FilamentCategoryPage.tsx` | Add `materialStats` query, `generateMaterialCategoryFAQs()`, `FAQSection` import + render |
+| `src/components/brands/BrandFAQSection.tsx` | Extend props, upgrade FAQ generators to use live price range, retailers, regions |
+| `src/pages/BrandDetail.tsx` | Add `brandPriceRange`, `topRetailers`, `regionsCovered` memos; pass to `BrandFAQSection` |
 
-No changes needed to:
-- `ProductJsonLd.tsx` — interface already has `regionalOffers`, `AggregateOffer` logic already handles it
-- `DetailBreadcrumb` — BreadcrumbList JSON-LD already correct
-- Any SEO component — all existing
+### Expected Outcome
 
-The result will be: Google's Rich Results Test will show `Product` schema with `AggregateOffer` (price range) for printers that have multi-regional pricing data, enabling price range snippets in SERPs.
+After this change:
+- All `/filaments/pla`, `/filaments/petg`, etc. pages emit a `FAQPage` JSON-LD with 5-6 dynamic questions driven by live DB price/brand data
+- All `/brands/bambu-lab`, `/brands/polymaker`, etc. pages emit a `FAQPage` JSON-LD where answers include actual price ranges (`$18–$32/kg`), actual retailer names (from `product_url` domains), and regions with pricing coverage (`US, CA, EU, UK`)
+- Both add visible FAQ accordions matching the JSON-LD content, satisfying Google's requirement that schema content must be visible on the page
