@@ -71,6 +71,18 @@ const RELATED_PROSE: Record<string, { intro: string; links: { label: string; slu
     intro: "Looking for lighter or more flexible options?",
     links: [{ label: "PETG", slug: "petg" }, { label: "PLA", slug: "pla" }, { label: "Nylon", slug: "nylon" }],
   },
+  wood: {
+    intro: "Want standard PLA or specialty finishes?",
+    links: [{ label: "PLA", slug: "pla" }, { label: "Silk PLA", slug: "silk-pla" }, { label: "PLA+", slug: "pla-plus" }],
+  },
+  "carbon-fiber": {
+    intro: "Need a softer or easier base material?",
+    links: [{ label: "PETG", slug: "petg" }, { label: "Nylon", slug: "nylon" }, { label: "PLA+", slug: "pla-plus" }],
+  },
+  "glow-in-the-dark": {
+    intro: "Interested in other specialty finishes?",
+    links: [{ label: "Silk PLA", slug: "silk-pla" }, { label: "PLA", slug: "pla" }],
+  },
 };
 
 const CATEGORY_META: Record<string, CategoryMeta> = {
@@ -139,6 +151,24 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
     descTemplate: "Compare {count}+ PETG-CF carbon fiber 3D printer filaments. Stiff, lightweight, and strong. Filter by brand, price, and printer compatibility on FilaScope.",
     h1: "PETG Carbon Fiber Filaments",
     introTemplate: "PETG-CF (Carbon Fiber reinforced PETG) combines PETG's chemical resistance and printability with dramatically increased stiffness from short-strand carbon fibers — ideal for lightweight structural parts, brackets, and drone frames. It requires a hardened steel nozzle (0.4mm+) to prevent wear. Compare {count}+ PETG-CF filaments with specs, pricing, and compatibility data.",
+  },
+  wood: {
+    titleTemplate: "Wood PLA Filaments — Realistic Texture & Finish | FilaScope",
+    descTemplate: "Compare {count}+ Wood PLA 3D printer filaments. Achieve realistic wood texture and grain. Sand, stain, and paint like real wood. Find the best wood filament brand.",
+    h1: "Wood PLA Filaments",
+    introTemplate: "Wood PLA filaments blend standard PLA with 10–30% real wood particles — sawdust, bamboo, or cork — to produce prints with an authentic wooden texture and grain that can be sanded, stained, and even painted like real wood. They print at standard PLA temperatures (190–220°C) but require a larger nozzle (0.5mm+) to prevent clogging from the fiber content. Higher nozzle temperatures produce a darker, more 'burnt wood' appearance while cooler temps give a lighter finish. Wood PLA is popular for cosplay props, architectural models, decorative sculptures, furniture models, and any print where a natural organic look is desired. Compare {count}+ wood filament options below, with brand specs and pricing.",
+  },
+  "carbon-fiber": {
+    titleTemplate: "Carbon Fiber Filaments — Lightweight & Stiff | FilaScope",
+    descTemplate: "Compare {count}+ carbon fiber 3D printer filaments. CF-reinforced PLA, PETG, Nylon, and ABS for lightweight, rigid structural parts. Requires hardened nozzle.",
+    h1: "Carbon Fiber 3D Printing Filaments",
+    introTemplate: "Carbon fiber filaments combine a standard base polymer (PLA, PETG, Nylon, or ABS) with short-strand carbon fiber reinforcement, dramatically increasing stiffness and reducing weight compared to unreinforced plastics. The result is a material with an excellent strength-to-weight ratio — ideal for drone frames, RC car parts, robotic arms, structural brackets, and functional engineering components. Carbon fiber filaments are highly abrasive and will rapidly wear standard brass nozzles; a hardened steel, ruby-tipped, or tungsten carbide nozzle is essential. Print temperatures vary by base material (230–270°C) and the carbon fibers reduce stringing significantly. Compare {count}+ carbon fiber filaments from top brands below.",
+  },
+  "glow-in-the-dark": {
+    titleTemplate: "Glow in the Dark Filaments — Photoluminescent PLA | FilaScope",
+    descTemplate: "Compare {count}+ glow in the dark 3D printer filaments. Photoluminescent PLA that charges under light and glows for 6–12 hours. Easy to print, same settings as PLA.",
+    h1: "Glow in the Dark 3D Printer Filaments",
+    introTemplate: "Glow in the dark filaments use strontium aluminate phosphor particles embedded in a PLA base, creating prints that charge under natural or artificial light and emit a vivid glow for 6–12 hours in the dark. They print at standard PLA temperatures (190–220°C) making them beginner-friendly, and the thicker your walls and layers, the more phosphor material stores energy and the brighter and longer your glow. Popular for safety markers, cosplay costumes, night-stand accessories, gaming accessories, and Halloween decorations. Green glows are the brightest and most common; blue and purple variants have a shorter glow duration. Compare {count}+ glow filament options with brand, price, and color data.",
   },
 };
 
@@ -337,6 +367,24 @@ const MATERIAL_KNOWLEDGE: Record<string, MaterialKnowledge> = {
     beginner: false, enclosure: false,
     beginnerReason: "PETG-CF requires a hardened steel nozzle and careful settings. Not recommended for beginners.",
     enclosureReason: "An enclosure is not strictly required for PETG-CF, but it helps with print consistency.",
+  },
+  wood: {
+    nozzle: "190–220°C", bed: "25–60°C",
+    beginner: false, enclosure: false,
+    beginnerReason: "Wood PLA prints at standard PLA temperatures but requires a larger nozzle (0.5mm+) to prevent clogging from wood particles. Intermediate skill recommended.",
+    enclosureReason: "No enclosure is needed for Wood PLA. It prints on open-frame machines just like standard PLA.",
+  },
+  "carbon-fiber": {
+    nozzle: "230–270°C (varies by base material)", bed: "60–100°C",
+    beginner: false, enclosure: false,
+    beginnerReason: "Carbon fiber filaments are not recommended for beginners. They require a hardened steel nozzle and specific settings depending on the base material (PLA-CF vs PETG-CF vs Nylon-CF).",
+    enclosureReason: "Enclosure requirements vary by base material — ABS-CF and Nylon-CF benefit from an enclosure; PLA-CF and PETG-CF do not require one.",
+  },
+  "glow-in-the-dark": {
+    nozzle: "190–220°C", bed: "25–60°C",
+    beginner: true, enclosure: false,
+    beginnerReason: "Glow in the dark PLA uses the same print settings as standard PLA, making it beginner-friendly. Just print slightly cooler for lighter glow or warmer for a darker, 'charred' appearance.",
+    enclosureReason: "No enclosure is needed. Glow in the dark filaments behave like standard PLA and print on open-frame machines.",
   },
 };
 

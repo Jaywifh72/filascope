@@ -174,6 +174,10 @@ const ColorFamilyPage = lazy(() => import("./pages/ColorFamilyPage"));
 const BestFilamentsForBeginners = lazy(() => import("./pages/BestFilamentsForBeginners"));
 const FilamentTemperatureGuide = lazy(() => import("./pages/FilamentTemperatureGuide"));
 const FilamentStorageGuide = lazy(() => import("./pages/FilamentStorageGuide"));
+const BestFilament = lazy(() => import("./pages/BestFilament"));
+const CheapestFilament = lazy(() => import("./pages/CheapestFilament"));
+const FilamentTypes = lazy(() => import("./pages/FilamentTypes"));
+const FilamentPrinterCompatibility = lazy(() => import("./pages/FilamentPrinterCompatibility"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 import { AuthProvider } from "./contexts/AuthContext";

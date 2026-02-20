@@ -143,6 +143,37 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     colorSlugs: ["black", "dark-grey"],
     guides: [],
   },
+  wood: {
+    label: "Wood PLA",
+    materials: ["Wood PLA", "Wood Fill", "Wood Filled PLA", "PLA-Wood", "Woodfill", "Wood Filament"],
+    ilike: "%wood%",
+    relatedSlugs: ["pla", "silk-pla", "pla-plus"],
+    relatedMaterials: ["PLA", "Silk PLA", "PLA+"],
+    colorSlugs: [],
+    guides: [
+      { label: "Best Wood PLA Filaments", href: "/guides/best-wood-pla-filaments" },
+    ],
+  },
+  "carbon-fiber": {
+    label: "Carbon Fiber",
+    materials: ["PLA-CF", "PETG-CF", "ABS-CF", "ASA-CF", "PA-CF", "Nylon-CF", "Carbon Fiber PLA", "Carbon Fiber PETG", "Carbon Fiber Nylon", "Carbon Fiber ABS"],
+    ilike: "%carbon%",
+    relatedSlugs: ["petg-cf", "nylon", "petg", "abs"],
+    relatedMaterials: ["PETG-CF", "Nylon", "PETG", "ABS"],
+    colorSlugs: ["black"],
+    guides: [
+      { label: "Best Carbon Fiber Filaments", href: "/guides/best-carbon-fiber-filaments" },
+    ],
+  },
+  "glow-in-the-dark": {
+    label: "Glow in the Dark",
+    materials: ["Glow in the Dark PLA", "Glow PLA", "Photoluminescent PLA", "Glow in Dark"],
+    ilike: "%glow%",
+    relatedSlugs: ["silk-pla", "pla", "pla-plus"],
+    relatedMaterials: ["Silk PLA", "PLA", "PLA+"],
+    colorSlugs: ["green", "blue", "yellow"],
+    guides: [],
+  },
 };
 
 // ──────────────────────────────────────────────────────────────

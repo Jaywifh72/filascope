@@ -158,8 +158,8 @@ export default function BestFilamentsForHueForge() {
   return (
     <div className="min-h-screen bg-background">
       <DocumentHead
-        title="Best Filaments for HueForge 2026 — TD-Ranked | FilaScope"
-        description="Find the best filaments for HueForge lithophanes. TD-ranked picks across PLA, silk, and translucent materials. Compare TD values, prices & buy links."
+        title="Best Filament for HueForge 2026 — TD-Ranked Picks | FilaScope"
+        description="Find the best HueForge filament for lithophanes and color mixing. TD-ranked picks for PLA, silk, and translucent filaments. Compare TD values, prices & buy links."
         ogType="article"
       />
       <BreadcrumbSchema items={breadcrumbs} />
