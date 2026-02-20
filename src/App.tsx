@@ -368,6 +368,12 @@ const App = () => (
                   <Route path="/guides/best-filament-for-beginners-2025" element={<Navigate to="/best-filaments-for-beginners" replace />} />
                   <Route path="/guides/beginners-guide" element={<Navigate to="/best-filaments-for-beginners" replace />} />
                   <Route path="/guides/hueforge-filaments" element={<Navigate to="/best-filaments-for-hueforge" replace />} />
+                  {/* Clean comparison URL redirects */}
+                  <Route path="/petg-vs-abs" element={<Navigate to="/materials/compare?a=petg&b=abs" replace />} />
+                  <Route path="/pla-vs-abs" element={<Navigate to="/materials/compare?a=pla&b=abs" replace />} />
+                  <Route path="/asa-vs-abs" element={<Navigate to="/materials/compare?a=asa&b=abs" replace />} />
+                  <Route path="/tpu-vs-pla" element={<Navigate to="/materials/compare?a=tpu&b=pla" replace />} />
+                  <Route path="/nylon-vs-petg" element={<Navigate to="/materials/compare?a=nylon&b=petg" replace />} />
                   {/* Sitemap routes — _redirects 302s aren't honoured on Lovable hosting, so redirect here */}
                   <Route path="/sitemap.xml"           element={<SitemapRedirect path="/sitemap.xml" />} />
                   <Route path="/sitemap-pages.xml"     element={<SitemapRedirect path="/sitemap-pages.xml" />} />
