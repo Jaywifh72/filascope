@@ -16,8 +16,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const ROBOTS_TXT = `# FilaScope robots.txt — AI & Search Engine Crawler Policy
-# Updated: 2026-02-20
+const ROBOTS_TXT = `# FilaScope robots.txt — AI-optimized — Updated 2026-02-20
 
 User-agent: *
 Allow: /
@@ -26,11 +25,23 @@ Disallow: /auth/
 Disallow: /admin/
 Disallow: /_/
 
-# Sitemaps
 Sitemap: https://filascope.com/sitemap.xml
 
-# AI Crawlers - Explicitly Allowed
+# Search Engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# AI Answer Engines
 User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: ChatGPT-User
@@ -45,16 +56,20 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: Applebot-Extended
+User-agent: YouBot
 Allow: /
 
 User-agent: Google-Extended
 Allow: /
 
-User-agent: Bytespider
+User-agent: Applebot-Extended
 Allow: /
 
+# AI Training Crawlers
 User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
 Allow: /
 
 User-agent: Amazonbot
@@ -66,13 +81,14 @@ Allow: /
 User-agent: Diffbot
 Allow: /
 
+# Social Media Crawlers
 User-agent: FacebookExternalHit
 Allow: /
 
-User-agent: YouBot
+User-agent: Meta-ExternalAgent
 Allow: /
 
-# Crawl-delay for AI bots (be polite)
+# Crawl-delay for high-volume AI bots
 User-agent: GPTBot
 Crawl-delay: 2
 
