@@ -18,3 +18,6 @@ Disallow: /maintenance
 Disallow: /embed/
 
 Sitemap: https://filascope.com/sitemap.xml
+
+# IndexNow — instant Bing/Yandex notification on content changes
+# Key: a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c
