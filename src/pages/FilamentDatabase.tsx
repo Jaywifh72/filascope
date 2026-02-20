@@ -30,12 +30,12 @@ const FAQS = [
 ];
 
 const MATERIALS = [
-  { name: 'PLA', desc: 'Easy to print, biodegradable', count: null, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-  { name: 'PETG', desc: 'Durable, food-safe options', count: null, color: 'bg-green-500/20 text-green-400 border-green-500/30' },
-  { name: 'ABS', desc: 'Heat resistant, strong', count: null, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
-  { name: 'TPU', desc: 'Flexible, rubber-like', count: null, color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
-  { name: 'ASA', desc: 'UV resistant, outdoor use', count: null, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-  { name: 'Nylon', desc: 'Strong, engineering grade', count: null, color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+  { name: 'PLA', slug: 'pla', desc: 'Easy to print, biodegradable', count: null, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+  { name: 'PETG', slug: 'petg', desc: 'Durable, food-safe options', count: null, color: 'bg-green-500/20 text-green-400 border-green-500/30' },
+  { name: 'ABS', slug: 'abs', desc: 'Heat resistant, strong', count: null, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+  { name: 'TPU', slug: 'tpu', desc: 'Flexible, rubber-like', count: null, color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
+  { name: 'ASA', slug: 'asa', desc: 'UV resistant, outdoor use', count: null, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+  { name: 'Nylon', slug: 'nylon', desc: 'Strong, engineering grade', count: null, color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
 ];
 
 const FEATURED_LINKS = [
@@ -177,7 +177,7 @@ export default function FilamentDatabase() {
             {MATERIALS.map(mat => (
               <Link
                 key={mat.name}
-                to={`/?material=${mat.name}`}
+                to={`/filaments/${mat.slug}`}
                 className="rounded-lg border border-border bg-card p-4 hover:border-primary transition-colors"
               >
                 <div className="flex items-center justify-between mb-1">
