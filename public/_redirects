@@ -1,6 +1,7 @@
-# Static SEO files — explicit redirects BEFORE the SPA catch-all
-# These must come first so the CDN intercepts them before /* /index.html kicks in
-/robots.txt                              https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/robots.txt                   302
+# Static SEO files — explicit rewrites BEFORE the SPA catch-all
+# 200 = transparent proxy rewrite (content served inline, URL stays the same)
+# Must come before /* /index.html 200
+/robots.txt                              https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/robots.txt                   200
 /llms.txt                                https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms                      302
 /a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key              302
 
