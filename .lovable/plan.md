@@ -1,146 +1,140 @@
 
-## Audit Summary
+## Analytics Dashboard — What Exists vs. What Needs Building
 
-`ProductJsonLd` already emits `aggregateRating` — but only when `communityReviewStats` has real user reviews. Since the community review system is new and most products have zero reviews, `ratingValue` and `ratingCount` are both `null` on every filament page, so no `aggregateRating` block is ever injected into the Product schema.
+### Current State (Already Implemented)
+The dashboard at `/admin/analytics` already has **7 tabs** with substantial functionality:
 
-The request is to use **FilaScore** as the rating signal for `aggregateRating` so Google can show star snippets now, while real community reviews take precedence when they exist.
-
----
-
-## Root Cause
-
-In `FilamentDetail.tsx` (lines 894–898):
-```typescript
-ratingValue={communityReviewStats?.avgRating ?? null}   // null if no reviews
-ratingCount={communityReviewStats?.reviewCount ?? null}  // null if no reviews
-bestRating={5}
-worstRating={1}
-```
-
-`ProductJsonLd` only emits `aggregateRating` when both `ratingValue != null` AND `ratingCount != null` AND `ratingCount > 0`. With zero community reviews, all three conditions fail → no schema block emitted.
-
----
-
-## Plan
-
-### Priority: community reviews > FilaScore fallback
-
-When community reviews exist → use them (scale 1–5, current behavior).
-When no community reviews → fall back to FilaScore (scale 0–10).
-
-`dataPointCount` from `calculateUnifiedScore` is the correct `ratingCount` proxy — it counts the number of distinct data signals (filled specs, pricing regions, TDS records, brand verification etc.) that produced the score. This is an honest representation of how many data points backed the rating.
-
----
-
-## Files to Change
-
-| File | Change |
+| Tab | Status |
 |---|---|
-| `src/pages/FilamentDetail.tsx` | Call `calculateUnifiedScore` on `pricingFilament`, build fallback rating vars, pass them to `ProductJsonLd` |
-| `src/components/seo/ProductJsonLd.tsx` | Update `bestRating` default from `5` to `10` and `worstRating` from `1` to `0` to accommodate FilaScore's 0–10 scale; keep the existing guard (`ratingCount > 0`) |
+| **Affiliate Performance** | ✅ Full — KPIs, trend chart, brands, regions, stores, material type, top 20 products |
+| **Content Metrics** | ✅ Full — completeness KPIs, material breakdown, deals distribution, recently added |
+| **Search Insights** | ✅ Full — volume trend, funnel, top terms, zero-result table |
+| **Traffic (GA4)** | ✅ Exists — links to GA4 and Looker Studio embed; no native data pull |
+| **SEO Health** | ✅ Full — robots.txt check, page count, hreflang badges, external links |
+| **Content Gaps** | ✅ Full — zero-result terms, brand CTR, top source pages |
+| **Search Console** | ✅ Full — GSC API sync, KPIs, query table, opportunity flags |
+
+The request is for **4 new sections**: Traffic Overview, Affiliate Performance (extended), Content Insights, and SEO Health placeholders. Most of this maps onto existing tabs, but there are genuine gaps:
+
+**Actual gaps to fill:**
+1. **Traffic Overview tab** — zero native pageview data. `user_browse_history` has 161 product-page views and `module_engagement_metrics` has ~850 events, but no daily visitor count or top-10-pages-by-views table exists. The existing "Traffic (GA4)" tab only links to external GA4.
+2. **Clicks by source_type** — `affiliate_clicks` has `source_component` (sidebar_purchase, best_prices_section, product_card), not a `source_type` column. The existing AffiliatePanel doesn't show source_component breakdown.
+3. **Conversion funnel: Page Views → Product Views → Affiliate Clicks** — data exists in `user_browse_history` (product views) and `affiliate_clicks` (clicks) and `session_id` is the join key. The SearchPanel already shows search→click but not pageview→click.
+4. **Most viewed products without affiliate clicks** — this data CAN be computed (shown in my analysis: `user_browse_history LEFT JOIN affiliate_clicks ON product_slug`) but there's no UI panel for it.
+5. **Filter usage patterns** — `filter_analytics` table is empty; no filter tracking is firing yet.
+6. **Most compared products** — the `user_activity` table has comparison events but no panel shows this.
 
 ---
 
-## Detailed Changes
+### Plan
 
-### 1. `src/pages/FilamentDetail.tsx`
-
-Add an import for `calculateUnifiedScore` and `FilamentForScoring` (already used in `FilamentHeroSection` — just add it to the page-level import list).
-
-After `pricingFilament` is defined (line ~187), derive the FilaScore fallback:
-
-```typescript
-// FilaScore fallback for aggregateRating (used when no community reviews exist)
-const { score: filaScoreValue, dataPointCount: filaScoreDataPoints } = useMemo(
-  () => pricingFilament
-    ? calculateUnifiedScore(pricingFilament as FilamentForScoring)
-    : { score: null, dataPointCount: 0 },
-  [pricingFilament]
-);
-```
-
-Then update the `ProductJsonLd` props (lines 894–898) from:
-```typescript
-ratingValue={communityReviewStats?.avgRating ?? null}
-ratingCount={communityReviewStats?.reviewCount ?? null}
-bestRating={5}
-worstRating={1}
-```
-
-To:
-```typescript
-// Community reviews take priority; FilaScore is the fallback for star snippet eligibility
-ratingValue={
-  communityReviewStats && communityReviewStats.reviewCount > 0
-    ? communityReviewStats.avgRating
-    : filaScoreValue
-}
-ratingCount={
-  communityReviewStats && communityReviewStats.reviewCount > 0
-    ? communityReviewStats.reviewCount
-    : filaScoreValue != null ? filaScoreDataPoints : null
-}
-bestRating={
-  communityReviewStats && communityReviewStats.reviewCount > 0 ? 5 : 10
-}
-worstRating={
-  communityReviewStats && communityReviewStats.reviewCount > 0 ? 1 : 0
-}
-```
-
-### 2. `src/components/seo/ProductJsonLd.tsx`
-
-No logic change needed — the existing guard is correct:
-```typescript
-...(ratingValue != null && ratingCount != null && ratingCount > 0 && {
-  aggregateRating: { ... }
-})
-```
-
-However, the **default values** `bestRating = 5` and `worstRating = 1` in the destructured props need to be removed as defaults (since they're now passed explicitly from the call site). This avoids confusion. The actual values passed from `FilamentDetail.tsx` control the output.
+The request maps cleanly to **enhancing existing tabs + creating one new "Traffic Overview" tab**. Avoid creating a new page — enhance the existing `/admin/analytics` dashboard.
 
 ---
 
-## What the Schema Looks Like After the Fix
+### Changes By File
 
-For a typical filament with FilaScore 6.5 and 7 data points (no community reviews):
+#### 1. **New: `TrafficOverviewPanel.tsx`** (replaces the current `TrafficPanel.tsx` content)
+The current `TrafficPanel.tsx` is just links to GA4. Rebuild it as a real native data panel using internal tables, with GA4 links as a secondary section.
 
-```json
-"aggregateRating": {
-  "@type": "AggregateRating",
-  "ratingValue": "6.5",
-  "bestRating": "10",
-  "worstRating": "0",
-  "ratingCount": "7"
-}
+Data sources:
+- **Daily product views** — `user_browse_history` grouped by date (last 30 days), producing a "sessions with product views" area chart
+- **Top 10 pages** — `user_browse_history` JOIN `filaments/printers` to get product name + page URL, ranked by view count
+- **Region breakdown** — `affiliate_clicks.region_code` used as a proxy for visitor region (since we don't have a raw pageview+region table). This is the best available signal.
+- **KPI cards** — views today, this week, this month from `user_browse_history`
+
+The GA4 links section moves to a collapsible "External Tools" card at the bottom.
+
+#### 2. **Enhanced: `AffiliatePanel.tsx`** — add `source_component` breakdown
+Add a new chart section: **"Clicks by Source" (bar chart)** using `affiliate_clicks.source_component` values (sidebar_purchase, best_prices_section, product_card, sticky_buy_bar, etc.).
+
+Also add the **Conversion Funnel** card directly in the Affiliate tab:
+- Step 1: Total product page views (from `user_browse_history`, last 30 days)
+- Step 2: Unique sessions that clicked an affiliate link (from `affiliate_clicks`)
+- Step 3: Conversion rate = step 2 / step 1
+
+This is richer than the Search→Click funnel in SearchPanel because it uses actual product page views.
+
+#### 3. **Enhanced: `ContentGapsPanel.tsx`** — add "Most Viewed Without Clicks" table
+Add a new query that joins `user_browse_history` with `affiliate_clicks` on `filament_id`/`product_slug` to surface filaments with many views but zero affiliate clicks in the last 30 days. This becomes the "Most viewed products without affiliate clicks" table. Limit to top 15 results.
+
+Also add a **"Most Compared Products"** section that queries `user_activity` where `activity_type = 'comparison'`.
+
+#### 4. **Enhanced: `Analytics.tsx`** page — reorganize tabs
+Rename the "Traffic (GA4)" tab to "Traffic Overview" and reorder tabs so the dashboard reads left-to-right in priority order:
 ```
-
-For a filament that has 12 community reviews averaging 4.2 stars:
-
-```json
-"aggregateRating": {
-  "@type": "AggregateRating",
-  "ratingValue": "4.2",
-  "bestRating": "5",
-  "worstRating": "1",
-  "ratingCount": "12"
-}
+Traffic Overview | Affiliate Performance | Search Insights | Content Insights | SEO Health | Content Gaps | Search Console
 ```
 
 ---
 
-## Technical Notes
+### New `TrafficOverviewPanel.tsx` — Data Architecture
 
-- `calculateUnifiedScore` is already called in `FilamentHeroSection` which is a child of `FilamentDetail`. The page-level call adds a second invocation — this is fine since `pricingFilament` is a stable object reference and the `useMemo` will compute only once per render cycle. The computation is lightweight (pure arithmetic, no network calls).
-- `dataPointCount` from the score function ranges from 0 to ~12 depending on how many data signals exist. The guard `ratingCount > 0` in `ProductJsonLd` ensures nothing is emitted for unrated products where `score === null` (in which case `filaScoreValue` is `null` and the condition fails cleanly).
-- `PrinterDetail.tsx` already passes real community review counts (`printer.rating_community_overall`, `printer.review_count_aggregated`) so printer pages already have working `aggregateRating`. No change needed there.
-- Google's guidelines require `aggregateRating` to reflect a genuine rating. FilaScore is a transparent algorithmic score based on data completeness and is shown visibly on the product page (the FilaScore badge) — this satisfies the "must match on-page content" requirement.
+```text
+user_browse_history (161 rows and growing)
+  ├── GROUP BY DATE(viewed_at) → daily views area chart
+  ├── JOIN filaments ON filament_id → top pages table
+  ├── COUNT by session_id → unique sessions KPI
+  └── product_type breakdown → filament vs printer split
+
+affiliate_clicks (35 rows, region_code always set)
+  └── GROUP BY region_code → traffic by region pie chart
+      (used as proxy for visitor region until GA4 API is wired)
+```
+
+**KPI Cards:**
+- Views Today (user_browse_history WHERE viewed_at >= today)
+- Views This Week
+- Views This Month
+- Total Unique Sessions (COUNT DISTINCT session_id)
+
+**Charts:**
+- Area chart: Daily product page views (30 days)
+- Pie chart: Visits by region (from affiliate_clicks region_code)
+- Table: Top 10 most-viewed products (filament + printer)
 
 ---
 
-## Files Changed
+### Conversion Funnel (in AffiliatePanel)
 
-| File | Lines affected |
-|---|---|
-| `src/pages/FilamentDetail.tsx` | ~3 lines added (useMemo) + ~6 lines updated in ProductJsonLd props |
-| `src/components/seo/ProductJsonLd.tsx` | Default prop values for `bestRating`/`worstRating` removed (cosmetic — values are now always passed explicitly) |
+```text
+[Product Page Views] → [Affiliate Clicks] → [Conversion Rate]
+      161 views           35 clicks             21.7%
+```
+
+The join is `session_id` across `user_browse_history` and `affiliate_clicks`. Sessions that appear in both = converted. This gives a meaningful funnel metric that currently doesn't exist anywhere in the dashboard.
+
+---
+
+### "Most Viewed Without Clicks" — in ContentGapsPanel
+
+SQL logic (client-side aggregate):
+1. Fetch all `user_browse_history` rows for last 30 days with `filament_id`
+2. Fetch all `affiliate_clicks.product_id` (uuid) for last 30 days
+3. Anti-join: filaments that appear in browse history but NOT in clicks
+4. Sort by view count descending, take top 15
+
+This surfaces products where users are landing but not buying — potential issues with buy button placement, pricing, or missing affiliate links.
+
+---
+
+### Files to Create/Modify
+
+| File | Action | Description |
+|---|---|---|
+| `src/components/admin/analytics/TrafficOverviewPanel.tsx` | **Create** | New native traffic panel with KPIs, area chart, top pages, region pie |
+| `src/components/admin/analytics/AffiliatePanel.tsx` | **Enhance** | Add source_component bar chart + page view → click funnel card |
+| `src/components/admin/analytics/ContentGapsPanel.tsx` | **Enhance** | Add "most viewed without clicks" + "most compared" tables |
+| `src/pages/admin/Analytics.tsx` | **Update** | Import TrafficOverviewPanel, reorder tabs, rename Traffic tab |
+
+---
+
+### Technical Notes
+
+- **No new database tables or migrations needed** — all data exists
+- **No new edge functions needed** — all queries use direct Supabase client calls
+- `affiliate_clicks` doesn't have `source_type` — use `source_component` instead (sidebar_purchase, best_prices_section, product_card, sticky_buy_bar). The chart labels will be human-friendly.
+- `filter_analytics` is empty — skip the "filter usage patterns" section entirely; it would just show an empty state. Document this with a placeholder note.
+- The existing SearchPanel already has the search→click funnel. The new pageview→click funnel in AffiliatePanel is additive, not duplicative.
+- All charts reuse the existing Recharts components, matching the FilaScope dark theme HSL CSS variables pattern used throughout the existing panels.
+- The `region_code` proxy for traffic is honest — label the region pie as "Affiliate Click Regions" not "Visitor Regions" to avoid misleading data.
