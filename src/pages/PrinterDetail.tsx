@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,6 +102,9 @@ import { toBrandSlug } from "@/utils/brandSlug";
 
 const PrinterDetail = () => {
   const { id } = useParams();
+  const location = useLocation();
+  // Derive canonical slug from the actual browser URL (always slug-based after resolution)
+  const canonicalPrinterSlug = location.pathname.replace(/^\/printers\//, '') || id || '';
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
@@ -656,7 +659,7 @@ const PrinterDetail = () => {
       <ProductSEO
         title={seoTitle}
         description={seoDescription}
-        canonicalUrl={`/printers/${printer.printer_id || id}`}
+        canonicalUrl={`/printers/${canonicalPrinterSlug}`}
         image={seoImage}
         brand={printerBrand}
         price={displayPrice}
@@ -671,7 +674,7 @@ const PrinterDetail = () => {
         image={seoImage}
         brand={printerBrand}
         sku={printer.printer_id}
-        url={`https://filascope.com/printers/${printer.printer_id || printer.id}`}
+        url={`https://filascope.com/printers/${canonicalPrinterSlug}`}
         price={displayPrice}
         availability={!isDiscontinued}
         buildVolume={printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm ? {
@@ -706,7 +709,7 @@ const PrinterDetail = () => {
           segments={[
             { label: "Printers", href: "/printers" },
             ...(printerBrand ? [{ label: printerBrand, href: `/printers/brand/${toBrandSlug(printerBrand)}` }] : []),
-            { label: printerModel, href: `/printers/${printer.printer_id || printer.id}` },
+            { label: printerModel, href: `/printers/${canonicalPrinterSlug}` },
           ]}
           mobileBackLabel="Printers"
         />
