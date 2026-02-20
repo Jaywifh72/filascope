@@ -97,7 +97,7 @@ export function GuideRelatedProducts({
                   </Button>
                   {product.affiliateUrl && (
                     <Button size="sm" className="gap-1" asChild>
-                      <a href={product.affiliateUrl} target="_blank" rel="noopener noreferrer">
+                      <a href={product.affiliateUrl} target="_blank" rel="nofollow sponsored noopener noreferrer">
                         <ShoppingCart className="w-3.5 h-3.5" />
                         Buy
                       </a>

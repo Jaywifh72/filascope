@@ -266,7 +266,7 @@ export function RetailerCompareGrid({ retailers, className }: RetailerCompareGri
                     <TableCell>
                       <Button
                         size="sm"
-                        onClick={() => affiliateUrl && window.open(affiliateUrl, '_blank')}
+                        onClick={() => affiliateUrl && window.open(affiliateUrl, '_blank', 'noopener,noreferrer')}
                         disabled={stockStatus === 'out_of_stock' || !affiliateUrl}
                         className="w-full gap-1"
                       >

@@ -351,7 +351,7 @@ export default function NozzleDetail() {
                     <a
                       href={getAffiliateUrl(nozzle.product_url, nozzle.brand) || nozzle.product_url}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="nofollow sponsored noopener noreferrer"
                     >
                       <Button className="w-full gap-2">
                         <ExternalLink className="h-4 w-4" />
