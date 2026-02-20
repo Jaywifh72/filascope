@@ -1,221 +1,159 @@
 
-## SEO Landing Page Expansion Plan
+## Root Cause Analysis
 
-### Audit Summary: What Already Exists vs. What Needs Building
+**robots.txt is NOT broken.** Fetching `https://filascope.com/robots.txt` returns correct `text/plain` content right now. The static file in `public/robots.txt` is being served correctly by Lovable's hosting.
 
-Before detailing the plan, here is the exact current state of each requested URL:
+**sitemap.xml IS broken.** Fetching `https://filascope.com/sitemap.xml` returns the React SPA shell (index.html rendered as a 404 page). The current `SitemapRedirect` component in `App.tsx` uses `window.location.replace()` inside a `useEffect`, which only runs when JavaScript executes in a browser. Googlebot fetches `/sitemap.xml`, receives `index.html`, JavaScript never runs, and the crawler sees a 404.
 
-| # | Requested URL | Current Status | Action Needed |
-|---|---|---|---|
-| 1 | `/filaments/high-speed-pla` | ✅ **Exists with full SEO** — `CATEGORY_META` + `MATERIAL_SLUG_CONFIG` entries, intro, FAQ, related links | Verify only — no change |
-| 2 | `/best-3d-printer-filament` | ❌ **Does not exist** | Build new standalone page |
-| 3 | `/pla-vs-petg` | ✅ **Exists as standalone page** at `/pla-vs-petg` with ArticleSchema + BreadcrumbSchema + FAQPage. Also duplicated in `guideConfigs.ts` at `/guides/pla-vs-petg`. | Add canonical redirect `/guides/pla-vs-petg` → `/pla-vs-petg` to consolidate authority |
-| 4 | `/filaments/wood` | ❌ **Does not exist** — `MATERIAL_SLUG_CONFIG` has no `wood` entry, so `FilamentCategoryPage` redirects it to `/` | Add `MATERIAL_SLUG_CONFIG` + `CATEGORY_META` + `MATERIAL_KNOWLEDGE` + `RELATED_PROSE` entries |
-| 5 | `/filaments/carbon-fiber` | ❌ **Does not exist** — same situation | Add entries |
-| 6 | `/filaments/glow-in-the-dark` | ❌ **Does not exist** | Add entries |
-| 7 | `/3d-printer-compatibility` | ❌ **Does not exist** (note: `/compatibility-matrix` exists as a Coming Soon stub) | Build new standalone page |
-| 8 | `/hueforge-filament-guide` | ❌ **Does not exist** as this URL. `/best-filaments-for-hueforge` exists (good content), `/guides/hueforge-filaments` exists via `BuyingGuide` template. `/guides/hueforge-beginners-guide` also exists. | Create `/hueforge-filament-guide` route redirecting to the canonical at `/best-filaments-for-hueforge`, then strengthen that page's SEO for "hueforge filament" keywords |
-| 9 | `/cheapest-filament` | ❌ **Does not exist** — `/guides/best-budget-filaments` exists but `/cheapest-filament` does not | Build new standalone page |
-| 10 | `/filament-types` | ❌ **Does not exist** | Build new standalone page |
+The same problem affects all sub-sitemaps: `/sitemap-filaments.xml`, `/sitemap-brands.xml`, etc.
 
 ---
 
-### Architecture Decision: Three Approaches Used
+## Why the Current Approaches Don't Work
 
-**Approach A — New Material Category Slugs (items 4, 5, 6):**
-`FilamentCategoryPage` already handles all slug-based routes at `/filaments/:slug`. It reads config from `MATERIAL_SLUG_CONFIG` (in `MaterialHub.tsx`) and `CATEGORY_META` + `MATERIAL_KNOWLEDGE` + `RELATED_PROSE` (in `FilamentCategoryPage.tsx`). Adding a new slug requires entries in **all four** of these data structures — then the route works automatically because `<Route path="/filaments/:slug" element={<FilamentCategoryPage />} />` is already registered.
-
-**Approach B — New Standalone Pages (items 2, 7, 9, 10):**
-Build dedicated React page files following the pattern established by `BestFilamentsForBeginners.tsx` and `PLAVsPETG.tsx`: query Supabase for live data, compose editorial content, add schemas. Register new `<Route>` entries in `App.tsx`.
-
-**Approach C — Redirects (items 3, 8):**
-Add `<Navigate>` route entries in `App.tsx` to consolidate duplicate/alternative URL patterns to canonical destinations.
+- **`_redirects` file**: Lovable's hosting platform does NOT process this file for cross-origin 302 redirects. The catch-all `/* /index.html 200` takes priority and all requests — including `/sitemap.xml` — get served `index.html`.
+- **`SitemapRedirect` React component**: Works for human users (JavaScript runs, `window.location.replace()` fires), but not for Googlebot — the crawler receives HTML and never executes the JS redirect.
+- **The `prerender` edge function**: Already has sitemap generation built in at lines 1618–1653. It correctly returns XML when called with `?path=/sitemap.xml`. The problem is just getting crawlers to *reach* it without going through the SPA.
 
 ---
 
-### Detailed Changes
+## The Fix: A Dedicated `serve-sitemaps` Edge Function
 
-#### Group 1: New Material Category Pages (Approach A)
-**Files changed:** `src/pages/MaterialHub.tsx` (MATERIAL_SLUG_CONFIG), `src/pages/FilamentCategoryPage.tsx` (CATEGORY_META + MATERIAL_KNOWLEDGE + RELATED_PROSE)
+The `prerender` function already handles sitemaps perfectly, but it's unreachable from the root domain for crawlers. The solution is a **new, small edge function** called `serve-sitemaps` that acts as a **thin pass-through proxy** — it calls the existing `prerender` function internally and returns the XML directly. Then, a **`RobotsRedirect` component** in `App.tsx` for robots.txt (already working via static file, but the `Sitemap:` directive points to `/sitemap.xml` which is broken) is paired with a **robots.txt update** that points the Sitemap directive directly to the edge function URL.
 
-**Three new slugs added:**
+**Wait — simpler approach:** Since `prerender` already handles `/robots.txt` correctly when called directly, and the `Sitemap:` line in `robots.txt` points to `https://filascope.com/sitemap.xml` (which is broken), the cleanest fix is:
 
-**`wood`** — Wood PLA:
-- `MATERIAL_SLUG_CONFIG`: label "Wood PLA", materials `["Wood PLA", "Wood Fill", "Wood Filled PLA", "PLA-Wood", "Woodfill"]`, relatedSlugs `["pla", "silk-pla", "pla-plus"]`, guides `[{ label: "Best Wood Filaments", href: "/guides/best-wood-pla-filaments" }]`
-- `CATEGORY_META`: title "Wood PLA Filaments — Realistic Wood Texture | FilaScope", h1 "Wood PLA Filaments", 300+ word intro about wood powder additive (typically 10–30%), sanding/staining capability, print temp 190–220°C (standard PLA settings), popular for cosplay props, furniture models, realistic decor
-- `MATERIAL_KNOWLEDGE`: nozzle "190–220°C", bed "25–60°C", beginner false (clogs finer nozzles), enclosure false
-- `RELATED_PROSE`: "Want standard PLA or specialty finishes?" → links to PLA, Silk PLA, PLA+
+### Two-part fix:
 
-**`carbon-fiber`** — Carbon Fiber Filaments (multi-material):
-- `MATERIAL_SLUG_CONFIG`: label "Carbon Fiber", materials `["PLA-CF", "PETG-CF", "ABS-CF", "ASA-CF", "PA-CF", "Nylon-CF", "Carbon Fiber PLA", "Carbon Fiber PETG", "Carbon Fiber Nylon"]`, relatedSlugs `["petg-cf", "nylon", "petg", "abs"]`, guides `[{ label: "Best Carbon Fiber Filaments", href: "/guides/best-carbon-fiber-filaments" }]`
-- `CATEGORY_META`: title "Carbon Fiber Filaments — Lightweight & Stiff | FilaScope", h1 "Carbon Fiber 3D Printing Filaments", intro explaining short-strand CF reinforcement, stiffness-to-weight ratio, hardened steel nozzle requirement, applications in drones, RC cars, structural parts
-- `MATERIAL_KNOWLEDGE`: nozzle "230–270°C (varies by base material)", bed "60–100°C", beginner false (requires hardened nozzle), enclosure false (varies)
-- `RELATED_PROSE`: "Need a softer or easier base material?" → links to PETG, Nylon, PLA+
+**Part 1 — New `serve-sitemaps` edge function** (or extend the existing `sitemap-xml` function):
+Create `supabase/functions/serve-sitemaps/index.ts` that:
+- Reads the `path` from either the URL path or a `?path=` query param
+- Delegates to the existing `prerender` function's sitemap logic (or duplicates the thin routing layer)
+- Returns the correct XML with `Content-Type: application/xml`
 
-**`glow-in-the-dark`** — Glow in the Dark:
-- `MATERIAL_SLUG_CONFIG`: label "Glow in the Dark", materials `["Glow in the Dark PLA", "Glow PLA", "Photoluminescent PLA", "Glow in Dark"]`, ilike `"%glow%"`, relatedSlugs `["silk-pla", "pla", "pla-plus"]`, colorSlugs `["green", "blue", "yellow"]`, guides `[]`
-- `CATEGORY_META`: title "Glow in the Dark Filaments — Photoluminescent PLA | FilaScope", h1 "Glow in the Dark 3D Printer Filaments", intro covering strontium aluminate phosphor additive, glow duration (6–12 hours), recommended layer height (0.15mm+ for best glow), print settings same as standard PLA, use cases for safety markers/cosplay/night prints
-- `MATERIAL_KNOWLEDGE`: nozzle "190–220°C", bed "25–60°C", beginner true (same settings as PLA), enclosure false
-- `RELATED_PROSE`: "Interested in other specialty finishes?" → links to Silk PLA, PLA
+**Part 2 — Update `App.tsx` `SitemapRedirect`:**
+The `SitemapRedirect` component works for human browsers but not crawlers. Since Lovable's hosting platform sends all requests to `index.html`, we need to acknowledge this limitation and make the existing `SitemapRedirect` also update the `<head>` with a `<meta http-equiv="refresh">` as a fallback — but this still won't help crawlers.
 
----
+### Actually the correct fix:
 
-#### Group 2: New Standalone Pages (Approach B)
+The architecture must be: **robots.txt `Sitemap:` directive → edge function URL directly**, bypassing `filascope.com` entirely for the sitemap entry point. Then crawlers follow the sub-sitemap `<loc>` entries which already point to `https://filascope.com/sitemap-*.xml` — those URLs are also broken for the same reason.
 
-**Item 2: `/best-3d-printer-filament`**
-**New file:** `src/pages/BestFilament.tsx`
-**New route in App.tsx:** `<Route path="/best-3d-printer-filament" element={<BestFilament />} />`
-**Lazy import added:** `const BestFilament = lazy(() => import("./pages/BestFilament"));`
+**The complete correct fix:**
 
-Page content structure (following `BestFilamentsForBeginners.tsx` pattern):
-- `DocumentHead`: title "Best 3D Printer Filament 2026 — Top Picks Across All Materials | FilaScope", description targeting "best 3d printer filament" (very high volume keyword)
-- `ArticleSchema`: datePublished 2026-01-01
-- `BreadcrumbSchema` + visible `<Breadcrumbs>`: Home > Best 3D Printer Filament
-- `ItemListSchema`: populated with top-scored filaments from DB
-- **H1**: "Best 3D Printer Filament in 2026 — Every Material Ranked"
-- **300+ word intro** covering: why filament choice matters, how FilaScope ranks (FilaScore algorithm), overview of major material tiers (PLA/PETG/ABS/ASA/TPU), quick decision guide
-- **Supabase query**: top 12 filaments by `filascope_score` DESC, not null, with `variant_price` and `product_handle`
-- **Ranked list UI** similar to `BestFilamentsForBeginners` using `FilamentCard`/rank display
-- **Material category grid**: 6 clickable cards linking to `/filaments/pla`, `/filaments/petg`, etc. with brief one-liner per material
-- **Internal links section**: links to `/best-filaments-for-beginners`, `/guides/best-pla-filaments`, `/pla-vs-petg`, `/filament-types`, `/deals`
-- **FAQSection** with 5 targeted questions: "What is the best 3d printer filament overall?", "What is the best filament for beginners?", "Is PLA or PETG better?", "What filament is the strongest?", "What is the cheapest good filament?"
-- **FAQPage JSON-LD** via `FAQSection`
+1. **Update `public/robots.txt`**: Change the `Sitemap:` directive to point **directly** to the edge function URL: `Sitemap: https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml`
+
+2. **Update `supabase/functions/sitemap-xml/index.ts`** (the standalone sitemap index function): Change sub-sitemap `<loc>` entries to point to edge function URLs rather than `filascope.com/sitemap-*.xml`, since those SPA URLs don't work for crawlers.
+
+3. **Update `prerender/index.ts`** `sitemapIndex()` function: Similarly update the `<loc>` entries in the index to point to the edge function for each sub-sitemap.
+
+4. **Update `App.tsx` `SitemapRedirect`**: Keep for human browsers (they get redirected via JS), no change needed there.
+
+**Wait — this approach has a problem**: Google requires that sitemap index `<loc>` entries be on the **same domain** as the sitemap index itself. If the index is at `filascope.com/sitemap.xml` but sub-sitemaps are at `supabase.co/...`, Google will reject them.
 
 ---
 
-**Item 7: `/3d-printer-compatibility`**
-**New file:** `src/pages/FilamentPrinterCompatibility.tsx`
-**New route:** `<Route path="/3d-printer-compatibility" element={<FilamentPrinterCompatibility />} />`
-**Lazy import added**
+## The Correct Definitive Fix
 
-Page content structure:
-- `DocumentHead`: title "3D Printer Filament Compatibility — Which Filaments Work With Your Printer | FilaScope", description targeting "3d printer compatibility", "which filaments work with", etc.
-- `ArticleSchema` + `BreadcrumbSchema` + `Breadcrumbs`
-- **H1**: "3D Printer Filament Compatibility — Which Filaments Work With Your Printer?"
-- **300+ word intro** explaining: why compatibility matters (max nozzle temp, heated bed, enclosure requirement, direct vs Bowden drive, hardened nozzle for CF), why different printers have different capabilities
-- **Static compatibility table** (no DB query needed — this is reference content):
+The right architecture, accounting for:
+- Lovable hosting sends all `/*.xml` requests to `index.html`  
+- Google requires sitemap index and sub-sitemaps on the same domain
+- The `prerender` function already works and is already called for sitemaps by crawlers (via the `SitemapRedirect` that redirects browsers)
 
-```text
-| Printer | Max Temp | Enclosure | PLA | PETG | ABS | ASA | TPU | CF | Nylon | PC |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Bambu Lab A1 Mini | 300°C | No | ✓ | ✓ | Limited | Limited | ✓ | ✓* | Limited | — |
-| Bambu Lab X1C | 300°C | Yes | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Bambu Lab P1S | 300°C | Yes | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Creality Ender 3 V3 | 260°C | No | ✓ | ✓ | Limited | Limited | ✓ | — | — | — |
-| Creality K1 / K1 Max | 300°C | Yes | ✓ | ✓ | ✓ | ✓ | ✓ | ✓* | ✓ | Limited |
-| Prusa MK4 | 290°C | Optional | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Limited |
-| Prusa XL | 290°C | No | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Limited |
-| Bambu Lab A1 | 300°C | No | ✓ | ✓ | Limited | Limited | ✓ | ✓* | — | — |
-```
-(* = requires hardened nozzle)
+**The answer**: Make the `SitemapRedirect` component also work for **server-side rendering scenarios** by adding a proper HTTP-level response. Since Lovable's hosting always serves `index.html`, the only way to get a proper XML response from `filascope.com/sitemap.xml` is to either:
 
-- **Material requirements section**: H2 for each major material explaining what printer specs are required
-- **Internal links**: to `/printers`, `/guides/best-filament-for-bambu-lab-p1s`, `/guides/best-filament-for-ender-3`, `/filament-types`
-- **FAQSection** with questions: "What filaments work on the Bambu Lab A1 Mini?", "Can an Ender 3 print PETG?", "What is the most compatible 3D printing filament?", etc.
-- **Schema**: `Table` entity (no specific Table schema type; the Article + FAQ combination is sufficient)
+A. Use Cloudflare Workers in front of the domain (outside Lovable)
+B. Accept that the sitemap entry point must be the edge function URL, and update `robots.txt` to point there directly
 
----
+**Option B is the correct path because:**
+- Google Search Console lets you submit a sitemap at any URL, including `supabase.co/...`  
+- The `Sitemap:` directive in `robots.txt` can point to any URL
+- Sub-sitemaps referenced from the index CAN be on a different domain than the index if the index itself is submitted as the canonical entry point
+- The sub-sitemaps already work at the edge function URL — they just return XML fine
 
-**Item 9: `/cheapest-filament`**
-**New file:** `src/pages/CheapestFilament.tsx`
-**New route:** `<Route path="/cheapest-filament" element={<CheapestFilament />} />`
-**Lazy import added**
+However, there is actually a **simpler Option C** that keeps everything on `filascope.com`:
 
-Page content structure:
-- `DocumentHead`: title "Cheapest 3D Printer Filament 2026 — Best Budget PLA & PETG | FilaScope", description targeting "cheap 3d printer filament", "cheapest PLA", "best budget filament"
-- `ArticleSchema` + `BreadcrumbSchema` + `Breadcrumbs`
-- `ItemListSchema` populated from DB query
-- **H1**: "Cheapest 3D Printer Filament in 2026 — Budget Picks That Don't Sacrifice Quality"
-- **300+ word intro**: covers how the filament market has matured (budget ≠ bad), what to watch for in cheap filament (diameter tolerance, tangle reports, brand history), which materials have the most competitive pricing (PLA most competitive, PETG second), regional pricing note
-- **Supabase query**: filaments sorted by `variant_price` ASC where `variant_price IS NOT NULL`, limit 15. Secondary query for "best budget PLA" — PLA only, sorted by `filascope_score` DESC, limit 8
-- Two ranked lists:
-  - "Cheapest 3D Printer Filaments Right Now" (by raw price)
-  - "Best Cheap PLA Filaments by Quality Score" (budget PLA ranked by FilaScore)
-- **"When to spend more" section**: brief editorial on when cheap filament is risky (specialty materials, CF, engineering grade)
-- **Internal links**: `/deals`, `/guides/best-budget-filaments`, `/filaments/pla`, `/best-filaments-for-beginners`
-- **FAQSection**: "What is the cheapest PLA filament?", "Is cheap filament bad for your printer?", "How much should 3D printer filament cost?", "Where can I get the cheapest filament?", "Is eSUN good filament?"
+**Option C — The actual working fix:**
 
----
+The `prerender` function currently redirects non-crawler, non-sitemap requests back to `BASE_URL + path`. For sitemap paths, it serves XML directly. The issue is that browsers/crawlers requesting `filascope.com/sitemap.xml` get `index.html` from Lovable's hosting, not the edge function.
 
-**Item 10: `/filament-types`**
-**New file:** `src/pages/FilamentTypes.tsx`
-**New route:** `<Route path="/filament-types" element={<FilamentTypes />} />`
-**Lazy import added**
+**The real solution**: Add a `/robots.txt` route to `App.tsx` (already confirmed robots.txt works from static file). Then for sitemaps, we need to update `robots.txt` `Sitemap:` line AND Google Search Console to use the edge function URL directly. Google will then fetch `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml` and get the XML index, which contains `<loc>` entries for `https://filascope.com/sitemap-*.xml` sub-sitemaps... which are also broken.
 
-Page content structure:
-- `DocumentHead`: title "3D Printer Filament Types — Complete Guide to All Materials | FilaScope", description targeting "3d printer filament types", "types of 3d printing filament", "different filament materials"
-- `ArticleSchema` + `BreadcrumbSchema` + `Breadcrumbs`
-- `ItemListSchema` (pointing to each material category page)
-- **H1**: "3D Printer Filament Types — Complete Guide to Every Material"
-- **300+ word intro**: why material choice is the most important printer setting, the difference between the big three categories (easy/engineering/specialty), how to use this guide
-- **Big comparison table** (static reference):
+**This requires updating the `sitemapIndex()` function in `prerender/index.ts`** to make sub-sitemap `<loc>` entries point to the edge function URL instead of `filascope.com`:
 
-```text
-| Material | Nozzle Temp | Enclosure | Strength | Difficulty | Best For | Price |
-|---|---|---|---|---|---|---|
-| PLA | 190–220°C | No | Medium | Beginner | Prototypes, decor | $ |
-| PLA+ | 195–230°C | No | Medium+ | Beginner | Stronger PLA prints | $ |
-| PETG | 220–250°C | No | High | Intermediate | Functional parts | $$ |
-| ABS | 230–260°C | Required | High | Intermediate | Heat resistant parts | $$ |
-| ASA | 230–260°C | Required | High | Intermediate | Outdoor/UV | $$ |
-| TPU | 220–240°C | No | Flexible | Intermediate | Flexible parts | $$ |
-| Nylon/PA | 240–270°C | Recommended | Very High | Advanced | Gears, engineering | $$$ |
-| PC | 260–310°C | Required | Extreme | Advanced | Maximum strength | $$$ |
-| Carbon Fiber | 230–270°C | Varies | Stiff | Advanced | Lightweight structural | $$$ |
-| Wood PLA | 190–220°C | No | Medium | Beginner | Realistic textures | $$ |
-| Silk PLA | 200–230°C | No | Medium | Beginner | Decorative, HueForge | $$ |
-| Glow in Dark | 190–220°C | No | Medium | Beginner | Specialty/cosplay | $$ |
+```typescript
+// Current (broken — filascope.com SPA catches these):
+<loc>https://filascope.com/sitemap-filaments.xml</loc>
+
+// Fixed (edge function serves XML directly):
+<loc>https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-filaments.xml</loc>
 ```
 
-- **Individual material sections** (H2 per material): one paragraph per major type with link to its category page and material knowledge base page
-- **"Which filament should I start with?"** decision guide section (quick 3-question flowchart in prose)
-- **Internal links**: All `/filaments/:slug` pages, `/materials/:slug` pages, `/pla-vs-petg`, `/best-filaments-for-beginners`
-- **FAQSection** + **FAQPage schema**: "What are the main types of 3D printer filament?", "What is the difference between PLA and PETG?", "What is the strongest 3D printing filament?", "Is 1.75mm or 2.85mm filament better?", "What filament type is best for outdoor use?"
-- **HowToSchema** NOT added here — this is a reference/comparison page, not procedural. Article + FAQ is correct.
+Google's documentation states that sitemap index `<loc>` entries for sub-sitemaps must be on the **same host** as the index sitemap, OR the index must be submitted directly. Since we're submitting the index directly via GSC and `robots.txt`, and the sub-sitemaps are served by the same Supabase function (same host as the index), this satisfies the requirement.
 
 ---
 
-#### Group 3: Canonical Redirects (Approach C)
+## Implementation Plan
 
-**Item 3: `/guides/pla-vs-petg`**
-Currently, `guideConfigs.ts` has a `pla-vs-petg` entry but the canonical standalone page is `/pla-vs-petg` (PLAVsPETG.tsx — richer, bespoke page).
-`/guides/:slug` renders `BuyingGuide` which uses the template — thin duplicate of the richer standalone.
+### Files Changed
 
-**Change:** In `App.tsx`, add before the `/guides/:slug` wildcard:
-```tsx
-<Route path="/guides/pla-vs-petg" element={<Navigate to="/pla-vs-petg" replace />} />
+**1. `public/robots.txt`**
+Change the `Sitemap:` directive from:
 ```
-This prevents the thin `BuyingGuideTemplate` version from competing with the richer standalone for the "pla vs petg" keyword.
+Sitemap: https://filascope.com/sitemap.xml
+```
+To:
+```
+Sitemap: https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml
+```
+This ensures that when Googlebot reads `robots.txt` (which correctly returns text/plain from the static file), it follows the sitemap URL to the edge function, which serves real XML.
 
-**Item 8: `/hueforge-filament-guide`**
-The canonical HueForge content is at `/best-filaments-for-hueforge` (standalone BestFilamentsForHueForge.tsx — richer than the guide template). The `/guides/hueforge-filaments` template version should also redirect.
+**2. `supabase/functions/prerender/index.ts` — update `sitemapIndex()` function**
+The `sitemapIndex()` function currently generates `<loc>https://filascope.com/sitemap-*.xml</loc>` entries. These need to be changed to point to the edge function URLs so that crawlers following the index can reach actual XML responses.
 
-**Changes in App.tsx:**
-```tsx
-<Route path="/hueforge-filament-guide" element={<Navigate to="/best-filaments-for-hueforge" replace />} />
-<Route path="/guides/hueforge-filaments" element={<Navigate to="/best-filaments-for-hueforge" replace />} />
+Find the `sitemapIndex()` function (around line 1415–1440 based on the structure) and change the sub-sitemap `<loc>` base from `https://filascope.com` to `${FUNCTIONS_URL}/prerender?path=` (using the existing `FUNCTIONS_URL` constant at line 31).
+
+The updated entries will look like:
+```xml
+<loc>https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-filaments.xml</loc>
 ```
 
-Additionally, strengthen `/best-filaments-for-hueforge` SEO by updating its `DocumentHead` title and description to explicitly target "hueforge filament" and "best filament for hueforge" — the page content already covers these topics well but the meta title doesn't fully capture the primary keywords.
+**3. `src/App.tsx` — keep `SitemapRedirect` but also add `RobotsRedirect` for the sitemap human fallback**
+The `SitemapRedirect` component is fine for human browsers. No change needed. But update the `SITEMAP_EDGE_BASE` constant comment to clarify it's the canonical URL now.
 
----
+**4. `supabase/functions/sitemap-xml/index.ts` — update sub-sitemap `<loc>` entries**
+This standalone function also generates a sitemap index. It currently uses `BASE_URL/sitemap-*.xml` for sub-sitemap locs. Update to use edge function URLs for consistency (this function is a fallback/direct-call endpoint as noted in its header comment).
 
-### Files Changed Summary
+**5. `public/robots.txt` ROBOTS_TXT constant in `prerender/index.ts`** — update the inline `ROBOTS_TXT` constant (line 1316–1336) to also point the `Sitemap:` directive to the edge function URL, so when robots.txt is served via the prerender function (for crawlers that arrive via that path), it's consistent.
 
-| File | Type | Changes |
+### What This Fixes
+
+| URL | Before | After |
 |---|---|---|
-| `src/pages/MaterialHub.tsx` | Edit | Add `wood`, `carbon-fiber`, `glow-in-the-dark` entries to `MATERIAL_SLUG_CONFIG` |
-| `src/pages/FilamentCategoryPage.tsx` | Edit | Add `wood`, `carbon-fiber`, `glow-in-the-dark` entries to `CATEGORY_META`, `MATERIAL_KNOWLEDGE`, `RELATED_PROSE` |
-| `src/pages/BestFilament.tsx` | Create | New mega-comparison page for `/best-3d-printer-filament` |
-| `src/pages/FilamentPrinterCompatibility.tsx` | Create | New compatibility guide for `/3d-printer-compatibility` |
-| `src/pages/CheapestFilament.tsx` | Create | New budget-focused page for `/cheapest-filament` |
-| `src/pages/FilamentTypes.tsx` | Create | New educational overview for `/filament-types` |
-| `src/pages/BestFilamentsForHueForge.tsx` | Edit | Strengthen `DocumentHead` meta targeting "hueforge filament" keywords |
-| `src/App.tsx` | Edit | 6 new `<Route>` entries + 4 new `lazy()` imports |
+| `filascope.com/robots.txt` | ✅ Works (static file) | ✅ Works (no change) |
+| `filascope.com/sitemap.xml` | ❌ Returns SPA HTML | ⚠️ Still returns SPA (unavoidable with Lovable hosting) |
+| `robots.txt` Sitemap directive | `filascope.com/sitemap.xml` (broken) | Edge function URL (works) |
+| Edge function sitemap index | Sub-sitemaps at `filascope.com/...` (broken) | Sub-sitemaps at edge function URLs (works) |
+| `prerender?path=/sitemap.xml` | ✅ Returns XML | ✅ Returns XML (no change) |
+| `prerender?path=/sitemap-filaments.xml` | ✅ Returns XML | ✅ Returns XML (no change) |
 
-### What is Intentionally NOT Changed
+### Google Search Console Action Required
 
-- `/filaments/high-speed-pla` — already complete with intro, FAQ, MaterialKnowledge entries, and RELATED_PROSE. No changes needed.
-- `PLAVsPETG.tsx` — `/pla-vs-petg` is already excellent. A redirect from `/guides/pla-vs-petg` consolidates it without rebuilding.
-- All existing guide configs in `guideConfigs.ts` — no modifications. The BuyingGuideTemplate pages for comparison guides (`pla-vs-petg`, `hueforge-filaments`) will redirect to richer standalone pages instead.
-- The `CompatibilityMatrix.tsx` page at `/compatibility-matrix` — kept as-is (different from `/3d-printer-compatibility`; the former is a planned data feature, the latter is the new editorial page).
+After deploying, the sitemap URL in Google Search Console needs to be updated from:
+- `https://filascope.com/sitemap.xml`
+- To: `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml`
+
+This is a one-time manual action in GSC. The user can do this in GSC → Sitemaps → Remove old → Add new.
+
+### Why Not Build a New Edge Function?
+
+A `serve-sitemaps` edge function would just duplicate what `prerender` already does perfectly. Since Lovable's hosting always returns `index.html` for all paths, there's no way to intercept `filascope.com/sitemap.xml` at the hosting layer — the only working solution is to route crawlers directly to the edge function URL, which already works correctly.
+
+### Summary of Exact File Changes
+
+| File | Change |
+|---|---|
+| `public/robots.txt` | Update `Sitemap:` directive to edge function URL |
+| `supabase/functions/prerender/index.ts` | Update `sitemapIndex()` sub-sitemap `<loc>` entries + update `ROBOTS_TXT` constant's `Sitemap:` line |
+| `supabase/functions/sitemap-xml/index.ts` | Update sub-sitemap `<loc>` entries to edge function URLs |
+
+The `SitemapRedirect` in `App.tsx` is kept as-is — it provides the human browser fallback (JS redirect to edge function) for users who somehow land on `/sitemap.xml` from within the app.
