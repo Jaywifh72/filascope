@@ -1030,6 +1030,7 @@ const { id } = useParams();
               }
               regionName={regionName}
               netWeightG={displayFilament.net_weight_g}
+              filaScopeScore={displayFilament.filascope_score}
             />
 
             {/* Retailers Modal */}
