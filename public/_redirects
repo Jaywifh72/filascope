@@ -1,5 +1,4 @@
-# Static files — served via edge function (Lovable hosting sends all requests to SPA)
-/robots.txt                              https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots                              302
+# IndexNow key file — served via edge function
 /a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key           302
 
 # Sitemap routes — 302 redirect to Supabase edge function
