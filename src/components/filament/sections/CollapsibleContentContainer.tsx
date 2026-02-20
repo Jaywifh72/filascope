@@ -76,7 +76,17 @@ export function CollapsibleContentContainer({ filament, className }: Collapsible
       title: 'Frequently Asked Questions',
       icon: <HelpCircle size={20} />,
       show: true,
-      component: <FAQContent material={filament.material} />
+      component: <FAQContent
+        material={filament.material}
+        brand={filament.vendor}
+        productName={filament.product_title}
+        nozzleTempMin={filament.nozzle_temp_min_c}
+        nozzleTempMax={filament.nozzle_temp_max_c}
+        bedTempMin={filament.bed_temp_min_c}
+        bedTempMax={filament.bed_temp_max_c}
+        transmissionDistance={(filament as any).transmission_distance}
+        price={filament.variant_price}
+      />
     }
   ].filter(section => section.show);
 

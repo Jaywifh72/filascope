@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
+import { generateDynamicFAQs } from '@/lib/generateFilamentFAQs';
 
 interface FAQContentProps {
   material: string | null;
+  brand?: string | null;
+  productName?: string | null;
+  nozzleTempMin?: number | null;
+  nozzleTempMax?: number | null;
+  bedTempMin?: number | null;
+  bedTempMax?: number | null;
+  transmissionDistance?: number | null;
+  price?: number | null;
 }
 
 interface FAQItem {
@@ -9,10 +18,32 @@ interface FAQItem {
   answer: string;
 }
 
-export function FAQContent({ material }: FAQContentProps) {
+export function FAQContent({
+  material,
+  brand,
+  productName,
+  nozzleTempMin,
+  nozzleTempMax,
+  bedTempMin,
+  bedTempMax,
+  transmissionDistance,
+  price,
+}: FAQContentProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   
-  const faqs = getFAQsForMaterial(material);
+  const staticFaqs = getFAQsForMaterial(material);
+  const dynamicFaqs = generateDynamicFAQs({
+    brand,
+    productName,
+    material,
+    nozzleTempMin,
+    nozzleTempMax,
+    bedTempMin,
+    bedTempMax,
+    transmissionDistance,
+    price,
+  });
+  const faqs = [...staticFaqs, ...dynamicFaqs];
 
   if (faqs.length === 0) {
     return (
