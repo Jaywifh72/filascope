@@ -21,6 +21,7 @@ const corsHeaders = {
 };
 
 const BASE_URL = "https://filascope.com";
+const FUNCTIONS_URL = "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1";
 
 const SUB_SITEMAPS = [
   "sitemap-pages.xml",
@@ -39,11 +40,11 @@ Deno.serve(async (req) => {
   try {
     const today = new Date().toISOString().split("T")[0];
 
-    // Build sitemap index — <loc> entries use filascope.com domain URLs.
-    // Google requires sub-sitemap <loc>s to be on the same domain as the index.
+    // Build sitemap index — <loc> entries point directly to the edge function
+    // so crawlers receive real XML (Lovable hosting returns index.html for /*.xml).
     const items = SUB_SITEMAPS.map(
       (s) =>
-        `  <sitemap>\n    <loc>${BASE_URL}/${s}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
+        `  <sitemap>\n    <loc>${FUNCTIONS_URL}/prerender?path=/${s}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
     ).join("\n");
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
