@@ -33,11 +33,11 @@ Allow: /
 Disallow: /admin
 Disallow: /settings
 Disallow: /maintenance
-Disallow: /embed/
+Disallow: /embed
 
-Sitemap: https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml
+Sitemap: https://filascope.com/sitemap.xml
 
-# IndexNow — instant Bing/Yandex notification on content changes
+# IndexNow - instant Bing/Yandex notification on content changes
 # Key: a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c`;
 
 const INDEXNOW_KEY = "a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c";
