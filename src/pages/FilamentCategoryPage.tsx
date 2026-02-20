@@ -10,6 +10,7 @@ import { useFinderQuery, DEFAULT_PAGE_SIZE } from "@/hooks/useFinderQuery";
 import { FilamentCard } from "@/components/FilamentCard";
 import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 import { CrawlablePaginationBar } from "@/components/CrawlablePaginationBar";
+import { RelatedSearchesSection } from "@/components/seo/RelatedSearchesSection";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
 
 // ─────────────────────────────────────────────
@@ -381,6 +382,9 @@ export default function FilamentCategoryPage() {
             </div>
           </nav>
         )}
+
+        {/* Related Searches for SEO discoverability */}
+        {slug && <RelatedSearchesSection materialSlug={slug} materialLabel={config?.label} />}
       </div>
     </>
   );

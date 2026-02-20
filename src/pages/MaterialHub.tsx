@@ -11,6 +11,8 @@ import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton"
 import { FilamentCard } from "@/components/FilamentCard";
 import { Thermometer, Scale, Tag, Layers, Wind, Droplets, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { getMaterialReference } from "@/lib/materialReferenceData";
+import { MaterialBrandComparisonTable } from "@/components/filament/MaterialBrandComparisonTable";
+import { RelatedSearchesSection } from "@/components/seo/RelatedSearchesSection";
 import { slugToMaterialName, slugToMaterialNames } from "@/lib/materialSlugUtils";
 
 // ──────────────────────────────────────────────────────────────
@@ -1001,6 +1003,11 @@ export default function MaterialHub() {
           </section>
         )}
 
+        {/* Brand comparison table for this material */}
+        {topBrands && topBrands.length >= 2 && (
+          <MaterialBrandComparisonTable topBrands={topBrands} material={label} />
+        )}
+
         {/* Color-specific pages for this material */}
         {config.colorSlugs && config.colorSlugs.length > 0 && (
           <section className="mb-10">
@@ -1021,6 +1028,9 @@ export default function MaterialHub() {
             </div>
           </section>
         )}
+
+        {/* Related Searches for SEO */}
+        <RelatedSearchesSection materialSlug={slug} materialLabel={label} />
 
         {/* FAQ */}
         <FAQSection faqs={faqs} title={`${label} Filament FAQ`} />
