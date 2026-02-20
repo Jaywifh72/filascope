@@ -18,6 +18,7 @@ import { GUIDES, type GuideMetadata } from './LearningCenter';
 import { GuideRelatedProducts, GuideReadNext } from '@/components/guides/GuideComponents';
 import { BUYING_GUIDE_SLUGS } from '@/components/guides/guideConfigs';
 import { ArticleSchema } from '@/components/seo/ArticleSchema';
+import { HowToSchema } from '@/components/seo/HowToSchema';
 import { DetailBreadcrumb } from '@/components/navigation/DetailBreadcrumb';
 import { trackGuideRead } from '@/lib/analytics';
 
@@ -34,6 +35,30 @@ const GUIDE_CONTENT_MAP: Record<string, React.ComponentType> = {
   'how-to-choose-3d-printer-budget': GuideChoosePrinterBudget,
   'understanding-filament-temperature-settings': GuideTemperatureSettings,
   'top-10-filaments-functional-parts': GuideFunctionalParts,
+};
+
+const GUIDE_HOW_TO_DATA: Record<string, {
+  name: string;
+  description: string;
+  totalTime: string;
+  tool?: string[];
+  supply?: string[];
+  steps: { name: string; text: string }[];
+}> = {
+  'understanding-filament-temperature-settings': {
+    name: 'How to Find the Perfect 3D Printing Temperature',
+    description: 'A step-by-step process for calibrating nozzle and bed temperature for any filament using a temperature tower.',
+    totalTime: 'PT30M',
+    tool: ['3D Printer', 'Slicer Software'],
+    supply: ['3D Printer Filament'],
+    steps: [
+      { name: 'Download a Temperature Tower Model', text: 'Search for "temperature tower STL" and download a model. These are available on Printables and Thingiverse.' },
+      { name: 'Configure Temperature Changes in Your Slicer', text: 'Set up your slicer with temperature changes at each section of the tower. Most slicers have a temperature tower plugin to automate this.' },
+      { name: 'Print the Temperature Tower', text: "Print the tower using the mid-point of your filament's recommended temperature range as the starting point." },
+      { name: 'Evaluate Each Section', text: 'Examine each section for the best layer adhesion and minimal stringing. Avoid sections with gaps (too cold) or excessive oozing (too hot).' },
+      { name: 'Set Your Optimal Temperature', text: 'Use the best-performing temperature as your baseline setting in your slicer profile for this filament.' },
+    ],
+  },
 };
 
 // Table of contents item type
@@ -239,6 +264,9 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
         datePublished={guide.publishedAt}
         url={`/learn/${slug}`}
       />
+      {slug && GUIDE_HOW_TO_DATA[slug] && (
+        <HowToSchema {...GUIDE_HOW_TO_DATA[slug]} />
+      )}
       {/* Sticky nav header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
