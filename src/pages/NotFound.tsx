@@ -68,7 +68,15 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <DocumentHead title="Page Not Found | FilaScope" robots="noindex" />
+      {/* noindex prevents soft-404 crawl budget waste.
+          Canonical → homepage so no duplicate authority is split to the 404 URL.
+          og:url → homepage so social unfurls don't canonicalize the broken path. */}
+      <DocumentHead
+        title="Page Not Found | FilaScope"
+        robots="noindex, nofollow"
+        canonical="https://filascope.com/"
+        ogUrl="https://filascope.com/"
+      />
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
