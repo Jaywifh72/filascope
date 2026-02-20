@@ -16,6 +16,5 @@ Disallow: /admin
 Disallow: /settings
 Disallow: /maintenance
 Disallow: /embed/
-Crawl-delay: 2
 
-Sitemap: https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-xml
+Sitemap: https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml
