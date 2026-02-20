@@ -5,6 +5,7 @@ export default function Methodology() {
     <LegalPageLayout
       title="Our Methodology"
       lastUpdated="February 6, 2026"
+      breadcrumbUrl="/methodology"
       metaDescription="FilaScope Methodology - How we collect data, score products, track prices, and ensure data quality across our 3D printing filament and printer database."
     >
       <LegalSection title="How We Collect Data">

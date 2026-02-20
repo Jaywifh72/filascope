@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
+import { Breadcrumbs } from "@/components/seo";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -216,6 +217,10 @@ const Wizard = () => {
         description="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations."
         ogTitle="Quick Match — Find Your Perfect Filament in 60 Seconds | FilaScope"
         ogDescription="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations."
+      />
+      <Breadcrumbs
+        items={[{ name: "Quick Match Wizard", url: "/wizard" }]}
+        className="max-w-2xl mx-auto px-3 sm:px-6 pt-4 pb-1"
       />
       <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}>
       <div className="max-w-2xl mx-auto w-full flex flex-col">

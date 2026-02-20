@@ -5,6 +5,7 @@ export default function About() {
     <LegalPageLayout
       title="About FilaScope"
       lastUpdated="February 6, 2026"
+      breadcrumbUrl="/about"
       metaDescription="About FilaScope - Helping 3D printing enthusiasts worldwide find the right materials at the best prices with comprehensive filament and printer data."
     >
       <LegalSection title="Our Mission">
