@@ -1,7 +1,61 @@
 import { LegalPageLayout, LegalSection, LegalList } from "@/components/legal/LegalPageLayout";
+import { OrganizationSchema } from "@/components/seo";
 
 export default function About() {
   return (
+    <>
+    <OrganizationSchema
+      name="FilaScope"
+      alternateName="FilaScope.com"
+      url="https://filascope.com"
+      logo="https://filascope.com/logo.png"
+      logoWidth={512}
+      logoHeight={512}
+      image="https://filascope.com/og-image.png"
+      description="The most comprehensive 3D printer filament database. Compare prices, materials, specifications, and HueForge TD values across 8,000+ filaments from 48+ brands. Covering PLA, PETG, ABS, TPU, ASA, Nylon, and specialty materials with regional pricing across US, CA, UK, EU, AU, and JP."
+      sameAs={[
+        'https://twitter.com/filascope',
+        'https://discord.gg/filascope',
+        'https://youtube.com/@filascope',
+        'https://reddit.com/r/filascope',
+      ]}
+      foundingDate="2024"
+      knowsAbout={[
+        '3D printing filament',
+        'HueForge transmissivity data',
+        'filament comparison',
+        'lithophane printing',
+        '3D printer compatibility',
+        'filament pricing',
+        'PETG filament',
+        'PLA filament',
+        'ABS filament',
+        'TPU filament',
+        'ASA filament',
+        'multi-color 3D printing',
+        'filament TD values',
+        'HueForge printing',
+      ]}
+      contactPoint={[
+        {
+          type: 'ContactPoint',
+          email: 'hello@filascope.com',
+          contactType: 'customer support',
+          areaServed: ['US', 'CA', 'GB', 'AU', 'EU', 'JP'],
+          availableLanguage: 'English',
+        },
+      ]}
+      founders={[
+        { name: 'FilaScope Team', jobTitle: 'Founders' },
+      ]}
+      areaServed={['US', 'CA', 'GB', 'AU', 'EU', 'JP']}
+      serviceType={[
+        '3D Filament Database',
+        'Filament Price Comparison',
+        'HueForge TD Value Lookup',
+        'Printer Compatibility Checker',
+      ]}
+    />
     <LegalPageLayout
       title="About FilaScope"
       lastUpdated="February 6, 2026"
@@ -70,5 +124,7 @@ export default function About() {
         </p>
       </LegalSection>
     </LegalPageLayout>
+    </>
   );
 }
+
