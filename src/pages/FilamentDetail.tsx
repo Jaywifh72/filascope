@@ -58,6 +58,7 @@ import { CompatiblePrintersLinks } from "@/components/filament/CompatiblePrinter
 import { QuickSummaryBar } from "@/components/filament/QuickSummaryBar";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
+import { generateFilamentSlug, isUuid } from "@/lib/seoSlugUtils";
 import { useFilamentListings } from "@/hooks/useFilamentListings";
 import { useFilamentDetailPricing } from "@/hooks/useFilamentDetailPricing";
 import { useBrowseHistory } from "@/hooks/useBrowseHistory";
@@ -96,11 +97,8 @@ function BackToResults() {
   );
 }
 const FilamentDetail = () => {
-  const { id } = useParams();
+const { id } = useParams();
   const location = useLocation();
-  // Use the actual URL pathname slug — the hook updates it via history.replaceState
-  // so this is always the SEO-friendly slug, never a UUID after resolution.
-  const canonicalSlug = location.pathname.replace(/^\/filament\//, '') || id || '';
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin } = useAuth();
@@ -108,6 +106,23 @@ const FilamentDetail = () => {
   
   // Use the slug-aware hook instead of inline fetch
   const { filament, loading, error: fetchError, isRedirecting, refetch } = useFilamentBySlug(id);
+
+  // Derive canonical slug from the RESOLVED filament object, not the URL pathname.
+  // location.pathname is NOT updated by history.replaceState() — using it would
+  // produce UUID-based canonicals when users land via UUID URLs.
+  const canonicalSlug = useMemo(() => {
+    if (filament) {
+      return generateFilamentSlug(
+        filament.vendor,
+        filament.material,
+        filament.product_title,
+        filament.color_family,
+      ) || filament.id;
+    }
+    // Fallback while loading: use pathname slug if it's not a UUID, else id param
+    const pathSlug = location.pathname.replace(/^\/filament\//, '');
+    return isUuid(pathSlug) ? (id || '') : pathSlug;
+  }, [filament, location.pathname, id]);
   
   const [rescrapingImage, setRescrapingImage] = useState(false);
   const [scrapingData, setScrapingData] = useState(false);
