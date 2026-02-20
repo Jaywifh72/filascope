@@ -38,6 +38,7 @@ import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analyt
 import { OfflineBanner, SWUpdateNotifier } from "./components/pwa";
 // GA4 loaded via index.html <script> tag — no dynamic injection needed
 import { GA4RouteTracker } from "./components/analytics/GA4RouteTracker";
+import { AIReferralTracker } from "./components/analytics/AIReferralTracker";
 import { usePageTracking } from "./hooks/usePageTracking";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
@@ -214,6 +215,7 @@ const App = () => (
                 {/* SEO: hreflang for multi-region international SEO */}
                 <HreflangTags />
                 <GA4RouteTracker />
+                <AIReferralTracker />
                 <SchemaValidatorRunner />
                 <GlobalKeyboardHandler>
                 {/* WCAG 2.1 AA: Skip to main content link */}
