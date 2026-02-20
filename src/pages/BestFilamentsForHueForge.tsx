@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, ItemListSchema, FAQSection } from '@/components/seo';
+import { BreadcrumbSchema, ItemListSchema, FAQSection, ArticleSchema } from '@/components/seo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -163,6 +163,16 @@ export default function BestFilamentsForHueForge() {
         ogType="article"
       />
       <BreadcrumbSchema items={breadcrumbs} />
+      <ArticleSchema
+        headline="Best Filaments for HueForge in 2026 — TD-Ranked Picks"
+        description="Find the best HueForge filament for lithophanes and color mixing. TD-ranked picks for PLA, silk, and translucent filaments. Compare TD values, prices & buy links."
+        datePublished="2025-01-15"
+        dateModified="2026-02-20"
+        url="/best-filaments-for-hueforge"
+        articleType="TechArticle"
+        about={{ '@type': 'Thing', name: 'HueForge 3D Printing' }}
+        proficiencyLevel="Beginner"
+      />
       <ItemListSchema
         name="Best Filaments for HueForge 2026 — TD-Ranked"
         description="Top-ranked filaments for HueForge lithophane printing, sorted by Transmission Distance (TD) value."

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, ItemListSchema, FAQSection } from '@/components/seo';
+import { BreadcrumbSchema, ItemListSchema, FAQSection, ArticleSchema } from '@/components/seo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -136,6 +136,16 @@ export default function BestWhiteFilaments() {
         ogType="article"
       />
       <BreadcrumbSchema items={breadcrumbs} />
+      <ArticleSchema
+        headline="Best White Filaments for 3D Printing & HueForge — TD-Ranked"
+        description="Compare white 3D printer filaments ranked by TD value, print quality & price. Find the perfect white PLA for HueForge lithophanes and general printing."
+        datePublished="2025-06-01"
+        dateModified="2026-02-20"
+        url="/best-white-filaments"
+        articleType="TechArticle"
+        about={{ '@type': 'Thing', name: 'White 3D Printer Filament for HueForge' }}
+        proficiencyLevel="Beginner"
+      />
       <ItemListSchema name="Best White 3D Printer Filaments — Ranked by TD Value" description="White and natural 3D printer filaments ranked by TD value for HueForge lithophane projects." items={itemListItems} />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
