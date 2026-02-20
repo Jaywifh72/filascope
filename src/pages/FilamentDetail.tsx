@@ -65,6 +65,7 @@ import { useFilamentDetailPricing } from "@/hooks/useFilamentDetailPricing";
 import { useBrowseHistory } from "@/hooks/useBrowseHistory";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useCommunityReviewStats } from "@/hooks/useCommunityReviewStats";
+import { useFilamentReviewsForSchema } from "@/hooks/useFilamentReviewsForSchema";
 import { calculateUnifiedScore, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -151,7 +152,9 @@ const { id } = useParams();
   
   // Community review stats for hero badge
   const { data: communityReviewStats } = useCommunityReviewStats(filament?.id);
-  
+
+  // Individual reviews for Product JSON-LD schema (up to 5, only when they have body text)
+  const { data: schemaReviews } = useFilamentReviewsForSchema(filament?.id);
   // Compatible printer count for tab badge
   const { data: compatiblePrinterCount } = useQuery({
     queryKey: ['compatible-printer-count', filament?.nozzle_temp_max_c],
@@ -930,6 +933,7 @@ const { id } = useParams();
         bestRating={5}
         worstRating={1}
         hasReturnPolicy={true}
+        reviews={schemaReviews ?? undefined}
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
