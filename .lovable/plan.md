@@ -1,124 +1,110 @@
 
-## aggregateRating Fix — FilaScope Score Scaled to 1–5 for Google Rich Results
+## Audit Result — Most Is Already Implemented
 
-### What's Already Wired (No Changes Needed Here)
-`ProductJsonLd.tsx` already emits `aggregateRating` correctly (lines 475–483):
-```json
-"aggregateRating": {
-  "@type": "AggregateRating",
-  "ratingValue": "<ratingValue>.toFixed(1)",
-  "bestRating": "<bestRating>.toString()",
-  "worstRating": "<worstRating>.toString()",
-  "ratingCount": "<ratingCount>.toString()"
-}
-```
-It guards on `ratingValue != null && ratingCount != null && ratingCount > 0` — so it only emits when there is real data. The component interface is already correct.
+After a thorough audit of `PrinterDetail.tsx` and `ProductJsonLd.tsx`, the Product JSON-LD and BreadcrumbList are **already emitted** on every printer detail page. What the user is requesting is substantially already present.
 
----
+### What Already Exists (No Changes Needed)
 
-### The Bug — Wrong Scale for FilaScore Fallback
+- `<ProductJsonLd>` at line 671 emits a complete `Product` schema with:
+  - `name`, `description`, `image`, `brand`, `sku`, `mpn`, `url` (slug-based canonical)
+  - `category` → resolves to `"3D Printer - {technology}"` (e.g., `"3D Printer - FDM"`)
+  - `additionalProperty` array covering Build Volume, Max Print Speed, Enclosure, Wi-Fi, Multi-Material, Extruder Type, Drive Type, Auto Bed Leveling, Input Shaping, Compatible Materials, and physical dimensions
+  - `offers` (single Offer with USD price, availability, shipping details, return policy)
+  - `aggregateRating` from `printer.rating_community_overall` (community reviews)
+  - Machine dimensions (`width`, `depth`, `height`, `weight`)
+- `<DetailBreadcrumb>` at line 729 emits BreadcrumbList JSON-LD: **Home > Printers > [Brand] > [Printer Name]**
 
-In `FilamentDetail.tsx` lines 904–919, there are **two paths** for the fallback rating:
+### The Two Real Gaps to Fix
 
-**Path A — Community reviews (correct):**
-- `avgRating` from `product_reviews.overall_rating` → 1–5 scale ✅
-- `bestRating: 5`, `worstRating: 1` ✅
+**Gap 1 — Single `Offer` instead of `AggregateOffer` with regional pricing**
 
-**Path B — FilaScore fallback (broken):**
-- `filaScoreValue` is passed raw: 0–10 scale ❌ (e.g., `7.4` instead of `3.7`)
-- `bestRating: 10` ❌ (Google expects standard 5-star)
-- `worstRating: 0` ❌ (should be 1)
+The printer record has multi-regional prices stored directly in columns (`current_price_usd_store`, `current_price_cad_store`, `current_price_eur_store`, `current_price_gbp_store`, `current_price_aud_store`, `current_price_jpy_store`) and also MSRP variants. These are not assembled into `regionalOffers`, so `ProductJsonLd` emits a single `Offer` with just the USD price instead of an `AggregateOffer` with `lowPrice`/`highPrice`.
 
-Google's Rich Results guidelines require the rating scale to be internally consistent. While any scale is technically allowed, passing `ratingValue: 7.4` with `bestRating: 10` produces no star snippet because Google normalises to 5 internally and deprioritises non-standard scales. Passing it on the 5-star scale is the standard practice that actually triggers snippets.
+The filament page does this correctly by passing `detailPricing.allCandidates` into `regionalOffers`. The printer page needs equivalent logic.
+
+**Gap 2 — No FilaScore fallback for `aggregateRating`**
+
+The printer page passes `ratingValue={printer.rating_community_overall}` directly. For printers with no community reviews (where `rating_community_overall` is null), `aggregateRating` is suppressed entirely. The filament page has a `filaScoreRating5` fallback that scales the internal score. Printers don't have a `filascope_score` column, but they do have `printer.rating_community_overall` — this is the correct primary source. If null, the schema correctly omits `aggregateRating` (the right behavior for printers since there's no internal scoring equivalent).
+
+**Only Gap 1 needs fixing.** Gap 2 is acceptable behavior — printers without community reviews should not emit a fabricated rating.
 
 ---
 
-### The Fix — One File: `FilamentDetail.tsx`
+## Implementation Plan
 
-**Change 1 — Derive scaled FilaScore (1–5) in the memo:**
+### File Changed: `src/pages/PrinterDetail.tsx`
 
-The existing memo at lines 191–195 returns `{ score: filaScoreValue, dataPointCount: filaScoreDataPoints }`. Add one more derived variable:
+**Change: Build `printerRegionalOffers` from known regional price columns and pass to `ProductJsonLd`**
+
+After the `unifiedPricing` hook call (around line 207), add a `useMemo` that assembles the regional offers array from the printer's stored price columns. This mirrors the pattern from `FilamentDetail.tsx`.
 
 ```typescript
-// Convert 0-10 FilaScore to 1-5 scale for Google aggregateRating
-// Formula: ((score / 10) * 4) + 1 maps 0→1, 5→3, 10→5
-const filaScoreRating5 = filaScoreValue != null
-  ? Math.round(((filaScoreValue / 10) * 4 + 1) * 10) / 10
-  : null;
+// Build regional offers from printer's stored regional prices for AggregateOffer JSON-LD
+const printerRegionalOffers = useMemo(() => {
+  if (!printer) return undefined;
+
+  const offers: Array<{
+    region: 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP';
+    price: number;
+    currency: 'USD' | 'CAD' | 'EUR' | 'GBP' | 'AUD' | 'JPY';
+    url?: string;
+    availability: boolean;
+  }> = [];
+
+  const storeUrl = printer.official_store_url || undefined;
+  const available = !isDiscontinued;  // ← defined later, so use !(printer.discontinued === true)
+
+  if (printer.current_price_usd_store && printer.current_price_usd_store > 0)
+    offers.push({ region: 'US', price: printer.current_price_usd_store, currency: 'USD', url: storeUrl, availability: available });
+  if ((printer as any).current_price_cad_store && (printer as any).current_price_cad_store > 0)
+    offers.push({ region: 'CA', price: (printer as any).current_price_cad_store, currency: 'CAD', url: storeUrl, availability: available });
+  if ((printer as any).current_price_eur_store && (printer as any).current_price_eur_store > 0)
+    offers.push({ region: 'EU', price: (printer as any).current_price_eur_store, currency: 'EUR', url: storeUrl, availability: available });
+  if ((printer as any).current_price_gbp_store && (printer as any).current_price_gbp_store > 0)
+    offers.push({ region: 'UK', price: (printer as any).current_price_gbp_store, currency: 'GBP', url: storeUrl, availability: available });
+  if ((printer as any).current_price_aud_store && (printer as any).current_price_aud_store > 0)
+    offers.push({ region: 'AU', price: (printer as any).current_price_aud_store, currency: 'AUD', url: storeUrl, availability: available });
+  if ((printer as any).current_price_jpy_store && (printer as any).current_price_jpy_store > 0)
+    offers.push({ region: 'JP', price: (printer as any).current_price_jpy_store, currency: 'JPY', url: storeUrl, availability: available });
+
+  return offers.length >= 2 ? offers : undefined; // Only emit AggregateOffer if 2+ prices exist
+}, [printer]);
 ```
 
-Why `((score / 10) * 4) + 1` instead of `(score / 10) * 5`?
-- `(score / 10) * 5` maps 0→0, which means a product with ANY data would get `0` — below Google's `worstRating: 1`, triggering a schema error.
-- `((score / 10) * 4) + 1` maps 0→1 (worst) and 10→5 (best), fitting cleanly within `worstRating: 1, bestRating: 5`. This is the correct linear interpolation for a 1–5 scale.
+Note: `isDiscontinued` is computed at line 626, which is inside the render path after the early returns. The `useMemo` needs to be placed before the early returns use it, or replicate the logic inline as `printer?.discontinued === true`. The memo will be placed in the pre-return section (before line 540, where the loading/not-found early returns are) using `printer?.discontinued === true`.
 
-**Change 2 — Pass normalised values to `<ProductJsonLd>`:**
-
+Then update the `<ProductJsonLd>` call to add:
 ```tsx
-// BEFORE (lines 904–919):
-ratingValue={
-  communityReviewStats?.reviewCount > 0
-    ? communityReviewStats.avgRating  // 1-5 ✅
-    : filaScoreValue                  // 0-10 ❌
-}
-ratingCount={...}
-bestRating={communityReviewStats?.reviewCount > 0 ? 5 : 10}   // 10 ❌ for fallback
-worstRating={communityReviewStats?.reviewCount > 0 ? 1 : 0}   // 0 ❌ for fallback
-
-// AFTER:
-ratingValue={
-  communityReviewStats?.reviewCount > 0
-    ? communityReviewStats.avgRating  // 1-5 ✅
-    : filaScoreRating5                // 1-5 ✅ (scaled)
-}
-ratingCount={...}  // unchanged
-bestRating={5}     // always 5 ✅
-worstRating={1}    // always 1 ✅
+regionalOffers={printerRegionalOffers}
 ```
 
-This collapses four conditional expressions into two fixed values — cleaner and correct.
-
----
-
-### Guard Condition Audit
-
-`ProductJsonLd` emits `aggregateRating` only when:
-```
-ratingValue != null && ratingCount != null && ratingCount > 0
-```
-
-With the fix:
-- **Community reviews exist:** `avgRating` (1–5), `reviewCount > 0` → emits ✅
-- **No reviews, FilaScore exists:** `filaScoreRating5` (1–5), `filaScoreDataPoints > 0` → emits ✅  
-- **No reviews, no FilaScore:** `filaScoreRating5 = null` → blocked by guard → no emission ✅
-- **FilaScore = 0:** `filaScoreRating5 = 1.0`, `filaScoreDataPoints` likely 0 or very low → blocked by `ratingCount > 0` guard ✅
-
-Edge case: `filaScoreDataPoints` could theoretically be 0 even when `filaScoreValue` is non-null. The guard `ratingCount > 0` handles this correctly — no `aggregateRating` is emitted.
-
----
-
-### Files Changed
-
-| File | Lines | Change |
-|---|---|---|
-| `src/pages/FilamentDetail.tsx` | ~193 | Add `filaScoreRating5` derived value after existing memo |
-| `src/pages/FilamentDetail.tsx` | 904–919 | Use `filaScoreRating5`, set `bestRating={5}`, `worstRating={1}` unconditionally |
-
-No changes to `ProductJsonLd.tsx` — its interface is already correct.
-
----
-
-### Expected Outcome
-
-After this fix, every filament page with a FilaScore and at least 1 data point will emit valid JSON-LD like:
-
+This will cause `ProductJsonLd` to emit an `AggregateOffer` with:
 ```json
-"aggregateRating": {
-  "@type": "AggregateRating",
-  "ratingValue": "3.7",
-  "bestRating": "5",
-  "worstRating": "1",
-  "ratingCount": "8"
+{
+  "@type": "AggregateOffer",
+  "priceCurrency": "USD",
+  "lowPrice": "299.00",
+  "highPrice": "999.00",
+  "offerCount": 4,
+  "availability": "https://schema.org/InStock",
+  "offers": [...]
 }
 ```
 
-Google Search Console → Rich Results Test will validate this. Star snippets typically appear in SERPs within 1–4 weeks of indexation for pages with valid `aggregateRating`.
+**Note on `priceCurrency` in `AggregateOffer`:** `ProductJsonLd` sets `priceCurrency` to the user's active regional currency. The individual child `Offer` objects each carry their own `priceCurrency` matching the regional currency. This is the same pattern already working on filament pages.
+
+---
+
+## Summary of Changes
+
+| File | Change | Lines |
+|---|---|---|
+| `src/pages/PrinterDetail.tsx` | Add `printerRegionalOffers` useMemo | After line ~224 (post `useUnifiedRegionalPricing`) |
+| `src/pages/PrinterDetail.tsx` | Pass `regionalOffers={printerRegionalOffers}` to `<ProductJsonLd>` | Line ~725 |
+
+No changes needed to:
+- `ProductJsonLd.tsx` — interface already has `regionalOffers`, `AggregateOffer` logic already handles it
+- `DetailBreadcrumb` — BreadcrumbList JSON-LD already correct
+- Any SEO component — all existing
+
+The result will be: Google's Rich Results Test will show `Product` schema with `AggregateOffer` (price range) for printers that have multi-regional pricing data, enabling price range snippets in SERPs.
