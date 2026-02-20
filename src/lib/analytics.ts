@@ -30,11 +30,17 @@ export const trackEvent = (eventName: string, params?: Record<string, unknown>) 
 
 // ── User Properties ───────────────────────────────────────────────────
 
-export function setUserProperties(region: string, currency: string, userType: 'anonymous' | 'registered') {
+/**
+ * Set GA4 user properties. Call on every page load for returning users.
+ * Param names match the custom dimensions configured in GA4:
+ *   preferred_currency, user_region, user_type
+ */
+export function setUserProperties(region: string, currency: string, userType: 'new_visitor' | 'returning' | 'anonymous' | 'registered') {
+  const isReturning = userType === 'returning' || userType === 'registered';
   gtag('set', 'user_properties', {
+    preferred_currency: currency,
     user_region: region,
-    user_currency: currency,
-    user_type: userType,
+    user_type: isReturning ? 'returning' : 'new_visitor',
   });
 }
 
@@ -58,29 +64,40 @@ export interface AffiliateClickParams {
   store?: string;
   /** Material type (e.g. "PLA", "PETG") */
   material?: string;
+  /** Affiliate network — matches GA4 custom dimension "affiliate_program" */
   affiliateProgram?: string;
   region?: string;
   price?: number;
   currency?: string;
   discountCode?: string;
-  linkType?: 'direct' | 'affiliate' | 'amazon';
+  /** Matches GA4 custom dimension "link_type" */
+  linkType?: 'product_page' | 'comparison' | 'deal_card' | 'trending' | 'direct' | 'affiliate' | 'amazon';
 }
 
+/**
+ * Fire an affiliate_click event with parameter names matching GA4 custom dimensions:
+ *   affiliate_program, brand, discount_code, link_type, region
+ */
 export function trackAffiliateClick(params: AffiliateClickParams) {
-  // Custom event for detailed attribution
+  // Normalise affiliate_program to a short network name
+  const normalizedProgram = params.affiliateProgram?.toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/amazon.*/, 'amazon')
+    .replace(/impact.*/, 'impact')
+    .replace(/commission_junction|cj.*/, 'cj')
+    .replace(/awin.*/, 'awin') || 'direct';
+
+  // Custom event — param names match GA4 configured custom dimensions
   gtag('event', 'affiliate_click', {
+    affiliate_program: normalizedProgram,
+    brand: params.brand,
+    discount_code: params.discountCode || '',
+    link_type: params.linkType || 'product_page',
+    region: params.region || '',
+    // Extra context (not custom dimensions, but useful in Explore)
     product_id: params.productId,
     product_name: params.productName,
-    brand: params.brand,
-    material: params.material,
-    store: params.store,
-    region: params.region,
     price: params.price,
-    currency: params.currency,
-    affiliate_program: params.affiliateProgram,
-    discount_code: params.discountCode,
-    link_type: params.linkType,
-    source_page: typeof window !== 'undefined' ? window.location.pathname : undefined,
   });
 
   // Also fire begin_checkout for e-commerce funnel tracking
@@ -146,14 +163,19 @@ export function trackComparison(params: ComparisonParams) {
   });
 }
 
-/** Fired when a single item is added to the comparison tray. */
+/** Fired when a single item is added to the comparison tray.
+ * Params match GA4 custom dimensions: brand, link_type
+ */
 export function trackComparisonAdd(
   productId: string,
   productType: string,
   productName?: string,
-  comparisonCount?: number
+  comparisonCount?: number,
+  brand?: string
 ) {
   trackEvent('comparison_add', {
+    brand: brand || '',
+    link_type: 'comparison',
     product_id: productId,
     product_name: productName,
     product_type: productType,
@@ -161,9 +183,13 @@ export function trackComparisonAdd(
   });
 }
 
-/** Fired when user navigates to the compare page with 2+ items. */
+/** Fired when user navigates to the compare page with 2+ items.
+ * Params match GA4 custom dimensions: brand, link_type
+ */
 export function trackComparisonView(productCount: number, productIds: string[]) {
   trackEvent('comparison_view', {
+    brand: 'multiple',
+    link_type: 'comparison',
     product_count: productCount,
     product_ids: productIds.join(','),
   });
@@ -171,7 +197,11 @@ export function trackComparisonView(productCount: number, productIds: string[]) 
 
 /** @deprecated Use trackComparisonView */
 export function trackComparisonComplete(productCount: number) {
-  trackEvent('comparison_complete', { product_count: productCount });
+  trackEvent('comparison_complete', {
+    brand: 'multiple',
+    link_type: 'comparison',
+    product_count: productCount,
+  });
 }
 
 // ── Filter Usage ──────────────────────────────────────────────────────
@@ -184,20 +214,28 @@ export function trackFilter(filterType: string, filterValue: string, resultsCoun
   });
 }
 
-/** Full filter_apply event with page and results count. */
+/** Full filter_apply event.
+ * Param "link_type" matches GA4 custom dimension: filterType:filterValue
+ */
 export function trackFilterApply(filterType: string, filterValue: string, resultsCount?: number) {
   trackEvent('filter_apply', {
+    link_type: `${filterType}:${filterValue}`,
     filter_type: filterType,
     filter_value: filterValue,
-    page: typeof window !== 'undefined' ? window.location.pathname : undefined,
     results_count: resultsCount,
   });
 }
 
 // ── Region/Currency Change ─────────────────────────────────────────────
 
+/** Fired when user changes region.
+ * Param "region" matches GA4 custom dimension.
+ */
 export function trackRegionChange(fromRegion: string, toRegion: string) {
-  trackEvent('region_change', { from_region: fromRegion, to_region: toRegion });
+  trackEvent('region_change', {
+    region: toRegion,
+    from_region: fromRegion,
+  });
 }
 
 // ── HueForge TD Search ───────────────────────────────────────────────

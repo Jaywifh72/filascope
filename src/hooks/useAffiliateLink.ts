@@ -143,14 +143,16 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
     (url: string, metadata: ClickMetadata) => {
       const finalUrl = buildLink(url);
 
-      // GA4 tracking
+      // GA4 tracking — param names match configured custom dimensions
       trackGA4AffiliateClick({
         brand: program?.brand_name || brandName || '',
         productName: metadata.productName || '',
         productId: metadata.sourceComponent || '',
         affiliateProgram: program?.affiliate_network,
         region: program?.region_code || region,
-        linkType: program ? 'affiliate' : 'direct',
+        price: metadata.price,
+        currency: metadata.currency,
+        linkType: 'product_page',
       });
 
       if (program) {
