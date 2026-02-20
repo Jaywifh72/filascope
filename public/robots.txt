@@ -1,6 +1,8 @@
 # FilaScope robots.txt — AI & Search Engine Crawler Policy
-# Updated: 2026-02-20 (v2 — cache bust)
+# Updated: 2026-02-20 (v4)
+# https://filascope.com
 
+# === Search Engines ===
 User-agent: *
 Allow: /
 Disallow: /api/
@@ -8,24 +10,27 @@ Disallow: /auth/
 Disallow: /admin/
 Disallow: /_/
 
-# Sitemaps
 Sitemap: https://filascope.com/sitemap.xml
 
-# AI Crawlers - Explicitly Allowed
+# === AI Crawlers — Explicitly Allowed ===
+
 User-agent: GPTBot
 Allow: /
+Crawl-delay: 2
 
 User-agent: ChatGPT-User
 Allow: /
 
 User-agent: ClaudeBot
 Allow: /
+Crawl-delay: 2
 
 User-agent: anthropic-ai
 Allow: /
 
 User-agent: PerplexityBot
 Allow: /
+Crawl-delay: 2
 
 User-agent: Applebot-Extended
 Allow: /
@@ -48,18 +53,5 @@ Allow: /
 User-agent: Diffbot
 Allow: /
 
-User-agent: FacebookExternalHit
-Allow: /
-
 User-agent: YouBot
 Allow: /
-
-# Crawl-delay for AI bots (be polite)
-User-agent: GPTBot
-Crawl-delay: 2
-
-User-agent: ClaudeBot
-Crawl-delay: 2
-
-User-agent: PerplexityBot
-Crawl-delay: 2
