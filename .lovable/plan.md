@@ -1,183 +1,109 @@
 
-## Adding FAQPage JSON-LD to Material Category & Brand Pages
+## Adding HowTo JSON-LD to Remaining Guide Pages
 
-### What's Already Working (No Changes Needed)
+### Current State Assessment
 
-- `/materials/pla`, `/materials/petg`, etc. — `MaterialHub.tsx` already emits a rich `FAQPage` JSON-LD with 6-8 material-specific questions via `getMaterialFAQs()` + renders a visible accordion via `<FAQSection>`.
-- `/filament/:slug` — `FilamentFAQSchema` emits per-product FAQPage JSON-LD.
-- `/brands/bambu-lab` — `BrandFAQSection` emits `FAQPage` JSON-LD + visible accordion, but answers are largely generic with no live DB data.
+After reading all guide pages, here is exactly what exists and what's missing:
 
-### The Two Real Gaps
+**Already implemented correctly — no changes needed:**
+- `FilamentStorageGuide.tsx` — Has `HowToSchema` with 5 drying steps + supplies list + `PT8H` totalTime
+- `FilamentTemperatureGuide.tsx` — Has `HowToSchema` with 5 temperature calibration steps + `PT30M` totalTime
 
-**Gap 1 — `/filaments/pla` material listing pages have NO FAQPage JSON-LD**
+**Genuinely missing HowTo schema — needs work:**
+1. `GuideTroubleshooting.tsx` — Has 6 troubleshooting issues, each with a multi-action `quickFix`. No SEO schema at all (no Article, no Breadcrumb, no HowTo). The accordion format maps directly to HowTo steps for each troubleshooting process.
+2. `GuideDetail.tsx` rendering `GuideTemperatureSettings` — The guide content has a literal `<ol>` titled "Steps to Print a Temperature Tower" (5 explicit steps). The `GuideDetail` wrapper adds `ArticleSchema` but no `HowToSchema`. Since `GuideDetail` renders different guide types, `HowToSchema` needs to be conditionally injected per-slug.
 
-`FilamentCategoryPage.tsx` (the `/filaments/pla` route) emits a `CollectionPage` + `ItemList` JSON-LD but no `FAQPage`. The `CATEGORY_META` record already has per-material intro text, and the page already fetches `materialCount`. It needs:
-- A DB query to fetch `avgPrice`, `brandCount`, and `topBrands` for the material
-- A `generateMaterialCategoryFAQs()` function producing 5-6 dynamic questions per material slug
-- A `<FAQSchema>` injection + a visible `<FAQSection>` accordion below the product grid
+**Correctly kept as Article-only (not procedural):**
+- `GuideChoosePrinterBudget` — Price tier comparison/informational content
+- `GuideBestFilamentBeginners`, `GuidePLAvsPETGvsABS`, `GuideFunctionalParts` — Rankings and comparisons
+- `BuyingGuideTemplate` guides — Already have `ArticleSchema + FAQSchema`, correct as-is
+- `GuidePrintSettings.tsx` — "Coming Soon" stub with no real step content
 
-**Gap 2 — `/brands/bambu-lab` FAQ answers are mostly hardcoded boilerplate**
-
-`BrandFAQSection` gets `brandName`, `productCount`, `materials`, `isVerified`, `isPremium`, `isBudgetFriendly`. But the parent `BrandDetail.tsx` already has live data that isn't passed down:
-- `filaments[]` — can derive avg price, regional price columns (`price_cad`, `price_eur`, `price_gbp`), and retailer domains from `product_url`
-- `automatedBrand` — has `website`, `display_name`, price coverage info
-- These should be derived and passed as props to get answers like: actual price range, which regions have prices, which retailer domains are linked
+---
 
 ### Implementation Plan
 
----
+#### Change 1 — `GuideTroubleshooting.tsx`
 
-#### Change 1 — `FilamentCategoryPage.tsx`
+This page has no schema at all. Add:
+- `ArticleSchema` (required baseline for all guides)
+- `BreadcrumbSchema` (Home > Guides > Troubleshooting Guide)
+- `Breadcrumbs` visible component (currently missing)
+- One `HowToSchema` for the page-level troubleshooting process
 
-**Add a `useQuery` for material stats** (avg price, brand count, top brand names):
+The 6 `COMMON_ISSUES` items each have an `id`, `title`, and multi-action `quickFix`. Each maps to one `HowToStep`:
 
-```typescript
-const { data: materialStats } = useQuery({
-  queryKey: ["filament-category-stats", slug],
-  enabled: !!slug && !!config,
-  queryFn: async () => {
-    const { data } = await (supabase as any)
-      .from("filaments")
-      .select("vendor, variant_price")
-      .in("material", config!.materials)
-      .not("variant_price", "is", null)
-      .limit(500);
-    if (!data) return null;
-    const prices = (data as any[]).map((d: any) => d.variant_price).filter(Boolean) as number[];
-    const brandCounts: Record<string, number> = {};
-    for (const row of data as any[]) {
-      if (row.vendor) brandCounts[row.vendor] = (brandCounts[row.vendor] || 0) + 1;
-    }
-    const topBrands = Object.entries(brandCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
-      .map(([v]) => v);
-    return {
-      avgPrice: prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : null,
-      minPrice: prices.length ? Math.min(...prices) : null,
-      maxPrice: prices.length ? Math.max(...prices) : null,
-      topBrands,
-    };
-  },
-  staleTime: 1000 * 60 * 10,
-});
+```
+name: issue.title  (e.g. "Fix Stringing / Oozing")
+text: issue.quickFix  (the multi-step fix instructions)
 ```
 
-**Add a `generateMaterialCategoryFAQs()` function** producing 5-6 questions:
+The page-level HowTo wraps all 6 as steps in one schema:
 
-| Question | Answer Source |
-|---|---|
-| "What is {Material} filament?" | Pull from `CATEGORY_META[slug].introTemplate` (already present) |
-| "What temperature does {Material} print at?" | Material-specific nozzle/bed ranges hardcoded per slug (mirroring `MaterialHub.tsx` data) |
-| "Is {Material} good for beginners?" | Derived: PLA/PLA+/Silk PLA → Yes; TPU/Nylon/PC/ABS/ASA → No/Intermediate |
-| "How much does {Material} filament cost?" | `materialStats.minPrice`–`materialStats.maxPrice` from DB |
-| "Does {Material} need an enclosure?" | Per-material flag (ABS/ASA/Nylon/PC → Yes; PLA/PETG/TPU → No) |
-| "What brands make {Material} filament?" | `materialStats.topBrands.join(', ')` from DB |
-
-**Add `<FAQSchema>` and `<FAQSection>`** below the product grid (above `RelatedSearchesSection`):
-
-```tsx
-{slug && materialFaqs.length > 0 && (
-  <FAQSection faqs={materialFaqs} title={`${label} Filament FAQ`} />
-)}
-```
-
-`FAQSchema` is already imported via `FAQSection`. No new schema injection needed — `FAQSection` calls it internally.
-
-**Imports to add**: `FAQSection` from `@/components/seo`.
-
----
-
-#### Change 2 — `BrandFAQSection.tsx` — Upgrade Props + Answers
-
-**Extend the props interface** to accept richer data:
-
-```typescript
-interface BrandFAQSectionProps {
-  brandName: string;
-  productCount: number;
-  materials: string[];
-  avgPrice?: string;        // existing
-  // NEW:
-  priceRange?: { min: number; max: number } | null;
-  topRetailers?: string[];  // e.g. ["Official Store", "Amazon"]
-  regionsCovered?: string[]; // e.g. ["US", "CA", "EU", "UK"]
-  isVerified?: boolean;
-  isPremium?: boolean;
-  isBudgetFriendly?: boolean;
+```json
+{
+  "@type": "HowTo",
+  "name": "How to Diagnose and Fix Common 3D Printing Problems",
+  "description": "Step-by-step troubleshooting for the most common 3D printing issues including stringing, bed adhesion, warping, layer shifting, under-extrusion, and clogged nozzles.",
+  "totalTime": "PT30M",
+  "tool": [{ "@type": "HowToTool", "name": "3D Printer" }],
+  "supply": [{ "@type": "HowToSupply", "name": "Filament" }],
+  "step": [
+    { "@type": "HowToStep", "position": 1, "name": "Fix Stringing / Oozing", "text": "..." },
+    { "@type": "HowToStep", "position": 2, "name": "Fix Poor Bed Adhesion", "text": "..." },
+    ...6 total steps
+  ]
 }
 ```
 
-**Upgrade the four existing FAQ answers** to be data-driven:
-1. **Quality FAQ** — unchanged (already has premium/budget branching)
-2. **Where to buy** — use `topRetailers` list if available; otherwise fall back to current text
-3. **Materials FAQ** — unchanged (already lists materials)
-4. **Price FAQ** — use `priceRange` to show `$X.XX–$Y.YY per kg` instead of a vague `avgPrice` string
-5. **ADD: Regional shipping FAQ** — if `regionsCovered.length > 1`: "Does {Brand} ship internationally? → {Brand} products are available in {regions.join(', ')}. FilaScope tracks regional pricing and availability for all listed regions."
+The imports to add: `ArticleSchema, BreadcrumbSchema, HowToSchema` from `@/components/seo` and `Breadcrumbs` from `@/components/seo/Breadcrumbs`.
 
-**In `BrandDetail.tsx`**, derive and pass the new props:
+---
 
-```tsx
-// Derive price range
-const brandPriceRange = useMemo(() => {
-  if (!filaments || filaments.length === 0) return null;
-  const prices = filaments.map(f => f.variant_price).filter((p): p is number => p !== null && p > 0);
-  if (prices.length === 0) return null;
-  return { min: Math.min(...prices), max: Math.max(...prices) };
-}, [filaments]);
+#### Change 2 — `GuideDetail.tsx`
 
-// Derive top retailer domain names from product URLs
-const topRetailers = useMemo(() => {
-  if (!filaments) return [];
-  const domainCounts: Record<string, number> = {};
-  for (const f of filaments) {
-    if (!f.product_url) continue;
-    try {
-      const domain = new URL(f.product_url).hostname.replace(/^www\./, '');
-      domainCounts[domain] = (domainCounts[domain] || 0) + 1;
-    } catch {}
-  }
-  return Object.entries(domainCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([domain]) => {
-      if (domain.includes('amazon')) return 'Amazon';
-      // Capitalize brand's own domain into "Official Store"
-      if (domain.includes(brandSlug.replace(/-/g, ''))) return 'Official Store';
-      return domain.replace(/\.(com|net|org|store|shop).*$/, '').replace(/-/g, ' ')
-        .replace(/\b\w/g, c => c.toUpperCase());
-    });
-}, [filaments, brandSlug]);
+The `GuideDetail` wrapper handles 5 guide slugs. Of these, only one genuinely has step-by-step content suitable for HowTo:
 
-// Derive which regions have price data
-const regionsCovered = useMemo(() => {
-  if (!filaments) return ['US'];
-  const regions: string[] = [];
-  if (filaments.some(f => f.variant_price && f.variant_price > 0)) regions.push('US');
-  if (filaments.some(f => (f as any).price_cad && (f as any).price_cad > 0)) regions.push('CA');
-  if (filaments.some(f => (f as any).price_eur && (f as any).price_eur > 0)) regions.push('EU');
-  if (filaments.some(f => (f as any).price_gbp && (f as any).price_gbp > 0)) regions.push('UK');
-  if (filaments.some(f => (f as any).price_aud && (f as any).price_aud > 0)) regions.push('AU');
-  if (filaments.some(f => (f as any).price_jpy && (f as any).price_jpy > 0)) regions.push('JP');
-  return regions;
-}, [filaments]);
+- `understanding-filament-temperature-settings` — has 5 explicit ordered steps under "Steps to Print a Temperature Tower"
+
+The approach: add a `GUIDE_HOW_TO_DATA` map keyed by slug inside `GuideDetail.tsx`. When the current slug has an entry, render `<HowToSchema>` alongside the existing `<ArticleSchema>`.
+
+```typescript
+const GUIDE_HOW_TO_DATA: Record<string, {
+  name: string;
+  description: string;
+  totalTime: string;
+  tool?: string[];
+  supply?: string[];
+  steps: { name: string; text: string }[];
+}> = {
+  'understanding-filament-temperature-settings': {
+    name: 'How to Find the Perfect 3D Printing Temperature',
+    description: 'A step-by-step process for calibrating nozzle and bed temperature for any filament using a temperature tower.',
+    totalTime: 'PT30M',
+    tool: ['3D Printer', 'Slicer Software'],
+    supply: ['3D Printer Filament'],
+    steps: [
+      { name: 'Download a Temperature Tower Model', text: 'Search for "temperature tower STL" and download a model. These are available on Printables and Thingiverse.' },
+      { name: 'Configure Temperature Changes in Your Slicer', text: 'Set up your slicer with temperature changes at each section of the tower. Most slicers have a temperature tower plugin to automate this.' },
+      { name: 'Print the Temperature Tower', text: 'Print the tower using the mid-point of your filament\'s recommended temperature range as the starting point.' },
+      { name: 'Evaluate Each Section', text: 'Examine each section for the best layer adhesion and minimal stringing. Avoid sections with gaps (too cold) or excessive oozing (too hot).' },
+      { name: 'Set Your Optimal Temperature', text: 'Use the best-performing temperature as your baseline setting in your slicer profile for this filament.' },
+    ],
+  },
+};
 ```
 
-Update the `<BrandFAQSection>` call in `BrandDetail.tsx`:
+Then in the `GuideDetailContent` component, after `<ArticleSchema>`:
 
 ```tsx
-<BrandFAQSection
-  brandName={displayName}
-  productCount={filaments?.length ?? 0}
-  materials={availableMaterials}
-  priceRange={brandPriceRange}
-  topRetailers={topRetailers}
-  regionsCovered={regionsCovered}
-  isVerified={automatedBrand?.is_visible ?? false}
-  isPremium={isPremium}
-  isBudgetFriendly={isBudgetFriendly}
-/>
+const howToData = slug ? GUIDE_HOW_TO_DATA[slug] : null;
+
+// In the JSX:
+{howToData && <HowToSchema {...howToData} />}
 ```
+
+Imports to add: `HowToSchema` from `@/components/seo/HowToSchema`.
 
 ---
 
@@ -185,13 +111,22 @@ Update the `<BrandFAQSection>` call in `BrandDetail.tsx`:
 
 | File | Change |
 |---|---|
-| `src/pages/FilamentCategoryPage.tsx` | Add `materialStats` query, `generateMaterialCategoryFAQs()`, `FAQSection` import + render |
-| `src/components/brands/BrandFAQSection.tsx` | Extend props, upgrade FAQ generators to use live price range, retailers, regions |
-| `src/pages/BrandDetail.tsx` | Add `brandPriceRange`, `topRetailers`, `regionsCovered` memos; pass to `BrandFAQSection` |
+| `src/pages/GuideTroubleshooting.tsx` | Add `ArticleSchema` + `BreadcrumbSchema` + `Breadcrumbs` + `HowToSchema` |
+| `src/pages/GuideDetail.tsx` | Add `GUIDE_HOW_TO_DATA` map + conditional `HowToSchema` render |
 
-### Expected Outcome
+### What is intentionally NOT changed
 
-After this change:
-- All `/filaments/pla`, `/filaments/petg`, etc. pages emit a `FAQPage` JSON-LD with 5-6 dynamic questions driven by live DB price/brand data
-- All `/brands/bambu-lab`, `/brands/polymaker`, etc. pages emit a `FAQPage` JSON-LD where answers include actual price ranges (`$18–$32/kg`), actual retailer names (from `product_url` domains), and regions with pricing coverage (`US, CA, EU, UK`)
-- Both add visible FAQ accordions matching the JSON-LD content, satisfying Google's requirement that schema content must be visible on the page
+| File | Reason |
+|---|---|
+| `FilamentStorageGuide.tsx` | Already has complete HowTo schema |
+| `FilamentTemperatureGuide.tsx` | Already has complete HowTo schema |
+| `GuidePrintSettings.tsx` | "Coming Soon" stub — no step content exists yet |
+| `BuyingGuideTemplate.tsx` | Ranking/comparison guides — Article + FAQ schema is correct |
+| `GuideChoosePrinterBudget` | Price tier comparison — not a procedural how-to |
+| `GuideBestFilamentBeginners` | Curated list — not a how-to process |
+| `GuidePLAvsPETGvsABS` | Material comparison — Article schema is correct |
+| `GuideFunctionalParts` | Top-picks list — not procedural |
+
+### Technical Note on Schema Co-existence
+
+All three schema types (`ArticleSchema`, `FAQSchema`, `HowToSchema`) use `useJsonLd` which injects separate `<script type="application/ld+json">` tags directly into `<head>`, bypassing Helmet's deduplication. Google accepts multiple JSON-LD blocks on one page — this is the correct approach for pages that qualify for both Article and HowTo rich results simultaneously.
