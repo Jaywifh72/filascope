@@ -84,7 +84,13 @@ function truncatePage(page: string | null, maxLen = 60): string {
 
 // ─── Setup Card ───────────────────────────────────────────────────────────────
 
-function SetupCard({ onSync }: { onSync: () => void }) {
+function SetupCard({ onSync, syncing }: { onSync: () => void; syncing: boolean }) {
+  // The service account email that must be added to Search Console.
+  // Extracted from the GSC_SERVICE_ACCOUNT_JSON secret at runtime by the edge function,
+  // but we surface the critical action here so the user knows exactly what to do.
+  const serviceAccountNote =
+    "Find the service account email in your GSC_SERVICE_ACCOUNT_JSON (the 'client_email' field) and add it as a Restricted user in Search Console.";
+
   return (
     <Card>
       <CardHeader>
@@ -99,25 +105,35 @@ function SetupCard({ onSync }: { onSync: () => void }) {
           top queries, CTR trends, and content opportunities directly in this dashboard.
         </p>
 
+        {/* Action required banner */}
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 flex gap-3">
+          <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-medium text-sm text-destructive">
+              Action Required — Grant Search Console Access
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Your service account JSON is saved. The only remaining step is to{" "}
+              <strong>add the service account email as a user in Google Search Console</strong>.
+              Once granted, click <em>Run Sync</em> below to pull data.
+            </p>
+            <p className="text-xs text-muted-foreground/80 mt-1">{serviceAccountNote}</p>
+          </div>
+        </div>
+
         <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-          <p className="font-medium text-sm">Setup Instructions</p>
+          <p className="font-medium text-sm">Setup Checklist</p>
           <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-            <li>
-              Go to{" "}
-              <a
-                href="https://console.cloud.google.com/iam-admin/serviceaccounts"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline inline-flex items-center gap-1"
-              >
-                Google Cloud → Service Accounts <ExternalLink className="w-3 h-3" />
-              </a>
+            <li className="line-through opacity-60">
+              Go to Google Cloud → Service Accounts and create a service account
             </li>
-            <li>Create a new service account (e.g. "filascope-gsc")</li>
-            <li>
+            <li className="line-through opacity-60">
               Enable the <strong>Google Search Console API</strong> in your Cloud project
             </li>
-            <li>
+            <li className="line-through opacity-60">
+              Create a JSON key and save it as the <code className="bg-muted px-1 rounded text-xs">GSC_SERVICE_ACCOUNT_JSON</code> secret ✅
+            </li>
+            <li className="font-medium text-foreground">
               Go to{" "}
               <a
                 href="https://search.google.com/search-console/users"
@@ -125,22 +141,18 @@ function SetupCard({ onSync }: { onSync: () => void }) {
                 rel="noopener noreferrer"
                 className="text-primary underline inline-flex items-center gap-1"
               >
-                Search Console → Settings → Users <ExternalLink className="w-3 h-3" />
+                Search Console → Settings → Users &amp; Permissions <ExternalLink className="w-3 h-3" />
               </a>{" "}
-              and add the service account email as a <strong>Restricted user</strong>
+              and add the service account <code className="bg-muted px-1 rounded text-xs">client_email</code> as a{" "}
+              <strong>Restricted user</strong> for <code className="bg-muted px-1 rounded text-xs">https://filascope.com</code>
             </li>
-            <li>Back in Cloud Console, create a JSON key for the service account</li>
-            <li>
-              Add the entire JSON content as the secret <code className="bg-muted px-1 rounded text-xs">GSC_SERVICE_ACCOUNT_JSON</code> via
-              Lovable Cloud settings
-            </li>
-            <li>Click "Run Sync" below once the secret is saved</li>
+            <li>Come back here and click <strong>Run Sync</strong> below</li>
           </ol>
         </div>
 
-        <Button onClick={onSync} className="gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Run Sync (after setup)
+        <Button onClick={onSync} disabled={syncing} className="gap-2">
+          <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Syncing…" : "Run Sync"}
         </Button>
       </CardContent>
     </Card>
@@ -499,7 +511,7 @@ export function SearchConsolePanel() {
   if (!hasData) {
     return (
       <div className="space-y-6">
-        <SetupCard onSync={handleSync} />
+        <SetupCard onSync={handleSync} syncing={syncing} />
       </div>
     );
   }
@@ -722,7 +734,7 @@ export function SearchConsolePanel() {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-yellow-500" />
+                  <Star className="w-4 h-4 text-primary" />
                   <CardTitle className="text-sm">Quick Wins (Pos 4–20)</CardTitle>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -753,7 +765,7 @@ export function SearchConsolePanel() {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-orange-500" />
+                  <AlertCircle className="w-4 h-4 text-destructive" />
                   <CardTitle className="text-sm">CTR &lt;2% (Top 10)</CardTitle>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -784,7 +796,7 @@ export function SearchConsolePanel() {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-blue-500" />
+                  <BookOpen className="w-4 h-4 text-secondary-foreground" />
                   <CardTitle className="text-sm">High Impressions, Low Clicks</CardTitle>
                 </div>
                 <p className="text-xs text-muted-foreground">
