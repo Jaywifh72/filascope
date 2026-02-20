@@ -107,8 +107,8 @@ export function ProductJsonLd({
   regionalOffers,
   ratingValue,
   ratingCount,
-  bestRating = 5,
-  worstRating = 1,
+  bestRating,
+  worstRating,
   shippingRegions,
   hasReturnPolicy = true,
   transmissionDistance,
@@ -471,7 +471,7 @@ export function ProductJsonLd({
     }),
     ...(additionalProperties.length > 0 && { additionalProperty: additionalProperties }),
     ...(offers && { offers }),
-    // Aggregate rating from real community reviews only (never fake data)
+    // Aggregate rating — community reviews take priority; FilaScore is the fallback
     ...(ratingValue != null && ratingCount != null && ratingCount > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',
