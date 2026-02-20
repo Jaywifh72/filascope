@@ -16,6 +16,7 @@ import { GuideVSComparison } from './GuideVSComparison';
 import { ArticleSchema } from '@/components/seo/ArticleSchema';
 import { BreadcrumbSchema } from '@/components/seo/BreadcrumbSchema';
 import { FAQSchema } from '@/components/seo/FAQSchema';
+import { RelatedQuestionsSection } from '@/components/seo/RelatedQuestionsSection';
 import { ItemListSchema } from '@/components/seo/ItemListSchema';
 import { generateFilamentSlug } from '@/lib/seoSlugUtils';
 import { BUYING_GUIDE_CONFIGS } from './guideConfigs';
@@ -110,6 +111,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
     ...(config.layout === 'editorial' ? [{ label: 'Our Top Picks for Beginners', anchor: 'picks' }] : []),
     ...afterSections.map(s => ({ label: s.heading, anchor: slugify(s.heading) })),
     ...(config.faqs.length > 0 ? [{ label: 'Frequently Asked Questions', anchor: 'faq' }] : []),
+    ...(config.relatedQuestions?.length ? [{ label: 'People Also Ask', anchor: 'related-questions' }] : []),
     ...(relatedConfigs.length > 0 ? [{ label: 'Related Guides', anchor: 'related-guides' }] : []),
   ];
 
@@ -296,6 +298,16 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
                 </Card>
               ))}
             </div>
+          </section>
+        )}
+
+        {/* Related Questions — People Also Ask */}
+        {config.relatedQuestions && config.relatedQuestions.length > 0 && (
+          <section id="related-questions" className="mb-12 scroll-mt-24">
+            <RelatedQuestionsSection
+              questions={config.relatedQuestions}
+              title="People Also Ask"
+            />
           </section>
         )}
 

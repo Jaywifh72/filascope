@@ -36,6 +36,7 @@ export interface GuideConfig {
   faqs: FAQItem[];
   relatedSlugs: string[];
   aiSnippet?: AiSnippetData;
+  relatedQuestions?: FAQItem[];
 }
 
 export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
@@ -83,6 +84,24 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       runnerUp: { name: 'PLA Basic', brand: 'Bambu Lab', reason: 'best consistency spool-to-spool at a competitive price' },
       budgetPick: { name: 'PLA Filament', brand: 'Hatchbox', reason: 'proven reliability at under $20/kg' },
     },
+    relatedQuestions: [
+      {
+        question: 'What PLA filament has the best surface finish?',
+        answer: 'For the smoothest surface finish, Polymaker PolySonic PLA Pro and eSUN PLA+ consistently top the charts. Both have tight diameter tolerances (±0.02mm) that reduce under-extrusion artifacts, and their formulations print cleanly at 210–220°C. A slightly higher bed temperature (60°C) and moderate print speed (60–80mm/s) amplify the finish quality.',
+      },
+      {
+        question: 'Is 1kg enough PLA for a beginner?',
+        answer: "A 1kg spool is the standard starting point and will last most beginners several weeks of casual printing. A typical small decorative model uses 30–80g, while a medium functional part might use 150–300g. You'll use roughly 10–15kg per year if you print daily, but 1kg is plenty to learn with.",
+      },
+      {
+        question: 'What is the difference between PLA and PLA+?',
+        answer: 'PLA+ (also sold as PLA Pro or ePLA-LW) is standard PLA blended with modifiers — typically impact tougheners or plasticizers — to improve flexibility and reduce brittleness. It prints 5–10°C hotter than standard PLA, has slightly better layer adhesion, and is less prone to snapping under stress. The trade-off is marginally higher cost, typically $2–5 more per kilogram.',
+      },
+      {
+        question: 'Do I need a heated bed for PLA?',
+        answer: "A heated bed is not strictly required for PLA, but it significantly improves first-layer adhesion and reduces warping. If your printer has a heated bed, set it to 50–60°C. On printers without a heated bed, use a PEI sheet or blue painter's tape to help adhesion. Most budget printers include a heated bed, so this is rarely a limitation in practice.",
+      },
+    ],
   },
 
   'best-petg-filaments': {
@@ -205,6 +224,24 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can beginners print PETG?', answer: 'Yes, but PLA is easier. PETG requires slightly higher temperatures, more retraction tuning, and can stick too aggressively to smooth PEI sheets.' },
     ],
     relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'beginners-guide', 'pla-plus-vs-pla-pro', 'silk-pla-comparison'],
+    relatedQuestions: [
+      {
+        question: 'Can I print PETG on a Creality Ender 3?',
+        answer: 'Yes, the Ender 3 prints PETG reliably. You need to set the nozzle to 230–245°C and the bed to 70–85°C. The stock Bowden extruder handles PETG well at moderate speeds (40–60mm/s). A PEI spring-steel sheet or glass bed with hairspray helps with adhesion. Avoid smooth PEI for PETG — it can stick too aggressively and damage the sheet.',
+      },
+      {
+        question: 'Does PETG stick to a PEI sheet?',
+        answer: 'PETG sticks very well to PEI — sometimes too well on smooth surfaces. Use a textured PEI sheet for easy release, or apply a thin layer of glue stick as a release agent on smooth PEI. Textured PEI is the recommended choice for PETG in most community settings. Never print PETG directly on a cold smooth PEI sheet — it can pull off the coating.',
+      },
+      {
+        question: 'Which is better for miniatures, PLA or PETG?',
+        answer: 'PLA is better for miniatures. It has a lower printing temperature and produces sharper details at standard layer heights. PETG\'s slight flexibility can cause fine features to feel soft or rounded. PLA also post-processes more easily — sanding, painting, and priming all work better on PLA. For 28mm scale miniatures at 0.1mm layer height, PLA is the clear choice.',
+      },
+      {
+        question: 'Does PETG yellow over time?',
+        answer: 'PETG has moderate UV resistance compared to PLA, which degrades quickly in sunlight, but it is not UV-stable by itself. Clear or light-colored PETG can yellow noticeably after several months of direct UV exposure. For outdoor applications, ASA is the better choice. If you must use PETG outdoors, a UV-protective clear coat will significantly slow yellowing.',
+      },
+    ],
   },
 
   'beginners-guide': {
@@ -253,6 +290,24 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'What diameter filament do I need?', answer: 'Most modern printers use 1.75mm filament. Some older or industrial printers use 2.85mm. Check your printer\'s specifications.' },
     ],
     relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'hueforge-filaments'],
+    relatedQuestions: [
+      {
+        question: 'How long does a 1kg spool last?',
+        answer: 'A 1kg spool typically lasts 15–40 hours of printing time, depending on infill density and model size. Small decorative prints (30–80g each) yield 12–30 models per spool. Larger functional parts at 20% infill average 5–10 prints per kilogram. Casual weekend printers often get 2–4 weeks from a single spool.',
+      },
+      {
+        question: 'What happens if I print at the wrong temperature?',
+        answer: 'Printing too cold causes poor layer adhesion, brittle parts, rough surfaces, and frequent clogging. Printing too hot causes stringing, oozing, blobbing, and burned filament that smells bad. Both extremes reduce part strength. If in doubt, run a temperature tower — a calibration print that varies temperature in 5°C increments — to find the sweet spot for your filament and printer.',
+      },
+      {
+        question: 'Can I mix filament brands?',
+        answer: 'Yes, you can mix brands as long as you stay within the same material type — for example, any PLA with any other PLA, or any PETG with any other PETG. Temperature requirements and print profiles are generally compatible within a material family. Avoid mixing PLA and PETG in the same print: they have different temperatures and don\'t bond well at layer interfaces.',
+      },
+      {
+        question: 'What is nozzle clogging and how do I prevent it?',
+        answer: 'A nozzle clog happens when filament solidifies inside the nozzle or hotend, blocking the melt zone. It is most often caused by printing too cold, using low-quality filament with impurities, or leaving filament in a hot nozzle for extended periods. Prevent it by purging before long prints, using quality filament from verified brands, setting the correct temperature for your material, and doing a cold pull (atomic pull) if you suspect a partial blockage.',
+      },
+    ],
   },
 
   'hueforge-filaments': {
