@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
+import { HowToSchema } from "@/components/seo/HowToSchema";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -221,6 +222,19 @@ const Wizard = () => {
       <Breadcrumbs
         items={[{ name: "Quick Match Wizard", url: "/wizard" }]}
         className="max-w-2xl mx-auto px-3 sm:px-6 pt-4 pb-1"
+      />
+      <HowToSchema
+        name="How to Find Your Perfect 3D Printer Filament in 60 Seconds"
+        description="Use FilaScope's Quick Match wizard to get personalized filament recommendations based on your printer, project type, material preferences, and budget."
+        totalTime="PT1M"
+        steps={[
+          { name: "Select Your Printer", text: "Choose your 3D printer model from our database of 118+ printers to ensure material compatibility." },
+          { name: "Choose Your Project Type", text: "Tell us what you're printing — functional parts, cosplay, decorative items, or prototypes." },
+          { name: "Set Material Preferences", text: "Select preferred material properties like strength, flexibility, heat resistance, or ease of printing." },
+          { name: "Set Your Budget", text: "Define your price range to filter recommendations to filaments you can afford." },
+          { name: "Get Personalized Recommendations", text: "Review your matched filaments ranked by compatibility score, with direct links to compare specs and buy." },
+        ]}
+        tool={["FilaScope Quick Match Wizard"]}
       />
       <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}>
       <div className="max-w-2xl mx-auto w-full flex flex-col">
