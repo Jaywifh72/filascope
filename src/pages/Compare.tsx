@@ -1,7 +1,7 @@
 // Filament comparison page
 import React, { useEffect, useState, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema, HowToSchema } from "@/components/seo";
+import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema, HowToSchema, Breadcrumbs } from "@/components/seo";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -456,10 +456,10 @@ const Compare = () => {
         ogTitle={pageTitle}
         ogDescription={pageDescription}
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Compare', url: 'https://filascope.com/compare' },
-      ]} />
+      <Breadcrumbs
+        items={[{ name: "Compare Filaments", url: "/compare" }]}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-1"
+      />
       <WebApplicationSchema
         name="FilaScope Filament Comparison Tool"
         url="https://filascope.com/compare"

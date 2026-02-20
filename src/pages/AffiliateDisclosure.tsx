@@ -5,6 +5,7 @@ export default function AffiliateDisclosure() {
     <LegalPageLayout
       title="Affiliate Disclosure"
       lastUpdated="February 7, 2026"
+      breadcrumbUrl="/affiliate-disclosure"
       metaDescription="FilaScope Affiliate Disclosure - Transparency about how we earn commissions from affiliate links while maintaining editorial independence."
     >
       <LegalSection title="Transparency Statement">

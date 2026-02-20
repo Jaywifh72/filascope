@@ -33,7 +33,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { FAQSchema, DatasetSchema, BreadcrumbSchema } from '@/components/seo';
+import { FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
 import { useCurrency } from '@/hooks/useCurrency';
 import { trackTDSearch as trackGA4TDSearch } from '@/lib/analytics';
 
@@ -220,11 +220,9 @@ export default function HueForgeTDDatabase() {
         keywords="HueForge TD values, filament TD database, transmissivity data, lithophane filament, HueForge transmissivity, best filament for HueForge"
       />
 
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: 'https://filascope.com/' },
-          { name: 'HueForge TD Database', url: 'https://filascope.com/hueforge-td-database' },
-        ]}
+      <Breadcrumbs
+        items={[{ name: "HueForge TD Database", url: "/hueforge-td-database" }]}
+        className="max-w-7xl mx-auto px-4 pt-6 pb-1"
       />
       <DatasetSchema
         name="HueForge TD Value Database"

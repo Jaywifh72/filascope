@@ -24,7 +24,7 @@ import { DealsEmptyState } from "@/components/deals/DealsEmptyState";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
-import { ItemListSchema, BreadcrumbSchema } from "@/components/seo";
+import { ItemListSchema, BreadcrumbSchema, Breadcrumbs } from "@/components/seo";
 import { OfferCatalogSchema } from "@/components/seo/OfferCatalogSchema";
 import { formatDistanceToNow } from "date-fns";
 
@@ -173,10 +173,10 @@ const Deals = () => {
         ogTitle={totalDeals > 0 ? `3D Filament Deals & Discounts — ${totalDeals} Active Offers | FilaScope` : 'Today\'s Filament Deals — Best Prices on 3D Printing Materials | FilaScope'}
         ogDescription={totalDeals > 0 ? `Today's best 3D printer filament deals from ${uniqueBrandCount}+ brands. PLA, PETG, ABS & specialty materials. Save up to ${maxDiscount}%. Updated daily.` : metaDescription}
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Deals', url: 'https://filascope.com/deals' },
-      ]} />
+      <Breadcrumbs
+        items={[{ name: "Deals & Discounts", url: "/deals" }]}
+        className="max-w-[1600px] mx-auto px-6 md:px-10 pt-4 pb-1"
+      />
       {totalDeals > 0 && (
         <OfferCatalogSchema
           name="3D Printer Filament Deals"

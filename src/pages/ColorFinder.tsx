@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, WebApplicationSchema } from '@/components/seo';
+import { BreadcrumbSchema, WebApplicationSchema, Breadcrumbs } from '@/components/seo';
 import { Palette, Copy, Layers } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -68,10 +68,10 @@ export default function ColorFinder() {
         ogTitle="Find Filaments by Color — Color Matching Tool | FilaScope"
         ogDescription="Match any color to real 3D printer filaments. Search by hex code, color name, or TD value. Perfect for HueForge lithophanes & color-matched prints."
       />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Color Finder', url: 'https://filascope.com/colors' },
-      ]} />
+      <Breadcrumbs
+        items={[{ name: "Find by Color", url: "/colors" }]}
+        className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-4 pb-1"
+      />
       <WebApplicationSchema
         name="FilaScope Color Finder"
         url="https://filascope.com/colors"

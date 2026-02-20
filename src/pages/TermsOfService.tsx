@@ -5,6 +5,7 @@ export default function TermsOfService() {
     <LegalPageLayout
       title="Terms of Service"
       lastUpdated="February 7, 2026"
+      breadcrumbUrl="/terms-of-service"
       metaDescription="FilaScope Terms of Service - Read the terms and conditions for using our 3D printing filament comparison and price tracking service."
     >
       <LegalSection title="Agreement to Terms">

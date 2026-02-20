@@ -1,4 +1,5 @@
 import { DocumentHead } from "@/components/seo/DocumentHead";
+import { Breadcrumbs } from "@/components/seo";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
@@ -7,13 +8,19 @@ interface LegalPageLayoutProps {
   lastUpdated: string;
   metaDescription: string;
   children: React.ReactNode;
+  /** Breadcrumb label shown after "Home ›". Defaults to `title`. */
+  breadcrumbLabel?: string;
+  /** Breadcrumb URL for the current page. Required to render breadcrumbs. */
+  breadcrumbUrl: string;
 }
 
 export function LegalPageLayout({ 
   title, 
   lastUpdated, 
-  metaDescription, 
-  children 
+  metaDescription,
+  children,
+  breadcrumbLabel,
+  breadcrumbUrl,
 }: LegalPageLayoutProps) {
   return (
     <>
@@ -23,13 +30,20 @@ export function LegalPageLayout({
       />
       
       <div className="min-h-screen bg-background">
+        {/* Breadcrumb */}
+        <div className="max-w-3xl mx-auto px-4 pt-4">
+          <Breadcrumbs
+            items={[{ name: breadcrumbLabel ?? title, url: breadcrumbUrl }]}
+          />
+        </div>
+
         {/* Hero gradient area */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-20" />
           <div className="absolute top-0 right-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl opacity-15" />
           
-          <div className="relative max-w-3xl mx-auto px-4 pt-12 md:pt-16 pb-8">
+          <div className="relative max-w-3xl mx-auto px-4 pt-8 md:pt-10 pb-8">
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
               {title}
             </h1>
@@ -60,6 +74,7 @@ export function LegalPageLayout({
     </>
   );
 }
+
 
 interface LegalSectionProps {
   title: string;
