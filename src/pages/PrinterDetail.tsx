@@ -1317,7 +1317,11 @@ const PrinterDetail = () => {
                       <img
                         src={img}
                         alt={`Thumbnail ${idx + 1}`}
+                        width={64}
+                        height={64}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </button>
                   ))}

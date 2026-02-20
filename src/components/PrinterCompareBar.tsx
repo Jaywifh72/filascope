@@ -114,7 +114,11 @@ export function PrinterCompareBar() {
                             <img
                               src={printer.imageUrl}
                               alt={printer.name}
+                              width={48}
+                              height={48}
                               className="w-full h-full object-contain p-1"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";
                                 e.currentTarget.nextElementSibling?.classList.remove("hidden");

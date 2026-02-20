@@ -110,7 +110,11 @@ export default function SmallDeemphasizedPrinterCard({
               <img 
                 src={productImage} 
                 alt={`${printer.brand?.brand} ${printer.model_name}`}
+                width={240}
+                height={180}
                 className="w-full h-full object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)] grayscale-[50%] group-hover:grayscale-[20%] transition-all"
+                loading="lazy"
+                decoding="async"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
