@@ -552,6 +552,52 @@ const BrandDetail = () => {
   const isPremium = brandBadges.includes('premium');
   const isBudgetFriendly = brandBadges.includes('budget-friendly');
 
+  // Derive price range from live filament data for FAQ
+  const brandPriceRange = useMemo(() => {
+    if (!filaments || filaments.length === 0) return null;
+    const prices = filaments.map(f => f.variant_price).filter((p): p is number => p !== null && p > 0);
+    if (prices.length === 0) return null;
+    return { min: Math.min(...prices), max: Math.max(...prices) };
+  }, [filaments]);
+
+  // Derive top retailer names from product_url domains
+  const topRetailers = useMemo(() => {
+    if (!filaments) return [];
+    const domainCounts: Record<string, number> = {};
+    for (const f of filaments) {
+      if (!f.product_url) continue;
+      try {
+        const domain = new URL(f.product_url).hostname.replace(/^www\./, '');
+        domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+      } catch {}
+    }
+    return Object.entries(domainCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([domain]) => {
+        if (domain.includes('amazon')) return 'Amazon';
+        const slugNoDash = brandSlug.replace(/-/g, '');
+        if (domain.replace(/\./g, '').includes(slugNoDash)) return 'Official Store';
+        return domain
+          .replace(/\.(com|net|org|store|shop|co).*$/, '')
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, c => c.toUpperCase());
+      });
+  }, [filaments, brandSlug]);
+
+  // Derive which regions have live price data
+  const regionsCovered = useMemo(() => {
+    if (!filaments) return ['US'];
+    const regions: string[] = [];
+    if (filaments.some(f => f.variant_price && f.variant_price > 0)) regions.push('US');
+    if (filaments.some(f => (f as any).price_cad && (f as any).price_cad > 0)) regions.push('CA');
+    if (filaments.some(f => (f as any).price_eur && (f as any).price_eur > 0)) regions.push('EU');
+    if (filaments.some(f => (f as any).price_gbp && (f as any).price_gbp > 0)) regions.push('UK');
+    if (filaments.some(f => (f as any).price_aud && (f as any).price_aud > 0)) regions.push('AU');
+    if (filaments.some(f => (f as any).price_jpy && (f as any).price_jpy > 0)) regions.push('JP');
+    return regions.length > 0 ? regions : ['US'];
+  }, [filaments]);
+
   return (
     <div className="min-h-screen p-8">
       {/* Breadcrumb Schema - now handled by DetailBreadcrumb */}
@@ -723,6 +769,9 @@ const BrandDetail = () => {
               brandName={displayName}
               productCount={filaments?.length ?? 0}
               materials={availableMaterials}
+              priceRange={brandPriceRange}
+              topRetailers={topRetailers}
+              regionsCovered={regionsCovered}
               isVerified={automatedBrand?.is_visible ?? false}
               isPremium={isPremium}
               isBudgetFriendly={isBudgetFriendly}
