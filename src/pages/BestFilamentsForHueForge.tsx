@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { BreadcrumbSchema, ItemListSchema, FAQSection, ArticleSchema } from '@/components/seo';
+import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -273,6 +274,17 @@ export default function BestFilamentsForHueForge() {
         </section>
 
         <FAQSection faqs={FAQS} />
+
+        <RelatedContentBlock
+          title="Related Guides"
+          className="mt-8"
+          links={[
+            { label: 'HueForge TD Database', href: '/hueforge-td-database', description: 'Search all filament TD values' },
+            { label: 'Best White Filaments', href: '/best-white-filaments', description: 'Essential base layer filaments for HueForge' },
+            { label: 'Filament Temperature Guide', href: '/filament-temperature-guide', description: 'Print settings for every material type' },
+            { label: 'Best PLA Filaments', href: '/guides/best-pla-filaments', description: 'Top PLA picks across all categories' },
+          ]}
+        />
       </div>
     </div>
   );

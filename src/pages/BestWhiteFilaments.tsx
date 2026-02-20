@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { BreadcrumbSchema, ItemListSchema, FAQSection, ArticleSchema } from '@/components/seo';
+import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -237,6 +238,17 @@ export default function BestWhiteFilaments() {
         </section>
 
         <FAQSection faqs={FAQS} />
+
+        <RelatedContentBlock
+          title="Related Guides"
+          className="mt-8"
+          links={[
+            { label: 'Best Filaments for HueForge', href: '/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane printing' },
+            { label: 'HueForge TD Database', href: '/hueforge-td-database', description: 'Full transmissivity database' },
+            { label: 'PLA vs PETG', href: '/pla-vs-petg', description: 'Which material is best for your project?' },
+            { label: 'Best Filaments for Beginners', href: '/best-filaments-for-beginners', description: 'Easy-to-print filament recommendations' },
+          ]}
+        />
       </div>
     </div>
   );
