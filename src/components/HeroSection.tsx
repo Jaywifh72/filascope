@@ -243,7 +243,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
                 Find Your Perfect{' '}
               </span>
               <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-primary">
-                Filament.
+                3D Printer Filament.
               </span>
             </h1>
             
