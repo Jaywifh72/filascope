@@ -1440,6 +1440,10 @@ const GUIDE_DATES: Record<string, { date: string; isTopLevel?: boolean }> = {
   "pla-vs-petg":                           { date: "2026-01-15",  isTopLevel: true },
   "best-filaments-for-beginners":          { date: "2026-01-08",  isTopLevel: true },
   "best-filaments-for-hueforge":           { date: "2026-01-20",  isTopLevel: true },
+  // HueForge TD topical authority cluster
+  "what-is-hueforge-td":                   { date: "2026-02-20" },
+  "best-white-filaments-for-hueforge":     { date: "2026-02-20" },
+  "how-to-measure-filament-td":            { date: "2026-02-20" },
 };
 
 // Fixed lastmod for static informational pages (update when content changes)

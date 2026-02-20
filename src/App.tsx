@@ -151,6 +151,9 @@ const BrandComparePage = lazy(() => import("./pages/BrandComparePage"));
 const GuidePrintSettings = lazy(() => import("./pages/GuidePrintSettings"));
 const GuideTroubleshooting = lazy(() => import("./pages/GuideTroubleshooting"));
 const BuyingGuide = lazy(() => import("./pages/BuyingGuide"));
+const HueForgeWhatIsTD = lazy(() => import("./pages/guides/HueForgeWhatIsTD"));
+const BestWhiteFilamentsForHueForge = lazy(() => import("./pages/guides/BestWhiteFilamentsForHueForge"));
+const HowToMeasureFilamentTD = lazy(() => import("./pages/guides/HowToMeasureFilamentTD"));
 const EmbedProduct = lazy(() => import("./pages/EmbedProduct"));
 const ResourcesProfiles = lazy(() => import("./pages/ResourcesProfiles"));
 const Install = lazy(() => import("./pages/Install"));
@@ -334,6 +337,9 @@ const App = () => (
                   <Route path="/learn/:slug" element={<GuideDetail />} />
                   <Route path="/guides/print-settings" element={<GuidePrintSettings />} />
                   <Route path="/guides/troubleshooting" element={<GuideTroubleshooting />} />
+                  <Route path="/guides/what-is-hueforge-td" element={<HueForgeWhatIsTD />} />
+                  <Route path="/guides/best-white-filaments-for-hueforge" element={<BestWhiteFilamentsForHueForge />} />
+                  <Route path="/guides/how-to-measure-filament-td" element={<HowToMeasureFilamentTD />} />
                   <Route path="/guides/:slug" element={<BuyingGuide />} />
                   <Route path="/resources/profiles" element={<ResourcesProfiles />} />
                   <Route path="/install" element={<Install />} />
