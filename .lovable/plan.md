@@ -1,191 +1,181 @@
 
-## Content SEO: Expand the Guide Library
+## Admin Analytics Dashboard — Precise Gap Analysis & Enhancement Plan
 
 ### What Already Exists (Do Not Re-implement)
 
-The guide infrastructure is **complete and production-quality**. There is no need to build a new template system.
+The `/admin/analytics` page is fully wired: route ✅, `AdminLayout` auth guard ✅, 6 tabs ✅. Here is a panel-by-panel audit:
 
-| Component | Status |
-|---|---|
-| `BuyingGuideTemplate.tsx` | Full template with ToC, product cards, FAQ schema, Article schema, breadcrumbs, timestamps, related guides sidebar |
-| `guideConfigs.ts` | 13 configs already written: PLA, PETG, ABS, PLA vs PETG, Beginner, HueForge, HueForge Lithophanes, PLA+ vs PLA Pro, Bambu P1S, Silk PLA, ASA vs ABS, Ender 3, Bambu A1 |
-| `/guides/:slug` route | Already wired to `BuyingGuideTemplate` |
-| `useGuideFilaments` hook | Pulls live ranked filaments from DB by material, TD, and score |
-| SEO fields | `seoTitle`, `seoDescription`, `keywords`, `canonical`, Article + FAQ + Breadcrumb JSON-LD all already emit |
+**Tab 1: Affiliate Performance (`AffiliatePanel.tsx`)** — PARTIALLY DONE
+- KPI cards: Today / Week / Month clicks + Unique Sessions ✅
+- Clicks by Brand (horizontal bar chart) ✅
+- Clicks by Region (pie chart) ✅
+- Top Clicked Products table (10 rows) ✅
+- Missing: **Clicks by store** (bar chart) — `affiliate_clicks_daily` has a `store` column
+- Missing: **Clicks by material type** — `affiliate_clicks` has no material column, but `product_type` exists
+- Missing: **Top 20 products** (currently limited to 10; need to expand to 20)
+- Missing: **Click trend over time** (line/area chart by day)
+- Missing: **90d / All Time** date range options (currently only Today / 7d / 30d)
 
-**The real gap:** 20+ requested guide slugs have no config entry. Additionally, several existing configs are not listed in the `LearningCenter` `GUIDES` array, so they're unreachable from the `/learn` index.
+**Tab 2: Content Metrics** — DOES NOT EXIST (no "Content Metrics" tab anywhere)
+- Needs: product totals (8,297 total; 7,537 with price; 7,862 with image; 5,562 with TDS URL)
+- Needs: products by material breakdown (chart)
+- Needs: recently added products list
+- Needs: deals count + discount distribution
 
----
+**Tab 3: Search Analytics (`SearchPanel.tsx`)** — MOSTLY DONE ✅
+- Top search terms ✅ (20 rows)
+- Zero-result searches ✅
+- Search volume trend (30-day area chart) ✅
+- Missing: **Search → product view → affiliate click funnel** — requires correlating `search_logs.session_id` with `affiliate_clicks.session_id`
 
-### Gaps to Fill
+**Tab 4: SEO Health (`SeoHealthPanel.tsx`)** — PARTIAL
+- robots.txt check ✅
+- Sitemap configured ✅
+- Prerender check ✅
+- Hreflang badges ✅
+- Indexable page counts (filaments + printers) ✅
+- Missing: **Sitemap URL count by type** (currently shows total filament+printer count but not broken by type)
+- Missing: **Pages with missing meta descriptions** — would need DB query
+- Missing: **Pages with missing H1s** — needs DB query
+- Note: Structured data validation is already covered by `SeoHealthPanel` + `SearchConsolePanel`
 
-#### Gap 1 — Missing `BUYING_GUIDE_CONFIGS` entries (new guides to add to `guideConfigs.ts`)
+**Tab 5: Content Gaps (`ContentGapsPanel.tsx`)** — EXISTS under separate tab ✅
 
-These slugs appear in `relatedSlugs` of existing guides or are requested in the brief but have no config:
+**Tab 6: Search Console (`SearchConsolePanel.tsx`)** — COMPREHENSIVE ✅
 
-**Material "Best Of" guides:**
-- `best-tpu-filaments` — Best TPU Filaments in 2026
-- `best-asa-filaments` — Best ASA Filaments in 2026
-- `best-nylon-filaments` — Best Nylon (PA) Filaments in 2026
-- `best-pc-filaments` — Best Polycarbonate Filaments in 2026
-- `best-silk-pla-filaments` — redirect alias for `silk-pla-comparison` (already exists — just need GUIDES entry)
-
-**Material vs guides:**
-- `abs-vs-asa` — alias/redirect covered by `asa-vs-abs-outdoor-printing` ✅ (already exists)
-- `petg-vs-abs` — PETG vs ABS: Which Should You Choose?
-- `tpu-vs-petg` — TPU vs PETG: Flexible vs Rigid
-
-**Buyer intent guides:**
-- `best-budget-filaments` — Best Budget Filaments Under $15/kg
-- `best-filaments-for-miniatures` — Best Filaments for Miniatures & Detailed Prints
-- `best-filaments-for-functional-parts` — Best Filaments for Functional Parts
-- `best-filaments-for-outdoor-use` — Best Filaments for Outdoor Use
-- `best-high-speed-pla-filaments` — Best High-Speed PLA Filaments
-
-**HueForge guides:**
-- `hueforge-beginners-guide` — Complete HueForge Guide for Beginners
-- `understanding-td-values` — Understanding TD Values: What They Mean
-- `hueforge-color-selection` — HueForge Color Selection Guide
-
-**Printer-specific:**
-- `best-filament-for-prusa-mk4` — Best Filaments for Prusa MK4
-- `best-filament-for-creality-k1` — Best Filaments for Creality K1
-
-That is **16 new configs** to add to `guideConfigs.ts`.
-
-#### Gap 2 — LearningCenter `GUIDES` array is missing several existing configs
-
-These configs exist in `guideConfigs.ts` but are absent from the `GUIDES` metadata array in `LearningCenter.tsx` (so they don't appear on the `/learn` index page):
-- `asa-vs-abs-outdoor-printing`
-- `silk-pla-comparison`
-- `pla-plus-vs-pla-pro`
-- `best-filament-for-bambu-lab-p1s` ✅ (present)
-- `best-filaments-for-hueforge-lithophanes`
-- `best-filament-for-ender-3`
-- `best-filament-for-bambu-lab-a1`
-
-These need to be added to the `GUIDES` array.
-
-#### Gap 3 — LearningCenter category taxonomy needs "hueforge" and "printer-specific" categories
-
-Currently `CATEGORIES` only has: `all`, `buying-guide`, `beginner`, `materials`, `troubleshooting`, `advanced`. The HueForge-specific and printer-specific guides deserve their own category so users can filter to them.
+**Date Range** — The `AffiliatePanel` only supports Today/7d/30d. The user requests 7d/30d/90d/All Time.
 
 ---
 
-### Implementation Plan
+### What Needs to Be Built
 
-#### File 1: `src/components/guides/guideConfigs.ts` — EDIT
+#### Priority 1 — Add `ContentMetricsPanel` (entirely new panel)
 
-Add 16 new `GuideConfig` entries to `BUYING_GUIDE_CONFIGS`. Each follows the identical structure:
+New file: `src/components/admin/analytics/ContentMetricsPanel.tsx`
 
+Queries:
 ```typescript
-{
-  slug: 'best-tpu-filaments',
-  title: 'Best TPU Filaments in 2026',
-  seoTitle: 'Best TPU Filaments 2026 — Flexible 3D Printing Picks | FilaScope',
-  seoDescription: '...140-160 chars...',
-  description: '...',
-  category: 'buying-guide',
-  readTime: 11,
-  publishedAt: '2026-02-20',
-  updatedAt: '2026-02-20',
-  keywords: [...],
-  filters: { material: 'TPU', sortBy: 'score', limit: 10 },
-  layout: 'ranked-list',
-  editorialSections: [
-    { heading: '...', content: '...', position: 'before' },
-    { heading: '...', content: '...', position: 'after' },
-  ],
-  faqs: [
-    { question: '...', answer: '...' },
-    ...3 FAQs each
-  ],
-  relatedSlugs: [...],
-}
+// Product completeness
+SELECT 
+  COUNT(*) as total,
+  COUNT(variant_price) as with_price,
+  COUNT(featured_image) as with_image,
+  COUNT(tds_url) as with_tds,
+  COUNT(color_hex) as with_color,
+  COUNT(transmission_distance) as with_td  -- only 3 rows but still shown
+FROM filaments
+
+// Material breakdown
+SELECT material, COUNT(*) as count FROM filaments 
+WHERE material IS NOT NULL GROUP BY material ORDER BY count DESC LIMIT 12
+
+// Recently added
+SELECT product_title, vendor, material, variant_price, created_at 
+FROM filaments ORDER BY created_at DESC LIMIT 10
+
+// Deals
+SELECT COUNT(*) as deals, 
+  AVG((variant_compare_at_price - variant_price) / variant_compare_at_price * 100) as avg_discount
+FROM filaments 
+WHERE variant_compare_at_price > variant_price AND variant_price > 0
 ```
 
-The 16 new configs to add, grouped:
+Sections:
+1. **5 KPI cards**: Total Products (8,297) / With Price (7,537 = 90.8%) / With Image (7,862 = 94.8%) / With TDS (5,562 = 67.0%) / Active Deals (914)
+2. **Material breakdown** — horizontal bar chart (top 12 materials with counts)
+3. **Recently Added Products** — table with product name, brand, material, price, date
+4. **Deals & Discounts** — count + a small bar chart of discount brackets (10–20%, 20–30%, 30%+)
 
-**Material best-of (6):** `best-tpu-filaments`, `best-asa-filaments`, `best-nylon-filaments`, `best-pc-filaments`, `best-budget-filaments`, `best-high-speed-pla-filaments`
+#### Priority 2 — Upgrade `AffiliatePanel` date range + missing charts
 
-**VS comparisons (2):** `petg-vs-abs`, `tpu-vs-petg`
+**File: `src/components/admin/analytics/AffiliatePanel.tsx`**
 
-**Use-case guides (3):** `best-filaments-for-miniatures`, `best-filaments-for-functional-parts`, `best-filaments-for-outdoor-use`
+Changes:
+1. **Date range**: Add `90d` and `all` options. Change `DateRange` type to `"today" | "7d" | "30d" | "90d" | "all"`. For `all`, use `startDate = "2020-01-01"`.
 
-**HueForge guides (3):** `hueforge-beginners-guide`, `understanding-td-values`, `hueforge-color-selection`
-
-**Printer-specific (2):** `best-filament-for-prusa-mk4`, `best-filament-for-creality-k1`
-
-Filters for each:
-- TPU → `{ material: 'TPU', sortBy: 'score', limit: 10 }`
-- ASA → `{ material: 'ASA', sortBy: 'score', limit: 10 }`
-- Nylon → `{ material: 'Nylon', sortBy: 'score', limit: 10 }`
-- PC → `{ material: 'PC', sortBy: 'score', limit: 10 }`
-- Budget → `{ materials: ['PLA', 'PETG', 'ABS'], sortBy: 'price', limit: 10 }`
-- High-speed PLA → `{ material: 'PLA', sortBy: 'score', limit: 10 }` + `high_speed_capable: true` (add filter support)
-- PETG vs ABS → `{ materials: ['PETG', 'ABS'], sortBy: 'score', limit: 6, layout: 'vs-comparison' }`
-- TPU vs PETG → `{ materials: ['TPU', 'PETG'], sortBy: 'score', limit: 6, layout: 'vs-comparison' }`
-- Miniatures → `{ materials: ['PLA', 'Resin'], sortBy: 'score', limit: 10 }`
-- Functional parts → `{ materials: ['PETG', 'ABS', 'Nylon', 'ASA'], sortBy: 'score', limit: 10 }`
-- Outdoor → `{ materials: ['ASA', 'PETG', 'ABS'], sortBy: 'score', limit: 10 }`
-- HueForge guides → `{ requireTD: true, sortBy: 'td', limit: 15 }` (reuse TD filter)
-- Prusa MK4 → `{ materials: ['PLA', 'PETG', 'ASA', 'ABS'], sortBy: 'score', limit: 10 }`
-- Creality K1 → `{ materials: ['PLA', 'PETG', 'TPU'], sortBy: 'score', limit: 10 }`
-
-#### File 2: `src/pages/LearningCenter.tsx` — EDIT
-
-**Part A:** Add 16 new entries to the `GUIDES` metadata array:
-
+2. **Clicks by Store** — new bar chart querying `affiliate_clicks_daily.store`:
 ```typescript
-{
-  slug: 'best-tpu-filaments',
-  title: 'Best TPU Filaments in 2026',
-  description: 'Flexible filament ranked by Shore hardness, print quality, and compatibility with Bambu Lab, Ender 3, and Prusa printers.',
-  category: 'buying-guide',
-  readTime: 11,
-  publishedAt: '2026-02-20',
-  isBuyingGuide: true,
-},
+const { data: storeData } = useQuery({
+  queryKey: ["analytics-store-clicks", range],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from("affiliate_clicks_daily")
+      .select("store, clicks")
+      .gte("date", startDate);
+    // aggregate by store, sort desc, top 10
+  }
+});
 ```
 
-**Part B:** Add previously-missing existing guides to the `GUIDES` array:
-- `asa-vs-abs-outdoor-printing`
-- `silk-pla-comparison`
-- `pla-plus-vs-pla-pro`
-- `best-filaments-for-hueforge-lithophanes`
-- `best-filament-for-ender-3`
-- `best-filament-for-bambu-lab-a1`
-
-**Part C:** Add two new categories to `CATEGORIES`:
+3. **Clicks by product_type** (material proxy) — from `affiliate_clicks.product_type`:
 ```typescript
-{ id: 'hueforge', label: 'HueForge', icon: Layers },
-{ id: 'printer-specific', label: 'Printer Guides', icon: Printer },
+.from("affiliate_clicks")
+.select("product_type")
+.gte("clicked_at", startDate)
+// aggregate by product_type
 ```
 
-And update `getCategoryConfig` to handle these two new values.
+4. **Click trend over time** — line chart using `useClicksByDay` hook (already exists! just needs to be rendered):
+```typescript
+const { data: clicksByDay } = useClicksByDay(filters);
+// render as LineChart with date on X axis, sum of click_count on Y
+```
 
-**Part D:** Tag all new guide metadata entries with the appropriate category (HueForge guides get `category: 'hueforge'`, printer guides get `category: 'printer-specific'`).
+5. **Top products expanded to 20** — change `.slice(0, 10)` to `.slice(0, 20)` and `.limit(500)` to `.limit(1000)`.
 
-**Part E:** Update the `GuideConfig['category']` type in both `guideConfigs.ts` and `LearningCenter.tsx` to include `'hueforge' | 'printer-specific'`.
+#### Priority 3 — Add Search Funnel to `SearchPanel`
+
+**File: `src/components/admin/analytics/SearchPanel.tsx`**
+
+Add a "Search → Click Funnel" section. Correlate `search_logs.session_id` with `affiliate_clicks.session_id`:
+```typescript
+// Sessions that searched (30d)
+const searchSessions = new Set(searchLogs.map(r => r.session_id));
+// Sessions that also clicked affiliate
+const clickSessions = new Set(affiliateClicks.map(r => r.session_id));
+// Overlap
+const converted = [...searchSessions].filter(s => clickSessions.has(s)).length;
+const conversionRate = searchSessions.size > 0 ? (converted / searchSessions.size * 100).toFixed(1) : 0;
+```
+
+Render as 3 funnel steps:
+- Searches: N sessions
+- Product Views: N/A (would need page view tracking — render as "—" placeholder)
+- Affiliate Clicks: N sessions with rate %
+
+#### Priority 4 — Add "Content" tab to the Analytics page
+
+**File: `src/pages/admin/Analytics.tsx`**
+
+Add a new `TabsTrigger value="content"` between "affiliate" and "search", and a matching `TabsContent`.
 
 ---
 
-### Summary of Changes
+### Summary of Files to Change
 
 | File | Change |
 |---|---|
-| `src/components/guides/guideConfigs.ts` | Add 16 new `GuideConfig` entries, update `category` union type |
-| `src/pages/LearningCenter.tsx` | Add 22 entries to `GUIDES` array, 2 new categories, update `getCategoryConfig` |
+| `src/components/admin/analytics/ContentMetricsPanel.tsx` | **CREATE** — new content metrics tab |
+| `src/components/admin/analytics/AffiliatePanel.tsx` | **EDIT** — add 90d/all range, store chart, material chart, trend chart, expand top products to 20 |
+| `src/components/admin/analytics/SearchPanel.tsx` | **EDIT** — add search→click funnel section |
+| `src/pages/admin/Analytics.tsx` | **EDIT** — add Content Metrics tab + import |
 
-### No New Routes Needed
+### No Database Changes Required
 
-All new guides automatically work under `/guides/:slug` via the existing `BuyingGuide.tsx` page, which calls `getBuyingGuideConfig(slug)` and renders `BuyingGuideTemplate`. No routing changes are needed.
+All data is already in the database. The `affiliate_clicks`, `affiliate_clicks_daily`, `filaments`, `search_logs`, and `search_zero_results` tables are all readable by authenticated admin users via existing RLS policies.
 
-### Content Quality
+### No New Routes Required
 
-Each new config will include:
-- Keyword-targeted `seoTitle` (≤60 chars) and `seoDescription` (140–160 chars)
-- 2 `editorialSections` (one `before`, one `after`) with practical technical content (~300–400 words combined)
-- 3 FAQs targeting question-intent search queries (`what is the best X for Y?`)
-- Relevant `relatedSlugs` pointing to existing configs for internal link equity
-- `publishedAt` and `updatedAt` dates for `Article` schema freshness signals
+`/admin/analytics` already exists, is lazy-loaded, and is behind `AdminLayout`'s auth guard.
+
+### Data Notes from Live DB
+
+From querying the actual database:
+- Total filaments: **8,297**
+- With price: **7,537** (90.8%)
+- With image: **7,862** (94.8%)
+- With TDS URL: **5,562** (67.0%)
+- With TD (HueForge `transmission_distance`): **3** (shown as near-zero)
+- Active deals: **914**
+- Affiliate clicks in DB: **35** (still early, limited data for charts — handled with empty-state UI)
+- Top materials: PLA (3,141), PETG (834), PLA+ (743), ABS (501), HTPLA (329)
