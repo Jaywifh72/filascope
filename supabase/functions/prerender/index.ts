@@ -868,11 +868,11 @@ function comparePage(): PageData {
 }
 
 function colorFinderPage(): PageData {
-  const crumbs = [{ name: "Home", url: "/" }, { name: "Color Finder", url: "/color-finder" }];
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Color Finder", url: "/colors" }];
   return {
     type: "tool", title: "3D Filament Color Finder — Search by Color | FilaScope",
     description: "Find 3D printer filaments by exact color. Search by hex code, color name, or upload an image to match filaments visually.",
-    canonical: "/color-finder", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    canonical: "/colors", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
     h1: "3D Filament Color Finder", bodyText: "Search for 3D printer filaments by color. Match hex codes, browse color families, or find the closest filament to any color.",
   };
 }
@@ -1394,7 +1394,7 @@ const STATIC_PAGES = [
   { path: "/brands/compare", priority: 0.7, changefreq: "monthly" },
   { path: "/compare", priority: 0.7, changefreq: "monthly" },
   { path: "/wizard", priority: 0.7, changefreq: "monthly" },
-  { path: "/color-finder", priority: 0.7, changefreq: "monthly" },
+  { path: "/colors", priority: 0.7, changefreq: "monthly" },
   { path: "/hueforge-td-database", priority: 0.7, changefreq: "weekly" },
   { path: "/hueforge-filaments", priority: 0.7, changefreq: "weekly" },
   { path: "/accessories", priority: 0.7, changefreq: "weekly" },
@@ -1505,10 +1505,9 @@ function sitemapGuides(): string {
 }
 
 function sitemapIndex(): string {
-  // Sub-sitemap <loc> entries point directly to the edge function so crawlers
-  // can fetch them without any host-level redirect (Lovable hosting doesn't
-  // support _redirects / server-side proxy rules).
-  const EDGE_BASE = "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=";
+  // Sub-sitemap <loc> entries use filascope.com domain URLs so Google accepts
+  // them as same-domain (required by the sitemap protocol).
+  // The _redirects file proxies these paths to this edge function.
   const subs = [
     "sitemap-pages.xml",
     "sitemap-filaments.xml",
@@ -1517,7 +1516,7 @@ function sitemapIndex(): string {
     "sitemap-guides.xml",
     "sitemap-colors.xml",
   ];
-  const items = subs.map((s) => `  <sitemap><loc>${EDGE_BASE}/${s}</loc></sitemap>`).join("\n");
+  const items = subs.map((s) => `  <sitemap><loc>${BASE_URL}/${s}</loc></sitemap>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</sitemapindex>`;
 }
 
