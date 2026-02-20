@@ -268,23 +268,33 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
           {/* Main Content */}
           <article className="flex-1 min-w-0 max-w-3xl">
             {/* Meta */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
               <Badge variant="outline" className={categoryConfig.color}>
                 {categoryConfig.label}
               </Badge>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   {guide.readTime} min read
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  {new Date(guide.publishedAt).toLocaleDateString('en-US', { 
+                  Published {new Date(guide.publishedAt).toLocaleDateString('en-US', { 
                     month: 'long', 
                     day: 'numeric', 
                     year: 'numeric' 
                   })}
                 </span>
+                {guide.updatedAt && (
+                  <span className="flex items-center gap-1 text-primary/80 font-medium">
+                    <Calendar className="w-4 h-4" />
+                    Updated {new Date(guide.updatedAt).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </span>
+                )}
               </div>
             </div>
 
