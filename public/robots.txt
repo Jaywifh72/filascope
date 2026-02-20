@@ -1,4 +1,4 @@
-# FilaScope robots.txt — Updated 2026-02-20
+# FilaScope robots.txt — AI-optimized — Updated 2026-02-20
 
 User-agent: *
 Allow: /
@@ -7,15 +7,9 @@ Disallow: /auth/
 Disallow: /admin/
 Disallow: /_/
 
-User-agent: GPTBot
-Allow: /
+Sitemap: https://filascope.com/sitemap.xml
 
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
+# Search Engines
 User-agent: Googlebot
 Allow: /
 
@@ -25,4 +19,63 @@ Allow: /
 User-agent: Applebot
 Allow: /
 
-Sitemap: https://filascope.com/sitemap.xml
+# AI Answer Engines
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# AI Training Crawlers
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+# Social Media Crawlers
+User-agent: FacebookExternalHit
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+# Crawl-delay for high-volume AI bots
+User-agent: GPTBot
+Crawl-delay: 2
+
+User-agent: ClaudeBot
+Crawl-delay: 2
+
+User-agent: PerplexityBot
+Crawl-delay: 2
