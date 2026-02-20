@@ -16,6 +16,8 @@ import { GuideVSComparison } from './GuideVSComparison';
 import { ArticleSchema } from '@/components/seo/ArticleSchema';
 import { BreadcrumbSchema } from '@/components/seo/BreadcrumbSchema';
 import { FAQSchema } from '@/components/seo/FAQSchema';
+import { ItemListSchema } from '@/components/seo/ItemListSchema';
+import { generateFilamentSlug } from '@/lib/seoSlugUtils';
 import { BUYING_GUIDE_CONFIGS } from './guideConfigs';
 import { useDocumentHead } from '@/hooks/useDocumentHead';
 import { useRelatedFilaments } from '@/hooks/useRelatedFilaments';
@@ -124,6 +126,26 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
       />
       <BreadcrumbSchema items={breadcrumbs} />
       {config.faqs.length > 0 && <FAQSchema faqs={config.faqs} />}
+      {config.layout === 'ranked-list' && filaments && filaments.length > 0 && (
+        <ItemListSchema
+          name={config.title}
+          description={config.seoDescription}
+          itemListOrder="Descending"
+          items={filaments.map((f, i) => {
+            const slug = f.product_handle || generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
+            return {
+              position: i + 1,
+              name: f.product_title,
+              url: `https://filascope.com/filament/${slug}`,
+              image: f.featured_image ?? undefined,
+              brand: f.vendor ?? undefined,
+              material: f.material ?? undefined,
+              price: f.variant_price ?? undefined,
+              priceCurrency: 'USD',
+            };
+          })}
+        />
+      )}
 
       {/* Header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-40">
