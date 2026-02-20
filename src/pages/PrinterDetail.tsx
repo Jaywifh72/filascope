@@ -673,7 +673,25 @@ const PrinterDetail = () => {
         description={seoDescription}
         image={seoImage}
         brand={printerBrand}
-        sku={printer.printer_id}
+        sku={
+          printer.printer_id ||
+          // Generated fallback: BRAND-MODEL e.g. "BAMBULAB-X1-CARBON"
+          [printerBrand, printerModel]
+            .filter(Boolean)
+            .join('-')
+            .toUpperCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^A-Z0-9-]/g, '') || null
+        }
+        mpn={
+          printer.printer_id ||
+          [printerBrand, printerModel, printer.printer_technology]
+            .filter(Boolean)
+            .join('-')
+            .toUpperCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^A-Z0-9-]/g, '') || null
+        }
         url={`https://filascope.com/printers/${canonicalPrinterSlug}`}
         price={displayPrice}
         availability={!isDiscontinued}
@@ -701,6 +719,9 @@ const PrinterDetail = () => {
         printerHeightMm={(printer as any).machine_height_mm}
         ratingValue={printer.rating_community_overall}
         ratingCount={printer.review_count_aggregated}
+        bestRating={5}
+        worstRating={1}
+        hasReturnPolicy={true}
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">

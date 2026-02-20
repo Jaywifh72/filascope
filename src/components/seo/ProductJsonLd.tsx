@@ -27,11 +27,14 @@ interface ProductJsonLdProps {
   availability?: boolean;
   // Regional pricing support
   regionalOffers?: RegionalOffer[];
-  // Aggregate rating support (FilaScope scores)
+  // Aggregate rating support (community reviews)
   ratingValue?: number | null;
   ratingCount?: number | null;
   bestRating?: number;
   worstRating?: number;
+  // Shipping & return policy for Merchant Center eligibility
+  shippingRegions?: RegionCode[];
+  hasReturnPolicy?: boolean;
   // Technical specs for additionalProperty
   transmissionDistance?: number | null;
   nozzleTempMin?: number | null;
@@ -104,8 +107,10 @@ export function ProductJsonLd({
   regionalOffers,
   ratingValue,
   ratingCount,
-  bestRating = 10,
-  worstRating = 0,
+  bestRating = 5,
+  worstRating = 1,
+  shippingRegions,
+  hasReturnPolicy = true,
   transmissionDistance,
   nozzleTempMin,
   nozzleTempMax,
@@ -291,8 +296,55 @@ export function ProductJsonLd({
     });
   }
 
+  // Build shipping details for supported regions
+  const buildShippingDetails = () => {
+    const regions = shippingRegions ?? (['US', 'CA', 'UK', 'AU', 'EU'] as RegionCode[]);
+    return regions.map(r => ({
+      '@type': 'OfferShippingDetails',
+      shippingRate: {
+        '@type': 'MonetaryAmount',
+        value: '0',
+        currency: activeCurrency,
+      },
+      shippingDestination: {
+        '@type': 'DefinedRegion',
+        addressCountry: REGION_COUNTRY_CODES[r],
+      },
+      deliveryTime: {
+        '@type': 'ShippingDeliveryTime',
+        handlingTime: {
+          '@type': 'QuantitativeValue',
+          minValue: 1,
+          maxValue: 3,
+          unitCode: 'DAY',
+        },
+        transitTime: {
+          '@type': 'QuantitativeValue',
+          minValue: 2,
+          maxValue: 14,
+          unitCode: 'DAY',
+        },
+      },
+    }));
+  };
+
+  // Return policy for Merchant Center eligibility
+  const returnPolicy = hasReturnPolicy
+    ? {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'US',
+        returnPolicyCategory:
+          'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 30,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+      }
+    : undefined;
+
   // Build offers array for regional pricing (Schema.org AggregateOffer)
   const buildOffers = () => {
+    const shippingDetails = buildShippingDetails();
+
     // If we have regional offers, create AggregateOffer + individual Offers
     if (regionalOffers && regionalOffers.length > 0) {
       // All offer prices are already in user's currency (converted by detail pricing hook)
@@ -308,6 +360,7 @@ export function ProductJsonLd({
         availability: regionalOffers.some(o => o.availability !== false)
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
+        ...(returnPolicy && { hasMerchantReturnPolicy: returnPolicy }),
         offers: regionalOffers.map(offer => ({
           '@type': 'Offer',
           priceCurrency: offer.currency || activeCurrency,
@@ -316,6 +369,7 @@ export function ProductJsonLd({
             ? 'https://schema.org/InStock'
             : 'https://schema.org/OutOfStock',
           url: offer.url || url,
+          shippingDetails,
           ...(offer.sellerName && {
             seller: {
               '@type': 'Organization',
@@ -344,6 +398,8 @@ export function ProductJsonLd({
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
       url,
+      shippingDetails,
+      ...(returnPolicy && { hasMerchantReturnPolicy: returnPolicy }),
       areaServed: {
         '@type': 'Country',
         name: REGION_COUNTRY_NAMES[userRegion as RegionCode] || 'United States',
@@ -367,7 +423,7 @@ export function ProductJsonLd({
         name: brand,
       },
     }),
-    category: printerType 
+    category: printerType
       ? `3D Printer - ${printerType}`
       : `3D Printer Filament${material ? ` - ${material}` : ''}`,
     ...(material && { material }),
@@ -415,7 +471,7 @@ export function ProductJsonLd({
     }),
     ...(additionalProperties.length > 0 && { additionalProperty: additionalProperties }),
     ...(offers && { offers }),
-    // Aggregate rating from community reviews
+    // Aggregate rating from real community reviews only (never fake data)
     ...(ratingValue != null && ratingCount != null && ratingCount > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',
