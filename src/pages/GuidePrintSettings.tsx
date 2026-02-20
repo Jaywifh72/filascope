@@ -1,4 +1,5 @@
 import { DocumentHead } from "@/components/seo/DocumentHead";
+import { ArticleSchema } from "@/components/seo/ArticleSchema";
 import { Link } from "react-router-dom";
 import { SlidersHorizontal, Clock, ArrowLeft, BookOpen } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
@@ -19,6 +20,13 @@ const GuidePrintSettings = () => {
       <DocumentHead
         title="Print Settings Guide | FilaScope"
         description="Learn optimal print settings for different materials. Master layer height, print speed, temperature, and more."
+      />
+      <ArticleSchema
+        headline="Print Settings Guide"
+        description="Learn optimal print settings for different materials. Master layer height, print speed, temperature, and more."
+        url="https://filascope.com/print-settings-guide"
+        datePublished="2025-01-15"
+        dateModified="2026-02-20"
       />
 
       <div className="min-h-screen bg-background">
