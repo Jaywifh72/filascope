@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -96,6 +96,10 @@ function BackToResults() {
 }
 const FilamentDetail = () => {
   const { id } = useParams();
+  const location = useLocation();
+  // Use the actual URL pathname slug — the hook updates it via history.replaceState
+  // so this is always the SEO-friendly slug, never a UUID after resolution.
+  const canonicalSlug = location.pathname.replace(/^\/filament\//, '') || id || '';
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin } = useAuth();
@@ -784,7 +788,7 @@ const FilamentDetail = () => {
       <ProductSEO
         title={seoFullName}
         description={seoDescription}
-        canonicalUrl={`/filament/${displayFilament.product_handle || id}`}
+        canonicalUrl={`/filament/${canonicalSlug}`}
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
         material={displayFilament.material}
@@ -808,7 +812,7 @@ const FilamentDetail = () => {
         mpn={displayFilament.mpn}
         material={displayFilament.material}
         color={displayFilament.color_family}
-        url={`https://filascope.com/filament/${id}`}
+        url={`https://filascope.com/filament/${canonicalSlug}`}
         price={validationPricePerKg}
         availability={displayFilament.variant_available ?? true}
         transmissionDistance={displayFilament.transmission_distance}
