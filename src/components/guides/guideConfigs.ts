@@ -1083,46 +1083,102 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
 
   'best-filaments-for-outdoor-use': {
     slug: 'best-filaments-for-outdoor-use',
-    title: 'Best Filaments for Outdoor Use in 2026',
-    seoTitle: 'Best Filament for Outdoor 3D Printing 2026 — UV Resistant | FilaScope',
-    seoDescription: 'Top filaments for outdoor 3D printing projects. Compare UV resistance, weathering, heat tolerance, and durability for ASA, PETG, and ABS outdoor filaments.',
-    description: 'The best filaments for outdoor applications — UV-resistant, weatherproof, and heat-tolerant materials ranked for outdoor 3D printing durability.',
+    title: 'Best 3D Printer Filaments for Outdoor Use in 2026',
+    seoTitle: 'Best 3D Printer Filaments for Outdoor Use 2026 | FilaScope',
+    seoDescription: 'Top-ranked filaments for outdoor 3D printing projects. Compare ASA, PETG, and ABS for UV resistance, heat tolerance, and weatherproofing. With prices and specs.',
+    description: 'The best filaments for outdoor 3D printing, ranked by UV resistance, heat tolerance, and weatherproofing — with real pricing data.',
     category: 'buying-guide',
     readTime: 10,
     publishedAt: '2026-02-20',
     updatedAt: '2026-02-20',
-    keywords: ['best filament for outdoor use', 'UV resistant filament', 'outdoor 3D printing', 'weatherproof filament', 'sun resistant filament'],
+    keywords: ['best filament outdoor use', 'UV resistant filament', 'weather resistant 3D printing', 'ASA filament', 'outdoor 3D prints', 'weatherproof filament'],
     filters: { materials: ['ASA', 'PETG', 'ABS'], sortBy: 'score', limit: 10 },
     layout: 'ranked-list',
     editorialSections: [
       {
-        heading: 'The Outdoor Filament Hierarchy',
-        content: `<p>Outdoor use combines UV radiation, elevated temperatures, and moisture cycling — a combination that rapidly degrades standard filaments:</p>
-<ul>
-<li><strong>PLA outdoors:</strong> Fails within weeks to months. Deforms above 60°C, yellows from UV exposure.</li>
-<li><strong>PETG outdoors:</strong> Better than PLA but not ideal. Withstands ~80°C but yellows noticeably with extended UV exposure (6–12 months).</li>
-<li><strong>ABS outdoors:</strong> Heat-resistant but UV-unstable — yellows and becomes chalky within 3–6 months of direct sun.</li>
-<li><strong>ASA outdoors:</strong> The clear winner. UV-stable, heat-resistant to 100°C, maintains color and strength for years of direct sun exposure.</li>
-</ul>`,
+        heading: 'Why Material Choice Matters for Outdoor Prints',
+        content: `<div class="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
+<p class="font-semibold text-sm uppercase tracking-wide text-primary mb-2">AI Summary</p>
+<p>The best filaments for outdoor 3D printing are <strong>ASA, PETG, and ABS</strong>. ASA offers the best UV resistance and weatherproofing. PETG provides a good balance of strength and chemical resistance. ABS is affordable and heat-resistant but degrades in direct sunlight. For maximum durability outdoors, choose ASA.</p>
+</div>
+<p>Outdoor 3D prints face challenges that indoor prints don't: UV radiation degrades polymer chains over time, temperature swings cause thermal expansion and cracking, and moisture absorption leads to swelling and delamination. Choosing the wrong filament means your part could fail within weeks.</p>
+<p>Here's the core issue: <strong>PLA is the most popular filament, but it's the worst choice for outdoors</strong>. PLA has a glass transition temperature around 60°C — well within the range of a car dashboard on a sunny day — and it degrades rapidly under UV exposure. Always use ASA, PETG, or ABS for any outdoor application.</p>
+<h3 class="text-lg font-semibold mt-6 mb-3">Material Outdoor Performance Comparison</h3>
+<div class="overflow-x-auto">
+<table class="w-full text-sm border-collapse">
+<thead><tr class="border-b border-border">
+<th class="text-left py-2 pr-4 font-semibold">Material</th>
+<th class="text-left py-2 pr-4 font-semibold">UV Resistance</th>
+<th class="text-left py-2 pr-4 font-semibold">Heat Resistance</th>
+<th class="text-left py-2 pr-4 font-semibold">Print Difficulty</th>
+<th class="text-left py-2 font-semibold">Best For</th>
+</tr></thead>
+<tbody>
+<tr class="border-b border-border/50"><td class="py-2 pr-4 font-medium">ASA</td><td class="py-2 pr-4 text-green-500">Excellent</td><td class="py-2 pr-4 text-green-500">High (~100°C)</td><td class="py-2 pr-4">Moderate</td><td class="py-2">All outdoor applications</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4 font-medium">PETG</td><td class="py-2 pr-4 text-yellow-500">Good</td><td class="py-2 pr-4 text-yellow-500">Medium (~80°C)</td><td class="py-2 pr-4">Easy</td><td class="py-2">Humid / chemical environments</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4 font-medium">ABS</td><td class="py-2 pr-4 text-red-500">Poor</td><td class="py-2 pr-4 text-green-500">High (~100°C)</td><td class="py-2 pr-4">Hard</td><td class="py-2">Shaded, high-heat applications</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4 font-medium">PLA</td><td class="py-2 pr-4 text-red-500">Very Poor</td><td class="py-2 pr-4 text-red-500">Low (~60°C)</td><td class="py-2 pr-4">Easy</td><td class="py-2">❌ Avoid outdoors</td></tr>
+</tbody>
+</table>
+</div>
+<p class="mt-4">Explore dedicated material pages: <a href="/materials/asa" class="text-primary hover:underline">ASA Filament Guide</a> · <a href="/materials/petg" class="text-primary hover:underline">PETG Filament Guide</a> · <a href="/guides/asa-vs-abs-outdoor-printing" class="text-primary hover:underline">ASA vs ABS for Outdoor Printing</a></p>`,
         position: 'before',
       },
       {
-        heading: 'Outdoor Print Design Tips',
+        heading: 'ASA vs PETG vs ABS: Head-to-Head for Outdoor Prints',
+        content: `<div class="overflow-x-auto">
+<table class="w-full text-sm border-collapse">
+<thead><tr class="border-b border-border">
+<th class="text-left py-2 pr-4 font-semibold">Property</th>
+<th class="text-center py-2 pr-4 font-semibold">ASA</th>
+<th class="text-center py-2 pr-4 font-semibold">PETG</th>
+<th class="text-center py-2 font-semibold">ABS</th>
+</tr></thead>
+<tbody>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">UV Stability</td><td class="py-2 pr-4 text-center">⭐⭐⭐⭐⭐</td><td class="py-2 pr-4 text-center">⭐⭐⭐</td><td class="py-2 text-center">⭐⭐</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Heat Deflection</td><td class="py-2 pr-4 text-center">~98°C</td><td class="py-2 pr-4 text-center">~80°C</td><td class="py-2 text-center">~98°C</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Moisture Resistance</td><td class="py-2 pr-4 text-center">Excellent</td><td class="py-2 pr-4 text-center">Excellent</td><td class="py-2 text-center">Good</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Warping Risk</td><td class="py-2 pr-4 text-center">Medium</td><td class="py-2 pr-4 text-center">Low</td><td class="py-2 text-center">High</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Needs Enclosure</td><td class="py-2 pr-4 text-center">Yes</td><td class="py-2 pr-4 text-center">No</td><td class="py-2 text-center">Yes</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Relative Price</td><td class="py-2 pr-4 text-center">Medium</td><td class="py-2 pr-4 text-center">Low</td><td class="py-2 text-center">Low</td></tr>
+<tr><td class="py-2 pr-4 font-semibold">Verdict</td><td class="py-2 pr-4 text-center font-semibold text-green-500">Best Overall</td><td class="py-2 pr-4 text-center font-semibold text-yellow-500">Best for Beginners</td><td class="py-2 text-center font-semibold">Niche Use</td></tr>
+</tbody>
+</table>
+</div>`,
+        position: 'after',
+      },
+      {
+        heading: 'Tips for Printing Weather-Resistant Parts',
         content: `<ul>
-<li><strong>Wall thickness:</strong> Use 3+ perimeters for outdoor parts to reduce water infiltration.</li>
-<li><strong>UV coating:</strong> Even ASA benefits from UV-resistant clear coat for maximum longevity.</li>
-<li><strong>Dark colors last longer:</strong> Dark filaments typically show less surface degradation than light colors over time.</li>
-<li><strong>Print orientation:</strong> Orient parts to minimize horizontal surface area exposed to UV.</li>
+<li><strong>Use an enclosure for ASA and ABS:</strong> Both materials warp severely without an enclosed chamber. PETG can print open-air, which makes it friendlier for most setups.</li>
+<li><strong>Increase wall count:</strong> For outdoor parts, use at least 4 perimeters (walls). This improves impact resistance and reduces moisture infiltration at layer lines.</li>
+<li><strong>Choose infill wisely:</strong> Gyroid or honeycomb infill at 30–50% prevents water pooling inside hollow sections. Rectilinear infill creates channels where water can sit.</li>
+<li><strong>Layer orientation matters:</strong> Orient parts so that critical surfaces face upward during printing to minimize layer line exposure to UV and water ingress.</li>
+<li><strong>UV-coating protects PETG and ABS:</strong> Apply a clear UV-resistant coating (e.g., Rust-Oleum UV spray) over PETG and ABS parts to significantly extend outdoor lifespan. ASA doesn't require this.</li>
+<li><strong>Hardware fasteners:</strong> When embedding nuts or bolts in outdoor parts, use stainless steel — galvanic corrosion from brass or zinc inserts can crack surrounding material.</li>
 </ul>`,
         position: 'after',
       },
     ],
     faqs: [
-      { question: 'What is the best filament for outdoor printing?', answer: 'ASA is the best choice for outdoor 3D printing. It\'s specifically engineered for UV resistance and maintains color and mechanical properties for years of direct sun exposure.' },
-      { question: 'Will PETG survive outdoors?', answer: 'PETG handles outdoor use reasonably well for 6–18 months, especially in partial shade. In direct sunlight, PETG yellows and becomes slightly brittle over time. For multi-year durability, ASA is the better choice.' },
-      { question: 'Can I waterproof a 3D printed outdoor part?', answer: 'FDM parts are not inherently watertight. Use 4+ perimeters, 40%+ infill, and apply a waterproof coating (epoxy resin, automotive clear coat) after printing.' },
+      {
+        question: 'What is the best filament for outdoor 3D printing?',
+        answer: 'ASA (Acrylonitrile Styrene Acrylate) is the best filament for outdoor use. It offers excellent UV resistance, high heat deflection temperature (~98°C), and weatherproofing comparable to automotive-grade plastics. PETG is the best alternative if you don\'t have an enclosure.',
+      },
+      {
+        question: 'Can PETG be used outdoors?',
+        answer: 'Yes, PETG is suitable for outdoor use. It has good UV resistance, excellent moisture resistance, and doesn\'t require an enclosure to print. It\'s the best outdoor filament choice for printers without an enclosure. Its main limitation is a lower heat deflection temperature (~80°C) compared to ASA.',
+      },
+      {
+        question: 'How long do outdoor 3D prints last?',
+        answer: 'ASA prints can last 5–10 years outdoors with minimal degradation. PETG typically lasts 2–5 years before noticeable UV yellowing. ABS without UV coating degrades within 6–18 months in direct sun. PLA can begin warping or cracking within weeks in warm climates.',
+      },
+      {
+        question: 'Does PLA work outdoors?',
+        answer: 'PLA is not recommended for outdoor use. Its glass transition temperature of ~60°C means it can warp in direct sunlight, even in mild climates. PLA also absorbs moisture and is vulnerable to UV degradation. For any outdoor application, use ASA or PETG instead.',
+      },
     ],
-    relatedSlugs: ['best-asa-filaments', 'asa-vs-abs-outdoor-printing', 'best-filaments-for-functional-parts', 'best-petg-filaments'],
+    relatedSlugs: ['asa-vs-abs-outdoor-printing', 'best-abs-filaments', 'best-petg-filaments', 'best-pla-filaments'],
   },
 
   'hueforge-beginners-guide': {
@@ -1368,6 +1424,95 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is the Creality K1 better than the Bambu Lab A1 for filament compatibility?', answer: 'The K1\'s fully enclosed design gives it an edge for ABS and ASA printing vs. the open-frame A1. The A1 benefits from better slicer integration and AMS Lite. For pure filament range, the K1 slightly edges the A1.' },
     ],
     relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-filament-for-ender-3', 'best-filament-for-bambu-lab-p1s', 'best-high-speed-pla-filaments'],
+  },
+
+  'best-filaments-for-lithophanes': {
+    slug: 'best-filaments-for-lithophanes',
+    title: 'Best Filaments for Lithophane Printing in 2026',
+    seoTitle: 'Best Filaments for Lithophane Printing 2026 | FilaScope',
+    seoDescription: 'Find the best filaments for lithophane 3D printing. White PLA ranked by transmissivity, plus PETG alternatives. TD values, prices, and print settings.',
+    description: 'The top-ranked filaments for lithophane 3D printing — white PLA with optimal TD values for light transmission, ranked by data.',
+    category: 'buying-guide',
+    readTime: 11,
+    publishedAt: '2026-02-20',
+    updatedAt: '2026-02-20',
+    keywords: ['best filament for lithophanes', 'lithophane filament', 'white PLA TD value', 'lithophane 3D printing', 'transparent filament 3D print', 'HueForge TD'],
+    filters: { material: 'PLA', requireTD: true, sortBy: 'td', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'What Makes a Good Lithophane Filament?',
+        content: `<div class="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
+<p class="font-semibold text-sm uppercase tracking-wide text-primary mb-2">AI Summary</p>
+<p>The best filaments for lithophane printing are <strong>white PLA filaments with TD values between 4 and 6</strong>, which provide the optimal balance of light transmission and contrast. For extra translucency, consider white PETG with lower TD values. Always print lithophanes slowly (20–40mm/s) with small layer heights (0.1–0.12mm) for maximum detail.</p>
+</div>
+<p>A lithophane is a thin 3D-printed panel that reveals a photographic image when backlit. The quality of your lithophane depends almost entirely on two factors: <strong>material transmissivity</strong> and <strong>print precision</strong>. The filament you choose determines how light passes through the print.</p>
+<h3 class="text-lg font-semibold mt-6 mb-3">Understanding TD Values for Lithophanes</h3>
+<p>TD (Transmission Distance) is a measurement of how opaque a filament is — the key metric for lithophane quality. It's measured in millimeters: the thickness at which a material transmits 50% of light. Lower TD values mean more translucent material.</p>
+<ul>
+<li><strong>TD 2–3:</strong> Very translucent — excellent contrast, suitable for large, bright lithophanes.</li>
+<li><strong>TD 4–6:</strong> Optimal range for most lithophanes — best balance of brightness and tonal detail.</li>
+<li><strong>TD 7–10:</strong> More opaque — prints look better with very bright backlights; richer mid-tones.</li>
+<li><strong>TD 10+:</strong> Too opaque for standard lithophanes — only practical for LED panels at very close range.</li>
+</ul>
+<p>Check the <a href="/hueforge-td-database" class="text-primary hover:underline">FilaScope TD Database</a> for measured TD values across hundreds of filaments. Also see: <a href="/guides/what-is-hueforge-td" class="text-primary hover:underline">What is HueForge TD?</a> · <a href="/guides/best-white-filaments-for-hueforge" class="text-primary hover:underline">Best White Filaments for HueForge</a> · <a href="/colors" class="text-primary hover:underline">Browse by Color</a></p>`,
+        position: 'before',
+      },
+      {
+        heading: 'PLA vs PETG for Lithophanes',
+        content: `<div class="overflow-x-auto">
+<table class="w-full text-sm border-collapse">
+<thead><tr class="border-b border-border">
+<th class="text-left py-2 pr-4 font-semibold">Property</th>
+<th class="text-center py-2 pr-4 font-semibold">White PLA</th>
+<th class="text-center py-2 font-semibold">White PETG</th>
+</tr></thead>
+<tbody>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Typical TD Range</td><td class="py-2 pr-4 text-center">3–8</td><td class="py-2 text-center">2–5</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Surface Finish</td><td class="py-2 pr-4 text-center">Matte to semi-gloss</td><td class="py-2 text-center">Semi-gloss</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Print Difficulty</td><td class="py-2 pr-4 text-center">Easy</td><td class="py-2 text-center">Easy–Medium</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Stringing</td><td class="py-2 pr-4 text-center">Low</td><td class="py-2 text-center">Medium</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Detail Retention</td><td class="py-2 pr-4 text-center">Excellent</td><td class="py-2 text-center">Good</td></tr>
+<tr class="border-b border-border/50"><td class="py-2 pr-4">Best Use</td><td class="py-2 pr-4 text-center">Most lithophanes</td><td class="py-2 text-center">High-contrast, bright-light</td></tr>
+</tbody>
+</table>
+</div>
+<p class="mt-4"><strong>Verdict:</strong> White PLA is the standard choice for lithophanes. It prints cleanly at slow speeds, holds fine detail, and most brands offer well-documented TD values. PETG is worth trying if you want a slightly more translucent result or if your backlight is especially bright.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'Lithophane Print Settings Guide',
+        content: `<ul>
+<li><strong>Layer height:</strong> 0.1–0.12mm is the sweet spot — captures the most tonal detail without excessive print time. Do not use 0.2mm for lithophanes.</li>
+<li><strong>Print speed:</strong> 20–40mm/s for the lithophane itself. Slow speeds reduce vibration artifacts and ensure consistent extrusion at thin layers.</li>
+<li><strong>Infill:</strong> 100% infill. Lithophanes must be solid — any gaps or infill patterns will show through when backlit.</li>
+<li><strong>Nozzle size:</strong> 0.4mm is standard. A 0.2mm nozzle provides even more detail but significantly increases print time.</li>
+<li><strong>Orientation:</strong> Print vertical (standing upright) rather than flat. Vertical printing produces sharper horizontal detail because layers are perpendicular to the image lines.</li>
+<li><strong>Temperature:</strong> Run 5–10°C cooler than normal to reduce over-extrusion in thin sections. Cooling fan at 100%.</li>
+<li><strong>Backlighting:</strong> Warm white LEDs (3000K) produce the most natural-looking lithophane output. Cool white (6500K) creates higher contrast but slightly harsher tones.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      {
+        question: 'What is the best filament for lithophanes?',
+        answer: 'White PLA with a TD value between 4 and 6 is the best filament for lithophanes. This TD range provides the optimal balance of light transmission and contrast. Brands like Bambu Lab, Polymaker PolyLite, and eSUN White PLA are popular choices with documented TD values in the ideal range.',
+      },
+      {
+        question: 'What TD value is best for lithophanes?',
+        answer: 'A TD (Transmission Distance) value between 4 and 6 is optimal for most lithophanes. Lower TD values (2–3) are more translucent and work well with dim backlights. Higher TD values (7–10) require brighter LED panels but can produce richer tonal depth. Check the FilaScope TD Database for measured values.',
+      },
+      {
+        question: 'Can I use PETG for lithophanes?',
+        answer: 'Yes, white PETG works for lithophanes and typically has slightly lower TD values than PLA, making it more translucent. PETG can string more than PLA at slow speeds, so fine-tune retraction settings. It\'s a good choice if you want a brighter, more translucent lithophane result.',
+      },
+      {
+        question: 'Should I print lithophanes vertically or flat?',
+        answer: 'Print lithophanes vertically (standing upright, perpendicular to the print bed). This orientation aligns layer lines horizontally, which produces sharper detail in the vertical dimension and avoids the "stepping" artifacts that appear when printing flat. Vertical printing takes longer but produces significantly better quality.',
+      },
+    ],
+    relatedSlugs: ['what-is-hueforge-td', 'best-white-filaments-for-hueforge', 'best-pla-filaments', 'silk-pla-comparison'],
   },
 };
 

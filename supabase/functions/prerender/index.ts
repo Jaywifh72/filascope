@@ -1446,6 +1446,9 @@ const GUIDE_DATES: Record<string, { date: string; isTopLevel?: boolean; isLearn?
   "what-is-hueforge-td":                   { date: "2026-02-20" },
   "best-white-filaments-for-hueforge":     { date: "2026-02-20" },
   "how-to-measure-filament-td":            { date: "2026-02-20" },
+  // New high-intent AI query pages
+  "best-filaments-for-outdoor-use":        { date: "2026-02-20" },
+  "best-filaments-for-lithophanes":        { date: "2026-02-20" },
 };
 
 // Fixed lastmod for static informational pages (update when content changes)
