@@ -85,7 +85,7 @@ export function MobileStickyBuyBar({
           <a 
             href={resolved.affiliateUrl} 
             target="_blank" 
-            rel="noopener noreferrer"
+            rel="nofollow sponsored noopener noreferrer"
             onClick={(e) => {
               if (!inStock) e.preventDefault();
             }}

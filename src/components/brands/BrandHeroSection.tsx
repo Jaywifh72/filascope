@@ -156,7 +156,7 @@ export function BrandHeroSection({
               <a 
                 href={hasAffiliate ? buildLink(website) : website} 
                 target="_blank" 
-                rel="nofollow sponsored noopener noreferrer"
+                rel={hasAffiliate ? "nofollow sponsored noopener noreferrer" : "nofollow noopener noreferrer"}
                 className="flex items-center gap-1.5 text-primary hover:underline"
                 onClick={(e) => {
                   if (hasAffiliate) {

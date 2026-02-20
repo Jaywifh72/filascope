@@ -81,7 +81,7 @@ export function WizardProductCard({ product }: WizardProductCardProps) {
               <a
                 href={product.buyUrl}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="nofollow sponsored noopener noreferrer"
                 onClick={() => {
                   trackGA4AffiliateClick({
                     brand: product.vendor,

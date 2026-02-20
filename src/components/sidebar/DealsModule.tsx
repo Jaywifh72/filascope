@@ -135,7 +135,7 @@ export function DealsModule() {
                     <a
                       href={getAffiliateUrl(deal.product_url, deal.vendor || "")}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="nofollow sponsored noopener noreferrer"
                       className="ml-auto"
                       onClick={() => handleAffiliateClick(deal)}
                     >
