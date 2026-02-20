@@ -79,90 +79,12 @@ function isStaticAsset(pathname) {
   return STATIC_EXTENSIONS.test(pathname) || pathname.startsWith("/assets/");
 }
 
-const ROBOTS_TXT = `# FilaScope robots.txt — AI & Search Engine Crawler Policy
-# Updated: 2026-02-20
-
-User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /auth/
-Disallow: /admin/
-Disallow: /_/
-
-# Sitemaps
-Sitemap: https://filascope.com/sitemap.xml
-
-# AI Crawlers - Explicitly Allowed
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Applebot-Extended
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: Bytespider
-Allow: /
-
-User-agent: CCBot
-Allow: /
-
-User-agent: Amazonbot
-Allow: /
-
-User-agent: cohere-ai
-Allow: /
-
-User-agent: Diffbot
-Allow: /
-
-User-agent: FacebookExternalHit
-Allow: /
-
-User-agent: YouBot
-Allow: /
-
-# Crawl-delay for AI bots (be polite)
-User-agent: GPTBot
-Crawl-delay: 2
-
-User-agent: ClaudeBot
-Crawl-delay: 2
-
-User-agent: PerplexityBot
-Crawl-delay: 2
-`;
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const pathname = url.pathname;
     const userAgent = request.headers.get("User-Agent") || "";
-
-    // 0. Serve robots.txt directly from worker — never depends on asset binding
-    if (pathname === "/robots.txt") {
-      return new Response(ROBOTS_TXT, {
-        status: 200,
-        headers: {
-          "Content-Type": "text/plain; charset=utf-8",
-          "Cache-Control": "public, max-age=86400",
-          "X-Robots-Tag": "noindex",
-        },
-      });
-    }
 
     // 1. Always serve static files directly — never prerender
     if (isStaticAsset(pathname)) {
