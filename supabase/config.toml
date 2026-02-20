@@ -470,3 +470,6 @@ verify_jwt = false
 
 [functions.diagnose-sync-failures]
 verify_jwt = false
+
+[functions.search-console-sync]
+verify_jwt = false
