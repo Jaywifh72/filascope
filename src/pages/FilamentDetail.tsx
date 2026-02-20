@@ -54,6 +54,7 @@ import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFi
 import { RelatedFilaments } from "@/components/filament/RelatedFilaments";
 import { BrandQuickLinks } from "@/components/filament/BrandQuickLinks";
 import { RelatedGuidesLinks } from "@/components/filament/RelatedGuidesLinks";
+import { CompatiblePrintersLinks } from "@/components/filament/CompatiblePrintersLinks";
 import { QuickSummaryBar } from "@/components/filament/QuickSummaryBar";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
@@ -1136,6 +1137,10 @@ const FilamentDetail = () => {
           material={displayFilament.material}
           filamentId={displayFilament.id}
           hasTransmissionDistance={displayFilament.transmission_distance != null}
+        />
+        <CompatiblePrintersLinks
+          nozzleTempMaxC={displayFilament.nozzle_temp_max_c}
+          material={displayFilament.material}
         />
         <RelatedFilaments
           filamentId={displayFilament.id}

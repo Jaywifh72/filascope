@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { BrandGuidesLinks } from "@/components/brands/BrandGuidesLinks";
 import { Badge } from "@/components/ui/badge";
 import { 
   Zap, Leaf, Cpu, Package, Layers, ArrowRight, 
@@ -384,6 +385,9 @@ export function BrandOverviewTab({
           </div>
         </div>
       )}
+
+      {/* Brand Guides Links — SEO cross-linking to relevant buying guides */}
+      <BrandGuidesLinks brandName={brandName} />
     </div>
   );
 }
