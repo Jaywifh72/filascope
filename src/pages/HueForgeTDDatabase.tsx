@@ -225,18 +225,30 @@ export default function HueForgeTDDatabase() {
         className="max-w-7xl mx-auto px-4 pt-6 pb-1"
       />
       <DatasetSchema
-        name="HueForge TD Value Database"
-        description="Comprehensive transmissivity distance (TD) values for 3D printing filaments used in HueForge and lithophane projects"
+        name="HueForge Transmissivity Distance (TD) Database"
+        description="The world's most comprehensive database of transmissivity distance (TD) values for 3D printing filaments used in HueForge lithophane and multicolor printing. Includes TD values, colors, materials, and pricing across 48+ brands."
         url="https://filascope.com/hueforge-td-database"
         keywords={[
           'HueForge',
+          'transmissivity distance',
           'TD value',
-          'Transmission Distance',
-          'transmissivity',
-          'lithophane',
-          'filament database',
+          'lithophane filament',
+          '3D printing filament data',
+          'filament TD database',
         ]}
-        recordCount={totalCount}
+        creator={{ '@type': 'Organization', name: 'FilaScope', url: 'https://filascope.com' }}
+        temporalCoverage="2024/.."
+        spatialCoverage="Global"
+        variableMeasured={[
+          { '@type': 'PropertyValue', name: 'Transmissivity Distance (TD)', unitText: 'mm' },
+        ]}
+        distribution={{
+          '@type': 'DataDownload',
+          encodingFormat: 'text/csv',
+          contentUrl: 'https://filascope.com/hueforge-td-database',
+        }}
+        isAccessibleForFree={true}
+        license="https://filascope.com/terms"
       />
       <FAQSchema faqs={faqData} />
 
