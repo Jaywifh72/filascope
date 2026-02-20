@@ -40,11 +40,12 @@ Deno.serve(async (req) => {
   try {
     const today = new Date().toISOString().split("T")[0];
 
-    // Build sitemap index — <loc> entries point directly to the edge function
-    // so crawlers receive real XML (Lovable hosting returns index.html for /*.xml).
+    // Build sitemap index — <loc> entries use filascope.com domain URLs.
+    // The _redirects file proxies these /*.xml paths to the prerender edge function,
+    // so crawlers receive real XML while Google sees same-domain sub-sitemap URLs.
     const items = SUB_SITEMAPS.map(
       (s) =>
-        `  <sitemap>\n    <loc>${FUNCTIONS_URL}/prerender?path=/${s}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
+        `  <sitemap>\n    <loc>${BASE_URL}/${s}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
     ).join("\n");
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

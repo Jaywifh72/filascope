@@ -1543,10 +1543,9 @@ function sitemapGuides(): string {
 }
 
 function sitemapIndex(): string {
-  // Sub-sitemap <loc> entries point directly to the edge function so crawlers
-  // receive real XML (Lovable hosting returns index.html for all /*.xml paths).
-  // Both the index and sub-sitemaps are served from the same edge function host,
-  // satisfying Google's same-host requirement when the index is submitted directly.
+  // Sub-sitemap <loc> entries use filascope.com domain URLs so Google accepts
+  // them as same-domain (required by the sitemap protocol).
+  // The _redirects file proxies these /*.xml paths to this edge function.
   const subs = [
     "sitemap-pages.xml",
     "sitemap-filaments.xml",
@@ -1555,7 +1554,7 @@ function sitemapIndex(): string {
     "sitemap-guides.xml",
     "sitemap-colors.xml",
   ];
-  const items = subs.map((s) => `  <sitemap><loc>${FUNCTIONS_URL}/prerender?path=/${s}</loc></sitemap>`).join("\n");
+  const items = subs.map((s) => `  <sitemap><loc>${BASE_URL}/${s}</loc></sitemap>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</sitemapindex>`;
 }
 
