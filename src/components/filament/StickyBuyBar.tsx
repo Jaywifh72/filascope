@@ -3,6 +3,7 @@ import { ShoppingCart, ExternalLink, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { trackAffiliateClick as trackGA4AffiliateClick } from "@/lib/analytics";
+import { trackAffiliateClick as trackSupabaseAffiliateClick } from "@/utils/affiliateLinks";
 import { useRegion } from "@/contexts/RegionContext";
 import { cn } from "@/lib/utils";
 import { PriceUrgencyBadge } from "./urgency/PriceUrgencyBadge";
@@ -111,7 +112,7 @@ export function StickyBuyBar({
       entityType: 'filament',
     });
 
-    // GA4 tracking — param names match configured custom dimensions
+    // GA4 tracking
     trackGA4AffiliateClick({
       brand: filament.vendor || '',
       productName: filament.product_title,
@@ -120,6 +121,17 @@ export function StickyBuyBar({
       region: userRegion,
       linkType: 'product_page',
     });
+
+    // Supabase logging — fire-and-forget
+    trackSupabaseAffiliateClick('', affiliateUrl || '', {
+      brandName: filament.vendor || '',
+      regionCode: userRegion,
+      productName: filament.product_title,
+      productId: filament.id,
+      productType: 'filament',
+      sourcePage: window.location.pathname,
+      sourceComponent: 'sticky_buy_bar',
+    }).catch(() => {});
 
     if (affiliateUrl) {
       window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
