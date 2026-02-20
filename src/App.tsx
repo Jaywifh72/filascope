@@ -169,6 +169,7 @@ const ModelRepositories = lazy(() => import("./pages/ModelRepositories"));
 const Roadmap = lazy(() => import("./pages/Roadmap"));
 const RequestFeature = lazy(() => import("./pages/RequestFeature"));
 const BestFilamentsForHueForge = lazy(() => import("./pages/BestFilamentsForHueForge"));
+const HueForgeHub = lazy(() => import("./pages/learn/HueForgeHub"));
 const PLAVsPETG = lazy(() => import("./pages/PLAVsPETG"));
 const BestWhiteFilaments = lazy(() => import("./pages/BestWhiteFilaments"));
 const FilamentDatabase = lazy(() => import("./pages/FilamentDatabase"));
@@ -334,6 +335,7 @@ const App = () => (
                   <Route path="/td-database" element={<TDDatabase />} />
                   <Route path="/hueforge-td-database" element={<HueForgeTDDatabase />} />
                   <Route path="/learn" element={<LearningCenter />} />
+                  <Route path="/learn/hueforge" element={<HueForgeHub />} />
                   <Route path="/learn/:slug" element={<GuideDetail />} />
                   <Route path="/guides/print-settings" element={<GuidePrintSettings />} />
                   <Route path="/guides/troubleshooting" element={<GuideTroubleshooting />} />
