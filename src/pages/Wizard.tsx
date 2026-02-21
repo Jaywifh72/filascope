@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useRegion } from "@/contexts/RegionContext";
 import { WizardResults } from "@/components/wizard/WizardResults";
 import { trackQuickMatchStart } from "@/lib/analytics";
@@ -87,6 +88,8 @@ const questions: Question[] = [
   },
 ];
 
+const STEP_LABELS = ["Use Case", "Printer", "Priority", "Budget", "Special"];
+
 // Recommendation interface and scoring logic moved to useWizardRecommendations hook
 
 const Wizard = () => {
@@ -98,6 +101,7 @@ const Wizard = () => {
   // Fire quick_match_start once on mount
   useEffect(() => { trackQuickMatchStart(); }, []);
   const [showResults, setShowResults] = useState(false);
+  const [bounceNext, setBounceNext] = useState(false);
   const wizardCardRef = useRef<HTMLDivElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
 
@@ -160,7 +164,13 @@ const Wizard = () => {
   const isLastQuestion = currentStep === localizedQuestions.length - 1;
 
   const handleSingleAnswer = (value: string) => {
+    const prev = answers[currentQuestion.id];
     setAnswers({ ...answers, [currentQuestion.id]: value });
+    // Trigger bounce if this is a new selection
+    if (prev !== value) {
+      setBounceNext(true);
+      setTimeout(() => setBounceNext(false), 500);
+    }
   };
 
   const handleMultiAnswer = (value: string, checked: boolean) => {
@@ -248,18 +258,45 @@ const Wizard = () => {
                 <Sparkles className="h-6 w-6 text-primary" />
                 <h2 className="text-xl md:text-2xl font-bold">Material Wizard</h2>
               </div>
-              <span className="text-sm text-muted-foreground font-mono">
-                {currentStep + 1} / {questions.length}
-              </span>
+              <div className="relative h-6 w-8 overflow-hidden">
+                <span
+                  key={currentStep}
+                  className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground font-mono animate-[scale-in_200ms_ease-out]"
+                >
+                  {currentStep + 1} / {questions.length}
+                </span>
+              </div>
             </div>
-            {/* Progress bar */}
-            <div className="w-full bg-muted rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-primary to-primary/70 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${((currentStep + 1) / questions.length) * 100}%` }}
-              />
+            {/* Segmented progress */}
+            <div className="flex gap-1">
+              {STEP_LABELS.map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-2 rounded-full transition-all duration-300 w-[40px] sm:flex-1",
+                    i < currentStep
+                      ? "bg-amber-500"
+                      : i === currentStep
+                        ? "bg-amber-500/50 animate-pulse"
+                        : "bg-muted"
+                  )}
+                />
+              ))}
             </div>
-            <p className="text-xs text-gray-500 font-mono uppercase tracking-wider mt-3">Step {currentStep + 1} of {questions.length} — {currentQuestion.id.replace(/_/g, ' ')}</p>
+            {/* Step labels — desktop only */}
+            <div className="hidden sm:flex gap-1 mt-1.5">
+              {STEP_LABELS.map((label, i) => (
+                <span
+                  key={label}
+                  className={cn(
+                    "flex-1 text-xs text-center",
+                    i <= currentStep ? "text-muted-foreground" : "text-muted-foreground/40"
+                  )}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Question */}
@@ -275,28 +312,41 @@ const Wizard = () => {
                 onValueChange={handleSingleAnswer}
                 className="space-y-2 sm:space-y-3"
               >
-                {currentQuestion.options.map((option) => (
-                  <div key={option.value}>
-                    <RadioGroupItem value={option.value} id={option.value} className="sr-only peer" />
-                    <Label
-                      htmlFor={option.value}
-                      className="flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 border-border hover:border-cyan-500/30 hover:bg-cyan-950/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all duration-200 min-h-[56px] touch-manipulation"
-                    >
-                      {option.icon && (
-                        <span className="text-xl sm:text-2xl flex-shrink-0">{option.icon}</span>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm sm:text-base">{option.label}</div>
-                        <div className="text-xs sm:text-sm text-muted-foreground">{option.description}</div>
-                      </div>
-                      <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-muted-foreground/30 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary flex items-center justify-center">
-                        {(answers[currentQuestion.id] === option.value) && (
-                          <Check className="h-3 w-3 text-background" />
+                {currentQuestion.options.map((option) => {
+                  const isSelected = answers[currentQuestion.id] === option.value;
+                  return (
+                    <div key={option.value}>
+                      <RadioGroupItem value={option.value} id={option.value} className="sr-only peer" />
+                      <Label
+                        htmlFor={option.value}
+                        className={cn(
+                          "group flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all duration-150 min-h-[56px] touch-manipulation",
+                          isSelected
+                            ? "border-amber-500 bg-amber-500/10"
+                            : "border-border hover:border-amber-500/50 hover:bg-muted/60"
                         )}
-                      </div>
-                    </Label>
-                  </div>
-                ))}
+                      >
+                        {option.icon && (
+                          <span className="text-xl sm:text-2xl flex-shrink-0 transition-transform duration-150 group-hover:scale-110">{option.icon}</span>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm sm:text-base">{option.label}</div>
+                          <div className="text-xs sm:text-sm text-muted-foreground">{option.description}</div>
+                        </div>
+                        <div className={cn(
+                          "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                          isSelected
+                            ? "border-amber-500 bg-amber-500"
+                            : "border-muted-foreground/30"
+                        )}>
+                          {isSelected && (
+                            <Check className="h-3 w-3 text-background" />
+                          )}
+                        </div>
+                      </Label>
+                    </div>
+                  );
+                })}
               </RadioGroup>
             ) : (
               <div className="space-y-2 sm:space-y-3">
@@ -307,15 +357,16 @@ const Wizard = () => {
                   return (
                     <div
                       key={option.value}
-                      className={`flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 min-h-[56px] touch-manipulation ${
-                        isChecked 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-cyan-500/30 hover:bg-cyan-950/10'
-                      }`}
+                      className={cn(
+                        "group flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all duration-150 min-h-[56px] touch-manipulation",
+                        isChecked
+                          ? "border-amber-500 bg-amber-500/10"
+                          : "border-border hover:border-amber-500/50 hover:bg-muted/60"
+                      )}
                       onClick={() => handleMultiAnswer(option.value, !isChecked)}
                     >
                       {option.icon && (
-                        <span className="text-xl sm:text-2xl flex-shrink-0">{option.icon}</span>
+                        <span className="text-xl sm:text-2xl flex-shrink-0 transition-transform duration-150 group-hover:scale-110">{option.icon}</span>
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm sm:text-base">{option.label}</div>
@@ -347,7 +398,10 @@ const Wizard = () => {
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="flex-1 h-12 sm:h-11 min-h-[48px] touch-manipulation bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              className={cn(
+                "flex-1 h-12 sm:h-11 min-h-[48px] touch-manipulation bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
+                bounceNext && "animate-bounce"
+              )}
             >
               {isLastQuestion ? (
                 <>
