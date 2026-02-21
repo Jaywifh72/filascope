@@ -53,10 +53,10 @@ function ZeroResultsTab() {
   const addSynonym = useMutation({
     mutationFn: async ({ source, target, type }: { source: string; target: string; type: string }) => {
       const { error } = await supabase.from("search_synonyms").insert({
-        source_term: source,
-        target_term: target,
-        target_type: type,
-        created_by: user?.id,
+        term: source,
+        synonyms: [target],
+        maps_to_material: type === 'material' ? target : null,
+        maps_to_tag: type === 'tag' ? target : null,
       });
       if (error) throw error;
     },

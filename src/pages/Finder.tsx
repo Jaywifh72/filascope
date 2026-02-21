@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinderQuery, type FinderFilters, DEFAULT_PAGE_SIZE } from "@/hooks/useFinderQuery";
+import { useSmartSearch } from "@/hooks/useSmartSearch";
 import { useFilterCounts } from "@/hooks/useFilterCounts";
 import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
 import { useSearchContext } from "@/hooks/useSearchContext";
@@ -52,6 +53,7 @@ import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
 import { QuickFilterPills } from "@/components/QuickFilterPills";
 import { FilamentsEmptyState } from "@/components/filament/FilamentsEmptyState";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
+import { SearchSmartChips } from "@/components/search/SearchSmartChips";
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MoreFiltersModal } from "@/components/filters/MoreFiltersModal";
@@ -804,16 +806,26 @@ const Finder = () => {
     carbonFiber, glassFiber, woodFilled, highSpeed, largeSpools, amsOnly, brassOnly,
     selectedColorFamilies, hasTdData]);
 
-  const { groups: rawGroups, totalCount: rawTotalCount, isLoading, isFetching, isPlaceholderData } = 
+  const { groups: rawGroups, totalCount: rawTotalCount, isLoading: finderLoading, isFetching: finderFetching, isPlaceholderData } = 
     useFinderQuery(finderFilters, currentPage, brandNameMap, pageSize);
 
+  // Smart search: when searchTerm is active, overlay ranked results
+  const smartSearch = useSmartSearch(searchTerm, currentPage, pageSize);
+  const useSmartResults = smartSearch.isSmartSearchActive && searchTerm.trim().length >= 2;
+
+  // Merge: use smart search results when searching, otherwise finder results
+  const isLoading = useSmartResults ? smartSearch.isLoading : finderLoading;
+  const isFetching = useSmartResults ? smartSearch.isFetching : finderFetching;
+
   // Client-side "In Stock Only" filtering — when active, partition: in-stock first, OOS last
+  const effectiveRawGroups = useSmartResults ? smartSearch.groups : rawGroups;
+  const effectiveRawTotalCount = useSmartResults ? smartSearch.totalCount : rawTotalCount;
   const stockFiltered = useMemo(() => {
-    if (!inStockOnly) return rawGroups;
-    const inStock = rawGroups.filter(g => g.anyInStock !== false);
-    const oos = rawGroups.filter(g => g.anyInStock === false);
+    if (!inStockOnly) return effectiveRawGroups;
+    const inStock = effectiveRawGroups.filter(g => g.anyInStock !== false);
+    const oos = effectiveRawGroups.filter(g => g.anyInStock === false);
     return [...inStock, ...oos];
-  }, [rawGroups, inStockOnly]);
+  }, [effectiveRawGroups, inStockOnly]);
 
   // Index where OOS section begins (for divider rendering)
   const oosStartIndex = useMemo(() => {
@@ -843,8 +855,8 @@ const Finder = () => {
   }, [stockFiltered]);
 
   const totalCount = inStockOnly
-    ? displayedGroups.length + (rawTotalCount > rawGroups.length ? rawTotalCount - rawGroups.length : 0)
-    : rawTotalCount;
+    ? displayedGroups.length + (effectiveRawTotalCount > effectiveRawGroups.length ? effectiveRawTotalCount - effectiveRawGroups.length : 0)
+    : effectiveRawTotalCount;
 
   // === SERVER-SIDE FILTER COUNTS ===
   const { data: serverFilterCounts } = useFilterCounts(
@@ -1280,6 +1292,16 @@ const Finder = () => {
           />
         );
       })()}
+
+      {/* Smart Search Chips - shown when smart search expanded the query */}
+      {useSmartResults && (
+        <SearchSmartChips
+          chips={smartSearch.chips}
+          expandedQuery={smartSearch.expandedQuery}
+          originalQuery={searchTerm}
+          onRemoveChip={smartSearch.removeChip}
+        />
+      )}
 
       {/* Printer Selector Sheet */}
       <Sheet open={printerSelectorOpen} onOpenChange={setPrinterSelectorOpen}>
