@@ -1225,6 +1225,7 @@ const Finder = () => {
               ...(brassOnly ? [{ id: 'brassOnly', label: 'Brass Safe', type: 'property' as const }] : []),
               ...(amsOnly ? [{ id: 'amsOnly', label: 'AMS Compatible', type: 'property' as const }] : []),
               ...(hasTdData ? [{ id: 'hasTdData', label: 'HueForge TD', type: 'property' as const }] : []),
+              ...(inStockOnly ? [{ id: 'inStockOnly', label: 'In Stock', type: 'property' as const }] : []),
               ...selectedColorFamilies.map(c => ({ id: c, label: c, type: 'color' as const })),
             ]}
             onRemove={(id, type) => {
@@ -1255,6 +1256,7 @@ const Finder = () => {
                   case 'brassOnly': setBrassOnly(false); break;
                   case 'amsOnly': setAmsOnly(false); break;
                   case 'hasTdData': setHasTdData(false); break;
+                  case 'inStockOnly': setInStockOnly(false); break;
                 }
               }
             }}
@@ -1495,7 +1497,10 @@ const Finder = () => {
                 <span className="inline-block w-20 h-4 bg-muted/30 rounded animate-pulse align-middle" />
               ) : (
                 <>
-                  {inStockOnly ? `${displayedGroups.length.toLocaleString()} in-stock` : totalCount.toLocaleString()} products{unfilteredProductCount > 0 && totalCount < unfilteredProductCount ? ` of ${unfilteredProductCount.toLocaleString()} total` : ''}
+                  {inStockOnly
+                    ? `Showing ${displayedGroups.length.toLocaleString()} in-stock products`
+                    : `${totalCount.toLocaleString()} products${unfilteredProductCount > 0 && totalCount < unfilteredProductCount ? ` of ${unfilteredProductCount.toLocaleString()} total` : ''}`
+                  }
                 </>
               )}
             </p>
