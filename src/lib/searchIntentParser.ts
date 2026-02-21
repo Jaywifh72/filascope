@@ -78,10 +78,10 @@ const MATERIAL_ALIASES: Record<string, string> = {
 
 const FLEXIBILITY_INTENT: PropertyIntent = {
   name: 'Flexibility',
-  sortColumn: 'shore_hardness_a',
+  sortColumn: 'hardness_shore_a',
   sortDirection: 'asc',
   badgeLabel: 'Shore',
-  badgeColumn: 'shore_hardness_a',
+  badgeColumn: 'hardness_shore_a',
   badgeUnit: 'A',
   explanation: 'Sorted by Shore A hardness (lower = more flexible)',
 };
@@ -98,10 +98,10 @@ const STRENGTH_INTENT: PropertyIntent = {
 
 const HEAT_INTENT: PropertyIntent = {
   name: 'Heat Resistance',
-  sortColumn: 'hdt_1_8mpa_c',
+  sortColumn: 'hdt_18_mpa_c',
   sortDirection: 'desc',
   badgeLabel: 'HDT',
-  badgeColumn: 'hdt_1_8mpa_c',
+  badgeColumn: 'hdt_18_mpa_c',
   badgeUnit: '°C',
   explanation: 'Sorted by Heat Deflection Temperature',
 };
