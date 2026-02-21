@@ -86,9 +86,9 @@ export default function FilamentDatabase() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/filaments?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
-      navigate('/');
+      navigate('/filaments');
     }
   };
 
