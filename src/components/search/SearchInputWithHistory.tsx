@@ -1,14 +1,13 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, Clock, X, ArrowUpRight, Package, Tag, Sparkles, ChevronRight, Compass, Wand2 } from "lucide-react";
+import { Search, Clock, X, ArrowUpRight, Package, Tag, ChevronRight, Compass, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchContext } from "@/hooks/useSearchContext";
-import type { SearchSuggestion } from "@/hooks/useSearchSuggestions";
-import { useSmartSearchPreview } from "@/hooks/useSmartSearchPreview";
-import { SearchSuggestionItemSkeleton } from "@/components/skeletons/SearchSuggestionsSkeleton";
+import { useSearchAutocomplete } from "@/hooks/useSearchAutocomplete";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { trackSearch as trackGA4Search } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
-import { SEARCH_INTENT_MAP } from "@/lib/personalizationEngine";
 
 interface SearchInputWithHistoryProps {
   value: string;
@@ -18,6 +17,29 @@ interface SearchInputWithHistoryProps {
   className?: string;
   inputClassName?: string;
   onSelect?: (value: string) => void;
+}
+
+// ────────────────────────────────────────────────────────────
+// Highlight matched characters in text
+// ────────────────────────────────────────────────────────────
+function HighlightMatch({ text, query }: { text: string; query: string }) {
+  if (!query || query.length < 2) return <>{text}</>;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(regex);
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} className="bg-amber-500/20 text-amber-400 font-medium rounded-sm">
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
 }
 
 export function SearchInputWithHistory({
@@ -36,53 +58,44 @@ export function SearchInputWithHistory({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const zeroResultLoggedRef = useRef<string>("");
-  
-  const { recentSearches, trackSearch } = useSearchContext();
-  const { suggestions, isLoading, expandedQuery, materialHint, totalCount: totalProductGroups } = useSmartSearchPreview(value, context === "filaments");
-  const typoCorrection = null; // Typo correction is now handled server-side via synonym expansion
 
-  // Filter recent searches to not duplicate current value
+  const { recentSearches, trackSearch } = useSearchContext();
+  const { materials, brands, filaments, isLoading, hasResults } = useSearchAutocomplete(value, context === "filaments");
+
+  // ── Recent searches ──
   const filteredRecentSearches = recentSearches
     .filter((s) => s.toLowerCase() !== value.toLowerCase())
     .slice(0, 5);
 
-  // Detect smart zero state
-  const showZeroState = value.length >= 3 && !isLoading && suggestions.length === 0;
+  // ── Build flat item list for keyboard navigation ──
+  const allItems = useMemo(() => {
+    if (value.length < 2) return filteredRecentSearches.map((s) => ({ type: "recent" as const, key: s }));
+    const items: { type: "material" | "brand" | "filament"; key: string; index: number }[] = [];
+    materials.forEach((m, i) => items.push({ type: "material", key: m.material, index: i }));
+    brands.forEach((b, i) => items.push({ type: "brand", key: b.slug, index: i }));
+    filaments.forEach((f, i) => items.push({ type: "filament", key: f.id, index: i }));
+    return items;
+  }, [value, materials, brands, filaments, filteredRecentSearches]);
 
-  // Match intent for zero state
-  const matchedIntent = useMemo(() => {
-    if (!showZeroState) return null;
-    const words = value.toLowerCase().split(/\s+/);
-    for (const intent of Object.values(SEARCH_INTENT_MAP)) {
-      const hasMatch = intent.keywords.some(kw => words.some(w => w === kw || kw.includes(w)));
-      if (hasMatch && intent.boostMaterials.length > 0) {
-        return intent;
-      }
-    }
-    return null;
-  }, [showZeroState, value]);
+  // ── Zero state ──
+  const showZeroState = value.length >= 3 && !isLoading && !hasResults;
 
-  // Show dropdown when focused and we have content to show
-  const hasContent = value.length >= 2 
-    ? suggestions.length > 0 || showZeroState
-    : filteredRecentSearches.length > 0;
-
+  // ── Dropdown visibility ──
+  const hasContent = value.length >= 2 ? hasResults || showZeroState || isLoading : filteredRecentSearches.length > 0;
   useEffect(() => {
     setShowDropdown(isFocused && hasContent);
   }, [isFocused, hasContent]);
 
-  // Reset selected index when suggestions change
   useEffect(() => {
     setSelectedIndex(-1);
-  }, [suggestions, filteredRecentSearches, value]);
+  }, [value, materials, brands, filaments]);
 
-  // Log zero-result searches to search_logs (feeds search_zero_results view)
+  // ── Log zero-result searches ──
   useEffect(() => {
     if (
       value.length >= 2 &&
       !isLoading &&
-      (totalProductGroups ?? 1) === 0 &&
-      suggestions.length === 0 &&
+      !hasResults &&
       zeroResultLoggedRef.current !== value.trim().toLowerCase()
     ) {
       const term = value.trim().toLowerCase();
@@ -97,94 +110,83 @@ export function SearchInputWithHistory({
         created_at: new Date().toISOString(),
       }).then(() => {});
     }
-    // Reset tracker when value changes substantially
-    if (value.length < 2) {
-      zeroResultLoggedRef.current = "";
-    }
-  }, [value, isLoading, totalProductGroups, suggestions.length]);
+    if (value.length < 2) zeroResultLoggedRef.current = "";
+  }, [value, isLoading, hasResults]);
 
-  // Get all items for keyboard navigation
-  const allItems = value.length >= 2 
-    ? suggestions.map((s) => s.value)
-    : filteredRecentSearches;
-
-  const handleSelect = useCallback((selectedValue: string, suggestion?: SearchSuggestion) => {
-    // If this is a product suggestion with an ID, navigate to detail page
-    if (suggestion?.type === "product" && suggestion.id) {
-      trackSearch(selectedValue);
+  // ── Selection handler ──
+  const handleSelectItem = useCallback(
+    (item: (typeof allItems)[number]) => {
       setShowDropdown(false);
-      onChange(""); // Clear input after navigation
-      
-      // Navigate using product_handle or ID
-      const slug = suggestion.productHandle || suggestion.id;
-      navigate(`/filament/${slug}`);
-      return;
-    }
-
-    // Color suggestion → navigate to filtered color view
-    if (suggestion?.type === "color") {
-      trackSearch(selectedValue);
-      setShowDropdown(false);
-      onChange("");
-      navigate(`/filaments?colors=${encodeURIComponent(selectedValue)}`);
-      inputRef.current?.blur();
-      return;
-    }
-    
-    // For brands, materials, typos, and recent searches - update search input
-    onChange(selectedValue);
-    trackSearch(selectedValue);
-    setShowDropdown(false);
-    onSelect?.(selectedValue);
-    inputRef.current?.blur();
-  }, [navigate, onChange, trackSearch, onSelect]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!showDropdown) return;
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setSelectedIndex((prev) => 
-          prev < allItems.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (selectedIndex >= 0 && allItems[selectedIndex]) {
-          // Find the corresponding suggestion for keyboard navigation
-          const selectedSuggestion = value.length >= 2 
-            ? suggestions[selectedIndex] 
-            : undefined;
-          handleSelect(allItems[selectedIndex], selectedSuggestion);
-        } else if (value) {
-          trackSearch(value);
-          trackGA4Search(value, totalProductGroups ?? 0);
-          setShowDropdown(false);
-          navigate(`/filaments?search=${encodeURIComponent(value.trim())}`);
-          inputRef.current?.blur();
-        }
-        break;
-      case "Escape":
-        setShowDropdown(false);
+      if (item.type === "recent") {
+        onChange(item.key);
+        trackSearch(item.key);
+        onSelect?.(item.key);
         inputRef.current?.blur();
-        break;
-    }
-  }, [showDropdown, selectedIndex, allItems, value, trackSearch, handleSelect, suggestions]);
+        return;
+      }
+      if (item.type === "material") {
+        const mat = materials[item.index];
+        onChange(mat.material);
+        trackSearch(mat.material);
+        onSelect?.(mat.material);
+        inputRef.current?.blur();
+        return;
+      }
+      if (item.type === "brand") {
+        const brand = brands[item.index];
+        trackSearch(brand.name);
+        onChange("");
+        navigate(`/brands/${brand.slug}`);
+        return;
+      }
+      if (item.type === "filament") {
+        const fil = filaments[item.index];
+        trackSearch(fil.name);
+        onChange("");
+        navigate(`/filament/${fil.slug}`);
+        return;
+      }
+    },
+    [materials, brands, filaments, navigate, onChange, trackSearch, onSelect]
+  );
 
-  const handleClearRecent = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    localStorage.removeItem("filament_search_history");
-    setShowDropdown(false);
-  };
+  // ── Keyboard navigation ──
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!showDropdown) return;
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev < allItems.length - 1 ? prev + 1 : prev));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (selectedIndex >= 0 && allItems[selectedIndex]) {
+            handleSelectItem(allItems[selectedIndex]);
+          } else if (value) {
+            trackSearch(value);
+            trackGA4Search(value, 0);
+            setShowDropdown(false);
+            navigate(`/filaments?search=${encodeURIComponent(value.trim())}`);
+            inputRef.current?.blur();
+          }
+          break;
+        case "Escape":
+          setShowDropdown(false);
+          inputRef.current?.blur();
+          break;
+      }
+    },
+    [showDropdown, selectedIndex, allItems, value, trackSearch, handleSelectItem, navigate]
+  );
 
-  // Close dropdown on outside click
+  // ── Click outside ──
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(e.target as Node) &&
@@ -193,54 +195,31 @@ export function SearchInputWithHistory({
         setShowDropdown(false);
       }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const getIcon = (suggestion: SearchSuggestion) => {
-    switch (suggestion.type) {
-      case "brand":
-        return <Tag className="w-3.5 h-3.5" />;
-      case "material":
-        return <Package className="w-3.5 h-3.5" />;
-      case "product":
-        return <ArrowUpRight className="w-3.5 h-3.5" />;
-      case "typo":
-        return <Sparkles className="w-3.5 h-3.5" />;
-      case "color":
-        return (
-          <div
-            className="w-3.5 h-3.5 rounded-full border border-border/50 flex-shrink-0"
-            style={{ backgroundColor: suggestion.colorHex || "#888" }}
-          />
-        );
-    }
+  const handleClearRecent = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    localStorage.removeItem("filament_search_history");
+    setShowDropdown(false);
   };
 
-  const highlightMatch = (text: string, query: string) => {
-    if (!query || query.length < 2) return text;
-    
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    const parts = text.split(regex);
-    
-    return parts.map((part, i) => 
-      regex.test(part) ? (
-        <span key={i} className="text-primary font-medium">{part}</span>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
-  };
+  // ── Compute running index offsets for keyboard navigation ──
+  const matOffset = 0;
+  const brandOffset = materials.length;
+  const filOffset = materials.length + brands.length;
 
   return (
     <div className={cn("relative w-full", className)} role="search">
-      {/* Input - Full width on mobile */}
+      {/* Input */}
       <div className="relative w-full">
-        <Search className={cn(
-          "absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 z-10 transition-colors duration-200",
-          isFocused ? "text-primary" : "text-muted-foreground"
-        )} />
+        <Search
+          className={cn(
+            "absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 z-10 transition-colors duration-200",
+            isFocused ? "text-primary" : "text-muted-foreground"
+          )}
+        />
         <input
           ref={inputRef}
           type="text"
@@ -248,9 +227,7 @@ export function SearchInputWithHistory({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => {
-            setTimeout(() => setIsFocused(false), 150);
-          }}
+          onBlur={() => setTimeout(() => setIsFocused(false), 150)}
           onKeyDown={handleKeyDown}
           data-search-input="true"
           className={cn(
@@ -259,9 +236,7 @@ export function SearchInputWithHistory({
             "min-h-[44px] touch-manipulation",
             "shadow-inner shadow-black/20",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
-            isFocused
-              ? "border-primary ring-2 ring-primary/20"
-              : "border-white/20 hover:border-white/30",
+            isFocused ? "border-primary ring-2 ring-primary/20" : "border-white/20 hover:border-white/30",
             inputClassName
           )}
           aria-label="Search filaments, brands, and materials. Press forward slash to focus."
@@ -277,86 +252,184 @@ export function SearchInputWithHistory({
         )}
       </div>
 
-      {/* Dropdown */}
+      {/* ── Dropdown ── */}
       {showDropdown && (
         <div
           ref={dropdownRef}
           id="search-suggestions-list"
-          className={cn(
-            "absolute top-full left-0 right-0 mt-2 z-50",
-            "bg-card/95 backdrop-blur-lg border border-border rounded-xl shadow-xl",
-            "animate-in fade-in-0 slide-in-from-top-2 duration-200",
-            "max-h-[400px] overflow-y-auto"
-          )}
+          className="absolute top-full left-0 right-0 mt-2 z-50 bg-card border border-border rounded-lg shadow-lg max-h-[320px] overflow-y-auto animate-in fade-in-0 slide-in-from-top-2 duration-200"
           role="listbox"
           aria-label="Search suggestions"
         >
-          {/* Loading skeleton while fetching suggestions */}
-          {isLoading && value.length >= 2 && suggestions.length === 0 && (
-            <div className="p-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <SearchSuggestionItemSkeleton key={i} index={i} />
+          {/* ── Loading skeleton ── */}
+          {isLoading && value.length >= 2 && !hasResults && (
+            <div className="p-2 space-y-1">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-10 px-3 flex items-center gap-3 animate-pulse">
+                  <div className="w-4 h-4 rounded bg-muted" />
+                  <div className="flex-1 h-3.5 rounded bg-muted" style={{ width: `${60 + i * 12}%` }} />
+                </div>
               ))}
             </div>
           )}
 
-          {/* Expanded query pill */}
-          {expandedQuery && expandedQuery !== value && !isLoading && value.length >= 2 && (
-            <div className="px-4 py-2 border-b border-border/50">
-              <p className="text-xs text-muted-foreground italic">
-                Also searching: <span className="font-medium">{expandedQuery}</span>
-              </p>
+          {/* ── MATERIALS section ── */}
+          {value.length >= 2 && materials.length > 0 && (
+            <div>
+              <div className="px-3 pt-2.5 pb-1">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Materials
+                </span>
+              </div>
+              {materials.map((mat, i) => {
+                const idx = matOffset + i;
+                return (
+                  <button
+                    key={mat.material}
+                    onClick={() => handleSelectItem({ type: "material", key: mat.material, index: i })}
+                    className={cn(
+                      "w-full h-10 px-3 flex items-center gap-3 cursor-pointer transition-colors",
+                      selectedIndex === idx ? "bg-accent text-accent-foreground" : "hover:bg-accent"
+                    )}
+                    role="option"
+                    aria-selected={selectedIndex === idx}
+                  >
+                    <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-sm truncate">
+                      <HighlightMatch text={mat.material} query={value} />
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-medium px-1.5 py-0.5 bg-muted rounded-full whitespace-nowrap">
+                      {mat.count} filaments
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
 
-          {/* Smart zero state */}
+          {/* Divider */}
+          {value.length >= 2 && materials.length > 0 && (brands.length > 0 || filaments.length > 0) && (
+            <div className="mx-3 border-t border-border/50" />
+          )}
+
+          {/* ── BRANDS section ── */}
+          {value.length >= 2 && brands.length > 0 && (
+            <div>
+              <div className="px-3 pt-2.5 pb-1">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Brands
+                </span>
+              </div>
+              {brands.map((brand, i) => {
+                const idx = brandOffset + i;
+                const logoUrl = getBrandLogoUrl(brand.name, 16);
+                return (
+                  <button
+                    key={brand.slug}
+                    onClick={() => handleSelectItem({ type: "brand", key: brand.slug, index: i })}
+                    className={cn(
+                      "w-full h-10 px-3 flex items-center gap-3 cursor-pointer transition-colors",
+                      selectedIndex === idx ? "bg-accent text-accent-foreground" : "hover:bg-accent"
+                    )}
+                    role="option"
+                    aria-selected={selectedIndex === idx}
+                  >
+                    <BrandLogo
+                      src={logoUrl || brand.logoUrl}
+                      brandName={brand.name}
+                      size="sm"
+                      className="w-4 h-4"
+                    />
+                    <span className="flex-1 text-sm truncate">
+                      <HighlightMatch text={brand.name} query={value} />
+                    </span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Divider */}
+          {value.length >= 2 && brands.length > 0 && filaments.length > 0 && (
+            <div className="mx-3 border-t border-border/50" />
+          )}
+
+          {/* ── FILAMENTS section ── */}
+          {value.length >= 2 && filaments.length > 0 && (
+            <div>
+              <div className="px-3 pt-2.5 pb-1">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Filaments
+                </span>
+              </div>
+              {filaments.map((fil, i) => {
+                const idx = filOffset + i;
+                return (
+                  <button
+                    key={fil.id}
+                    onClick={() => handleSelectItem({ type: "filament", key: fil.id, index: i })}
+                    className={cn(
+                      "w-full h-10 px-3 flex items-center gap-3 cursor-pointer transition-colors",
+                      selectedIndex === idx ? "bg-accent text-accent-foreground" : "hover:bg-accent"
+                    )}
+                    role="option"
+                    aria-selected={selectedIndex === idx}
+                  >
+                    {/* Color swatch */}
+                    <div
+                      className="w-3 h-3 rounded-full border border-border/50 flex-shrink-0"
+                      style={{ backgroundColor: fil.colorHex || "#888" }}
+                    />
+                    <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
+                      <span className="text-sm truncate">
+                        <HighlightMatch text={fil.name} query={value} />
+                      </span>
+                      {fil.vendor && (
+                        <span className="text-[11px] text-muted-foreground truncate flex-shrink-0">
+                          {fil.vendor}
+                        </span>
+                      )}
+                    </div>
+                    {fil.price != null && (
+                      <span className="text-xs text-muted-foreground font-medium flex-shrink-0">
+                        ${fil.price.toFixed(2)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── "See all results" footer ── */}
+          {value.length >= 2 && hasResults && (
+            <div className="border-t border-border/50">
+              <button
+                onClick={() => {
+                  trackSearch(value);
+                  trackGA4Search(value, 0);
+                  setShowDropdown(false);
+                  onSelect?.(value);
+                  inputRef.current?.blur();
+                }}
+                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-b-lg"
+              >
+                <span>
+                  See all results for <span className="font-medium text-foreground">"{value}"</span>
+                </span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* ── Zero state ── */}
           {showZeroState && (
             <div className="p-4 text-center space-y-3">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">
-                  No filaments found for "<span className="text-foreground font-medium">{value}</span>".
-                  Try searching by material type (e.g. TPU, PETG) or brand name.
-                </p>
-              </div>
-
-              {/* Typo correction */}
-              {typoCorrection && (
-                <button
-                  onClick={() => handleSelect(typoCorrection)}
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors font-medium"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Did you mean "{typoCorrection}"?
-                </button>
-              )}
-
-              {/* Intent-based material chips */}
-              {matchedIntent && (
-                <div className="space-y-1.5">
-                  <p className="text-xs text-muted-foreground">
-                    Looking for {matchedIntent.context.replace(/_/g, " ")}? Try these materials:
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-1.5">
-                    {matchedIntent.boostMaterials.map((mat) => (
-                      <button
-                        key={mat}
-                        onClick={() => {
-                          onChange(mat);
-                          trackSearch(mat);
-                          setShowDropdown(false);
-                          onSelect?.(mat);
-                          inputRef.current?.blur();
-                        }}
-                        className="px-2.5 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        {mat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Helpful links */}
+              <p className="text-sm text-muted-foreground">
+                No filaments found for "<span className="text-foreground font-medium">{value}</span>".
+                Try searching by material type (e.g. TPU, PETG) or brand name.
+              </p>
               <div className="flex flex-col items-center gap-1.5 pt-1">
                 <Link
                   to="/filaments"
@@ -378,75 +451,7 @@ export function SearchInputWithHistory({
             </div>
           )}
 
-
-          {value.length >= 2 && suggestions.length > 0 && (
-            <div className="p-2">
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={`${suggestion.type}-${suggestion.value}`}
-                  onClick={() => handleSelect(suggestion.value, suggestion)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
-                    selectedIndex === index
-                      ? "bg-primary/20 text-foreground"
-                      : "hover:bg-muted/50 text-foreground"
-                  )}
-                  role="option"
-                  aria-selected={selectedIndex === index}
-                >
-                  <span className={cn(
-                    "flex-shrink-0",
-                    suggestion.type === "typo" ? "text-amber-500" : "text-muted-foreground"
-                  )}>
-                    {getIcon(suggestion)}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="truncate text-sm">
-                      {highlightMatch(suggestion.displayText, value)}
-                    </div>
-                    {suggestion.subtitle && (
-                      <div className="text-xs text-muted-foreground truncate">
-                        {suggestion.subtitle}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {suggestion.variantCount && suggestion.variantCount > 1 && (
-                      <span className="text-[10px] text-primary/80 font-medium px-1.5 py-0.5 bg-primary/10 rounded-full whitespace-nowrap">
-                        {suggestion.variantCount} variants
-                      </span>
-                    )}
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider px-2 py-0.5 bg-muted/50 rounded">
-                      {suggestion.type}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* "See all results" footer */}
-          {value.length >= 2 && suggestions.length > 0 && (
-            <div className="border-t border-border/50">
-              <button
-                onClick={() => {
-                  trackSearch(value);
-                  trackGA4Search(value, totalProductGroups ?? 0);
-                  setShowDropdown(false);
-                  onSelect?.(value);
-                  inputRef.current?.blur();
-                }}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors rounded-b-xl"
-              >
-                <span>
-                  See all results for <span className="font-medium text-foreground">"{value}"</span>
-                </span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* Recent searches (when empty) */}
+          {/* ── Recent searches (when empty) ── */}
           {value.length < 2 && filteredRecentSearches.length > 0 && (
             <div className="p-2">
               <div className="flex items-center justify-between px-3 py-2">
@@ -463,12 +468,12 @@ export function SearchInputWithHistory({
               {filteredRecentSearches.map((search, index) => (
                 <button
                   key={search}
-                  onClick={() => handleSelect(search)}
+                  onClick={() => handleSelectItem({ type: "recent", key: search })}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
                     selectedIndex === index
-                      ? "bg-primary/20 text-foreground"
-                      : "hover:bg-muted/50 text-foreground"
+                      ? "bg-accent text-accent-foreground"
+                      : "hover:bg-accent text-foreground"
                   )}
                   role="option"
                   aria-selected={selectedIndex === index}
@@ -477,19 +482,6 @@ export function SearchInputWithHistory({
                   <span className="truncate">{search}</span>
                 </button>
               ))}
-            </div>
-          )}
-
-          {/* Typo correction hint */}
-          {typoCorrection && value.length >= 3 && !suggestions.some(s => s.type === "typo") && (
-            <div className="px-4 py-3 border-t border-border/50 bg-amber-500/5">
-              <button
-                onClick={() => handleSelect(typoCorrection)}
-                className="flex items-center gap-2 text-sm text-amber-500 hover:text-amber-400 transition-colors"
-              >
-                <Sparkles className="w-4 h-4" />
-                Did you mean "<span className="font-medium">{typoCorrection}</span>"?
-              </button>
             </div>
           )}
         </div>
