@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getTypoSuggestion, getSimilarSuggestions } from "@/lib/fuzzySearch";
+import { SEARCH_INTENT_MAP } from "@/lib/personalizationEngine";
 
 export interface SearchSuggestion {
   type: "brand" | "material" | "product" | "typo";
@@ -219,6 +220,27 @@ export function useSearchSuggestions(
     return getTypoSuggestion(debouncedQuery);
   }, [debouncedQuery]);
 
+  // Intent-based suggestions from SEARCH_INTENT_MAP
+  const intentSuggestions = useMemo((): SearchSuggestion[] => {
+    if (!debouncedQuery || debouncedQuery.length < 2) return [];
+    const words = debouncedQuery.toLowerCase().split(/\s+/);
+    const matched: SearchSuggestion[] = [];
+
+    for (const intent of Object.values(SEARCH_INTENT_MAP)) {
+      if (matched.length >= 2) break;
+      const hasMatch = intent.keywords.some((kw) => words.some((w) => w === kw || kw.includes(w)));
+      if (hasMatch && intent.boostMaterials.length > 0) {
+        matched.push({
+          type: "material",
+          value: intent.boostMaterials[0],
+          displayText: `Best for ${intent.context.replace(/_/g, " ")}`,
+          subtitle: `Try ${intent.boostMaterials.join(", ")}`,
+        });
+      }
+    }
+    return matched;
+  }, [debouncedQuery]);
+
   // Get similar suggestions if no results
   const similarSuggestions = useMemo(() => {
     if (!debouncedQuery || debouncedQuery.length < 3) return [];
@@ -242,6 +264,12 @@ export function useSearchSuggestions(
         displayText: typoSuggestion,
         subtitle: `Did you mean "${typoSuggestion}"?`,
       });
+    }
+
+    // Add intent suggestions if few direct matches
+    const directMatchCount = brandSuggestions.length + materialSuggestions.length + productSuggestions.length;
+    if (directMatchCount < 2 && intentSuggestions.length > 0) {
+      all.push(...intentSuggestions);
     }
 
     // Add top brand match (max 2 for diversity)
@@ -268,7 +296,7 @@ export function useSearchSuggestions(
     }
 
     return all.slice(0, maxSuggestions);
-  }, [brandSuggestions, materialSuggestions, productSuggestions, typoSuggestion, similarSuggestions, maxSuggestions]);
+  }, [brandSuggestions, materialSuggestions, productSuggestions, typoSuggestion, intentSuggestions, similarSuggestions, maxSuggestions]);
 
   const isLoading = debouncedQuery !== query;
   const hasQuery = query.length >= 2;
