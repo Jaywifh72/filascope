@@ -1,128 +1,105 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { normalizeColorHex } from "@/lib/utils";
-import { getFilamentHref } from "@/lib/filamentUrl";
-import { Package } from "lucide-react";
+import { toBrandSlug } from "@/utils/brandSlug";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
-interface PopularFilament {
-  id: string;
-  product_title: string;
-  vendor: string | null;
-  color_hex: string | null;
-  featured_image: string | null;
-  product_handle: string | null;
-}
+// Curated list of well-known brands with good logos
+const HERO_BRANDS = [
+  "Bambu Lab",
+  "Polymaker",
+  "Prusament",
+  "eSun",
+  "Overture",
+  "Hatchbox",
+  "Sunlu",
+  "ColorFabb",
+  "Filamentum",
+  "Eryone",
+  "Fiberlogy",
+  "Proto-Pasta",
+  "3DXTech",
+  "Atomic Filament",
+  "Creality",
+  "Anycubic",
+  "Elegoo",
+  "Spectrum Filaments",
+];
 
-function usePopularFilaments(limit = 6) {
-  return useQuery({
-    queryKey: ["hero-popular-filaments", limit],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("filaments")
-        .select("id, product_title, vendor, color_hex, featured_image, product_handle")
-        .not("featured_image", "is", null)
-        .eq("variant_available", true)
-        .order("filascope_score", { ascending: false, nullsFirst: false })
-        .limit(limit);
-      if (error) throw error;
-      return (data || []) as unknown as PopularFilament[];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
-function HeroTile({ filament, hidden }: { filament: PopularFilament; hidden?: boolean }) {
-  const [imgStatus, setImgStatus] = useState<"loading" | "loaded" | "error">("loading");
-  const href = getFilamentHref(filament.id, filament.product_handle);
-  const colorHex = filament.color_hex ? normalizeColorHex(filament.color_hex) : "#334155";
-  const label = filament.vendor || "";
-
-  return (
-    <Link
-      to={href}
-      className={`group relative aspect-square rounded-xl overflow-hidden border border-border/30 transition-transform duration-200 ease-out hover:scale-105 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary ${hidden ? "hidden xl:block" : ""}`}
-    >
-      {/* Loading skeleton */}
-      {imgStatus === "loading" && (
-        <div className="absolute inset-0 animate-pulse bg-muted rounded-xl" />
-      )}
-
-      {/* Actual image */}
-      {imgStatus !== "error" && filament.featured_image && (
-        <img
-          src={filament.featured_image}
-          alt={filament.product_title}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${imgStatus === "loaded" ? "opacity-100" : "opacity-0"}`}
-          loading="lazy"
-          onLoad={() => setImgStatus("loaded")}
-          onError={() => setImgStatus("error")}
-        />
-      )}
-
-      {/* Branded fallback on error */}
-      {imgStatus === "error" && (
-        <div
-          className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-2"
-          style={{
-            background: `linear-gradient(135deg, ${colorHex}66 0%, ${colorHex}cc 100%)`,
-          }}
-        >
-          <Package className="w-8 h-8 text-white/40" />
-          <span className="text-[11px] text-white/70 text-center leading-tight line-clamp-2 font-medium">
-            {filament.product_title}
-          </span>
-        </div>
-      )}
-
-      {/* Bottom gradient overlay */}
-      {imgStatus !== "error" && (
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
-      )}
-
-      {/* Color swatch + vendor label */}
-      <div className="absolute bottom-2 left-2 right-2 flex items-center gap-1.5">
-        {colorHex && (
-          <span
-            className="w-3 h-3 rounded-full flex-shrink-0 ring-1 ring-white/30"
-            style={{ backgroundColor: colorHex }}
-          />
-        )}
-        {label && (
-          <span className="text-[10px] font-medium text-white truncate leading-tight drop-shadow-sm">
-            {label}
-          </span>
-        )}
-      </div>
-    </Link>
-  );
+function pickInitial(count: number): string[] {
+  const shuffled = [...HERO_BRANDS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
 }
 
 /**
- * 2×3 grid of popular filament product images for the hero section.
+ * 2×3 grid of rotating brand logos for the hero section.
+ * Every few seconds, one tile swaps to a new brand not already visible.
  */
 export function HeroProductGrid() {
-  const { data: filaments, isLoading } = usePopularFilaments(6);
+  const TILE_COUNT = 6;
+  const [brands, setBrands] = useState<string[]>(() => pickInitial(TILE_COUNT));
+  const [fadingIndex, setFadingIndex] = useState<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
-  if (isLoading || !filaments || filaments.length === 0) {
-    return (
-      <div className="grid grid-cols-3 gap-3 w-full max-w-[400px]">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className={`aspect-square rounded-xl bg-muted animate-pulse ${i >= 3 ? "hidden xl:block" : ""}`}
-          />
-        ))}
-      </div>
-    );
-  }
+  const swapOne = useCallback(() => {
+    setBrands((prev) => {
+      const available = HERO_BRANDS.filter((b) => !prev.includes(b));
+      if (available.length === 0) return prev;
+      const idx = Math.floor(Math.random() * TILE_COUNT);
+      const newBrand = available[Math.floor(Math.random() * available.length)];
+      setFadingIndex(idx);
+      // After fade-out, swap and fade-in
+      setTimeout(() => {
+        setBrands((curr) => {
+          const next = [...curr];
+          next[idx] = newBrand;
+          return next;
+        });
+        setTimeout(() => setFadingIndex(null), 50);
+      }, 300);
+      return prev;
+    });
+  }, []);
+
+  useEffect(() => {
+    intervalRef.current = setInterval(swapOne, 3000);
+    return () => clearInterval(intervalRef.current);
+  }, [swapOne]);
 
   return (
     <div className="grid grid-cols-3 gap-3 w-full max-w-[400px]">
-      {filaments.map((f, i) => (
-        <HeroTile key={f.id} filament={f} hidden={i >= 3} />
-      ))}
+      {brands.map((brand, i) => {
+        const logoUrl = getBrandLogoUrl(brand, 120);
+        const slug = toBrandSlug(brand);
+        const isFading = fadingIndex === i;
+
+        return (
+          <Link
+            key={`${i}-${brand}`}
+            to={`/brand/${slug}`}
+            className={`group relative aspect-square rounded-xl overflow-hidden bg-card border border-border/30 flex items-center justify-center p-4 transition-all duration-200 ease-out hover:scale-105 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary ${
+              i >= 3 ? "hidden xl:block" : ""
+            }`}
+            style={{
+              opacity: isFading ? 0 : 1,
+              transition: "opacity 300ms ease-in-out, transform 200ms ease-out",
+            }}
+          >
+            <BrandLogo
+              src={logoUrl}
+              brandName={brand}
+              size="lg"
+              className="max-w-[80%] max-h-[80%]"
+            />
+            {/* Brand name label on hover */}
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <span className="text-[10px] font-medium text-white truncate block text-center drop-shadow-sm">
+                {brand}
+              </span>
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }
