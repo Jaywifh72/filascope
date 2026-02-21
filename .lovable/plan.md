@@ -1,121 +1,165 @@
 
-
-# Dynamic Search Dictionaries from Database
+# Admin Search Analytics Dashboard
 
 ## Overview
-Replace the hardcoded `KNOWN_BRANDS` (42 entries) and `KNOWN_MATERIALS` (29 entries) in `fuzzySearch.ts` with live data fetched from the database (48 brands, 83 materials, 22 color families). A new materialized view aggregates all dictionary terms in one query, a new hook fetches and caches them, and the fuzzy search functions accept optional override arrays.
+Create a new admin page at `/admin/search-analytics` with four tabbed panels that provide deep insight into search behavior, zero-result gaps, conversion rates, and dictionary improvement opportunities. Uses the existing `AdminLayout`, `AdminPageHeader`, and admin auth gating.
 
 ## Changes
 
-### 1. Create `search_dictionaries` database view (migration)
-A simple SQL view (not materialized -- views are simpler and the data is small enough) that unions three queries:
+### 1. New page: `src/pages/admin/SearchAnalytics.tsx`
+A tabbed page using the existing `AdminLayout` wrapper with four tabs:
+
+**Tab 1: Zero-Result Queries**
+- Fetches from the `search_zero_results` view (already exists), ordered by `search_count DESC`
+- Columns: search_term, search_count, unique_sessions, last_searched_at, most_common_region
+- Each row has an "Add as Synonym" button that opens a dialog where the admin can pick a target brand or material from `search_dictionaries` view, then inserts into a new `search_synonyms` table
+
+**Tab 2: Top Search Queries**
+- Fetches from `search_logs` (last 30 days, limit 1000), aggregates client-side
+- Columns: search_term, total searches, % with results (`has_results` true count / total), avg results_count
+- Sorted by total searches DESC
+
+**Tab 3: Search-to-Click Conversion**
+- Reuses the same session correlation pattern from the existing `SearchPanel.tsx`
+- Shows: total search sessions, sessions that also had an affiliate click, conversion rate
+- Additionally breaks down top converting search terms (terms where the session also had an affiliate click)
+
+**Tab 4: Suggested Dictionary Additions**
+- Fetches zero-result terms from `search_zero_results` view
+- Runs each term through `levenshteinDistance()` (imported from `fuzzySearch.ts`) against known brands and materials from `search_dictionaries`
+- Shows terms with Levenshtein distance 1-2 from a known brand/material
+- Columns: search_term, closest_match, distance, search_count
+- Each row has "Add to Typos" button (copies the suggested mapping to clipboard as a code snippet for `COMMON_TYPOS`)
+
+### 2. New database table: `search_synonyms`
+For the "Add as Synonym" feature, a simple table to store admin-defined mappings:
 
 ```text
-"brand"    -> SELECT brand_name FROM automated_brands WHERE is_visible = true
-"material" -> SELECT name FROM materials
-"color"    -> SELECT name FROM color_families
+search_synonyms
+  id          UUID PK
+  source_term TEXT NOT NULL (the misspelled/variant term)
+  target_term TEXT NOT NULL (the correct brand/material name)
+  target_type TEXT NOT NULL ('brand' | 'material')
+  created_at  TIMESTAMPTZ DEFAULT now()
+  created_by  UUID REFERENCES auth.users(id)
+
+RLS: admin-only read/write via has_role()
 ```
 
-Each row has two columns: `dict_type` (text) and `term` (text). Grant SELECT to anon and authenticated roles.
+### 3. Route registration in `App.tsx`
+- Add lazy import: `const AdminSearchAnalytics = lazy(() => import("./pages/admin/SearchAnalytics"));`
+- Add route: `<Route path="/admin/search-analytics" element={<AdminSearchAnalytics />} />`
 
-### 2. New hook: `src/hooks/useSearchDictionaries.ts`
-- Single `useQuery` with key `["search-dictionaries"]`
-- Fetches all rows from the `search_dictionaries` view
-- Groups results into `{ brands: string[], materials: string[], colors: string[] }`
-- Uses `staleTime: 60 * 60 * 1000` (1 hour), `gcTime: 24 * 60 * 60 * 1000` (24 hours)
-- Falls back to empty arrays on error (the fuzzy search functions will use hardcoded fallbacks)
+### 4. Sidebar link in `AdminSidebar.tsx`
+- Add to the "Analytics" nav group: `{ title: 'Search Analytics', href: '/admin/search-analytics', icon: Search }`
 
-### 3. Refactor `src/lib/fuzzySearch.ts`
-- Keep `KNOWN_BRANDS` and `KNOWN_MATERIALS` as hardcoded fallbacks (renamed to `FALLBACK_BRANDS` / `FALLBACK_MATERIALS` internally)
-- Add module-level `dynamicBrands` / `dynamicMaterials` variables with setter functions `setDynamicBrands()` / `setDynamicMaterials()`
-- Update `getKnownBrands()` and `getKnownMaterials()` to return dynamic data when available, falling back to hardcoded arrays
-- Update all internal functions (`getTypoSuggestion`, `getSimilarSuggestions`, `needsCorrection`) to call `getKnownBrands()` / `getKnownMaterials()` instead of referencing the hardcoded constants directly
-
-### 4. Update `src/hooks/useSearchSuggestions.ts`
-- Import and call `useSearchDictionaries()` at the top
-- Add a `useEffect` that calls `setDynamicBrands(brands)` and `setDynamicMaterials(materials)` whenever the dictionary data loads
-- No other changes needed -- all downstream functions (`getTypoSuggestion`, `getSimilarSuggestions`, `analyzeSearchQuery` via `getKnownBrands`/`getKnownMaterials`) automatically pick up the dynamic data
+### 5. Quick link in `NewAdminPanel.tsx`
+- Add a card linking to `/admin/search-analytics` with a Search icon
 
 ## Technical Details
 
-### Database view SQL
-```sql
-CREATE OR REPLACE VIEW public.search_dictionaries AS
-SELECT 'brand' AS dict_type, brand_name AS term
-FROM public.automated_brands
-WHERE is_visible = true
-UNION ALL
-SELECT 'material' AS dict_type, name AS term
-FROM public.materials
-UNION ALL
-SELECT 'color' AS dict_type, name AS term
-FROM public.color_families;
-
-GRANT SELECT ON public.search_dictionaries TO anon, authenticated;
+### Zero-result query with synonym button
+```typescript
+const { data: zeroResults } = useQuery({
+  queryKey: ["admin-zero-results"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("search_zero_results")
+      .select("*")
+      .order("search_count", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return data || [];
+  },
+});
 ```
 
-### Hook structure
+### Top queries aggregation
 ```typescript
-export function useSearchDictionaries() {
-  return useQuery({
-    queryKey: ["search-dictionaries"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("search_dictionaries")
-        .select("dict_type, term");
-      if (error) throw error;
-      const brands: string[] = [];
-      const materials: string[] = [];
-      const colors: string[] = [];
-      for (const row of data || []) {
-        if (row.dict_type === "brand") brands.push(row.term);
-        else if (row.dict_type === "material") materials.push(row.term);
-        else if (row.dict_type === "color") colors.push(row.term);
+const { data: topQueries } = useQuery({
+  queryKey: ["admin-top-queries"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("search_logs")
+      .select("search_term, results_count, has_results")
+      .gte("created_at", thirtyDaysAgo)
+      .limit(1000);
+    if (error) throw error;
+    // Group by search_term, compute count, % with results, avg results_count
+    const map: Record<string, { total: number; withResults: number; sumResults: number }> = {};
+    for (const row of data || []) { ... }
+    return Object.entries(map)
+      .map(([term, d]) => ({
+        term, total: d.total,
+        pctWithResults: ((d.withResults / d.total) * 100).toFixed(1),
+        avgResults: (d.sumResults / d.total).toFixed(1),
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 30);
+  },
+});
+```
+
+### Dictionary suggestions (Levenshtein matching)
+```typescript
+const suggestions = useMemo(() => {
+  if (!zeroResults || !dictionaries) return [];
+  const allTerms = [...dictionaries.brands, ...dictionaries.materials];
+  return zeroResults
+    .map(zr => {
+      let bestMatch = "", bestDist = Infinity;
+      for (const known of allTerms) {
+        const dist = levenshteinDistance(zr.search_term.toLowerCase(), known.toLowerCase());
+        if (dist < bestDist) { bestDist = dist; bestMatch = known; }
       }
-      return { brands, materials, colors };
-    },
-    staleTime: 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+      return { ...zr, closestMatch: bestMatch, distance: bestDist };
+    })
+    .filter(s => s.distance >= 1 && s.distance <= 2)
+    .sort((a, b) => a.distance - b.distance || b.search_count - a.search_count);
+}, [zeroResults, dictionaries]);
+```
+
+### Synonym insert
+```typescript
+const addSynonym = async (sourceTerm: string, targetTerm: string, targetType: string) => {
+  await supabase.from("search_synonyms").insert({
+    source_term: sourceTerm,
+    target_term: targetTerm,
+    target_type: targetType,
+    created_by: user?.id,
   });
-}
+};
 ```
 
-### fuzzySearch.ts setter pattern
-```typescript
-let dynamicBrands: string[] | null = null;
-let dynamicMaterials: string[] | null = null;
+### Migration SQL
+```sql
+CREATE TABLE IF NOT EXISTS public.search_synonyms (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  source_term TEXT NOT NULL,
+  target_term TEXT NOT NULL,
+  target_type TEXT NOT NULL DEFAULT 'brand',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
+);
 
-export function setDynamicBrands(b: string[]) { dynamicBrands = b; }
-export function setDynamicMaterials(m: string[]) { dynamicMaterials = m; }
+CREATE UNIQUE INDEX idx_search_synonyms_source ON public.search_synonyms(LOWER(source_term));
 
-export function getKnownBrands(): string[] {
-  return dynamicBrands && dynamicBrands.length > 0 ? dynamicBrands : [...FALLBACK_BRANDS];
-}
-export function getKnownMaterials(): string[] {
-  return dynamicMaterials && dynamicMaterials.length > 0 ? dynamicMaterials : [...FALLBACK_MATERIALS];
-}
+ALTER TABLE public.search_synonyms ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can manage search synonyms"
+  ON public.search_synonyms FOR ALL
+  USING (has_role(auth.uid(), 'admin'))
+  WITH CHECK (has_role(auth.uid(), 'admin'));
 ```
 
-### Integration in useSearchSuggestions.ts
-```typescript
-const { data: dictionaries } = useSearchDictionaries();
+## Files Modified
+- `src/pages/admin/SearchAnalytics.tsx` -- new page with 4 tabs
+- `src/App.tsx` -- add lazy import and route
+- `src/components/admin/AdminSidebar.tsx` -- add nav link
+- `src/pages/NewAdminPanel.tsx` -- add quick link card
+- Database migration -- create `search_synonyms` table
 
-useEffect(() => {
-  if (dictionaries) {
-    setDynamicBrands(dictionaries.brands);
-    setDynamicMaterials(dictionaries.materials);
-  }
-}, [dictionaries]);
-```
-
-## What does NOT change
-- `COMMON_TYPOS` stays hardcoded (hand-curated corrections)
-- `multiTermSearch.ts` needs zero changes (already calls `getKnownBrands`/`getKnownMaterials`)
-- `COLOR_FAMILIES` in `colorMatchUtils.ts` stays as-is for hex/swatch data (the view provides the family names for dictionary purposes only)
-- All existing search behavior remains identical; dictionaries just grow dynamically
-
-## Files modified
-- `src/lib/fuzzySearch.ts` -- add setters, rename constants, use getters internally
-- `src/hooks/useSearchDictionaries.ts` -- new file
-- `src/hooks/useSearchSuggestions.ts` -- import hook, seed dynamic data via useEffect
-- Database migration -- create `search_dictionaries` view with grants
+## What Does NOT Change
+- Existing `SearchPanel.tsx` in the Analytics dashboard remains untouched
+- `fuzzySearch.ts` is only imported (read-only) for the `levenshteinDistance` function
+- `search_logs` and `search_zero_results` are read-only, no schema changes
