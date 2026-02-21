@@ -89,7 +89,7 @@ export function HeroProductGrid() {
               src={logoUrl}
               brandName={brand}
               size="lg"
-              className="max-w-[80%] max-h-[80%]"
+              className="w-full h-full object-contain"
             />
             {/* Brand name label on hover */}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
