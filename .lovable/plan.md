@@ -1,165 +1,118 @@
 
-# Admin Search Analytics Dashboard
+
+# Filament Product Card Redesign
 
 ## Overview
-Create a new admin page at `/admin/search-analytics` with four tabbed panels that provide deep insight into search behavior, zero-result gaps, conversion rates, and dictionary improvement opportunities. Uses the existing `AdminLayout`, `AdminPageHeader`, and admin auth gating.
+Five coordinated changes to the FilamentCard component addressing color accuracy, TD visibility, timestamp noise, out-of-stock clarity, and compare link usability.
 
 ## Changes
 
-### 1. New page: `src/pages/admin/SearchAnalytics.tsx`
-A tabbed page using the existing `AdminLayout` wrapper with four tabs:
+### 1. Color Swatch Fix (Lines 520-560)
+**Problem**: The 28px color dot in the brand row uses `filament.color_hex` directly, which defaults to `#0000FF` for many products.
 
-**Tab 1: Zero-Result Queries**
-- Fetches from the `search_zero_results` view (already exists), ordered by `search_count DESC`
-- Columns: search_term, search_count, unique_sessions, last_searched_at, most_common_region
-- Each row has an "Add as Synonym" button that opens a dialog where the admin can pick a target brand or material from `search_dictionaries` view, then inserts into a new `search_synonyms` table
+**Fix**:
+- Add a `getReliableColorHex` helper that picks the first non-default hex from `effectiveVariantIndicators.colors` (skipping `#0000ff`, `#000000`, `#ffffff` defaults), then falls back to `filament.color_hex`, then returns `null`.
+- Replace the current 28px rounded-lg swatch with a pill shape: `w-12 h-5 rounded` (48x20px, 4px border-radius).
+- Inside the pill, if a color name can be derived (from the product title or a simple hex-to-name map), render it in 9px text with contrast-appropriate color (white on dark backgrounds, dark on light backgrounds using a luminance check).
+- Remove the old `+N` variant count text below the swatch (it's already shown in the color swatches row below).
 
-**Tab 2: Top Search Queries**
-- Fetches from `search_logs` (last 30 days, limit 1000), aggregates client-side
-- Columns: search_term, total searches, % with results (`has_results` true count / total), avg results_count
-- Sorted by total searches DESC
+### 2. TD Value Badge (New, image area overlay)
+**Problem**: TD badge currently lives in the badges row (line 698-710) -- not prominent enough.
 
-**Tab 3: Search-to-Click Conversion**
-- Reuses the same session correlation pattern from the existing `SearchPanel.tsx`
-- Shows: total search sessions, sessions that also had an affiliate click, conversion rate
-- Additionally breaks down top converting search terms (terms where the session also had an affiliate click)
+**Fix**:
+- Add a new absolutely-positioned badge in the top-left of the card (inside the main card div, before the brand row).
+- Style: `absolute top-3 left-3 z-10 bg-black/65 text-white text-[10px] font-semibold px-2 py-0.5 rounded`
+- Content: `TD {value}` (e.g. "TD 4.8")
+- Only rendered when `filament.transmission_distance != null`.
+- Keep the existing TD badge in the badges row as well for information density.
 
-**Tab 4: Suggested Dictionary Additions**
-- Fetches zero-result terms from `search_zero_results` view
-- Runs each term through `levenshteinDistance()` (imported from `fuzzySearch.ts`) against known brands and materials from `search_dictionaries`
-- Shows terms with Levenshtein distance 1-2 from a known brand/material
-- Columns: search_term, closest_match, distance, search_count
-- Each row has "Add to Typos" button (copies the suggested mapping to clipboard as a code snippet for `COMMON_TYPOS`)
+### 3. Timestamp Treatment (Lines 1007-1015 and 819-835)
+**Problem**: "Checked Xd ago" text is always visible, adding noise.
 
-### 2. New database table: `search_synonyms`
-For the "Add as Synonym" feature, a simple table to store admin-defined mappings:
+**Fix**:
+- Remove the always-visible reframed freshness text block (lines 1007-1015).
+- Replace the existing mini confidence badge (lines 820-835) with a freshness dot: a small colored circle (`w-2 h-2 rounded-full`) using the existing `getFreshnessDotColor` helper (green for high, amber for medium, red for stale).
+- The dot is always visible next to the price. Wrap it in a Tooltip showing "Price updated [timeAgo]" on hover.
+- On card hover (`isHovered` state already tracked), show a small inline text next to the dot: the compact time ago label (e.g. "3d"). At rest, only the dot is visible.
 
-```text
-search_synonyms
-  id          UUID PK
-  source_term TEXT NOT NULL (the misspelled/variant term)
-  target_term TEXT NOT NULL (the correct brand/material name)
-  target_type TEXT NOT NULL ('brand' | 'material')
-  created_at  TIMESTAMPTZ DEFAULT now()
-  created_by  UUID REFERENCES auth.users(id)
+### 4. Out of Stock Treatment (Lines 448-453, 1025-1045)
+**Problem**: Current OOS overlay is a translucent bar across the top -- not prominent enough. CTA still says "View Prices".
 
-RLS: admin-only read/write via has_role()
-```
+**Fix**:
+- **(a) Grayscale image**: The card doesn't have a separate product image area (it's text-based with a color swatch). Apply `filter: grayscale(0.6)` to the color swatch and variant color dots when `isOutOfStock` is true.
+- **(b) OOS badge**: Replace the current top overlay (lines 448-453) with a centered pill overlaid on the brand/title area: `absolute top-1/3 left-1/2 -translate-x-1/2 z-10`, background `#1a1a1a`, white text, 11px uppercase font, rounded-full padding.
+- **(c) CTA**: Already handled -- `ctaText` is "Check Availability" when OOS (line 418). The button variant is already `"outline"` for OOS (line 1027). Update the OOS button styling to use `variant="ghost"` with muted border instead of the current slate-700 background.
 
-### 3. Route registration in `App.tsx`
-- Add lazy import: `const AdminSearchAnalytics = lazy(() => import("./pages/admin/SearchAnalytics"));`
-- Add route: `<Route path="/admin/search-analytics" element={<AdminSearchAnalytics />} />`
+### 5. Compare Link Elevation (Lines 1046-1068)
+**Problem**: Compare is a small icon button next to the CTA -- hard to discover on mobile.
 
-### 4. Sidebar link in `AdminSidebar.tsx`
-- Add to the "Analytics" nav group: `{ title: 'Search Analytics', href: '/admin/search-analytics', icon: Search }`
-
-### 5. Quick link in `NewAdminPanel.tsx`
-- Add a card linking to `/admin/search-analytics` with a Search icon
+**Fix**:
+- Move the compare action from the CTA row to the badges row (Element 2, line 670).
+- Render it as a small ghost button: `border border-current px-2 py-0.5 rounded text-[11px] min-h-[28px] inline-flex items-center gap-1`.
+- Position it after the material badge using a flex layout.
+- Label: "Compare" with the Columns icon.
+- Remove the old compare button from the CTA row (lines 1046-1068) and the floating corner button (lines 1104-1120) to avoid triple-rendering compare.
+- Keep the top-right checkbox for quick multi-select -- that serves a different UX pattern.
 
 ## Technical Details
 
-### Zero-result query with synonym button
+### Luminance helper for swatch text contrast
 ```typescript
-const { data: zeroResults } = useQuery({
-  queryKey: ["admin-zero-results"],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from("search_zero_results")
-      .select("*")
-      .order("search_count", { ascending: false })
-      .limit(50);
-    if (error) throw error;
-    return data || [];
-  },
-});
+function getContrastTextColor(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
+}
 ```
 
-### Top queries aggregation
+### Reliable color hex resolution
 ```typescript
-const { data: topQueries } = useQuery({
-  queryKey: ["admin-top-queries"],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from("search_logs")
-      .select("search_term, results_count, has_results")
-      .gte("created_at", thirtyDaysAgo)
-      .limit(1000);
-    if (error) throw error;
-    // Group by search_term, compute count, % with results, avg results_count
-    const map: Record<string, { total: number; withResults: number; sumResults: number }> = {};
-    for (const row of data || []) { ... }
-    return Object.entries(map)
-      .map(([term, d]) => ({
-        term, total: d.total,
-        pctWithResults: ((d.withResults / d.total) * 100).toFixed(1),
-        avgResults: (d.sumResults / d.total).toFixed(1),
-      }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 30);
-  },
-});
+const DEFAULT_HEXES = new Set(['#0000ff', '#000000', '#ffffff']);
+
+function getReliableColorHex(
+  filamentHex: string | null | undefined,
+  variantColors: string[]
+): string | null {
+  // Try first non-default variant color
+  for (const hex of variantColors) {
+    const normalized = normalizeColorHex(hex).toLowerCase();
+    if (!DEFAULT_HEXES.has(normalized)) return normalized;
+  }
+  // Fall back to filament hex if non-default
+  if (filamentHex) {
+    const normalized = normalizeColorHex(filamentHex).toLowerCase();
+    if (!DEFAULT_HEXES.has(normalized)) return normalized;
+  }
+  return filamentHex ? normalizeColorHex(filamentHex) : null;
+}
 ```
 
-### Dictionary suggestions (Levenshtein matching)
+### Hover-only timestamp
 ```typescript
-const suggestions = useMemo(() => {
-  if (!zeroResults || !dictionaries) return [];
-  const allTerms = [...dictionaries.brands, ...dictionaries.materials];
-  return zeroResults
-    .map(zr => {
-      let bestMatch = "", bestDist = Infinity;
-      for (const known of allTerms) {
-        const dist = levenshteinDistance(zr.search_term.toLowerCase(), known.toLowerCase());
-        if (dist < bestDist) { bestDist = dist; bestMatch = known; }
-      }
-      return { ...zr, closestMatch: bestMatch, distance: bestDist };
-    })
-    .filter(s => s.distance >= 1 && s.distance <= 2)
-    .sort((a, b) => a.distance - b.distance || b.search_count - a.search_count);
-}, [zeroResults, dictionaries]);
-```
-
-### Synonym insert
-```typescript
-const addSynonym = async (sourceTerm: string, targetTerm: string, targetType: string) => {
-  await supabase.from("search_synonyms").insert({
-    source_term: sourceTerm,
-    target_term: targetTerm,
-    target_type: targetType,
-    created_by: user?.id,
-  });
-};
-```
-
-### Migration SQL
-```sql
-CREATE TABLE IF NOT EXISTS public.search_synonyms (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  source_term TEXT NOT NULL,
-  target_term TEXT NOT NULL,
-  target_type TEXT NOT NULL DEFAULT 'brand',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
-);
-
-CREATE UNIQUE INDEX idx_search_synonyms_source ON public.search_synonyms(LOWER(source_term));
-
-ALTER TABLE public.search_synonyms ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can manage search synonyms"
-  ON public.search_synonyms FOR ALL
-  USING (has_role(auth.uid(), 'admin'))
-  WITH CHECK (has_role(auth.uid(), 'admin'));
+{/* Freshness dot - always visible */}
+<Tooltip>
+  <TooltipTrigger asChild>
+    <span className={cn("w-2 h-2 rounded-full inline-block", getFreshnessDotColor(priceConfidence))} />
+  </TooltipTrigger>
+  <TooltipContent>Price updated {timeAgo || 'unknown'}</TooltipContent>
+</Tooltip>
+{/* Compact label - hover only */}
+{isHovered && compactTimeAgo && (
+  <span className="text-[10px] text-muted-foreground animate-in fade-in-0 duration-150">
+    {compactTimeAgo}
+  </span>
+)}
 ```
 
 ## Files Modified
-- `src/pages/admin/SearchAnalytics.tsx` -- new page with 4 tabs
-- `src/App.tsx` -- add lazy import and route
-- `src/components/admin/AdminSidebar.tsx` -- add nav link
-- `src/pages/NewAdminPanel.tsx` -- add quick link card
-- Database migration -- create `search_synonyms` table
+- `src/components/FilamentCard.tsx` -- all 5 changes in a single file
 
 ## What Does NOT Change
-- Existing `SearchPanel.tsx` in the Analytics dashboard remains untouched
-- `fuzzySearch.ts` is only imported (read-only) for the `levenshteinDistance` function
-- `search_logs` and `search_zero_results` are read-only, no schema changes
+- FilamentCardSkeleton layout
+- Compare hook logic
+- Price resolution logic
+- Affiliate link handling
+- Any other card variants (MiniFilamentCard, CompactFilamentCard, GuideProductCard)
+
