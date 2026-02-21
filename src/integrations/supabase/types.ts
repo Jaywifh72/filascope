@@ -7805,6 +7805,33 @@ export type Database = {
         }
         Relationships: []
       }
+      search_synonyms: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          source_term: string
+          target_term: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          source_term: string
+          target_term: string
+          target_type?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          source_term?: string
+          target_term?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       shared_settings: {
         Row: {
           created_at: string | null
