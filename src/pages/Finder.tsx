@@ -808,10 +808,30 @@ const Finder = () => {
     useFinderQuery(finderFilters, currentPage, brandNameMap, pageSize);
 
   // Client-side "In Stock Only" filtering
-  const displayedGroups = useMemo(() => {
+  const stockFiltered = useMemo(() => {
     if (!inStockOnly) return rawGroups;
     return rawGroups.filter(g => g.anyInStock !== false);
   }, [rawGroups, inStockOnly]);
+
+  // Brand diversity: max 3 per brand in first 12 positions
+  const displayedGroups = useMemo(() => {
+    if (stockFiltered.length <= 12) return stockFiltered;
+    const brandCount = new Map<string, number>();
+    const top: typeof stockFiltered = [];
+    const deferred: typeof stockFiltered = [];
+    for (const g of stockFiltered) {
+      const vendor = (g.representativeFilament.vendor || "Unknown").toLowerCase();
+      if (top.length < 12 && (brandCount.get(vendor) || 0) >= 3) {
+        deferred.push(g);
+      } else {
+        if (top.length < 12) brandCount.set(vendor, (brandCount.get(vendor) || 0) + 1);
+        top.push(g);
+      }
+    }
+    const insertAt = Math.min(top.length, 12);
+    top.splice(insertAt, 0, ...deferred);
+    return top;
+  }, [stockFiltered]);
 
   const totalCount = inStockOnly
     ? displayedGroups.length + (rawTotalCount > rawGroups.length ? rawTotalCount - rawGroups.length : 0)
