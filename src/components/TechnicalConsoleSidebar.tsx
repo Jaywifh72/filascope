@@ -841,7 +841,16 @@ function QuickMatchSidebarCTA() {
     setDismissed(true);
   };
 
-  if (dismissed) return null;
+  if (dismissed) {
+    return (
+      <div className="border-t border-border px-4 py-3">
+        <p className="text-[12px]">
+          <span style={{ color: 'rgba(255,255,255,0.4)' }}>Not sure what to choose? </span>
+          <Link to="/wizard" className="font-medium hover:underline" style={{ color: '#F59E0B' }}>→ Quick Match</Link>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="border-t border-border p-4">
