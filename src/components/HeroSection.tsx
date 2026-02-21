@@ -5,6 +5,7 @@ import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { useDealsCount } from "@/hooks/useDealsCount";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
+import { HeroProductGrid } from "@/components/HeroProductGrid";
 
 const QUICK_MATCH_DISMISSED_KEY = "filascope_hero_quickmatch_dismissed";
 
@@ -390,35 +391,12 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             </div>
           </div>
           
-          {/* Right: Brand Logo Marquee */}
+          {/* Right: Popular Filament Product Grid */}
           <div 
-            className="hidden xl:flex justify-end items-center animate-fade-in order-2"
+            className="hidden lg:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
-            <div className="w-[320px] overflow-hidden">
-              <div className="grid grid-cols-3 gap-3 group/marquee">
-                {[
-                  { name: "Bambu Lab" },
-                  { name: "Polymaker" },
-                  { name: "eSun" },
-                  { name: "Prusament" },
-                  { name: "Hatchbox" },
-                  { name: "Overture" },
-                ].map((brand) => (
-                  <Link
-                    key={brand.name}
-                    to={`/brands/${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3 flex items-center justify-center h-20 opacity-70 brightness-75 hover:brightness-100 hover:opacity-100 hover:scale-105 transition-all duration-200"
-                  >
-                    <BrandLogo
-                      src={getBrandLogoUrl(brand.name, 80)}
-                      brandName={brand.name}
-                      size="md"
-                    />
-                  </Link>
-                ))}
-              </div>
-            </div>
+            <HeroProductGrid />
           </div>
         </div>
       </div>
