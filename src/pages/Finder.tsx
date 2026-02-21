@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useRef, useCallback } from "react";
+import React, { useMemo, useEffect, useState, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
@@ -807,11 +807,20 @@ const Finder = () => {
   const { groups: rawGroups, totalCount: rawTotalCount, isLoading, isFetching, isPlaceholderData } = 
     useFinderQuery(finderFilters, currentPage, brandNameMap, pageSize);
 
-  // Client-side "In Stock Only" filtering
+  // Client-side "In Stock Only" filtering — when active, partition: in-stock first, OOS last
   const stockFiltered = useMemo(() => {
     if (!inStockOnly) return rawGroups;
-    return rawGroups.filter(g => g.anyInStock !== false);
+    const inStock = rawGroups.filter(g => g.anyInStock !== false);
+    const oos = rawGroups.filter(g => g.anyInStock === false);
+    return [...inStock, ...oos];
   }, [rawGroups, inStockOnly]);
+
+  // Index where OOS section begins (for divider rendering)
+  const oosStartIndex = useMemo(() => {
+    if (!inStockOnly) return -1;
+    const idx = stockFiltered.findIndex(g => g.anyInStock === false);
+    return idx;
+  }, [stockFiltered, inStockOnly]);
 
   // Brand diversity: max 3 per brand in first 12 positions
   const displayedGroups = useMemo(() => {
@@ -1568,22 +1577,31 @@ const Finder = () => {
                 const filament = group.representativeFilament;
 
                 return (
-                  <LabReadoutCard
-                    key={filament.id}
-                    filament={filament}
-                    index={index}
-                    displayTitle={group.baseName}
-                    communityRating={communityRatingsMap?.get(filament.id) || null}
-                    priority={index < 4}
-                    variantIndicators={group.variants.length > 1 ? {
-                      colors: Array.from(group.colors),
-                      weights: Array.from(group.weights).sort((a, b) => a - b),
-                      variantCount: group.variants.length,
-                      priceRange: group.priceRange,
-                      anyInStock: group.anyInStock,
-                    } : undefined}
-                    showCostPerPrint={showCostPerPrint}
-                  />
+                  <React.Fragment key={filament.id}>
+                    {/* OOS section divider */}
+                    {oosStartIndex > 0 && index === oosStartIndex && (
+                      <div className="col-span-full flex items-center gap-3 py-3" role="separator">
+                        <div className="flex-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.15)' }} />
+                        <span className="text-[11px] whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.3)' }}>Out of Stock</span>
+                        <div className="flex-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.15)' }} />
+                      </div>
+                    )}
+                    <LabReadoutCard
+                      filament={filament}
+                      index={index}
+                      displayTitle={group.baseName}
+                      communityRating={communityRatingsMap?.get(filament.id) || null}
+                      priority={index < 4}
+                      variantIndicators={group.variants.length > 1 ? {
+                        colors: Array.from(group.colors),
+                        weights: Array.from(group.weights).sort((a, b) => a - b),
+                        variantCount: group.variants.length,
+                        priceRange: group.priceRange,
+                        anyInStock: group.anyInStock,
+                      } : undefined}
+                      showCostPerPrint={showCostPerPrint}
+                    />
+                  </React.Fragment>
                 );
               })}
             </div>

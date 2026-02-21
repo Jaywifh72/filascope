@@ -380,14 +380,15 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         "group relative rounded-2xl transition-all duration-200 ease-out min-h-[420px] flex flex-col",
         "bg-slate-800/80 border border-slate-700/50",
         "filament-card-hover",
-        isOutOfStock && "opacity-75 is-oos",
+        isOutOfStock && "is-oos",
         "active:scale-[0.99] active:duration-[50ms]",
         "focus-within:ring-2 focus-within:ring-cyan-500/50 focus-within:ring-offset-2 focus-within:ring-offset-slate-900",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
       )}
       style={{
-        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`
+        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`,
+        ...(isOutOfStock ? { opacity: 0.82 } : {}),
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
@@ -402,10 +403,10 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         </div>
       )}
 
-      {/* === PLAN #4b: Out of Stock centered pill overlay === */}
+      {/* === OOS Badge: centered overlay === */}
       {isOutOfStock && (
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-          <span className="bg-[#1a1a1a] text-white text-[11px] font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full whitespace-nowrap">
+          <span className="text-white text-[11px] font-semibold uppercase tracking-[0.05em] px-2 py-[3px] rounded whitespace-nowrap" style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}>
             Out of Stock
           </span>
         </div>
@@ -477,7 +478,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           {/* === PLAN #1: Color swatch pill === */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex-shrink-0 mt-1" style={{ filter: isOutOfStock ? 'grayscale(0.6)' : undefined }}>
+              <div className="flex-shrink-0 mt-1" style={{ filter: isOutOfStock ? 'grayscale(0.55)' : undefined }}>
                 {reliableColor ? (
                   <div 
                     className="w-12 h-5 rounded flex items-center justify-center ring-1 ring-white/20 shadow-sm cursor-help"
@@ -530,7 +531,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                     className="flex items-center gap-1 cursor-pointer mt-1.5" 
                     role="group" 
                     aria-label="Color variants"
-                    style={{ filter: isOutOfStock ? 'grayscale(0.6)' : undefined }}
+                    style={{ filter: isOutOfStock ? 'grayscale(0.55)' : undefined }}
                   >
                     {effectiveVariantIndicators.colors.slice(0, 5).map((hex, i) => {
                       const isColorInStock = variantIndicators?.colorStockStatus?.[hex] !== false;
@@ -986,7 +987,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           className={cn(
             "w-full h-11 font-semibold transition-all duration-200",
             isOutOfStock
-              ? "border border-border text-muted-foreground hover:bg-muted/30"
+              ? "bg-transparent text-white hover:bg-white/10"
               : isDeal
               ? "bg-amber-500 border-amber-500 text-black hover:bg-amber-400 hover:border-amber-400"
               : cn(
@@ -995,6 +996,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                 ),
             "active:scale-[0.98]"
           )}
+          style={isOutOfStock ? { border: '1px solid rgba(255,255,255,0.3)' } : undefined}
         >
           <Link to={`${filamentHref}${ctaTab}`} aria-label={`${ctaText} for ${filament.product_title}`}>
             {ctaText}
