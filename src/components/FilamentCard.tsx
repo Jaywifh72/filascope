@@ -69,7 +69,7 @@ function getContrastTextColor(hex: string): string {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
+  return luminance >= 0.5 ? '#111111' : '#ffffff';
 }
 
 // Reliable color hex resolution — skips default placeholder colors
@@ -475,27 +475,28 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
 
         {/* Product Name with inline color swatch pill */}
         <div className="flex items-start gap-2.5">
-          {/* === PLAN #1: Color swatch pill === */}
-          <Tooltip>
+          {/* === Color swatch pill === */}
+          <Tooltip delayDuration={200}>
             <TooltipTrigger asChild>
               <div className="flex-shrink-0 mt-1" style={{ filter: isOutOfStock ? 'grayscale(0.55)' : undefined }}>
                 {reliableColor ? (
                   <div 
-                    className="w-12 h-5 rounded flex items-center justify-center ring-1 ring-white/20 shadow-sm cursor-help"
-                    style={{ backgroundColor: reliableColor }}
+                    className="h-5 min-w-[48px] max-w-[96px] rounded flex items-center justify-center cursor-help"
+                    style={{ backgroundColor: reliableColor, border: '1px solid rgba(255,255,255,0.15)' }}
                     role="img"
                     aria-label={`Color: ${colorName || reliableColor}`}
                   >
-                    {colorName && (
-                      <span className="text-[9px] font-medium leading-none px-0.5 truncate" style={{ color: swatchTextColor }}>
-                        {colorName}
-                      </span>
-                    )}
+                    <span
+                      className="text-[9px] font-semibold leading-none px-1.5 truncate max-w-[90px]"
+                      style={{ color: swatchTextColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
+                      {colorName || reliableColor}
+                    </span>
                   </div>
                 ) : (
                   <div 
-                    className="w-12 h-5 rounded ring-1 ring-white/20 shadow-sm bg-muted/50 flex items-center justify-center cursor-help"
-                    style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, hsl(var(--muted-foreground) / 0.15) 3px, hsl(var(--muted-foreground) / 0.15) 4px)' }}
+                    className="h-5 min-w-[48px] max-w-[96px] rounded bg-muted/50 flex items-center justify-center cursor-help"
+                    style={{ border: '1px solid rgba(255,255,255,0.15)', backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, hsl(var(--muted-foreground) / 0.15) 3px, hsl(var(--muted-foreground) / 0.15) 4px)' }}
                     role="img"
                     aria-label="Color unknown"
                   >
@@ -504,14 +505,12 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                 )}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
-              <p className="font-medium">{getDisplayTitle()}</p>
-              <p className="text-muted-foreground font-mono">
-                {reliableColor || 'Unknown color'}
-              </p>
-              {hasMultipleVariants && effectiveVariantIndicators.colors.length > 1 && (
-                <p className="text-muted-foreground mt-1">{effectiveVariantIndicators.colors.length} colors available</p>
-              )}
+            <TooltipContent
+              side="top"
+              className="text-xs border-0"
+              style={{ backgroundColor: '#1a1a1a', color: '#ffffff', fontSize: '12px', borderRadius: '4px', padding: '4px 8px' }}
+            >
+              <p>{colorName ? `${colorName} — ${reliableColor}` : reliableColor || 'Unknown color'}</p>
             </TooltipContent>
           </Tooltip>
           
