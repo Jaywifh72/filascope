@@ -59,6 +59,13 @@ interface Filament {
   price_eur?: number | null;
   price_aud?: number | null;
   price_jpy?: number | null;
+  // Property columns for contextual badges
+  shore_hardness_d?: number | null;
+  hardness_shore_a?: number | null;
+  tensile_strength_xy_mpa?: number | null;
+  hdt_18_mpa_c?: number | null;
+  density_g_cm3?: number | null;
+  elongation_break_xy_percent?: number | null;
 }
 
 
@@ -79,6 +86,8 @@ interface LabReadoutCardProps {
   showCostPerPrint?: boolean;
   /** When true, image loads eagerly with high fetch priority (use for above-the-fold cards) */
   priority?: boolean;
+  /** Contextual property badge from search intent */
+  searchPropertyBadge?: { badge: string; sortCol: string };
 }
 
 export function LabReadoutCard({ 
@@ -89,6 +98,7 @@ export function LabReadoutCard({
   communityRating,
   showCostPerPrint = false,
   priority = false,
+  searchPropertyBadge,
 }: LabReadoutCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -435,6 +445,25 @@ export function LabReadoutCard({
               </TooltipContent>
             </Tooltip>
           )}
+          {/* Contextual property badge from search intent */}
+          {searchPropertyBadge && (() => {
+            const col = searchPropertyBadge.sortCol;
+            const f = filament as any;
+            let value: string | null = null;
+            if (col === 'shore_hardness_d' && f.shore_hardness_d != null) value = `Shore ${f.shore_hardness_d}D`;
+            else if (col === 'hardness_shore_a' && f.hardness_shore_a != null) value = `Shore ${f.hardness_shore_a}A`;
+            else if (col === 'tensile_strength_xy_mpa' && f.tensile_strength_xy_mpa != null) value = `${f.tensile_strength_xy_mpa} MPa`;
+            else if (col === 'hdt_18_mpa_c' && f.hdt_18_mpa_c != null) value = `HDT ${f.hdt_18_mpa_c}°C`;
+            else if (col === 'print_speed_max_mms' && f.print_speed_max_mms != null) value = `${f.print_speed_max_mms} mm/s`;
+            else if (col === 'density_g_cm3' && f.density_g_cm3 != null) value = `${f.density_g_cm3} g/cm³`;
+            else if (col === 'elongation_break_xy_percent' && f.elongation_break_xy_percent != null) value = `${f.elongation_break_xy_percent}% stretch`;
+            if (!value) return null;
+            return (
+              <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold tracking-wider bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-full">
+                {value}
+              </span>
+            );
+          })()}
           </div>
           
           {/* Price Display - Enhanced with "From $X at [Retailer]" */}

@@ -1104,6 +1104,15 @@ const Finder = () => {
         materialHint={smartSearch.materialHint}
       />
 
+      {/* Property sort indicator */}
+      {useSmartResults && smartSearch.searchIntent.propertyHints.length > 0 && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/15 text-amber-400 rounded-full border border-amber-500/30">
+            Sorted by: {smartSearch.searchIntent.propertyHints[0].badge} — {smartSearch.searchIntent.propertyHints[0].label}
+          </span>
+        </div>
+      )}
+
       {/* Quick Filter Pills */}
       <QuickFilterPills
         activeFilter={activeQuickFilter}
@@ -1625,6 +1634,10 @@ const Finder = () => {
                         anyInStock: group.anyInStock,
                       } : undefined}
                       showCostPerPrint={showCostPerPrint}
+                      searchPropertyBadge={useSmartResults && smartSearch.searchIntent.propertyHints.length > 0 ? {
+                        badge: smartSearch.searchIntent.propertyHints[0].badge,
+                        sortCol: smartSearch.searchIntent.propertyHints[0].sortCol,
+                      } : undefined}
                     />
                   </React.Fragment>
                 );

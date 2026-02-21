@@ -12,7 +12,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { query, region = "US", limit = 48, offset = 0 } = await req.json();
+    const {
+      query,
+      region = "US",
+      limit = 48,
+      offset = 0,
+      materialFilter = null,
+      propertySortCol = null,
+      propertySortDir = null,
+    } = await req.json();
 
     if (!query || typeof query !== "string" || query.trim().length === 0) {
       return new Response(
@@ -32,12 +40,12 @@ Deno.serve(async (req) => {
     // Tokenize
     const tokens = sanitized.toLowerCase().split(/\s+/).filter(Boolean);
 
-    // Look up synonyms for each token
-    let materialHint: string | null = null;
+    // Look up synonyms for each token (fallback when no client-side intent)
+    let materialHint: string | null = materialFilter;
     let tagHint: string | null = null;
     const expandedTerms: string[] = [];
 
-    if (tokens.length > 0) {
+    if (tokens.length > 0 && !materialFilter) {
       const { data: synonymRows } = await supabase
         .from("search_synonyms")
         .select("term, synonyms, maps_to_material, maps_to_tag");
@@ -45,7 +53,6 @@ Deno.serve(async (req) => {
       if (synonymRows && synonymRows.length > 0) {
         for (const token of tokens) {
           for (const row of synonymRows) {
-            // Check if the token matches the term or any synonym
             const allTerms = [row.term, ...(row.synonyms || [])].map((t: string) => t.toLowerCase());
             if (allTerms.includes(token)) {
               if (row.maps_to_material && !materialHint) {
@@ -63,19 +70,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build query string: original query + material hint for broader matching
+    // If client provided materialFilter, note it as an expansion
+    if (materialFilter) {
+      expandedTerms.push(`intent: ${materialFilter}`);
+    }
+
+    // Build query string for FTS
     let searchQuery = sanitized;
     if (materialHint && !sanitized.toLowerCase().includes(materialHint.toLowerCase())) {
       searchQuery = `${sanitized} ${materialHint}`;
     }
 
-    // Call the ranked search RPC
+    // Call the ranked search RPC with new property sort params
     const { data: result, error } = await supabase.rpc("search_filaments_ranked", {
       p_query: searchQuery,
       p_material_hint: materialHint,
       p_region: region,
       p_limit: Math.min(limit, 100),
       p_offset: Math.max(offset, 0),
+      p_property_sort_col: propertySortCol || null,
+      p_property_sort_dir: propertySortDir || "desc",
     });
 
     if (error) {
