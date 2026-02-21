@@ -466,7 +466,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             src={brandLogo}
             brandName={filament.vendor || "Unknown"}
             size="sm"
-            className="w-5 h-5 rounded"
+            className="rounded"
           />
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
             {filament.vendor || "Unknown"}
