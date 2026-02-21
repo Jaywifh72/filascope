@@ -4,6 +4,7 @@ import { Search, Clock, X, ArrowUpRight, Package, Tag, ChevronRight, Compass, Wa
 import { cn } from "@/lib/utils";
 import { useSearchContext } from "@/hooks/useSearchContext";
 import { useSearchAutocomplete } from "@/hooks/useSearchAutocomplete";
+import { SearchCategoryChips, useSmartChipFilters } from "@/components/search/SearchSmartChips";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { trackSearch as trackGA4Search } from "@/lib/analytics";
@@ -60,6 +61,7 @@ export function SearchInputWithHistory({
   const zeroResultLoggedRef = useRef<string>("");
 
   const { recentSearches, trackSearch } = useSearchContext();
+  const { activeFilters: chipFilters, toggle: toggleChip } = useSmartChipFilters();
   const { materials, brands, filaments, isLoading, hasResults } = useSearchAutocomplete(value, context === "filaments");
 
   // ── Recent searches ──
@@ -251,6 +253,14 @@ export function SearchInputWithHistory({
           </div>
         )}
       </div>
+
+      {/* ── Smart Category Chips ── */}
+      <SearchCategoryChips
+        query={value}
+        activeFilters={chipFilters}
+        onToggle={toggleChip}
+        className="mt-2"
+      />
 
       {/* ── Dropdown ── */}
       {showDropdown && (
