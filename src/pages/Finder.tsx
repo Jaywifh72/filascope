@@ -1105,10 +1105,10 @@ const Finder = () => {
       />
 
       {/* Property sort indicator */}
-      {useSmartResults && smartSearch.searchIntent.propertyHints.length > 0 && (
+      {useSmartResults && smartSearch.searchIntent.propertyIntent && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/15 text-amber-400 rounded-full border border-amber-500/30">
-            Sorted by: {smartSearch.searchIntent.propertyHints[0].badge} — {smartSearch.searchIntent.propertyHints[0].label}
+            Sorted by: {smartSearch.searchIntent.propertyIntent.name} — {smartSearch.searchIntent.propertyIntent.explanation}
           </span>
         </div>
       )}
@@ -1634,9 +1634,9 @@ const Finder = () => {
                         anyInStock: group.anyInStock,
                       } : undefined}
                       showCostPerPrint={showCostPerPrint}
-                      searchPropertyBadge={useSmartResults && smartSearch.searchIntent.propertyHints.length > 0 ? {
-                        badge: smartSearch.searchIntent.propertyHints[0].badge,
-                        sortCol: smartSearch.searchIntent.propertyHints[0].sortCol,
+                      searchPropertyBadge={useSmartResults && smartSearch.searchIntent.propertyIntent ? {
+                        badge: smartSearch.searchIntent.propertyIntent.name,
+                        sortCol: smartSearch.searchIntent.propertyIntent.sortColumn,
                       } : undefined}
                     />
                   </React.Fragment>
