@@ -1099,6 +1099,9 @@ const Finder = () => {
         hasActiveFilters={hasActiveFilters}
         onClearFilters={handleClearAllFilters}
         isUpdating={isRegionTransitioning || (isFetching && isPlaceholderData)}
+        searchQuery={searchTerm || undefined}
+        expandedQuery={smartSearch.expandedQuery}
+        materialHint={smartSearch.materialHint}
       />
 
       {/* Quick Filter Pills */}

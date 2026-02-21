@@ -1,7 +1,13 @@
-import { X, Printer, Download, Loader2 } from "lucide-react";
+import { X, Printer, Download, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ResultsHeaderProps {
   count: number;
@@ -13,6 +19,9 @@ interface ResultsHeaderProps {
   onExportCSV?: () => void;
   isExporting?: boolean;
   isUpdating?: boolean;
+  searchQuery?: string;
+  expandedQuery?: string | null;
+  materialHint?: string | null;
 }
 
 const ResultsHeader = ({ 
@@ -24,7 +33,10 @@ const ResultsHeader = ({
   onClearFilters,
   onExportCSV,
   isExporting = false,
-  isUpdating = false
+  isUpdating = false,
+  searchQuery,
+  expandedQuery,
+  materialHint,
 }: ResultsHeaderProps) => {
   const printerBrand = selectedPrinter?.printer_brands?.brand || "";
   const printerName = selectedPrinter?.model_name || "";
@@ -52,6 +64,33 @@ const ResultsHeader = ({
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-normal flex-wrap">
             {showLoadingSkeleton ? (
               <span className="inline-block w-40 h-4 bg-muted rounded animate-pulse align-middle" />
+            ) : searchQuery ? (
+              <>
+                <span>
+                  {count.toLocaleString()} results for "<span className="text-foreground font-medium">{searchQuery}</span>"
+                  {isUpdating && (
+                    <Loader2 className="inline-block w-3 h-3 ml-1.5 text-primary animate-spin align-middle" />
+                  )}
+                </span>
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="inline-flex text-muted-foreground hover:text-foreground transition-colors">
+                        <Info className="w-3.5 h-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="bg-popover border border-border rounded-lg p-3 text-xs text-muted-foreground shadow-md max-w-xs space-y-1">
+                      <p>Matched on: name, material type, tags</p>
+                      {expandedQuery && (
+                        <p>Expanded terms: {expandedQuery}</p>
+                      )}
+                      {materialHint && (
+                        <p>Applied material filter: {materialHint}</p>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
             ) : (
               <>
                 <span>
