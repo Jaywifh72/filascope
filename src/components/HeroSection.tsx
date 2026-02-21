@@ -7,7 +7,7 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { HeroProductGrid } from "@/components/HeroProductGrid";
 
-const QUICK_MATCH_DISMISSED_KEY = "filascope_hero_quickmatch_dismissed";
+
 
 const CACHE_KEY = "hero_stats_cache";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -113,9 +113,6 @@ const searchSuggestions = [
 
 const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, brandCount, compatibleCount, isLoading = false }: HeroSectionProps) => {
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
-  const [quickMatchDismissed, setQuickMatchDismissed] = useState(() => {
-    try { return localStorage.getItem(QUICK_MATCH_DISMISSED_KEY) === "true"; } catch { return false; }
-  });
 
   // Use shared deals count hook for consistency with Deals page
   const { data: dealsData, isLoading: isDealsLoading } = useDealsCount();
@@ -297,38 +294,15 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               />
             </div>
 
-            {/* Quick Match Inline Banner — dismissable */}
-            {!quickMatchDismissed && (
-              <div
-                className="w-full max-w-full sm:max-w-[600px] mb-4 animate-fade-in bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3"
-                style={{ animationDelay: "0.3s" }}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Target className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="text-sm text-slate-300">
-                    New to filaments? Quick Match finds your perfect filament in 60 seconds.
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Link
-                    to="/wizard"
-                    className="bg-primary/80 hover:bg-primary text-sm text-primary-foreground px-3 py-1 rounded-md font-medium transition-colors"
-                  >
-                    Start <ArrowRight className="w-3 h-3 inline ml-0.5" />
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setQuickMatchDismissed(true);
-                      try { localStorage.setItem(QUICK_MATCH_DISMISSED_KEY, "true"); } catch {}
-                    }}
-                    className="text-slate-500 hover:text-foreground transition-colors"
-                    aria-label="Dismiss Quick Match banner"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Quick Match contextual tip */}
+            <div className="w-full max-w-full sm:max-w-[600px] mb-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+              <p className="text-[13px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                New here?{' '}
+                <Link to="/wizard" className="font-medium hover:underline" style={{ color: '#F59E0B' }}>
+                  → Take the 60-second Filament Quiz
+                </Link>
+              </p>
+            </div>
 
             {/* Quick Start Paths - 5 cards */}
             <div 
