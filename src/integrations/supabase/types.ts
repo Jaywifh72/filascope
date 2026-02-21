@@ -3322,6 +3322,7 @@ export type Database = {
           retraction_length_mm: number | null
           retraction_speed_mms: number | null
           scrape_frequency_hours: number | null
+          search_vector: unknown
           shore_hardness_d: number | null
           shrinkage_annealed_percent: number | null
           spool_ams_fit: boolean | null
@@ -3467,6 +3468,7 @@ export type Database = {
           retraction_length_mm?: number | null
           retraction_speed_mms?: number | null
           scrape_frequency_hours?: number | null
+          search_vector?: unknown
           shore_hardness_d?: number | null
           shrinkage_annealed_percent?: number | null
           spool_ams_fit?: boolean | null
@@ -3612,6 +3614,7 @@ export type Database = {
           retraction_length_mm?: number | null
           retraction_speed_mms?: number | null
           scrape_frequency_hours?: number | null
+          search_vector?: unknown
           shore_hardness_d?: number | null
           shrinkage_annealed_percent?: number | null
           spool_ams_fit?: boolean | null
@@ -7807,28 +7810,28 @@ export type Database = {
       }
       search_synonyms: {
         Row: {
-          created_at: string | null
-          created_by: string | null
+          created_at: string
           id: string
-          source_term: string
-          target_term: string
-          target_type: string
+          maps_to_material: string | null
+          maps_to_tag: string | null
+          synonyms: string[]
+          term: string
         }
         Insert: {
-          created_at?: string | null
-          created_by?: string | null
+          created_at?: string
           id?: string
-          source_term: string
-          target_term: string
-          target_type?: string
+          maps_to_material?: string | null
+          maps_to_tag?: string | null
+          synonyms?: string[]
+          term: string
         }
         Update: {
-          created_at?: string | null
-          created_by?: string | null
+          created_at?: string
           id?: string
-          source_term?: string
-          target_term?: string
-          target_type?: string
+          maps_to_material?: string | null
+          maps_to_tag?: string | null
+          synonyms?: string[]
+          term?: string
         }
         Relationships: []
       }
@@ -11670,6 +11673,16 @@ export type Database = {
           p_sparkle?: boolean
           p_translucent_filter?: boolean
           p_wood_filled?: boolean
+        }
+        Returns: Json
+      }
+      search_filaments_ranked: {
+        Args: {
+          p_limit?: number
+          p_material_hint?: string
+          p_offset?: number
+          p_query: string
+          p_region?: string
         }
         Returns: Json
       }
