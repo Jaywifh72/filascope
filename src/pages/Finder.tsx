@@ -1043,11 +1043,11 @@ const Finder = () => {
 
       {/* Quick Match banner moved to sidebar and mobile bottom sheet */}
 
-      {/* Trending Section — between hero and registry */}
-      <TrendingSection />
-
       {/* Why FilaScope value proposition */}
       <WhyFilaScope />
+
+      {/* Trending Section — between hero and registry */}
+      <TrendingSection />
 
       {/* AI snippet zone — factual summary for AI engines and featured snippets */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 my-8">
