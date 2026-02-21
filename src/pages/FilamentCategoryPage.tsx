@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useSearchParams, Navigate } from "react-router-dom";
+import { useParams, useSearchParams, Navigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
@@ -454,6 +454,9 @@ export default function FilamentCategoryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
+  // Read search query param for filtering
+  const searchParam = searchParams.get("search") || "";
+
   // ?material=PLA → redirect to /filaments/pla (Option A)
   // Must be after all hooks to satisfy Rules of Hooks
   const materialParam = searchParams.get("material");
@@ -479,10 +482,11 @@ export default function FilamentCategoryPage() {
   const metaConfig = (slug && CATEGORY_META[slug]) ? CATEGORY_META[slug] : ALL_META;
   const label = config?.label ?? "All Filaments";
 
-  // Build filters: pre-set material from slug
+  // Build filters: pre-set material from slug and/or search term
   const finderFilters = {
     ...DEFAULT_FILTERS,
     selectedMaterials: config ? config.materials : [],
+    searchTerm: searchParam,
   };
 
   // Fetch product count for the material
@@ -600,11 +604,28 @@ export default function FilamentCategoryPage() {
         {/* Breadcrumbs */}
         <Breadcrumbs items={breadcrumbItems} className="mb-4" />
 
-        {/* H1 + intro */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          {metaConfig.h1}
-        </h1>
-        <p className="text-muted-foreground mb-3 max-w-2xl leading-relaxed">{intro}</p>
+        {/* Search results heading */}
+        {searchParam ? (
+          <>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+              Results for: "{searchParam}"
+            </h1>
+            <Link
+              to="/filaments"
+              className="text-sm text-primary hover:underline mb-4 inline-block"
+            >
+              ← Back to all filaments
+            </Link>
+          </>
+        ) : (
+          <>
+            {/* H1 + intro */}
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+              {metaConfig.h1}
+            </h1>
+            <p className="text-muted-foreground mb-3 max-w-2xl leading-relaxed">{intro}</p>
+          </>
+        )}
 
         {/* Inline related-material cross-links — prose-style, above the grid */}
         {slug && RELATED_PROSE[slug] && (
