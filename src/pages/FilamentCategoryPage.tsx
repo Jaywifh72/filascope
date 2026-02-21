@@ -14,6 +14,7 @@ import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 import { CrawlablePaginationBar } from "@/components/CrawlablePaginationBar";
 import { RelatedSearchesSection } from "@/components/seo/RelatedSearchesSection";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
+import { ExploreMoreSection } from "@/components/ExploreMoreSection";
 
 // ─────────────────────────────────────────────
 // Per-material SEO meta + intro text
@@ -657,6 +658,16 @@ export default function FilamentCategoryPage() {
                 />
               ))}
             </div>
+
+            <ExploreMoreSection
+              topBrand={
+                materialStats?.topBrands?.[0]
+                  ? { name: materialStats.topBrands[0], count: undefined }
+                  : undefined
+              }
+              materialLabel={config?.label}
+              materialSlug={slug}
+            />
 
             <CrawlablePaginationBar
               currentPage={currentPage}
