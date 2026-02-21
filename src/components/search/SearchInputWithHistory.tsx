@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, Clock, X, ArrowUpRight, Package, Tag, Sparkles, ChevronRight } from "lucide-react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Search, Clock, X, ArrowUpRight, Package, Tag, Sparkles, ChevronRight, Compass, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchContext } from "@/hooks/useSearchContext";
 import { useSearchSuggestions, SearchSuggestion } from "@/hooks/useSearchSuggestions";
 import { SearchSuggestionItemSkeleton } from "@/components/skeletons/SearchSuggestionsSkeleton";
 import { trackSearch as trackGA4Search } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
+import { SEARCH_INTENT_MAP } from "@/lib/personalizationEngine";
 
 interface SearchInputWithHistoryProps {
   value: string;
@@ -43,9 +44,25 @@ export function SearchInputWithHistory({
     .filter((s) => s.toLowerCase() !== value.toLowerCase())
     .slice(0, 5);
 
+  // Detect smart zero state
+  const showZeroState = value.length >= 3 && !isLoading && suggestions.length === 0;
+
+  // Match intent for zero state
+  const matchedIntent = useMemo(() => {
+    if (!showZeroState) return null;
+    const words = value.toLowerCase().split(/\s+/);
+    for (const intent of Object.values(SEARCH_INTENT_MAP)) {
+      const hasMatch = intent.keywords.some(kw => words.some(w => w === kw || kw.includes(w)));
+      if (hasMatch && intent.boostMaterials.length > 0) {
+        return intent;
+      }
+    }
+    return null;
+  }, [showZeroState, value]);
+
   // Show dropdown when focused and we have content to show
   const hasContent = value.length >= 2 
-    ? suggestions.length > 0 
+    ? suggestions.length > 0 || showZeroState
     : filteredRecentSearches.length > 0;
 
   useEffect(() => {
@@ -281,7 +298,75 @@ export function SearchInputWithHistory({
             </div>
           )}
 
-          {/* Suggestions (when typing) */}
+          {/* Smart zero state */}
+          {showZeroState && (
+            <div className="p-4 text-center space-y-3">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">
+                  No exact matches for "<span className="text-primary">{value}</span>"
+                </p>
+              </div>
+
+              {/* Typo correction */}
+              {typoCorrection && (
+                <button
+                  onClick={() => handleSelect(typoCorrection)}
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Did you mean "{typoCorrection}"?
+                </button>
+              )}
+
+              {/* Intent-based material chips */}
+              {matchedIntent && (
+                <div className="space-y-1.5">
+                  <p className="text-xs text-muted-foreground">
+                    Looking for {matchedIntent.context.replace(/_/g, " ")}? Try these materials:
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {matchedIntent.boostMaterials.map((mat) => (
+                      <button
+                        key={mat}
+                        onClick={() => {
+                          onChange(mat);
+                          trackSearch(mat);
+                          setShowDropdown(false);
+                          onSelect?.(mat);
+                          inputRef.current?.blur();
+                        }}
+                        className="px-2.5 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      >
+                        {mat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Helpful links */}
+              <div className="flex flex-col items-center gap-1.5 pt-1">
+                <Link
+                  to="/filaments"
+                  onClick={() => setShowDropdown(false)}
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  Browse all filaments →
+                </Link>
+                <Link
+                  to="/quick-match"
+                  onClick={() => setShowDropdown(false)}
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  Try Quick Match →
+                </Link>
+              </div>
+            </div>
+          )}
+
+
           {value.length >= 2 && suggestions.length > 0 && (
             <div className="p-2">
               {suggestions.map((suggestion, index) => (
