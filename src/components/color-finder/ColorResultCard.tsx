@@ -1,10 +1,12 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { normalizeColorHex } from '@/lib/utils';
 import { getColorMatchPercent } from '@/lib/colorMatchUtils';
 import { MaterialBadge } from '@/components/MaterialBadge';
-import { Lightbulb } from 'lucide-react';
+import { Sun } from 'lucide-react';
 import { useRegion } from '@/contexts/RegionContext';
 import { resolveFilamentPrice, type FilamentForPricing, type PriceResolutionContext } from '@/lib/resolveFilamentPrice';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface ColorResultCardProps {
@@ -35,7 +37,15 @@ export function ColorResultCard({ filament, searchHex }: ColorResultCardProps) {
   const colorHex = filament.color_hex ? normalizeColorHex(filament.color_hex) : '#888';
   const matchPercent = filament.color_hex ? getColorMatchPercent(searchHex, normalizeColorHex(filament.color_hex)) : 0;
 
-  // Resolve regional price
+  // Pulse animation for near-perfect matches
+  const [showPulse, setShowPulse] = useState(matchPercent >= 95);
+  useEffect(() => {
+    if (matchPercent >= 95) {
+      const timer = setTimeout(() => setShowPulse(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [matchPercent]);
+
   const priceContext: PriceResolutionContext = {
     userCurrency: currency,
     convertFromCurrency: convertPrice,
@@ -47,6 +57,8 @@ export function ColorResultCard({ filament, searchHex }: ColorResultCardProps) {
     : matchPercent >= 70 ? 'text-yellow-400 bg-yellow-500/15 border-yellow-500/30'
     : matchPercent >= 50 ? 'text-orange-400 bg-orange-500/15 border-orange-500/30'
     : 'text-muted-foreground bg-muted/50 border-border';
+
+  const hasTd = filament.transmission_distance != null;
 
   return (
     <Link
@@ -71,23 +83,38 @@ export function ColorResultCard({ filament, searchHex }: ColorResultCardProps) {
           {filament.material && (
             <MaterialBadge material={filament.material} size="sm" showTooltip={false} />
           )}
+          {/* TD Badge */}
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <span className={cn(
+                "inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-full",
+                hasTd
+                  ? "bg-cyan-500/15 text-cyan-400"
+                  : "bg-muted/30 text-muted-foreground/50"
+              )}>
+                <Sun className="w-3 h-3" />
+                TD {hasTd ? filament.transmission_distance : '—'}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs max-w-[240px]">
+              Transmissivity Distance — used in HueForge for filament painting. Lower = more opaque.
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
-      {/* Match + Price + TD */}
+      {/* Match + Price */}
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <span className={cn("text-xs font-mono font-semibold px-2 py-0.5 rounded-md border", matchColor)}>
+        <span className={cn(
+          "text-xs font-mono font-semibold px-2 py-0.5 rounded-md border",
+          matchColor,
+          showPulse && "animate-pulse"
+        )}>
           {matchPercent}%
         </span>
         {resolved.spoolPrice !== null && (
           <span className="text-xs text-muted-foreground font-mono">
             {resolved.isConverted && '~'}{formatPrice(resolved.spoolPrice)}
-          </span>
-        )}
-        {filament.transmission_distance != null && (
-          <span className="flex items-center gap-0.5 text-[10px] text-amber-400 font-mono">
-            <Lightbulb className="w-3 h-3" />
-            TD {filament.transmission_distance}
           </span>
         )}
       </div>

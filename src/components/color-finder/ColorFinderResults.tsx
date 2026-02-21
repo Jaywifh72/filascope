@@ -4,7 +4,10 @@ import { normalizeColorHex } from '@/lib/utils';
 import { ColorResultCard } from './ColorResultCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Sun } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ColorFinderFilament } from '@/hooks/useColorFinderFilaments';
 
 type SortMode = 'match' | 'price' | 'rated';
@@ -30,6 +33,7 @@ export function ColorFinderResults({
 }: ColorFinderResultsProps) {
   const [sortMode, setSortMode] = useState<SortMode>('match');
   const [visibleCount, setVisibleCount] = useState(50);
+  const [tdOnly, setTdOnly] = useState(false);
 
   // Extract unique materials and brands for filters
   const { materials, brands } = useMemo(() => {
@@ -55,6 +59,9 @@ export function ColorFinderResults({
     if (brandFilter) {
       filtered = filtered.filter(f => f.vendor === brandFilter);
     }
+    if (tdOnly) {
+      filtered = filtered.filter(f => f.transmission_distance != null);
+    }
 
     // Add match score
     const scored = filtered.map(f => ({
@@ -72,13 +79,12 @@ export function ColorFinderResults({
         scored.sort((a, b) => (a.variant_price ?? 9999) - (b.variant_price ?? 9999));
         break;
       case 'rated':
-        // Use match as fallback since we don't have rating data here
         scored.sort((a, b) => a.distance - b.distance);
         break;
     }
 
     return scored;
-  }, [filaments, searchHex, materialFilter, brandFilter, sortMode]);
+  }, [filaments, searchHex, materialFilter, brandFilter, sortMode, tdOnly]);
 
   const visibleResults = results.slice(0, visibleCount);
   const hasMore = results.length > visibleCount;
@@ -145,6 +151,27 @@ export function ColorFinderResults({
         <span className="text-xs text-muted-foreground ml-auto">
           {results.length.toLocaleString()} results
         </span>
+      </div>
+
+      {/* TD Filter Toggle */}
+      <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-card/40 border border-border/40 w-fit">
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <Sun className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            Filter to filaments with measured Transmissivity Distance values
+          </TooltipContent>
+        </Tooltip>
+        <Switch
+          id="td-filter"
+          checked={tdOnly}
+          onCheckedChange={setTdOnly}
+          className="data-[state=checked]:bg-cyan-500"
+        />
+        <Label htmlFor="td-filter" className="text-xs text-muted-foreground cursor-pointer select-none">
+          Only show filaments with TD values
+        </Label>
       </div>
 
       {/* Results list */}
