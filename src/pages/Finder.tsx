@@ -1049,20 +1049,6 @@ const Finder = () => {
       {/* Trending Section — between hero and registry */}
       <TrendingSection />
 
-      {/* AI snippet zone — factual summary for AI engines and featured snippets */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 my-8">
-        <section className="bg-card/5 border border-border/30 rounded-xl py-8 px-6 text-center">
-          <h2 className="text-lg font-semibold text-foreground mb-3">
-            The Internet's Most Complete 3D Printer Filament Database
-          </h2>
-          <p className="text-sm text-muted-foreground/90 leading-relaxed mb-3">
-            FilaScope indexes over 1,078 filaments from 48+ manufacturers across 15+ retailers worldwide. Every filament listing includes detailed specifications — nozzle temperature, bed temperature, density, tensile strength, and shore hardness — plus live regional pricing in USD, CAD, EUR, GBP, and AUD. FilaScope also maintains the world's largest verified HueForge Transmissivity Distance (TD) database, making it the go-to resource for lithophane and multicolor 3D printing projects.
-          </p>
-          <p className="text-sm text-muted-foreground/90 leading-relaxed">
-            Whether you're a beginner choosing your first PLA or an advanced maker sourcing carbon-fiber PETG, FilaScope's comparison tools, printer compatibility filters, and real-time deal tracking help you find the right filament at the best price.
-          </p>
-        </section>
-      </div>
 
       {/* Spacer between value props and catalog */}
       <div className="py-2" />
@@ -1669,6 +1655,19 @@ const Finder = () => {
       {/* Mobile Quick Match Prompt */}
       <MobileQuickMatchPrompt />
       <ScrollToTopButton />
+
+      {/* AI snippet zone — supplementary SEO content */}
+      <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-10 text-center" style={{ background: 'rgba(255,255,255,0.015)' }}>
+        <h2 className="text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          The Internet's Most Complete 3D Printer Filament Database
+        </h2>
+        <p className="text-[14px] leading-relaxed mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          FilaScope indexes over 1,078 filaments from 48+ manufacturers across 15+ retailers worldwide. Every filament listing includes detailed specifications — nozzle temperature, bed temperature, density, tensile strength, and shore hardness — plus live regional pricing in USD, CAD, EUR, GBP, and AUD. FilaScope also maintains the world's largest verified HueForge Transmissivity Distance (TD) database, making it the go-to resource for lithophane and multicolor 3D printing projects.
+        </p>
+        <p className="text-[14px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          Whether you're a beginner choosing your first PLA or an advanced maker sourcing carbon-fiber PETG, FilaScope's comparison tools, printer compatibility filters, and real-time deal tracking help you find the right filament at the best price.
+        </p>
+      </div>
 
       {/* SEO content block — above implicit footer, discoverable by crawlers */}
       <HomeSEOContent />
