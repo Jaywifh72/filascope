@@ -1,108 +1,90 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { GitCompare, Printer as PrinterIcon, FlaskConical, ArrowRight, Trash2, X, ChevronUp } from "lucide-react";
+import { ArrowRight, Trash2, X, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
-import { usePrinterCompare } from "@/hooks/usePrinterCompare";
 import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MiniFilamentCard } from "./MiniFilamentCard";
-import { toast } from "sonner";
-
-type TrayTab = "filaments" | "printers";
 
 /**
- * Mobile version of the unified comparison tray with tabs for filaments and printers.
+ * Mobile persistent bottom drawer for filament comparison.
+ * Shows a compact bar at bottom; expands into a sheet with full details.
  */
 export function UnifiedMobileCompareTray() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TrayTab>("filaments");
 
   const {
     items: filamentItems,
     count: filamentCount,
     removeItem: removeFilament,
     clearAll: clearFilaments,
+    maxItems: maxFilaments,
   } = useCompare();
-
-  const {
-    selectedPrinters,
-    removePrinter,
-    clearAll: clearPrinters,
-    count: printerCount,
-  } = usePrinterCompare();
-
-  const totalCount = filamentCount + printerCount;
-
-  // Auto-select tab
-  useEffect(() => {
-    if (filamentCount > 0 && printerCount === 0) setActiveTab("filaments");
-    else if (printerCount > 0 && filamentCount === 0) setActiveTab("printers");
-  }, [filamentCount, printerCount]);
 
   // Hide on compare pages
   const isOnComparePage =
     (location.pathname === "/compare" && new URLSearchParams(location.search).has("ids")) ||
     location.pathname === "/printers/compare";
 
-  if (totalCount === 0 || isOnComparePage) return null;
+  if (filamentCount === 0 || isOnComparePage) return null;
 
-  const canCompare = activeTab === "filaments" ? filamentCount >= 2 : printerCount >= 2;
-  const activeCount = activeTab === "filaments" ? filamentCount : printerCount;
+  const canCompare = filamentCount >= 2;
+  const needMore = Math.max(0, 2 - filamentCount);
+  const progressPercent = (filamentCount / maxFilaments) * 100;
 
   const handleCompare = () => {
-    if (!canCompare) {
-      toast.info(`Add at least 2 ${activeTab} to compare`);
-      return;
-    }
-    if (activeTab === "filaments") {
-      const ids = filamentItems.map(i => i.id).join(",");
-      navigate(`/compare?ids=${ids}`);
-    } else {
-      const ids = selectedPrinters.map(p => p.id).join(",");
-      navigate(`/printers/compare?ids=${ids}`);
-    }
+    if (!canCompare) return;
+    const ids = filamentItems.map((i) => i.id).join(",");
+    navigate(`/compare?ids=${ids}`);
     setIsOpen(false);
-  };
-
-  const handleClear = () => {
-    if (activeTab === "filaments") clearFilaments();
-    else clearPrinters();
   };
 
   return (
     <>
-      {/* Mobile Bottom Bar */}
+      {/* Sticky bottom bar */}
       <div
         className={cn(
           "lg:hidden fixed bottom-0 left-0 right-0 z-[70]",
-          "bg-card/95 backdrop-blur-xl border-t border-primary/20"
+          "bg-card/95 backdrop-blur-sm border-t border-border",
+          "animate-in slide-in-from-bottom duration-300"
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full min-h-[56px] px-4 flex items-center justify-between"
+          className="w-full px-4 flex items-center justify-between"
+          style={{ height: 64 }}
         >
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <GitCompare className="w-5 h-5 text-primary" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                {totalCount}
-              </span>
+          {/* Left: swatches */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center -space-x-1.5">
+              {filamentItems.slice(0, 4).map((item) => (
+                <div
+                  key={item.id}
+                  className="w-6 h-6 rounded-full border-2 border-card flex-shrink-0 shadow-sm"
+                  style={{ backgroundColor: item.color_hex || '#888' }}
+                />
+              ))}
             </div>
-            <div className="text-left">
-              <p className="text-sm font-medium">
-                {filamentCount > 0 && `${filamentCount} filament${filamentCount !== 1 ? "s" : ""}`}
-                {filamentCount > 0 && printerCount > 0 && " · "}
-                {printerCount > 0 && `${printerCount} printer${printerCount !== 1 ? "s" : ""}`}
+            <div className="text-left ml-2 min-w-0">
+              <p className="text-sm font-medium truncate">
+                {filamentCount} filament{filamentCount !== 1 ? "s" : ""}
               </p>
+              {needMore > 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Add {needMore} more to compare
+                </p>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Right: CTA + chevron */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               size="sm"
               disabled={!canCompare}
@@ -110,130 +92,92 @@ export function UnifiedMobileCompareTray() {
                 e.stopPropagation();
                 handleCompare();
               }}
-              className="min-h-[44px] px-4"
+              className={cn(
+                "min-h-[40px] px-4 rounded-lg font-semibold",
+                "bg-amber-500 hover:bg-amber-400 text-black"
+              )}
             >
               Compare
+              <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Button>
             <ChevronUp className="w-5 h-5 text-muted-foreground" />
           </div>
         </button>
       </div>
 
-      {/* Full Tray Sheet */}
+      {/* Expanded sheet */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl px-0">
-          <SheetHeader className="px-4 pb-0 border-b-0">
-            <div className="flex items-center justify-between mb-3">
-              <SheetTitle className="flex items-center gap-2">
-                <GitCompare className="w-5 h-5 text-primary" />
-                Compare Tray
+        <SheetContent side="bottom" className="h-[80vh] rounded-t-2xl px-0">
+          <SheetHeader className="px-4 pb-3 border-b border-border">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-base font-semibold">
+                Building Comparison
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  {filamentCount} of {maxFilaments}
+                </span>
               </SheetTitle>
               <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="min-h-[44px] min-w-[44px]">
                 <X className="w-5 h-5" />
               </Button>
             </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-border">
-              <button
-                onClick={() => setActiveTab("filaments")}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors relative",
-                  activeTab === "filaments" ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-                <FlaskConical className="w-4 h-4" />
-                Filaments
-                {filamentCount > 0 && (
-                  <span className={cn(
-                    "w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center",
-                    activeTab === "filaments" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  )}>
-                    {filamentCount}
-                  </span>
-                )}
-                {activeTab === "filaments" && <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary rounded-full" />}
-              </button>
-              <button
-                onClick={() => setActiveTab("printers")}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors relative",
-                  activeTab === "printers" ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-                <PrinterIcon className="w-4 h-4" />
-                Printers
-                {printerCount > 0 && (
-                  <span className={cn(
-                    "w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center",
-                    activeTab === "printers" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  )}>
-                    {printerCount}
-                  </span>
-                )}
-                {activeTab === "printers" && <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary rounded-full" />}
-              </button>
+            {/* Progress bar */}
+            <div className="mt-2 space-y-1">
+              <Progress value={progressPercent} className="h-1.5" />
+              <p className="text-xs text-muted-foreground">
+                {needMore > 0
+                  ? `Add ${needMore} more to unlock side-by-side comparison`
+                  : "Ready to compare!"}
+              </p>
             </div>
           </SheetHeader>
 
-          {/* Items */}
+          {/* Items list */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
-            {activeTab === "filaments" ? (
-              filamentCount > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {filamentItems.map((item, index) => (
-                    <MiniFilamentCard key={item.id} item={item} onRemove={removeFilament} cardIndex={index} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-sm text-muted-foreground py-8">No filaments added to compare yet</p>
-              )
-            ) : (
-              printerCount > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {selectedPrinters.map((printer) => (
-                    <div key={printer.id} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
-                      <div className="w-12 h-12 rounded-lg bg-muted/30 flex items-center justify-center flex-shrink-0">
-                        {printer.imageUrl ? (
-                          <img src={getOptimizedImageUrl(printer.imageUrl, 96)} alt={printer.name} className="w-full h-full object-contain p-1 rounded-lg" />
-                        ) : (
-                          <PrinterIcon className="w-5 h-5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{printer.name}</p>
-                        {printer.brand && <p className="text-xs text-muted-foreground">{printer.brand}</p>}
-                      </div>
-                      <button
-                        onClick={() => removePrinter(printer.id)}
-                        className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-sm text-muted-foreground py-8">No printers added to compare yet</p>
-              )
+            <div className="grid grid-cols-1 gap-3">
+              {filamentItems.map((item, index) => (
+                <MiniFilamentCard
+                  key={item.id}
+                  item={item}
+                  onRemove={removeFilament}
+                  cardIndex={index}
+                />
+              ))}
+            </div>
+
+            {filamentCount === 1 && (
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                Add 1 more material to enable comparison
+              </p>
             )}
           </div>
 
-          {/* Bottom Actions */}
-          <div className="sticky bottom-0 px-4 py-4 bg-background border-t border-border space-y-3"
-               style={{ paddingBottom: "env(safe-area-inset-bottom, 12px)" }}>
+          {/* Bottom actions */}
+          <div
+            className="sticky bottom-0 px-4 py-4 bg-background border-t border-border space-y-3"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 12px)" }}
+          >
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleClear} className="flex-1 min-h-[44px] gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilaments}
+                className="flex-1 min-h-[44px] gap-2"
+              >
                 <Trash2 className="w-4 h-4" />
-                Clear {activeTab === "filaments" ? "Filaments" : "Printers"}
+                Clear All
               </Button>
             </div>
             <Button
               onClick={handleCompare}
               disabled={!canCompare}
-              className="w-full min-h-[48px] text-base font-semibold"
+              className={cn(
+                "w-full min-h-[48px] text-base font-semibold rounded-lg",
+                "bg-amber-500 hover:bg-amber-400 text-black"
+              )}
             >
-              Compare {activeCount} {activeTab === "filaments" ? "Material" : "Printer"}{activeCount !== 1 ? "s" : ""}
+              Compare {filamentCount} Filament{filamentCount !== 1 ? "s" : ""}
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </SheetContent>
