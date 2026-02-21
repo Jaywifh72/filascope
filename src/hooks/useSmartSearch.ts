@@ -3,6 +3,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
 import { formatProductLineIdForDisplay } from "@/lib/productNameUtils";
+import { parseSearchIntent, type SearchIntent } from "@/lib/searchIntentParser";
 import type { GroupedFilament } from "@/lib/productNameUtils";
 
 export interface SmartSearchChip {
@@ -24,6 +25,7 @@ export interface SmartSearchResult {
   chips: SmartSearchChip[];
   removeChip: (chipId: string) => void;
   isSmartSearchActive: boolean;
+  searchIntent: SearchIntent;
 }
 
 function mapRpcResultToGroups(items: any[]): GroupedFilament[] {
@@ -81,6 +83,12 @@ export function useSmartSearch(
     setRemovedChips(new Set());
   }, [debouncedTerm]);
 
+  // Parse intent from debounced term (client-side, instant)
+  const searchIntent = useMemo(
+    () => parseSearchIntent(debouncedTerm),
+    [debouncedTerm]
+  );
+
   const isSmartSearchActive = debouncedTerm.trim().length >= 2;
 
   const { data, isLoading, isFetching } = useQuery({
@@ -94,6 +102,9 @@ export function useSmartSearch(
           region: currentRegion,
           limit: pageSize,
           offset: page * pageSize,
+          materialFilter: searchIntent.materialFilter,
+          propertySortCol: searchIntent.propertyHints[0]?.sortCol ?? null,
+          propertySortDir: searchIntent.propertyHints[0]?.dir ?? null,
         },
       });
 
@@ -158,5 +169,6 @@ export function useSmartSearch(
     chips,
     removeChip,
     isSmartSearchActive,
+    searchIntent,
   };
 }

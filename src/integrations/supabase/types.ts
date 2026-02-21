@@ -11676,16 +11676,29 @@ export type Database = {
         }
         Returns: Json
       }
-      search_filaments_ranked: {
-        Args: {
-          p_limit?: number
-          p_material_hint?: string
-          p_offset?: number
-          p_query: string
-          p_region?: string
-        }
-        Returns: Json
-      }
+      search_filaments_ranked:
+        | {
+            Args: {
+              p_limit?: number
+              p_material_hint?: string
+              p_offset?: number
+              p_query: string
+              p_region?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_limit?: number
+              p_material_hint?: string
+              p_offset?: number
+              p_property_sort_col?: string
+              p_property_sort_dir?: string
+              p_query: string
+              p_region?: string
+            }
+            Returns: Json
+          }
       should_refresh_exchange_rates: { Args: never; Returns: boolean }
       start_brand_scrape: { Args: { p_brand_slug: string }; Returns: boolean }
       test_price_extraction: { Args: { p_url: string }; Returns: Json }
