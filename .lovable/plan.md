@@ -1,165 +1,193 @@
 
 
-# Smart Search Overhaul for FilaScope
+# Complete Search Overhaul — Intent-Based Filtering + Property Ranking
 
-## Overview
+## Problem Summary
 
-Replace the current ILIKE substring search with a 3-layer intelligent search system: database full-text search (tsvector/tsquery), an edge function for query expansion via synonyms, and updated frontend components for autocomplete, smart chips, and ranked results.
+The current search pipeline has a critical gap: the `smart-search` edge function and `search_filaments_ranked` RPC exist and are wired up, but they rely on `search_vector` (tsvector) matching which only contains actual column values like "TPU" — not descriptive property words like "flexible", "strong", or "heat-resistant". The `search_synonyms` table partially bridges this, but the system lacks a proper client-side intent parser that can decompose queries into structured filters before hitting the database.
 
----
-
-## Current Architecture (What Exists Today)
-
-- **Database**: `search_filaments_paginated` RPC uses ILIKE `%term%` matching on `product_title`, `vendor`, `material`, etc.
-- **Frontend**: `useFinderQuery` hook calls that RPC with `p_search` param. `useSearchSuggestions` does separate ILIKE queries for brands, materials, and products to power the autocomplete dropdown.
-- **Autocomplete**: `SearchInputWithHistory` renders a dropdown with brand/material/product/color/typo suggestions from `useSearchSuggestions`.
-- **Dictionaries**: `search_dictionaries` view + `useSearchDictionaries` hook provides known brands/materials/colors for fuzzy matching and typo correction.
-
----
-
-## Implementation Plan
-
-### Phase 1: Database Layer
-
-#### 1a. Add `search_vector` column + GIN index
-
-Migration SQL:
-- Add `search_vector tsvector` column to `filaments`
-- Populate it: `UPDATE filaments SET search_vector = to_tsvector('english', coalesce(product_title,'') || ' ' || coalesce(vendor,'') || ' ' || coalesce(material,'') || ' ' || coalesce(finish_type,'') || ' ' || coalesce(color_family,''))`
-- Create GIN index: `CREATE INDEX idx_filaments_search_vector ON filaments USING gin(search_vector)`
-- Create trigger to auto-update on INSERT/UPDATE
-
-#### 1b. Create `search_synonyms` table
+## Architecture Overview
 
 ```text
-search_synonyms
-  id           uuid PK default gen_random_uuid()
-  term         text NOT NULL        -- e.g. "flexible", "carbon"
-  synonyms     text[] NOT NULL      -- e.g. ["bendy", "flex", "rubbery"]
-  maps_to_material text             -- e.g. "TPU"
-  maps_to_tag  text                 -- e.g. "carbon_fiber"
-  created_at   timestamptz default now()
+User types "flexible red"
+        |
+        v
+[Layer 1: Intent Parser]  (client-side, instant, new file)
+  -> materialFilter: "TPU"
+  -> propertyHint: { sortCol: "shore_hardness_d", dir: "asc", badge: "Flexibility" }
+  -> colorFilter: "Red"
+  -> freeText: "flexible red"
+        |
+        v
+[Layer 2: smart-search Edge Function]  (existing, enhanced)
+  -> Receives: { query, region, materialFilter, propertySortCol, propertySortDir }
+  -> Passes materialFilter as hard WHERE clause to RPC
+  -> Passes propertySortCol/Dir for ORDER BY override
+        |
+        v
+[Layer 3: search_filaments_ranked RPC]  (existing, enhanced)
+  -> Accepts new params: p_property_sort_col, p_property_sort_dir
+  -> When material_hint present: WHERE material ILIKE '%TPU%'
+  -> When property sort present: ORDER BY that column instead of ts_rank
+  -> Falls back to tsvector ranking when no intent detected
+        |
+        v
+[Frontend Presentation]
+  -> Contextual badges on FilamentCard based on active search intent
+  -> "Shore 95A" badge when flexibility search active
+  -> "45 MPa" badge when strength search active
 ```
 
-RLS: public read (no auth required), admin write.
+---
 
-Seed with initial data (flexible->TPU, strong->ABS/Nylon, outdoor->ASA/PETG, etc.).
+## Detailed Implementation Plan
 
-#### 1c. Create `search_filaments_ranked` RPC
+### 1. New File: `src/lib/searchIntentParser.ts`
 
-PostgreSQL function that:
-1. Accepts `p_query text, p_material_hint text, p_region text, p_limit int, p_offset int`
-2. Converts `p_query` to a tsquery using `websearch_to_tsquery('english', p_query)`
-3. Ranks results using `ts_rank_cd(search_vector, query)`
-4. Falls back to ILIKE if tsquery yields zero results (graceful degradation)
-5. Applies material hint as a boost (not a filter) when present
-6. Returns JSON: `{ items: [...], total: int }`
+A pure function that parses a raw search string into structured intent. No API calls — runs instantly on every keystroke.
 
-This function follows the same pattern as the existing `search_filaments_paginated` RPC but with ranking.
+**Exports:**
+- `parseSearchIntent(query: string): SearchIntent`
+- `SearchIntent` type: `{ materialFilter: string | null, propertyHints: PropertyHint[], brandFilter: string | null, freeText: string }`
+- `PropertyHint` type: `{ sortCol: string, dir: 'asc' | 'desc', badge: string, label: string }`
+
+**Data maps (hardcoded constants):**
+
+- `MATERIAL_ALIASES`: Maps ~30 keywords to canonical material names
+  - `tpu`, `flex`, `flexible` -> `TPU`
+  - `pla` -> `PLA`, `petg` -> `PETG`, `abs` -> `ABS`, etc.
+  - `nylon`, `pa` -> `Nylon` (matches ILIKE)
+  - `wood` -> `PLA-Wood`, `silk` -> `PLA Silk`
+
+- `PROPERTY_SORT_MAP`: Maps ~20 descriptive keywords to database columns
+  - `flexible`, `soft`, `shore`, `rubber`, `bendy` -> `{ sortCol: "shore_hardness_d", dir: "asc", badge: "Flexibility" }`
+  - `strong`, `rigid`, `tough`, `engineering` -> `{ sortCol: "tensile_strength_xy_mpa", dir: "desc", badge: "Strength" }`
+  - `heat`, `hot`, `outdoor`, `high-temp` -> `{ sortCol: "hdt_18_mpa_c", dir: "desc", badge: "Heat Resistance" }`
+  - `fast`, `hs`, `high-speed`, `rapid` -> `{ sortCol: "print_speed_max_mms", dir: "desc", badge: "Print Speed" }`
+  - `lightweight`, `light` -> `{ sortCol: "density_g_cm3", dir: "asc", badge: "Lightweight" }`
+  - `stretchy`, `elastic` -> `{ sortCol: "elongation_break_xy_percent", dir: "desc", badge: "Stretch" }`
+
+**Note on column names:** The database has `shore_hardness_d` (not `shore_hardness_a`), `hdt_18_mpa_c` (not `hdt_1_8mpa_c`), `tensile_strength_xy_mpa`, `print_speed_max_mms`, `density_g_cm3`, `elongation_break_xy_percent`. All verified from the schema.
+
+**Logic:**
+1. Lowercase + tokenize query
+2. For each token, check `MATERIAL_ALIASES` first, then `PROPERTY_SORT_MAP`
+3. Extract first material match and first property match
+4. Return remaining unmatched tokens as `freeText`
 
 ---
 
-### Phase 2: Edge Function — `smart-search`
+### 2. Modify: `src/hooks/useSmartSearch.ts`
 
-New file: `supabase/functions/smart-search/index.ts`
+- Import and call `parseSearchIntent(searchTerm)` before invoking the edge function
+- Pass `materialFilter` and `propertySortCol`/`propertySortDir` in the edge function request body
+- Add `searchIntent` to the return value so Finder.tsx can access the active property hints for badge rendering
 
-Request: `POST { query, region, limit, offset }`
+Updated body sent to edge function:
+```text
+{
+  query: debouncedTerm,
+  region: currentRegion,
+  limit: pageSize,
+  offset: page * pageSize,
+  materialFilter: intent.materialFilter,      // NEW
+  propertySortCol: intent.propertyHints[0]?.sortCol,  // NEW
+  propertySortDir: intent.propertyHints[0]?.dir,      // NEW
+}
+```
 
-Processing pipeline:
-1. Sanitize + tokenize the query
-2. Look up each token against `search_synonyms` table
-3. Expand terms (e.g. "flexible" adds "TPU" as material hint)
-4. Build the tsquery string
-5. Call `search_filaments_ranked` RPC
-6. Return `{ results, expandedQuery, materialHint, totalCount }`
-
-CORS headers included per edge function guidelines. JWT verification disabled in config.toml (public search endpoint).
+New return fields:
+- `searchIntent: SearchIntent` — the parsed intent object
 
 ---
 
-### Phase 3: Frontend Changes
+### 3. Modify: `supabase/functions/smart-search/index.ts`
 
-#### 3a. New hook: `src/hooks/useSmartSearch.ts`
+Accept 3 new optional fields from the request body: `materialFilter`, `propertySortCol`, `propertySortDir`.
 
-- Manages debounced query state (300ms)
-- Calls `smart-search` edge function via `supabase.functions.invoke()`
-- Returns: `{ results, isLoading, expandedQuery, materialHint, chipFilters, setChipFilters }`
-- Provides chip state management (add/remove synonym-expanded filters)
+Changes:
+- If `materialFilter` is provided from the client, use it as `p_material_hint` (overriding the synonym-based one)
+- Pass `propertySortCol` and `propertySortDir` as new params to the RPC
+- The existing synonym lookup still runs as a fallback when no client-side intent is detected
 
-#### 3b. New component: `src/components/search/SearchAutocomplete.tsx`
+Updated RPC call:
+```text
+supabase.rpc("search_filaments_ranked", {
+  p_query: searchQuery,
+  p_material_hint: materialFilter || materialHint,
+  p_region: region,
+  p_limit: limit,
+  p_offset: offset,
+  p_property_sort_col: propertySortCol || null,    // NEW
+  p_property_sort_dir: propertySortDir || null,     // NEW
+})
+```
 
-- Dropdown below the search input showing:
-  - Top 3 product matches (from smart-search results preview)
-  - Detected brand/material matches
-  - Synonym expansions as clickable chips ("flexible" -> "Showing TPU results")
-- Replaces the suggestion logic currently embedded in `SearchInputWithHistory`
+---
 
-#### 3c. New component: `src/components/search/SearchSmartChips.tsx`
+### 4. Database Migration: Enhance `search_filaments_ranked` RPC
 
-- Horizontal chip row rendered above the results grid
-- Shows active search refinements: expanded synonyms, detected material, detected brand
-- Each chip is removable (X button)
-- Styled consistently with existing `ActiveFilterTags` component pattern
+Add two new parameters to the existing function: `p_property_sort_col text DEFAULT NULL` and `p_property_sort_dir text DEFAULT 'desc'`.
 
-#### 3d. Modify: `src/components/search/SearchInputWithHistory.tsx`
+Key changes to the function:
+- When `p_property_sort_col` is provided AND is one of the whitelisted columns (`shore_hardness_d`, `tensile_strength_xy_mpa`, `hdt_18_mpa_c`, `print_speed_max_mms`, `density_g_cm3`, `elongation_break_xy_percent`), use it as the ORDER BY column instead of `ts_rank_cd`
+- NULLs sort last (so filaments without data don't crowd the top)
+- The whitelist prevents SQL injection — only these 6 column names are allowed
+- When `p_material_hint` is provided, apply it as a hard `WHERE` filter (not just a boost), since the client has explicitly identified the material intent
 
-- When `context === "filaments"`, use `useSmartSearch` instead of `useSearchSuggestions` for the primary suggestion flow
-- Keep `useSearchSuggestions` as fallback for printers context
-- Render `SearchAutocomplete` dropdown instead of the current inline suggestion UI
-- "See all results" still navigates to `/filaments?search=...`
+---
 
-#### 3e. Modify: `src/pages/Finder.tsx`
+### 5. Modify: `src/pages/Finder.tsx`
 
-- When `searchTerm` is present, use `useSmartSearch` results instead of `useFinderQuery`
-- When `searchTerm` is empty, continue using `useFinderQuery` (catalog browsing mode)
-- Render `SearchSmartChips` between the filter bar and the results grid when in search mode
-- Show "expanded search" pill when `expandedQuery` differs from original query
+- Access `smartSearch.searchIntent` to get the active property hints
+- Pass `searchIntent` down to `FilamentCard` as a prop (or via context) so cards can render contextual badges
+- When `searchIntent.propertyHints` is non-empty, show a small info bar above results: "Sorted by: [Flexibility — softest first]"
 
-#### 3f. Modify: `src/components/HeroSection.tsx`
+---
 
-- Pass the search submission through to the same `/filaments?search=...` route (no change needed -- already works)
-- The smart search activates on the Finder page, not in the hero itself
+### 6. Modify: `src/components/FilamentCard.tsx`
 
-#### 3g. UX States
+Add a new optional prop: `searchPropertyBadge?: { badge: string, value: string | null }`.
 
-- **Loading**: Existing `FilamentCardSkeletonGrid` already handles this
-- **Zero results**: Existing `FilamentsEmptyState` component -- add expandedQuery context ("No results for X, also tried Y")
-- **Partial match**: Show an "expanded search" info pill above results
-- **Active chips**: `SearchSmartChips` component handles display and removal
+When present, render a small badge on the card:
+- For Flexibility: Show "Shore [X]D" if `shore_hardness_d` is available on the filament
+- For Strength: Show "[X] MPa" from `tensile_strength_xy_mpa`
+- For Heat Resistance: Show "HDT [X]C" from `hdt_18_mpa_c`
+- For Print Speed: Show "[X] mm/s" from `print_speed_max_mms`
+- For Lightweight: Show "[X] g/cm3" from `density_g_cm3`
+
+Badge styling: Same amber chip style as smart chips (`bg-amber-500/15 text-amber-400 text-xs rounded-full px-2`). Only shown when search intent is active.
 
 ---
 
 ## Implementation Order
 
-1. Database migration (search_vector, GIN index, trigger, search_synonyms table, seed data)
-2. `search_filaments_ranked` RPC function
-3. `smart-search` edge function
-4. `useSmartSearch` hook
-5. `SearchAutocomplete` + `SearchSmartChips` components
-6. Wire into `SearchInputWithHistory` and `Finder.tsx`
-7. Test end-to-end
+1. Create `src/lib/searchIntentParser.ts` (pure logic, no dependencies)
+2. Database migration: enhance `search_filaments_ranked` with property sort params
+3. Update `supabase/functions/smart-search/index.ts` to accept and forward new params
+4. Update `src/hooks/useSmartSearch.ts` to use intent parser and pass params
+5. Update `src/pages/Finder.tsx` to pass intent to cards
+6. Update `src/components/FilamentCard.tsx` to render contextual badges
 
 ---
 
 ## Files Summary
 
-| Action   | File                                             |
-|----------|--------------------------------------------------|
-| Create   | DB migration (search_vector, synonyms, RPC)      |
-| Create   | `supabase/functions/smart-search/index.ts`        |
-| Create   | `src/hooks/useSmartSearch.ts`                      |
-| Create   | `src/components/search/SearchAutocomplete.tsx`     |
-| Create   | `src/components/search/SearchSmartChips.tsx`        |
-| Modify   | `src/components/search/SearchInputWithHistory.tsx` |
-| Modify   | `src/pages/Finder.tsx`                             |
-| Modify   | `src/components/filament/FilamentsEmptyState.tsx`  |
-| Modify   | `supabase/config.toml` (smart-search JWT config)   |
+| Action | File |
+|--------|------|
+| Create | `src/lib/searchIntentParser.ts` |
+| Modify | `src/hooks/useSmartSearch.ts` |
+| Modify | `supabase/functions/smart-search/index.ts` |
+| Create | DB migration (enhance `search_filaments_ranked` RPC) |
+| Modify | `src/pages/Finder.tsx` |
+| Modify | `src/components/FilamentCard.tsx` |
 
 ---
 
 ## Risks and Mitigations
 
-- **Fallback**: The `search_filaments_ranked` function falls back to ILIKE when tsquery returns 0 results, so existing search behavior is preserved.
-- **Performance**: GIN index ensures tsvector search is fast. The edge function adds one network hop but returns ranked results, reducing client-side processing.
-- **Backward compatibility**: `useFinderQuery` remains untouched for non-search catalog browsing. Smart search only activates when a search term is present.
+- **SQL injection in property sort**: Mitigated by strict server-side whitelist of 6 allowed column names. Any other value is ignored and falls back to ts_rank.
+- **Sparse data**: Many filaments lack `shore_hardness_d` or mechanical properties. The ORDER BY puts NULLs last, so filaments with data bubble up. Badges only render when the value exists.
+- **Backward compatibility**: The intent parser is additive. When no intent is detected, the system behaves exactly as before (tsvector ranking). The new RPC params default to NULL, so existing callers are unaffected.
+- **Performance**: The intent parser runs client-side with zero latency. The RPC changes only affect ORDER BY, not the WHERE clause complexity — no performance regression.
 
