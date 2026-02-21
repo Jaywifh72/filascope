@@ -47,6 +47,7 @@ import HeroSection from "@/components/HeroSection";
 import { WebSiteSchema, OrganizationSchema, TrendingItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
+import { SearchIntelligenceBar } from "@/components/search/SearchIntelligenceBar";
 import { FilamentFilters } from "@/components/FilamentFilters";
 import { TechnicalConsoleSidebar } from "@/components/TechnicalConsoleSidebar";
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
@@ -1517,6 +1518,22 @@ const Finder = () => {
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           <section className="w-full" role="region" aria-label="Filament product listings" id="filament-results">
+
+        {/* Search Intelligence Bar — appears when search is active */}
+        {useSmartResults && (
+          <SearchIntelligenceBar
+            searchQuery={searchTerm}
+            intent={smartSearch.searchIntent}
+            filteredCount={totalCount}
+            onClear={() => {
+              setSearchTerm("");
+              window.history.replaceState({}, "", window.location.pathname);
+            }}
+            onMaterialOnly={(mat) => {
+              setSearchTerm(mat);
+            }}
+          />
+        )}
 
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
