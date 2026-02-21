@@ -19,7 +19,7 @@ function brandColor(name: string): string {
 }
 
 const sizeMap = {
-  sm: { container: "h-5 w-5", text: "text-[10px]", img: "h-5 max-w-[60px]", width: 60, height: 20, sizes: "60px" },
+  sm: { container: "h-5 w-5", text: "text-[10px]", img: "max-h-[20px] max-w-[80px] w-auto h-auto", width: 80, height: 20, sizes: "80px" },
   md: { container: "h-8 w-8", text: "text-xs", img: "h-8 max-w-[100px]", width: 100, height: 32, sizes: "100px" },
   lg: { container: "h-12 w-12", text: "text-base", img: "h-12 max-w-[180px]", width: 180, height: 48, sizes: "180px" },
 };
