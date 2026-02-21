@@ -184,7 +184,8 @@ export function parseSearchIntent(query: string): SearchIntent {
     };
   }
 
-  const tokens = trimmed.toLowerCase().split(/\s+/);
+  const normalized = trimmed.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const tokens = normalized.toLowerCase().split(/\s+/);
   let materialFilter: string | null = null;
   let propertyIntent: PropertyIntent | null = null;
   const freeTextTokens: string[] = [];
