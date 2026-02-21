@@ -3,7 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { Search, Clock, X, ArrowUpRight, Package, Tag, Sparkles, ChevronRight, Compass, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchContext } from "@/hooks/useSearchContext";
-import { useSearchSuggestions, SearchSuggestion } from "@/hooks/useSearchSuggestions";
+import type { SearchSuggestion } from "@/hooks/useSearchSuggestions";
+import { useSmartSearchPreview } from "@/hooks/useSmartSearchPreview";
 import { SearchSuggestionItemSkeleton } from "@/components/skeletons/SearchSuggestionsSkeleton";
 import { trackSearch as trackGA4Search } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,7 +38,8 @@ export function SearchInputWithHistory({
   const zeroResultLoggedRef = useRef<string>("");
   
   const { recentSearches, trackSearch } = useSearchContext();
-  const { suggestions, isLoading, typoCorrection, totalProductGroups } = useSearchSuggestions(value, { context });
+  const { suggestions, isLoading, expandedQuery, materialHint, totalCount: totalProductGroups } = useSmartSearchPreview(value, context === "filaments");
+  const typoCorrection = null; // Typo correction is now handled server-side via synonym expansion
 
   // Filter recent searches to not duplicate current value
   const filteredRecentSearches = recentSearches
@@ -292,9 +294,18 @@ export function SearchInputWithHistory({
           {/* Loading skeleton while fetching suggestions */}
           {isLoading && value.length >= 2 && suggestions.length === 0 && (
             <div className="p-2">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <SearchSuggestionItemSkeleton key={i} index={i} />
               ))}
+            </div>
+          )}
+
+          {/* Expanded query pill */}
+          {expandedQuery && expandedQuery !== value && !isLoading && value.length >= 2 && (
+            <div className="px-4 py-2 border-b border-border/50">
+              <p className="text-xs text-muted-foreground italic">
+                Also searching: <span className="font-medium">{expandedQuery}</span>
+              </p>
             </div>
           )}
 
@@ -302,8 +313,9 @@ export function SearchInputWithHistory({
           {showZeroState && (
             <div className="p-4 text-center space-y-3">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">
-                  No exact matches for "<span className="text-primary">{value}</span>"
+                <p className="text-sm text-muted-foreground">
+                  No filaments found for "<span className="text-foreground font-medium">{value}</span>".
+                  Try searching by material type (e.g. TPU, PETG) or brand name.
                 </p>
               </div>
 
