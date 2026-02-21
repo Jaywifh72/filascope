@@ -183,6 +183,13 @@ function getFreshnessDotColor(confidence: string | null): string {
   return 'bg-red-400';
 }
 
+// Freshness tooltip text based on confidence + timeAgo
+function getFreshnessTooltipText(confidence: string | null, timeAgo: string | null): string {
+  if (confidence === 'high') return 'Price updated today';
+  if (confidence === 'medium') return `Price updated ${timeAgo || 'a few days'} ago`;
+  return `Price data may be outdated — updated ${timeAgo || 'a while'} ago`;
+}
+
 // Compact time ago (e.g., "24d", "3h")
 function getCompactTimeAgo(timeAgo: string | null): string | null {
   if (!timeAgo) return null;
@@ -778,12 +785,16 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
 
             {/* === PLAN #3: Freshness dot + hover-only timestamp === */}
             <div className="inline-flex items-center gap-1.5">
-              <Tooltip>
+              <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
                   <span className={cn("w-2 h-2 rounded-full inline-block flex-shrink-0 cursor-help", getFreshnessDotColor(priceConfidence))} />
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  Price updated {timeAgo || 'unknown'}
+                <TooltipContent
+                  side="top"
+                  className="text-[12px] text-white px-2.5 py-1.5 rounded-md animate-in fade-in-0 duration-150"
+                  style={{ backgroundColor: '#1a1a1a' }}
+                >
+                  {getFreshnessTooltipText(priceConfidence, timeAgo)}
                 </TooltipContent>
               </Tooltip>
               {isHovered && compactTimeAgo && (
