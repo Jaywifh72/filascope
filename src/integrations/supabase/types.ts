@@ -10819,6 +10819,13 @@ export type Database = {
         }
         Relationships: []
       }
+      search_dictionaries: {
+        Row: {
+          dict_type: string | null
+          term: string | null
+        }
+        Relationships: []
+      }
       search_zero_results: {
         Row: {
           last_searched_at: string | null

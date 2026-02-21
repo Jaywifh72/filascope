@@ -3,8 +3,8 @@
  * Uses Levenshtein distance to find close matches for search terms
  */
 
-// Common brand names and materials for typo matching
-const KNOWN_BRANDS = [
+// Hardcoded fallbacks — used when dynamic data hasn't loaded yet
+const FALLBACK_BRANDS = [
   "Bambu Lab", "Creality", "Prusa Research", "Prusament", "QIDI", "Anycubic",
   "Elegoo", "FlashForge", "Sovol", "Voron", "FLSUN", "Snapmaker", "Raise3D",
   "UltiMaker", "Markforged", "Polymaker", "Hatchbox", "eSUN", "Overture",
@@ -14,12 +14,19 @@ const KNOWN_BRANDS = [
   "Anker", "AnkerMake", "eufyMake", "Rat Rig", "LDO", "Formbot"
 ];
 
-const KNOWN_MATERIALS = [
+const FALLBACK_MATERIALS = [
   "PLA", "PLA+", "PETG", "ABS", "ASA", "TPU", "TPE", "Nylon", "PA", "PC",
   "Polycarbonate", "HIPS", "PVA", "Carbon Fiber", "CF", "Glass Fiber", "GF",
   "Wood", "Marble", "Silk", "Matte", "Metallic", "Glow", "Transparent",
   "Translucent", "High Speed", "High Flow", "Flexible", "Rigid"
 ];
+
+// Dynamic dictionaries seeded from the database
+let dynamicBrands: string[] | null = null;
+let dynamicMaterials: string[] | null = null;
+
+export function setDynamicBrands(b: string[]) { dynamicBrands = b; }
+export function setDynamicMaterials(m: string[]) { dynamicMaterials = m; }
 
 const COMMON_TYPOS: Record<string, string[]> = {
   "creality": ["crality", "crealit", "crealty", "crealitey", "crealtiy"],
@@ -47,32 +54,21 @@ const COMMON_TYPOS: Record<string, string[]> = {
  */
 export function levenshteinDistance(a: string, b: string): number {
   const matrix: number[][] = [];
-
-  // Increment along the first column of each row
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  // Increment each column in the first row
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  // Fill in the rest of the matrix
+  for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
+  for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
         matrix[i][j] = matrix[i - 1][j - 1];
       } else {
         matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
         );
       }
     }
   }
-
   return matrix[b.length][a.length];
 }
 
@@ -95,10 +91,8 @@ export function findBestMatch(
   minSimilarity = 0.6
 ): { match: string; similarity: number } | null {
   const normalizedQuery = query.toLowerCase().trim();
-  
   let bestMatch: string | null = null;
   let bestSimilarity = 0;
-
   for (const candidate of candidates) {
     const similarity = getSimilarity(normalizedQuery, candidate.toLowerCase());
     if (similarity > bestSimilarity && similarity >= minSimilarity) {
@@ -106,7 +100,6 @@ export function findBestMatch(
       bestMatch = candidate;
     }
   }
-
   return bestMatch ? { match: bestMatch, similarity: bestSimilarity } : null;
 }
 
@@ -115,29 +108,30 @@ export function findBestMatch(
  */
 export function getTypoSuggestion(query: string): string | null {
   const normalizedQuery = query.toLowerCase().trim();
-  
+  const brands = getKnownBrands();
+  const materials = getKnownMaterials();
+
   // Check exact typo mappings first
   for (const [correct, typos] of Object.entries(COMMON_TYPOS)) {
     if (typos.includes(normalizedQuery)) {
-      // Return the properly cased version from KNOWN_BRANDS or KNOWN_MATERIALS
-      const brandMatch = KNOWN_BRANDS.find(b => b.toLowerCase() === correct);
-      const materialMatch = KNOWN_MATERIALS.find(m => m.toLowerCase() === correct);
+      const brandMatch = brands.find(b => b.toLowerCase() === correct);
+      const materialMatch = materials.find(m => m.toLowerCase() === correct);
       return brandMatch || materialMatch || correct;
     }
   }
-  
+
   // Check fuzzy match against known brands
-  const brandMatch = findBestMatch(normalizedQuery, KNOWN_BRANDS, 0.7);
+  const brandMatch = findBestMatch(normalizedQuery, brands, 0.7);
   if (brandMatch && brandMatch.similarity < 1) {
     return brandMatch.match;
   }
-  
+
   // Check fuzzy match against known materials
-  const materialMatch = findBestMatch(normalizedQuery, KNOWN_MATERIALS, 0.75);
+  const materialMatch = findBestMatch(normalizedQuery, materials, 0.75);
   if (materialMatch && materialMatch.similarity < 1) {
     return materialMatch.match;
   }
-  
+
   return null;
 }
 
@@ -147,24 +141,22 @@ export function getTypoSuggestion(query: string): string | null {
 export function getSimilarSuggestions(query: string, limit = 3): string[] {
   const normalizedQuery = query.toLowerCase().trim();
   const suggestions: { term: string; similarity: number }[] = [];
-  
-  // Check brands
-  for (const brand of KNOWN_BRANDS) {
+  const brands = getKnownBrands();
+  const materials = getKnownMaterials();
+
+  for (const brand of brands) {
     const similarity = getSimilarity(normalizedQuery, brand.toLowerCase());
     if (similarity >= 0.4 && similarity < 1) {
       suggestions.push({ term: brand, similarity });
     }
   }
-  
-  // Check materials
-  for (const material of KNOWN_MATERIALS) {
+  for (const material of materials) {
     const similarity = getSimilarity(normalizedQuery, material.toLowerCase());
     if (similarity >= 0.4 && similarity < 1) {
       suggestions.push({ term: material, similarity });
     }
   }
-  
-  // Sort by similarity and return top matches
+
   return suggestions
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, limit)
@@ -176,16 +168,14 @@ export function getSimilarSuggestions(query: string, limit = 3): string[] {
  */
 export function needsCorrection(query: string): boolean {
   if (!query || query.trim().length < 3) return false;
-  
   const normalizedQuery = query.toLowerCase().trim();
-  
-  // Check if it's already an exact match
-  const isExactBrand = KNOWN_BRANDS.some(b => b.toLowerCase() === normalizedQuery);
-  const isExactMaterial = KNOWN_MATERIALS.some(m => m.toLowerCase() === normalizedQuery);
-  
+  const brands = getKnownBrands();
+  const materials = getKnownMaterials();
+
+  const isExactBrand = brands.some(b => b.toLowerCase() === normalizedQuery);
+  const isExactMaterial = materials.some(m => m.toLowerCase() === normalizedQuery);
   if (isExactBrand || isExactMaterial) return false;
-  
-  // Check if we have a suggestion
+
   return getTypoSuggestion(query) !== null;
 }
 
@@ -193,12 +183,12 @@ export function needsCorrection(query: string): boolean {
  * Get all known brands for autocomplete
  */
 export function getKnownBrands(): string[] {
-  return [...KNOWN_BRANDS];
+  return dynamicBrands && dynamicBrands.length > 0 ? dynamicBrands : [...FALLBACK_BRANDS];
 }
 
 /**
  * Get all known materials for autocomplete
  */
 export function getKnownMaterials(): string[] {
-  return [...KNOWN_MATERIALS];
+  return dynamicMaterials && dynamicMaterials.length > 0 ? dynamicMaterials : [...FALLBACK_MATERIALS];
 }
