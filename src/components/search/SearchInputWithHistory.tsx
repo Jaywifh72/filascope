@@ -247,6 +247,20 @@ export function SearchInputWithHistory({
           aria-autocomplete="list"
           aria-controls={showDropdown ? "search-suggestions-list" : undefined}
         />
+        {/* Clear search × button */}
+        {value.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors",
+              isLoading && value.length >= 2 ? "right-10" : "right-3"
+            )}
+            aria-label="Clear search"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
         {isLoading && value.length >= 2 && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
