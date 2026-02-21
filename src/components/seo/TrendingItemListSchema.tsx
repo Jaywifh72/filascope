@@ -11,7 +11,7 @@ interface TrendingFilament {
 
 function useTrendingFilamentsForSchema(regionCode: string) {
   return useQuery({
-    queryKey: ['trending-filaments', regionCode],
+    queryKey: ['trending-filaments-schema', regionCode],
     queryFn: async (): Promise<TrendingFilament[]> => {
       // Primary: filaments with available listings in the user's region
       const { data: regional, error: regionalError } = await supabase
