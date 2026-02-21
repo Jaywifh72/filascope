@@ -30,6 +30,7 @@ import {
   MapPin,
   Clock,
   Handshake,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -121,6 +122,7 @@ const navGroups: NavGroup[] = [
     label: 'Analytics',
     items: [
       { title: 'Analytics Dashboard', href: '/admin/analytics', icon: BarChart3 },
+      { title: 'Search Analytics', href: '/admin/search-analytics', icon: Search },
       { title: 'Module Analytics', href: '/old-admin/module-analytics', icon: BarChart3 },
       { title: 'A/B Tests', href: '/old-admin/ab-tests', icon: FlaskConical },
     ],
