@@ -44,13 +44,17 @@ function useTrendingFilaments(regionCode: string) {
         .limit(8);
 
       if (!regionalError && regional && regional.length >= 4) {
-        // Deduplicate by filament_id, keep cheapest
+        // Deduplicate by filament_id, keep cheapest; max 2 per brand
         const seen = new Set<string>();
+        const brandCount = new Map<string, number>();
         const results: TrendingFilament[] = [];
         for (const row of regional) {
           const f = row.filaments as any;
           if (!f || seen.has(f.id)) continue;
+          const vendor = (f.vendor || "Unknown").toLowerCase();
+          if ((brandCount.get(vendor) || 0) >= 2) continue;
           seen.add(f.id);
+          brandCount.set(vendor, (brandCount.get(vendor) || 0) + 1);
           results.push({
             id: f.id,
             product_title: f.product_title,
@@ -76,9 +80,19 @@ function useTrendingFilaments(regionCode: string) {
         .not("variant_price", "is", null)
         .not("color_hex", "is", null)
         .order("value_score", { ascending: false })
-        .limit(8);
+        .limit(20);
       if (error) throw error;
-      return (data || []) as TrendingFilament[];
+      // Apply max 2 per brand
+      const brandCount = new Map<string, number>();
+      const filtered: TrendingFilament[] = [];
+      for (const f of (data || []) as TrendingFilament[]) {
+        const vendor = (f.vendor || "Unknown").toLowerCase();
+        if ((brandCount.get(vendor) || 0) >= 2) continue;
+        brandCount.set(vendor, (brandCount.get(vendor) || 0) + 1);
+        filtered.push(f);
+        if (filtered.length >= 8) break;
+      }
+      return filtered;
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
