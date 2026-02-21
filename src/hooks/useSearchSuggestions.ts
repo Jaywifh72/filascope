@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getTypoSuggestion, getSimilarSuggestions } from "@/lib/fuzzySearch";
+import { getTypoSuggestion, getSimilarSuggestions, setDynamicBrands, setDynamicMaterials } from "@/lib/fuzzySearch";
 import { SEARCH_INTENT_MAP } from "@/lib/personalizationEngine";
 import { analyzeSearchQuery } from "@/lib/multiTermSearch";
 import { COLOR_FAMILIES } from "@/lib/colorMatchUtils";
+import { useSearchDictionaries } from "@/hooks/useSearchDictionaries";
 
 export interface SearchSuggestion {
   type: "brand" | "material" | "product" | "typo" | "color";
@@ -35,6 +36,15 @@ export function useSearchSuggestions(
   } = options;
 
   const [debouncedQuery, setDebouncedQuery] = useState(query);
+
+  // Seed dynamic search dictionaries from database
+  const { data: dictionaries } = useSearchDictionaries();
+  useEffect(() => {
+    if (dictionaries) {
+      setDynamicBrands(dictionaries.brands);
+      setDynamicMaterials(dictionaries.materials);
+    }
+  }, [dictionaries]);
 
   // Debounce the query
   useEffect(() => {
