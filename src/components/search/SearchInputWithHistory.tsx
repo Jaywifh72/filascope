@@ -136,6 +136,8 @@ export function SearchInputWithHistory({
           trackSearch(value);
           trackGA4Search(value, totalProductGroups ?? 0);
           setShowDropdown(false);
+          navigate(`/filaments?search=${encodeURIComponent(value.trim())}`);
+          inputRef.current?.blur();
         }
         break;
       case "Escape":
