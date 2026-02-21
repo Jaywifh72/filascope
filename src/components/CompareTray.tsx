@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { GitCompare, ChevronUp, ChevronDown, ArrowRight, Loader2, AlertCircle, Sparkles, Minus, Share2, Bookmark } from "lucide-react";
+import { GitCompare, ChevronUp, ChevronDown, ArrowRight, Loader2, AlertCircle, Sparkles, Minus, Share2, Bookmark, X, Plus, MoreHorizontal } from "lucide-react";
 import { SharePopover } from "@/components/sharing/SharePopover";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -44,7 +44,6 @@ export function CompareTray() {
   const trayRef = useRef<HTMLDivElement>(null);
   const trayMode = useCompareTrayMode();
   const [hasEntered, setHasEntered] = useState(false);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showMinItemsHelp, setShowMinItemsHelp] = useState(false);
@@ -66,8 +65,8 @@ export function CompareTray() {
   });
   
   // Advanced filters
-  const [activeFilters, setActiveFilters] = useState<TrayFilter[]>([]);
-  const [sortOption, setSortOption] = useState<TraySortOption>('recent');
+  const [activeFilters] = useState<TrayFilter[]>([]);
+  const [sortOption] = useState<TraySortOption>('recent');
   
   // Check auth on mount
   useEffect(() => {
@@ -260,96 +259,6 @@ export function CompareTray() {
     setShowClearConfirm(false);
   };
 
-  // Drag handlers
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex !== null && draggedIndex !== index) {
-      setDragOverIndex(index);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = (index: number) => {
-    if (draggedIndex !== null && draggedIndex !== index) {
-      reorderItems(draggedIndex, index);
-      toast.success("Items reordered");
-    }
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
-  // Build slots array
-  const slots = [];
-  
-  // Add filled cards
-  displayItems.forEach((item, index) => {
-    const isNew = item.id === newItemId;
-    const isDragging = draggedIndex === index;
-    const isDragOver = dragOverIndex === index;
-    const isDuplicatePulse = item.id === duplicatePulseId;
-    const isFocused = focusedCardIndex === index;
-    const dragDirection = dragOverIndex !== null && draggedIndex !== null && draggedIndex < dragOverIndex ? 'left' : 'right';
-    
-    slots.push(
-      <MiniFilamentCard 
-        key={item.id} 
-        item={item} 
-        onRemove={removeItem}
-        onSwapUnavailable={(id) => {
-          // Remove and navigate to finder to find replacement
-          removeItem(id);
-          navigate('/');
-        }}
-        isNew={isNew}
-        isDragging={isDragging}
-        isDragOver={isDragOver}
-        isDuplicatePulse={isDuplicatePulse}
-        isFocused={isFocused}
-        isFiltered={item.isFiltered}
-        dragDirection={dragDirection}
-        onDragStart={() => handleDragStart(index)}
-        onDragOver={(e) => handleDragOver(e, index)}
-        onDragLeave={handleDragLeave}
-        onDrop={() => handleDrop(index)}
-        onDragEnd={handleDragEnd}
-        cardIndex={index}
-      />
-    );
-  });
-  
-  // Add "Add More" slot if not full
-  if (!isFull) {
-    slots.push(
-      <EmptySlot 
-        key="add-more" 
-        isAddMore 
-        onClick={handleAddMore}
-      />
-    );
-  }
-  
-  // Fill remaining with empty slots (up to 4 total)
-  while (slots.length < maxItems) {
-    slots.push(
-      <EmptySlot 
-        key={`empty-${slots.length}`} 
-        isFull={isFull}
-      />
-    );
-  }
-
   // Count badge animation class
   const countBadgeClass = lastAction === 'add' 
     ? 'badge-pop-add' 
@@ -402,226 +311,204 @@ export function CompareTray() {
           </button>
         )}
 
-        {/* Collapsed View */}
-        {!isMinimized && !isExpanded && (
-          <div className="flex items-center">
-            <button
-              onClick={() => setIsExpanded(true)}
-              className="flex-1 h-14 px-4 flex items-center justify-between hover:bg-muted/20 transition-colors rounded-l-xl"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <GitCompare className="w-4 h-4 text-primary" />
+        {/* Main tray bar (collapsed & expanded share same bar layout) */}
+        {!isMinimized && (
+          <div className="flex items-center gap-3 px-3 py-2.5">
+            {/* Far left: collapse/minimize controls */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-muted/30 transition-colors"
+                aria-label={isExpanded ? "Collapse tray" : "Expand tray"}
+              >
+                {isExpanded ? (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
+              <button
+                onClick={toggleMinimized}
+                className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-muted/30 transition-colors"
+                aria-label="Minimize tray"
+              >
+                <Minus className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* LEFT: Thumbnail slots */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {Array.from({ length: maxItems }).map((_, i) => {
+                const item = items[i];
+                if (item) {
+                  return (
+                    <div
+                      key={item.id}
+                      className="relative w-10 h-10 rounded-md overflow-hidden bg-muted/40 border border-border/40 group/thumb flex-shrink-0"
+                    >
+                      {item.featured_image ? (
+                        <img
+                          src={item.featured_image}
+                          alt={item.product_title || "Filament"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: item.color_hex || 'hsl(var(--muted))' }}
+                        />
+                      )}
+                      {/* Remove button on hover */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
+                        className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+                        aria-label={`Remove ${item.product_title}`}
+                      >
+                        <X className="w-3.5 h-3.5 text-white" />
+                      </button>
+                    </div>
+                  );
+                }
+                return (
+                  <div
+                    key={`empty-${i}`}
+                    className="w-10 h-10 rounded-md border border-dashed border-border/40 flex items-center justify-center flex-shrink-0"
+                  >
+                    <Plus className="w-3 h-3 text-muted-foreground/40" />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* CENTER: Count + names */}
+            <div className="flex-1 min-w-0 px-2">
+              <p className="text-[13px] text-muted-foreground">
+                {count} / {maxItems} filaments selected
+              </p>
+              {count > 0 && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {items.slice(0, 2).map((item) => (
+                    <span
+                      key={item.id}
+                      className="text-[11px] text-foreground/70 bg-muted/40 px-1.5 py-0.5 rounded truncate max-w-[120px]"
+                    >
+                      {item.product_title?.split(' ').slice(0, 3).join(' ') || 'Filament'}
+                    </span>
+                  ))}
+                  {count > 2 && (
+                    <span className="text-[11px] text-muted-foreground">
+                      + {count - 2} more
+                    </span>
+                  )}
                 </div>
-                <span className="text-sm font-medium flex items-center gap-1">
-                  Compare 
-                  <span className={cn(
-                    "inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold",
-                    countBadgeClass
-                  )}>
-                    {count}
+              )}
+            </div>
+
+            {/* RIGHT: Compare Now + overflow */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Overflow menu */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-1" align="end" side="top">
+                  <div className="flex flex-col">
+                    <button
+                      onClick={handleShare}
+                      disabled={!canCompare}
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 rounded-md disabled:opacity-40 transition-colors"
+                    >
+                      <Share2 className="w-3.5 h-3.5" /> Share
+                    </button>
+                    {user && (
+                      <button
+                        onClick={() => setShowSaveDialog(true)}
+                        disabled={!canCompare}
+                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 rounded-md disabled:opacity-40 transition-colors"
+                      >
+                        <Bookmark className="w-3.5 h-3.5" /> Save for Later
+                      </button>
+                    )}
+                    <TrayActionsMenu
+                      items={items}
+                      onSavePreset={() => setShowPresetDialog(true)}
+                      onViewHistory={() => setShowHistory(!showHistory)}
+                      onClearAll={handleClearAll}
+                      onShowKeyboardHints={() => setShowKeyboardHints(true)}
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Compare Now CTA */}
+              <Popover open={showMinItemsHelp} onOpenChange={setShowMinItemsHelp}>
+                <PopoverTrigger asChild>
+                  <span>
+                    <Button
+                      onClick={handleCompareNow}
+                      disabled={isNavigating}
+                      className={cn(
+                        "gap-2 font-semibold min-w-[140px]",
+                        canCompare && !isNavigating && "animate-pulse-once"
+                      )}
+                      size="sm"
+                    >
+                      {isNavigating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          Compare Now
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
                   </span>
-                </span>
-                {!canCompare && (
-                  <span className="text-xs text-muted-foreground">
-                    • Add {2 - count} more to compare
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                {canCompare && (
-                  <span className="text-sm text-primary font-medium">
-                    View Comparison →
-                  </span>
-                )}
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </button>
-            {/* Minimize button */}
-            <button
-              onClick={toggleMinimized}
-              className="h-14 px-3 flex items-center justify-center hover:bg-muted/20 transition-colors rounded-r-xl border-l border-border/30"
-              aria-label="Minimize compare tray"
-            >
-              <Minus className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-4" align="end">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-amber-500">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="font-medium text-sm">Add at least 2 materials</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Select filaments from the grid to compare their properties side-by-side.
+                    </p>
+                    <Separator />
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        Popular comparisons:
+                      </p>
+                      <div className="space-y-1.5">
+                        {POPULAR_COMPARISONS.map((comp) => (
+                          <Button 
+                            key={comp.label}
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full justify-start text-xs h-8"
+                            onClick={() => handleSuggestedComparison(comp.materials)}
+                          >
+                            {comp.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         )}
 
-        {/* Expanded View */}
-        {!isMinimized && isExpanded && (
-          <div className={cn("p-4", isFirstItem && "tray-content-enter")}>
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setIsExpanded(false)}
-                  className="w-8 h-8 rounded-lg bg-muted/30 flex items-center justify-center hover:bg-muted/50 transition-colors"
-                  aria-label="Collapse compare tray"
-                >
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <button
-                  onClick={toggleMinimized}
-                  className="w-8 h-8 rounded-lg bg-muted/30 flex items-center justify-center hover:bg-muted/50 transition-colors"
-                  aria-label="Minimize tray"
-                  title="Minimize to thin bar"
-                >
-                  <Minus className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <div className="flex items-center gap-2">
-                  <GitCompare className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-semibold">
-                    Compare Tray
-                  </span>
-                  <span className={cn(
-                    "inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-medium",
-                    countBadgeClass
-                  )}>
-                    {count}/{maxItems}
-                  </span>
-                </div>
-                
-                {/* Preset Gallery */}
-                <PresetGallery onRestore={handleRestoreFromHistory} />
-                
-                {/* Tray Filters */}
-                <TrayFilters
-                  items={items}
-                  activeFilters={activeFilters}
-                  onFiltersChange={setActiveFilters}
-                  sortOption={sortOption}
-                  onSortChange={setSortOption}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* Share Button */}
-                <SharePopover
-                  shareUrl={canCompare ? `${window.location.origin}/compare?ids=${items.map(i => i.id).join(',')}` : ''}
-                  shareText={
-                    canCompare
-                      ? `Comparing ${items.map(i => i.product_title || 'filament').slice(0, 3).join(' vs ')} on FilaScope`
-                      : ''
-                  }
-                  title="Share comparison"
-                  align="end"
-                  side="top"
-                >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={!canCompare}
-                    aria-label="Share comparison link"
-                  >
-                    <Share2 className="w-4 h-4" aria-hidden="true" />
-                  </Button>
-                </SharePopover>
-
-                {/* Save for Later (if logged in) */}
-                {user && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setShowSaveDialog(true)}
-                    disabled={!canCompare}
-                    aria-label="Save comparison for later"
-                  >
-                    <Bookmark className="w-4 h-4" aria-hidden="true" />
-                  </Button>
-                )}
-
-                {/* Quick Actions Menu */}
-                <TrayActionsMenu
-                  items={items}
-                  onSavePreset={() => setShowPresetDialog(true)}
-                  onViewHistory={() => setShowHistory(!showHistory)}
-                  onClearAll={handleClearAll}
-                  onShowKeyboardHints={() => setShowKeyboardHints(true)}
-                />
-                
-                {/* History dropdown (legacy) */}
-                <HistoryDropdown onRestore={handleRestoreFromHistory} />
-                
-                <Popover open={showMinItemsHelp} onOpenChange={setShowMinItemsHelp}>
-                  <PopoverTrigger asChild>
-                    <span>
-                      <Button
-                        onClick={handleCompareNow}
-                        disabled={isNavigating}
-                        className={cn(
-                          "gap-2 font-semibold min-w-[140px]",
-                          canCompare && !isNavigating && "animate-pulse-once"
-                        )}
-                        size="sm"
-                      >
-                        {isNavigating ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            Compare Now
-                            <ArrowRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </Button>
-                    </span>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-72 p-4" align="end">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-amber-500">
-                        <AlertCircle className="w-4 h-4" />
-                        <span className="font-medium text-sm">Add at least 2 materials</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Select filaments from the grid to compare their properties side-by-side.
-                      </p>
-                      <Separator />
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
-                          Popular comparisons:
-                        </p>
-                        <div className="space-y-1.5">
-                          {POPULAR_COMPARISONS.map((comp) => (
-                            <Button 
-                              key={comp.label}
-                              variant="outline" 
-                              size="sm" 
-                              className="w-full justify-start text-xs h-8"
-                              onClick={() => handleSuggestedComparison(comp.materials)}
-                            >
-                              {comp.label}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            {/* Cards Grid */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin">
-              {slots}
-            </div>
-
-            {/* Helper text */}
-            {count === 1 && (
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Add 1 more material to enable comparison • Drag to reorder • Press <kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">?</kbd> for shortcuts
-              </p>
-            )}
-
-            {/* Suggestions when 1 item */}
-            {count === 1 && items[0] && (
-              <SuggestionChips currentItem={items[0]} onAdd={addItem} />
-            )}
+        {/* Expanded: suggestion chips when 1 item */}
+        {!isMinimized && isExpanded && count === 1 && items[0] && (
+          <div className="px-4 pb-3">
+            <SuggestionChips currentItem={items[0]} onAdd={addItem} />
           </div>
         )}
 
