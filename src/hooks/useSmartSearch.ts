@@ -103,8 +103,8 @@ export function useSmartSearch(
           limit: pageSize,
           offset: page * pageSize,
           materialFilter: searchIntent.materialFilter,
-          propertySortCol: searchIntent.propertyHints[0]?.sortCol ?? null,
-          propertySortDir: searchIntent.propertyHints[0]?.dir ?? null,
+          propertySortCol: searchIntent.propertyIntent?.sortColumn ?? null,
+          propertySortDir: searchIntent.propertyIntent?.sortDirection ?? null,
         },
       });
 
