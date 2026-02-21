@@ -50,7 +50,7 @@ const Navbar = () => {
 
   const handleNavSearch = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && navSearchValue.trim()) {
-      navigate(`/?q=${encodeURIComponent(navSearchValue.trim())}`);
+      navigate(`/filaments?search=${encodeURIComponent(navSearchValue.trim())}`);
       setNavSearchValue("");
       navSearchRef.current?.blur();
     }
