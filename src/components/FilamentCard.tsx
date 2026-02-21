@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { SearchPropertyBadges, type SearchPropertyIntent } from "@/components/filament/SearchPropertyBadges";
 import { Link } from "react-router-dom";
 import { 
   Star, 
@@ -151,6 +152,7 @@ interface FilamentCardProps {
   communityRating?: { avgRating: number; reviewCount: number; avgQuality?: number | null; avgEase?: number | null; avgValue?: number | null } | null;
   showCostPerPrint?: boolean;
   retailerCount?: number;
+  searchPropertyIntent?: SearchPropertyIntent | null;
 }
 
 // Get the single most important standout feature
@@ -202,7 +204,7 @@ function getCompactTimeAgo(timeAgo: string | null): string | null {
   return `${num}${unit.charAt(0)}`;
 }
 
-export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 0, displayTitle, variantIndicators, communityRating, showCostPerPrint = false, retailerCount }: FilamentCardProps) {
+export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 0, displayTitle, variantIndicators, communityRating, showCostPerPrint = false, retailerCount, searchPropertyIntent }: FilamentCardProps) {
   const isOutOfStock = variantIndicators && variantIndicators.variantCount > 1
     ? variantIndicators.anyInStock === false
     : filament.variant_available === false;
@@ -684,6 +686,15 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           </Tooltip>
         )}
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          ELEMENT 2.5: Contextual Property Badges (search intent only)
+          ═══════════════════════════════════════════════════════════════ */}
+      {searchPropertyIntent && (
+        <div className="px-6 pb-1">
+          <SearchPropertyBadges intent={searchPropertyIntent} data={filament as any} />
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════
           ELEMENT 3: Price Block

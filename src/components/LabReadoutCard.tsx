@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { SearchPropertyBadges } from "@/components/filament/SearchPropertyBadges";
 import { Link } from "react-router-dom";
 import { 
   Star, 
@@ -88,6 +89,8 @@ interface LabReadoutCardProps {
   priority?: boolean;
   /** Contextual property badge from search intent */
   searchPropertyBadge?: { badge: string; sortCol: string };
+  /** Rich contextual property intent for detailed badges */
+  searchPropertyIntent?: { column: string; label: string; unit: string } | null;
 }
 
 export function LabReadoutCard({ 
@@ -99,6 +102,7 @@ export function LabReadoutCard({
   showCostPerPrint = false,
   priority = false,
   searchPropertyBadge,
+  searchPropertyIntent,
 }: LabReadoutCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -445,8 +449,15 @@ export function LabReadoutCard({
               </TooltipContent>
             </Tooltip>
           )}
-          {/* Contextual property badge from search intent */}
-          {searchPropertyBadge && (() => {
+          {/* Rich contextual property badges from search intent */}
+          {searchPropertyIntent && (
+            <SearchPropertyBadges
+              intent={searchPropertyIntent}
+              data={filament as any}
+            />
+          )}
+          {/* Fallback: legacy simple badge when no rich intent */}
+          {!searchPropertyIntent && searchPropertyBadge && (() => {
             const col = searchPropertyBadge.sortCol;
             const f = filament as any;
             let value: string | null = null;

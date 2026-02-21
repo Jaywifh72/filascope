@@ -1638,6 +1638,11 @@ const Finder = () => {
                         badge: smartSearch.searchIntent.propertyIntent.name,
                         sortCol: smartSearch.searchIntent.propertyIntent.sortColumn,
                       } : undefined}
+                      searchPropertyIntent={useSmartResults && smartSearch.searchIntent.propertyIntent ? {
+                        column: smartSearch.searchIntent.propertyIntent.sortColumn,
+                        label: smartSearch.searchIntent.propertyIntent.badgeLabel,
+                        unit: smartSearch.searchIntent.propertyIntent.badgeUnit,
+                      } : null}
                     />
                   </React.Fragment>
                 );
