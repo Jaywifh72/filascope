@@ -358,7 +358,7 @@ export function SiteFooter() {
             <div>
               <FooterColumnHeader>Stay Updated</FooterColumnHeader>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Price drops, new filaments, and deals delivered weekly.
+                Get notified when filaments on your watchlist drop in price. Plus new arrivals and weekly deals.
               </p>
               
               {subscribed ? (
@@ -406,7 +406,7 @@ export function SiteFooter() {
                       </>
                     )}
                   </Button>
-                  <p className="text-xs text-muted-foreground/50">No spam. Unsubscribe anytime.</p>
+                  <p className="text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>No spam. Unsubscribe anytime. Your data is never sold.</p>
                 </form>
               )}
 
