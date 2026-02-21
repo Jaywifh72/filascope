@@ -307,6 +307,22 @@ export function TechnicalConsoleSidebar({
             )}
           </div>
         </div>
+        {/* Progress bar */}
+        <div className="mt-2.5 h-[3px] rounded-sm bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-sm transition-all duration-[400ms] ease-in-out"
+            style={{
+              width: selectedPrinterId ? '100%' : selectedBrand ? '50%' : '0%',
+              backgroundColor: selectedPrinterId ? '#22C55E' : selectedBrand ? '#F59E0B' : 'transparent',
+            }}
+          />
+        </div>
+        {/* Benefit prompt when no printer selected */}
+        {!selectedBrand && (
+          <p className="mt-2 text-xs font-medium" style={{ color: '#F59E0B' }}>
+            ⚡ Select your printer to filter results to only compatible filaments
+          </p>
+        )}
       </div>
 
       {/* Printer Selection */}
@@ -319,7 +335,7 @@ export function TechnicalConsoleSidebar({
               setSelectedPrinterId("");
             }}
           >
-            <SelectTrigger className="w-full h-9 bg-muted border-border text-foreground text-sm hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50">
+            <SelectTrigger className={`w-full h-9 bg-muted border-border text-foreground text-sm hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50 ${!selectedBrand ? 'animate-[pulse-ring_2s_ease-in-out_3]' : ''}`}>
               <SelectValue placeholder="Select brand..." />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border z-50">
