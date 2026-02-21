@@ -101,6 +101,16 @@ export function SearchInputWithHistory({
       navigate(`/filament/${slug}`);
       return;
     }
+
+    // Color suggestion → navigate to filtered color view
+    if (suggestion?.type === "color") {
+      trackSearch(selectedValue);
+      setShowDropdown(false);
+      onChange("");
+      navigate(`/filaments?colors=${encodeURIComponent(selectedValue)}`);
+      inputRef.current?.blur();
+      return;
+    }
     
     // For brands, materials, typos, and recent searches - update search input
     onChange(selectedValue);
@@ -169,8 +179,8 @@ export function SearchInputWithHistory({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const getIcon = (type: SearchSuggestion["type"]) => {
-    switch (type) {
+  const getIcon = (suggestion: SearchSuggestion) => {
+    switch (suggestion.type) {
       case "brand":
         return <Tag className="w-3.5 h-3.5" />;
       case "material":
@@ -179,6 +189,13 @@ export function SearchInputWithHistory({
         return <ArrowUpRight className="w-3.5 h-3.5" />;
       case "typo":
         return <Sparkles className="w-3.5 h-3.5" />;
+      case "color":
+        return (
+          <div
+            className="w-3.5 h-3.5 rounded-full border border-border/50 flex-shrink-0"
+            style={{ backgroundColor: suggestion.colorHex || "#888" }}
+          />
+        );
     }
   };
 
@@ -284,7 +301,7 @@ export function SearchInputWithHistory({
                     "flex-shrink-0",
                     suggestion.type === "typo" ? "text-amber-500" : "text-muted-foreground"
                   )}>
-                    {getIcon(suggestion.type)}
+                    {getIcon(suggestion)}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="truncate text-sm">
