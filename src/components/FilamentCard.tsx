@@ -380,8 +380,8 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         "active:scale-[0.99] active:duration-[50ms]",
         "focus-within:ring-2 focus-within:ring-cyan-500/50 focus-within:ring-offset-2 focus-within:ring-offset-slate-900",
         "hover:-translate-y-1 hover:shadow-lg hover:shadow-black/30",
-        isSelected && "border-2 border-primary bg-primary/5",
-        isPendingSelection && "border-2 border-primary/60 bg-primary/5",
+        isSelected && "border-2 border-primary bg-primary/5 border-l-[3px] border-l-amber-500",
+        isPendingSelection && "border-2 border-primary/60 bg-primary/5 border-l-[3px] border-l-amber-500/60",
       )}
       style={{
         animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`,
