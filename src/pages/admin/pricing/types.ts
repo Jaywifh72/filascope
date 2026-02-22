@@ -60,7 +60,7 @@ export const PRODUCT_TYPE_CONFIGS: Record<ProductType, ProductTypeConfig> = {
     tableName: 'printers',
     brandField: 'brand_id',
     nameField: 'model_name',
-    typeField: null,
+    typeField: 'printer_technology',
     urlField: 'product_url',
     regionalUrlFields: {
       US: 'product_url', CA: 'product_url_ca', UK: 'product_url_uk',
@@ -72,7 +72,7 @@ export const PRODUCT_TYPE_CONFIGS: Record<ProductType, ProductTypeConfig> = {
     colorHexField: null,
     handleField: 'slug',
     groupByStrategy: 'brand_model',
-    selectColumns: 'id, brand_id, model_name, slug, variant_id, variant_title, variant_price, variant_compare_at_price, variant_available, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, image_url, published_at, updated_at, current_price_usd_store, current_price_usd_amazon, msrp_usd, printer_technology, discontinued',
+    selectColumns: 'id, brand_id, model_name, slug, variant_id, variant_title, variant_price, variant_compare_at_price, variant_available, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, image_url, published_at, updated_at, current_price_usd_store, current_price_usd_amazon, msrp_usd, printer_technology, is_discontinued, sku, series_name, product_page_url, official_product_url, official_store_url',
     searchPlaceholder: 'Search by model, brand...',
   },
   accessory: {
