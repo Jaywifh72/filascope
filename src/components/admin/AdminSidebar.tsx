@@ -223,7 +223,42 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
                     );
                   }
 
-                  return <div key={item.href}>{linkContent}</div>;
+                  // Render sub-links for Pricing Data when on that page
+                  const isPricingDataItem = item.href === '/admin/pricing-data';
+                  const isOnPricingPage = currentPath.startsWith('/admin/pricing-data');
+
+                  return (
+                    <div key={item.href}>
+                      {linkContent}
+                      {isPricingDataItem && isOnPricingPage && !collapsed && (
+                        <div className="ml-4 mt-0.5 space-y-0.5">
+                          {[
+                            { label: '↳ Filament Pricing', type: 'filament' },
+                            { label: '↳ Printer Pricing', type: 'printer' },
+                            { label: '↳ Accessory Pricing', type: 'accessory' },
+                          ].map(sub => {
+                            const subHref = `/admin/pricing-data?type=${sub.type}`;
+                            const searchType = new URLSearchParams(location.search).get('type') || 'filament';
+                            const isSubActive = isOnPricingPage && searchType === sub.type;
+                            return (
+                              <Link
+                                key={sub.type}
+                                to={subHref}
+                                className={cn(
+                                  'block pl-8 py-1 text-xs rounded-md transition-colors',
+                                  isSubActive
+                                    ? 'text-primary font-medium'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                )}
+                              >
+                                {sub.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
                 })}
               </div>
             </div>
