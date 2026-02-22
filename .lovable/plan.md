@@ -1,44 +1,41 @@
 
 
-## Create "intelligent-filament-search" Edge Function
+## Create "generate-filament-embedding" Edge Function
 
-### Overview
-A new edge function that uses AI to parse natural-language filament queries into structured intent, then queries the database with spec-based filters, scores results by trait matching, and returns ranked results.
+### Blocker: Missing API Key
 
-### Key Design Decision: AI Provider
-The project does not have an `OPENAI_API_KEY` configured. Instead of asking you to provide one, the function will use **Lovable AI** (which is already configured via `LOVABLE_API_KEY`) to call `google/gemini-3-flash-preview` — a fast, capable model that handles structured JSON extraction well. The system prompt and behavior will be identical to what you described; only the API endpoint differs.
+This function requires `OPENAI_API_KEY` for calling OpenAI's `text-embedding-3-small` embedding model. That secret is not currently configured. Before the function can work, you'll need to provide your OpenAI API key so it can be stored securely as a backend secret.
 
-### Implementation Steps
+**Note:** The Lovable AI gateway does not support embedding endpoints — only chat completions — so a direct OpenAI API key is required for this specific function.
 
-**1. Create the edge function file**
-`supabase/functions/intelligent-filament-search/index.ts`
+### What Will Be Created
 
-The function will follow the existing pattern from `smart-search/index.ts` (CORS headers, Supabase client initialization, error handling).
+**File:** `supabase/functions/generate-filament-embedding/index.ts`
 
-**2. Request flow (7 steps as specified)**
+A single edge function that:
 
-- **STEP 1 — Intent Parsing**: Call Lovable AI Gateway with the system prompt you provided. Use tool calling to extract the structured JSON reliably. Model: `google/gemini-3-flash-preview`.
+1. Receives `{ filament_id }` via POST
+2. Fetches the filament row (using `product_title`, `vendor`, `material` from the `filaments` table — there are no `name`/`description` columns or separate `brands`/`material_types` join tables)
+3. Fetches `filament_properties`, `filament_trait_tags`, and `filament_use_cases` for that filament
+4. Builds a natural-language embedding text blob from all the data (skipping null fields)
+5. Calls OpenAI `text-embedding-3-small` to generate the embedding vector
+6. Upserts the result into `filament_search_embeddings` (text + JSON-stringified vector)
+7. Returns `{ success, filament_id, characters }` or error with status 500
+8. Includes full CORS headers and OPTIONS handling
 
-- **STEP 2 — Spec-Filtered Database Query**: Build a Supabase query joining `filaments` with `filament_properties`, `filament_trait_tags`, and `filament_use_cases`. Apply filters from parsed intent (material via `filaments.material`, heat resistance, enclosure, abrasive, food_safe, outdoor_suitable). Limit 60.
+**Config:** `verify_jwt = true` (admin-only operation) added to `supabase/config.toml`.
 
-- **STEP 3 — Trait Scoring**: Score each filament (base 0.3) by checking trait matches (+0.25), use case matches (+0.35/+0.2), weakness penalties (-0.2), and heat resistance bonus (up to +0.3). Build `matchReasons` array.
+### Data Mapping Notes
 
-- **STEP 4 — Sort and Return**: Sort by score descending, take top 15, return results with intent, query, and totalFound.
+Since the `filaments` table uses `product_title` (not `name`), `vendor` (not a `brands` join), and `material` (not a `material_types` join), the embedding text will use:
+- Brand Name = `filaments.vendor`
+- Filament Name = `filaments.product_title`
+- Material Type = `filaments.material`
+- Description = not available (no description column exists)
 
-- **STEP 5 — Fallback**: If AI call fails, fall back to `product_title ILIKE` and `material ILIKE` text search (note: `filaments` has no `description` column, so we'll search `product_title`, `vendor`, and `material`).
+### Implementation Sequence
 
-- **STEP 6 — Logging**: Insert into `intelligent_search_logs` (query, parsed_intent, result_count, region).
-
-- **STEP 7 — CORS**: Standard CORS headers matching existing edge function patterns.
-
-**3. Update config.toml**
-Add `[functions.intelligent-filament-search]` with `verify_jwt = false` (public search endpoint).
-
-### Technical Notes
-
-- The `filaments` table has no `name`, `slug`, or `description` columns. Results will use `product_title`, `product_handle`, `vendor`, and `material` from the filaments table directly.
-- Brand data comes from `filaments.vendor` (no separate brands join needed for display).
-- Regional pricing will use `filaments.variant_price` (USD) and the currency-specific columns (`price_cad`, `price_eur`, etc.) already on the filaments table, rather than a separate `filament_prices` table join.
-- Material filtering will use `filaments.material ILIKE` against the parsed `material_types` array, since there is no separate `material_types` lookup table.
-- Trait/use-case matching in Step 3 uses case-insensitive substring matching against `filament_trait_tags.trait` and `filament_use_cases.use_case`.
+1. Request the `OPENAI_API_KEY` secret from you
+2. Create the edge function file
+3. Update `config.toml` with the new function entry
 
