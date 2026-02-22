@@ -15,6 +15,10 @@ import { CrawlablePaginationBar } from "@/components/CrawlablePaginationBar";
 import { RelatedSearchesSection } from "@/components/seo/RelatedSearchesSection";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
 import { ExploreMoreSection } from "@/components/ExploreMoreSection";
+import { useRegion } from "@/contexts/RegionContext";
+import { useIntelligentSearch } from "@/hooks/useIntelligentSearch";
+import IntelligentSearchBar from "@/components/search/IntelligentSearchBar";
+import IntelligentSearchResults from "@/components/search/IntelligentSearchResults";
 
 // ─────────────────────────────────────────────
 // Per-material SEO meta + intro text
@@ -453,6 +457,21 @@ export default function FilamentCategoryPage() {
   const { slug } = useParams<{ slug?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { region: currentRegion } = useRegion();
+
+  // Intelligent search
+  const {
+    query: aiQuery,
+    setQuery: setAiQuery,
+    results: aiResults,
+    intent: aiIntent,
+    isLoading: aiLoading,
+    isIntelligentMode,
+    error: aiError,
+    clearSearch: aiClearSearch,
+  } = useIntelligentSearch(currentRegion);
+
+  const isAiActive = aiQuery.trim().length >= 3;
 
   // Read search query param for filtering
   const searchParam = searchParams.get("search") || "";
@@ -646,7 +665,7 @@ export default function FilamentCategoryPage() {
         )}
 
         {/* Stats strip */}
-        {displayCount > 0 && (
+        {displayCount > 0 && !isAiActive && (
           <div className="flex flex-wrap gap-3 mb-6 text-sm text-muted-foreground">
             <span className="bg-muted/60 rounded px-3 py-1">
               {displayCount.toLocaleString()} filaments
@@ -659,49 +678,74 @@ export default function FilamentCategoryPage() {
           </div>
         )}
 
-        {/* Product grid */}
-        {isLoading ? (
-          <FilamentCardSkeletonGrid count={24} />
-        ) : groups.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            No filaments found for this category.
-          </div>
+        {/* Intelligent Search Bar */}
+        <div className="mb-6">
+          <IntelligentSearchBar
+            query={aiQuery}
+            onQueryChange={setAiQuery}
+            isLoading={aiLoading && isIntelligentMode}
+            isIntelligentMode={isIntelligentMode}
+          />
+        </div>
+
+        {/* Conditional: AI results vs normal grid */}
+        {isAiActive ? (
+          <IntelligentSearchResults
+            results={aiResults}
+            isLoading={aiLoading}
+            isIntelligentMode={isIntelligentMode}
+            query={aiQuery}
+            intent={aiIntent}
+            region={currentRegion}
+            onClear={aiClearSearch}
+          />
         ) : (
           <>
-            <div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-              aria-label={`${label} filaments`}
-            >
-              {groups.map((group) => (
-                <FilamentCard
-                  key={group.representativeFilament?.id ?? group.baseName}
-                  filament={group.representativeFilament as any}
+            {/* Product grid */}
+            {isLoading ? (
+              <FilamentCardSkeletonGrid count={24} />
+            ) : groups.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                No filaments found for this category.
+              </div>
+            ) : (
+              <>
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                  aria-label={`${label} filaments`}
+                >
+                  {groups.map((group) => (
+                    <FilamentCard
+                      key={group.representativeFilament?.id ?? group.baseName}
+                      filament={group.representativeFilament as any}
+                    />
+                  ))}
+                </div>
+
+                <ExploreMoreSection
+                  topBrand={
+                    materialStats?.topBrands?.[0]
+                      ? { name: materialStats.topBrands[0], count: undefined }
+                      : undefined
+                  }
+                  materialLabel={config?.label}
+                  materialSlug={slug}
                 />
-              ))}
-            </div>
 
-            <ExploreMoreSection
-              topBrand={
-                materialStats?.topBrands?.[0]
-                  ? { name: materialStats.topBrands[0], count: undefined }
-                  : undefined
-              }
-              materialLabel={config?.label}
-              materialSlug={slug}
-            />
-
-            <CrawlablePaginationBar
-              currentPage={currentPage}
-              totalCount={totalCount}
-              pageSize={pageSize}
-              displayedCount={groups.length}
-              basePath={basePath}
-              onPageChange={handlePageChange}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                handlePageChange(0);
-              }}
-            />
+                <CrawlablePaginationBar
+                  currentPage={currentPage}
+                  totalCount={totalCount}
+                  pageSize={pageSize}
+                  displayedCount={groups.length}
+                  basePath={basePath}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    handlePageChange(0);
+                  }}
+                />
+              </>
+            )}
           </>
         )}
 
