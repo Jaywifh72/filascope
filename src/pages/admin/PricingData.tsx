@@ -1,11 +1,14 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, Upload, Plus } from 'lucide-react';
 import { ProductType, PRODUCT_TYPE_CONFIGS } from './pricing/types';
 import type { StoreRow } from './pricing/types';
 import { PricingStatsBar } from './pricing/components/PricingStatsBar';
@@ -20,9 +23,41 @@ const VALID_TYPES: ProductType[] = ['filament', 'printer', 'accessory'];
 
 export default function PricingData() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const paramType = searchParams.get('type') as ProductType | null;
   const initialType: ProductType = paramType && VALID_TYPES.includes(paramType) ? paramType : 'filament';
   const [activeType, setActiveType] = useState<ProductType>(initialType);
+
+  // Lightweight count queries for tab badges
+  const { data: filamentCount } = useQuery({
+    queryKey: ['pricing-tab-count', 'filament'],
+    queryFn: async () => {
+      const { count } = await supabase.from('filaments').select('*', { count: 'exact', head: true });
+      return count ?? 0;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+  const { data: printerCount } = useQuery({
+    queryKey: ['pricing-tab-count', 'printer'],
+    queryFn: async () => {
+      const { count } = await supabase.from('printers').select('*', { count: 'exact', head: true });
+      return count ?? 0;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+  const { data: accessoryCount } = useQuery({
+    queryKey: ['pricing-tab-count', 'accessory'],
+    queryFn: async () => {
+      const { count } = await supabase.from('accessories').select('*', { count: 'exact', head: true });
+      return count ?? 0;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+  const tabCounts: Record<ProductType, number | undefined> = {
+    filament: filamentCount,
+    printer: printerCount,
+    accessory: accessoryCount,
+  };
 
   // Selection & expansion state
   const [selectedStoreKeys, setSelectedStoreKeys] = useState<Set<string>>(new Set());
@@ -173,6 +208,7 @@ export default function PricingData() {
               const tabColor = type === 'filament' ? 'data-[state=active]:border-b-emerald-400'
                 : type === 'printer' ? 'data-[state=active]:border-b-blue-400'
                 : 'data-[state=active]:border-b-orange-400';
+              const count = tabCounts[type];
               return (
                 <TabsTrigger
                   key={type}
@@ -181,14 +217,41 @@ export default function PricingData() {
                 >
                   <Icon className="w-3.5 h-3.5" />
                   {cfg.pluralLabel}
+                  {count !== undefined && (
+                    <Badge variant="outline" className="ml-1.5 text-[10px] px-1.5 py-0">{count.toLocaleString()}</Badge>
+                  )}
                 </TabsTrigger>
               );
             })}
           </TabsList>
 
           <TabsContent value={activeType} className="mt-4 space-y-4">
-            <PricingStatsBar stats={stats} onStatusFilter={setStatusFilter} />
+            <PricingStatsBar stats={stats} onStatusFilter={setStatusFilter} isEmpty={stats.totalProducts === 0} />
 
+            {stats.totalProducts === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="p-4 rounded-full bg-muted/50 mb-4">
+                  <config.icon className="w-10 h-10 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">No {config.pluralLabel} Yet</h3>
+                <p className="text-sm text-muted-foreground max-w-md mb-4">
+                  {activeType === 'printer'
+                    ? 'Add printers to start tracking their pricing across regions. Use the Import tool or add them manually.'
+                    : activeType === 'accessory'
+                    ? 'Add accessories like nozzles, build plates, and dryers to track their pricing across regions.'
+                    : 'No filaments found. Run a sync to populate pricing data.'}
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate('/old-admin/import')}>
+                    <Upload className="w-4 h-4 mr-2" /> Import {config.pluralLabel}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/old-admin/${activeType === 'filament' ? 'filaments' : activeType === 'printer' ? 'printers' : 'accessories'}`)}>
+                    <Plus className="w-4 h-4 mr-2" /> Add Manually
+                  </Button>
+                </div>
+              </div>
+            ) : (
+            <>
             <PricingToolbar
               productType={activeType}
               search={search}
@@ -245,6 +308,8 @@ export default function PricingData() {
               allVisibleSelected={allVisibleSelected}
               onToggleSelectAll={toggleSelectAll}
             />
+            </>
+            )}
           </TabsContent>
         </Tabs>
 
