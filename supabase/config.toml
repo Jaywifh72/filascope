@@ -473,3 +473,6 @@ verify_jwt = false
 
 [functions.search-console-sync]
 verify_jwt = false
+
+[functions.generate-filament-embedding]
+verify_jwt = false
