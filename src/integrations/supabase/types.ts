@@ -6053,6 +6053,7 @@ export type Database = {
           image_url: string | null
           input_shaping_supported: boolean | null
           internal_lighting: boolean | null
+          is_discontinued: boolean | null
           last_sync_error: string | null
           last_sync_status: string | null
           last_verified_utc: string | null
@@ -6118,6 +6119,7 @@ export type Database = {
           printer_id: string
           printer_profile_slug_in_slicers: string | null
           printer_technology: string | null
+          product_page_url: string | null
           product_url: string | null
           product_url_au: string | null
           product_url_ca: string | null
@@ -6151,6 +6153,7 @@ export type Database = {
           screen_size_inch: number | null
           screen_type: string | null
           series_id: string | null
+          series_name: string | null
           sku: string | null
           slug: string | null
           smoke_sensor: boolean | null
@@ -6292,6 +6295,7 @@ export type Database = {
           image_url?: string | null
           input_shaping_supported?: boolean | null
           internal_lighting?: boolean | null
+          is_discontinued?: boolean | null
           last_sync_error?: string | null
           last_sync_status?: string | null
           last_verified_utc?: string | null
@@ -6357,6 +6361,7 @@ export type Database = {
           printer_id: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
+          product_page_url?: string | null
           product_url?: string | null
           product_url_au?: string | null
           product_url_ca?: string | null
@@ -6390,6 +6395,7 @@ export type Database = {
           screen_size_inch?: number | null
           screen_type?: string | null
           series_id?: string | null
+          series_name?: string | null
           sku?: string | null
           slug?: string | null
           smoke_sensor?: boolean | null
@@ -6531,6 +6537,7 @@ export type Database = {
           image_url?: string | null
           input_shaping_supported?: boolean | null
           internal_lighting?: boolean | null
+          is_discontinued?: boolean | null
           last_sync_error?: string | null
           last_sync_status?: string | null
           last_verified_utc?: string | null
@@ -6596,6 +6603,7 @@ export type Database = {
           printer_id?: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
+          product_page_url?: string | null
           product_url?: string | null
           product_url_au?: string | null
           product_url_ca?: string | null
@@ -6629,6 +6637,7 @@ export type Database = {
           screen_size_inch?: number | null
           screen_type?: string | null
           series_id?: string | null
+          series_name?: string | null
           sku?: string | null
           slug?: string | null
           smoke_sensor?: boolean | null

@@ -181,8 +181,17 @@ export function usePricingData(productType: ProductType) {
       } else if (productType === 'printer') {
         const brandName = printerBrandsMap?.get(item.brand_id) || 'Unknown';
         groupKey = `${item.brand_id}::${item.model_name}`;
-        // Attach resolved brand name for display
         item._brandName = brandName;
+
+        // Populate fallback fields for Pricing Data compatibility
+        // If product_url is null, fall back to official_store_url or official_product_url
+        if (!item.product_url && (item.official_store_url || item.official_product_url)) {
+          item.product_url = item.official_store_url || item.official_product_url;
+        }
+        // If variant_price is null, fall back to current_price_usd_store or msrp_usd
+        if (item.variant_price == null) {
+          item.variant_price = item.current_price_usd_store ?? item.msrp_usd ?? null;
+        }
       } else {
         groupKey = `${item.brand}::${item.name}`;
       }
@@ -242,7 +251,9 @@ export function usePricingData(productType: ProductType) {
       const activeRegionsForBrand = activeStoreRegions?.get(vendorKey);
 
       for (const { region, priceField, urlField } of regionFieldMap) {
-        if (activeRegionsForBrand && !activeRegionsForBrand.has(region)) continue;
+        // For printers/accessories, don't skip regions based on activeStoreRegions
+        // since they may have direct regional URLs without brand_regional_stores entries
+        if (productType === 'filament' && activeRegionsForBrand && !activeRegionsForBrand.has(region)) continue;
 
         let url: string | null = null;
         let price: number | null = null;
