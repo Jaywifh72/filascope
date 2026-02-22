@@ -145,23 +145,20 @@ export function usePricingData(productType: ProductType) {
   });
 
   // All brands/vendors for filter dropdown
-  const { data: allVendors } = useQuery({
-    queryKey: ['admin-pricing-all-vendors', productType],
-    queryFn: async () => {
-      if (productType === 'printer' && printerBrandsMap) {
-        return Array.from(new Set(printerBrandsMap.values())).sort();
-      }
-      const { data, error } = await supabase
-        .from(config.tableName as any)
-        .select(config.brandField)
-        .not(config.brandField, 'is', null);
-      if (error) throw error;
-      const set = new Set((data || []).map((r: any) => r[config.brandField]).filter(Boolean));
-      return Array.from(set).sort() as string[];
-    },
-    staleTime: 1000 * 60 * 10,
-    enabled: productType !== 'printer' || !!printerBrandsMap,
-  });
+  // NOTE: We derive vendors from rawProducts (which is fully paginated) to avoid
+  // the default 1000-row limit that would miss brands appearing after row 1000.
+  const allVendors = useMemo(() => {
+    if (productType === 'printer' && printerBrandsMap) {
+      return Array.from(new Set(printerBrandsMap.values())).sort();
+    }
+    if (!rawProducts) return [];
+    const set = new Set(
+      rawProducts
+        .map((r: any) => productType === 'printer' ? r._brandName : r[config.brandField])
+        .filter(Boolean)
+    );
+    return Array.from(set).sort() as string[];
+  }, [rawProducts, productType, config.brandField, printerBrandsMap]);
 
   const vendors = allVendors || [];
   const totalVariantCount = rawProducts?.length || 0;
