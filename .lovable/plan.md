@@ -1,63 +1,37 @@
 
 
-## Add "Search Intelligence" Tab to Admin Edit Modal
+## Multi-Product Database Extension
 
-### Overview
-Add a 4th tab to the existing `EditProductModal` for filament products only. This tab provides three collapsible sections for managing the data that powers intelligent search: Physical Specifications, Trait Tags, and Use Cases, plus an embedding status indicator.
+### What This Does
+Extends the database to support pricing data for printers and accessories alongside filaments, by creating 1 new table and adding columns to 3 existing tables.
 
-### Architecture
+### Changes
 
-The implementation will create one large new component and modify one existing file:
+**1. New `accessories` table** with 50+ columns matching the filament pattern: regional URLs, variant pricing, Amazon links, compatibility arrays, flexible specs JSON, sync fields, and timestamps. RLS: public read, admin write (using `has_role()`).
 
-**New file:** `src/components/admin/inventory/SearchIntelligenceTab.tsx`
-- A self-contained component that receives `filamentId: string` as a prop
-- Manages its own data fetching, state, and mutations against three tables: `filament_properties`, `filament_trait_tags`, `filament_use_cases`, and reads from `filament_search_embeddings` and `trait_taxonomy`
-- After each save/add/delete operation, automatically calls `supabase.functions.invoke('generate-filament-embedding', { body: { filament_id } })` to regenerate the search embedding
+**2. Extend `filament_listings` table** (the actual listings table — note: there is no `store_listings` table):
+- Add `printer_id` (FK to printers), `accessory_id` (FK to accessories), `product_type` (text, default 'filament')
+- Add a CHECK constraint ensuring at most one product FK is set
+- Add indexes on new columns
 
-**Modified file:** `src/components/admin/inventory/EditProductModal.tsx`
-- Change `TabsList` from `grid-cols-3` to `grid-cols-4` (only when editing a filament)
-- Add a 4th `TabsTrigger` with value `"search-intelligence"` and label containing a search icon + "Search Intel"
-- Add a `TabsContent` that renders `<SearchIntelligenceTab filamentId={product.id} />`
-- The tab only appears when `type === 'filament'`
+**3. Extend `price_history` table:**
+- Add `printer_id` (FK to printers), `accessory_id` (FK to accessories), `product_type` (text, default 'filament')
+- Add indexes on new columns
+
+**4. Add columns to `printers` table:**
+- Regional URLs: `product_url`, `product_url_ca/uk/eu/au/jp`
+- Display: `image_url`, `slug`, `description`
+- Variant pricing: `variant_id`, `variant_title`, `variant_sku`, `variant_price`, `variant_compare_at_price`, `variant_available`
+- Amazon links: `amazon_link_us/uk/de/ca/fr/es/it/nl/be/au/jp`
+- Other: `tags`, `published_at`
+- Note: Printers already has `official_product_url`, `amazon_url_us/ca/uk`, and `msrp_usd`/`current_price_usd_store` — the new columns follow the filament naming pattern for consistency in the pricing tool
 
 ### Technical Details
 
-#### SearchIntelligenceTab Component Structure
-
-The component uses three `Collapsible` sections (from shadcn/ui):
-
-**Section A - Physical Specifications:**
-- On mount: `supabase.from('filament_properties').select('*').eq('filament_id', id).maybeSingle()`
-- Local state holds all field values
-- Fields organized in grouped 2-column grids:
-  - Thermal: `heat_resistance_c`, `glass_transition_c`, `print_temp_min`, `print_temp_max`, `bed_temp_min`, `bed_temp_max` (number inputs)
-  - Mechanical: `flexibility_score`, `layer_adhesion_score`, `impact_strength_score`, `uv_resistance_score`, `moisture_resistance_score` (Slider 1-10)
-  - Categorical: `warping_risk`, `support_removal`, `translucency`, `surface_finish` (Select dropdowns)
-  - Booleans: `food_safe`, `outdoor_suitable`, `biodegradable`, `enclosure_required`, `abrasive`, `drying_required` (Switch toggles)
-- Save button upserts to `filament_properties` with `onConflict: 'filament_id'`, then calls `generate-filament-embedding`
-
-**Section B - Trait Tags:**
-- On mount: `supabase.from('filament_trait_tags').select('*').eq('filament_id', id)`
-- Displays existing tags grouped by `trait_category` (strength, weakness, use_case, avoid_if) as colored chips with delete (X) buttons
-- Add form: text input with autocomplete from `trait_taxonomy` table, category radio group, confidence 1-5 selector
-- Insert into `filament_trait_tags`, then re-fetch and re-call embedding generation
-
-**Section C - Use Cases:**
-- On mount: `supabase.from('filament_use_cases').select('*').eq('filament_id', id)`
-- Table display with suitability color badges
-- Add form: use_case text, suitability select, notes textarea
-- Insert into `filament_use_cases`, then re-fetch and re-call embedding generation
-
-**Embedding Status (bottom):**
-- Fetches `filament_search_embeddings` for this filament
-- Shows green/yellow badge based on whether an embedding exists
-- "Regenerate Embedding" button calls the edge function manually
-
-#### EditProductModal Changes
-- Line 358: TabsList grid changes from `grid-cols-3` to dynamic based on `isFilament`
-- New TabsTrigger and TabsContent added before the closing `</Tabs>` tag
-- Import of the new component
-
-### No Database Changes Required
-All tables (`filament_properties`, `filament_trait_tags`, `filament_use_cases`, `filament_search_embeddings`, `trait_taxonomy`) already exist with the correct schemas. No migrations needed.
+- **RLS**: Accessories uses `public.has_role(auth.uid(), 'admin')` for write policies (matching existing project pattern), not `profiles.role`
+- **Trigger**: Reuses existing `update_listing_timestamp()` function for `updated_at` auto-update (there is no `handle_updated_at()` function in this DB)
+- **Constraint**: `filament_listings_one_product_check` ensures each listing row links to at most one product type
+- **Backward compatibility**: `filament_id` column unchanged; existing rows get `product_type = 'filament'` by default
+- **No code changes**: Migration only — no React components modified
+- Single migration file with all 4 steps
 
