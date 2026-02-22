@@ -7,7 +7,7 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DollarSign, Upload, Plus } from 'lucide-react';
 import { ProductType, PRODUCT_TYPE_CONFIGS } from './pricing/types';
 import type { StoreRow } from './pricing/types';
@@ -182,13 +182,7 @@ export default function PricingData() {
     return () => window.removeEventListener('keydown', handler);
   }, [toggleSelectAll]);
 
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <PageLoadingSkeleton />
-      </AdminLayout>
-    );
-  }
+  // Loading state is now handled inline per-tab instead of blocking the whole page
 
   return (
     <AdminLayout>
@@ -226,9 +220,22 @@ export default function PricingData() {
           </TabsList>
 
           <TabsContent value={activeType} className="mt-4 space-y-4">
-            <PricingStatsBar stats={stats} onStatusFilter={setStatusFilter} isEmpty={stats.totalProducts === 0} />
-
-            {stats.totalProducts === 0 ? (
+            {!isLoading && <PricingStatsBar stats={stats} onStatusFilter={setStatusFilter} isEmpty={stats.totalProducts === 0} />}
+            {isLoading ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 rounded-lg" />
+                  ))}
+                </div>
+                <Skeleton className="h-12 rounded-lg" />
+                <div className="space-y-2">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 rounded" />
+                  ))}
+                </div>
+              </div>
+            ) : stats.totalProducts === 0 && tabCounts[activeType] === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="p-4 rounded-full bg-muted/50 mb-4">
                   <config.icon className="w-10 h-10 text-muted-foreground" />

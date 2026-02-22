@@ -304,7 +304,9 @@ export function usePricingData(productType: ProductType) {
         });
       }
 
-      if (stores.length === 0 && prices.length === 0) continue;
+      // For filaments, skip groups with no stores AND no prices (truly empty)
+      // For printers/accessories, always show them so admins can see what needs populating
+      if (productType === 'filament' && stores.length === 0 && prices.length === 0) continue;
 
       groups.push({
         productLineId: groupKey,
