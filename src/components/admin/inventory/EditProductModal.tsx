@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, RotateCcw, ImageIcon } from 'lucide-react';
+import { Loader2, RotateCcw, ImageIcon, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,7 @@ import { useSaveRegionalUrls, useSaveRegionalPrices, useFetchRegionalData } from
 import { RegionalUrlEditor, RegionalUrlData } from './RegionalUrlEditor';
 import { RegionalPriceEditor, RegionalPriceData } from './RegionalPriceEditor';
 import { RegionCode, CurrencyCode } from '@/types/regional';
+import { SearchIntelligenceTab } from './SearchIntelligenceTab';
 
 const MATERIALS = ['PLA', 'ABS', 'PETG', 'TPU', 'ASA', 'Nylon', 'PC', 'PVA', 'HIPS', 'Carbon Fiber', 'Wood', 'Metal', 'Other'];
 const DIAMETERS = ['1.75mm', '2.85mm'];
@@ -355,10 +356,16 @@ export function EditProductModal({
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className={`grid w-full ${isFilament ? 'grid-cols-4' : 'grid-cols-3'}`}>
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="regional-urls">Regional URLs</TabsTrigger>
               <TabsTrigger value="regional-prices">Regional Prices</TabsTrigger>
+              {isFilament && (
+                <TabsTrigger value="search-intelligence">
+                  <Search className="w-3.5 h-3.5 mr-1" />
+                  Search Intel
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="basic" className="mt-4">
@@ -736,6 +743,12 @@ export function EditProductModal({
                 </Button>
               </div>
             </TabsContent>
+
+            {isFilament && product && (
+              <TabsContent value="search-intelligence" className="mt-4">
+                <SearchIntelligenceTab filamentId={product.id} />
+              </TabsContent>
+            )}
           </Tabs>
         </DialogContent>
       </Dialog>
