@@ -1,44 +1,44 @@
 
 
-## Intelligent Search Infrastructure — Database Migration Plan
+## Create "intelligent-filament-search" Edge Function
 
-This plan creates 6 new tables and seeds the `trait_taxonomy` table with 15 rows. No existing tables are modified.
+### Overview
+A new edge function that uses AI to parse natural-language filament queries into structured intent, then queries the database with spec-based filters, scores results by trait matching, and returns ranked results.
 
-### Tables to Create
+### Key Design Decision: AI Provider
+The project does not have an `OPENAI_API_KEY` configured. Instead of asking you to provide one, the function will use **Lovable AI** (which is already configured via `LOVABLE_API_KEY`) to call `google/gemini-3-flash-preview` — a fast, capable model that handles structured JSON extraction well. The system prompt and behavior will be identical to what you described; only the API endpoint differs.
 
-1. **filament_properties** — Structured material properties (temps, scores, booleans, enums) linked 1:1 to filaments
-2. **filament_trait_tags** — Freeform trait labels with category and confidence, many-per-filament
-3. **filament_use_cases** — Use case suitability ratings per filament
-4. **trait_taxonomy** — Reference/lookup table of canonical traits with search keywords
-5. **filament_search_embeddings** — Text blobs and JSON-encoded vectors for future semantic search
-6. **intelligent_search_logs** — Query analytics for search quality monitoring
+### Implementation Steps
 
-### RLS Policies
+**1. Create the edge function file**
+`supabase/functions/intelligent-filament-search/index.ts`
 
-| Table | Public Read | Admin Write | Insert (anon) |
-|---|---|---|---|
-| trait_taxonomy | Yes | No (read-only reference) | No |
-| filament_properties | Yes | Yes | No |
-| filament_trait_tags | Yes | Yes | No |
-| filament_use_cases | Yes | Yes | No |
-| filament_search_embeddings | Yes | Yes | No |
-| intelligent_search_logs | No | Yes (read) | Yes (insert for logging) |
+The function will follow the existing pattern from `smart-search/index.ts` (CORS headers, Supabase client initialization, error handling).
 
-For `intelligent_search_logs`, anonymous/authenticated users can INSERT (for search telemetry), but only admins can SELECT.
+**2. Request flow (7 steps as specified)**
 
-### Seed Data
+- **STEP 1 — Intent Parsing**: Call Lovable AI Gateway with the system prompt you provided. Use tool calling to extract the structured JSON reliably. Model: `google/gemini-3-flash-preview`.
 
-15 rows into `trait_taxonomy` covering strengths, weaknesses, and use cases with related traits and search keywords arrays.
+- **STEP 2 — Spec-Filtered Database Query**: Build a Supabase query joining `filaments` with `filament_properties`, `filament_trait_tags`, and `filament_use_cases`. Apply filters from parsed intent (material via `filaments.material`, heat resistance, enclosure, abrasive, food_safe, outdoor_suitable). Limit 60.
 
-### Technical Details
+- **STEP 3 — Trait Scoring**: Score each filament (base 0.3) by checking trait matches (+0.25), use case matches (+0.35/+0.2), weakness penalties (-0.2), and heat resistance bonus (up to +0.3). Build `matchReasons` array.
 
-Single migration SQL covering:
-- 6 `CREATE TABLE` statements with all columns, defaults, CHECK constraints for score ranges (1-10, 1-5) and text enums
-- `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` on all 6 tables
-- RLS policies using `public.has_role(auth.uid(), 'admin'::app_role)` for admin access (matching existing project patterns)
-- `INSERT INTO trait_taxonomy` for seed data
-- Indexes on `filament_id` foreign keys and `trait_taxonomy.trait`
-- `updated_at` auto-update trigger on `filament_properties` (reusing existing trigger function pattern)
+- **STEP 4 — Sort and Return**: Sort by score descending, take top 15, return results with intent, query, and totalFound.
 
-No code changes are needed — this is a schema-only migration.
+- **STEP 5 — Fallback**: If AI call fails, fall back to `product_title ILIKE` and `material ILIKE` text search (note: `filaments` has no `description` column, so we'll search `product_title`, `vendor`, and `material`).
+
+- **STEP 6 — Logging**: Insert into `intelligent_search_logs` (query, parsed_intent, result_count, region).
+
+- **STEP 7 — CORS**: Standard CORS headers matching existing edge function patterns.
+
+**3. Update config.toml**
+Add `[functions.intelligent-filament-search]` with `verify_jwt = false` (public search endpoint).
+
+### Technical Notes
+
+- The `filaments` table has no `name`, `slug`, or `description` columns. Results will use `product_title`, `product_handle`, `vendor`, and `material` from the filaments table directly.
+- Brand data comes from `filaments.vendor` (no separate brands join needed for display).
+- Regional pricing will use `filaments.variant_price` (USD) and the currency-specific columns (`price_cad`, `price_eur`, etc.) already on the filaments table, rather than a separate `filament_prices` table join.
+- Material filtering will use `filaments.material ILIKE` against the parsed `material_types` array, since there is no separate `material_types` lookup table.
+- Trait/use-case matching in Step 3 uses case-insensitive substring matching against `filament_trait_tags.trait` and `filament_use_cases.use_case`.
 
