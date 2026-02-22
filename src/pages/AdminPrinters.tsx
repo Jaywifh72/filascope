@@ -446,9 +446,13 @@ export default function AdminPrinters() {
 
       if (data.success) {
         setStats(data.stats);
+        queryClient.invalidateQueries({ queryKey: ["all-printers-for-count"] });
+        queryClient.invalidateQueries({ queryKey: ["pricing-tab-count", "printer"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-pricing-data", "printer"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-printer-brands-map"] });
         toast({
           title: "Import successful",
-          description: `Imported ${data.stats.printers_created} new printers, updated ${data.stats.printers_updated}`,
+          description: `Imported ${data.stats.printers_created} new, updated ${data.stats.printers_updated}. Check Pricing Data → Printers tab to verify.`,
         });
       } else {
         throw new Error("Import failed");

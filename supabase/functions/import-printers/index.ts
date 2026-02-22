@@ -108,7 +108,31 @@ function convertInteger(value: string): number | null {
 /**
  * Safely convert all printer data fields with proper type handling
  */
+function generateSlug(brand: string, model: string): string {
+  return `${brand}-${model}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 function convertPrinterData(row: CSVRow): any {
+  const msrp = convertValue(row.msrp_usd, "number");
+  const storePrice = convertValue(row.current_price_usd_store, "number");
+  const officialUrl = convertValue(row.official_product_url, "text");
+  const productPageUrl = convertValue(row.product_page_url, "text");
+  const officialStoreUrl = convertValue(row.official_store_url, "text");
+
+  // Pricing Data reads variant_price — populate from best available price
+  const variantPrice = storePrice ?? msrp ?? null;
+
+  // Pricing Data reads product_url — populate from best available URL
+  const productUrl = officialStoreUrl ?? officialUrl ?? productPageUrl ?? null;
+
+  // Auto-generate slug from brand + model
+  const slug = row.brand && row.model_name
+    ? generateSlug(row.brand, row.model_name)
+    : null;
+
   return {
     printer_id: row.printer_id,
     brand_id: null, // Will be set later
@@ -123,8 +147,8 @@ function convertPrinterData(row: CSVRow): any {
     discontinued_date: convertValue(row.discontinued_date, "date"),
     firmware_family: convertValue(row.firmware_family, "text"),
     firmware_open_source: convertValue(row.firmware_open_source, "boolean"),
-    official_product_url: convertValue(row.official_product_url, "text"),
-    official_store_url: convertValue(row.official_store_url, "text"),
+    official_product_url: officialUrl,
+    official_store_url: officialStoreUrl,
     amazon_url_us: convertValue(row.amazon_url_us, "text"),
     amazon_url_ca: convertValue(row.amazon_url_ca, "text"),
     amazon_url_uk: convertValue(row.amazon_url_uk, "text"),
@@ -229,10 +253,10 @@ function convertPrinterData(row: CSVRow): any {
     power_loss_recovery: convertValue(row.power_loss_recovery, "boolean"),
     safety_certifications: convertValue(row.safety_certifications, "text"),
     safety_notes: convertValue(row.safety_notes, "text"),
-    msrp_usd: convertValue(row.msrp_usd, "number"),
+    msrp_usd: msrp,
     msrp_cad: convertValue(row.msrp_cad, "number"),
     msrp_eur: convertValue(row.msrp_eur, "number"),
-    current_price_usd_store: convertValue(row.current_price_usd_store, "number"),
+    current_price_usd_store: storePrice,
     current_price_usd_amazon: convertValue(row.current_price_usd_amazon, "number"),
     price_tier: convertValue(row.price_tier, "text"),
     target_user_segment: convertValue(row.target_user_segment, "text"),
@@ -252,6 +276,13 @@ function convertPrinterData(row: CSVRow): any {
     data_source_priority: convertValue(row.data_source_priority, "text"),
     data_quality_notes: convertValue(row.data_quality_notes, "text"),
     last_verified_utc: convertValue(row.last_verified_utc, "date"),
+    // === Pricing Data compatibility fields ===
+    slug: slug,
+    variant_price: variantPrice,
+    product_url: productUrl,
+    product_page_url: productPageUrl,
+    image_url: convertValue(row.image_url, "text"),
+    series_name: convertValue(row.series_name, "text"),
   };
 }
 
