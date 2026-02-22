@@ -77,7 +77,7 @@ export function HeroProductGrid() {
           <Link
             key={`${i}-${brand}`}
             to={`/brands/${slug}`}
-            className={`group relative aspect-square rounded-xl overflow-hidden bg-card border border-border/30 flex items-center justify-center p-4 transition-all duration-200 ease-out hover:scale-105 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary ${
+            className={`group relative aspect-[3/1] rounded-xl overflow-hidden bg-card border border-border/30 flex items-center justify-center p-3 transition-all duration-200 ease-out hover:scale-105 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary ${
               i >= 3 ? "hidden xl:block" : ""
             }`}
             style={{
