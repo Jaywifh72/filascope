@@ -132,6 +132,168 @@ export type Database = {
         }
         Relationships: []
       }
+      accessories: {
+        Row: {
+          amazon_link_au: string | null
+          amazon_link_be: string | null
+          amazon_link_ca: string | null
+          amazon_link_de: string | null
+          amazon_link_es: string | null
+          amazon_link_fr: string | null
+          amazon_link_it: string | null
+          amazon_link_jp: string | null
+          amazon_link_nl: string | null
+          amazon_link_uk: string | null
+          amazon_link_us: string | null
+          brand: string
+          category: string
+          compatible_materials: string[] | null
+          compatible_printers: string[] | null
+          created_at: string | null
+          data_confidence_score: number | null
+          description: string | null
+          external_data_hash: string | null
+          external_sources: Json | null
+          id: string
+          image_url: string | null
+          last_external_sync_at: string | null
+          local_data_hash: string | null
+          name: string
+          persona_tags: string[] | null
+          primary_data_source: string | null
+          product_url: string | null
+          product_url_au: string | null
+          product_url_ca: string | null
+          product_url_eu: string | null
+          product_url_jp: string | null
+          product_url_uk: string | null
+          published_at: string | null
+          requires_manual_review: boolean | null
+          sku: string | null
+          slug: string | null
+          specifications: Json | null
+          subcategory: string | null
+          sync_error_log: string | null
+          sync_status: string | null
+          tags: string[] | null
+          updated_at: string | null
+          user_override_fields: string[] | null
+          validated_by_user: boolean | null
+          variant_available: boolean | null
+          variant_compare_at_price: number | null
+          variant_id: string | null
+          variant_price: number | null
+          variant_sku: string | null
+          variant_title: string | null
+        }
+        Insert: {
+          amazon_link_au?: string | null
+          amazon_link_be?: string | null
+          amazon_link_ca?: string | null
+          amazon_link_de?: string | null
+          amazon_link_es?: string | null
+          amazon_link_fr?: string | null
+          amazon_link_it?: string | null
+          amazon_link_jp?: string | null
+          amazon_link_nl?: string | null
+          amazon_link_uk?: string | null
+          amazon_link_us?: string | null
+          brand: string
+          category?: string
+          compatible_materials?: string[] | null
+          compatible_printers?: string[] | null
+          created_at?: string | null
+          data_confidence_score?: number | null
+          description?: string | null
+          external_data_hash?: string | null
+          external_sources?: Json | null
+          id?: string
+          image_url?: string | null
+          last_external_sync_at?: string | null
+          local_data_hash?: string | null
+          name: string
+          persona_tags?: string[] | null
+          primary_data_source?: string | null
+          product_url?: string | null
+          product_url_au?: string | null
+          product_url_ca?: string | null
+          product_url_eu?: string | null
+          product_url_jp?: string | null
+          product_url_uk?: string | null
+          published_at?: string | null
+          requires_manual_review?: boolean | null
+          sku?: string | null
+          slug?: string | null
+          specifications?: Json | null
+          subcategory?: string | null
+          sync_error_log?: string | null
+          sync_status?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_override_fields?: string[] | null
+          validated_by_user?: boolean | null
+          variant_available?: boolean | null
+          variant_compare_at_price?: number | null
+          variant_id?: string | null
+          variant_price?: number | null
+          variant_sku?: string | null
+          variant_title?: string | null
+        }
+        Update: {
+          amazon_link_au?: string | null
+          amazon_link_be?: string | null
+          amazon_link_ca?: string | null
+          amazon_link_de?: string | null
+          amazon_link_es?: string | null
+          amazon_link_fr?: string | null
+          amazon_link_it?: string | null
+          amazon_link_jp?: string | null
+          amazon_link_nl?: string | null
+          amazon_link_uk?: string | null
+          amazon_link_us?: string | null
+          brand?: string
+          category?: string
+          compatible_materials?: string[] | null
+          compatible_printers?: string[] | null
+          created_at?: string | null
+          data_confidence_score?: number | null
+          description?: string | null
+          external_data_hash?: string | null
+          external_sources?: Json | null
+          id?: string
+          image_url?: string | null
+          last_external_sync_at?: string | null
+          local_data_hash?: string | null
+          name?: string
+          persona_tags?: string[] | null
+          primary_data_source?: string | null
+          product_url?: string | null
+          product_url_au?: string | null
+          product_url_ca?: string | null
+          product_url_eu?: string | null
+          product_url_jp?: string | null
+          product_url_uk?: string | null
+          published_at?: string | null
+          requires_manual_review?: boolean | null
+          sku?: string | null
+          slug?: string | null
+          specifications?: Json | null
+          subcategory?: string | null
+          sync_error_log?: string | null
+          sync_status?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_override_fields?: string[] | null
+          validated_by_user?: boolean | null
+          variant_available?: boolean | null
+          variant_compare_at_price?: number | null
+          variant_id?: string | null
+          variant_price?: number | null
+          variant_sku?: string | null
+          variant_title?: string | null
+        }
+        Relationships: []
+      }
       accessory_price_history: {
         Row: {
           accessory_id: string | null
@@ -2680,6 +2842,7 @@ export type Database = {
       }
       filament_listings: {
         Row: {
+          accessory_id: string | null
           affiliate_url: string | null
           available: boolean | null
           compare_at_price: number | null
@@ -2693,6 +2856,8 @@ export type Database = {
           last_scraped_at: string | null
           price_confidence: string | null
           price_source: string | null
+          printer_id: string | null
+          product_type: string
           product_url: string
           region: string
           retailer_id: string
@@ -2704,6 +2869,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          accessory_id?: string | null
           affiliate_url?: string | null
           available?: boolean | null
           compare_at_price?: number | null
@@ -2717,6 +2883,8 @@ export type Database = {
           last_scraped_at?: string | null
           price_confidence?: string | null
           price_source?: string | null
+          printer_id?: string | null
+          product_type?: string
           product_url: string
           region?: string
           retailer_id: string
@@ -2728,6 +2896,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          accessory_id?: string | null
           affiliate_url?: string | null
           available?: boolean | null
           compare_at_price?: number | null
@@ -2741,6 +2910,8 @@ export type Database = {
           last_scraped_at?: string | null
           price_confidence?: string | null
           price_source?: string | null
+          printer_id?: string | null
+          product_type?: string
           product_url?: string
           region?: string
           retailer_id?: string
@@ -2752,6 +2923,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "filament_listings_accessory_id_fkey"
+            columns: ["accessory_id"]
+            isOneToOne: false
+            referencedRelation: "accessories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "filament_listings_filament_id_fkey"
             columns: ["filament_id"]
@@ -2799,6 +2977,20 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_listings_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_listings_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -4963,6 +5155,7 @@ export type Database = {
       }
       price_history: {
         Row: {
+          accessory_id: string | null
           available: boolean | null
           compare_at_price: number | null
           currency: string | null
@@ -4970,12 +5163,15 @@ export type Database = {
           id: string
           notes: string | null
           price: number
+          printer_id: string | null
+          product_type: string
           recorded_at: string | null
           region: string
           source: string | null
           variant_id: string | null
         }
         Insert: {
+          accessory_id?: string | null
           available?: boolean | null
           compare_at_price?: number | null
           currency?: string | null
@@ -4983,12 +5179,15 @@ export type Database = {
           id?: string
           notes?: string | null
           price: number
+          printer_id?: string | null
+          product_type?: string
           recorded_at?: string | null
           region: string
           source?: string | null
           variant_id?: string | null
         }
         Update: {
+          accessory_id?: string | null
           available?: boolean | null
           compare_at_price?: number | null
           currency?: string | null
@@ -4996,12 +5195,21 @@ export type Database = {
           id?: string
           notes?: string | null
           price?: number
+          printer_id?: string | null
+          product_type?: string
           recorded_at?: string | null
           region?: string
           source?: string | null
           variant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "price_history_accessory_id_fkey"
+            columns: ["accessory_id"]
+            isOneToOne: false
+            referencedRelation: "accessories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "price_history_filament_id_fkey"
             columns: ["filament_id"]
@@ -5049,6 +5257,20 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]
@@ -5729,6 +5951,17 @@ export type Database = {
           admin_notes: string | null
           ai_camera_features: string | null
           ai_spaghetti_detection: boolean | null
+          amazon_link_au: string | null
+          amazon_link_be: string | null
+          amazon_link_ca: string | null
+          amazon_link_de: string | null
+          amazon_link_es: string | null
+          amazon_link_fr: string | null
+          amazon_link_it: string | null
+          amazon_link_jp: string | null
+          amazon_link_nl: string | null
+          amazon_link_uk: string | null
+          amazon_link_us: string | null
           amazon_url_au: string | null
           amazon_url_ca: string | null
           amazon_url_de: string | null
@@ -5781,6 +6014,7 @@ export type Database = {
           data_source_priority: string | null
           data_source_urls: string | null
           default_plate_type: string | null
+          description: string | null
           discontinued: boolean | null
           discontinued_date: string | null
           display_name: string | null
@@ -5816,6 +6050,7 @@ export type Database = {
           hotend_material_composition: string | null
           hotend_type: string | null
           id: string
+          image_url: string | null
           input_shaping_supported: boolean | null
           internal_lighting: boolean | null
           last_sync_error: string | null
@@ -5883,6 +6118,13 @@ export type Database = {
           printer_id: string
           printer_profile_slug_in_slicers: string | null
           printer_technology: string | null
+          product_url: string | null
+          product_url_au: string | null
+          product_url_ca: string | null
+          product_url_eu: string | null
+          product_url_jp: string | null
+          product_url_uk: string | null
+          published_at: string | null
           quick_release_hotend: boolean | null
           rated_power_w: number | null
           rating_community_overall: number | null
@@ -5910,6 +6152,7 @@ export type Database = {
           screen_type: string | null
           series_id: string | null
           sku: string | null
+          slug: string | null
           smoke_sensor: boolean | null
           status: string | null
           stock_nozzle_diameter_mm: number | null
@@ -5918,6 +6161,7 @@ export type Database = {
           supported_plate_types: string | null
           sustained_nozzle_temp_c: number | null
           sync_enabled: boolean | null
+          tags: string[] | null
           target_user_segment: string | null
           temperature_sensors: string | null
           thermal_runaway_protection: boolean | null
@@ -5926,7 +6170,13 @@ export type Database = {
           typical_power_pla_w: number | null
           ui_language_options: string | null
           updated_at: string | null
+          variant_available: boolean | null
+          variant_compare_at_price: number | null
+          variant_id: string | null
           variant_or_bundle_name: string | null
+          variant_price: number | null
+          variant_sku: string | null
+          variant_title: string | null
           warranty_coverage: string | null
           warranty_years: number | null
           xy_positioning_accuracy_um: number | null
@@ -5940,6 +6190,17 @@ export type Database = {
           admin_notes?: string | null
           ai_camera_features?: string | null
           ai_spaghetti_detection?: boolean | null
+          amazon_link_au?: string | null
+          amazon_link_be?: string | null
+          amazon_link_ca?: string | null
+          amazon_link_de?: string | null
+          amazon_link_es?: string | null
+          amazon_link_fr?: string | null
+          amazon_link_it?: string | null
+          amazon_link_jp?: string | null
+          amazon_link_nl?: string | null
+          amazon_link_uk?: string | null
+          amazon_link_us?: string | null
           amazon_url_au?: string | null
           amazon_url_ca?: string | null
           amazon_url_de?: string | null
@@ -5992,6 +6253,7 @@ export type Database = {
           data_source_priority?: string | null
           data_source_urls?: string | null
           default_plate_type?: string | null
+          description?: string | null
           discontinued?: boolean | null
           discontinued_date?: string | null
           display_name?: string | null
@@ -6027,6 +6289,7 @@ export type Database = {
           hotend_material_composition?: string | null
           hotend_type?: string | null
           id?: string
+          image_url?: string | null
           input_shaping_supported?: boolean | null
           internal_lighting?: boolean | null
           last_sync_error?: string | null
@@ -6094,6 +6357,13 @@ export type Database = {
           printer_id: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
+          product_url?: string | null
+          product_url_au?: string | null
+          product_url_ca?: string | null
+          product_url_eu?: string | null
+          product_url_jp?: string | null
+          product_url_uk?: string | null
+          published_at?: string | null
           quick_release_hotend?: boolean | null
           rated_power_w?: number | null
           rating_community_overall?: number | null
@@ -6121,6 +6391,7 @@ export type Database = {
           screen_type?: string | null
           series_id?: string | null
           sku?: string | null
+          slug?: string | null
           smoke_sensor?: boolean | null
           status?: string | null
           stock_nozzle_diameter_mm?: number | null
@@ -6129,6 +6400,7 @@ export type Database = {
           supported_plate_types?: string | null
           sustained_nozzle_temp_c?: number | null
           sync_enabled?: boolean | null
+          tags?: string[] | null
           target_user_segment?: string | null
           temperature_sensors?: string | null
           thermal_runaway_protection?: boolean | null
@@ -6137,7 +6409,13 @@ export type Database = {
           typical_power_pla_w?: number | null
           ui_language_options?: string | null
           updated_at?: string | null
+          variant_available?: boolean | null
+          variant_compare_at_price?: number | null
+          variant_id?: string | null
           variant_or_bundle_name?: string | null
+          variant_price?: number | null
+          variant_sku?: string | null
+          variant_title?: string | null
           warranty_coverage?: string | null
           warranty_years?: number | null
           xy_positioning_accuracy_um?: number | null
@@ -6151,6 +6429,17 @@ export type Database = {
           admin_notes?: string | null
           ai_camera_features?: string | null
           ai_spaghetti_detection?: boolean | null
+          amazon_link_au?: string | null
+          amazon_link_be?: string | null
+          amazon_link_ca?: string | null
+          amazon_link_de?: string | null
+          amazon_link_es?: string | null
+          amazon_link_fr?: string | null
+          amazon_link_it?: string | null
+          amazon_link_jp?: string | null
+          amazon_link_nl?: string | null
+          amazon_link_uk?: string | null
+          amazon_link_us?: string | null
           amazon_url_au?: string | null
           amazon_url_ca?: string | null
           amazon_url_de?: string | null
@@ -6203,6 +6492,7 @@ export type Database = {
           data_source_priority?: string | null
           data_source_urls?: string | null
           default_plate_type?: string | null
+          description?: string | null
           discontinued?: boolean | null
           discontinued_date?: string | null
           display_name?: string | null
@@ -6238,6 +6528,7 @@ export type Database = {
           hotend_material_composition?: string | null
           hotend_type?: string | null
           id?: string
+          image_url?: string | null
           input_shaping_supported?: boolean | null
           internal_lighting?: boolean | null
           last_sync_error?: string | null
@@ -6305,6 +6596,13 @@ export type Database = {
           printer_id?: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
+          product_url?: string | null
+          product_url_au?: string | null
+          product_url_ca?: string | null
+          product_url_eu?: string | null
+          product_url_jp?: string | null
+          product_url_uk?: string | null
+          published_at?: string | null
           quick_release_hotend?: boolean | null
           rated_power_w?: number | null
           rating_community_overall?: number | null
@@ -6332,6 +6630,7 @@ export type Database = {
           screen_type?: string | null
           series_id?: string | null
           sku?: string | null
+          slug?: string | null
           smoke_sensor?: boolean | null
           status?: string | null
           stock_nozzle_diameter_mm?: number | null
@@ -6340,6 +6639,7 @@ export type Database = {
           supported_plate_types?: string | null
           sustained_nozzle_temp_c?: number | null
           sync_enabled?: boolean | null
+          tags?: string[] | null
           target_user_segment?: string | null
           temperature_sensors?: string | null
           thermal_runaway_protection?: boolean | null
@@ -6348,7 +6648,13 @@ export type Database = {
           typical_power_pla_w?: number | null
           ui_language_options?: string | null
           updated_at?: string | null
+          variant_available?: boolean | null
+          variant_compare_at_price?: number | null
+          variant_id?: string | null
           variant_or_bundle_name?: string | null
+          variant_price?: number | null
+          variant_sku?: string | null
+          variant_title?: string | null
           warranty_coverage?: string | null
           warranty_years?: number | null
           xy_positioning_accuracy_um?: number | null
