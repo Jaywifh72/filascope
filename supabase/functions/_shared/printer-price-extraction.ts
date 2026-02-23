@@ -625,11 +625,8 @@ function parseMarkdownPrices(
   config?: BrandSyncConfig
 ): ExtractionResult | null {
   // Strategy 1: Look for variant list pattern "- VariantName\n...\n$Price"
-  const variantBlockRegex = /^-\s+(.+?)$\s*(?:\n.*?)*?\n\$?([\d,]+(?:\.\d{1,2})?)/gm;
   const variants: NormalizedVariant[] = [];
-  let match;
 
-  // Reset regex
   const lines = markdown.split('\n');
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -688,7 +685,7 @@ function parseMarkdownPrices(
       const price = parseFloat(priceMatch[1].replace(/,/g, ''));
       if (!isNaN(price) && price >= 50) {
         // Check for compare-at price (second price on same line like "$399.00 USD$559.00 USD")
-        const allPrices = afterTitle.match(/\$?([\d,]+(?:\.\d{1,2})?)\s*(?:USD|CAD|GBP|EUR|AUD|JPY)?/g);
+        const allPrices = afterTitle.match(/[\$£€¥]([\d,]+(?:\.\d{1,2})?)\s*(?:USD|CAD|GBP|EUR|AUD|JPY)?/g);
         let compareAt: number | null = null;
         if (allPrices && allPrices.length >= 2) {
           const second = parseFloat(allPrices[1].replace(/[^0-9.]/g, ''));
@@ -709,6 +706,66 @@ function parseMarkdownPrices(
     }
   }
 
+  // Strategy 3: Inline sale/regular price pattern (FlashForge: "Sale price$299.00 USDRegular price$399.00 USD")
+  const inlineSaleMatch = markdown.match(/Sale\s*price\s*[\$£€¥]?([\d,]+(?:\.\d{1,2})?)\s*(?:USD|CAD|GBP|EUR|AUD|JPY)?.*?Regular\s*price\s*[\$£€¥]?([\d,]+(?:\.\d{1,2})?)/i);
+  if (inlineSaleMatch) {
+    const salePrice = parseFloat(inlineSaleMatch[1].replace(/,/g, ''));
+    const regularPrice = parseFloat(inlineSaleMatch[2].replace(/,/g, ''));
+    if (!isNaN(salePrice) && salePrice >= 50) {
+      return {
+        current_price: salePrice,
+        compare_at_price: !isNaN(regularPrice) && regularPrice > salePrice ? regularPrice : null,
+        currency: detectCurrencyFromMarkdown(markdown) || '',
+        variant_name: null,
+        extraction_method: 'meta_tags',
+        confidence: 'medium',
+        raw_variants_found: 1,
+        is_combo: false,
+        requires_review: false,
+      };
+    }
+  }
+
+  // Strategy 4: Strikethrough pattern (FLSUN: "~~$1,499.00~~\n$599.00")
+  const strikeMatch = markdown.match(/~~[\$£€¥]?([\d,]+(?:\.\d{1,2})?)~~[\s\S]{0,20}?[\$£€¥]([\d,]+(?:\.\d{1,2})?)/);
+  if (strikeMatch) {
+    const oldPrice = parseFloat(strikeMatch[1].replace(/,/g, ''));
+    const newPrice = parseFloat(strikeMatch[2].replace(/,/g, ''));
+    if (!isNaN(newPrice) && newPrice >= 50) {
+      return {
+        current_price: newPrice,
+        compare_at_price: !isNaN(oldPrice) && oldPrice > newPrice ? oldPrice : null,
+        currency: detectCurrencyFromMarkdown(markdown) || '',
+        variant_name: null,
+        extraction_method: 'meta_tags',
+        confidence: 'medium',
+        raw_variants_found: 1,
+        is_combo: false,
+        requires_review: false,
+      };
+    }
+  }
+
+  // Strategy 5: Any standalone price >= $50 in the first 1000 chars (last resort)
+  const firstChunk = markdown.substring(0, 1000);
+  const anyPriceMatch = firstChunk.match(/[\$£€¥]([\d,]+(?:\.\d{1,2})?)/);
+  if (anyPriceMatch) {
+    const price = parseFloat(anyPriceMatch[1].replace(/,/g, ''));
+    if (!isNaN(price) && price >= 50) {
+      return {
+        current_price: price,
+        compare_at_price: null,
+        currency: detectCurrencyFromMarkdown(markdown) || '',
+        variant_name: null,
+        extraction_method: 'meta_tags',
+        confidence: 'low',
+        raw_variants_found: 0,
+        is_combo: false,
+        requires_review: true, // low confidence, flag for review
+      };
+    }
+  }
+
   return null;
 }
 
@@ -726,12 +783,33 @@ function detectCurrencyFromMarkdown(md: string): string | null {
   return null;
 }
 const REGION_SPOOF_HEADERS: Record<string, Record<string, string>> = {
+  // Bambu Lab
   'us.store.bambulab.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
   'ca.store.bambulab.com': { 'Accept-Language': 'en-CA,en;q=0.9', 'CF-IPCountry': 'CA', 'X-Forwarded-For': '99.224.0.1' },
   'uk.store.bambulab.com': { 'Accept-Language': 'en-GB,en;q=0.9', 'CF-IPCountry': 'GB', 'X-Forwarded-For': '81.2.69.142' },
   'eu.store.bambulab.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
   'au.store.bambulab.com': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
   'jp.store.bambulab.com': { 'Accept-Language': 'ja-JP,ja;q=0.9', 'CF-IPCountry': 'JP', 'X-Forwarded-For': '126.0.0.1' },
+  // Elegoo
+  'us.elegoo.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  'ca.elegoo.com': { 'Accept-Language': 'en-CA,en;q=0.9', 'CF-IPCountry': 'CA', 'X-Forwarded-For': '99.224.0.1' },
+  'uk.elegoo.com': { 'Accept-Language': 'en-GB,en;q=0.9', 'CF-IPCountry': 'GB', 'X-Forwarded-For': '81.2.69.142' },
+  'eu.elegoo.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
+  'au.elegoo.com': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
+  // QIDI Tech
+  'us.qidi3d.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  'eu.qidi3d.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
+  // FLSUN
+  'us.store.flsun3d.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  // Snapmaker
+  'us.snapmaker.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  'eu.snapmaker.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
+  // FlashForge
+  'www.flashforge.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  'ca.flashforge.com': { 'Accept-Language': 'en-CA,en;q=0.9', 'CF-IPCountry': 'CA', 'X-Forwarded-For': '99.224.0.1' },
+  'eu.flashforge.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
+  'uk.flashforge.com': { 'Accept-Language': 'en-GB,en;q=0.9', 'CF-IPCountry': 'GB', 'X-Forwarded-For': '81.2.69.142' },
+  'au.flashforge.com': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
 };
 
 // Per-currency price validation ranges for printers
@@ -754,7 +832,7 @@ export function validatePrinterPrice(price: number, currency: string): boolean {
   return price >= range.min && price <= range.max;
 }
 
-// Map Bambu Lab store subdomains to region codes
+// Map store subdomains to region codes for geo-redirect detection
 const DOMAIN_REGION_MAP: Record<string, string> = {
   'us.store.bambulab.com': 'US',
   'ca.store.bambulab.com': 'CA',
@@ -762,6 +840,21 @@ const DOMAIN_REGION_MAP: Record<string, string> = {
   'eu.store.bambulab.com': 'EU',
   'au.store.bambulab.com': 'AU',
   'jp.store.bambulab.com': 'JP',
+  'us.elegoo.com': 'US',
+  'ca.elegoo.com': 'CA',
+  'uk.elegoo.com': 'UK',
+  'eu.elegoo.com': 'EU',
+  'au.elegoo.com': 'AU',
+  'us.qidi3d.com': 'US',
+  'eu.qidi3d.com': 'EU',
+  'us.store.flsun3d.com': 'US',
+  'us.snapmaker.com': 'US',
+  'eu.snapmaker.com': 'EU',
+  'www.flashforge.com': 'US',
+  'ca.flashforge.com': 'CA',
+  'eu.flashforge.com': 'EU',
+  'uk.flashforge.com': 'UK',
+  'au.flashforge.com': 'AU',
 };
 
 async function fetchHtml(url: string, targetRegion?: string): Promise<string | null> {
