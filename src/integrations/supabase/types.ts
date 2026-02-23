@@ -6218,6 +6218,7 @@ export type Database = {
           screen_type: string | null
           series_id: string | null
           series_name: string | null
+          shopify_variant_ids: Json | null
           sku: string | null
           slug: string | null
           smoke_sensor: boolean | null
@@ -6464,6 +6465,7 @@ export type Database = {
           screen_type?: string | null
           series_id?: string | null
           series_name?: string | null
+          shopify_variant_ids?: Json | null
           sku?: string | null
           slug?: string | null
           smoke_sensor?: boolean | null
@@ -6710,6 +6712,7 @@ export type Database = {
           screen_type?: string | null
           series_id?: string | null
           series_name?: string | null
+          shopify_variant_ids?: Json | null
           sku?: string | null
           slug?: string | null
           smoke_sensor?: boolean | null
