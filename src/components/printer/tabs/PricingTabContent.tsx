@@ -414,14 +414,12 @@ export function PricingTabContent({
             const msrp = regionData?.msrp;
             const hasRealData = salePrice != null || msrp != null;
             
-            // Fallback: convert USD MSRP if no real data
-            const estimatedFromUsd = !hasRealData && msrpUsd && regionCurrency !== 'USD'
-              ? msrpUsd * getConversionRate('USD', regionCurrency)
-              : null;
-            
-            const mainPrice = salePrice ?? msrp ?? estimatedFromUsd;
-            const isEstimate = !hasRealData && estimatedFromUsd !== null;
+            const mainPrice = salePrice ?? msrp;
             const hasSaleDiscount = salePrice != null && msrp != null && salePrice < msrp;
+
+            // Build regional store URL for "Check store" fallback
+            const regionUrlKey = regionCode === 'US' ? 'product_url' : `product_url_${regionCode.toLowerCase()}`;
+            const regionalStoreUrl = printer[regionUrlKey] || null;
 
             return (
               <div key={regionCode} className={cn(
@@ -438,14 +436,11 @@ export function PricingTabContent({
                     </Badge>
                   )}
                 </div>
-                {mainPrice != null ? (
+                {hasRealData && mainPrice != null ? (
                   <div>
                     {/* Main price (sale price if available) */}
-                    <div className={cn(
-                      "text-sm sm:text-lg font-bold",
-                      isEstimate ? "text-muted-foreground" : "text-foreground"
-                    )}>
-                      {isEstimate ? '~' : ''}{formatCurrencyPrice(mainPrice, regionCurrency)}
+                    <div className="text-sm sm:text-lg font-bold text-foreground">
+                      {formatCurrencyPrice(mainPrice, regionCurrency)}
                     </div>
                     {/* Strikethrough MSRP if sale price is lower */}
                     {hasSaleDiscount && (
@@ -453,17 +448,26 @@ export function PricingTabContent({
                         {formatCurrencyPrice(msrp!, regionCurrency)}
                       </div>
                     )}
-                    {/* Source label */}
                     <div className="text-[10px] mt-1">
-                      {isEstimate ? (
-                        <span className="text-muted-foreground/70">Converted from {formatCurrencyPrice(msrpUsd!, 'USD')}</span>
-                      ) : (
-                        <span className="text-green-500/80">Official store price</span>
-                      )}
+                      <span className="text-green-500/80">Official store price</span>
+                    </div>
+                  </div>
+                ) : regionalStoreUrl ? (
+                  <div>
+                    <a
+                      href={regionalStoreUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Check store <ExternalLink className="h-3 w-3" />
+                    </a>
+                    <div className="text-[10px] mt-1 text-muted-foreground/70">
+                      Price not yet verified
                     </div>
                   </div>
                 ) : (
-                  <div className="text-sm sm:text-lg text-muted-foreground/50 italic font-normal">
+                  <div className="text-sm text-muted-foreground/50 italic font-normal">
                     Not available
                   </div>
                 )}
