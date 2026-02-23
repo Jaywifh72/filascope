@@ -433,7 +433,8 @@ export async function extractPrice(
   url: string,
   region?: string,
   oldPrice?: number | null,
-  config?: BrandSyncConfig
+  config?: BrandSyncConfig,
+  expectedCurrency?: string
 ): Promise<ExtractionResult> {
   const primary = config?.primary_extraction ?? 'shopify_json';
   const fallback = config?.fallback_extraction ?? 'meta_tags';
@@ -494,21 +495,45 @@ export async function extractPrice(
           }
         }
         if (tier === 'meta_tags') {
+          // When we used Firecrawl HTML, meta_tags picks up the default variant (often Combo).
+          // Try Firecrawl markdown FIRST — it does proper variant selection.
+          if (usedFirecrawlHtml) {
+            console.log(`[Firecrawl-MD] Trying markdown extraction BEFORE meta_tags for ${url}`);
+            const mdResult = await extractPriceFromFirecrawlMarkdown(url, region, config);
+            if (mdResult?.current_price && mdResult.current_price > 0) {
+              // Currency mismatch check: Firecrawl may render from wrong country
+              if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
+                console.log(`[Firecrawl-MD] Currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Rejecting.`);
+              } else {
+                return applyAnomalyCheck(mdResult, oldPrice);
+              }
+            }
+            console.log(`[Firecrawl-MD] Markdown extraction failed, falling through to meta_tags`);
+          }
+          // Also check currency mismatch for meta_tags from Firecrawl HTML
           const result = extractFromMetaTags(html);
           if (result?.current_price && result.current_price > 0) {
-            return applyAnomalyCheck(result, oldPrice);
+            if (usedFirecrawlHtml && expectedCurrency && result.currency && result.currency !== expectedCurrency) {
+              console.log(`[Meta] Currency mismatch from Firecrawl HTML: got ${result.currency}, expected ${expectedCurrency}. Rejecting.`);
+            } else {
+              return applyAnomalyCheck(result, oldPrice);
+            }
           }
         }
       }
     }
   }
 
-  // Tier 4: Firecrawl Markdown extraction — always try if geo-blocked or if Firecrawl HTML didn't yield structured data
-  if (isGeoBlocked || usedFirecrawlHtml) {
-    console.log(`[Firecrawl-MD] Trying markdown extraction for ${url}`);
+  // Tier 4 fallback: Firecrawl Markdown extraction for geo-blocked sites where nothing else worked
+  if (isGeoBlocked && !usedFirecrawlHtml) {
+    console.log(`[Firecrawl-MD] Last resort markdown extraction for ${url}`);
     const mdResult = await extractPriceFromFirecrawlMarkdown(url, region, config);
     if (mdResult?.current_price && mdResult.current_price > 0) {
-      return applyAnomalyCheck(mdResult, oldPrice);
+      if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
+        console.log(`[Firecrawl-MD] Currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Rejecting.`);
+      } else {
+        return applyAnomalyCheck(mdResult, oldPrice);
+      }
     }
   }
 
@@ -533,9 +558,21 @@ async function extractPriceFromFirecrawlMarkdown(
   const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
   if (!apiKey) return null;
 
+  // Map region to Firecrawl location for geo-targeted rendering
+  const REGION_TO_LOCATION: Record<string, { country: string; languages: string[] }> = {
+    US: { country: 'US', languages: ['en-US'] },
+    CA: { country: 'CA', languages: ['en-CA'] },
+    UK: { country: 'GB', languages: ['en-GB'] },
+    EU: { country: 'DE', languages: ['de-DE', 'en'] },
+    AU: { country: 'AU', languages: ['en-AU'] },
+    JP: { country: 'JP', languages: ['ja-JP'] },
+  };
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    const locationParam = region ? REGION_TO_LOCATION[region] : undefined;
 
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -548,6 +585,7 @@ async function extractPriceFromFirecrawlMarkdown(
         formats: ['markdown'],
         waitFor: 3000,
         onlyMainContent: true,
+        ...(locationParam && { location: locationParam }),
       }),
       signal: controller.signal,
     });
@@ -595,15 +633,18 @@ function parseMarkdownPrices(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     // Check if line starts with "- " and looks like a variant name (not a feature bullet)
-    if (line.startsWith('- ') && line.length < 60 && !line.includes('Calibration') && !line.includes('Printing') && !line.includes('Nozzle') && !line.includes('Volume') && !line.includes('cable') && !line.includes('Shipping') && !line.includes('accessories')) {
+    if (line.startsWith('- ') && line.length < 60 && !line.includes('Calibration') && !line.includes('Printing') && !line.includes('Nozzle') && !line.includes('Volume') && !line.includes('cable') && !line.includes('Shipping') && !line.includes('accessories') && !line.includes('Learn more') && !line.includes('http')) {
       const variantName = line.substring(2).trim();
-      // Look for a price in the next few lines — require $ or currency symbol
-      for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
+      if (!variantName || variantName.length < 2) continue;
+      // Look for a price in the next 12 lines (Bambu Lab has ~6 blank lines between name and price)
+      for (let j = i + 1; j < Math.min(i + 12, lines.length); j++) {
         const priceLine = lines[j].trim();
+        // Stop if we hit another variant bullet
+        if (priceLine.startsWith('- ') && priceLine.length > 2) break;
         const priceMatch = priceLine.match(/^[\$£€¥]([\d,]+(?:\.\d{1,2})?)\s*(?:USD|CAD|GBP|EUR|AUD|JPY)?$/);
         if (priceMatch) {
           const price = parseFloat(priceMatch[1].replace(/,/g, ''));
-          if (!isNaN(price) && price >= 50) {  // Printers are always >= $50
+          if (!isNaN(price) && price >= 50) {
             variants.push({
               name: variantName,
               price,
