@@ -159,6 +159,13 @@ Deno.serve(async (req) => {
       // No config = use generic fallback (try all extraction tiers)
       const effectiveConfig: BrandSyncConfig | undefined = config || undefined;
 
+      // Skip printers with no URL or DISCONTINUED marker
+      if (!printer.product_url || printer.product_url === 'DISCONTINUED') {
+        totalSkipped++;
+        results.push({ printer: printer.model_name, brand: brandSlug, slug: null, skipped: true, reason: "No product URL or discontinued" });
+        continue;
+      }
+
       const slug = extractSlug(printer.product_url || "");
       if (!slug) {
         totalErrors++;
