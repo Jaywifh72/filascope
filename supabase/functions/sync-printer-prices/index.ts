@@ -14,6 +14,7 @@ const REGION_MAP = {
   UK: { urlCol: "product_url_uk", priceCol: "current_price_gbp_store", msrpCol: "msrp_gbp", currency: "GBP", configUrlCol: "store_url_uk" },
   EU: { urlCol: "product_url_eu", priceCol: "current_price_eur_store", msrpCol: "msrp_eur", currency: "EUR", configUrlCol: "store_url_eu" },
   AU: { urlCol: "product_url_au", priceCol: "current_price_aud_store", msrpCol: "msrp_aud", currency: "AUD", configUrlCol: "store_url_au" },
+  JP: { urlCol: "product_url_jp", priceCol: "current_price_jpy_store", msrpCol: "msrp_jpy", currency: "JPY", configUrlCol: "store_url_jp" },
 } as const;
 
 type RegionCode = keyof typeof REGION_MAP;
@@ -100,8 +101,8 @@ Deno.serve(async (req) => {
       .from("printers")
       .select(`
         id, model_name, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au,
-        current_price_usd_store, current_price_cad_store, current_price_eur_store, current_price_gbp_store, current_price_aud_store,
-        msrp_usd, msrp_cad, msrp_eur, msrp_gbp, msrp_aud,
+        current_price_usd_store, current_price_cad_store, current_price_eur_store, current_price_gbp_store, current_price_aud_store, current_price_jpy_store,
+        msrp_usd, msrp_cad, msrp_eur, msrp_gbp, msrp_aud, msrp_jpy, product_url_jp,
         shopify_variant_ids, price_extraction_method, price_confidence, price_requires_review,
         brand_id, status,
         printer_brands!inner ( id, brand )
@@ -173,7 +174,7 @@ Deno.serve(async (req) => {
       const regionsToSync: RegionCode[] = ["US"]; // Always sync US
       if (!config.uses_geo_pricing) {
         // Add regions that have a URL template in config OR a URL on the printer
-        for (const rc of ["CA", "UK", "EU", "AU"] as RegionCode[]) {
+        for (const rc of ["CA", "UK", "EU", "AU", "JP"] as RegionCode[]) {
           const regionMeta = REGION_MAP[rc];
           const configUrl = (config as any)[regionMeta.configUrlCol];
           const printerUrl = (printer as any)[regionMeta.urlCol];

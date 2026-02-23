@@ -1,0 +1,1 @@
+ALTER TABLE brand_sync_config ADD COLUMN store_url_jp TEXT;
