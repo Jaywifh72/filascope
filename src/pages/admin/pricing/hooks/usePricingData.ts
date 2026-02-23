@@ -191,9 +191,9 @@ export function usePricingData(productType: ProductType) {
         if (!item.product_url_eu && item.official_store_url_eu) item.product_url_eu = item.official_store_url_eu;
         if (!item.product_url_au && item.official_store_url_au) item.product_url_au = item.official_store_url_au;
         if (!item.product_url_jp && item.official_store_url_jp) item.product_url_jp = item.official_store_url_jp;
-        // If variant_price is null, fall back to current_price_usd_store or msrp_usd
-        if (item.variant_price == null) {
-          item.variant_price = item.current_price_usd_store ?? item.msrp_usd ?? null;
+        // If current_price_usd_store is null, fall back to variant_price or msrp_usd
+        if (item.current_price_usd_store == null) {
+          item.current_price_usd_store = item.variant_price ?? item.msrp_usd ?? null;
         }
       } else {
         groupKey = `${item.brand}::${item.name}`;

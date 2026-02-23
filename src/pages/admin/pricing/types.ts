@@ -66,7 +66,7 @@ export const PRODUCT_TYPE_CONFIGS: Record<ProductType, ProductTypeConfig> = {
       US: 'product_url', CA: 'product_url_ca', UK: 'product_url_uk',
       EU: 'product_url_eu', AU: 'product_url_au', JP: 'product_url_jp',
     },
-    priceField: 'variant_price',
+    priceField: 'current_price_usd_store',
     compareAtPriceField: 'variant_compare_at_price',
     hasColorSwatches: false,
     colorHexField: null,
@@ -115,7 +115,7 @@ export const FILAMENT_REGION_FIELD_MAP: { region: string; priceField: string; ur
 
 /** For printers: each region has its own price column */
 export const PRINTER_REGION_FIELD_MAP: { region: string; priceField: string; urlField: string }[] = [
-  { region: 'US', priceField: 'variant_price', urlField: 'product_url' },
+  { region: 'US', priceField: 'current_price_usd_store', urlField: 'product_url' },
   { region: 'CA', priceField: 'current_price_cad_store', urlField: 'product_url_ca' },
   { region: 'UK', priceField: 'current_price_gbp_store', urlField: 'product_url_uk' },
   { region: 'EU', priceField: 'current_price_eur_store', urlField: 'product_url_eu' },
