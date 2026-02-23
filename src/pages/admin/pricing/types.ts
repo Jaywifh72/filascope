@@ -72,7 +72,7 @@ export const PRODUCT_TYPE_CONFIGS: Record<ProductType, ProductTypeConfig> = {
     colorHexField: null,
     handleField: 'slug',
     groupByStrategy: 'brand_model',
-    selectColumns: 'id, brand_id, model_name, slug, variant_id, variant_title, variant_price, variant_compare_at_price, variant_available, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, image_url, published_at, updated_at, current_price_usd_store, current_price_usd_amazon, msrp_usd, printer_technology, is_discontinued, sku, series_name, product_page_url, official_product_url, official_store_url',
+    selectColumns: 'id, brand_id, model_name, slug, variant_id, variant_title, variant_price, variant_compare_at_price, variant_available, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, official_store_url, official_product_url, official_store_url_ca, official_store_url_eu, official_store_url_uk, official_store_url_au, official_store_url_jp, current_price_usd_store, current_price_cad_store, current_price_eur_store, current_price_gbp_store, current_price_aud_store, current_price_jpy_store, msrp_usd, image_url, updated_at, printer_technology, is_discontinued, sku, series_name',
     searchPlaceholder: 'Search by model, brand...',
   },
   accessory: {
@@ -113,7 +113,17 @@ export const FILAMENT_REGION_FIELD_MAP: { region: string; priceField: string; ur
   { region: 'JP', priceField: 'price_jpy', urlField: 'product_url_jp' },
 ];
 
-/** For printers/accessories: all regions use variant_price (no per-currency columns) */
+/** For printers: each region has its own price column */
+export const PRINTER_REGION_FIELD_MAP: { region: string; priceField: string; urlField: string }[] = [
+  { region: 'US', priceField: 'variant_price', urlField: 'product_url' },
+  { region: 'CA', priceField: 'current_price_cad_store', urlField: 'product_url_ca' },
+  { region: 'UK', priceField: 'current_price_gbp_store', urlField: 'product_url_uk' },
+  { region: 'EU', priceField: 'current_price_eur_store', urlField: 'product_url_eu' },
+  { region: 'AU', priceField: 'current_price_aud_store', urlField: 'product_url_au' },
+  { region: 'JP', priceField: 'current_price_jpy_store', urlField: 'product_url_jp' },
+];
+
+/** For accessories: all regions use variant_price (no per-currency columns) */
 export const GENERIC_REGION_FIELD_MAP: { region: string; priceField: string; urlField: string }[] = [
   { region: 'US', priceField: 'variant_price', urlField: 'product_url' },
   { region: 'CA', priceField: 'variant_price', urlField: 'product_url_ca' },
@@ -124,7 +134,9 @@ export const GENERIC_REGION_FIELD_MAP: { region: string; priceField: string; url
 ];
 
 export function getRegionFieldMap(productType: ProductType) {
-  return productType === 'filament' ? FILAMENT_REGION_FIELD_MAP : GENERIC_REGION_FIELD_MAP;
+  if (productType === 'filament') return FILAMENT_REGION_FIELD_MAP;
+  if (productType === 'printer') return PRINTER_REGION_FIELD_MAP;
+  return GENERIC_REGION_FIELD_MAP;
 }
 
 // =============================================

@@ -177,7 +177,7 @@ export function usePricingData(productType: ProductType) {
         if (!groupKey) continue;
       } else if (productType === 'printer') {
         const brandName = printerBrandsMap?.get(item.brand_id) || 'Unknown';
-        groupKey = `${item.brand_id}::${item.model_name}`;
+        groupKey = `${item.brand_id}::${item.model_name || item.variant_or_bundle_name || item.id}`;
         item._brandName = brandName;
 
         // Populate fallback fields for Pricing Data compatibility
@@ -185,6 +185,12 @@ export function usePricingData(productType: ProductType) {
         if (!item.product_url && (item.official_store_url || item.official_product_url)) {
           item.product_url = item.official_store_url || item.official_product_url;
         }
+        // Regional URL fallbacks to official_store_url_XX
+        if (!item.product_url_ca && item.official_store_url_ca) item.product_url_ca = item.official_store_url_ca;
+        if (!item.product_url_uk && item.official_store_url_uk) item.product_url_uk = item.official_store_url_uk;
+        if (!item.product_url_eu && item.official_store_url_eu) item.product_url_eu = item.official_store_url_eu;
+        if (!item.product_url_au && item.official_store_url_au) item.product_url_au = item.official_store_url_au;
+        if (!item.product_url_jp && item.official_store_url_jp) item.product_url_jp = item.official_store_url_jp;
         // If variant_price is null, fall back to current_price_usd_store or msrp_usd
         if (item.variant_price == null) {
           item.variant_price = item.current_price_usd_store ?? item.msrp_usd ?? null;
