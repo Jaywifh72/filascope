@@ -1,144 +1,150 @@
 
+# Fix Bambu Lab Printer Pricing: Root Cause Analysis and Repair Plan
 
-# Fix All Bambu Lab Printer Data: URLs, Prices, Sync Engine, and Display
+## Root Cause Analysis
 
-## Overview
-There are 4 interconnected bugs affecting all Bambu Lab printers. This plan addresses broken store URLs, wrong regional prices, sync engine extraction logic, and display component issues.
+After tracing through the database, price history, edge function logs, and admin UI code, I identified **5 interconnected bugs** that are corrupting printer pricing data:
 
----
+### Bug 1: Admin Pricing Dashboard Uses the Wrong Sync Engine for Printers
+**Location:** `src/pages/admin/pricing/hooks/usePricingActions.ts` (line 292)
 
-## Bug 1: Fix Store URLs in Database
+The "Sync" button on the admin pricing dashboard calls `get-current-price` -- a **filament price scraper** that uses Firecrawl markdown parsing. This function was never designed for printers and produces garbage results:
+- For the A1, it extracts **$160** (an accessory price on the page) instead of **$299** (the actual printer price)
+- The `price_history` table confirms: every `admin_refresh` entry for the A1 shows `price: 160.00` with `compare_at: 559`
 
-The `product_url` fields are already correct (e.g., `/products/a1`, not `/products/bambu-lab-a1`). However, several regional prices and discontinued printer URLs need cleanup.
+The correct function for printers is `sync-printer-prices`, which uses the JSON-LD extraction engine with variant selection logic.
 
-**Data updates** (via SQL UPDATE statements):
+### Bug 2: Geo-Redirect Corrupts All Non-US Regional Prices
+**Location:** `supabase/functions/_shared/printer-price-extraction.ts` (line 491-508)
 
-| Printer | What's Wrong Now | Correct Values |
-|---------|-----------------|----------------|
-| A1 Mini | CA price=150 (garbage), GBP price=299 (wrong) | CA=239, GBP=149 |
-| A1 | CA price=519 (strikethrough!), GBP=379 (wrong) | CA=339, GBP=209 |
-| P1S | CA=1367 (garbage), GBP=120 (garbage) | CA=499, GBP=339 |
-| P2S | CA=1049 (wrong) | CA=799 |
-| H2S | CA=1999 (wrong), GBP=1199 (wrong) | CA=1649, GBP=999 |
-| H2D | CA=330 (garbage!) | CA=2269, GBP=1449 |
-| H2C | All correct | No change |
-| X1E | All prices null | Set sync_status='reseller_only' |
-| P1P | Has stale regional prices | Null out all regional prices |
-| X1 Carbon | Has stale regional prices | Null out all regional prices |
+The edge function server is in **Canada**. When it fetches regional store URLs:
+- `uk.store.bambulab.com/products/a1` redirects (302) to `ca.store.bambulab.com/products/a1`
+- `au.store.bambulab.com/products/a1` redirects to `ca.store.bambulab.com/products/a1`
+- `jp.store.bambulab.com/products/a1` redirects to `ca.store.bambulab.com/products/a1`
 
-**For EU and AU**: Set `current_price_eur_store`, `msrp_eur`, `current_price_aud_store`, `msrp_aud` to NULL for all active Bambu Lab printers. These are currently showing garbage USD-converted values.
+The `fetchHtml()` function uses the default `redirect: 'follow'` behavior, silently following the redirect. It then extracts **CAD prices from the Canadian store** and stores them as GBP, AUD, or JPY values. This explains:
+- UK showing L379 (actually C$379 from CA store)
+- AU showing $210 (a random CAD variant price)
+- JP showing Y2,210 (a random CAD variant price)
 
-**For P1P and X1 Carbon**: Null out all regional price and URL fields since stores are removed.
+### Bug 3: USD Column Mapping Bug
+**Location:** `src/pages/admin/pricing/hooks/usePricingActions.ts` (line 388)
 
----
+```
+USD: 'variant_price'  // WRONG -- should be 'current_price_usd_store'
+```
 
-## Bug 2: Sync Engine -- Already Correct
+When the admin dashboard syncs a USD price for a printer, it writes to `variant_price` instead of `current_price_usd_store`. This means the main USD price column used by the display component never gets the synced value (which is already wrong from Bug 1, but it's still a mapping error).
 
-After reviewing `supabase/functions/_shared/printer-price-extraction.ts`, the extraction logic is already implemented correctly:
-- It handles `ProductGroup` with `hasVariant[]` (lines 250-280)
-- It uses `offers.price` as current price, `priceSpecification` as strikethrough (lines 307-343)
-- It filters combo variants via `selectBestVariant` (lines 72-128)
-- The `brand_sync_config` for Bambu Lab already sets `shopify_json_available = false` and `primary_extraction = 'json_ld'`
+### Bug 4: JP Region Missing from Sync Engine
+**Location:** `supabase/functions/sync-printer-prices/index.ts` (lines 11-17)
 
-No code changes needed in the extraction engine.
+The `REGION_MAP` in `sync-printer-prices` only has US, CA, UK, EU, AU. Japan is completely missing, so JP prices are never synced by the proper engine. The garbage JP values (Y2,210) came from the admin dashboard's `get-current-price` calls (Bug 1 + Bug 2).
 
----
-
-## Bug 3: Fix All Regional Prices via Data Update
-
-Run UPDATE statements for each Bambu Lab printer with verified prices:
-
-**A1 Mini** (`bambu-lab-a1-mini`):
-- US: $219 / MSRP $299
-- CA: C$239 / MSRP C$389
-- UK: L149 / MSRP L169
-- EU/AU: NULL (unverified)
-
-**A1** (`bambu-lab-a1`):
-- US: $299 / MSRP $399
-- CA: C$339 / MSRP C$519
-- UK: L209 / MSRP L259
-- EU/AU: NULL
-
-**P1S** (`bambu-lab-p1s`):
-- US: $399 / MSRP $699
-- CA: C$499 / MSRP C$899
-- UK: L339 / MSRP L429
-- EU/AU: NULL
-
-**P2S** (`bambu-lab-p2s`):
-- US: $549 / MSRP $549
-- CA: C$799 / MSRP C$799
-- UK: L479 / MSRP L479
-- EU/AU: NULL
-
-**H2S** (`bambu-lab-h2s`):
-- US: $1,249 / MSRP $1,249
-- CA: C$1,649 / MSRP C$1,649
-- UK: L999 / MSRP L999
-- EU/AU: NULL
-
-**H2D** (`bambu-lab-h2d`):
-- US: $1,749 / MSRP $1,999
-- CA: C$2,269 / MSRP C$2,599
-- UK: L1,449 / MSRP L1,599
-- EU/AU: NULL
-
-**H2C** (`bambu-lab-h2c`):
-- US: $2,399 / MSRP $2,399
-- CA: C$3,149 / MSRP C$3,149
-- UK: L1,999 / MSRP L1,999
-- EU/AU: NULL
-
-**X1E** (`bambu-lab-x1e`):
-- All prices: NULL
-- sync_status: 'reseller_only'
-- discontinued_note: 'Available exclusively through authorized resellers'
-
-**P1P** (`bambu-lab-p1p`):
-- All regional prices/URLs: NULL (already discontinued)
-
-**X1 Carbon** (`bambu-lab-x1-carbon`):
-- All regional prices/URLs: NULL (already discontinued)
-
-All active printers: set `last_synced_at = NOW()`, `sync_status = 'manual'`, `sync_method = 'manual'`
+### Bug 5: No Price Sanity Validation Per Currency
+There is no per-currency range check. A printer price of Y2,210 JPY (~$15 USD) should be immediately rejected as impossible, but it's accepted and stored.
 
 ---
 
-## Bug 4: Display Component Update
+## Repair Plan
 
-### File: `src/components/printer/tabs/PricingTabContent.tsx`
+### Step 1: Fix the Admin Pricing Dashboard's Printer Sync Path
+**File:** `src/pages/admin/pricing/hooks/usePricingActions.ts`
 
-**Price by Region section** (lines 400-473):
+For `productType === 'printer'`, change `syncSinglePrice` to call `sync-printer-prices` with `{ printer_id: store.representativeId }` instead of `get-current-price`. This routes all printer syncs through the proper JSON-LD extraction engine with variant filtering.
 
-Current behavior for regions with no data: falls back to converting USD MSRP, showing misleading "~" prices.
+Also fix the USD column mapping:
+```
+USD: 'current_price_usd_store'  // was 'variant_price'
+```
 
-Changes needed:
-1. When a region has `salePrice = null` AND `msrp = null` (EU, AU after our data fix), show "Check store" with a link to the regional store URL instead of a converted USD estimate
-2. Keep existing logic for regions with real data (sale price + strikethrough MSRP)
-3. Add a "Check regional store" link button for regions without verified prices
+### Step 2: Fix Geo-Redirect in the Extraction Engine
+**File:** `supabase/functions/_shared/printer-price-extraction.ts`
 
-The specific change is in the `mainPrice` fallback logic (line 422): instead of computing `estimatedFromUsd` when no real data exists, show a "Visit store" link using the printer's `product_url_eu` / `product_url_au` column.
+Modify `fetchHtml()` to:
+1. Set `redirect: 'manual'` to prevent auto-following redirects
+2. If a 3xx response is received, check if the redirect domain differs from the request domain
+3. If geo-redirected (e.g., `uk.store.bambulab.com` redirected to `ca.store.bambulab.com`), reject the response and return null
+4. Add region-spoofing headers: `Accept-Language`, `CF-IPCountry`, `X-Forwarded-For` with IP addresses appropriate for each region
+5. If spoofed headers still get redirected, fall back gracefully (log the error, don't store garbage)
 
-### Regional Stores section (lines 528-681):
+### Step 3: Add JP Region to Sync Engine
+**File:** `supabase/functions/sync-printer-prices/index.ts`
 
-This section uses `interpolateProductUrl` with `productSlug` to build URLs from `product_url_pattern`. For Bambu Lab, the `product_url` fields are already correct in the DB, so the "Where to Buy" section at line 317 correctly uses `regionalStoreUrl` from the `regionalPriceMap`.
+Add to `REGION_MAP`:
+```
+JP: { urlCol: "product_url_jp", priceCol: "current_price_jpy_store", msrpCol: "msrp_jpy", currency: "JPY", configUrlCol: "store_url_jp" }
+```
 
-No changes needed here -- the buy button already reads directly from `product_url_XX` columns.
+Also add `store_url_jp` to the `brand_sync_config` for Bambu Lab: `https://jp.store.bambulab.com/products/{slug}`
+
+### Step 4: Add Per-Currency Price Validation
+**File:** `supabase/functions/_shared/printer-price-extraction.ts`
+
+Add a validation function that rejects clearly impossible printer prices based on currency:
+
+```text
+Currency | Min  | Max
+---------|------|--------
+USD      | $50  | $15,000
+CAD      | $60  | $20,000
+GBP      | L40  | L12,000
+EUR      | E45  | E14,000
+AUD      | $70  | $22,000
+JPY      | Y5k  | Y2,000k
+```
+
+Any extraction outside these ranges gets rejected with `requires_review = true`.
+
+### Step 5: Manually Correct ALL Bambu Lab Prices (Data Fix)
+
+Set verified prices for all 10 Bambu Lab printers via SQL UPDATE. This time, also include AU and JP prices (user-verified) and protect against future overwrites by setting `sync_status = 'manual_verified'`.
+
+Verified prices to set:
+
+```text
+Printer     | USD    | CAD     | GBP     | EUR  | AUD    | JPY
+------------|--------|---------|---------|------|--------|--------
+A1 Mini     | $219   | C$239   | L149    | null | $429*  | Y72,800*
+A1          | $299   | C$339   | L209    | null | $429*  | Y72,800*
+P1S         | $399   | C$499   | L339    | null | null   | null
+P2S         | $549   | C$799   | L479    | null | null   | null
+H2S         | $1,249 | C$1,649 | L999    | null | null   | null
+H2D         | $1,749 | C$2,269 | L1,449  | null | null   | null
+H2C         | $2,399 | C$3,149 | L1,999  | null | null   | null
+X1E         | null   | null    | null    | null | null   | null
+P1P         | null   | null    | null    | null | null   | null
+X1 Carbon   | null   | null    | null    | null | null   | null
+```
+
+*AU and JP: User reported A1 should be $429 AUD and Y72,800 JPY. These need verification for other models -- set to null for unverified ones.
+
+EU and AU/JP for most models: Set to null, display "Check store" link.
+
+### Step 6: Add Overwrite Protection
+**File:** `src/pages/admin/pricing/hooks/usePricingActions.ts`
+
+Before auto-syncing a printer price, check if `sync_status === 'manual_verified'`. If so, show a confirmation dialog warning that manually verified prices will be overwritten, requiring explicit admin approval.
 
 ---
 
 ## Technical Details
 
 ### Files Modified
-1. `src/components/printer/tabs/PricingTabContent.tsx` -- Update "Price by Region" section to show "Check store" for unverified regions instead of fake conversions
+1. `src/pages/admin/pricing/hooks/usePricingActions.ts` -- Route printer syncs to `sync-printer-prices`, fix USD column mapping, add overwrite protection
+2. `supabase/functions/_shared/printer-price-extraction.ts` -- Fix geo-redirect in `fetchHtml()`, add per-currency price range validation
+3. `supabase/functions/sync-printer-prices/index.ts` -- Add JP to REGION_MAP
 
 ### Data Updates (via database tool)
-- 10 UPDATE statements for Bambu Lab printers (7 active + X1E + P1P + X1 Carbon)
+- 10 SQL UPDATE statements for all Bambu Lab printers with verified prices
+- UPDATE `brand_sync_config` to add `store_url_jp` for Bambu Lab
 
-### No Changes Needed
-- `supabase/functions/_shared/printer-price-extraction.ts` -- extraction logic already correct
-- `supabase/functions/sync-printer-prices/index.ts` -- orchestrator already correct
-- `src/components/printer/CTAButtons.tsx` -- already uses URL from props, not auto-generated
-- Store URLs in DB are already correct (short slugs like `/products/a1`)
-
+### Verification Checklist
+After implementation:
+1. Check `/printers/bambu-lab-a1` -- US=$299, CA=C$339, UK=L209, EU="Check store", AU=$429, JP=Y72,800
+2. Check `/printers/bambu-lab-p1s` -- US=$399, CA=C$499, UK=L339
+3. Check `/printers/bambu-lab-h2c` -- US=$2,399, UK=L1,999
+4. Admin pricing dashboard "Sync" button for printers calls `sync-printer-prices` not `get-current-price`
+5. Syncing a UK printer URL does NOT get geo-redirected prices
+6. JPY prices in the thousands are rejected (should be tens of thousands for printers)
+7. X1E shows "Reseller Only" with no price
