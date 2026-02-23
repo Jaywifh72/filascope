@@ -1,116 +1,131 @@
 
-# Printer URL Health Validation System
+# Bambu Lab Printer Price Resync System
 
 ## Overview
-Build a dedicated URL health monitoring system for printer store URLs, extending the existing filament link health infrastructure. This includes a new database table, a new edge function, and a new admin page.
+Automated Shopify-based price syncing for Bambu Lab printers across all regional stores (US, CA, EU, UK, AU), with an admin dashboard for monitoring and manual triggers.
 
-## Existing Infrastructure (What We Build On)
-- **validate-product-links** edge function: Already validates filament listing URLs with HEAD requests, redirect following, and break-type classification. We'll follow the same patterns.
-- **validate-url** edge function + regional-fetch shared module: Provides geo-redirect bypass with region-appropriate headers. We'll reuse this.
-- **AdminLinkHealth page** (/admin/link-health): Existing broken link dashboard for filaments. The new printer URL health page will follow a similar design but be printer-focused.
-- **UrlHealthTab component**: Simpler URL validation UI using the `url_validation_cache` table. We can cross-reference this cache.
-- Printers have 6 URL columns: `product_url`, `product_url_ca`, `product_url_uk`, `product_url_eu`, `product_url_au`, `product_url_jp`.
+## What Gets Built
 
-## Changes
+### 1. Edge Function: `resync-bambu-prices`
+Fetches live pricing from Bambu Lab's Shopify stores and updates the database.
 
-### 1. Database: New `printer_url_validations` Table
-Create a table to store per-printer, per-region URL validation results:
+**How it works:**
+- Queries all non-discontinued Bambu Lab printers from the database
+- Extracts the product slug from each `product_url` (e.g., `a1-mini` from `us.store.bambulab.com/products/a1-mini`)
+- For each regional store (US, CA, EU, UK, AU), fetches `{region}.store.bambulab.com/products/{slug}.json`
+- Parses the Shopify product JSON to find the base variant (cheapest variant, or first variant whose title does NOT contain "Combo")
+- Updates `current_price_X_store` with the variant price and `msrp_X` with `compare_at_price` (or the variant price if no compare_at)
+- Stores the Shopify `variant_id` on the printer row for future tracking
+- Logs every price change to the `price_history` table with `product_type = 'printer'`
+- Handles 404s gracefully (logs a warning, does not crash)
+- Flags price changes exceeding 20% as anomalies in the response
 
-- `id` (uuid, PK)
-- `printer_id` (uuid, FK to printers)
-- `region` (text) -- US, CA, UK, EU, AU, JP
-- `url` (text)
-- `status_code` (integer, nullable)
-- `status` (text) -- valid, invalid, redirect, unknown
-- `redirect_url` (text, nullable)
-- `error_message` (text, nullable)
-- `price_found` (numeric, nullable) -- price extracted from store page
-- `price_in_db` (numeric, nullable) -- price in our DB at check time
-- `price_mismatch` (boolean, default false)
-- `validated_at` (timestamptz)
-- Unique constraint on (printer_id, region)
+**Regional store mapping:**
+```text
+Region | Store Domain                    | Price Column              | MSRP Column
+-------|---------------------------------|--------------------------|------------
+US     | us.store.bambulab.com           | current_price_usd_store   | msrp_usd
+CA     | ca.store.bambulab.com           | current_price_cad_store   | msrp_cad
+EU     | eu.store.bambulab.com           | current_price_eur_store   | msrp_eur
+UK     | uk.store.bambulab.com           | current_price_gbp_store   | msrp_gbp
+AU     | au.store.bambulab.com           | current_price_aud_store   | msrp_aud
+```
 
-RLS: Admin-only read/write via `has_role(auth.uid(), 'admin')`.
+**Variant matching logic:**
+- Get all variants from the Shopify product JSON
+- Filter out variants with titles containing "Combo", "Bundle", "AMS"
+- Take the cheapest remaining variant (the standalone printer)
+- Store its `variant_id` for consistent future syncs
 
-### 2. Edge Function: `validate-printer-urls`
-New edge function that:
+### 2. Database Changes
+- Add `shopify_variant_id` column (text) to `printers` table to track the matched Shopify variant per region
+  - Actually, since variant IDs may differ per region, we'll store a JSONB column: `shopify_variant_ids` mapping region to variant ID
+- No other schema changes needed -- all price columns and `price_history` support already exist
 
-- Accepts `{ printerId?: string, region?: string }` (omit printerId for batch "all")
-- Queries printers table for all non-null URL columns
-- For each printer+region combo, performs a HEAD request using the existing `regional-fetch` module
-- For Shopify-hosted stores (Bambu Lab, Anycubic, etc.), also fetches `{url}.json` to extract the current price from the Shopify product JSON
-- Classifies results: 200 = valid, 301/302 = redirect (stores redirect_url), 404/410 = invalid
-- Compares extracted price against database values; flags price mismatches (>5% difference)
-- Upserts results into `printer_url_validations` table
-- Returns a summary (total checked, broken count, redirects, price mismatches)
+### 3. Admin Page: `/admin/price-sync`
+A monitoring dashboard showing:
 
-Uses the existing `_shared/regional-fetch.ts` module for geo-redirect bypass.
+**Summary section:**
+- Last sync timestamp (from most recent `price_history` entry with source = 'bambu-resync')
+- Number of prices updated in last sync
+- Error count
 
-### 3. Admin Page: `/admin/printer-url-health`
-New page with the following sections:
+**Brand sync table:**
+- Row per brand (starting with Bambu Lab, extensible)
+- Columns: Brand, Last Synced, Prices Updated, Errors, Status
+- "Sync Now" button per brand
 
-**Summary Cards:**
-- Total URLs tracked (across all printers x regions)
-- Valid (green), Broken (red), Redirects (yellow), Unchecked (grey), Price Mismatches (orange)
+**Diff view (collapsible per sync run):**
+- Table showing: Printer, Region, Old Price, New Price, Change %, Status
+- Color coding: green for small changes, orange for >10%, red for >20%
+- 404 errors shown in red
 
-**Filters:**
-- Status filter (All / Valid / Broken / Redirect / Unchecked / Price Mismatch)
-- Region filter (All / US / CA / UK / EU / AU / JP)
-- Brand filter
-- Search by printer name
-
-**Main Table:**
-- Columns: Printer Name, Brand, then one sub-column per region (US, CA, UK, EU, AU, JP)
-- Each region cell shows a colored dot: green (200), yellow (301), red (404), grey (never checked)
-- Hovering on a dot shows the URL + last validated time
-- If a redirect was detected, show the redirect URL
-- If a price mismatch was found, show an orange warning icon with the DB vs store price
-
-**Actions:**
-- "Validate All" button -- triggers batch validation for all printers
-- Per-printer "Validate" button -- validates all regions for that printer
-- Per-printer "Fix URLs" button -- opens an inline edit form for all 6 regional URL columns
-- Bulk URL template: input pattern like `{region}.store.bambulab.com/products/{slug}` to auto-generate regional URLs for a selected brand
-
-**Price Mismatch Section:**
-- Collapsible section showing all printers where extracted store price differs from DB by >5%
-- Shows: Printer, Region, DB Price, Store Price, Difference %
-- "Accept Store Price" button to update the DB value
-
-### 4. Route & Navigation
-- Add route `/admin/printer-url-health` in App.tsx
-- Add sidebar entry under the existing admin nav, near "Link Health"
+### 4. Route and Navigation
+- New route `/admin/price-sync` in App.tsx
+- New sidebar entry "Price Sync" under Operations group
 
 ## Technical Details
 
 ### Files Created
-1. **`supabase/functions/validate-printer-urls/index.ts`** -- Edge function for printer URL validation with Shopify price extraction
-2. **`src/pages/admin/PrinterUrlHealth.tsx`** -- Admin page component
-3. **Database migration** -- `printer_url_validations` table with RLS policies
+1. **`supabase/functions/resync-bambu-prices/index.ts`** -- Edge function
+2. **`src/pages/admin/PriceSync.tsx`** -- Admin monitoring page
 
 ### Files Modified
-1. **`src/App.tsx`** -- Add route for `/admin/printer-url-health`
-2. **`src/components/admin/AdminSidebar.tsx`** -- Add "Printer URL Health" nav item
-3. **`supabase/config.toml`** -- will auto-update for new edge function (no manual edit needed)
+1. **`src/App.tsx`** -- Add lazy import and route
+2. **`src/components/admin/AdminSidebar.tsx`** -- Add nav item
 
-### Edge Function: Price Extraction Strategy
-For Shopify stores (Bambu Lab, Anycubic, Creality, etc.):
-1. Fetch `{product_url}.json` -- returns Shopify product JSON with `variants[0].price`
-2. Compare against the appropriate DB column based on region (e.g., `current_price_cad_store` for CA)
+### Database Migration
+- Add `shopify_variant_ids JSONB DEFAULT '{}'` to `printers` table (stores `{"US": "variant_123", "CA": "variant_456", ...}`)
 
-For non-Shopify stores:
-1. Fetch the page HTML
-2. Look for JSON-LD `Product` schema with `offers.price`
-3. Fall back to Open Graph `product:price:amount` meta tag
+### Edge Function Details
 
-### Region-to-Column Mapping in Edge Function
-```text
-Region | URL Column      | Price Column               | MSRP Column
--------|-----------------|---------------------------|------------
-US     | product_url     | current_price_usd_store    | msrp_usd
-CA     | product_url_ca  | current_price_cad_store    | msrp_cad
-UK     | product_url_uk  | current_price_gbp_store    | msrp_gbp
-EU     | product_url_eu  | current_price_eur_store    | msrp_eur
-AU     | product_url_au  | current_price_aud_store    | msrp_aud
-JP     | product_url_jp  | current_price_jpy_store    | msrp_jpy
+The function accepts:
+```json
+{ "brand": "bambu-lab" }
 ```
+
+It returns:
+```json
+{
+  "success": true,
+  "brand": "bambu-lab",
+  "timestamp": "2026-02-23T...",
+  "results": [
+    {
+      "printer": "P1S",
+      "slug": "p1s",
+      "regions": {
+        "US": { "oldPrice": 399, "newPrice": 399, "msrp": 699, "status": "unchanged" },
+        "CA": { "oldPrice": 499, "newPrice": 479, "msrp": 899, "status": "updated" }
+      }
+    }
+  ],
+  "summary": {
+    "printersChecked": 8,
+    "pricesUpdated": 3,
+    "errors": 0,
+    "anomalies": 0
+  }
+}
+```
+
+Authentication: Validates admin JWT or service_role key (dual-auth pattern for manual + CRON).
+
+### Admin Page Design
+
+The page uses the existing `AdminLayout` wrapper and follows existing admin page patterns:
+- Summary cards at top (Total Brands, Last Sync, Prices Updated, Errors)
+- Brand table with sync controls
+- Expandable diff view showing what changed in the last sync
+- Results are fetched from `price_history` table filtered by `source = 'bambu-resync'`
+
+### CRON Setup (Post-Deploy)
+After deployment, a CRON job can be configured to run weekly:
+```sql
+SELECT cron.schedule(
+  'resync-bambu-prices-weekly',
+  '0 6 * * 1',  -- Every Monday at 6am UTC
+  $$ SELECT net.http_post(...) $$
+);
+```
+This will be set up via the insert tool after the edge function is deployed.
