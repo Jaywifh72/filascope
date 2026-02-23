@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { extractPrice, type ExtractionResult } from "../_shared/printer-price-extraction.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,53 +15,18 @@ const REGIONS = [
   { code: "AU", domain: "au.store.bambulab.com", priceCol: "current_price_aud_store", msrpCol: "msrp_aud", currency: "AUD" },
 ] as const;
 
-interface ShopifyVariant {
-  id: number;
-  title: string;
-  price: string;
-  compare_at_price: string | null;
-  available: boolean;
-}
-
-interface ShopifyProduct {
-  product: {
-    title: string;
-    variants: ShopifyVariant[];
-  };
-}
-
 function extractSlug(productUrl: string): string | null {
   try {
     const url = new URL(productUrl);
     const parts = url.pathname.split("/").filter(Boolean);
-    // Expected: /products/{slug}
     const prodIdx = parts.indexOf("products");
     if (prodIdx >= 0 && parts[prodIdx + 1]) {
       return parts[prodIdx + 1];
     }
-    // Fallback: last path segment
     return parts[parts.length - 1] || null;
   } catch {
     return null;
   }
-}
-
-function findBaseVariant(variants: ShopifyVariant[]): ShopifyVariant | null {
-  // Filter out combo/bundle/AMS variants
-  const excluded = /combo|bundle|ams/i;
-  const baseVariants = variants.filter((v) => !excluded.test(v.title));
-
-  if (baseVariants.length === 0) {
-    // If all variants match exclusion, fall back to cheapest overall
-    return variants.reduce((min, v) =>
-      parseFloat(v.price) < parseFloat(min.price) ? v : min
-    , variants[0]) || null;
-  }
-
-  // Return the cheapest base variant
-  return baseVariants.reduce((min, v) =>
-    parseFloat(v.price) < parseFloat(min.price) ? v : min
-  , baseVariants[0]);
 }
 
 Deno.serve(async (req) => {
@@ -86,7 +52,6 @@ Deno.serve(async (req) => {
       });
       const { data } = await userClient.auth.getClaims(token);
       if (data?.claims?.sub) {
-        // Check admin role
         const { data: roleData } = await userClient
           .from("user_roles")
           .select("role")
@@ -104,7 +69,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Get Bambu Lab brand ID
@@ -124,7 +88,7 @@ Deno.serve(async (req) => {
     // Get all active Bambu Lab printers
     const { data: printers, error: printersError } = await supabase
       .from("printers")
-      .select("id, model_name, product_url, current_price_usd_store, current_price_cad_store, current_price_eur_store, current_price_gbp_store, current_price_aud_store, msrp_usd, msrp_cad, msrp_eur, msrp_gbp, msrp_aud, shopify_variant_ids")
+      .select("id, model_name, product_url, current_price_usd_store, current_price_cad_store, current_price_eur_store, current_price_gbp_store, current_price_aud_store, msrp_usd, msrp_cad, msrp_eur, msrp_gbp, msrp_aud, shopify_variant_ids, price_extraction_method, price_confidence, price_requires_review")
       .eq("brand_id", brand.id)
       .neq("status", "discontinued");
 
@@ -155,47 +119,39 @@ Deno.serve(async (req) => {
       const priceUpdates: Record<string, any> = {};
       const currentVariantIds = (printer.shopify_variant_ids as Record<string, string>) || {};
       const newVariantIds = { ...currentVariantIds };
+      let lastExtractionMethod: string | null = null;
+      let lastConfidence: string | null = null;
+      let requiresReview = false;
 
       for (const region of REGIONS) {
-        const shopifyUrl = `https://${region.domain}/products/${slug}.json`;
+        const productUrl = `https://${region.domain}/products/${slug}`;
+        const oldPrice = (printer as any)[region.priceCol] as number | null;
 
         try {
-          const resp = await fetch(shopifyUrl, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (compatible; FilaScope/1.0)",
-              Accept: "application/json",
-            },
-          });
+          // Use the shared 3-tier extraction engine
+          const extraction: ExtractionResult = await extractPrice(
+            productUrl,
+            region.code,
+            oldPrice
+          );
 
-          if (resp.status === 404) {
-            regionResults[region.code] = { status: "not_found", error: "Product not found (404)" };
+          lastExtractionMethod = extraction.extraction_method;
+          lastConfidence = extraction.confidence;
+
+          // If extraction returned no price, don't overwrite existing
+          if (!extraction.current_price || extraction.current_price <= 0) {
+            regionResults[region.code] = {
+              status: extraction.extraction_method === 'manual' ? 'extraction_failed' : 'not_found',
+              error: 'No valid price extracted',
+              extraction_method: extraction.extraction_method,
+            };
             totalErrors++;
             continue;
           }
 
-          if (!resp.ok) {
-            const text = await resp.text();
-            regionResults[region.code] = { status: "error", error: `HTTP ${resp.status}: ${text.slice(0, 200)}` };
-            totalErrors++;
-            continue;
-          }
-
-          const data: ShopifyProduct = await resp.json();
-          const variant = findBaseVariant(data.product.variants);
-
-          if (!variant) {
-            regionResults[region.code] = { status: "error", error: "No suitable variant found" };
-            totalErrors++;
-            continue;
-          }
-
-          const newPrice = parseFloat(variant.price);
-          const compareAt = variant.compare_at_price ? parseFloat(variant.compare_at_price) : null;
+          const newPrice = extraction.current_price;
+          const compareAt = extraction.compare_at_price;
           const msrp = compareAt || newPrice;
-          const oldPrice = (printer as any)[region.priceCol] as number | null;
-
-          // Store variant ID for future tracking
-          newVariantIds[region.code] = String(variant.id);
 
           // Determine status
           let status = "unchanged";
@@ -205,33 +161,36 @@ Deno.serve(async (req) => {
             status = "updated";
           }
 
-          // Check for anomalous price changes (>20%)
+          // Check for anomalous price changes
           let isAnomaly = false;
-          if (oldPrice && oldPrice > 0 && status === "updated") {
-            const changePercent = Math.abs((newPrice - oldPrice) / oldPrice) * 100;
-            if (changePercent > 20) {
-              isAnomaly = true;
-              totalAnomalies++;
-            }
+          if (extraction.requires_review) {
+            isAnomaly = true;
+            requiresReview = true;
+            totalAnomalies++;
           }
 
           regionResults[region.code] = {
             oldPrice: oldPrice ?? null,
             newPrice,
             msrp,
-            variantId: variant.id,
-            variantTitle: variant.title,
+            variantName: extraction.variant_name,
             status,
             isAnomaly,
+            extraction_method: extraction.extraction_method,
+            confidence: extraction.confidence,
+            is_combo: extraction.is_combo,
+            raw_variants_found: extraction.raw_variants_found,
           };
 
-          // Build update object for this region
-          if (status !== "unchanged") {
+          // Only auto-update if confidence is not 'low' (>40% anomaly)
+          if (status !== "unchanged" && !extraction.requires_review) {
             priceUpdates[region.priceCol] = newPrice;
             priceUpdates[region.msrpCol] = msrp;
             totalUpdated++;
+          }
 
-            // Log to price_history
+          // Always log to price_history (even anomalies, for audit)
+          if (status !== "unchanged") {
             await supabase.from("price_history").insert({
               printer_id: printer.id,
               product_type: "printer",
@@ -240,8 +199,13 @@ Deno.serve(async (req) => {
               region: region.code,
               currency: region.currency,
               source: "bambu-resync",
-              notes: `Auto-synced from Shopify. Variant: ${variant.title} (${variant.id})`,
+              notes: `Method: ${extraction.extraction_method}, Variant: ${extraction.variant_name || 'N/A'}, Confidence: ${extraction.confidence}${extraction.is_combo ? ' [COMBO]' : ''}${extraction.requires_review ? ' [REVIEW NEEDED]' : ''}`,
             });
+          }
+
+          // Track variant ID if from Shopify JSON
+          if (extraction.extraction_method === 'shopify_json' && extraction.variant_name) {
+            newVariantIds[region.code] = extraction.variant_name;
           }
         } catch (err) {
           regionResults[region.code] = {
@@ -252,12 +216,15 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Apply price updates if any
+      // Apply price updates if any (never overwrite with null)
       if (Object.keys(priceUpdates).length > 0) {
-        const updatePayload = {
+        const updatePayload: Record<string, any> = {
           ...priceUpdates,
           shopify_variant_ids: newVariantIds,
           prices_last_updated_at: timestamp,
+          price_extraction_method: lastExtractionMethod,
+          price_confidence: lastConfidence,
+          price_requires_review: requiresReview,
         };
 
         const { error: updateError } = await supabase
@@ -268,11 +235,19 @@ Deno.serve(async (req) => {
         if (updateError) {
           console.error(`Failed to update printer ${printer.model_name}: ${updateError.message}`);
         }
-      } else if (JSON.stringify(newVariantIds) !== JSON.stringify(currentVariantIds)) {
-        // Update variant IDs even if prices didn't change
+      } else {
+        // Update metadata even if prices unchanged
+        const metaUpdate: Record<string, any> = {
+          price_extraction_method: lastExtractionMethod,
+          price_confidence: lastConfidence,
+          price_requires_review: requiresReview,
+        };
+        if (JSON.stringify(newVariantIds) !== JSON.stringify(currentVariantIds)) {
+          metaUpdate.shopify_variant_ids = newVariantIds;
+        }
         await supabase
           .from("printers")
-          .update({ shopify_variant_ids: newVariantIds })
+          .update(metaUpdate)
           .eq("id", printer.id);
       }
 

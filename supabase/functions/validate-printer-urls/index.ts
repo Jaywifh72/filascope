@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { fetchRegionalStore, getRegionHeaders } from "../_shared/regional-fetch.ts";
+import { fetchRegionalStore } from "../_shared/regional-fetch.ts";
+import { extractPrice, type ExtractionResult } from "../_shared/printer-price-extraction.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,84 +18,6 @@ const REGION_MAP: Record<string, { urlCol: string; priceCol: string }> = {
 
 const REGIONS = Object.keys(REGION_MAP);
 
-// Known Shopify store domains
-const SHOPIFY_DOMAINS = [
-  'store.bambulab.com', 'bambulab.com',
-  'anycubic.com', 'ca.anycubic.com', 'eu.anycubic.com',
-  'store.creality.com', 'creality.com',
-  'flashforge.com',
-  'elegoo.com',
-  'qidi3d.com',
-];
-
-function isShopifyDomain(url: string): boolean {
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-    return SHOPIFY_DOMAINS.some(d => hostname.includes(d));
-  } catch {
-    return false;
-  }
-}
-
-async function extractShopifyPrice(url: string, region: string): Promise<number | null> {
-  try {
-    // Try .json endpoint
-    const jsonUrl = url.replace(/\/?$/, '.json');
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
-    const resp = await fetch(jsonUrl, {
-      headers: getRegionHeaders(region),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    
-    if (resp.status === 200) {
-      const data = await resp.json();
-      const price = data?.product?.variants?.[0]?.price;
-      if (price) return parseFloat(price);
-    } else {
-      await resp.text().catch(() => {});
-    }
-  } catch (e) {
-    console.error(`Shopify price extraction failed for ${url}:`, e);
-  }
-  return null;
-}
-
-async function extractHtmlPrice(url: string, region: string): Promise<number | null> {
-  try {
-    const result = await fetchRegionalStore(url, region, { method: 'GET', timeoutMs: 12000 });
-    if (!result.response || result.response.status !== 200) return null;
-    
-    const html = await result.response.text();
-    
-    // Try JSON-LD
-    const jsonLdMatch = html.match(/<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
-    if (jsonLdMatch) {
-      for (const match of jsonLdMatch) {
-        try {
-          const content = match.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '');
-          const parsed = JSON.parse(content);
-          const product = parsed?.['@type'] === 'Product' ? parsed : 
-            Array.isArray(parsed?.['@graph']) ? parsed['@graph'].find((i: Record<string, string>) => i['@type'] === 'Product') : null;
-          if (product?.offers) {
-            const price = product.offers.price || product.offers?.lowPrice;
-            if (price) return parseFloat(price);
-          }
-        } catch { /* continue */ }
-      }
-    }
-    
-    // Try OG meta
-    const ogMatch = html.match(/<meta[^>]*property\s*=\s*["']product:price:amount["'][^>]*content\s*=\s*["']([^"']+)["']/i);
-    if (ogMatch?.[1]) return parseFloat(ogMatch[1]);
-  } catch (e) {
-    console.error(`HTML price extraction failed for ${url}:`, e);
-  }
-  return null;
-}
-
 interface ValidationResult {
   printer_id: string;
   region: string;
@@ -106,6 +29,7 @@ interface ValidationResult {
   price_found: number | null;
   price_in_db: number | null;
   price_mismatch: boolean;
+  extraction_method: string | null;
   validated_at: string;
 }
 
@@ -133,14 +57,13 @@ async function validateSingleUrl(
       status = 'invalid';
     }
     
-    // Extract price if URL is valid
+    // Extract price using shared 3-tier engine
     let priceFound: number | null = null;
+    let extractionMethod: string | null = null;
     if (status === 'valid') {
-      if (isShopifyDomain(url)) {
-        priceFound = await extractShopifyPrice(url, region);
-      } else {
-        priceFound = await extractHtmlPrice(url, region);
-      }
+      const extraction: ExtractionResult = await extractPrice(url, region, priceInDb);
+      priceFound = extraction.current_price;
+      extractionMethod = extraction.extraction_method;
     }
     
     // Check price mismatch (>5% difference)
@@ -161,6 +84,7 @@ async function validateSingleUrl(
       price_found: priceFound,
       price_in_db: priceInDb,
       price_mismatch: priceMismatch,
+      extraction_method: extractionMethod,
       validated_at: now,
     };
   } catch (err) {
@@ -175,6 +99,7 @@ async function validateSingleUrl(
       price_found: null,
       price_in_db: priceInDb,
       price_mismatch: false,
+      extraction_method: null,
       validated_at: now,
     };
   }
@@ -192,7 +117,6 @@ Deno.serve(async (req) => {
 
     const { printerId, region } = await req.json().catch(() => ({}));
 
-    // Build query for printers
     let query = supabase.from('printers').select(`
       id, model_name, brand_id, slug,
       product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp,
@@ -234,7 +158,6 @@ Deno.serve(async (req) => {
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
 
-      // Small delay between batches
       if (i + 3 < printers.length) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
@@ -251,7 +174,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Summary
     const summary = {
       total: results.length,
       valid: results.filter(r => r.status === 'valid').length,
