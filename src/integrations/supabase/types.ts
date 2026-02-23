@@ -6176,6 +6176,8 @@ export type Database = {
           power_supply_type: string | null
           pressure_advance_supported: boolean | null
           price_confidence: string | null
+          price_extraction_method: string | null
+          price_requires_review: boolean | null
           price_source: string | null
           price_tier: string | null
           prices_last_updated_at: string | null
@@ -6423,6 +6425,8 @@ export type Database = {
           power_supply_type?: string | null
           pressure_advance_supported?: boolean | null
           price_confidence?: string | null
+          price_extraction_method?: string | null
+          price_requires_review?: boolean | null
           price_source?: string | null
           price_tier?: string | null
           prices_last_updated_at?: string | null
@@ -6670,6 +6674,8 @@ export type Database = {
           power_supply_type?: string | null
           pressure_advance_supported?: boolean | null
           price_confidence?: string | null
+          price_extraction_method?: string | null
+          price_requires_review?: boolean | null
           price_source?: string | null
           price_tier?: string | null
           prices_last_updated_at?: string | null
