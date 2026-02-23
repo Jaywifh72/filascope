@@ -10,7 +10,7 @@ export interface ExtractionResult {
   compare_at_price: number | null;
   currency: string;
   variant_name: string | null;
-  extraction_method: 'shopify_json' | 'json_ld_product' | 'json_ld_product_group' | 'meta_tags' | 'manual';
+  extraction_method: 'shopify_json' | 'json_ld_product' | 'json_ld_product_group' | 'meta_tags' | 'manual' | 'geo_blocked';
   confidence: 'high' | 'medium' | 'low';
   raw_variants_found: number;
   is_combo: boolean;
@@ -467,7 +467,14 @@ export async function extractPrice(
     if (tier === 'json_ld' || tier === 'meta_tags') {
       // Fetch HTML once, reuse for both JSON-LD and meta tags
       if (html === null) {
-        html = await fetchHtml(url);
+        html = await fetchHtml(url, region);
+        // If fetchHtml returned null and this is a known geo-redirect domain, return geo_blocked
+        if (html === null) {
+          const domain = new URL(url).hostname;
+          if (REGION_SPOOF_HEADERS[domain]) {
+            return geoBlockedFallback();
+          }
+        }
       }
       if (html) {
         if (tier === 'json_ld') {
@@ -519,7 +526,17 @@ export function validatePrinterPrice(price: number, currency: string): boolean {
   return price >= range.min && price <= range.max;
 }
 
-async function fetchHtml(url: string): Promise<string | null> {
+// Map Bambu Lab store subdomains to region codes
+const DOMAIN_REGION_MAP: Record<string, string> = {
+  'us.store.bambulab.com': 'US',
+  'ca.store.bambulab.com': 'CA',
+  'uk.store.bambulab.com': 'UK',
+  'eu.store.bambulab.com': 'EU',
+  'au.store.bambulab.com': 'AU',
+  'jp.store.bambulab.com': 'JP',
+};
+
+async function fetchHtml(url: string, targetRegion?: string): Promise<string | null> {
   try {
     const requestDomain = new URL(url).hostname;
     const spoofHeaders = REGION_SPOOF_HEADERS[requestDomain] || {};
@@ -546,11 +563,33 @@ async function fetchHtml(url: string): Promise<string | null> {
         try {
           const redirectDomain = new URL(location, url).hostname;
           if (redirectDomain !== requestDomain) {
-            console.error(`Geo-redirect detected: ${requestDomain} → ${redirectDomain}. Rejecting to prevent price corruption.`);
+            // Check if the redirect destination matches our target region
+            const redirectRegion = DOMAIN_REGION_MAP[redirectDomain];
+            if (targetRegion && redirectRegion && redirectRegion === targetRegion) {
+              // Redirect goes to the correct region — follow it
+              console.log(`Geo-redirect ${requestDomain} → ${redirectDomain} matches target region ${targetRegion}, following.`);
+              await resp.text().catch(() => {});
+              const controller3 = new AbortController();
+              const timeoutId3 = setTimeout(() => controller3.abort(), 10000);
+              const resp3 = await fetch(location, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Accept': 'text/html,application/xhtml+xml',
+                },
+                signal: controller3.signal,
+              });
+              clearTimeout(timeoutId3);
+              if (resp3.ok) return await resp3.text();
+              await resp3.text().catch(() => {});
+              return null;
+            }
+            // Redirect goes to wrong region — reject gracefully
+            console.log(`Geo-redirect ${requestDomain} → ${redirectDomain} (target: ${targetRegion || 'none'}). Skipping — server location blocked.`);
             await resp.text().catch(() => {});
             return null;
           }
           // Same-domain redirect, follow it
+          await resp.text().catch(() => {});
           const controller2 = new AbortController();
           const timeoutId2 = setTimeout(() => controller2.abort(), 10000);
           const resp2 = await fetch(location, {
@@ -590,6 +629,20 @@ function manualFallback(): ExtractionResult {
     raw_variants_found: 0,
     is_combo: false,
     requires_review: true,
+  };
+}
+
+function geoBlockedFallback(): ExtractionResult {
+  return {
+    current_price: null,
+    compare_at_price: null,
+    currency: '',
+    variant_name: null,
+    extraction_method: 'geo_blocked',
+    confidence: 'low',
+    raw_variants_found: 0,
+    is_combo: false,
+    requires_review: false,
   };
 }
 

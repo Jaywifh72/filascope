@@ -219,6 +219,15 @@ Deno.serve(async (req) => {
           lastConfidence = extraction.confidence;
 
           if (!extraction.current_price || extraction.current_price <= 0) {
+            if (extraction.extraction_method === "geo_blocked") {
+              regionResults[regionCode] = {
+                status: "geo_blocked",
+                error: "Server location blocked by store geo-fencing",
+                extraction_method: extraction.extraction_method,
+              };
+              // Not counted as error — graceful skip
+              continue;
+            }
             regionResults[regionCode] = {
               status: extraction.extraction_method === "manual" ? "extraction_failed" : "not_found",
               error: "No valid price extracted",

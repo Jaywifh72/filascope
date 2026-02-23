@@ -347,9 +347,12 @@ export function usePricingActions(
         } else {
           const status = regionData?.status || 'not_found';
           const errorMsg = regionData?.error || `No price found for ${store.region}`;
-          const result: SyncResult = { status: status === 'skipped' ? 'unavailable' : 'failed', error: errorMsg };
+          const isGeoBlocked = status === 'geo_blocked';
+          const isSkipped = status === 'skipped';
+          const result: SyncResult = { status: (isGeoBlocked || isSkipped) ? 'unavailable' : 'failed', error: errorMsg };
           setSyncResults(prev => new Map(prev).set(store.storeKey, result));
-          if (showToast) toast.error(`✗ ${errorMsg}`);
+          if (isGeoBlocked) toast.info(`ℹ️ ${store.region}: ${errorMsg}`);
+          else if (showToast) toast.error(`✗ ${errorMsg}`);
           return result;
         }
       }
