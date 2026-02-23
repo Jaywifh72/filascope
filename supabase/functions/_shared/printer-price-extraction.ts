@@ -524,8 +524,9 @@ export async function extractPrice(
     }
   }
 
-  // Tier 4 fallback: Firecrawl Markdown extraction for geo-blocked sites where nothing else worked
-  if (isGeoBlocked && !usedFirecrawlHtml) {
+  // Tier 4 fallback: Firecrawl Markdown extraction — works for ALL sites as last resort
+  const shouldTryFirecrawlMd = !usedFirecrawlHtml; // Haven't already tried it inline
+  if (shouldTryFirecrawlMd) {
     console.log(`[Firecrawl-MD] Last resort markdown extraction for ${url}`);
     const mdResult = await extractPriceFromFirecrawlMarkdown(url, region, config);
     if (mdResult?.current_price && mdResult.current_price > 0) {

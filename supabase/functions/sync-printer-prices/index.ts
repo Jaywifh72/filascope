@@ -149,19 +149,15 @@ Deno.serve(async (req) => {
       const brandSlug = slugify(brandName);
       const config = configByBrandId.get(brandSlug);
 
-      // If no config exists, skip
-      if (!config) {
-        totalSkipped++;
-        results.push({ printer: printer.model_name, brand: brandSlug, slug: null, skipped: true, reason: "No brand_sync_config entry" });
-        continue;
-      }
-
       // If manual_only, skip
-      if (config.primary_extraction === "manual_only") {
+      if (config?.primary_extraction === "manual_only") {
         totalManualOnly++;
         results.push({ printer: printer.model_name, brand: brandSlug, slug: null, skipped: true, reason: "manual_only" });
         continue;
       }
+
+      // No config = use generic fallback (try all extraction tiers)
+      const effectiveConfig: BrandSyncConfig | undefined = config || undefined;
 
       const slug = extractSlug(printer.product_url || "");
       if (!slug) {
@@ -172,11 +168,11 @@ Deno.serve(async (req) => {
 
       // Determine which regions to sync
       const regionsToSync: RegionCode[] = ["US"]; // Always sync US
-      if (!config.uses_geo_pricing) {
+      if (!effectiveConfig?.uses_geo_pricing) {
         // Add regions that have a URL template in config OR a URL on the printer
         for (const rc of ["CA", "UK", "EU", "AU", "JP"] as RegionCode[]) {
           const regionMeta = REGION_MAP[rc];
-          const configUrl = (config as any)[regionMeta.configUrlCol];
+          const configUrl = effectiveConfig ? (effectiveConfig as any)[regionMeta.configUrlCol] : null;
           const printerUrl = (printer as any)[regionMeta.urlCol];
           if (configUrl || printerUrl) {
             regionsToSync.push(rc);
@@ -195,7 +191,7 @@ Deno.serve(async (req) => {
 
         // Build URL: config template > printer's own URL column > fallback
         let productUrl: string | null = null;
-        const configTemplate = (config as any)[regionMeta.configUrlCol] as string | null;
+        const configTemplate = effectiveConfig ? (effectiveConfig as any)[regionMeta.configUrlCol] as string | null : null;
         if (configTemplate && configTemplate.includes("{slug}")) {
           productUrl = configTemplate.replace("{slug}", slug);
         } else if (regionCode === "US" && printer.product_url) {
@@ -213,7 +209,7 @@ Deno.serve(async (req) => {
         const oldPrice = (printer as any)[regionMeta.priceCol] as number | null;
 
         try {
-          const extraction: ExtractionResult = await extractPrice(productUrl, regionCode, oldPrice, config, regionMeta.currency);
+          const extraction: ExtractionResult = await extractPrice(productUrl, regionCode, oldPrice, effectiveConfig, regionMeta.currency);
 
           lastExtractionMethod = extraction.extraction_method;
           lastConfidence = extraction.confidence;
@@ -268,8 +264,8 @@ Deno.serve(async (req) => {
             raw_variants_found: extraction.raw_variants_found,
           };
 
-          // Only auto-update if not flagged for review
-          if (status !== "unchanged" && !extraction.requires_review) {
+          // Always save new prices — anomalous ones are flagged for review but still written
+          if (status !== "unchanged") {
             priceUpdates[regionMeta.priceCol] = newPrice;
             priceUpdates[regionMeta.msrpCol] = msrp;
             totalUpdated++;
