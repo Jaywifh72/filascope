@@ -134,6 +134,7 @@ const navGroups: NavGroup[] = [
       { title: 'Affiliates', href: '/old-admin/affiliates', icon: DollarSign },
       { title: 'Affiliate Hub', href: '/admin/affiliate-hub', icon: Handshake },
       { title: 'Link Health', href: '/admin/link-health', icon: Link2Off },
+      { title: 'Printer URL Health', href: '/admin/printer-url-health', icon: Printer },
       { title: 'Maintenance', href: '/old-admin/maintenance', icon: AlertTriangle },
       { title: 'Site Settings', href: '/old-admin/site-settings', icon: Settings },
       { title: 'Docs', href: '/old-admin/docs', icon: BookOpen },

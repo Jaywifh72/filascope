@@ -5943,6 +5943,66 @@ export type Database = {
           },
         ]
       }
+      printer_url_validations: {
+        Row: {
+          error_message: string | null
+          id: string
+          price_found: number | null
+          price_in_db: number | null
+          price_mismatch: boolean
+          printer_id: string
+          redirect_url: string | null
+          region: string
+          status: string
+          status_code: number | null
+          url: string
+          validated_at: string
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          price_found?: number | null
+          price_in_db?: number | null
+          price_mismatch?: boolean
+          printer_id: string
+          redirect_url?: string | null
+          region: string
+          status?: string
+          status_code?: number | null
+          url: string
+          validated_at?: string
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          price_found?: number | null
+          price_in_db?: number | null
+          price_mismatch?: boolean
+          printer_id?: string
+          redirect_url?: string | null
+          region?: string
+          status?: string
+          status_code?: number | null
+          url?: string
+          validated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_url_validations_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_url_validations_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printers: {
         Row: {
           abl_technique: string | null
