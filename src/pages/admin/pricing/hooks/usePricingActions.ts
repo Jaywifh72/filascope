@@ -314,6 +314,16 @@ export function usePricingActions(
 
         // Extract the result for this specific region from the sync response
         const printerResult = syncData.results?.[0];
+
+        // Handle manual_only / skipped printers gracefully (not a failure)
+        if (printerResult?.skipped) {
+          const reason = printerResult.reason || 'skipped';
+          const result: SyncResult = { status: 'unchanged', error: reason === 'manual_only' ? 'Manual-only brand (prices managed manually)' : reason };
+          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+          if (showToast) toast.info(`ℹ️ ${result.error}`);
+          return result;
+        }
+
         const regionData = printerResult?.regions?.[store.region];
         const newPrice = regionData?.newPrice;
 
