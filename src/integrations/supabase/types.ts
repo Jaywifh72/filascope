@@ -6079,8 +6079,11 @@ export type Database = {
           max_travel_speed_xy_mms: number | null
           model_name: string
           motion_system_notes: string | null
+          msrp_aud: number | null
           msrp_cad: number | null
           msrp_eur: number | null
+          msrp_gbp: number | null
+          msrp_jpy: number | null
           msrp_usd: number | null
           multi_material_drying_capability: boolean | null
           multi_material_limitations_notes: string | null
@@ -6321,8 +6324,11 @@ export type Database = {
           max_travel_speed_xy_mms?: number | null
           model_name: string
           motion_system_notes?: string | null
+          msrp_aud?: number | null
           msrp_cad?: number | null
           msrp_eur?: number | null
+          msrp_gbp?: number | null
+          msrp_jpy?: number | null
           msrp_usd?: number | null
           multi_material_drying_capability?: boolean | null
           multi_material_limitations_notes?: string | null
@@ -6563,8 +6569,11 @@ export type Database = {
           max_travel_speed_xy_mms?: number | null
           model_name?: string
           motion_system_notes?: string | null
+          msrp_aud?: number | null
           msrp_cad?: number | null
           msrp_eur?: number | null
+          msrp_gbp?: number | null
+          msrp_jpy?: number | null
           msrp_usd?: number | null
           multi_material_drying_capability?: boolean | null
           multi_material_limitations_notes?: string | null

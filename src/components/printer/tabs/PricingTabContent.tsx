@@ -144,10 +144,27 @@ export function PricingTabContent({
 
   const hasAnyAmazonLink = printer.amazon_link_us || printer.amazon_link_uk || printer.amazon_link_de;
 
+  // Region-to-column mapping for regional store prices
+  const regionalPriceMap: Record<string, { salePrice: number | null; msrp: number | null; currency: CurrencyCode; url: string | null }> = {
+    US: { salePrice: printer.current_price_usd_store, msrp: printer.msrp_usd, currency: 'USD', url: printer.product_url || printer.official_store_url },
+    CA: { salePrice: (printer as any).current_price_cad_store, msrp: (printer as any).msrp_cad, currency: 'CAD', url: (printer as any).product_url_ca },
+    EU: { salePrice: (printer as any).current_price_eur_store, msrp: (printer as any).msrp_eur, currency: 'EUR', url: (printer as any).product_url_eu },
+    UK: { salePrice: (printer as any).current_price_gbp_store, msrp: (printer as any).msrp_gbp, currency: 'GBP', url: (printer as any).product_url_uk },
+    AU: { salePrice: (printer as any).current_price_aud_store, msrp: (printer as any).msrp_aud, currency: 'AUD', url: (printer as any).product_url_au },
+    JP: { salePrice: (printer as any).current_price_jpy_store, msrp: (printer as any).msrp_jpy, currency: 'JPY', url: (printer as any).product_url_jp },
+  };
+
+  // Get the user's regional store price for the Store card and Buy button
+  const userRegionalData = regionalPriceMap[region] || regionalPriceMap['US'];
+  const regionalStorePrice = userRegionalData?.salePrice;
+  const regionalStoreCurrency = userRegionalData?.currency || 'USD';
+  const regionalStoreUrl = userRegionalData?.url;
+
   // Detect potentially unconverted store prices (store price equals MSRP exactly)
-  const storePrice = printer.current_price_usd_store;
+  const storePrice = regionalStorePrice ?? printer.current_price_usd_store;
+  const storePriceCurrency = regionalStorePrice != null ? regionalStoreCurrency : 'USD' as CurrencyCode;
   const msrpUsd = printer.msrp_usd;
-  const storePriceSuspect = storePrice && msrpUsd && storePrice === msrpUsd;
+  const storePriceSuspect = storePrice && userRegionalData?.msrp && storePrice === userRegionalData.msrp && regionalStoreCurrency !== 'USD';
 
   return (
     <div className="tab-content">
@@ -208,18 +225,21 @@ export function PricingTabContent({
 
           {/* Price Sources Grid - Responsive: always show USD source prices with conversion */}
           <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:w-[400px]">
-            {/* Store Price Card */}
+            {/* Store Price Card - shows regional price based on user region */}
             <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
               <Store className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground mx-auto mb-2 sm:mb-3" />
-              <div className="text-xs sm:text-sm text-muted-foreground mb-1">Store</div>
+              <div className="text-xs sm:text-sm text-muted-foreground mb-1">
+                {region !== 'US' ? `${REGIONS[region]?.flag || ''} Store` : 'Store'}
+              </div>
               {storePrice ? (
                 <div>
                   <div className="text-sm sm:text-lg font-bold text-foreground">
-                    {formatCurrencyPrice(storePrice, 'USD')}
+                    {formatCurrencyPrice(storePrice, storePriceCurrency)}
                   </div>
-                  {!isUserCurrencyUsd && (
+                  {/* Show USD equivalent if showing non-USD regional price */}
+                  {storePriceCurrency !== 'USD' && printer.current_price_usd_store && (
                     <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
-                      {formatUsdAsUserCurrency(storePrice)}
+                      {formatCurrencyPrice(printer.current_price_usd_store, 'USD')} USD
                     </div>
                   )}
                   {storePriceSuspect && (
@@ -292,28 +312,32 @@ export function PricingTabContent({
       <section className="section-card">
         <SectionHeader icon={ShoppingCart} title="Where to Buy" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {/* Official Store - Primary CTA */}
-          {printer.official_store_url ? (
-            <a 
-              href={getAffiliateUrl(printer.official_store_url, brand) || printer.official_store_url}
-              target="_blank" 
-              rel="nofollow sponsored noopener noreferrer"
-              className="block"
-            >
-              <Button size="lg" className="w-full h-auto py-5 gap-4 text-base">
-                <Store className="h-5 w-5" />
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold">Official {brand || 'Store'}</span>
-                  <span className="text-xs opacity-80">Best warranty & support</span>
-                </div>
-                <ExternalLink className="h-4 w-4 ml-auto" />
-              </Button>
-            </a>
-          ) : (
-            <div className="flex items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-xl">
-              <span className="text-sm text-muted-foreground">No official store link</span>
-            </div>
-          )}
+          {/* Official Store - Primary CTA (regional URL based on user region) */}
+          {(() => {
+            const buyUrl = regionalStoreUrl || printer.official_store_url;
+            const regionLabel = region !== 'US' ? ` ${REGIONS[region]?.flag || ''}` : '';
+            return buyUrl ? (
+              <a 
+                href={getAffiliateUrl(buyUrl, brand) || buyUrl}
+                target="_blank" 
+                rel="nofollow sponsored noopener noreferrer"
+                className="block"
+              >
+                <Button size="lg" className="w-full h-auto py-5 gap-4 text-base">
+                  <Store className="h-5 w-5" />
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">Official {brand || 'Store'}{regionLabel}</span>
+                    <span className="text-xs opacity-80">Best warranty & support</span>
+                  </div>
+                  <ExternalLink className="h-4 w-4 ml-auto" />
+                </Button>
+              </a>
+            ) : (
+              <div className="flex items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-xl">
+                <span className="text-sm text-muted-foreground">No official store link</span>
+              </div>
+            );
+          })()}
 
           {/* Amazon - Secondary CTA */}
           {hasAnyAmazonLink ? (
@@ -373,71 +397,74 @@ export function PricingTabContent({
         )}
       </section>
 
-      {/* Price by Region - uses actual MSRP columns with proper formatting */}
+      {/* Price by Region - shows actual regional store prices with MSRP */}
       <section className="section-card">
-        <SectionHeader icon={Globe} title="Price by Region (MSRP)" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+        <SectionHeader icon={Globe} title="Price by Region" />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
           {([
-            { regionCode: 'US', label: '🇺🇸 USD', msrp: printer.msrp_usd, currency: 'USD' as CurrencyCode },
-            { regionCode: 'CA', label: '🇨🇦 CAD', msrp: printer.msrp_cad, currency: 'CAD' as CurrencyCode },
-            { regionCode: 'EU', label: '🇪🇺 EUR', msrp: printer.msrp_eur, currency: 'EUR' as CurrencyCode },
-            { regionCode: 'UK', label: '🇬🇧 GBP', msrp: printer.msrp_gbp, currency: 'GBP' as CurrencyCode },
-          ]).map(({ regionCode, label, msrp, currency: regionCurrency }) => {
-            // If MSRP exists for this region, show it in native currency
-            // If not, convert from USD as an estimate
-            const hasNativeMsrp = msrp !== null && msrp !== undefined;
-            const estimatedFromUsd = !hasNativeMsrp && msrpUsd && regionCurrency !== 'USD'
+            { regionCode: 'US', label: '🇺🇸 US', currency: 'USD' as CurrencyCode },
+            { regionCode: 'CA', label: '🇨🇦 CA', currency: 'CAD' as CurrencyCode },
+            { regionCode: 'EU', label: '🇪🇺 EU', currency: 'EUR' as CurrencyCode },
+            { regionCode: 'UK', label: '🇬🇧 UK', currency: 'GBP' as CurrencyCode },
+            { regionCode: 'AU', label: '🇦🇺 AU', currency: 'AUD' as CurrencyCode },
+            { regionCode: 'JP', label: '🇯🇵 JP', currency: 'JPY' as CurrencyCode },
+          ]).map(({ regionCode, label, currency: regionCurrency }) => {
+            const regionData = regionalPriceMap[regionCode];
+            const salePrice = regionData?.salePrice;
+            const msrp = regionData?.msrp;
+            const hasRealData = salePrice != null || msrp != null;
+            
+            // Fallback: convert USD MSRP if no real data
+            const estimatedFromUsd = !hasRealData && msrpUsd && regionCurrency !== 'USD'
               ? msrpUsd * getConversionRate('USD', regionCurrency)
               : null;
             
-            // Check: if regional MSRP equals USD MSRP exactly, it's likely unconverted data
-            const suspectSameAsUsd = hasNativeMsrp && msrpUsd && regionCurrency !== 'USD' && msrp === msrpUsd;
-            
-            const priceValue = hasNativeMsrp ? msrp : estimatedFromUsd;
-            const isEstimate = !hasNativeMsrp && estimatedFromUsd !== null;
+            const mainPrice = salePrice ?? msrp ?? estimatedFromUsd;
+            const isEstimate = !hasRealData && estimatedFromUsd !== null;
+            const hasSaleDiscount = salePrice != null && msrp != null && salePrice < msrp;
 
             return (
               <div key={regionCode} className={cn(
-                "p-3 sm:p-6 rounded-xl border",
+                "p-3 sm:p-5 rounded-xl border",
                 region === regionCode 
                   ? "bg-primary/10 border-primary/30" 
                   : "bg-muted/30 border-border/40"
               )}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs sm:text-sm text-muted-foreground">{label}</span>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">{label}</span>
                   {region === regionCode && (
                     <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
                       Your Region
                     </Badge>
                   )}
                 </div>
-                {priceValue ? (
+                {mainPrice != null ? (
                   <div>
+                    {/* Main price (sale price if available) */}
                     <div className={cn(
                       "text-sm sm:text-lg font-bold",
-                      isEstimate || suspectSameAsUsd ? "text-muted-foreground" : "text-foreground"
+                      isEstimate ? "text-muted-foreground" : "text-foreground"
                     )}>
-                      {isEstimate ? '~' : ''}{formatCurrencyPrice(priceValue, regionCurrency)}
+                      {isEstimate ? '~' : ''}{formatCurrencyPrice(mainPrice, regionCurrency)}
                     </div>
-                    {isEstimate && (
-                      <span className="text-[10px] text-muted-foreground/70">
-                        Converted from {formatCurrencyPrice(msrpUsd!, 'USD')}
-                      </span>
+                    {/* Strikethrough MSRP if sale price is lower */}
+                    {hasSaleDiscount && (
+                      <div className="text-xs text-muted-foreground line-through mt-0.5">
+                        {formatCurrencyPrice(msrp!, regionCurrency)}
+                      </div>
                     )}
-                    {suspectSameAsUsd && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-[10px] text-amber-400 cursor-help">⚠ Awaiting Verification</span>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs max-w-xs">
-                          This regional MSRP matches the USD price exactly ({formatCurrencyPrice(msrpUsd!, 'USD')}), which may indicate unconverted data.
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                    {/* Source label */}
+                    <div className="text-[10px] mt-1">
+                      {isEstimate ? (
+                        <span className="text-muted-foreground/70">Converted from {formatCurrencyPrice(msrpUsd!, 'USD')}</span>
+                      ) : (
+                        <span className="text-green-500/80">Official store price</span>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="text-sm sm:text-lg text-muted-foreground/50 italic font-normal">
-                    Not set
+                    Not available
                   </div>
                 )}
               </div>
