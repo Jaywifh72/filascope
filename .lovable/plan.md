@@ -1,88 +1,116 @@
 
+# Printer URL Health Validation System
 
-# Fix Regional Pricing for Printers
+## Overview
+Build a dedicated URL health monitoring system for printer store URLs, extending the existing filament link health infrastructure. This includes a new database table, a new edge function, and a new admin page.
 
-## Problem
-The printer detail page shows converted USD prices for non-US regions (e.g., "~C$955.64 Converted from $699.00") instead of actual regional store prices (e.g., C$499.00 sale / C$899.00 MSRP). This destroys user trust.
-
-## Root Cause
-1. Missing MSRP columns: `msrp_gbp`, `msrp_aud`, `msrp_jpy` don't exist on the printers table
-2. The "Price by Region" section only shows MSRP, not sale prices
-3. The Current Price section doesn't switch to regional store prices based on user region
-4. The Buy button doesn't link to regional store URLs
-5. The `useUnifiedRegionalPricing` hook correctly prioritizes actual regional prices, but only receives `current_price_X_store` data, not MSRP data for the regional comparison grid
+## Existing Infrastructure (What We Build On)
+- **validate-product-links** edge function: Already validates filament listing URLs with HEAD requests, redirect following, and break-type classification. We'll follow the same patterns.
+- **validate-url** edge function + regional-fetch shared module: Provides geo-redirect bypass with region-appropriate headers. We'll reuse this.
+- **AdminLinkHealth page** (/admin/link-health): Existing broken link dashboard for filaments. The new printer URL health page will follow a similar design but be printer-focused.
+- **UrlHealthTab component**: Simpler URL validation UI using the `url_validation_cache` table. We can cross-reference this cache.
+- Printers have 6 URL columns: `product_url`, `product_url_ca`, `product_url_uk`, `product_url_eu`, `product_url_au`, `product_url_jp`.
 
 ## Changes
 
-### 1. Database Migration
-Add missing MSRP columns to the printers table:
-- `msrp_gbp` (numeric)
-- `msrp_aud` (numeric)
-- `msrp_jpy` (numeric)
+### 1. Database: New `printer_url_validations` Table
+Create a table to store per-printer, per-region URL validation results:
 
-### 2. Populate Bambu Lab CA Prices
-Insert verified CA store prices (from ca.store.bambulab.com, Feb 22 2026):
-- A1 Mini: current_price_cad_store=239, msrp_cad=389
-- A1: current_price_cad_store=339, msrp_cad=519
-- P1S: current_price_cad_store=499, msrp_cad=899
-- P2S: current_price_cad_store=799, msrp_cad=799
-- H2S: current_price_cad_store=1649, msrp_cad=1649
-- H2D: current_price_cad_store=2269, msrp_cad=2599
-- H2C: current_price_cad_store=3149, msrp_cad=3149
+- `id` (uuid, PK)
+- `printer_id` (uuid, FK to printers)
+- `region` (text) -- US, CA, UK, EU, AU, JP
+- `url` (text)
+- `status_code` (integer, nullable)
+- `status` (text) -- valid, invalid, redirect, unknown
+- `redirect_url` (text, nullable)
+- `error_message` (text, nullable)
+- `price_found` (numeric, nullable) -- price extracted from store page
+- `price_in_db` (numeric, nullable) -- price in our DB at check time
+- `price_mismatch` (boolean, default false)
+- `validated_at` (timestamptz)
+- Unique constraint on (printer_id, region)
 
-### 3. Update PricingTabContent.tsx — "Price by Region" Section
-Replace the current MSRP-only grid with a richer display showing both sale price and MSRP per region:
-- Add AU region (currently missing from the grid)
-- For each region, show `current_price_X_store` as the main price, with `msrp_X` as strikethrough if different
-- Label "Official store price" when real data exists
-- Label "Converted from USD" only when falling back to conversion
-- Highlight the user's current region
+RLS: Admin-only read/write via `has_role(auth.uid(), 'admin')`.
 
-### 4. Update PricingTabContent.tsx — "Current Price" Section
-The Store price card currently always shows `current_price_usd_store`. Change it to show the regional store price based on user region:
-- CA region: show `current_price_cad_store` formatted as CAD
-- EU region: show `current_price_eur_store` formatted as EUR
-- UK region: show `current_price_gbp_store` formatted as GBP
-- AU region: show `current_price_aud_store` formatted as AUD
-- US/default: show `current_price_usd_store` formatted as USD
+### 2. Edge Function: `validate-printer-urls`
+New edge function that:
 
-### 5. Update PricingTabContent.tsx — "Where to Buy" Section
-The Official Store button currently uses `printer.official_store_url` (US). Change to use regional URL based on user region:
-- CA: `product_url_ca`
-- EU: `product_url_eu`
-- UK: `product_url_uk`
-- AU: `product_url_au`
-- Default: `product_url` or `official_store_url`
+- Accepts `{ printerId?: string, region?: string }` (omit printerId for batch "all")
+- Queries printers table for all non-null URL columns
+- For each printer+region combo, performs a HEAD request using the existing `regional-fetch` module
+- For Shopify-hosted stores (Bambu Lab, Anycubic, etc.), also fetches `{url}.json` to extract the current price from the Shopify product JSON
+- Classifies results: 200 = valid, 301/302 = redirect (stores redirect_url), 404/410 = invalid
+- Compares extracted price against database values; flags price mismatches (>5% difference)
+- Upserts results into `printer_url_validations` table
+- Returns a summary (total checked, broken count, redirects, price mismatches)
 
-### 6. Update PrinterDetail.tsx — Regional Data Passing
-Pass regional MSRP data to PricingTabContent so it can display regional MSRPs without conversion. The printer query already uses `SELECT *`, so all columns are available.
+Uses the existing `_shared/regional-fetch.ts` module for geo-redirect bypass.
 
----
+### 3. Admin Page: `/admin/printer-url-health`
+New page with the following sections:
+
+**Summary Cards:**
+- Total URLs tracked (across all printers x regions)
+- Valid (green), Broken (red), Redirects (yellow), Unchecked (grey), Price Mismatches (orange)
+
+**Filters:**
+- Status filter (All / Valid / Broken / Redirect / Unchecked / Price Mismatch)
+- Region filter (All / US / CA / UK / EU / AU / JP)
+- Brand filter
+- Search by printer name
+
+**Main Table:**
+- Columns: Printer Name, Brand, then one sub-column per region (US, CA, UK, EU, AU, JP)
+- Each region cell shows a colored dot: green (200), yellow (301), red (404), grey (never checked)
+- Hovering on a dot shows the URL + last validated time
+- If a redirect was detected, show the redirect URL
+- If a price mismatch was found, show an orange warning icon with the DB vs store price
+
+**Actions:**
+- "Validate All" button -- triggers batch validation for all printers
+- Per-printer "Validate" button -- validates all regions for that printer
+- Per-printer "Fix URLs" button -- opens an inline edit form for all 6 regional URL columns
+- Bulk URL template: input pattern like `{region}.store.bambulab.com/products/{slug}` to auto-generate regional URLs for a selected brand
+
+**Price Mismatch Section:**
+- Collapsible section showing all printers where extracted store price differs from DB by >5%
+- Shows: Printer, Region, DB Price, Store Price, Difference %
+- "Accept Store Price" button to update the DB value
+
+### 4. Route & Navigation
+- Add route `/admin/printer-url-health` in App.tsx
+- Add sidebar entry under the existing admin nav, near "Link Health"
 
 ## Technical Details
 
+### Files Created
+1. **`supabase/functions/validate-printer-urls/index.ts`** -- Edge function for printer URL validation with Shopify price extraction
+2. **`src/pages/admin/PrinterUrlHealth.tsx`** -- Admin page component
+3. **Database migration** -- `printer_url_validations` table with RLS policies
+
 ### Files Modified
-1. **Database migration** — Add `msrp_gbp`, `msrp_aud`, `msrp_jpy` columns
-2. **Database data update** — Populate Bambu Lab CA prices
-3. **`src/components/printer/tabs/PricingTabContent.tsx`** — Main changes:
-   - "Price by Region" section: show sale price + MSRP per region with proper labels
-   - "Current Price" Store card: show regional price based on user region
-   - "Where to Buy" Official Store button: use regional URL
-4. **`src/pages/PrinterDetail.tsx`** — Minor: pass regional MSRP fields to PricingTabContent props (may not need changes since printer object is passed directly)
+1. **`src/App.tsx`** -- Add route for `/admin/printer-url-health`
+2. **`src/components/admin/AdminSidebar.tsx`** -- Add "Printer URL Health" nav item
+3. **`supabase/config.toml`** -- will auto-update for new edge function (no manual edit needed)
 
-### Region-to-Column Mapping
+### Edge Function: Price Extraction Strategy
+For Shopify stores (Bambu Lab, Anycubic, Creality, etc.):
+1. Fetch `{product_url}.json` -- returns Shopify product JSON with `variants[0].price`
+2. Compare against the appropriate DB column based on region (e.g., `current_price_cad_store` for CA)
+
+For non-Shopify stores:
+1. Fetch the page HTML
+2. Look for JSON-LD `Product` schema with `offers.price`
+3. Fall back to Open Graph `product:price:amount` meta tag
+
+### Region-to-Column Mapping in Edge Function
 ```text
-Region  | Sale Price Column          | MSRP Column  | URL Column
---------|---------------------------|--------------|----------------
-US      | current_price_usd_store   | msrp_usd     | product_url
-CA      | current_price_cad_store   | msrp_cad     | product_url_ca
-EU      | current_price_eur_store   | msrp_eur     | product_url_eu
-UK      | current_price_gbp_store   | msrp_gbp     | product_url_uk
-AU      | current_price_aud_store   | msrp_aud     | product_url_au
-JP      | current_price_jpy_store   | msrp_jpy     | product_url_jp
+Region | URL Column      | Price Column               | MSRP Column
+-------|-----------------|---------------------------|------------
+US     | product_url     | current_price_usd_store    | msrp_usd
+CA     | product_url_ca  | current_price_cad_store    | msrp_cad
+UK     | product_url_uk  | current_price_gbp_store    | msrp_gbp
+EU     | product_url_eu  | current_price_eur_store    | msrp_eur
+AU     | product_url_au  | current_price_aud_store    | msrp_aud
+JP     | product_url_jp  | current_price_jpy_store    | msrp_jpy
 ```
-
-### No Changes Needed
-- `useUnifiedRegionalPricing.ts` — Already correctly prioritizes actual regional prices via `getActualRegionalPrice()`
-- `PrinterDetail.tsx` — Already passes `regionalPrices` to the unified hook with the correct field mapping
-- Edge function — No changes needed; regional price fetching already works
