@@ -383,11 +383,27 @@ export function usePricingActions(
         }
       } else {
         // Direct update for printers/accessories
+        // Map currency to the correct price column
+        const printerRegionPriceMap: Record<string, string> = {
+          USD: 'variant_price',
+          CAD: 'current_price_cad_store',
+          GBP: 'current_price_gbp_store',
+          EUR: 'current_price_eur_store',
+          AUD: 'current_price_aud_store',
+          JPY: 'current_price_jpy_store',
+        };
+        const priceColumn = productType === 'printer'
+          ? (printerRegionPriceMap[currency] || 'variant_price')
+          : 'variant_price';
+
         const updatePayload: Record<string, any> = {
-          variant_price: price,
-          variant_compare_at_price: compareAtPrice || null,
+          [priceColumn]: price,
           updated_at: new Date().toISOString(),
         };
+        // Only set compare_at_price for US/default price
+        if (currency === 'USD' || priceColumn === 'variant_price') {
+          updatePayload.variant_compare_at_price = compareAtPrice || null;
+        }
         await supabase.from(config.tableName as any).update(updatePayload).eq('id', store.representativeId);
 
         // Insert price history
@@ -404,11 +420,11 @@ export function usePricingActions(
           recorded_at: new Date().toISOString(),
         } as any);
 
-        // Fan out to other variants
+        // Fan out to other variants — use the same regional price column
         if (store.allProductIds.length > 1) {
           const otherIds = store.allProductIds.filter(id => id !== store.representativeId);
           if (otherIds.length > 0) {
-            await supabase.from(config.tableName as any).update({ variant_price: price, updated_at: new Date().toISOString() } as any).in('id', otherIds);
+            await supabase.from(config.tableName as any).update({ [priceColumn]: price, updated_at: new Date().toISOString() } as any).in('id', otherIds);
           }
         }
       }
