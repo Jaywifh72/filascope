@@ -1554,6 +1554,7 @@ export type Database = {
           store_url_au: string | null
           store_url_ca: string | null
           store_url_eu: string | null
+          store_url_jp: string | null
           store_url_uk: string | null
           store_url_us: string | null
           sync_notes: string | null
@@ -1578,6 +1579,7 @@ export type Database = {
           store_url_au?: string | null
           store_url_ca?: string | null
           store_url_eu?: string | null
+          store_url_jp?: string | null
           store_url_uk?: string | null
           store_url_us?: string | null
           sync_notes?: string | null
@@ -1602,6 +1604,7 @@ export type Database = {
           store_url_au?: string | null
           store_url_ca?: string | null
           store_url_eu?: string | null
+          store_url_jp?: string | null
           store_url_uk?: string | null
           store_url_us?: string | null
           sync_notes?: string | null

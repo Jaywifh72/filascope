@@ -36,6 +36,7 @@ export interface BrandSyncConfig {
   store_url_uk: string | null;
   store_url_eu: string | null;
   store_url_au: string | null;
+  store_url_jp: string | null;
   uses_geo_pricing: boolean;
   sync_notes: string | null;
 }
@@ -488,18 +489,88 @@ export async function extractPrice(
   return manualFallback();
 }
 
+// Region-spoofing headers to bypass geo-redirects
+const REGION_SPOOF_HEADERS: Record<string, Record<string, string>> = {
+  'us.store.bambulab.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  'ca.store.bambulab.com': { 'Accept-Language': 'en-CA,en;q=0.9', 'CF-IPCountry': 'CA', 'X-Forwarded-For': '99.224.0.1' },
+  'uk.store.bambulab.com': { 'Accept-Language': 'en-GB,en;q=0.9', 'CF-IPCountry': 'GB', 'X-Forwarded-For': '81.2.69.142' },
+  'eu.store.bambulab.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
+  'au.store.bambulab.com': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
+  'jp.store.bambulab.com': { 'Accept-Language': 'ja-JP,ja;q=0.9', 'CF-IPCountry': 'JP', 'X-Forwarded-For': '126.0.0.1' },
+};
+
+// Per-currency price validation ranges for printers
+const CURRENCY_PRICE_RANGES: Record<string, { min: number; max: number }> = {
+  USD: { min: 50, max: 15000 },
+  CAD: { min: 60, max: 20000 },
+  GBP: { min: 40, max: 12000 },
+  EUR: { min: 45, max: 14000 },
+  AUD: { min: 70, max: 22000 },
+  JPY: { min: 5000, max: 2000000 },
+};
+
+/**
+ * Validate that a printer price is within a sane range for its currency.
+ * Rejects obviously wrong values (e.g., ¥2,210 for a printer).
+ */
+export function validatePrinterPrice(price: number, currency: string): boolean {
+  const range = CURRENCY_PRICE_RANGES[currency];
+  if (!range) return true; // Unknown currency, allow
+  return price >= range.min && price <= range.max;
+}
+
 async function fetchHtml(url: string): Promise<string | null> {
   try {
+    const requestDomain = new URL(url).hostname;
+    const spoofHeaders = REGION_SPOOF_HEADERS[requestDomain] || {};
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    // First attempt: manual redirect to detect geo-redirects
     const resp = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml',
+        ...spoofHeaders,
       },
       signal: controller.signal,
+      redirect: 'manual',
     });
     clearTimeout(timeoutId);
+
+    // Check for geo-redirect (3xx with different domain)
+    if (resp.status >= 300 && resp.status < 400) {
+      const location = resp.headers.get('location');
+      if (location) {
+        try {
+          const redirectDomain = new URL(location, url).hostname;
+          if (redirectDomain !== requestDomain) {
+            console.error(`Geo-redirect detected: ${requestDomain} → ${redirectDomain}. Rejecting to prevent price corruption.`);
+            await resp.text().catch(() => {});
+            return null;
+          }
+          // Same-domain redirect, follow it
+          const controller2 = new AbortController();
+          const timeoutId2 = setTimeout(() => controller2.abort(), 10000);
+          const resp2 = await fetch(location, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml',
+              ...spoofHeaders,
+            },
+            signal: controller2.signal,
+          });
+          clearTimeout(timeoutId2);
+          if (resp2.ok) return await resp2.text();
+          await resp2.text().catch(() => {});
+        } catch {
+          await resp.text().catch(() => {});
+        }
+      }
+      return null;
+    }
+
     if (resp.ok) return await resp.text();
     await resp.text().catch(() => {});
   } catch (e) {
@@ -523,12 +594,26 @@ function manualFallback(): ExtractionResult {
 }
 
 /**
- * Safety rule: if new price differs from old by >40%, flag for review
+ * Safety rule: if new price differs from old by >40%, flag for review.
+ * Also validates per-currency price ranges to catch geo-redirect corruption.
  */
 function applyAnomalyCheck(
   result: ExtractionResult,
   oldPrice?: number | null
 ): ExtractionResult {
+  // Per-currency sanity check
+  if (result.current_price && result.current_price > 0 && result.currency) {
+    if (!validatePrinterPrice(result.current_price, result.currency)) {
+      console.error(`Price ${result.current_price} ${result.currency} outside valid range — flagging for review`);
+      return {
+        ...result,
+        confidence: 'low',
+        requires_review: true,
+      };
+    }
+  }
+
+  // Historical anomaly check
   if (oldPrice && oldPrice > 0 && result.current_price && result.current_price > 0) {
     const changePercent = Math.abs((result.current_price - oldPrice) / oldPrice) * 100;
     if (changePercent > 40) {

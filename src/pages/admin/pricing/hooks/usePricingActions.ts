@@ -289,6 +289,61 @@ export function usePricingActions(
     setSyncResults(prev => new Map(prev).set(store.storeKey, { status: 'syncing' }));
 
     try {
+      // For printers, use the dedicated sync-printer-prices engine (JSON-LD based)
+      // instead of get-current-price (Firecrawl/filament scraper)
+      if (productType === 'printer') {
+        const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-printer-prices', {
+          body: { printer_id: store.representativeId },
+        });
+
+        if (syncError) {
+          const errorMsg = syncData?.error || syncError.message || 'Printer sync failed';
+          const result: SyncResult = { status: 'failed', error: errorMsg };
+          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+          if (showToast) toast.error(`✗ ${errorMsg}`);
+          return result;
+        }
+
+        if (!syncData?.success) {
+          const errorMsg = syncData?.error || 'Printer sync returned no data';
+          const result: SyncResult = { status: 'failed', error: errorMsg };
+          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+          if (showToast) toast.error(`✗ ${errorMsg}`);
+          return result;
+        }
+
+        // Extract the result for this specific region from the sync response
+        const printerResult = syncData.results?.[0];
+        const regionData = printerResult?.regions?.[store.region];
+        const newPrice = regionData?.newPrice;
+
+        if (newPrice && newPrice > 0) {
+          invalidatePriceCache(store.productUrl);
+          const priceChanged = oldPrice != null && Math.abs(newPrice - oldPrice) > 0.01;
+          const pctChange = oldPrice && oldPrice > 0 ? ((newPrice - oldPrice) / oldPrice) * 100 : 0;
+          const result: SyncResult = {
+            status: priceChanged ? 'success' : 'unchanged',
+            oldPrice: oldPrice ?? undefined,
+            newPrice,
+            percentChange: pctChange,
+          };
+          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+          if (showToast) {
+            if (!priceChanged) toast.success(`✓ Price confirmed: ${store.currencySymbol}${newPrice.toFixed(2)}`);
+            else if (pctChange > 0) toast.warning(`⚠️ Price increased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${newPrice.toFixed(2)} (+${pctChange.toFixed(1)}%)`);
+            else toast.success(`✓ Price decreased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${newPrice.toFixed(2)} (${pctChange.toFixed(1)}%)`);
+          }
+          return result;
+        } else {
+          const status = regionData?.status || 'not_found';
+          const errorMsg = regionData?.error || `No price found for ${store.region}`;
+          const result: SyncResult = { status: status === 'skipped' ? 'unavailable' : 'failed', error: errorMsg };
+          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+          if (showToast) toast.error(`✗ ${errorMsg}`);
+          return result;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('get-current-price', {
         body: {
           productUrl: store.productUrl,
@@ -382,19 +437,8 @@ export function usePricingActions(
           }
         }
       } else {
-        // Direct update for printers/accessories
-        // Map currency to the correct price column
-        const printerRegionPriceMap: Record<string, string> = {
-          USD: 'variant_price',
-          CAD: 'current_price_cad_store',
-          GBP: 'current_price_gbp_store',
-          EUR: 'current_price_eur_store',
-          AUD: 'current_price_aud_store',
-          JPY: 'current_price_jpy_store',
-        };
-        const priceColumn = productType === 'printer'
-          ? (printerRegionPriceMap[currency] || 'variant_price')
-          : 'variant_price';
+        // Direct update for accessories (printers use sync-printer-prices and return early above)
+        const priceColumn = 'variant_price';
 
         const updatePayload: Record<string, any> = {
           [priceColumn]: price,
@@ -408,7 +452,7 @@ export function usePricingActions(
 
         // Insert price history
         const regionMap: Record<string, string> = { USD: 'US', CAD: 'CA', GBP: 'UK', EUR: 'EU', AUD: 'AU', JPY: 'JP' };
-        const productIdField = productType === 'printer' ? 'printer_id' : 'accessory_id';
+        const productIdField = 'accessory_id';
         await supabase.from('price_history').insert({
           [productIdField]: store.representativeId,
           price,
