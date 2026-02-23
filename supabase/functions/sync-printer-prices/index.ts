@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
         const oldPrice = (printer as any)[regionMeta.priceCol] as number | null;
 
         try {
-          const extraction: ExtractionResult = await extractPrice(productUrl, regionCode, oldPrice, config);
+          const extraction: ExtractionResult = await extractPrice(productUrl, regionCode, oldPrice, config, regionMeta.currency);
 
           lastExtractionMethod = extraction.extraction_method;
           lastConfidence = extraction.confidence;
