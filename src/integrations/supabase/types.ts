@@ -6192,6 +6192,7 @@ export type Database = {
           is_discontinued: boolean | null
           last_sync_error: string | null
           last_sync_status: string | null
+          last_synced_at: string | null
           last_verified_utc: string | null
           layer_height_default_um: number | null
           layer_height_max_um: number | null
@@ -6306,6 +6307,8 @@ export type Database = {
           supported_plate_types: string | null
           sustained_nozzle_temp_c: number | null
           sync_enabled: boolean | null
+          sync_method: string | null
+          sync_status: string | null
           tags: string[] | null
           target_user_segment: string | null
           temperature_sensors: string | null
@@ -6320,6 +6323,7 @@ export type Database = {
           variant_id: string | null
           variant_or_bundle_name: string | null
           variant_price: number | null
+          variant_selected: string | null
           variant_sku: string | null
           variant_title: string | null
           warranty_coverage: string | null
@@ -6441,6 +6445,7 @@ export type Database = {
           is_discontinued?: boolean | null
           last_sync_error?: string | null
           last_sync_status?: string | null
+          last_synced_at?: string | null
           last_verified_utc?: string | null
           layer_height_default_um?: number | null
           layer_height_max_um?: number | null
@@ -6555,6 +6560,8 @@ export type Database = {
           supported_plate_types?: string | null
           sustained_nozzle_temp_c?: number | null
           sync_enabled?: boolean | null
+          sync_method?: string | null
+          sync_status?: string | null
           tags?: string[] | null
           target_user_segment?: string | null
           temperature_sensors?: string | null
@@ -6569,6 +6576,7 @@ export type Database = {
           variant_id?: string | null
           variant_or_bundle_name?: string | null
           variant_price?: number | null
+          variant_selected?: string | null
           variant_sku?: string | null
           variant_title?: string | null
           warranty_coverage?: string | null
@@ -6690,6 +6698,7 @@ export type Database = {
           is_discontinued?: boolean | null
           last_sync_error?: string | null
           last_sync_status?: string | null
+          last_synced_at?: string | null
           last_verified_utc?: string | null
           layer_height_default_um?: number | null
           layer_height_max_um?: number | null
@@ -6804,6 +6813,8 @@ export type Database = {
           supported_plate_types?: string | null
           sustained_nozzle_temp_c?: number | null
           sync_enabled?: boolean | null
+          sync_method?: string | null
+          sync_status?: string | null
           tags?: string[] | null
           target_user_segment?: string | null
           temperature_sensors?: string | null
@@ -6818,6 +6829,7 @@ export type Database = {
           variant_id?: string | null
           variant_or_bundle_name?: string | null
           variant_price?: number | null
+          variant_selected?: string | null
           variant_sku?: string | null
           variant_title?: string | null
           warranty_coverage?: string | null
