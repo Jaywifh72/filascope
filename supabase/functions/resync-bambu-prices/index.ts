@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { extractPrice, type ExtractionResult } from "../_shared/printer-price-extraction.ts";
+import { extractPrice, type ExtractionResult, type BrandSyncConfig } from "../_shared/printer-price-extraction.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +71,15 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Load brand sync config for Bambu Lab
+    const { data: syncConfig } = await supabase
+      .from("brand_sync_config")
+      .select("*")
+      .eq("brand_id", "bambu-lab")
+      .maybeSingle();
+
+    const brandConfig: BrandSyncConfig | undefined = syncConfig ? syncConfig as BrandSyncConfig : undefined;
+
     // Get Bambu Lab brand ID
     const { data: brand } = await supabase
       .from("printer_brands")
@@ -128,11 +137,12 @@ Deno.serve(async (req) => {
         const oldPrice = (printer as any)[region.priceCol] as number | null;
 
         try {
-          // Use the shared 3-tier extraction engine
+          // Use the shared 3-tier extraction engine with brand config
           const extraction: ExtractionResult = await extractPrice(
             productUrl,
             region.code,
-            oldPrice
+            oldPrice,
+            brandConfig
           );
 
           lastExtractionMethod = extraction.extraction_method;

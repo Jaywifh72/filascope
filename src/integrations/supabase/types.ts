@@ -1539,6 +1539,81 @@ export type Database = {
           },
         ]
       }
+      brand_sync_config: {
+        Row: {
+          brand_id: string
+          compare_at_field: string | null
+          created_at: string | null
+          fallback_extraction: string | null
+          id: string
+          json_ld_type: string | null
+          price_field: string | null
+          primary_extraction: string
+          shopify_json_available: boolean | null
+          store_platform: string
+          store_url_au: string | null
+          store_url_ca: string | null
+          store_url_eu: string | null
+          store_url_uk: string | null
+          store_url_us: string | null
+          sync_notes: string | null
+          updated_at: string | null
+          uses_geo_pricing: boolean | null
+          variant_exclude_patterns: string[] | null
+          variant_region_in_title: boolean | null
+          variant_region_separator: string | null
+          variant_selection_strategy: string | null
+        }
+        Insert: {
+          brand_id: string
+          compare_at_field?: string | null
+          created_at?: string | null
+          fallback_extraction?: string | null
+          id?: string
+          json_ld_type?: string | null
+          price_field?: string | null
+          primary_extraction?: string
+          shopify_json_available?: boolean | null
+          store_platform?: string
+          store_url_au?: string | null
+          store_url_ca?: string | null
+          store_url_eu?: string | null
+          store_url_uk?: string | null
+          store_url_us?: string | null
+          sync_notes?: string | null
+          updated_at?: string | null
+          uses_geo_pricing?: boolean | null
+          variant_exclude_patterns?: string[] | null
+          variant_region_in_title?: boolean | null
+          variant_region_separator?: string | null
+          variant_selection_strategy?: string | null
+        }
+        Update: {
+          brand_id?: string
+          compare_at_field?: string | null
+          created_at?: string | null
+          fallback_extraction?: string | null
+          id?: string
+          json_ld_type?: string | null
+          price_field?: string | null
+          primary_extraction?: string
+          shopify_json_available?: boolean | null
+          store_platform?: string
+          store_url_au?: string | null
+          store_url_ca?: string | null
+          store_url_eu?: string | null
+          store_url_uk?: string | null
+          store_url_us?: string | null
+          sync_notes?: string | null
+          updated_at?: string | null
+          uses_geo_pricing?: boolean | null
+          variant_exclude_patterns?: string[] | null
+          variant_region_in_title?: boolean | null
+          variant_region_separator?: string | null
+          variant_selection_strategy?: string | null
+        }
+        Relationships: []
+      }
       brand_sync_logs: {
         Row: {
           brand_id: string | null
