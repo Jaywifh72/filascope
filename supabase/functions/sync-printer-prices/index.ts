@@ -266,18 +266,18 @@ Deno.serve(async (req) => {
             totalUpdated++;
           }
 
-          // Log to price_history
-          if (status !== "unchanged") {
+          // Log to price_history (guard against null/zero prices which violate check constraint)
+          if (status !== "unchanged" && newPrice > 0) {
             await supabase.from("price_history").insert({
               printer_id: printer.id,
               product_type: "printer",
               price: newPrice,
-              compare_at_price: compareAt,
+              compare_at_price: compareAt && compareAt > 0 ? compareAt : null,
               region: regionCode,
               currency: regionMeta.currency,
               source: "price-sync",
               notes: `Brand: ${brandSlug}, Method: ${extraction.extraction_method}, Variant: ${extraction.variant_name || "N/A"}, Confidence: ${extraction.confidence}${extraction.is_combo ? " [COMBO]" : ""}${extraction.requires_review ? " [REVIEW NEEDED]" : ""}`,
-            });
+            }).then(({ error }) => { if (error) console.error("price_history insert error:", error.message); });
           }
         } catch (err) {
           regionResults[regionCode] = {
