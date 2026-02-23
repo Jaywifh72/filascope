@@ -768,6 +768,21 @@ const PrinterDetail = () => {
           mobileBackLabel="Printers"
         />
 
+        {/* Discontinued Banner */}
+        {isDiscontinued && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 sm:px-6 sm:py-4 flex items-start gap-3 mb-4">
+            <XCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-amber-300">
+                This printer has been discontinued{printerBrand ? ` by ${printerBrand}` : ''} and is no longer available for purchase from the official store.
+              </p>
+              {(printer as any).discontinued_note && (
+                <p className="text-xs text-amber-400/70">{(printer as any).discontinued_note}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Main Content with Sticky Sidebar Container - spans full page */}
         <div className="flex gap-6 lg:gap-8 items-start">
           {/* Main Content Column */}
