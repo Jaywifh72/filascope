@@ -1,167 +1,144 @@
 
 
-# Rewrite Price Sync as Universal `sync-printer-prices` Edge Function
+# Fix All Bambu Lab Printer Data: URLs, Prices, Sync Engine, and Display
 
 ## Overview
-Replace the Bambu Lab-only `resync-bambu-prices` edge function with a new universal `sync-printer-prices` function that reads extraction settings from the `brand_sync_config` table and works for all brands. Update the admin UI to support per-brand sync triggers.
+There are 4 interconnected bugs affecting all Bambu Lab printers. This plan addresses broken store URLs, wrong regional prices, sync engine extraction logic, and display component issues.
 
-## Changes
+---
 
-### 1. New Edge Function: `sync-printer-prices`
-**File: `supabase/functions/sync-printer-prices/index.ts`**
+## Bug 1: Fix Store URLs in Database
 
-Accepts `{ brand_id?: string, printer_id?: string }`:
-- If `printer_id` provided: sync just that one printer
-- If `brand_id` provided (e.g. "bambu-lab"): sync all non-discontinued printers for that brand
-- If neither: sync ALL printers that have a matching `brand_sync_config` entry
+The `product_url` fields are already correct (e.g., `/products/a1`, not `/products/bambu-lab-a1`). However, several regional prices and discontinued printer URLs need cleanup.
 
-Logic per printer:
-1. Look up brand's sync config from `brand_sync_config` using a join: `brand_sync_config.brand_id` is matched to `printer_brands.brand` via slugification (e.g. "Bambu Lab" becomes "bambu-lab" using `LOWER(REPLACE(brand, ' ', '-'))`)
-2. If `primary_extraction = 'manual_only'`, skip with status log
-3. Determine which regions to sync:
-   - Brands with regional store URLs (store_url_ca, store_url_uk, etc. are non-null in config): sync each region separately
-   - Brands with only store_url_us (single store): sync US only
-   - For geo-pricing brands (uses_geo_pricing = true): sync US price only, note that regional prices may differ
-4. For each region, build the URL:
-   - Extract slug from the printer's `product_url` (existing `extractSlug` logic)
-   - Replace `{slug}` in the config's `store_url_XX` template
-   - If no regional template exists, use the printer's own `product_url_XX` column as fallback
-5. Call the shared `extractPrice()` with the brand's `BrandSyncConfig`
-6. Apply safety checks (null/0 rejection, >40% anomaly flagging)
-7. Update the appropriate price columns on the `printers` table
-8. Log to `price_history` with source = `'price-sync'` and include extraction method, variant name, and confidence
+**Data updates** (via SQL UPDATE statements):
 
-Regional column mapping (same as existing):
+| Printer | What's Wrong Now | Correct Values |
+|---------|-----------------|----------------|
+| A1 Mini | CA price=150 (garbage), GBP price=299 (wrong) | CA=239, GBP=149 |
+| A1 | CA price=519 (strikethrough!), GBP=379 (wrong) | CA=339, GBP=209 |
+| P1S | CA=1367 (garbage), GBP=120 (garbage) | CA=499, GBP=339 |
+| P2S | CA=1049 (wrong) | CA=799 |
+| H2S | CA=1999 (wrong), GBP=1199 (wrong) | CA=1649, GBP=999 |
+| H2D | CA=330 (garbage!) | CA=2269, GBP=1449 |
+| H2C | All correct | No change |
+| X1E | All prices null | Set sync_status='reseller_only' |
+| P1P | Has stale regional prices | Null out all regional prices |
+| X1 Carbon | Has stale regional prices | Null out all regional prices |
 
-```text
-Region | URL Column       | Price Column              | MSRP Column
--------|-----------------|---------------------------|------------
-US     | product_url      | current_price_usd_store   | msrp_usd
-CA     | product_url_ca   | current_price_cad_store   | msrp_cad
-UK     | product_url_uk   | current_price_gbp_store   | msrp_gbp
-EU     | product_url_eu   | current_price_eur_store   | msrp_eur
-AU     | product_url_au   | current_price_aud_store   | msrp_aud
-```
+**For EU and AU**: Set `current_price_eur_store`, `msrp_eur`, `current_price_aud_store`, `msrp_aud` to NULL for all active Bambu Lab printers. These are currently showing garbage USD-converted values.
 
-Auth: Same dual-auth pattern (admin JWT or service_role key).
+**For P1P and X1 Carbon**: Null out all regional price and URL fields since stores are removed.
 
-Returns:
-```json
-{
-  "success": true,
-  "timestamp": "...",
-  "results": [
-    {
-      "printer": "P1S",
-      "brand": "bambu-lab",
-      "slug": "p1s",
-      "regions": {
-        "US": { "oldPrice": 399, "newPrice": 399, "status": "unchanged", "extraction_method": "json_ld_product_group" },
-        "CA": { "oldPrice": 499, "newPrice": 479, "status": "updated", "extraction_method": "json_ld_product_group" }
-      }
-    }
-  ],
-  "summary": {
-    "printersChecked": 25,
-    "pricesUpdated": 8,
-    "skipped": 5,
-    "errors": 2,
-    "anomalies": 1,
-    "manualOnly": 3
-  }
-}
-```
+---
 
-### 2. Keep `resync-bambu-prices` as Thin Wrapper (Optional Deprecation)
-The existing `resync-bambu-prices` function will be updated to simply forward to `sync-printer-prices` with `{ brand_id: "bambu-lab" }` logic inline, OR we deprecate it entirely and update the admin UI to call the new function. The plan is to deprecate it -- the new function replaces it completely.
+## Bug 2: Sync Engine -- Already Correct
 
-### 3. Update Admin Page: `PriceSync.tsx`
-**Modified file: `src/pages/admin/PriceSync.tsx`**
+After reviewing `supabase/functions/_shared/printer-price-extraction.ts`, the extraction logic is already implemented correctly:
+- It handles `ProductGroup` with `hasVariant[]` (lines 250-280)
+- It uses `offers.price` as current price, `priceSpecification` as strikethrough (lines 307-343)
+- It filters combo variants via `selectBestVariant` (lines 72-128)
+- The `brand_sync_config` for Bambu Lab already sets `shopify_json_available = false` and `primary_extraction = 'json_ld'`
 
-Changes:
-- Fetch all brands from `brand_sync_config` table to populate the brand sync table (currently hardcoded to "Bambu Lab" only)
-- Each brand row gets its own "Sync" button that calls `sync-printer-prices` with `{ brand_id: "..." }`
-- "Sync All" button calls `sync-printer-prices` with no params (syncs everything)
-- Show `primary_extraction` method and `store_platform` per brand
-- Brands with `primary_extraction = 'manual_only'` show a "Manual Only" badge and disabled sync button
-- Update the `source` filter in `price_history` queries from `'bambu-resync'` to `'price-sync'`
-- The diff view works the same but now shows brand name per row
+No code changes needed in the extraction engine.
 
-### 4. Brand-to-Config Mapping Strategy
-The `brand_sync_config.brand_id` uses slugs like "bambu-lab" while `printer_brands.brand` uses display names like "Bambu Lab". The edge function will:
-1. Load all `brand_sync_config` rows
-2. Build a lookup map: slugified brand name to config
-3. For each printer, slugify its `printer_brands.brand` name and look up the config
-4. Slugification: `LOWER(REPLACE(REPLACE(brand, ' ', '-'), '.', ''))` -- handles "Bambu Lab" to "bambu-lab", "QIDI Tech" to "qidi-tech", "Prusa Research" to "prusa-research"
+---
 
-Note: Some brand names won't match exactly (e.g. "QIDI Tech" slugifies to "qidi-tech" but config has "qidi", "Prusa Research" to "prusa-research" but config has "prusa"). The edge function will try exact slug match first, then try matching just the first word as a fallback. Alternatively, we'll add the missing config entries or normalize the existing ones.
+## Bug 3: Fix All Regional Prices via Data Update
 
-To handle this cleanly, we'll insert/update the config entries to use the exact slugified brand names from `printer_brands`:
+Run UPDATE statements for each Bambu Lab printer with verified prices:
 
-```text
-Current config brand_id | printer_brands.brand | Needs update?
-bambu-lab              | Bambu Lab            | No (matches)
-creality               | Creality             | No
-elegoo                 | Elegoo               | No
-sovol                  | Sovol                | No
-anycubic               | Anycubic             | No
-qidi                   | QIDI Tech            | Yes -> "qidi-tech"
-flashforge             | FlashForge           | No
-prusa                  | Prusa Research       | Yes -> "prusa-research"
-flsun                  | FLSUN                | No
-snapmaker              | Snapmaker            | No
-```
+**A1 Mini** (`bambu-lab-a1-mini`):
+- US: $219 / MSRP $299
+- CA: C$239 / MSRP C$389
+- UK: L149 / MSRP L169
+- EU/AU: NULL (unverified)
 
-We'll update the two mismatched config entries (qidi and prusa) to use the correct slugified brand names.
+**A1** (`bambu-lab-a1`):
+- US: $299 / MSRP $399
+- CA: C$339 / MSRP C$519
+- UK: L209 / MSRP L259
+- EU/AU: NULL
+
+**P1S** (`bambu-lab-p1s`):
+- US: $399 / MSRP $699
+- CA: C$499 / MSRP C$899
+- UK: L339 / MSRP L429
+- EU/AU: NULL
+
+**P2S** (`bambu-lab-p2s`):
+- US: $549 / MSRP $549
+- CA: C$799 / MSRP C$799
+- UK: L479 / MSRP L479
+- EU/AU: NULL
+
+**H2S** (`bambu-lab-h2s`):
+- US: $1,249 / MSRP $1,249
+- CA: C$1,649 / MSRP C$1,649
+- UK: L999 / MSRP L999
+- EU/AU: NULL
+
+**H2D** (`bambu-lab-h2d`):
+- US: $1,749 / MSRP $1,999
+- CA: C$2,269 / MSRP C$2,599
+- UK: L1,449 / MSRP L1,599
+- EU/AU: NULL
+
+**H2C** (`bambu-lab-h2c`):
+- US: $2,399 / MSRP $2,399
+- CA: C$3,149 / MSRP C$3,149
+- UK: L1,999 / MSRP L1,999
+- EU/AU: NULL
+
+**X1E** (`bambu-lab-x1e`):
+- All prices: NULL
+- sync_status: 'reseller_only'
+- discontinued_note: 'Available exclusively through authorized resellers'
+
+**P1P** (`bambu-lab-p1p`):
+- All regional prices/URLs: NULL (already discontinued)
+
+**X1 Carbon** (`bambu-lab-x1-carbon`):
+- All regional prices/URLs: NULL (already discontinued)
+
+All active printers: set `last_synced_at = NOW()`, `sync_status = 'manual'`, `sync_method = 'manual'`
+
+---
+
+## Bug 4: Display Component Update
+
+### File: `src/components/printer/tabs/PricingTabContent.tsx`
+
+**Price by Region section** (lines 400-473):
+
+Current behavior for regions with no data: falls back to converting USD MSRP, showing misleading "~" prices.
+
+Changes needed:
+1. When a region has `salePrice = null` AND `msrp = null` (EU, AU after our data fix), show "Check store" with a link to the regional store URL instead of a converted USD estimate
+2. Keep existing logic for regions with real data (sale price + strikethrough MSRP)
+3. Add a "Check regional store" link button for regions without verified prices
+
+The specific change is in the `mainPrice` fallback logic (line 422): instead of computing `estimatedFromUsd` when no real data exists, show a "Visit store" link using the printer's `product_url_eu` / `product_url_au` column.
+
+### Regional Stores section (lines 528-681):
+
+This section uses `interpolateProductUrl` with `productSlug` to build URLs from `product_url_pattern`. For Bambu Lab, the `product_url` fields are already correct in the DB, so the "Where to Buy" section at line 317 correctly uses `regionalStoreUrl` from the `regionalPriceMap`.
+
+No changes needed here -- the buy button already reads directly from `product_url_XX` columns.
+
+---
 
 ## Technical Details
 
-### Files Created
-1. `supabase/functions/sync-printer-prices/index.ts` -- New universal sync function
-
 ### Files Modified
-1. `src/pages/admin/PriceSync.tsx` -- Multi-brand UI with per-brand sync buttons
+1. `src/components/printer/tabs/PricingTabContent.tsx` -- Update "Price by Region" section to show "Check store" for unverified regions instead of fake conversions
 
-### Files Deprecated
-1. `supabase/functions/resync-bambu-prices/index.ts` -- Replaced by sync-printer-prices (will be deleted)
+### Data Updates (via database tool)
+- 10 UPDATE statements for Bambu Lab printers (7 active + X1E + P1P + X1 Carbon)
 
-### Data Updates
-- Update `brand_sync_config` row where `brand_id = 'qidi'` to `brand_id = 'qidi-tech'`
-- Update `brand_sync_config` row where `brand_id = 'prusa'` to `brand_id = 'prusa-research'`
-
-### Edge Function Flow
-
-```text
-Input: { brand_id?, printer_id? }
-         |
-[Load all brand_sync_config rows]
-         |
-[Query printers with brand join]
-  - Filter by brand_id or printer_id if provided
-  - Join printer_brands for brand name
-         |
-For each printer:
-  |
-  [Slugify brand name -> look up config]
-  |
-  config.primary_extraction === 'manual_only'?
-    Yes -> skip, log "manual only"
-    No  -> continue
-  |
-  [Determine regions to sync]
-    - Check which store_url_XX are non-null in config
-    - Also check printer's own product_url_XX columns
-  |
-  For each region:
-    |
-    [Build URL from config template or printer column]
-    |
-    [Call extractPrice(url, region, oldPrice, config)]
-    |
-    [Safety checks: null/0/negative -> reject]
-    [>40% change -> flag requires_review]
-    |
-    [Update printers table price columns]
-    [Insert price_history record]
-```
+### No Changes Needed
+- `supabase/functions/_shared/printer-price-extraction.ts` -- extraction logic already correct
+- `supabase/functions/sync-printer-prices/index.ts` -- orchestrator already correct
+- `src/components/printer/CTAButtons.tsx` -- already uses URL from props, not auto-generated
+- Store URLs in DB are already correct (short slugs like `/products/a1`)
 
