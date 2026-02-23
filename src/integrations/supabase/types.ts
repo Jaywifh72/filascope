@@ -6017,6 +6017,7 @@ export type Database = {
           description: string | null
           discontinued: boolean | null
           discontinued_date: string | null
+          discontinued_note: string | null
           display_name: string | null
           door_sensor: boolean | null
           ean_upc: string | null
@@ -6262,6 +6263,7 @@ export type Database = {
           description?: string | null
           discontinued?: boolean | null
           discontinued_date?: string | null
+          discontinued_note?: string | null
           display_name?: string | null
           door_sensor?: boolean | null
           ean_upc?: string | null
@@ -6507,6 +6509,7 @@ export type Database = {
           description?: string | null
           discontinued?: boolean | null
           discontinued_date?: string | null
+          discontinued_note?: string | null
           display_name?: string | null
           door_sensor?: boolean | null
           ean_upc?: string | null

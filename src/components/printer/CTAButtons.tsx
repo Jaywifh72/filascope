@@ -56,8 +56,8 @@ export function CTAButtons({
 
   return (
     <div className={stackedButtons ? "flex flex-col gap-3" : "flex flex-wrap gap-4"}>
-      {/* Primary: Buy Now */}
-      {affiliateUrl && (
+      {/* Primary: Buy Now — hidden for discontinued printers */}
+      {affiliateUrl && !isDiscontinued && (
         <div className={stackedButtons ? "w-full" : "inline-flex flex-col flex-1 min-w-[160px]"}>
           <a
             href={affiliateUrl}

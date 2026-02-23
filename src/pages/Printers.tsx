@@ -108,6 +108,7 @@ export default function Printers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeQuickFilters, setActiveQuickFilters] = useState<string[]>([]);
   const [activeChip, setActiveChip] = useState<PrinterQuickFilter | null>(null);
+  const [showDiscontinued, setShowDiscontinued] = useState(false);
   
   // Filter bar state
   const [activeCategory, setActiveCategory] = useState("all");
@@ -310,6 +311,9 @@ export default function Printers() {
     if (!printers) return [];
 
     const filtered = printers.filter(printer => {
+      // Discontinued filter — hide by default
+      if (printer.discontinued && !showDiscontinued) return false;
+
       const price = getPrinterSortPrice(printer as any, region);
       const priceUsd = getPrice(printer); // keep USD for category counts
       const maxDimension = Math.max(
@@ -433,6 +437,7 @@ export default function Printers() {
         switch (activeChip) {
           case "popular":
             if (!printer.brand?.brand || !POPULAR_BRANDS.includes(printer.brand.brand)) return false;
+            if (printer.discontinued) return false; // Exclude discontinued from Popular
             break;
           case "under500":
             if (priceUsd > 500) return false;
@@ -450,6 +455,7 @@ export default function Printers() {
             if (maxDimension < 300) return false;
             break;
           case "new": {
+            if (printer.discontinued) return false; // Exclude discontinued from New Arrivals
             const createdAt = printer.created_at ? new Date(printer.created_at).getTime() : 0;
             const sixtyDaysAgo = Date.now() - 60 * 24 * 60 * 60 * 1000;
             if (createdAt < sixtyDaysAgo) return false;
@@ -476,7 +482,7 @@ export default function Printers() {
         default: return 0;
       }
     });
-  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, activeChip, region]);
+  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, activeChip, region, showDiscontinued]);
 
   const advancedFilterCount = 
     advancedFilters.brands.length +
@@ -868,8 +874,21 @@ export default function Printers() {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-            {/* Quick Filter Chips */}
-            <PrinterQuickFilterChips active={activeChip} onChange={setActiveChip} />
+            {/* Quick Filter Chips + Discontinued Toggle */}
+            <div className="flex items-center justify-between gap-4 mb-0">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <PrinterQuickFilterChips active={activeChip} onChange={setActiveChip} />
+              </div>
+              <label className="flex items-center gap-2 flex-shrink-0 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={showDiscontinued}
+                  onChange={(e) => setShowDiscontinued(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-border accent-primary"
+                />
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Show discontinued</span>
+              </label>
+            </div>
 
             {/* Active Filter Chips */}
             {hasActiveFilters && (

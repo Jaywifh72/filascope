@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Box, Zap, Thermometer, Loader2, CircleDot, Cog, Star } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Box, Zap, Thermometer, Loader2, CircleDot, Cog, Star, XCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -258,6 +258,16 @@ export default function MediumStandardPrinterCard({
 
             {/* Printer Image */}
             <div className="relative aspect-auto w-full h-auto sm:h-[200px] flex items-center justify-center rounded-lg overflow-hidden">
+              {/* Discontinued overlay badge */}
+              {printer.discontinued && (
+                <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-[5] flex items-center gap-1 bg-destructive/90 text-destructive-foreground text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-1 rounded">
+                  <XCircle className="h-3 w-3" />
+                  Discontinued
+                </div>
+              )}
+              {printer.discontinued && (
+                <div className="absolute inset-0 bg-background/40 z-[2] pointer-events-none" />
+              )}
               {imageTimedOut ? (
                 <div className="flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-gray-800/50 to-gray-900 border border-dashed border-gray-700 w-full h-full rounded-lg relative">
                   {getBrandLogo(printer.brand?.brand || null) && (
@@ -275,7 +285,7 @@ export default function MediumStandardPrinterCard({
                 <OptimizedImage
                   src={productImage}
                   alt={`${printer.brand?.brand} ${printer.model_name}`}
-                  className="w-auto h-full max-w-full max-h-[200px] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                  className={`w-auto h-full max-w-full max-h-[200px] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)] ${printer.discontinued ? 'grayscale opacity-60' : ''}`}
                   aspectRatio="auto"
                   objectFit="contain"
                   width={400}
@@ -333,8 +343,15 @@ export default function MediumStandardPrinterCard({
             {/* Price Section */}
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2 flex-wrap">
-                {printer.discontinued ? (
-                  <span className="text-xs sm:text-sm font-medium text-destructive/70">DISCONTINUED</span>
+              {printer.discontinued ? (
+                  <div className="flex flex-col gap-0.5">
+                    {price ? (
+                      <span className="text-sm text-muted-foreground line-through">
+                        Was {formatDisplayPrice(price)}
+                      </span>
+                    ) : null}
+                    <span className="text-xs text-muted-foreground italic">No longer available</span>
+                  </div>
                 ) : priceLoading ? (
                   <span className="h-5 w-20 rounded bg-muted animate-pulse" />
                 ) : price ? (
