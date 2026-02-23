@@ -2,12 +2,7 @@
  * Shared Price Extraction Engine for Printers
  * 
  * 3-tier extraction: Shopify JSON → JSON-LD → Meta Tags
- * Fixes 5 critical bugs:
- *  1. Strikethrough price read as current price
- *  2. Combo variant picked instead of base model
- *  3. Region-encoded variants ignored (Sovol pattern)
- *  4. No fallback when Shopify .json blocked
- *  5. ProductGroup JSON-LD not handled
+ * Supports brand-specific config from brand_sync_config table.
  */
 
 export interface ExtractionResult {
@@ -20,6 +15,29 @@ export interface ExtractionResult {
   raw_variants_found: number;
   is_combo: boolean;
   requires_review: boolean;
+}
+
+/** Brand-specific extraction config loaded from brand_sync_config table */
+export interface BrandSyncConfig {
+  brand_id: string;
+  store_platform: string;
+  primary_extraction: string;
+  fallback_extraction: string | null;
+  shopify_json_available: boolean;
+  json_ld_type: string;
+  variant_region_in_title: boolean;
+  variant_region_separator: string;
+  variant_exclude_patterns: string[];
+  variant_selection_strategy: string;
+  price_field: string;
+  compare_at_field: string;
+  store_url_us: string | null;
+  store_url_ca: string | null;
+  store_url_uk: string | null;
+  store_url_eu: string | null;
+  store_url_au: string | null;
+  uses_geo_pricing: boolean;
+  sync_notes: string | null;
 }
 
 interface ShopifyVariant {
@@ -38,7 +56,14 @@ interface NormalizedVariant {
   id?: number | string;
 }
 
-const COMBO_PATTERN = /combo|bundle|kit|pack|set|\bams\b|2\s*\*|3\s*\*/i;
+const DEFAULT_COMBO_PATTERNS = ['combo', 'bundle', 'kit', 'pack', 'set', 'ams', '2*', '3*'];
+
+function buildComboRegex(patterns: string[]): RegExp {
+  const escaped = patterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // Word-boundary wrap short terms like 'ams'
+  const parts = escaped.map(p => p.length <= 4 ? `\\b${p}\\b` : p);
+  return new RegExp(parts.join('|'), 'i');
+}
 
 /**
  * Select the best (base model) variant from a list.
@@ -46,17 +71,21 @@ const COMBO_PATTERN = /combo|bundle|kit|pack|set|\bams\b|2\s*\*|3\s*\*/i;
  */
 export function selectBestVariant(
   variants: NormalizedVariant[],
-  targetRegion?: string
+  targetRegion?: string,
+  config?: BrandSyncConfig
 ): { variant: NormalizedVariant; is_combo: boolean } | null {
   if (!variants || variants.length === 0) return null;
 
   let filtered = [...variants];
+  const useRegionFilter = config?.variant_region_in_title ?? true;
+  const regionSep = config?.variant_region_separator ?? ' / ';
 
   // Step 1: Region filter (Sovol pattern: "US / Only SV06")
-  if (targetRegion) {
+  if (targetRegion && useRegionFilter) {
     const regionUpper = targetRegion.toUpperCase();
+    const sepRegex = new RegExp(`\\s*${regionSep.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim()}\\s*`);
     const regionFiltered = filtered.filter(v => {
-      const parts = v.name.split(/\s*\/\s*/);
+      const parts = v.name.split(sepRegex);
       if (parts.length >= 2) {
         return parts[0].trim().toUpperCase() === regionUpper;
       }
@@ -67,8 +96,10 @@ export function selectBestVariant(
     }
   }
 
-  // Step 2: Exclude combo/bundle/kit/pack/set/AMS variants
-  const nonCombo = filtered.filter(v => !COMBO_PATTERN.test(v.name));
+  // Step 2: Exclude combo/bundle patterns
+  const excludePatterns = config?.variant_exclude_patterns ?? DEFAULT_COMBO_PATTERNS;
+  const comboRegex = buildComboRegex(excludePatterns);
+  const nonCombo = filtered.filter(v => !comboRegex.test(v.name));
 
   let is_combo = false;
   let candidates: NormalizedVariant[];
@@ -76,7 +107,6 @@ export function selectBestVariant(
   if (nonCombo.length > 0) {
     candidates = nonCombo;
   } else {
-    // All variants are combos — use all, flag it
     candidates = filtered;
     is_combo = true;
   }
@@ -86,9 +116,13 @@ export function selectBestVariant(
   if (available.length > 0) {
     candidates = available;
   }
-  // If none available, use all candidates anyway (prices still useful)
 
-  // Step 4: Pick cheapest
+  // Step 4: Pick based on strategy
+  const strategy = config?.variant_selection_strategy ?? 'cheapest_standalone';
+  if (strategy === 'first') {
+    return { variant: candidates[0], is_combo };
+  }
+  // Default: cheapest
   candidates.sort((a, b) => a.price - b.price);
   return { variant: candidates[0], is_combo };
 }
@@ -98,7 +132,8 @@ export function selectBestVariant(
  */
 export async function extractFromShopifyJson(
   url: string,
-  region?: string
+  region?: string,
+  config?: BrandSyncConfig
 ): Promise<ExtractionResult | null> {
   try {
     const jsonUrl = url.replace(/\/?(\?.*)?$/, '.json');
@@ -133,7 +168,7 @@ export async function extractFromShopifyJson(
 
     if (normalized.length === 0) return null;
 
-    const selection = selectBestVariant(normalized, region);
+    const selection = selectBestVariant(normalized, region, config);
     if (!selection) return null;
 
     const { variant, is_combo } = selection;
@@ -163,7 +198,8 @@ export async function extractFromShopifyJson(
  */
 export function extractFromJsonLd(
   html: string,
-  region?: string
+  region?: string,
+  config?: BrandSyncConfig
 ): ExtractionResult | null {
   const jsonLdBlocks = html.match(
     /<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
@@ -174,7 +210,7 @@ export function extractFromJsonLd(
     try {
       const content = block.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '');
       const parsed = JSON.parse(content);
-      const result = processJsonLdObject(parsed, region);
+      const result = processJsonLdObject(parsed, region, config);
       if (result) return result;
     } catch {
       // Invalid JSON, try next block
@@ -185,14 +221,15 @@ export function extractFromJsonLd(
 
 function processJsonLdObject(
   obj: any,
-  region?: string
+  region?: string,
+  config?: BrandSyncConfig
 ): ExtractionResult | null {
   if (!obj) return null;
 
   // Handle @graph arrays
   if (Array.isArray(obj?.['@graph'])) {
     for (const item of obj['@graph']) {
-      const result = processJsonLdObject(item, region);
+      const result = processJsonLdObject(item, region, config);
       if (result) return result;
     }
     return null;
@@ -201,7 +238,7 @@ function processJsonLdObject(
   // Handle arrays at top level
   if (Array.isArray(obj)) {
     for (const item of obj) {
-      const result = processJsonLdObject(item, region);
+      const result = processJsonLdObject(item, region, config);
       if (result) return result;
     }
     return null;
@@ -226,7 +263,7 @@ function processJsonLdObject(
     }
     if (variants.length === 0) return null;
 
-    const selection = selectBestVariant(variants, region);
+    const selection = selectBestVariant(variants, region, config);
     if (!selection) return null;
 
     return {
@@ -387,25 +424,71 @@ export function extractFromMetaTags(html: string): ExtractionResult | null {
 }
 
 /**
- * Orchestrator: tries Tier 1 → Tier 2 → Tier 3 → manual fallback
- * 
- * @param url - Product URL
- * @param region - Target region code (US, CA, EU, UK, AU)
- * @param oldPrice - Previous price for anomaly detection
+ * Orchestrator: uses brand config to determine extraction order.
+ * If no config provided, defaults to: Shopify JSON → JSON-LD → Meta Tags → manual.
+ * If config.primary_extraction is 'manual_only', skips all auto-extraction.
  */
 export async function extractPrice(
   url: string,
   region?: string,
-  oldPrice?: number | null
+  oldPrice?: number | null,
+  config?: BrandSyncConfig
 ): Promise<ExtractionResult> {
-  // Tier 1: Shopify JSON
-  const shopifyResult = await extractFromShopifyJson(url, region);
-  if (shopifyResult && shopifyResult.current_price && shopifyResult.current_price > 0) {
-    return applyAnomalyCheck(shopifyResult, oldPrice);
+  const primary = config?.primary_extraction ?? 'shopify_json';
+  const fallback = config?.fallback_extraction ?? 'meta_tags';
+
+  // If manual_only, skip all auto-extraction
+  if (primary === 'manual_only') {
+    return manualFallback();
   }
 
-  // Tier 2: Fetch HTML for JSON-LD and meta tags
+  // Build ordered extraction tiers based on config
+  const tiers: string[] = [primary];
+  if (fallback && fallback !== primary) tiers.push(fallback);
+  // Always add remaining tiers as final fallbacks
+  for (const t of ['shopify_json', 'json_ld', 'meta_tags']) {
+    if (!tiers.includes(t)) tiers.push(t);
+  }
+
+  // Skip shopify_json if config says it's not available
+  const skipShopify = config?.shopify_json_available === false;
+
   let html: string | null = null;
+
+  for (const tier of tiers) {
+    if (tier === 'shopify_json' && !skipShopify) {
+      const result = await extractFromShopifyJson(url, region, config);
+      if (result?.current_price && result.current_price > 0) {
+        return applyAnomalyCheck(result, oldPrice);
+      }
+    }
+
+    if (tier === 'json_ld' || tier === 'meta_tags') {
+      // Fetch HTML once, reuse for both JSON-LD and meta tags
+      if (html === null) {
+        html = await fetchHtml(url);
+      }
+      if (html) {
+        if (tier === 'json_ld') {
+          const result = extractFromJsonLd(html, region, config);
+          if (result?.current_price && result.current_price > 0) {
+            return applyAnomalyCheck(result, oldPrice);
+          }
+        }
+        if (tier === 'meta_tags') {
+          const result = extractFromMetaTags(html);
+          if (result?.current_price && result.current_price > 0) {
+            return applyAnomalyCheck(result, oldPrice);
+          }
+        }
+      }
+    }
+  }
+
+  return manualFallback();
+}
+
+async function fetchHtml(url: string): Promise<string | null> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 12000);
@@ -417,30 +500,15 @@ export async function extractPrice(
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
-    if (resp.ok) {
-      html = await resp.text();
-    } else {
-      await resp.text().catch(() => {});
-    }
+    if (resp.ok) return await resp.text();
+    await resp.text().catch(() => {});
   } catch (e) {
     console.error(`HTML fetch failed for ${url}:`, e);
   }
+  return null;
+}
 
-  if (html) {
-    // Tier 2: JSON-LD
-    const jsonLdResult = extractFromJsonLd(html, region);
-    if (jsonLdResult && jsonLdResult.current_price && jsonLdResult.current_price > 0) {
-      return applyAnomalyCheck(jsonLdResult, oldPrice);
-    }
-
-    // Tier 3: Meta tags
-    const metaResult = extractFromMetaTags(html);
-    if (metaResult && metaResult.current_price && metaResult.current_price > 0) {
-      return applyAnomalyCheck(metaResult, oldPrice);
-    }
-  }
-
-  // Tier 4: Manual fallback — do NOT overwrite existing price
+function manualFallback(): ExtractionResult {
   return {
     current_price: null,
     compare_at_price: null,
