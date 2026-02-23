@@ -455,6 +455,9 @@ export async function extractPrice(
   const skipShopify = config?.shopify_json_available === false;
 
   let html: string | null = null;
+  let fetchAttempted = false;
+  let isGeoBlocked = false;
+  let usedFirecrawlHtml = false;
 
   for (const tier of tiers) {
     if (tier === 'shopify_json' && !skipShopify) {
@@ -466,13 +469,20 @@ export async function extractPrice(
 
     if (tier === 'json_ld' || tier === 'meta_tags') {
       // Fetch HTML once, reuse for both JSON-LD and meta tags
-      if (html === null) {
+      if (!fetchAttempted) {
+        fetchAttempted = true;
         html = await fetchHtml(url, region);
-        // If fetchHtml returned null and this is a known geo-redirect domain, return geo_blocked
+        // If fetchHtml returned null and this is a known geo-redirect domain, try Firecrawl
         if (html === null) {
           const domain = new URL(url).hostname;
           if (REGION_SPOOF_HEADERS[domain]) {
-            return geoBlockedFallback();
+            isGeoBlocked = true;
+            console.log(`[GeoBlock] Direct fetch failed for ${url}, trying Firecrawl...`);
+            html = await fetchHtmlViaFirecrawl(url);
+            if (html) {
+              console.log(`[GeoBlock] Firecrawl HTML succeeded for ${url}`);
+              usedFirecrawlHtml = true;
+            }
           }
         }
       }
@@ -493,10 +503,186 @@ export async function extractPrice(
     }
   }
 
+  // Tier 4: Firecrawl Markdown extraction — always try if geo-blocked or if Firecrawl HTML didn't yield structured data
+  if (isGeoBlocked || usedFirecrawlHtml) {
+    console.log(`[Firecrawl-MD] Trying markdown extraction for ${url}`);
+    const mdResult = await extractPriceFromFirecrawlMarkdown(url, region, config);
+    if (mdResult?.current_price && mdResult.current_price > 0) {
+      return applyAnomalyCheck(mdResult, oldPrice);
+    }
+  }
+
+  // If we were geo-blocked and nothing worked, return geo_blocked
+  if (isGeoBlocked) {
+    return geoBlockedFallback();
+  }
+
   return manualFallback();
 }
 
-// Region-spoofing headers to bypass geo-redirects
+/**
+ * Tier 4: Firecrawl Markdown-based price extraction.
+ * Uses Firecrawl to render the page and get markdown, then parses variant/price patterns.
+ * Handles Bambu Lab and similar JS-rendered storefronts.
+ */
+async function extractPriceFromFirecrawlMarkdown(
+  url: string,
+  region?: string,
+  config?: BrandSyncConfig
+): Promise<ExtractionResult | null> {
+  const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!apiKey) return null;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown'],
+        waitFor: 3000,
+        onlyMainContent: true,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      await response.text().catch(() => {});
+      return null;
+    }
+
+    const data = await response.json();
+    const markdown = data?.data?.markdown || data?.markdown;
+    if (!markdown || typeof markdown !== 'string') return null;
+
+    console.log(`[Firecrawl-MD] Got ${markdown.length} chars of markdown for ${url}`);
+
+    // Parse variants and prices from markdown
+    // Pattern: "Variant : X Combo" followed by variant names and prices like "$299.00"
+    // Or "# Product Name\n\n$399.00 USD$559.00 USD"
+    return parseMarkdownPrices(markdown, region, config);
+  } catch (e) {
+    console.error(`[Firecrawl-MD] Error:`, e);
+    return null;
+  }
+}
+
+/**
+ * Parse prices from Firecrawl markdown output.
+ * Handles patterns like:
+ *   "- A1 Combo\n\n$399.00\n\n- A1\n\n$299.00"
+ *   or "# Product\n\n$299.00 USD"
+ */
+function parseMarkdownPrices(
+  markdown: string,
+  region?: string,
+  config?: BrandSyncConfig
+): ExtractionResult | null {
+  // Strategy 1: Look for variant list pattern "- VariantName\n...\n$Price"
+  const variantBlockRegex = /^-\s+(.+?)$\s*(?:\n.*?)*?\n\$?([\d,]+(?:\.\d{1,2})?)/gm;
+  const variants: NormalizedVariant[] = [];
+  let match;
+
+  // Reset regex
+  const lines = markdown.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    // Check if line starts with "- " and looks like a variant name (not a feature bullet)
+    if (line.startsWith('- ') && line.length < 60 && !line.includes('Calibration') && !line.includes('Printing') && !line.includes('Nozzle') && !line.includes('Volume') && !line.includes('cable') && !line.includes('Shipping') && !line.includes('accessories')) {
+      const variantName = line.substring(2).trim();
+      // Look for a price in the next few lines — require $ or currency symbol
+      for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
+        const priceLine = lines[j].trim();
+        const priceMatch = priceLine.match(/^[\$£€¥]([\d,]+(?:\.\d{1,2})?)\s*(?:USD|CAD|GBP|EUR|AUD|JPY)?$/);
+        if (priceMatch) {
+          const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+          if (!isNaN(price) && price >= 50) {  // Printers are always >= $50
+            variants.push({
+              name: variantName,
+              price,
+              compare_at_price: null,
+              available: true,
+            });
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  if (variants.length > 0) {
+    console.log(`[Firecrawl-MD] Found ${variants.length} variants: ${variants.map(v => `${v.name}=$${v.price}`).join(', ')}`);
+    const selection = selectBestVariant(variants, region, config);
+    if (selection) {
+      return {
+        current_price: selection.variant.price,
+        compare_at_price: selection.variant.compare_at_price,
+        currency: detectCurrencyFromMarkdown(markdown) || '',
+        variant_name: selection.variant.name,
+        extraction_method: 'meta_tags', // closest available type
+        confidence: 'medium',
+        raw_variants_found: variants.length,
+        is_combo: selection.is_combo,
+        requires_review: false,
+      };
+    }
+  }
+
+  // Strategy 2: Find first price in format "$XXX.XX" near the product title
+  const titleMatch = markdown.match(/^#\s+(.+)$/m);
+  if (titleMatch) {
+    const titleIdx = markdown.indexOf(titleMatch[0]);
+    const afterTitle = markdown.substring(titleIdx, titleIdx + 500);
+    // Match price pattern: "$299.00 USD" or "$299.00"
+    const priceMatch = afterTitle.match(/[\$£€¥]([\d,]+(?:\.\d{1,2})?)\s*(?:USD|CAD|GBP|EUR|AUD|JPY)?/);
+    if (priceMatch) {
+      const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+      if (!isNaN(price) && price >= 50) {
+        // Check for compare-at price (second price on same line like "$399.00 USD$559.00 USD")
+        const allPrices = afterTitle.match(/\$?([\d,]+(?:\.\d{1,2})?)\s*(?:USD|CAD|GBP|EUR|AUD|JPY)?/g);
+        let compareAt: number | null = null;
+        if (allPrices && allPrices.length >= 2) {
+          const second = parseFloat(allPrices[1].replace(/[^0-9.]/g, ''));
+          if (!isNaN(second) && second > price) compareAt = second;
+        }
+        return {
+          current_price: price,
+          compare_at_price: compareAt,
+          currency: detectCurrencyFromMarkdown(markdown) || '',
+          variant_name: titleMatch[1],
+          extraction_method: 'meta_tags',
+          confidence: 'medium',
+          raw_variants_found: 1,
+          is_combo: false,
+          requires_review: false,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function detectCurrencyFromMarkdown(md: string): string | null {
+  if (md.includes('USD')) return 'USD';
+  if (md.includes('CAD')) return 'CAD';
+  if (md.includes('GBP')) return 'GBP';
+  if (md.includes('EUR')) return 'EUR';
+  if (md.includes('AUD')) return 'AUD';
+  if (md.includes('JPY')) return 'JPY';
+  if (md.includes('$')) return 'USD';
+  if (md.includes('£')) return 'GBP';
+  if (md.includes('€')) return 'EUR';
+  if (md.includes('¥')) return 'JPY';
+  return null;
+}
 const REGION_SPOOF_HEADERS: Record<string, Record<string, string>> = {
   'us.store.bambulab.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
   'ca.store.bambulab.com': { 'Accept-Language': 'en-CA,en;q=0.9', 'CF-IPCountry': 'CA', 'X-Forwarded-For': '99.224.0.1' },
@@ -583,9 +769,10 @@ async function fetchHtml(url: string, targetRegion?: string): Promise<string | n
               await resp3.text().catch(() => {});
               return null;
             }
-            // Redirect goes to wrong region — reject gracefully
-            console.log(`Geo-redirect ${requestDomain} → ${redirectDomain} (target: ${targetRegion || 'none'}). Skipping — server location blocked.`);
+            // Redirect goes to wrong region — reject and try Firecrawl
+            console.log(`Geo-redirect ${requestDomain} → ${redirectDomain} (target: ${targetRegion || 'none'}). Will try Firecrawl.`);
             await resp.text().catch(() => {});
+            // Return a special marker so caller can try Firecrawl
             return null;
           }
           // Same-domain redirect, follow it
@@ -616,6 +803,58 @@ async function fetchHtml(url: string, targetRegion?: string): Promise<string | n
     console.error(`HTML fetch failed for ${url}:`, e);
   }
   return null;
+}
+
+/**
+ * Fetch HTML via Firecrawl API (bypasses geo-blocks via headless browser).
+ * Returns raw HTML content or null on failure.
+ */
+async function fetchHtmlViaFirecrawl(url: string): Promise<string | null> {
+  const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!apiKey) {
+    console.log('FIRECRAWL_API_KEY not available, skipping Firecrawl fallback');
+    return null;
+  }
+
+  try {
+    console.log(`[Firecrawl] Fetching: ${url}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['html'],
+        waitFor: 3000,
+        onlyMainContent: false,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => '');
+      console.error(`[Firecrawl] HTTP ${response.status}: ${errBody}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const html = data?.data?.html || data?.html;
+    if (html && typeof html === 'string' && html.length > 100) {
+      console.log(`[Firecrawl] Got ${html.length} chars of HTML`);
+      return html;
+    }
+    console.log('[Firecrawl] No usable HTML in response');
+    return null;
+  } catch (e) {
+    console.error(`[Firecrawl] Error:`, e);
+    return null;
+  }
 }
 
 function manualFallback(): ExtractionResult {
