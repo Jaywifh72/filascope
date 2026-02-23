@@ -14,6 +14,8 @@ import { REGIONS } from "@/config/regions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMultiplePrinters } from "@/hooks/useMultiplePrinters";
 import { toast } from "sonner";
+import { formatPrice as formatCurrencyPrice } from "@/config/currencies";
+import { getPrinterRegionalPrice } from "@/utils/printerRegionalPrice";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -87,19 +89,11 @@ export default function MediumStandardPrinterCard({
     return () => clearTimeout(timer);
   }, []);
 
-  // Calculate fallback price from database (store > amazon > msrp)
-  const databasePrice = printer.current_price_usd_store ?? printer.current_price_usd_amazon ?? printer.msrp_usd;
+  // Resolve regional price based on user's selected region
+  const regionalData = getPrinterRegionalPrice(printer as any, region);
   
-  // Debug logging for K2 pricing issue
-  if (printer.model_name === 'K2') {
-    console.log('[K2 Pricing Debug]', {
-      model: printer.model_name,
-      store: printer.current_price_usd_store,
-      amazon: printer.current_price_usd_amazon,
-      msrp: printer.msrp_usd,
-      databasePrice,
-    });
-  }
+  // Calculate fallback price from database (store > amazon > msrp) — used for live price hook
+  const databasePrice = printer.current_price_usd_store ?? printer.current_price_usd_amazon ?? printer.msrp_usd;
   
   // Fetch live price from store (uses caching to avoid excessive API calls)
   const { 
@@ -109,26 +103,14 @@ export default function MediumStandardPrinterCard({
     currency: livePriceCurrency
   } = usePrinterCurrentPrice(printer.official_store_url, databasePrice);
 
-  // Debug logging for K2 pricing issue - after hook
-  if (printer.model_name === 'K2') {
-    console.log('[K2 Pricing Debug - After Hook]', {
-      livePrice,
-      priceLoading,
-      isLivePrice,
-      finalPrice: livePrice ?? databasePrice,
-    });
-  }
-
-  // Use live price if available, otherwise use the hook's returned price (which includes fallback)
-  // The hook already handles fallback internally, so we just need to ensure we have a value
-  const price = livePrice ?? databasePrice;
+  // Use regional price if available, otherwise live price, then USD fallback
+  const price = regionalData.isRegional ? regionalData.price : (livePrice ?? databasePrice);
+  const priceCurrency = regionalData.isRegional ? regionalData.currency : 'USD';
+  const priceIsUsdFallback = !regionalData.isRegional && region !== 'US';
   
-  // Determine if live price is already in user's currency (no conversion needed)
-  const isLivePriceInUserCurrency = isLivePrice && livePriceCurrency === userCurrency;
-  
-  // Format price correctly based on whether conversion is needed
+  // Format price in its native currency (no conversion)
   const formatDisplayPrice = (priceValue: number): string => {
-    return formatPrice(priceValue);
+    return formatCurrencyPrice(priceValue, priceCurrency);
   };
 
   // Format simplified specs: "256×256×256mm • 500mm/s • 300°C"
@@ -170,9 +152,10 @@ export default function MediumStandardPrinterCard({
   };
   const kinematics = getKinematics();
 
-  // Calculate discount percentage
-  const discountPercent = printer.msrp_usd && price && price < printer.msrp_usd
-    ? Math.round((1 - price / printer.msrp_usd) * 100)
+  // Calculate discount percentage using regional MSRP when available
+  const regionalMsrp = regionalData.msrp;
+  const discountPercent = regionalMsrp && price && price < regionalMsrp
+    ? Math.round((1 - price / regionalMsrp) * 100)
     : null;
 
   // Price freshness check (>7 days = stale)
@@ -360,15 +343,18 @@ export default function MediumStandardPrinterCard({
                       <Tag className="h-3.5 w-3.5 text-muted-foreground/50" />
                       {formatDisplayPrice(price)}
                     </span>
-                    {printer.msrp_usd && price < printer.msrp_usd && discountPercent && discountPercent >= 5 && (
+                    {regionalMsrp && price < regionalMsrp && discountPercent && discountPercent >= 5 && (
                       <span className="bg-emerald-500/15 text-emerald-400 text-xs font-semibold px-1.5 py-0.5 rounded">
                         -{discountPercent}%
                       </span>
                     )}
-                    {printer.msrp_usd && price < printer.msrp_usd && (
+                    {regionalMsrp && price < regionalMsrp && (
                       <span className="text-sm text-muted-foreground line-through hidden sm:inline">
-                        {formatDisplayPrice(printer.msrp_usd)}
+                        {formatCurrencyPrice(regionalMsrp, priceCurrency)}
                       </span>
+                    )}
+                    {priceIsUsdFallback && (
+                      <span className="text-[10px] text-muted-foreground/60">(USD)</span>
                     )}
                   </>
                 ) : (

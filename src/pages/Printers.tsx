@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
 import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
 import { useSearchContext } from "@/hooks/useSearchContext";
+import { useRegion } from "@/contexts/RegionContext";
+import { getPrinterSortPrice } from "@/utils/printerRegionalPrice";
 
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -78,6 +80,9 @@ const isCoreXY = (p: Printer) => {
 
 const getPrice = (p: Printer) => p.current_price_usd_store || p.current_price_usd_amazon || p.msrp_usd || Infinity;
 
+// This is a static USD-only helper used for category counts. 
+// For region-aware sorting/filtering, we use getPrinterSortPrice inside the component.
+
 const defaultAdvancedFilters: AdvancedFilters = {
   brands: [],
   motionSystem: "any",
@@ -90,6 +95,7 @@ export default function Printers() {
   const navigate = useNavigate(); 
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
+  const { region, getConversionRate, currency } = useRegion();
   
   // Scroll restoration hook (kept for potential future use)
   
@@ -304,7 +310,8 @@ export default function Printers() {
     if (!printers) return [];
 
     const filtered = printers.filter(printer => {
-      const price = getPrice(printer);
+      const price = getPrinterSortPrice(printer as any, region);
+      const priceUsd = getPrice(printer); // keep USD for category counts
       const maxDimension = Math.max(
         printer.build_volume_x_mm || 0,
         printer.build_volume_y_mm || 0,
@@ -325,7 +332,7 @@ export default function Printers() {
             if (!isCoreXY(printer)) return false;
             break;
           case 'budget':
-            if (price > 500) return false;
+            if (priceUsd > 500) return false;
             break;
           case 'multicolor':
             if (!printer.multi_material_supported) return false;
@@ -408,7 +415,7 @@ export default function Printers() {
       if (activeQuickFilters.length > 0) {
         const matchesAny = activeQuickFilters.some(filterId => {
           switch (filterId) {
-            case 'budget': return price <= 500;
+            case 'budget': return priceUsd <= 500;
             case 'beginner': return printer.has_enclosure && printer.auto_bed_leveling;
             case 'multicolor': return printer.multi_material_supported;
             case 'large': return maxDimension >= 300;
@@ -428,7 +435,7 @@ export default function Printers() {
             if (!printer.brand?.brand || !POPULAR_BRANDS.includes(printer.brand.brand)) return false;
             break;
           case "under500":
-            if (price > 500) return false;
+            if (priceUsd > 500) return false;
             break;
           case "enclosed":
             if (!printer.has_enclosure) return false;
@@ -454,9 +461,9 @@ export default function Printers() {
       return true;
     });
 
-    // Sort
+    // Sort using regional prices
     return filtered.sort((a, b) => {
-      const getPrinterPrice = (p: Printer) => getPrice(p);
+      const getPrinterPrice = (p: Printer) => getPrinterSortPrice(p as any, region);
       const getVolume = (p: Printer) => (p.build_volume_x_mm || 0) * (p.build_volume_y_mm || 0) * (p.build_volume_z_mm || 0);
       
       switch (sortBy) {
@@ -469,7 +476,7 @@ export default function Printers() {
         default: return 0;
       }
     });
-  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, activeChip]);
+  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, activeChip, region]);
 
   const advancedFilterCount = 
     advancedFilters.brands.length +

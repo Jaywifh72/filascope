@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { useRegion } from "@/contexts/RegionContext";
+import { formatPrice } from "@/config/currencies";
 
 export type PrinterQuickFilter = 
   | "popular"
@@ -24,11 +26,13 @@ interface ChipDef {
   id: PrinterQuickFilter;
   emoji: string;
   label: string;
+  /** Dynamic label function for currency-aware chips */
+  getLabel?: (currencySymbol: string, convertedAmount: string) => string;
 }
 
 const CHIPS: ChipDef[] = [
   { id: "popular", emoji: "🔥", label: "Popular" },
-  { id: "under500", emoji: "💰", label: "Under $500" },
+  { id: "under500", emoji: "💰", label: "Under $500", getLabel: (_, amount) => `Under ${amount}` },
   { id: "enclosed", emoji: "🏠", label: "Enclosed" },
   { id: "multicolor", emoji: "🎨", label: "Multi-Color" },
   { id: "highspeed", emoji: "⚡", label: "High Speed" },
@@ -42,10 +46,22 @@ interface PrinterQuickFilterChipsProps {
 }
 
 export function PrinterQuickFilterChips({ active, onChange }: PrinterQuickFilterChipsProps) {
+  const { currency, getConversionRate } = useRegion();
+  
+  // Convert $500 USD to user's currency for the "Under $500" chip
+  const under500Label = (() => {
+    if ((currency as string) === 'USD') return 'Under $500';
+    const rate = getConversionRate('USD', currency);
+    if (rate === 1) return 'Under $500'; // rates not loaded yet
+    const converted = Math.round(500 * rate / 10) * 10; // round to nearest 10
+    return `Under ${formatPrice(converted, currency)}`;
+  })();
+
   return (
     <div className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-none pb-1 mb-4">
       {CHIPS.map((chip) => {
         const isActive = active === chip.id;
+        const displayLabel = chip.id === 'under500' ? under500Label : chip.label;
         return (
           <a
             key={chip.id}
@@ -62,7 +78,7 @@ export function PrinterQuickFilterChips({ active, onChange }: PrinterQuickFilter
             )}
           >
             <span>{chip.emoji}</span>
-            {chip.label}
+            {displayLabel}
           </a>
         );
       })}
