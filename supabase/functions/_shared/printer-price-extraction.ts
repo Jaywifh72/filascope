@@ -1322,11 +1322,14 @@ async function extractPrusaPrice(
 
   try {
     const locationParam = region ? REGION_TO_LOCATION[region] : REGION_TO_LOCATION['US'];
-    console.log(`[Prusa] Firecrawl scrape: ${url} region=${region || 'US'} waitFor=5000`);
+    console.log(`[Prusa] Firecrawl scrape: ${url} region=${region || 'US'} waitFor=8000 onlyMainContent=false`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 40000);
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
+    // Prusa uses Global-e for pricing which renders prices via JS after geo-detection.
+    // We need: longer wait, full page content (not just main), and HTML format to find
+    // price elements that may not appear in markdown.
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -1335,9 +1338,9 @@ async function extractPrusaPrice(
       },
       body: JSON.stringify({
         url,
-        formats: ['markdown'],
-        waitFor: 5000,
-        onlyMainContent: true,
+        formats: ['markdown', 'html'],
+        waitFor: 8000,
+        onlyMainContent: false, // Critical: price widget is outside "main content"
         ...(locationParam && { location: locationParam }),
       }),
       signal: controller.signal,
@@ -1351,27 +1354,37 @@ async function extractPrusaPrice(
     }
 
     const data = await response.json();
-    const markdown = data?.data?.markdown || data?.markdown;
-    if (!markdown || typeof markdown !== 'string') {
-      console.log('[Prusa] No markdown returned from Firecrawl');
-      return manualFallback();
-    }
+    const markdown = data?.data?.markdown || data?.markdown || '';
+    const html = data?.data?.html || data?.html || '';
+    console.log(`[Prusa] Got ${markdown.length} chars markdown, ${html.length} chars HTML`);
 
-    console.log(`[Prusa] Got ${markdown.length} chars of markdown`);
-
-    // Parse Prusa-specific price patterns from the rendered markdown
-    const result = parsePrusaMarkdownPrice(markdown, region, config);
-    if (result?.current_price && result.current_price > 0) {
-      // Currency mismatch check
-      if (expectedCurrency && result.currency && result.currency !== expectedCurrency) {
-        console.log(`[Prusa] Currency mismatch: got ${result.currency}, expected ${expectedCurrency}. Rejecting.`);
-        return manualFallback();
+    // Strategy 1: Try parsing from markdown first
+    if (markdown) {
+      const mdResult = parsePrusaMarkdownPrice(markdown, region, config);
+      if (mdResult?.current_price && mdResult.current_price > 0) {
+        if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
+          console.log(`[Prusa] MD currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Trying HTML.`);
+        } else {
+          console.log(`[Prusa] Extracted from markdown: ${mdResult.current_price} ${mdResult.currency}`);
+          return applyAnomalyCheck(mdResult, oldPrice, usPriceForSanity, expectedCurrency);
+        }
       }
-      console.log(`[Prusa] Extracted price: ${result.current_price} ${result.currency}`);
-      return applyAnomalyCheck(result, oldPrice, usPriceForSanity, expectedCurrency);
     }
 
-    console.log('[Prusa] No price found in Firecrawl markdown — returning manual fallback');
+    // Strategy 2: Parse from rendered HTML (Global-e injects prices into DOM elements)
+    if (html) {
+      const htmlResult = parsePrusaHtmlPrice(html, region, expectedCurrency);
+      if (htmlResult?.current_price && htmlResult.current_price > 0) {
+        if (expectedCurrency && htmlResult.currency && htmlResult.currency !== expectedCurrency) {
+          console.log(`[Prusa] HTML currency mismatch: got ${htmlResult.currency}, expected ${expectedCurrency}. Rejecting.`);
+        } else {
+          console.log(`[Prusa] Extracted from HTML: ${htmlResult.current_price} ${htmlResult.currency}`);
+          return applyAnomalyCheck(htmlResult, oldPrice, usPriceForSanity, expectedCurrency);
+        }
+      }
+    }
+
+    console.log('[Prusa] No price found in markdown or HTML — returning manual fallback');
     return manualFallback();
   } catch (e) {
     console.error('[Prusa] Extraction error:', e);
@@ -1458,6 +1471,121 @@ function parsePrusaMarkdownPrice(
         requires_review: true,
       };
     }
+  }
+
+  return null;
+}
+
+/**
+ * Parse prices from Prusa's rendered HTML.
+ * Global-e injects prices into specific DOM elements after JS rendering.
+ * Look for price patterns in data attributes, spans with price classes, and text content.
+ */
+function parsePrusaHtmlPrice(
+  html: string,
+  region?: string,
+  expectedCurrency?: string
+): ExtractionResult | null {
+  // Strategy 1: Look for Global-e price elements (data-ge-price, data-price attributes)
+  const gePriceMatch = html.match(/data-ge-price="([\d.]+)"/);
+  if (gePriceMatch) {
+    const price = parseFloat(gePriceMatch[1]);
+    if (!isNaN(price) && price >= 100 && price <= 5000) {
+      console.log(`[Prusa:HTML] Found Global-e data attribute price: ${price}`);
+      return {
+        current_price: price,
+        compare_at_price: null,
+        currency: expectedCurrency || 'USD',
+        variant_name: null,
+        extraction_method: 'meta_tags',
+        confidence: 'medium',
+        raw_variants_found: 1,
+        is_combo: false,
+        requires_review: false,
+      };
+    }
+  }
+
+  // Strategy 2: Look for price in elements with price-related classes
+  const pricePatterns = [
+    // Match $1,202.78 or €1,099.00 in span/div elements
+    /<(?:span|div|p|strong)[^>]*>[\s]*(?:[\$\u20AC\u00A3])([\d,]+(?:\.\d{1,2})?)[\s]*<\/(?:span|div|p|strong)>/gi,
+    // Match price with class containing "price"
+    /class="[^"]*price[^"]*"[^>]*>[\s]*(?:[\$\u20AC\u00A3])?([\d,]+(?:\.\d{1,2})?)[\s]*(?:USD|EUR|GBP|CAD|AUD)?/gi,
+    // Match data-price attributes
+    /data-price="([\d.]+)"/gi,
+    // Broader: any element containing a price-like value near "cart" or "buy"
+    /(?:cart|buy|price|add to)[^<]{0,200}[\$\u20AC\u00A3]([\d,]+(?:\.\d{1,2})?)/gi,
+  ];
+
+  for (const pattern of pricePatterns) {
+    let match;
+    while ((match = pattern.exec(html)) !== null) {
+      const priceStr = match[1].replace(/,/g, '');
+      const price = parseFloat(priceStr);
+      if (!isNaN(price) && price >= 100 && price <= 5000) {
+        const context = html.substring(Math.max(0, match.index - 20), match.index + match[0].length + 20);
+        let currency = expectedCurrency || 'USD';
+        if (context.includes('\u20AC') || context.includes('EUR')) currency = 'EUR';
+        else if (context.includes('\u00A3') || context.includes('GBP')) currency = 'GBP';
+        else if (context.includes('CA$') || context.includes('CAD')) currency = 'CAD';
+        else if (context.includes('$')) currency = 'USD';
+
+        console.log(`[Prusa:HTML] Found price via pattern: ${price} ${currency}`);
+        return {
+          current_price: price,
+          compare_at_price: null,
+          currency,
+          variant_name: null,
+          extraction_method: 'meta_tags',
+          confidence: 'medium',
+          raw_variants_found: 1,
+          is_combo: false,
+          requires_review: false,
+        };
+      }
+    }
+  }
+
+  // Strategy 3: Broad scan - find all price-like values in the printer range ($100-$5000)
+  const broadRegex = /[\$\u20AC\u00A3]([\d,]+\.\d{2})/g;
+  const foundPrices: { value: number; currency: string }[] = [];
+  let bMatch;
+  while ((bMatch = broadRegex.exec(html)) !== null) {
+    const price = parseFloat(bMatch[1].replace(/,/g, ''));
+    if (!isNaN(price) && price >= 100 && price <= 5000) {
+      const symbol = bMatch[0].charAt(0);
+      let currency = symbol === '\u20AC' ? 'EUR' : symbol === '\u00A3' ? 'GBP' : 'USD';
+      foundPrices.push({ value: price, currency });
+    }
+  }
+
+  if (foundPrices.length > 0) {
+    const priceCounts = new Map<number, number>();
+    for (const fp of foundPrices) {
+      priceCounts.set(fp.value, (priceCounts.get(fp.value) || 0) + 1);
+    }
+    let bestPrice = foundPrices[0];
+    let bestCount = 0;
+    for (const [value, count] of priceCounts) {
+      if (count > bestCount) {
+        bestCount = count;
+        bestPrice = foundPrices.find(fp => fp.value === value)!;
+      }
+    }
+
+    console.log(`[Prusa:HTML] Broad scan found ${foundPrices.length} prices, best: ${bestPrice.value} ${bestPrice.currency} (appeared ${bestCount}x)`);
+    return {
+      current_price: bestPrice.value,
+      compare_at_price: null,
+      currency: bestPrice.currency,
+      variant_name: null,
+      extraction_method: 'meta_tags',
+      confidence: 'low',
+      raw_variants_found: foundPrices.length,
+      is_combo: false,
+      requires_review: true,
+    };
   }
 
   return null;
