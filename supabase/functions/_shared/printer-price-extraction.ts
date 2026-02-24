@@ -10,7 +10,7 @@ export interface ExtractionResult {
   compare_at_price: number | null;
   currency: string;
   variant_name: string | null;
-  extraction_method: 'shopify_json' | 'json_ld_product' | 'json_ld_product_group' | 'meta_tags' | 'manual' | 'geo_blocked' | 'not_in_region';
+  extraction_method: 'shopify_json' | 'json_ld_product' | 'json_ld_product_group' | 'meta_tags' | 'manual' | 'geo_blocked' | 'not_in_region' | 'firecrawl' | 'firecrawl_converted';
   confidence: 'high' | 'medium' | 'low';
   raw_variants_found: number;
   is_combo: boolean;
