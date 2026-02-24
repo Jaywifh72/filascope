@@ -157,7 +157,7 @@ export interface TestResult {
 }
 
 export interface SyncResult {
-  status: 'syncing' | 'success' | 'failed' | 'unchanged' | 'unavailable';
+  status: 'syncing' | 'success' | 'failed' | 'unchanged' | 'unavailable' | 'not_in_region';
   oldPrice?: number;
   newPrice?: number;
   percentChange?: number;

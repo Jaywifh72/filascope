@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
         }
 
         if (!productUrl) {
-          regionResults[regionCode] = { status: "skipped", reason: "No URL available" };
+          regionResults[regionCode] = { status: "not_in_region", reason: "No URL configured for this region" };
           continue;
         }
 
