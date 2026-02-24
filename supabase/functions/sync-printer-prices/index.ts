@@ -97,6 +97,28 @@ Deno.serve(async (req) => {
     }
 
     // 2. Query printers with brand join
+    // First, check if a specific printer_id was requested and it's discontinued
+    let discontinuedResults: any[] = [];
+    if (body.printer_id) {
+      const { data: discCheck } = await supabase
+        .from("printers")
+        .select("id, model_name, status, msrp_usd, brand_id, printer_brands!inner ( id, brand )")
+        .eq("id", body.printer_id)
+        .eq("status", "discontinued")
+        .maybeSingle();
+      if (discCheck) {
+        const brandName = (discCheck as any).printer_brands?.brand || 'Unknown';
+        discontinuedResults.push({
+          printer: discCheck.model_name,
+          brand: slugify(brandName),
+          slug: null,
+          skipped: true,
+          reason: "discontinued",
+          msrp: discCheck.msrp_usd,
+        });
+      }
+    }
+
     let query = supabase
       .from("printers")
       .select(`
@@ -425,17 +447,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Merge discontinued results with active results
+    const allResults = [...discontinuedResults, ...results];
+
     return new Response(JSON.stringify({
       success: true,
       timestamp,
-      results,
+      results: allResults,
       summary: {
-        printersChecked: printers?.length || 0,
+        printersChecked: (printers?.length || 0) + discontinuedResults.length,
         pricesUpdated: totalUpdated,
-        skipped: totalSkipped,
+        skipped: totalSkipped + discontinuedResults.length,
         errors: totalErrors,
         anomalies: totalAnomalies,
         manualOnly: totalManualOnly,
+        discontinued: discontinuedResults.length,
       },
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
