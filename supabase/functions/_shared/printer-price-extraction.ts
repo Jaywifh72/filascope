@@ -1363,7 +1363,14 @@ async function extractPrusaPrice(
       const mdResult = parsePrusaMarkdownPrice(markdown, region, config);
       if (mdResult?.current_price && mdResult.current_price > 0) {
         if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
-          console.log(`[Prusa] MD currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Trying HTML.`);
+          // Prusa uses a single global store with ~1:1 USD/EUR pricing.
+          // Firecrawl renders from EU, so we always get EUR. Accept the numeric value.
+          console.log(`[Prusa] Currency mismatch: got ${mdResult.currency} ${mdResult.current_price}, expected ${expectedCurrency}. Accepting price (single global store).`);
+          mdResult.currency = expectedCurrency;
+          mdResult.requires_review = true;
+          mdResult.confidence = 'low';
+          mdResult.extraction_method = 'firecrawl_converted';
+          return applyAnomalyCheck(mdResult, oldPrice, usPriceForSanity, expectedCurrency);
         } else {
           console.log(`[Prusa] Extracted from markdown: ${mdResult.current_price} ${mdResult.currency}`);
           return applyAnomalyCheck(mdResult, oldPrice, usPriceForSanity, expectedCurrency);
@@ -1376,7 +1383,12 @@ async function extractPrusaPrice(
       const htmlResult = parsePrusaHtmlPrice(html, region, expectedCurrency);
       if (htmlResult?.current_price && htmlResult.current_price > 0) {
         if (expectedCurrency && htmlResult.currency && htmlResult.currency !== expectedCurrency) {
-          console.log(`[Prusa] HTML currency mismatch: got ${htmlResult.currency}, expected ${expectedCurrency}. Rejecting.`);
+          console.log(`[Prusa] HTML currency mismatch: got ${htmlResult.currency} ${htmlResult.current_price}, expected ${expectedCurrency}. Accepting price (single global store).`);
+          htmlResult.currency = expectedCurrency;
+          htmlResult.requires_review = true;
+          htmlResult.confidence = 'low';
+          htmlResult.extraction_method = 'firecrawl_converted';
+          return applyAnomalyCheck(htmlResult, oldPrice, usPriceForSanity, expectedCurrency);
         } else {
           console.log(`[Prusa] Extracted from HTML: ${htmlResult.current_price} ${htmlResult.currency}`);
           return applyAnomalyCheck(htmlResult, oldPrice, usPriceForSanity, expectedCurrency);
