@@ -1315,15 +1315,26 @@ async function extractCrealityRegionalPrice(
   const shopifyDomain = CREALITY_MYSHOPIFY_MAP[region];
   const usSlug = url.match(/\/products\/([^/?#]+)/)?.[1] || null;
 
-  // Try myshopify discovery first
+  // Try myshopify discovery first (returns handle + price for immediate validation)
   let discoveredHandle: string | null = null;
   if (shopifyDomain) {
-    discoveredHandle = await discoverCrealityRegionalHandle(region, productTitle, usSlug);
+    const discoveryResult = await discoverCrealityRegionalHandle(region, productTitle, usSlug);
+    if (discoveryResult) {
+      // Validate discovered price immediately against US price
+      const discoverySanity = validateAgainstUsPrice(discoveryResult.price);
+      if (discoverySanity === 'ok' || discoverySanity === 'too_high') {
+        discoveredHandle = discoveryResult.handle;
+        console.log(`[Creality] Discovery price validation passed: ${discoveryResult.price} (${discoverySanity})`);
+      } else {
+        console.warn(`[Creality] Rejecting myshopify match for "${productTitle}" in ${region}: price ${discoveryResult.price} is too low (likely accessory "${discoveryResult.handle}")`);
+        // Don't use this handle — fall through to search
+      }
+    }
   }
 
-  // Step 3 (NEW): If myshopify discovery failed, try custom storefront search
+  // Step 3: If myshopify discovery failed or was rejected, try custom storefront search
   if (!discoveredHandle) {
-    console.log(`[Creality] myshopify discovery failed for "${productTitle}" in ${region}, trying storefront search...`);
+    console.log(`[Creality] myshopify discovery failed/rejected for "${productTitle}" in ${region}, trying storefront search...`);
     discoveredHandle = await discoverCrealityHandleViaSearch(region, productTitle);
   }
 
@@ -1464,12 +1475,13 @@ async function extractFromMyShopifyDirect(
 /**
  * Discover a Creality product's regional handle via the myshopify.com backend catalog.
  * Uses strict matching to prevent short model names (K1, K2) from matching accessories.
+ * Returns handle + price so callers can immediately validate the match.
  */
 async function discoverCrealityRegionalHandle(
   region: string,
   productTitle: string,
   usSlug?: string | null
-): Promise<string | null> {
+): Promise<{ handle: string; price: number } | null> {
   const shopifyDomain = CREALITY_MYSHOPIFY_MAP[region];
   if (!shopifyDomain) {
     console.log(`[Creality] No myshopify.com domain mapped for region ${region}`);
@@ -1509,6 +1521,7 @@ async function discoverCrealityRegionalHandle(
     const normalize = (t: string) =>
       t.replace(/^creality\s+/i, '')
        .replace(/\s+3d\s+printer$/i, '')
+       .replace(/\(.*?\)/g, '') // Remove parenthetical text like "(2025 Version)"
        .replace(/[🔥🎁🎀✨💥]/g, '')
        .replace(/\s+/g, ' ')
        .trim()
@@ -1517,30 +1530,57 @@ async function discoverCrealityRegionalHandle(
     const normalizedSearch = normalize(productTitle);
 
     // Strict exclusion filter: remove accessories, filament, bundles, etc.
-    const EXCLUDE_KEYWORDS = /accessori|filament|nozzle|plate|enclosure|dryer|live exclusive|hub|upgrade|replacement|spare|cable|brush|bearing|belt|fan|sensor|hotend|heat.?break|extruder|tool|mat|sheet|glass|kit|mount|cover|tube|clip|screw|bolt|motor|wheel|pulley|rail|guide|adapter|connector|mod\b|part\b|component|extrusion/i;
-    // Filter out accessories by keyword AND by minimum price (all variants < $30 = accessory)
+    const EXCLUDE_KEYWORDS = /accessori|filament|nozzle|plate|enclosure|dryer|live exclusive|hub|upgrade|replacement|spare|cable|brush|bearing|belt|fan|sensor|hotend|heat.?break|extruder|tool|mat|sheet|glass|kit|mount|cover|tube|clip|screw|bolt|motor|wheel|pulley|rail|guide|adapter|connector|mod\b|part\b|component|extrusion|board|gear|screen|door|hotbed|heating.?block/i;
+
+    // Filter out accessories by keyword, product_type, AND minimum price
     const printerProducts = products.filter((p: any) => {
-      if (EXCLUDE_KEYWORDS.test(p.title || '')) return false;
-      // Check minimum price: at least one variant must be > $30
+      const title = p.title || '';
+      if (EXCLUDE_KEYWORDS.test(title)) return false;
+
+      // Check product_type — if present, must contain "Printer" or be empty
+      const pType = (p.product_type || '').toLowerCase();
+      if (pType && !pType.includes('printer') && !pType.includes('3d printer')) {
+        // If product_type explicitly indicates non-printer, exclude
+        if (pType.includes('accessory') || pType.includes('accessories') || pType.includes('filament') || pType.includes('part') || pType.includes('spare')) {
+          console.log(`[Creality] Filtered out "${title}" — product_type="${p.product_type}"`);
+          return false;
+        }
+      }
+
+      // Check minimum price: at least one variant must be > $50 (printers cost more)
       const variants = p.variants || [];
       if (variants.length > 0) {
         const maxPrice = Math.max(...variants.map((v: any) => parseFloat(v.price) || 0));
-        if (maxPrice < 30) {
-          console.log(`[Creality] Filtered out "${p.title}" — max variant price ${maxPrice} < $30`);
+        if (maxPrice < 50) {
+          console.log(`[Creality] Filtered out "${title}" — max variant price ${maxPrice} < $50`);
           return false;
         }
       }
       return true;
     });
 
+    // Sort printer products by price descending — actual printers cost more than accessories
+    printerProducts.sort((a: any, b: any) => {
+      const aPrice = Math.max(...(a.variants || []).map((v: any) => parseFloat(v.price) || 0));
+      const bPrice = Math.max(...(b.variants || []).map((v: any) => parseFloat(v.price) || 0));
+      return bPrice - aPrice;
+    });
+
     console.log(`[Creality] ${printerProducts.length} printer products after filtering`);
+
+    // Helper: build result from a matched product
+    const buildResult = (product: any): { handle: string; price: number } => {
+      const variants = product.variants || [];
+      const price = variants.length > 0 ? parseFloat(variants[0].price) || 0 : 0;
+      return { handle: product.handle, price };
+    };
 
     // Step 1: Exact normalized title match
     for (const product of printerProducts) {
       const pTitle = normalize(product.title || '');
       if (pTitle === normalizedSearch) {
         console.log(`[Creality] Exact title match: "${product.title}" → handle "${product.handle}"`);
-        return product.handle;
+        return buildResult(product);
       }
     }
 
@@ -1550,7 +1590,7 @@ async function discoverCrealityRegionalHandle(
         const pHandle = (product.handle || '').toLowerCase();
         if (pHandle === usSlug.toLowerCase()) {
           console.log(`[Creality] US slug match: "${usSlug}" found in ${region} catalog → handle "${product.handle}"`);
-          return product.handle;
+          return buildResult(product);
         }
       }
       // Also try slug without brand prefix
@@ -1560,7 +1600,7 @@ async function discoverCrealityRegionalHandle(
           const pHandle = (product.handle || '').toLowerCase();
           if (pHandle === strippedSlug || pHandle === `creality-${strippedSlug}`) {
             console.log(`[Creality] Stripped US slug match: "${strippedSlug}" → handle "${product.handle}"`);
-            return product.handle;
+            return buildResult(product);
           }
         }
       }
@@ -1574,16 +1614,14 @@ async function discoverCrealityRegionalHandle(
           const shorter = Math.min(pHandle.length, usSlugLower.length);
           if (shorter / longer >= 0.6) {
             console.log(`[Creality] Partial US slug match: US="${usSlug}" ↔ Regional="${product.handle}"`);
-            return product.handle;
+            return buildResult(product);
           }
         }
       }
     }
 
     // Step 2: For short names (≤4 chars like K1, K2, K1C), require very strict matching
-    // The normalized search must match the ENTIRE normalized product title (not just a substring)
     if (normalizedSearch.length <= 4) {
-      // Only allow exact title match (already tried above) or exact handle match
       const searchSlug = normalizedSearch.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       for (const product of printerProducts) {
         const pHandle = (product.handle || '').toLowerCase();
@@ -1592,7 +1630,17 @@ async function discoverCrealityRegionalHandle(
             pHandle === `creality-${searchSlug}-3d-printer` ||
             pHandle === `creality-${searchSlug}`) {
           console.log(`[Creality] Exact handle match for short name: "${product.handle}"`);
-          return product.handle;
+          return buildResult(product);
+        }
+      }
+      // Also try: short name as a standalone word in the title, but ONLY if product_type says "Printer"
+      for (const product of printerProducts) {
+        const pTitle = normalize(product.title || '');
+        const pType = (product.product_type || '').toLowerCase();
+        const shortRegex = new RegExp(`\\b${normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (shortRegex.test(pTitle) && pType.includes('printer')) {
+          console.log(`[Creality] Short name word-boundary match with printer product_type: "${product.title}" → "${product.handle}"`);
+          return buildResult(product);
         }
       }
       console.log(`[Creality] Short name "${normalizedSearch}" — no exact match found, skipping fuzzy`);
@@ -1604,10 +1652,9 @@ async function discoverCrealityRegionalHandle(
     const searchWordBoundary = new RegExp(`\\b${escapedSearch}\\b`, 'i');
     for (const product of printerProducts) {
       const pTitle = normalize(product.title || '');
-      // Require the search to be a significant portion of the title (≥50%)
       if (searchWordBoundary.test(pTitle) && normalizedSearch.length >= pTitle.length * 0.5) {
         console.log(`[Creality] Word-boundary match: "${product.title}" → handle "${product.handle}"`);
-        return product.handle;
+        return buildResult(product);
       }
     }
 
@@ -1620,7 +1667,7 @@ async function discoverCrealityRegionalHandle(
           pHandle === `${searchSlug}-3d-printer` ||
           pHandle === `creality-${searchSlug}-3d-printer`) {
         console.log(`[Creality] Handle match: "${product.handle}" for search "${searchSlug}"`);
-        return product.handle;
+        return buildResult(product);
       }
     }
 
