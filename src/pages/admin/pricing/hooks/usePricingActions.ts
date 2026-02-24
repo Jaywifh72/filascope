@@ -34,12 +34,22 @@ export function usePricingActions(
   const abortSyncRef = useRef(false);
   const diagnoseRef = useRef<() => void>(() => {});
 
-  // Store key map
+  // Store key maps
   const storeKeyMap = useMemo(() => {
     const map = new Map<string, { store: StoreRow; group: ProductGroup }>();
     for (const g of productGroups) {
       for (const s of g.stores) {
         map.set(s.storeKey, { store: s, group: g });
+      }
+    }
+    return map;
+  }, [productGroups]);
+
+  const storeKeyByRepresentativeRegion = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const g of productGroups) {
+      for (const s of g.stores) {
+        map.set(`${s.representativeId}::${s.region}`, s.storeKey);
       }
     }
     return map;
@@ -314,7 +324,7 @@ export function usePricingActions(
           return result;
         }
 
-        // Extract the result for this specific region from the sync response
+        // Extract all regional results returned by backend and mirror them into UI state
         const printerResult = syncData.results?.[0];
 
         // Handle manual_only / skipped / discontinued printers gracefully (not a failure)
@@ -326,45 +336,124 @@ export function usePricingActions(
             ? `Discontinued${printerResult.msrp ? ` (MSRP: $${printerResult.msrp})` : ''}`
             : reason === 'manual_only' ? 'Manual-only brand (prices managed manually)' : reason;
           const result: SyncResult = { status: mappedStatus, error: errorMsg };
-          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+
+          // Apply skip/discontinued status to all visible regional rows for this printer
+          setSyncResults(prev => {
+            const next = new Map(prev);
+            let applied = false;
+            for (const [key, entry] of storeKeyMap) {
+              if (entry.store.representativeId === store.representativeId) {
+                next.set(key, result);
+                applied = true;
+              }
+            }
+            if (!applied) next.set(store.storeKey, result);
+            return next;
+          });
+
           if (showToast && !isDiscontinued) toast.info(`ℹ️ ${errorMsg}`);
           return result;
         }
 
-        const regionData = printerResult?.regions?.[store.region];
-        const newPrice = regionData?.newPrice;
+        const regionalPayload = (printerResult?.regions || {}) as Record<string, any>;
+        const regionalUpdates = new Map<string, SyncResult>();
+        let anySuccessfulRegion = false;
 
-        if (newPrice && newPrice > 0) {
-          invalidatePriceCache(store.productUrl);
-          const priceChanged = oldPrice != null && Math.abs(newPrice - oldPrice) > 0.01;
-          const pctChange = oldPrice && oldPrice > 0 ? ((newPrice - oldPrice) / oldPrice) * 100 : 0;
+        for (const [regionCode, data] of Object.entries(regionalPayload)) {
+          const targetStoreKey = storeKeyByRepresentativeRegion.get(`${store.representativeId}::${regionCode}`);
+          if (!targetStoreKey) continue;
+
+          const targetStore = storeKeyMap.get(targetStoreKey)?.store;
+          if (!targetStore) continue;
+
+          const targetOldPrice = targetStore.price;
+          const targetNewPrice = typeof data?.newPrice === 'number' ? data.newPrice : null;
+
+          if (targetNewPrice != null && targetNewPrice > 0) {
+            const priceChanged = targetOldPrice != null && Math.abs(targetNewPrice - targetOldPrice) > 0.01;
+            const pctChange = targetOldPrice && targetOldPrice > 0
+              ? ((targetNewPrice - targetOldPrice) / targetOldPrice) * 100
+              : 0;
+
+            regionalUpdates.set(targetStoreKey, {
+              status: priceChanged ? 'success' : 'unchanged',
+              oldPrice: targetOldPrice ?? undefined,
+              newPrice: targetNewPrice,
+              percentChange: pctChange,
+            });
+            anySuccessfulRegion = true;
+          } else {
+            const status = data?.status || 'not_found';
+            const errorMsg = data?.error || `No price found for ${regionCode}`;
+            const isGeoBlocked = status === 'geo_blocked';
+            const isSkipped = status === 'skipped';
+            const isNotInRegion = status === 'not_in_region';
+            const mappedStatus: SyncResult['status'] = (isGeoBlocked || isSkipped || isNotInRegion) ? 'not_in_region' : 'failed';
+
+            regionalUpdates.set(targetStoreKey, {
+              status: mappedStatus,
+              error: isNotInRegion ? 'Not sold in this region' : errorMsg,
+            });
+          }
+        }
+
+        if (regionalUpdates.size > 0) {
+          setSyncResults(prev => {
+            const next = new Map(prev);
+            regionalUpdates.forEach((value, key) => next.set(key, value));
+            return next;
+          });
+        }
+
+        const requestedRegionResult = regionalUpdates.get(store.storeKey);
+        if (requestedRegionResult) {
+          if (anySuccessfulRegion && store.productUrl) invalidatePriceCache(store.productUrl);
+
+          if (showToast) {
+            if (requestedRegionResult.status === 'unchanged' && requestedRegionResult.newPrice != null) {
+              toast.success(`✓ Price confirmed: ${store.currencySymbol}${requestedRegionResult.newPrice.toFixed(2)}`);
+            } else if (requestedRegionResult.status === 'success' && requestedRegionResult.newPrice != null) {
+              const pct = requestedRegionResult.percentChange ?? 0;
+              const oldVal = requestedRegionResult.oldPrice;
+              if (pct > 0) {
+                toast.warning(`⚠️ Price increased: ${store.currencySymbol}${oldVal?.toFixed(2)} → ${store.currencySymbol}${requestedRegionResult.newPrice.toFixed(2)} (+${pct.toFixed(1)}%)`);
+              } else {
+                toast.success(`✓ Price decreased: ${store.currencySymbol}${oldVal?.toFixed(2)} → ${store.currencySymbol}${requestedRegionResult.newPrice.toFixed(2)} (${pct.toFixed(1)}%)`);
+              }
+            } else if (requestedRegionResult.status === 'failed' && requestedRegionResult.error) {
+              toast.error(`✗ ${requestedRegionResult.error}`);
+            }
+          }
+
+          return requestedRegionResult;
+        }
+
+        // Fallback: keep previous behavior if backend omitted requested region from payload
+        const fallbackRegionData = printerResult?.regions?.[store.region];
+        const fallbackNewPrice = fallbackRegionData?.newPrice;
+        if (fallbackNewPrice && fallbackNewPrice > 0) {
+          const priceChanged = oldPrice != null && Math.abs(fallbackNewPrice - oldPrice) > 0.01;
+          const pctChange = oldPrice && oldPrice > 0 ? ((fallbackNewPrice - oldPrice) / oldPrice) * 100 : 0;
           const result: SyncResult = {
             status: priceChanged ? 'success' : 'unchanged',
             oldPrice: oldPrice ?? undefined,
-            newPrice,
+            newPrice: fallbackNewPrice,
             percentChange: pctChange,
           };
           setSyncResults(prev => new Map(prev).set(store.storeKey, result));
           if (showToast) {
-            if (!priceChanged) toast.success(`✓ Price confirmed: ${store.currencySymbol}${newPrice.toFixed(2)}`);
-            else if (pctChange > 0) toast.warning(`⚠️ Price increased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${newPrice.toFixed(2)} (+${pctChange.toFixed(1)}%)`);
-            else toast.success(`✓ Price decreased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${newPrice.toFixed(2)} (${pctChange.toFixed(1)}%)`);
+            if (!priceChanged) toast.success(`✓ Price confirmed: ${store.currencySymbol}${fallbackNewPrice.toFixed(2)}`);
+            else if (pctChange > 0) toast.warning(`⚠️ Price increased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${fallbackNewPrice.toFixed(2)} (+${pctChange.toFixed(1)}%)`);
+            else toast.success(`✓ Price decreased: ${store.currencySymbol}${oldPrice?.toFixed(2)} → ${store.currencySymbol}${fallbackNewPrice.toFixed(2)} (${pctChange.toFixed(1)}%)`);
           }
           return result;
-        } else {
-          const status = regionData?.status || 'not_found';
-          const errorMsg = regionData?.error || `No price found for ${store.region}`;
-          const isGeoBlocked = status === 'geo_blocked';
-          const isSkipped = status === 'skipped';
-          const isNotInRegion = status === 'not_in_region';
-          const mappedStatus: SyncResult['status'] = (isGeoBlocked || isSkipped || isNotInRegion) ? 'not_in_region' : 'failed';
-          const result: SyncResult = { status: mappedStatus, error: isNotInRegion ? 'Not sold in this region' : errorMsg };
-          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
-          if (isGeoBlocked) toast.info(`ℹ️ ${store.region}: ${errorMsg}`);
-          else if (isNotInRegion) { /* silent — not a failure */ }
-          else if (showToast) toast.error(`✗ ${errorMsg}`);
-          return result;
         }
+
+        const fallbackError = fallbackRegionData?.error || `No sync result returned for ${store.region}`;
+        const fallbackResult: SyncResult = { status: 'failed', error: fallbackError };
+        setSyncResults(prev => new Map(prev).set(store.storeKey, fallbackResult));
+        if (showToast) toast.error(`✗ ${fallbackError}`);
+        return fallbackResult;
       }
 
       const { data, error } = await supabase.functions.invoke('get-current-price', {
@@ -540,7 +629,7 @@ export function usePricingActions(
       if (showToast) toast.error(`✗ ${errorMsg}`);
       return result;
     }
-  }, [storeKeyMap, productType, config.tableName]);
+  }, [storeKeyMap, storeKeyByRepresentativeRegion, productType, config.tableName]);
 
   const syncBatch = useCallback(async (storesToSync: StoreRow[]) => {
     const seen = new Set<string>();
