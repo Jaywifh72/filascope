@@ -35,7 +35,8 @@ function generateVerboseLog(
   const failures: string[] = [];
   const changes: string[] = [];
   const unchanged: string[] = [];
-  let updatedCount = 0, unchangedCount = 0, failedCount = 0, unavailableCount = 0;
+  const notInRegion: string[] = [];
+  let updatedCount = 0, unchangedCount = 0, failedCount = 0, unavailableCount = 0, notInRegionCount = 0;
 
   syncResults.forEach((result, storeKey) => {
     if (result.status === 'syncing') return;
@@ -43,7 +44,10 @@ function generateVerboseLog(
     const label = entry ? `${entry.group.cleanName} — ${entry.store.region}` : storeKey;
     const url = entry?.store.productUrl;
 
-    if (result.status === 'failed') {
+    if (result.status === 'not_in_region') {
+      notInRegionCount++;
+      notInRegion.push(`[N/A] ${label}${result.error ? ` — ${result.error}` : ''}`);
+    } else if (result.status === 'failed') {
       failedCount++;
       let block = `[FAILED] ${label}`;
       if (url) block += `\n  URL: ${url}`;
@@ -76,13 +80,20 @@ function generateVerboseLog(
   lines.push(`=== PRICING DATA SYNC LOG ===`);
   lines.push(`Timestamp: ${timestamp}`);
   lines.push(`Product Type: ${config.pluralLabel}`);
-  lines.push(`Summary: ${total} synced — ${updatedCount} updated, ${unchangedCount} unchanged, ${failedCount} failed${unavailableCount > 0 ? `, ${unavailableCount} unavailable` : ''}`);
+  lines.push(`Summary: ${total} synced — ${updatedCount} updated, ${unchangedCount} unchanged, ${failedCount} failed${unavailableCount > 0 ? `, ${unavailableCount} unavailable` : ''}${notInRegionCount > 0 ? `, ${notInRegionCount} not in region` : ''}`);
 
   if (failures.length > 0) {
     lines.push('');
     lines.push('--- FAILURES ---');
     lines.push('');
     failures.forEach(f => lines.push(f));
+  }
+
+  if (notInRegion.length > 0) {
+    lines.push('');
+    lines.push('--- NOT IN REGION ---');
+    lines.push('');
+    notInRegion.forEach(n => lines.push(n));
   }
 
   if (changes.length > 0) {

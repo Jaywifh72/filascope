@@ -350,9 +350,12 @@ export function usePricingActions(
           const errorMsg = regionData?.error || `No price found for ${store.region}`;
           const isGeoBlocked = status === 'geo_blocked';
           const isSkipped = status === 'skipped';
-          const result: SyncResult = { status: (isGeoBlocked || isSkipped) ? 'unavailable' : 'failed', error: errorMsg };
+          const isNotInRegion = status === 'not_in_region';
+          const mappedStatus: SyncResult['status'] = (isGeoBlocked || isSkipped || isNotInRegion) ? 'not_in_region' : 'failed';
+          const result: SyncResult = { status: mappedStatus, error: isNotInRegion ? 'Not sold in this region' : errorMsg };
           setSyncResults(prev => new Map(prev).set(store.storeKey, result));
           if (isGeoBlocked) toast.info(`ℹ️ ${store.region}: ${errorMsg}`);
+          else if (isNotInRegion) { /* silent — not a failure */ }
           else if (showToast) toast.error(`✗ ${errorMsg}`);
           return result;
         }
