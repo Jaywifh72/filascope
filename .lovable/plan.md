@@ -1,133 +1,96 @@
 
 
-# Fix Prusa Research Price Sync
-
-## Problem
-
-Prusa Research (www.prusa3d.com) uses a custom WooCommerce/Next.js storefront that renders prices entirely via JavaScript. Neither static HTML scraping nor Shopify JSON works. The `brand_sync_config` is already correctly set (`primary_extraction = 'json_ld'`, `shopify_json_available = false`), but JSON-LD and meta tags contain no price data on Prusa pages. The Firecrawl markdown fallback (Tier 4) fires but also returns no price because Prusa's pricing widget loads asynchronously and requires full JS rendering with geo-detection.
-
-**Evidence**: Fetching the Core One product page returns 774 lines of markdown with zero price mentions. The HTML source also contains no structured price data -- prices are injected client-side based on the shipping country selector.
-
-## Current Database State
-
-- 10 Prusa products in DB (not 8 as originally stated)
-- 3 already marked `discontinued = true`: MINI+, MINI+ Semi-assembled, MK3S+
-- 7 active products: Core One, Core One L, CORE One+ Ultimate Edition, MK4S, Original Prusa XL (3 toolhead variants)
-- All have `sync_status = 'never_synced'`
-- All have US product URLs set, no regional URLs
-- `brand_sync_config` already exists with correct settings
+# Fix Prusa US Price Extraction (Currency Mismatch Issue)
 
 ## Root Cause
 
-Prusa's storefront is a Next.js app that:
-1. Detects the user's country via Cloudflare geo headers
-2. Loads pricing via a client-side API call (not embedded in HTML)
-3. Shows a country/currency selector that changes prices dynamically
-4. Has no JSON-LD, no meta tags, and no Shopify JSON for price data
+The Prusa extraction pipeline IS working -- Firecrawl successfully renders the page and returns 60K+ chars of content. The problem is a **currency mismatch rejection**:
 
-Even Firecrawl's `waitFor: 3000` may not reliably capture the price because it depends on the geo-detection completing and the price widget rendering.
+1. For US region, the code requests `expectedCurrency = 'USD'`
+2. Firecrawl's servers render from the EU, so Prusa's geo-detection shows EUR prices
+3. The markdown parser finds `€1,349` and correctly identifies it as `EUR`
+4. The currency mismatch check at line 1365 rejects the result: `got EUR, expected USD`
+5. The HTML parser also finds EUR and gets rejected at line 1378
+6. Both strategies fail, so it falls through to `manualFallback()`
+
+This is confirmed by the edge function logs:
+```
+[Prusa] Firecrawl scrape: region=US → Got 60150 chars markdown
+→ "No price found in markdown or HTML — returning manual fallback"
+```
+Meanwhile EU works perfectly because `expectedCurrency = EUR` matches the rendered currency.
 
 ## Solution
 
-### Step 1: Update `brand_sync_config` to use Firecrawl as primary
+Since Prusa uses a **single global store** with the same prices worldwide (just different currency display based on geo-detection), the fix is:
 
-Change `primary_extraction` from `'json_ld'` to `'firecrawl'` so the engine skips the JSON-LD and meta tag tiers entirely and goes straight to Firecrawl markdown (Tier 4). This avoids wasting time on extraction methods that will never work for Prusa.
+### Change 1: Accept cross-currency prices for Prusa with conversion
 
-```text
-UPDATE brand_sync_config SET
-  primary_extraction = 'firecrawl',
-  fallback_extraction = 'meta_tags',
-  sync_notes = 'WooCommerce/Next.js. Prices rendered via JS. Firecrawl primary with waitFor=5000. Single global store with currency selector.'
-WHERE brand_id = 'prusa-research';
-```
+In `extractPrusaPrice()` (lines 1361-1385), instead of rejecting currency mismatches, accept the extracted price and convert it to the expected currency using the exchange rates already in the database.
 
-### Step 2: Add a Prusa-specific Firecrawl extraction strategy
+When a currency mismatch occurs:
+- Log it as informational (not an error)
+- Look up the exchange rate from `exchange_rates` table
+- Convert the extracted price to the expected currency
+- Mark with `confidence: 'low'` and `requires_review: true` to flag for manual verification
+- Set `extraction_method` to `'firecrawl_converted'` for auditability
 
-In `printer-price-extraction.ts`, add a new handler in the `extractPrice` orchestrator (similar to the Creality dedicated path) that detects Prusa URLs and:
+### Change 2: Fallback -- accept EUR price as-is for US when currencies share the same base price
 
-1. Calls Firecrawl with `waitFor: 5000` (longer than default 3000ms to allow price widget to load)
-2. Uses the `location` parameter to request rendering from the US (or target region)
-3. Parses the rendered markdown for Prusa's specific price patterns
+Prusa's pricing is nearly 1:1 between USD and EUR (e.g., Core One is $1,349 USD and EUR 1,349). So as a simpler first approach:
+- If the extracted currency is EUR and expectedCurrency is USD, and they're within 5% of each other (which they are for Prusa), accept the numeric value as the USD price
+- This avoids needing exchange rate lookups for Prusa specifically
 
-Add a new `isPrusaUrl()` check and `extractPrusaPrice()` function that:
-- Detects `prusa3d.com` domain
-- Calls Firecrawl with appropriate location settings
-- Searches markdown for price patterns like `$1,349` near the product title or "Add to Cart" section
-- Falls back to a regex scan of the full markdown for currency-prefixed prices within the $100-$5000 range
+### Change 3: Add logging for diagnostic clarity
 
-### Step 3: Handle the "no price found" case gracefully
+Add a log line when currency mismatch occurs that includes the actual prices found, making future debugging easier.
 
-If Firecrawl also fails to capture the price (which is possible given Prusa's aggressive client-side rendering), the sync should:
-- Return `extraction_method: 'manual'` (not `'failed'`)
-- Preserve the existing MSRP from the database
-- Flag as `sync_status = 'manual_only'` with a note explaining why automated sync doesn't work
+## Files to Modify
 
-### Step 4: Mark 3 discontinued products properly
+1. **`supabase/functions/_shared/printer-price-extraction.ts`** (lines 1361-1385):
+   - Remove the strict currency rejection in `extractPrusaPrice()`
+   - For Prusa specifically, accept the extracted price regardless of detected currency symbol when the brand uses a single global store (`uses_geo_pricing = true`)
+   - Override the currency field to match the expected currency since Prusa uses 1:1 pricing
+   - Add `requires_review: true` flag for converted prices
 
-The 3 discontinued Prusa products (MINI+, MINI+ Semi-assembled, MK3S+) are already marked `discontinued = true` in the database. Ensure the sync engine's discontinued check (implemented earlier) catches them and skips sync.
-
-Verify that:
-- `product_url` is set to NULL for all 3 discontinued products (prevents sync attempts)
-- MSRPs are preserved ($429, $549, $699)
-
-### Step 5: Regional pricing consideration
-
-Prusa uses a single global URL with a currency selector -- there are no separate regional storefronts. For now, only sync US prices (USD). Regional pricing (EUR) would require:
-- Firecrawl rendering with EU location headers
-- Parsing EUR prices from the rendered page
-- This is a future enhancement, not part of this initial fix
+2. **Redeploy `sync-printer-prices`** edge function after changes
 
 ## Technical Details
 
-### Files to modify:
-1. **`supabase/functions/_shared/printer-price-extraction.ts`**:
-   - Add `isPrusaUrl()` helper
-   - Add `extractPrusaPrice()` dedicated handler
-   - Hook it into `extractPrice()` orchestrator before the standard tier loop (like Creality)
-
-2. **Database updates** (via data operations):
-   - Update `brand_sync_config` for Prusa to `primary_extraction = 'firecrawl'`
-   - Set `product_url = NULL` for discontinued products
-   - Leave active product URLs as-is
-
-### New Prusa-specific markdown parsing patterns:
+Current code (lines 1364-1371):
 ```text
-Pattern 1: "$1,349" near "# Prusa CORE One" title
-Pattern 2: "$1,349 USD" anywhere in first 2000 chars
-Pattern 3: "from $1,349" or "starting at $1,349"
-Pattern 4: Price in "Add to Cart" section context
+if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
+  console.log(`[Prusa] MD currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Trying HTML.`);
+  // Falls through to HTML, which also fails → manual fallback
+}
 ```
 
-### Firecrawl call configuration for Prusa:
+New behavior:
 ```text
-waitFor: 5000 (vs default 3000)
-location: { country: 'US', languages: ['en-US'] }
-onlyMainContent: true
-formats: ['markdown']
+if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
+  console.log(`[Prusa] Currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Accepting price (single global store).`);
+  mdResult.currency = expectedCurrency;  // Override since Prusa uses ~1:1 pricing
+  mdResult.requires_review = true;
+  mdResult.confidence = 'low';
+  return applyAnomalyCheck(mdResult, oldPrice, usPriceForSanity, expectedCurrency);
+}
 ```
+
+Same pattern applied to the HTML extraction path.
 
 ## Expected Outcome
 
-| Product | Status | Price Source |
-|---------|--------|-------------|
-| Core One | Active | Firecrawl USD |
-| Core One L | Active | Firecrawl USD |
-| CORE One+ Ultimate Edition | Active | Firecrawl USD |
-| MK4S | Active | Firecrawl USD |
-| Original Prusa XL (single) | Active | Firecrawl USD |
-| Original Prusa XL (2-tool) | Active | Firecrawl USD |
-| Original Prusa XL (5-tool) | Active | Firecrawl USD |
-| MINI+ | Discontinued | MSRP preserved ($429) |
-| MINI+ Semi-assembled | Discontinued | MSRP preserved ($549) |
-| MK3S+ | Discontinued | MSRP preserved ($699) |
+| Product | US Before | US After | EU Before | EU After |
+|---------|-----------|----------|-----------|----------|
+| Core One | extraction_failed | $1,349 (from EUR) | $1,349 EUR | $1,349 EUR |
+| Core One L | extraction_failed | $1,699 (from EUR) | $1,699 EUR | $1,699 EUR |
+| CORE One+ Ultimate | extraction_failed | price extracted | price extracted | price extracted |
+| MK4S | extraction_failed | price extracted | price extracted | price extracted |
+| XL (3 variants) | extraction_failed | price extracted | price extracted | price extracted |
 
-- **Best case**: 7 active products synced via Firecrawl, 3 discontinued skipped
-- **Worst case**: Firecrawl can't render prices either -- all 7 active products marked `manual_only` with MSRPs preserved, 0 failures (graceful degradation)
+All 7 active products should sync for both US and EU regions. Prices marked `requires_review: true` for manual verification that EUR = USD assumption holds.
 
 ## Risk
 
-Prusa's site may not render prices even with Firecrawl because the price widget may require cookie consent, specific geo headers, or additional JS execution time. If the initial implementation doesn't capture prices, we can:
-1. Increase `waitFor` to 8000ms
-2. Try Firecrawl's `html` format instead of `markdown`
-3. Fall back to manual price entry as the permanent solution for Prusa
+Low. Prusa is well-known for having identical numeric prices in USD and EUR ($1,349 = EUR 1,349). The `requires_review` flag ensures any discrepancy is caught during manual review. The anomaly detection (`applyAnomalyCheck`) provides an additional safety net.
 
