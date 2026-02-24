@@ -217,6 +217,7 @@ Deno.serve(async (req) => {
       let lastExtractionMethod: string | null = null;
       let lastConfidence: string | null = null;
       let requiresReview = false;
+      let usSalePrice: number | null = null; // Track US price for cross-region sanity checks
 
       for (const regionCode of regionsToSync) {
         const regionMeta = REGION_MAP[regionCode];
@@ -254,7 +255,9 @@ Deno.serve(async (req) => {
         const oldPrice = (printer as any)[regionMeta.priceCol] as number | null;
 
         try {
-          const extraction: ExtractionResult = await extractPrice(productUrl, regionCode, oldPrice, effectiveConfig, regionMeta.currency, printer.model_name);
+          // Pass US price for cross-region sanity checking (Creality accessory detection)
+          const usPriceParam = regionCode !== "US" ? (usSalePrice || (printer as any).current_price_usd_store) : undefined;
+          const extraction: ExtractionResult = await extractPrice(productUrl, regionCode, oldPrice, effectiveConfig, regionMeta.currency, printer.model_name, usPriceParam);
 
           lastExtractionMethod = extraction.extraction_method;
           lastConfidence = extraction.confidence;
@@ -289,6 +292,11 @@ Deno.serve(async (req) => {
           const newPrice = extraction.current_price;
           const compareAt = extraction.compare_at_price;
           const msrp = compareAt || newPrice;
+
+          // Track US price for cross-region validation
+          if (regionCode === "US" && newPrice > 0) {
+            usSalePrice = newPrice;
+          }
 
           let status = "unchanged";
           if (oldPrice === null || oldPrice === undefined) {
