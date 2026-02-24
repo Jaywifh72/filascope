@@ -370,6 +370,7 @@ export function usePricingData(productType: ProductType) {
         brokenCount: stores.filter(s => s.linkStatus === 'broken' || s.linkStatus === 'failed').length,
         alertCount: stores.filter(s => s.linkStatus === 'alert').length,
         notInRegionCount: stores.filter(s => s.linkStatus === 'not_in_region').length,
+        hasAnomalyFlag: productType === 'printer' && variants.some((v: any) => v.price_requires_review === true),
       });
     }
 

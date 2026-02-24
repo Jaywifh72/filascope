@@ -72,7 +72,7 @@ export const PRODUCT_TYPE_CONFIGS: Record<ProductType, ProductTypeConfig> = {
     colorHexField: null,
     handleField: 'slug',
     groupByStrategy: 'brand_model',
-    selectColumns: 'id, brand_id, model_name, slug, variant_id, variant_title, variant_price, variant_compare_at_price, variant_available, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, official_store_url, official_product_url, official_store_url_ca, official_store_url_eu, official_store_url_uk, official_store_url_au, official_store_url_jp, current_price_usd_store, current_price_cad_store, current_price_eur_store, current_price_gbp_store, current_price_aud_store, current_price_jpy_store, msrp_usd, image_url, updated_at, printer_technology, is_discontinued, sku, series_name',
+    selectColumns: 'id, brand_id, model_name, slug, variant_id, variant_title, variant_price, variant_compare_at_price, variant_available, product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, official_store_url, official_product_url, official_store_url_ca, official_store_url_eu, official_store_url_uk, official_store_url_au, official_store_url_jp, current_price_usd_store, current_price_cad_store, current_price_eur_store, current_price_gbp_store, current_price_aud_store, current_price_jpy_store, msrp_usd, image_url, updated_at, printer_technology, is_discontinued, sku, series_name, price_requires_review',
     searchPlaceholder: 'Search by model, brand...',
   },
   accessory: {
@@ -211,6 +211,8 @@ export interface ProductGroup {
   brokenCount: number;
   alertCount: number;
   notInRegionCount: number;
+  /** True if any variant has price_requires_review flag set */
+  hasAnomalyFlag?: boolean;
 }
 
 // =============================================

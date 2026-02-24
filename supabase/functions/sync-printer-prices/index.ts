@@ -298,6 +298,21 @@ Deno.serve(async (req) => {
             usSalePrice = newPrice;
           }
 
+          // CRITICAL ANOMALY: price is almost certainly wrong (e.g., accessory matched instead of printer)
+          // Don't save this price — reject it entirely
+          if (extraction.anomaly_severity === 'critical') {
+            regionResults[regionCode] = {
+              status: "anomaly_rejected",
+              error: extraction.anomaly_reason || "Critical price anomaly detected",
+              extraction_method: extraction.extraction_method,
+              anomaly_severity: 'critical',
+              anomaly_reason: extraction.anomaly_reason,
+            };
+            totalAnomalies++;
+            totalErrors++;
+            continue;
+          }
+
           let status = "unchanged";
           if (oldPrice === null || oldPrice === undefined) {
             status = "new";
@@ -306,7 +321,7 @@ Deno.serve(async (req) => {
           }
 
           let isAnomaly = false;
-          if (extraction.requires_review) {
+          if (extraction.requires_review || extraction.anomaly_severity === 'warning') {
             isAnomaly = true;
             requiresReview = true;
             totalAnomalies++;
@@ -319,6 +334,8 @@ Deno.serve(async (req) => {
             variantName: extraction.variant_name,
             status,
             isAnomaly,
+            anomaly_severity: extraction.anomaly_severity || null,
+            anomaly_reason: extraction.anomaly_reason || null,
             extraction_method: extraction.extraction_method,
             confidence: extraction.confidence,
             is_combo: extraction.is_combo,
@@ -346,6 +363,7 @@ Deno.serve(async (req) => {
           }
 
           // Always save new prices — anomalous ones are flagged for review but still written
+          // (Critical anomalies were already rejected above)
           if (status !== "unchanged") {
             priceUpdates[regionMeta.priceCol] = newPrice;
             priceUpdates[regionMeta.msrpCol] = msrp;
@@ -362,7 +380,7 @@ Deno.serve(async (req) => {
               region: regionCode,
               currency: regionMeta.currency,
               source: "price-sync",
-              notes: `Brand: ${brandSlug}, Method: ${extraction.extraction_method}, Variant: ${extraction.variant_name || "N/A"}, Confidence: ${extraction.confidence}${extraction.is_combo ? " [COMBO]" : ""}${extraction.requires_review ? " [REVIEW NEEDED]" : ""}`,
+              notes: `Brand: ${brandSlug}, Method: ${extraction.extraction_method}, Variant: ${extraction.variant_name || "N/A"}, Confidence: ${extraction.confidence}${extraction.is_combo ? " [COMBO]" : ""}${extraction.requires_review ? " [REVIEW NEEDED]" : ""}${extraction.anomaly_severity ? ` [ANOMALY: ${extraction.anomaly_severity}]` : ""}`,
             }).then(({ error }) => { if (error) console.error("price_history insert error:", error.message); });
           }
         } catch (err) {
