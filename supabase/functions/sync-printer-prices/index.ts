@@ -200,17 +200,17 @@ Deno.serve(async (req) => {
 
       // Determine which regions to sync
       const regionsToSync: RegionCode[] = ["US"]; // Always sync US
-      if (!effectiveConfig?.uses_geo_pricing) {
-        // Add regions that have a URL template in config OR a URL on the printer
-        for (const rc of ["CA", "UK", "EU", "AU", "JP"] as RegionCode[]) {
-          const regionMeta = REGION_MAP[rc];
-          const configUrl = effectiveConfig ? (effectiveConfig as any)[regionMeta.configUrlCol] : null;
-          const printerUrl = (printer as any)[regionMeta.urlCol];
-          if (configUrl || printerUrl) {
-            regionsToSync.push(rc);
-          }
+      // Add regions that have a URL template in config OR a URL on the printer
+      // (uses_geo_pricing flag no longer blocks this — it just marks brands with regional stores)
+      for (const rc of ["CA", "UK", "EU", "AU", "JP"] as RegionCode[]) {
+        const regionMeta = REGION_MAP[rc];
+        const configUrl = effectiveConfig ? (effectiveConfig as any)[regionMeta.configUrlCol] : null;
+        const printerUrl = (printer as any)[regionMeta.urlCol];
+        if (configUrl || printerUrl) {
+          regionsToSync.push(rc);
         }
       }
+      console.log(`[RegionSelect] ${printer.model_name}: syncing regions [${regionsToSync.join(', ')}]`);
 
       const regionResults: Record<string, any> = {};
       const priceUpdates: Record<string, any> = {};
