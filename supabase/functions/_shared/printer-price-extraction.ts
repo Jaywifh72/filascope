@@ -61,13 +61,18 @@ interface NormalizedVariant {
 
 const DEFAULT_COMBO_PATTERNS = ['combo', 'bundle', 'kit', 'pack', 'set', 'ams', '2*', '3*'];
 
-// Creality myshopify.com backend domains for handle discovery
+// Creality myshopify.com backend domains for handle discovery AND direct price extraction
 const CREALITY_MYSHOPIFY_MAP: Record<string, string> = {
   US: 'https://crealityusa.myshopify.com',
   CA: 'https://crealityca.myshopify.com',
   UK: 'https://crealityuk.myshopify.com',
   EU: 'https://crealityeu.myshopify.com',
   AU: 'https://crealityau.myshopify.com',
+};
+
+// Creality region-to-currency mapping
+const CREALITY_CURRENCY_MAP: Record<string, string> = {
+  US: 'USD', CA: 'CAD', UK: 'GBP', EU: 'EUR', AU: 'AUD', JP: 'JPY',
 };
 
 function buildComboRegex(patterns: string[]): RegExp {
@@ -645,6 +650,15 @@ export async function extractPrice(
     return manualFallback();
   }
 
+  // ========== CREALITY DEDICATED PATH ==========
+  // Creality uses a custom storefront that blocks Shopify JSON and often fails JSON-LD.
+  // Route directly to dedicated extraction pipeline (myshopify.com backend).
+  if (isCrealityUrl(url) && region && productTitle) {
+    console.log(`[Creality] Detected Creality URL, using dedicated extraction pipeline for ${region}`);
+    return extractCrealityRegionalPrice(url, region, productTitle, oldPrice, config);
+  }
+
+  // ========== STANDARD EXTRACTION PATH ==========
   // Build ordered extraction tiers based on config
   const tiers: string[] = [primary];
   if (fallback && fallback !== primary) tiers.push(fallback);
@@ -761,55 +775,6 @@ export async function extractPrice(
       is_combo: false,
       requires_review: false,
     };
-  }
-
-  // Creality handle discovery: if JSON-LD failed on custom storefront,
-  // try discovering the correct regional handle via myshopify.com backend
-  if (isCrealityUrl(url) && region && region !== 'US' && productTitle) {
-    console.log(`[Creality] JSON-LD failed for ${url}, attempting handle discovery via myshopify.com`);
-    const discoveredHandle = await discoverCrealityRegionalHandle(region, productTitle);
-    if (discoveredHandle) {
-      // Rebuild URL with discovered handle
-      const newUrl = url.replace(/\/products\/[^/?#]+/, `/products/${discoveredHandle}`);
-      console.log(`[Creality] Discovered handle "${discoveredHandle}", retrying: ${newUrl}`);
-      
-      // Retry HTML fetch + JSON-LD with new URL
-      const retryHtml = await fetchHtml(newUrl, region);
-      if (retryHtml) {
-        const retryResult = extractFromJsonLd(retryHtml, region, config);
-        if (retryResult?.current_price && retryResult.current_price > 0) {
-          retryResult.discovered_slug = discoveredHandle;
-          return applyAnomalyCheck(retryResult, oldPrice);
-        }
-      }
-      // Even if JSON-LD retry failed, still cache the discovered handle
-      return {
-        current_price: null,
-        compare_at_price: null,
-        currency: expectedCurrency || '',
-        variant_name: null,
-        extraction_method: 'manual' as const,
-        confidence: 'low',
-        raw_variants_found: 0,
-        is_combo: false,
-        requires_review: true,
-        discovered_slug: discoveredHandle,
-      };
-    } else {
-      // Handle not found in regional catalog — product doesn't exist in this region
-      console.log(`[Creality] Product "${productTitle}" not found in ${region} catalog — marking not_in_region`);
-      return {
-        current_price: null,
-        compare_at_price: null,
-        currency: '',
-        variant_name: null,
-        extraction_method: 'not_in_region',
-        confidence: 'high',
-        raw_variants_found: 0,
-        is_combo: false,
-        requires_review: false,
-      };
-    }
   }
 
   // If we were geo-blocked and nothing worked, return geo_blocked
@@ -1290,9 +1255,157 @@ function isCrealityUrl(url: string): boolean {
 }
 
 /**
+ * Full Creality regional extraction pipeline:
+ * 1. Try direct fetch + JSON-LD on custom storefront (works for some pages)
+ * 2. Discover regional handle via myshopify.com catalog
+ * 3. Extract price directly from myshopify.com/{handle}.json (most reliable)
+ * 4. Optionally retry JSON-LD on custom storefront with discovered handle
+ * Returns null only if product genuinely not found in region.
+ */
+async function extractCrealityRegionalPrice(
+  url: string,
+  region: string,
+  productTitle: string,
+  oldPrice: number | null | undefined,
+  config?: BrandSyncConfig
+): Promise<ExtractionResult> {
+  const currency = CREALITY_CURRENCY_MAP[region] || 'USD';
+
+  // Step 1: Try JSON-LD on the custom storefront URL directly
+  const html = await fetchHtml(url, region);
+  if (html && html.length > 2000) {
+    const jsonLdResult = extractFromJsonLd(html, region, config);
+    if (jsonLdResult?.current_price && jsonLdResult.current_price > 0) {
+      if (!currency || jsonLdResult.currency === currency || !jsonLdResult.currency) {
+        console.log(`[Creality] JSON-LD success on custom storefront: ${url} → ${jsonLdResult.current_price} ${jsonLdResult.currency}`);
+        return applyAnomalyCheck(jsonLdResult, oldPrice);
+      }
+    }
+  }
+
+  // Step 2: Discover handle + extract price via myshopify.com
+  const shopifyDomain = CREALITY_MYSHOPIFY_MAP[region];
+  if (!shopifyDomain) {
+    console.log(`[Creality] No myshopify.com domain for region ${region} — marking not_in_region`);
+    return {
+      current_price: null, compare_at_price: null, currency: '',
+      variant_name: null, extraction_method: 'not_in_region',
+      confidence: 'high', raw_variants_found: 0, is_combo: false, requires_review: false,
+    };
+  }
+
+  const discoveredHandle = await discoverCrealityRegionalHandle(region, productTitle);
+  if (!discoveredHandle) {
+    console.log(`[Creality] Product "${productTitle}" not found in ${region} catalog — not_in_region`);
+    return {
+      current_price: null, compare_at_price: null, currency: '',
+      variant_name: null, extraction_method: 'not_in_region',
+      confidence: 'high', raw_variants_found: 0, is_combo: false, requires_review: false,
+    };
+  }
+
+  console.log(`[Creality] Discovered handle "${discoveredHandle}" for "${productTitle}" in ${region}`);
+
+  // Step 3: Extract price directly from myshopify.com/{handle}.json (most reliable!)
+  const myShopifyResult = await extractFromMyShopifyDirect(shopifyDomain, discoveredHandle, region, config);
+  if (myShopifyResult?.current_price && myShopifyResult.current_price > 0) {
+    myShopifyResult.discovered_slug = discoveredHandle;
+    console.log(`[Creality] myshopify.com direct extraction: ${discoveredHandle} → ${myShopifyResult.current_price} ${myShopifyResult.currency}`);
+    return applyAnomalyCheck(myShopifyResult, oldPrice);
+  }
+
+  // Step 4: Fallback — try JSON-LD on custom storefront with discovered handle
+  const regionPath = url.match(/store\.creality\.com(\/[a-z]{2})?\/products\//)?.[1] || '';
+  const discoveredUrl = `https://store.creality.com${regionPath}/products/${discoveredHandle}`;
+  console.log(`[Creality] Trying JSON-LD on discovered URL: ${discoveredUrl}`);
+  const retryHtml = await fetchHtml(discoveredUrl, region);
+  if (retryHtml && retryHtml.length > 2000) {
+    const retryResult = extractFromJsonLd(retryHtml, region, config);
+    if (retryResult?.current_price && retryResult.current_price > 0) {
+      retryResult.discovered_slug = discoveredHandle;
+      return applyAnomalyCheck(retryResult, oldPrice);
+    }
+  }
+
+  // Handle was found but price extraction failed — flag for review
+  return {
+    current_price: null, compare_at_price: null, currency,
+    variant_name: null, extraction_method: 'manual' as const,
+    confidence: 'low', raw_variants_found: 0, is_combo: false,
+    requires_review: true, discovered_slug: discoveredHandle,
+  };
+}
+
+/**
+ * Extract price directly from myshopify.com JSON endpoint.
+ * This bypasses the custom storefront entirely and is the most reliable method.
+ */
+async function extractFromMyShopifyDirect(
+  shopifyDomain: string,
+  handle: string,
+  region: string,
+  config?: BrandSyncConfig
+): Promise<ExtractionResult | null> {
+  try {
+    const jsonUrl = `${shopifyDomain}/products/${handle}.json`;
+    console.log(`[Creality-MyShopify] Fetching: ${jsonUrl}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const resp = await fetch(jsonUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; FilaScope/1.0)',
+        'Accept': 'application/json',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!resp.ok) {
+      console.log(`[Creality-MyShopify] HTTP ${resp.status} for ${jsonUrl}`);
+      await resp.text().catch(() => {});
+      return null;
+    }
+
+    const data = await resp.json();
+    const variants: ShopifyVariant[] = data?.product?.variants || [];
+    if (variants.length === 0) return null;
+
+    const normalized: NormalizedVariant[] = variants.map(v => ({
+      name: v.title || '',
+      price: parseFloat(v.price),
+      compare_at_price: v.compare_at_price ? parseFloat(v.compare_at_price) : null,
+      available: v.available,
+      id: v.id,
+    })).filter(v => !isNaN(v.price) && v.price > 0);
+
+    if (normalized.length === 0) return null;
+
+    const selection = selectBestVariant(normalized, region, config);
+    if (!selection) return null;
+
+    const currency = CREALITY_CURRENCY_MAP[region] || 'USD';
+
+    return {
+      current_price: selection.variant.price,
+      compare_at_price: selection.variant.compare_at_price,
+      currency,
+      variant_name: selection.variant.name,
+      extraction_method: 'shopify_json',
+      confidence: 'high',
+      raw_variants_found: variants.length,
+      is_combo: selection.is_combo,
+      requires_review: false,
+    };
+  } catch (e) {
+    console.error(`[Creality-MyShopify] Error:`, e);
+    return null;
+  }
+}
+
+/**
  * Discover a Creality product's regional handle via the myshopify.com backend catalog.
- * Creality's custom storefront blocks /products.json, but the underlying Shopify stores
- * at crealityXX.myshopify.com expose the full catalog.
+ * Uses strict matching to prevent short model names (K1, K2) from matching accessories.
  */
 async function discoverCrealityRegionalHandle(
   region: string,
@@ -1309,7 +1422,6 @@ async function discoverCrealityRegionalHandle(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-    // Fetch up to 250 products from the myshopify.com catalog
     const resp = await fetch(`${shopifyDomain}/products.json?limit=250`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; FilaScope/1.0)',
@@ -1338,19 +1450,20 @@ async function discoverCrealityRegionalHandle(
     const normalize = (t: string) =>
       t.replace(/^creality\s+/i, '')
        .replace(/\s+3d\s+printer$/i, '')
+       .replace(/[🔥🎁🎀✨💥]/g, '')
        .replace(/\s+/g, ' ')
        .trim()
        .toLowerCase();
 
     const normalizedSearch = normalize(productTitle);
 
-    // Filter out non-printer products (accessories, bundles, filament, etc.)
-    const EXCLUDE_KEYWORDS = /accessori|filament|nozzle|plate|enclosure|dryer|live exclusive|hub|upgrade|replacement|spare/i;
+    // Strict exclusion filter: remove accessories, filament, bundles, etc.
+    const EXCLUDE_KEYWORDS = /accessori|filament|nozzle|plate|enclosure|dryer|live exclusive|hub|upgrade|replacement|spare|cable|brush|bearing|belt|fan|sensor|hotend|heat.?break|extruder|tool|mat|sheet|glass/i;
     const printerProducts = products.filter((p: any) => !EXCLUDE_KEYWORDS.test(p.title || ''));
 
     console.log(`[Creality] ${printerProducts.length} printer products after filtering`);
 
-    // Try exact normalized match first
+    // Step 1: Exact normalized title match
     for (const product of printerProducts) {
       const pTitle = normalize(product.title || '');
       if (pTitle === normalizedSearch) {
@@ -1359,28 +1472,46 @@ async function discoverCrealityRegionalHandle(
       }
     }
 
-    // Try word-boundary contains: the search must appear as a complete word sequence
-    // This prevents "K1" from matching "K1 MAX" or "K1C"
-    const searchWordBoundary = new RegExp(`\\b${normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    // Step 2: For short names (≤4 chars like K1, K2, K1C), require very strict matching
+    // The normalized search must match the ENTIRE normalized product title (not just a substring)
+    if (normalizedSearch.length <= 4) {
+      // Only allow exact title match (already tried above) or exact handle match
+      const searchSlug = normalizedSearch.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      for (const product of printerProducts) {
+        const pHandle = (product.handle || '').toLowerCase();
+        if (pHandle === searchSlug ||
+            pHandle === `${searchSlug}-3d-printer` ||
+            pHandle === `creality-${searchSlug}-3d-printer` ||
+            pHandle === `creality-${searchSlug}`) {
+          console.log(`[Creality] Exact handle match for short name: "${product.handle}"`);
+          return product.handle;
+        }
+      }
+      console.log(`[Creality] Short name "${normalizedSearch}" — no exact match found, skipping fuzzy`);
+      return null;
+    }
+
+    // Step 3: Word-boundary match for longer names (≥5 chars)
+    const escapedSearch = normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchWordBoundary = new RegExp(`\\b${escapedSearch}\\b`, 'i');
     for (const product of printerProducts) {
       const pTitle = normalize(product.title || '');
-      // The catalog title must contain the search as a whole-word match
-      // AND the search must be at least 50% of the catalog title length (prevents matching long unrelated titles)
-      if (searchWordBoundary.test(pTitle) && normalizedSearch.length >= pTitle.length * 0.4) {
+      // Require the search to be a significant portion of the title (≥50%)
+      if (searchWordBoundary.test(pTitle) && normalizedSearch.length >= pTitle.length * 0.5) {
         console.log(`[Creality] Word-boundary match: "${product.title}" → handle "${product.handle}"`);
         return product.handle;
       }
     }
 
-    // Try handle-based exact match (slugify search and compare directly)
+    // Step 4: Handle-based exact match
     const searchSlug = normalizedSearch.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     for (const product of printerProducts) {
       const pHandle = (product.handle || '').toLowerCase();
-      // Require exact slug match or the handle to start/end with the search slug
-      if (pHandle === searchSlug || 
+      if (pHandle === searchSlug ||
           pHandle === `creality-${searchSlug}` ||
-          pHandle === `${searchSlug}-3d-printer`) {
-        console.log(`[Creality] Exact handle match: "${product.handle}" for search "${searchSlug}"`);
+          pHandle === `${searchSlug}-3d-printer` ||
+          pHandle === `creality-${searchSlug}-3d-printer`) {
+        console.log(`[Creality] Handle match: "${product.handle}" for search "${searchSlug}"`);
         return product.handle;
       }
     }
