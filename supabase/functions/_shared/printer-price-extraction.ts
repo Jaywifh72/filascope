@@ -680,6 +680,13 @@ export async function extractPrice(
     return manualFallback();
   }
 
+  // ========== PRUSA DEDICATED PATH ==========
+  // Prusa uses WooCommerce/Next.js with JS-rendered prices. Skip all standard tiers.
+  if (isPrusaUrl(url)) {
+    console.log(`[Prusa] Detected Prusa URL, using dedicated Firecrawl extraction`);
+    return extractPrusaPrice(url, region, oldPrice, config, expectedCurrency, usPriceForSanity);
+  }
+
   // ========== CREALITY DEDICATED PATH ==========
   // Creality uses a custom storefront that blocks Shopify JSON and often fails JSON-LD.
   // Route directly to dedicated extraction pipeline (myshopify.com backend).
@@ -1271,6 +1278,189 @@ async function fetchHtmlViaFirecrawl(url: string): Promise<string | null> {
     console.error(`[Firecrawl] Error:`, e);
     return null;
   }
+}
+
+/**
+ * Check if a URL belongs to Prusa Research's storefront
+ */
+function isPrusaUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.includes('prusa3d.com');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Prusa-specific price extraction via Firecrawl.
+ * Prusa's WooCommerce/Next.js storefront renders prices via client-side JS
+ * with geo-detection, so standard HTML/JSON-LD/meta extraction won't work.
+ * Uses Firecrawl with extended waitFor to allow the price widget to render.
+ */
+async function extractPrusaPrice(
+  url: string,
+  region?: string,
+  oldPrice?: number | null,
+  config?: BrandSyncConfig,
+  expectedCurrency?: string,
+  usPriceForSanity?: number | null
+): Promise<ExtractionResult> {
+  const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!apiKey) {
+    console.log('[Prusa] FIRECRAWL_API_KEY not available, returning manual fallback');
+    return manualFallback();
+  }
+
+  const REGION_TO_LOCATION: Record<string, { country: string; languages: string[] }> = {
+    US: { country: 'US', languages: ['en-US'] },
+    CA: { country: 'CA', languages: ['en-CA'] },
+    UK: { country: 'GB', languages: ['en-GB'] },
+    EU: { country: 'DE', languages: ['de-DE', 'en'] },
+    AU: { country: 'AU', languages: ['en-AU'] },
+    JP: { country: 'JP', languages: ['ja-JP'] },
+  };
+
+  try {
+    const locationParam = region ? REGION_TO_LOCATION[region] : REGION_TO_LOCATION['US'];
+    console.log(`[Prusa] Firecrawl scrape: ${url} region=${region || 'US'} waitFor=5000`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 40000);
+
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown'],
+        waitFor: 5000,
+        onlyMainContent: true,
+        ...(locationParam && { location: locationParam }),
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => '');
+      console.error(`[Prusa] Firecrawl HTTP ${response.status}: ${errBody}`);
+      return manualFallback();
+    }
+
+    const data = await response.json();
+    const markdown = data?.data?.markdown || data?.markdown;
+    if (!markdown || typeof markdown !== 'string') {
+      console.log('[Prusa] No markdown returned from Firecrawl');
+      return manualFallback();
+    }
+
+    console.log(`[Prusa] Got ${markdown.length} chars of markdown`);
+
+    // Parse Prusa-specific price patterns from the rendered markdown
+    const result = parsePrusaMarkdownPrice(markdown, region, config);
+    if (result?.current_price && result.current_price > 0) {
+      // Currency mismatch check
+      if (expectedCurrency && result.currency && result.currency !== expectedCurrency) {
+        console.log(`[Prusa] Currency mismatch: got ${result.currency}, expected ${expectedCurrency}. Rejecting.`);
+        return manualFallback();
+      }
+      console.log(`[Prusa] Extracted price: ${result.current_price} ${result.currency}`);
+      return applyAnomalyCheck(result, oldPrice, usPriceForSanity, expectedCurrency);
+    }
+
+    console.log('[Prusa] No price found in Firecrawl markdown — returning manual fallback');
+    return manualFallback();
+  } catch (e) {
+    console.error('[Prusa] Extraction error:', e);
+    return manualFallback();
+  }
+}
+
+/**
+ * Parse prices from Prusa's rendered markdown.
+ * Prusa pages typically show prices like:
+ *   "$1,349" or "$1,349 USD" or "from $1,349"
+ *   Or in comparison tables: "| $1,349 |"
+ *   Or near "Add to Cart" / "Buy" sections
+ */
+function parsePrusaMarkdownPrice(
+  markdown: string,
+  region?: string,
+  config?: BrandSyncConfig
+): ExtractionResult | null {
+  // Strategy 1: Look for prices near the product title (first 2000 chars)
+  const topSection = markdown.substring(0, 2000);
+
+  // Pattern: "$X,XXX" or "$XXX" with optional "USD"/"EUR"
+  const priceRegex = /[\$€£]([\d,]+(?:\.\d{1,2})?)\s*(?:USD|EUR|CAD|GBP|AUD)?/g;
+  const prices: { value: number; index: number; currency: string }[] = [];
+
+  let match;
+  while ((match = priceRegex.exec(topSection)) !== null) {
+    const price = parseFloat(match[1].replace(/,/g, ''));
+    if (!isNaN(price) && price >= 100 && price <= 5000) {
+      const symbol = match[0].charAt(0);
+      let currency = '';
+      if (match[0].includes('USD') || symbol === '$') currency = 'USD';
+      else if (match[0].includes('EUR') || symbol === '€') currency = 'EUR';
+      else if (match[0].includes('GBP') || symbol === '£') currency = 'GBP';
+      else if (match[0].includes('CAD')) currency = 'CAD';
+      else if (match[0].includes('AUD')) currency = 'AUD';
+      prices.push({ value: price, index: match.index, currency });
+    }
+  }
+
+  if (prices.length > 0) {
+    // Take the first valid price (closest to the product title)
+    const best = prices[0];
+    // Check for compare-at price (second price that's higher)
+    let compareAt: number | null = null;
+    if (prices.length >= 2 && prices[1].value > best.value) {
+      compareAt = prices[1].value;
+    }
+
+    return {
+      current_price: best.value,
+      compare_at_price: compareAt,
+      currency: best.currency || detectCurrencyFromMarkdown(markdown) || '',
+      variant_name: null,
+      extraction_method: 'meta_tags', // closest available type for Firecrawl extraction
+      confidence: 'medium',
+      raw_variants_found: prices.length,
+      is_combo: false,
+      requires_review: false,
+    };
+  }
+
+  // Strategy 2: Scan full markdown for price in $100-$5000 range
+  const fullPriceRegex = /[\$€£]([\d,]+(?:\.\d{1,2})?)\s*(?:USD|EUR|CAD|GBP|AUD)?/g;
+  while ((match = fullPriceRegex.exec(markdown)) !== null) {
+    const price = parseFloat(match[1].replace(/,/g, ''));
+    if (!isNaN(price) && price >= 100 && price <= 5000) {
+      const symbol = match[0].charAt(0);
+      let currency = '';
+      if (match[0].includes('USD') || symbol === '$') currency = 'USD';
+      else if (match[0].includes('EUR') || symbol === '€') currency = 'EUR';
+      else if (match[0].includes('GBP') || symbol === '£') currency = 'GBP';
+
+      return {
+        current_price: price,
+        compare_at_price: null,
+        currency: currency || detectCurrencyFromMarkdown(markdown) || '',
+        variant_name: null,
+        extraction_method: 'meta_tags',
+        confidence: 'low',
+        raw_variants_found: 0,
+        is_combo: false,
+        requires_review: true,
+      };
+    }
+  }
+
+  return null;
 }
 
 /**
