@@ -14,6 +14,8 @@ export function getLinkStatusBadge(status: LinkStatus) {
       return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">🔴 Broken</Badge>;
     case 'failed':
       return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">🔴 Failed</Badge>;
+    case 'not_in_region':
+      return <Badge className="bg-muted/60 text-muted-foreground border-muted text-[10px]">⊘ N/A</Badge>;
     case 'alert':
       return <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px]">🟣 Alert</Badge>;
     default:
@@ -214,6 +216,7 @@ export function StatusSummary({ group }: { group: ProductGroup }) {
   if (group.staleCount > 0) parts.push(<span key="s" className="text-yellow-400">{group.staleCount} Stale</span>);
   if (group.brokenCount > 0) parts.push(<span key="b" className="text-red-400">{group.brokenCount} Broken</span>);
   if (group.alertCount > 0) parts.push(<span key="al" className="text-purple-400">{group.alertCount} Alert</span>);
+  if (group.notInRegionCount > 0) parts.push(<span key="na" className="text-muted-foreground">{group.notInRegionCount} N/A</span>);
   if (parts.length === 0) return <span className="text-muted-foreground text-[10px]">No URLs</span>;
   return (
     <span className="text-[10px] flex items-center gap-1.5 flex-wrap">

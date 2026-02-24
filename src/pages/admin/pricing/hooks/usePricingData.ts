@@ -254,8 +254,36 @@ export function usePricingData(productType: ProductType) {
       const activeRegionsForBrand = activeStoreRegions?.get(vendorKey);
 
       for (const { region, priceField, urlField } of regionFieldMap) {
-        // For printers/accessories, don't skip regions based on activeStoreRegions
-        // since they may have direct regional URLs without brand_regional_stores entries
+        // For printers/accessories, skip regions where brand store is explicitly inactive
+        if (productType !== 'filament' && activeStoreRegions && activeRegionsForBrand !== undefined && !activeRegionsForBrand.has(region) && region !== 'US') {
+          // Check if there's still a direct URL on the product — if so, show as not_in_region
+          const directUrl = variants.some((v: any) => v[urlField]);
+          const directPrice = variants.some((v: any) => v[priceField] != null);
+          if (directUrl || directPrice) {
+            const rc = REGION_CONFIG[region];
+            const storeKey = `${groupKey}::${region}`;
+            stores.push({
+              storeKey,
+              productLineId: groupKey,
+              representativeId: rep.id,
+              allProductIds: allIds,
+              region,
+              regionFlag: rc.flag,
+              storeName: `${brand} ${rc.label}`,
+              price: null,
+              compareAtPrice: null,
+              currency: rc.currency,
+              currencySymbol: rc.symbol,
+              productUrl: null,
+              isDerived: false,
+              lastScrapedAt: null,
+              linkStatus: 'not_in_region',
+              priceChange: null,
+              netWeightG: null,
+            });
+          }
+          continue;
+        }
         if (productType === 'filament' && activeRegionsForBrand && !activeRegionsForBrand.has(region)) continue;
 
         let url: string | null = null;
@@ -341,6 +369,7 @@ export function usePricingData(productType: ProductType) {
         staleCount: stores.filter(s => s.linkStatus === 'stale').length,
         brokenCount: stores.filter(s => s.linkStatus === 'broken' || s.linkStatus === 'failed').length,
         alertCount: stores.filter(s => s.linkStatus === 'alert').length,
+        notInRegionCount: stores.filter(s => s.linkStatus === 'not_in_region').length,
       });
     }
 
