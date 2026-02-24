@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,7 @@ import { PricingStatsBar } from './pricing/components/PricingStatsBar';
 import { PricingToolbar } from './pricing/components/PricingToolbar';
 import { PricingTable } from './pricing/components/PricingTable';
 import { DiagnosisModal } from './pricing/components/DiagnosisModal';
+import { SyncLogPanel } from './pricing/components/SyncLogPanel';
 import { usePricingData } from './pricing/hooks/usePricingData';
 import { usePricingActions } from './pricing/hooks/usePricingActions';
 import { usePricingFilters } from './pricing/hooks/usePricingFilters';
@@ -62,6 +63,7 @@ export default function PricingData() {
   // Selection & expansion state
   const [selectedStoreKeys, setSelectedStoreKeys] = useState<Set<string>>(new Set());
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
+  const [syncLogVisible, setSyncLogVisible] = useState(false);
 
   // Data hook
   const { productGroups, stats, isLoading, vendors } = usePricingData(activeType);
@@ -78,6 +80,15 @@ export default function PricingData() {
   // Actions hook
   const actions = usePricingActions(activeType, productGroups, filtered);
 
+  // Show sync log when a batch completes
+  const prevSyncCount = useRef(actions.syncBatchCompleteCount);
+  useEffect(() => {
+    if (actions.syncBatchCompleteCount > prevSyncCount.current) {
+      setSyncLogVisible(true);
+    }
+    prevSyncCount.current = actions.syncBatchCompleteCount;
+  }, [actions.syncBatchCompleteCount]);
+
   // Tab change handler — reset all state
   const handleTabChange = useCallback((type: string) => {
     const newType = type as ProductType;
@@ -88,6 +99,7 @@ export default function PricingData() {
     setSearch('');
     setVendorFilter('all');
     setStatusFilter('all');
+    setSyncLogVisible(false);
   }, [setSearchParams, setSearch, setVendorFilter, setStatusFilter]);
 
   // Sync URL param when it changes externally
@@ -314,6 +326,13 @@ export default function PricingData() {
               onToggleSelectStore={toggleSelectStore}
               allVisibleSelected={allVisibleSelected}
               onToggleSelectAll={toggleSelectAll}
+            />
+
+            <SyncLogPanel
+              productType={activeType}
+              syncResults={actions.syncResults}
+              productGroups={productGroups}
+              visible={syncLogVisible}
             />
             </>
             )}

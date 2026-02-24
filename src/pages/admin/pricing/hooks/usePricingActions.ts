@@ -29,6 +29,7 @@ export function usePricingActions(
   const [searchResults, setSearchResults] = useState<Record<string, { loading: boolean; url?: string; confidence?: number; method?: string; query?: string; error?: boolean }>>({});
   const [bulkSearchProgress, setBulkSearchProgress] = useState<{ running: boolean; done: number; total: number; found: number } | null>(null);
   const [isClearingInactiveCache, setIsClearingInactiveCache] = useState(false);
+  const [syncBatchCompleteCount, setSyncBatchCompleteCount] = useState(0);
   const abortRef = useRef(false);
   const abortSyncRef = useRef(false);
   const diagnoseRef = useRef<() => void>(() => {});
@@ -581,6 +582,7 @@ export function usePricingActions(
     } else {
       toast.success(`Synced ${done} stores: ${updated} updated${updatedDetail}, ${unchanged} unchanged, ${failed} failed`);
     }
+    setSyncBatchCompleteCount(c => c + 1);
   }, [syncSinglePrice, queryClient, productType]);
 
   // =============================================
@@ -861,6 +863,7 @@ export function usePricingActions(
     searchResults,
     bulkSearchProgress,
     isClearingInactiveCache,
+    syncBatchCompleteCount,
     isBusy,
     totalFailureCount,
     storeKeyMap,
