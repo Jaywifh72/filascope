@@ -61,6 +61,15 @@ interface NormalizedVariant {
 
 const DEFAULT_COMBO_PATTERNS = ['combo', 'bundle', 'kit', 'pack', 'set', 'ams', '2*', '3*'];
 
+// Creality myshopify.com backend domains for handle discovery
+const CREALITY_MYSHOPIFY_MAP: Record<string, string> = {
+  US: 'https://crealityusa.myshopify.com',
+  CA: 'https://crealityca.myshopify.com',
+  UK: 'https://crealityuk.myshopify.com',
+  EU: 'https://crealityeu.myshopify.com',
+  AU: 'https://crealityau.myshopify.com',
+};
+
 function buildComboRegex(patterns: string[]): RegExp {
   const escaped = patterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   // Word-boundary wrap short terms like 'ams'
@@ -427,8 +436,52 @@ function processJsonLdObject(
     };
   }
 
-  // Product → direct offers
+  // Product → direct offers (may have multiple offers for variants)
   if (type === 'Product') {
+    const offers = obj.offers;
+    const offersArray = Array.isArray(offers) ? offers : (offers ? [offers] : []);
+
+    if (offersArray.length > 1) {
+      // Multi-offer handling: filter by availability and combo exclusion
+      const variants: NormalizedVariant[] = [];
+      for (const offer of offersArray) {
+        const p = parseFloat(offer.price);
+        if (isNaN(p) || p <= 0) continue;
+        const avail = extractAvailability(offer);
+        const name = offer.name || offer.description || offer.sku || '';
+        variants.push({
+          name,
+          price: p,
+          compare_at_price: null,
+          available: avail,
+          id: offer.sku || offer['@id'],
+        });
+      }
+
+      if (variants.length > 0) {
+        // Prefer InStock variants
+        const inStock = variants.filter(v => v.available);
+        const candidates = inStock.length > 0 ? inStock : variants;
+        const allOutOfStock = inStock.length === 0 && variants.length > 0;
+
+        const selection = selectBestVariant(candidates, region, config);
+        if (selection) {
+          return {
+            current_price: selection.variant.price,
+            compare_at_price: selection.variant.compare_at_price,
+            currency: extractCurrency(offersArray[0]) || '',
+            variant_name: selection.variant.name || obj.name || null,
+            extraction_method: 'json_ld_product',
+            confidence: 'high',
+            raw_variants_found: variants.length,
+            is_combo: selection.is_combo,
+            requires_review: allOutOfStock,
+          };
+        }
+      }
+    }
+
+    // Single offer or fallback
     const price = extractPriceFromOffers(obj.offers);
     if (price === null || price <= 0) return null;
 
@@ -708,6 +761,55 @@ export async function extractPrice(
       is_combo: false,
       requires_review: false,
     };
+  }
+
+  // Creality handle discovery: if JSON-LD failed on custom storefront,
+  // try discovering the correct regional handle via myshopify.com backend
+  if (isCrealityUrl(url) && region && region !== 'US' && productTitle) {
+    console.log(`[Creality] JSON-LD failed for ${url}, attempting handle discovery via myshopify.com`);
+    const discoveredHandle = await discoverCrealityRegionalHandle(region, productTitle);
+    if (discoveredHandle) {
+      // Rebuild URL with discovered handle
+      const newUrl = url.replace(/\/products\/[^/?#]+/, `/products/${discoveredHandle}`);
+      console.log(`[Creality] Discovered handle "${discoveredHandle}", retrying: ${newUrl}`);
+      
+      // Retry HTML fetch + JSON-LD with new URL
+      const retryHtml = await fetchHtml(newUrl, region);
+      if (retryHtml) {
+        const retryResult = extractFromJsonLd(retryHtml, region, config);
+        if (retryResult?.current_price && retryResult.current_price > 0) {
+          retryResult.discovered_slug = discoveredHandle;
+          return applyAnomalyCheck(retryResult, oldPrice);
+        }
+      }
+      // Even if JSON-LD retry failed, still cache the discovered handle
+      return {
+        current_price: null,
+        compare_at_price: null,
+        currency: expectedCurrency || '',
+        variant_name: null,
+        extraction_method: 'manual' as const,
+        confidence: 'low',
+        raw_variants_found: 0,
+        is_combo: false,
+        requires_review: true,
+        discovered_slug: discoveredHandle,
+      };
+    } else {
+      // Handle not found in regional catalog — product doesn't exist in this region
+      console.log(`[Creality] Product "${productTitle}" not found in ${region} catalog — marking not_in_region`);
+      return {
+        current_price: null,
+        compare_at_price: null,
+        currency: '',
+        variant_name: null,
+        extraction_method: 'not_in_region',
+        confidence: 'high',
+        raw_variants_found: 0,
+        is_combo: false,
+        requires_review: false,
+      };
+    }
   }
 
   // If we were geo-blocked and nothing worked, return geo_blocked
@@ -1172,6 +1274,121 @@ async function fetchHtmlViaFirecrawl(url: string): Promise<string | null> {
     return null;
   } catch (e) {
     console.error(`[Firecrawl] Error:`, e);
+    return null;
+  }
+}
+
+/**
+ * Check if a URL belongs to Creality's custom storefront
+ */
+function isCrealityUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname === 'store.creality.com';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Discover a Creality product's regional handle via the myshopify.com backend catalog.
+ * Creality's custom storefront blocks /products.json, but the underlying Shopify stores
+ * at crealityXX.myshopify.com expose the full catalog.
+ */
+async function discoverCrealityRegionalHandle(
+  region: string,
+  productTitle: string
+): Promise<string | null> {
+  const shopifyDomain = CREALITY_MYSHOPIFY_MAP[region];
+  if (!shopifyDomain) {
+    console.log(`[Creality] No myshopify.com domain mapped for region ${region}`);
+    return null;
+  }
+
+  try {
+    console.log(`[Creality] Searching ${shopifyDomain} for "${productTitle}"`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    // Fetch up to 250 products from the myshopify.com catalog
+    const resp = await fetch(`${shopifyDomain}/products.json?limit=250`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; FilaScope/1.0)',
+        'Accept': 'application/json',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!resp.ok) {
+      console.log(`[Creality] myshopify.com returned ${resp.status} for ${region}`);
+      await resp.text().catch(() => {});
+      return null;
+    }
+
+    const data = await resp.json();
+    const products = data?.products;
+    if (!Array.isArray(products) || products.length === 0) {
+      console.log(`[Creality] No products found in ${region} catalog`);
+      return null;
+    }
+
+    console.log(`[Creality] Found ${products.length} products in ${region} catalog`);
+
+    // Normalize title for matching
+    const normalize = (t: string) =>
+      t.replace(/^creality\s+/i, '')
+       .replace(/\s+3d\s+printer$/i, '')
+       .replace(/\s+/g, ' ')
+       .trim()
+       .toLowerCase();
+
+    const normalizedSearch = normalize(productTitle);
+
+    // Filter out non-printer products (accessories, bundles, filament, etc.)
+    const EXCLUDE_KEYWORDS = /accessori|filament|nozzle|plate|enclosure|dryer|live exclusive|hub|upgrade|replacement|spare/i;
+    const printerProducts = products.filter((p: any) => !EXCLUDE_KEYWORDS.test(p.title || ''));
+
+    console.log(`[Creality] ${printerProducts.length} printer products after filtering`);
+
+    // Try exact normalized match first
+    for (const product of printerProducts) {
+      const pTitle = normalize(product.title || '');
+      if (pTitle === normalizedSearch) {
+        console.log(`[Creality] Exact title match: "${product.title}" → handle "${product.handle}"`);
+        return product.handle;
+      }
+    }
+
+    // Try word-boundary contains: the search must appear as a complete word sequence
+    // This prevents "K1" from matching "K1 MAX" or "K1C"
+    const searchWordBoundary = new RegExp(`\\b${normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    for (const product of printerProducts) {
+      const pTitle = normalize(product.title || '');
+      // The catalog title must contain the search as a whole-word match
+      // AND the search must be at least 50% of the catalog title length (prevents matching long unrelated titles)
+      if (searchWordBoundary.test(pTitle) && normalizedSearch.length >= pTitle.length * 0.4) {
+        console.log(`[Creality] Word-boundary match: "${product.title}" → handle "${product.handle}"`);
+        return product.handle;
+      }
+    }
+
+    // Try handle-based exact match (slugify search and compare directly)
+    const searchSlug = normalizedSearch.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    for (const product of printerProducts) {
+      const pHandle = (product.handle || '').toLowerCase();
+      // Require exact slug match or the handle to start/end with the search slug
+      if (pHandle === searchSlug || 
+          pHandle === `creality-${searchSlug}` ||
+          pHandle === `${searchSlug}-3d-printer`) {
+        console.log(`[Creality] Exact handle match: "${product.handle}" for search "${searchSlug}"`);
+        return product.handle;
+      }
+    }
+
+    console.log(`[Creality] No match found for "${productTitle}" in ${products.length} ${region} products`);
+    return null;
+  } catch (e) {
+    console.error(`[Creality] Handle discovery error for ${region}:`, e);
     return null;
   }
 }
