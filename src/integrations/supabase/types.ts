@@ -7158,6 +7158,7 @@ export type Database = {
           filament_id: string
           http_status: number | null
           id: string
+          printer_id: string | null
           region_code: string
           slug: string
           updated_at: string | null
@@ -7169,6 +7170,7 @@ export type Database = {
           filament_id: string
           http_status?: number | null
           id?: string
+          printer_id?: string | null
           region_code: string
           slug: string
           updated_at?: string | null
@@ -7180,6 +7182,7 @@ export type Database = {
           filament_id?: string
           http_status?: number | null
           id?: string
+          printer_id?: string | null
           region_code?: string
           slug?: string
           updated_at?: string | null
@@ -7234,6 +7237,20 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_regional_slugs_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_regional_slugs_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]

@@ -109,6 +109,19 @@ Deno.serve(async (req) => {
       `)
       .neq("status", "discontinued");
 
+    // Pre-load all cached regional slugs for printers
+    const { data: cachedSlugs } = await supabase
+      .from("product_regional_slugs")
+      .select("printer_id, region_code, slug, verified")
+      .not("printer_id", "is", null);
+
+    const slugCache = new Map<string, string>();
+    for (const s of cachedSlugs || []) {
+      if (s.printer_id && s.slug) {
+        slugCache.set(`${s.printer_id}:${s.region_code}`, s.slug);
+      }
+    }
+
     if (body.printer_id) {
       query = query.eq("id", body.printer_id);
     } else if (body.brand_id) {
@@ -196,10 +209,16 @@ Deno.serve(async (req) => {
       for (const regionCode of regionsToSync) {
         const regionMeta = REGION_MAP[regionCode];
 
-        // Build URL: config template > printer's own URL column > fallback
+        // Build URL: cached slug > config template > printer's own URL column > fallback
         let productUrl: string | null = null;
+        const cachedSlug = slugCache.get(`${printer.id}:${regionCode}`);
         const configTemplate = effectiveConfig ? (effectiveConfig as any)[regionMeta.configUrlCol] as string | null : null;
-        if (configTemplate && configTemplate.includes("{slug}")) {
+
+        if (cachedSlug && configTemplate && configTemplate.includes("{slug}")) {
+          // Use the cached regional slug instead of the US slug
+          productUrl = configTemplate.replace("{slug}", cachedSlug);
+          console.log(`[SlugCache] Using cached slug "${cachedSlug}" for ${printer.model_name} ${regionCode}`);
+        } else if (configTemplate && configTemplate.includes("{slug}")) {
           productUrl = configTemplate.replace("{slug}", slug);
         } else if (regionCode === "US" && printer.product_url) {
           productUrl = printer.product_url;
@@ -216,7 +235,7 @@ Deno.serve(async (req) => {
         const oldPrice = (printer as any)[regionMeta.priceCol] as number | null;
 
         try {
-          const extraction: ExtractionResult = await extractPrice(productUrl, regionCode, oldPrice, effectiveConfig, regionMeta.currency);
+          const extraction: ExtractionResult = await extractPrice(productUrl, regionCode, oldPrice, effectiveConfig, regionMeta.currency, printer.model_name);
 
           lastExtractionMethod = extraction.extraction_method;
           lastConfidence = extraction.confidence;
@@ -277,7 +296,27 @@ Deno.serve(async (req) => {
             confidence: extraction.confidence,
             is_combo: extraction.is_combo,
             raw_variants_found: extraction.raw_variants_found,
+            discovered_slug: extraction.discovered_slug || undefined,
           };
+
+          // Cache discovered slug for future syncs
+          if (extraction.discovered_slug && regionCode !== "US") {
+            const cacheKey = `${printer.id}:${regionCode}`;
+            if (!slugCache.has(cacheKey)) {
+              slugCache.set(cacheKey, extraction.discovered_slug);
+              supabase.from("product_regional_slugs").upsert({
+                printer_id: printer.id,
+                region_code: regionCode,
+                slug: extraction.discovered_slug,
+                verified: true,
+                verified_at: new Date().toISOString(),
+              }, { onConflict: "printer_id,region_code" })
+              .then(({ error }) => {
+                if (error) console.error(`Slug cache upsert error for ${printer.model_name} ${regionCode}:`, error.message);
+                else console.log(`[SlugCache] Cached slug "${extraction.discovered_slug}" for ${printer.model_name} ${regionCode}`);
+              });
+            }
+          }
 
           // Always save new prices — anomalous ones are flagged for review but still written
           if (status !== "unchanged") {
