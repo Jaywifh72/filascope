@@ -1,88 +1,87 @@
 
 
-# Admin Panel with Configurable Sidebar Sections
+# Fix Elegoo Printer Regional Pricing
 
-## What this does
+## Problem
+All 7 Elegoo printers show "Not Tested" for regional prices. No regional syncing happens because:
+- `brand_sync_config` has no regional store URL templates (CA/UK/EU/AU all null)
+- No regional URLs are set on the printer rows themselves
+- JP and CN stores are marked active but aren't functional stores
+- Two printers use `www.elegoo.com` instead of `us.elegoo.com` for their US URL
 
-Add a sidebar layout to the `/admin` section (similar to the old admin panel), with the ability to:
-- Set which sidebar groups are visible by default (your "focused view")
-- Toggle to "Show All" when you need access to everything
-- Persist your preferences in localStorage so they stick between sessions
+## Solution (3 data updates + 1 config update, no code changes needed)
 
-## How it will look
+The existing sync engine already supports everything needed. This is purely a data/configuration fix.
 
-The `/admin` panel will get a collapsible sidebar with grouped navigation (Content, Regional, Data Quality, Operations, Analytics, System). A small settings icon at the bottom of the sidebar opens a popover where you can check/uncheck which groups are visible. A toggle at the top of the sidebar lets you flip between "Focused" (your chosen defaults) and "All" view.
+### Step 1: Update brand_sync_config with regional store URLs
 
-## Technical Plan
+Add Shopify JSON URL templates for all 5 functional regions:
 
-### 1. Create `AdminNewSidebar.tsx`
+| Column | Value |
+|--------|-------|
+| store_url_us | `https://us.elegoo.com/products/{slug}` (already set) |
+| store_url_ca | `https://ca.elegoo.com/products/{slug}` |
+| store_url_uk | `https://uk.elegoo.com/products/{slug}` |
+| store_url_eu | `https://eu.elegoo.com/products/{slug}` |
+| store_url_au | `https://au.elegoo.com/products/{slug}` |
+| store_url_jp | null (not a store) |
 
-A new sidebar component for the `/admin` routes, modeled after the existing `AdminSidebar.tsx` but with:
-- Same nav groups, but all links pointing to `/admin/...` routes
-- A "View Mode" toggle at the top: Focused vs All
-- A settings popover at the bottom to configure which groups are visible by default
-- Preferences stored in localStorage under key `admin-sidebar-config`
+### Step 2: Mark JP and CN stores inactive
 
-The sidebar will have:
-- Collapsed/expanded state (like old admin)
-- Group visibility state: `{ visibleGroups: string[], viewMode: 'focused' | 'all' }`
-- When `viewMode = 'focused'`, only groups in `visibleGroups` are shown
-- When `viewMode = 'all'`, all groups are shown (with non-default groups slightly dimmed)
+Update `brand_regional_stores` to set `is_active = false` for:
+- Elegoo JP (`elegoo.co.jp`) -- WordPress blog, not a store
+- Elegoo CN (`www.elegoo.cn`) -- inaccessible outside China
 
-### 2. Create `AdminNewLayout.tsx`
+### Step 3: Fix US product URLs
 
-A layout wrapper (like `AdminLayout.tsx`) that:
-- Wraps the sidebar + content area
-- Handles auth gating (redirect non-admins)
-- Manages sidebar collapsed state in localStorage
+Two printers use `www.elegoo.com` instead of `us.elegoo.com`:
+- Neptune 4: `www.elegoo.com/products/...` -> `us.elegoo.com/products/...`
+- Neptune 3 Pro: `www.elegoo.com/products/...` -> `us.elegoo.com/products/...`
 
-### 3. Update `/admin` routes to use the new layout
+### Step 4: Populate regional URLs on all 7 printers
 
-Wrap all `/admin` pages (`NewAdminPanel`, `AdminAffiliateHub`, `AdminPricingData`, etc.) in the new `AdminNewLayout`.
+Set `product_url_ca`, `product_url_uk`, `product_url_eu`, `product_url_au` for each printer using its verified handle (same handle works on all regions).
 
-### 4. Update `NewAdminPanel.tsx`
+## Why no code changes are needed
 
-Remove the inline auth checks and header since the layout handles that. The page becomes just the dashboard content.
+The sync engine (`sync-printer-prices/index.ts`) already:
+- Reads `brand_sync_config` store URL templates and substitutes `{slug}`
+- Skips regions where `brand_regional_stores.is_active = false`
+- Uses Shopify JSON extraction when `shopify_json_available = true`
+- Handles subdomain-per-region Shopify stores (fetches `{domain}/products/{slug}.json`)
 
-### Files to create
-- `src/components/admin/AdminNewSidebar.tsx` -- Sidebar with configurable group visibility
-- `src/components/admin/AdminNewLayout.tsx` -- Layout wrapper with sidebar + auth
+## Expected Outcome
 
-### Files to modify
-- `src/pages/NewAdminPanel.tsx` -- Remove redundant auth/layout, use new layout
-- `src/App.tsx` -- Wrap `/admin` routes in the new layout
+- 7 printers x 5 regions (US, CA, UK, EU, AU) = 35 price points syncing
+- JP and CN show as "N/A" (inactive store) instead of "Failed"
+- Shopify JSON provides reliable structured price data
 
-### Nav groups for the new sidebar
+## Technical Details
 
-```text
-Overview:      Dashboard (/admin)
-Content:       Affiliate Hub, Pricing Data
-Analytics:     Analytics Dashboard, Search Analytics
-Operations:    Link Health, Printer URL Health, Price Sync, Price Audit
-System:        OldAdmin Dashboard (link to /old-admin/dashboard)
+### Database updates (using insert/update tool, not migrations)
+
+**1. Update `brand_sync_config`** where `brand_id = 'elegoo'`:
+```sql
+UPDATE brand_sync_config 
+SET store_url_ca = 'https://ca.elegoo.com/products/{slug}',
+    store_url_uk = 'https://uk.elegoo.com/products/{slug}',
+    store_url_eu = 'https://eu.elegoo.com/products/{slug}',
+    store_url_au = 'https://au.elegoo.com/products/{slug}'
+WHERE brand_id = 'elegoo';
 ```
 
-### Section visibility config (stored in localStorage)
-
-```typescript
-interface AdminSidebarConfig {
-  visibleGroups: string[];  // e.g. ["Overview", "Content", "Analytics"]
-  viewMode: 'focused' | 'all';
-}
-
-// Default: all groups visible
-const DEFAULT_CONFIG: AdminSidebarConfig = {
-  visibleGroups: ['Overview', 'Content', 'Analytics', 'Operations', 'System'],
-  viewMode: 'all',
-};
+**2. Deactivate JP and CN stores:**
+```sql
+UPDATE brand_regional_stores SET is_active = false 
+WHERE id IN ('cba1ecae-3fab-4fbe-bd39-b5ca0ff07a6e', '2d23a44d-c400-44d8-b690-b241a448fc80');
 ```
 
-### UI for configuring defaults
+**3. Fix US URLs and populate regional URLs** for all 7 printers using their verified Shopify handles.
 
-At the bottom of the sidebar, a small gear icon opens a popover with:
-- Checkboxes for each group (Overview, Content, Analytics, Operations, System)
-- A "Reset to all" button
-- The current view mode toggle ("Focused" / "All") stays in the sidebar header area
-
-When in "Focused" mode, only checked groups appear. When in "All" mode, everything shows but unchecked groups have a subtle visual treatment (slightly lower opacity) so you can tell which ones are your defaults.
+**4. Update `brand_regional_stores` `shopify_domain`** for the 5 active regions so the system can use Shopify JSON directly:
+- US: `us.elegoo.com`
+- CA: `ca.elegoo.com`
+- UK: `uk.elegoo.com`
+- EU: `eu.elegoo.com`
+- AU: `au.elegoo.com`
 
