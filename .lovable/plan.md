@@ -1,97 +1,155 @@
 
 
-# Fix Anycubic Regional Printer Price Sync
+# Creality Regional Pricing Fix Strategy
 
-## Summary
-Anycubic printers fail to sync prices for CA, UK, EU, and AU because: (1) Shopify JSON is disabled in config despite working endpoints, (2) no regional URL templates exist, (3) product handles differ across regions, and (4) AU store URL is wrong.
+## Problem Summary
 
-## Phase 1: Update brand_sync_config for Anycubic
+Creality's store (`store.creality.com`) uses path-based regional routing (e.g., `/ca/products/...`, `/eu/products/...`) but operates on a custom frontend that **blocks Shopify `.json` endpoints**. Currently, only US prices sync because no regional store URLs or templates are configured.
 
-Change the Anycubic config to enable Shopify JSON and add regional URL templates:
+The underlying Shopify stores are accessible via `*.myshopify.com` domains, which can be used for handle discovery. JSON-LD structured data on the custom storefront pages works correctly for price extraction.
 
-- `shopify_json_available` -> `true`
-- `primary_extraction` -> `shopify_json`
-- `store_url_ca` -> `https://ca.anycubic.com/products/{slug}`
-- `store_url_uk` -> `https://uk.anycubic.com/products/{slug}`
-- `store_url_eu` -> `https://eu.anycubic.com/products/{slug}`
-- `store_url_au` -> `https://www.anycubic.au/products/{slug}`
-- Remove `store_url_jp` (no JP store)
+## Current State (from database investigation)
 
-## Phase 2: Fix AU Regional Store entry
+- `brand_sync_config` for Creality: `primary_extraction: json_ld`, `shopify_json_available: false`, all `store_url_*` fields are `null`
+- No `brand_regional_stores` entries exist for Creality
+- All Creality printers have `null` for `product_url_ca/uk/eu/au/jp`
+- Only US prices are syncing (via JSON-LD from `store.creality.com/products/{handle}`)
 
-Update `brand_regional_stores` for Anycubic Australia:
-- Change `base_url` from `https://store.anycubic.com` to `https://www.anycubic.au`
-- Change `product_url_pattern` from `https://store.anycubic.com/products/{slug}` to `https://www.anycubic.au/products/{slug}`
+## Implementation Plan
 
-## Phase 3: Handle Regional Slug Mismatch in Extraction Engine
+### Phase 1: Configure Regional Store URL Templates
 
-The core problem: when the sync engine builds a regional URL using the US slug (e.g., `anycubic-kobra-3`), the CA store may use a different slug (`kobra-3`), causing a 404 on the Shopify JSON endpoint.
+**Update `brand_sync_config`** to add regional URL templates for Creality. Since Creality uses path-based routing with the same domain, the templates use the pattern `https://store.creality.com/{region}/products/{slug}`.
 
-**Solution: Add slug discovery fallback to `extractFromShopifyJson`**
+```text
+store_url_ca: https://store.creality.com/ca/products/{slug}
+store_url_uk: https://store.creality.com/uk/products/{slug}
+store_url_eu: https://store.creality.com/eu/products/{slug}
+store_url_au: https://store.creality.com/au/products/{slug}
+store_url_jp: https://store.creality.com/jp/products/{slug}
+```
 
-When the `.json` endpoint returns 404:
-1. Try stripping the brand prefix: `anycubic-kobra-3` -> `kobra-3`
-2. Try adding the brand prefix: `kobra-3-max` -> `anycubic-kobra-3-max`
-3. If both fail, return null (product not available in that region)
+This alone will cause the sync engine to attempt all 6 regions for each Creality printer, using JSON-LD extraction (the configured primary method).
 
-This is implemented directly in `printer-price-extraction.ts` inside `extractFromShopifyJson`, keeping it self-contained.
+### Phase 2: Handle Discovery via myshopify.com Backends
 
-## Phase 4: Add Anycubic Regional Domains to Geo-Bypass Maps
+The critical problem: Creality uses **different product handles** across regional stores. The US handle `k2-combo-3d-printer` may not exist at `/ca/products/k2-combo-3d-printer`.
 
-Add these to `REGION_SPOOF_HEADERS` and `DOMAIN_REGION_MAP`:
-- `store.anycubic.com` -> US
-- `ca.anycubic.com` -> CA
-- `uk.anycubic.com` -> UK
-- `eu.anycubic.com` -> EU
-- `www.anycubic.au` -> AU
+**Add a Creality-specific handle discovery mechanism** to `printer-price-extraction.ts`:
 
-## Phase 5: Populate Regional URLs for Existing Printers
+1. When JSON-LD extraction fails (404 or no price found) for a Creality regional URL, trigger handle discovery
+2. Fetch the regional catalog from the corresponding myshopify.com backend:
+   - US: `crealityusa.myshopify.com`
+   - CA: `crealityca.myshopify.com`
+   - UK: `crealityuk.myshopify.com`
+   - EU: `crealityeu.myshopify.com`
+   - AU: `crealityau.myshopify.com`
+3. Search by normalized product title to find the regional handle
+4. Build the corrected URL and retry JSON-LD extraction
+5. Cache the discovered handle in `product_regional_slugs`
 
-For the 11 Anycubic printers that lack regional URLs, the sync engine will now auto-construct them from the brand_sync_config templates. No manual URL population needed -- the sync engine already builds URLs from `store_url_{region}` + slug.
+**Implementation approach**: Extend the existing `discoverHandleFromCatalog` function (or add a parallel `discoverCrealityHandle` function) that uses the myshopify.com domain instead of the store's own `/products.json` endpoint (which is blocked).
 
-However, the slug mismatch means some will 404 on first attempt and be resolved by the slug discovery fallback (Phase 3).
+### Phase 3: Update the Extraction Orchestrator
+
+In the `extractPrice` orchestrator function, add logic so that when:
+
+1. The brand is Creality (detected via config or URL domain)
+2. JSON-LD extraction fails for a regional URL
+3. The system attempts handle discovery via myshopify.com
+4. If a new handle is found, rebuilds the URL and retries JSON-LD
+5. If no handle is found, marks as `not_in_region`
+
+This fits naturally into the existing tier system -- it's essentially a "retry with corrected URL" step between Tier 2 (JSON-LD) and Tier 3 (meta tags).
+
+### Phase 4: Store myshopify.com Domain Mapping
+
+Add a new field or lookup for the myshopify.com discovery backends. Two options:
+
+**Option A (simpler)**: Add a `discovery_store_url` field to `brand_sync_config`:
+```text
+discovery_store_url: crealityusa.myshopify.com
+```
+Plus a mapping for regional variants embedded in the sync function.
+
+**Option B (database-driven)**: Create `brand_regional_stores` entries for Creality with the myshopify.com domains stored in a metadata field, keeping the primary URLs as `store.creality.com/{region}/...`.
+
+Recommendation: **Option A** -- hardcode the myshopify.com mapping in the extraction function since it's Creality-specific and unlikely to change.
+
+### Phase 5: Variant Selection for Creality
+
+Creality product pages may list multiple offers in JSON-LD (e.g., the K2 page shows both `$599 CAD OutOfStock` and `$799 CAD InStock` for standalone vs. combo). The existing `extractFromJsonLd` function handles `offers` arrays, but currently takes the first offer's price.
+
+Update the JSON-LD extraction to:
+1. When multiple offers exist, apply the same combo-exclusion logic used for Shopify JSON variants
+2. Prefer InStock offers over OutOfStock
+3. Select the cheapest non-combo, in-stock variant
 
 ## Technical Details
 
-### Database Changes (via insert tool, not migrations)
+### Files to modify:
 
-```sql
--- Update brand_sync_config
-UPDATE brand_sync_config SET
-  shopify_json_available = true,
-  primary_extraction = 'shopify_json',
-  store_url_ca = 'https://ca.anycubic.com/products/{slug}',
-  store_url_uk = 'https://uk.anycubic.com/products/{slug}',
-  store_url_eu = 'https://eu.anycubic.com/products/{slug}',
-  store_url_au = 'https://www.anycubic.au/products/{slug}',
-  sync_notes = 'Shopify JSON works on all regional stores. Handles may differ across regions — slug discovery fallback handles this.'
-WHERE brand_id = 'anycubic';
+1. **`supabase/functions/_shared/printer-price-extraction.ts`**
+   - Add `discoverCrealityRegionalHandle()` function that fetches from myshopify.com
+   - Update `extractPrice()` orchestrator to retry with discovered handle on Creality 404s
+   - Update `extractFromJsonLd()` to handle multiple offers with availability filtering
+   - Add myshopify.com domain mapping constant
 
--- Fix AU regional store
-UPDATE brand_regional_stores SET
-  base_url = 'https://www.anycubic.au',
-  product_url_pattern = 'https://www.anycubic.au/products/{slug}'
-WHERE id = 'f8d5ffb9-0505-4a34-ac8d-545c513123ca';
+2. **`supabase/functions/sync-printer-prices/index.ts`**
+   - No structural changes needed -- once `brand_sync_config` has regional URL templates, the existing region loop will attempt all regions automatically
+
+3. **Database migration**
+   - Update `brand_sync_config` for Creality to populate `store_url_ca/uk/eu/au/jp`
+   - Optionally create `brand_regional_stores` entries for Creality with `is_active: true` for CA/UK/EU/AU and metadata for JP (needs verification)
+
+### Myshopify.com domain mapping:
+
+```text
+Region  myshopify.com domain
+US      crealityusa.myshopify.com
+CA      crealityca.myshopify.com
+UK      crealityuk.myshopify.com
+EU      crealityeu.myshopify.com
+AU      crealityau.myshopify.com
+JP      (needs discovery -- may not exist)
 ```
 
-### Edge Function Changes (`printer-price-extraction.ts`)
+### Extraction flow for Creality regional pricing:
 
-1. **Modify `extractFromShopifyJson`**: On 404 response, try alternate slugs (strip/add brand prefix). Log the successful alternate slug for debugging.
+```text
+1. Build URL: store.creality.com/{region}/products/{us-handle}
+2. Check slug cache (product_regional_slugs) for known regional handle
+   - If cached: use cached handle instead
+3. Fetch HTML from regional URL
+4. Try JSON-LD extraction
+   - Success: return price, cache handle
+   - 404 or no price:
+5. Discover handle via crealityXX.myshopify.com/products.json
+   - Match by normalized product title
+   - If found: rebuild URL with discovered handle, retry JSON-LD
+   - If not found: mark as not_in_region
+6. Cache discovered handle in product_regional_slugs
+```
 
-2. **Add to `REGION_SPOOF_HEADERS`**:
-   - `store.anycubic.com`, `ca.anycubic.com`, `uk.anycubic.com`, `eu.anycubic.com`, `www.anycubic.au`
+### JSON-LD multi-offer handling:
 
-3. **Add to `DOMAIN_REGION_MAP`**:
-   - Same 5 domains mapped to their respective region codes
+When Creality JSON-LD contains multiple offers like:
+```text
+offers: [
+  { price: 599, currency: "CAD", availability: "OutOfStock" },
+  { price: 799, currency: "CAD", availability: "InStock" }
+]
+```
 
-### Expected Results
+The extraction should:
+- Filter to InStock offers first
+- Among InStock offers, exclude those with combo/bundle keywords in the name
+- Select the cheapest remaining offer
+- If all are OutOfStock, still extract the cheapest price but flag `requires_review`
 
-| Region | Before | After |
-|--------|--------|-------|
-| US | Working (JSON-LD) | Working (Shopify JSON -- faster, more reliable) |
-| CA | Failed (no URL template, wrong extraction) | Working (Shopify JSON + slug discovery) |
-| UK | Failed | Working (Shopify JSON + slug discovery) |
-| EU | Failed | Working (Shopify JSON + slug discovery) |
-| AU | Failed (wrong store URL) | Working (correct AU domain + Shopify JSON) |
-| JP | N/A (no store) | Skipped gracefully |
+### Expected outcome after implementation:
+- All 6 regions sync for Creality printers (where products exist)
+- Handle differences are automatically discovered and cached
+- Products not available in a region show "N/A" (not "Failed")
+- JSON-LD provides accurate regional prices with correct currencies
 
