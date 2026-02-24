@@ -229,22 +229,23 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Build URL: cached slug > config template > printer's own URL column > fallback
+        // Build URL: printer's own URL column > cached slug > config template > fallback
+        // Per-printer URLs take priority because handles can differ between regions (e.g. FLSUN)
         let productUrl: string | null = null;
+        const printerRegionalUrl = regionCode === "US" ? printer.product_url : (printer as any)[regionMeta.urlCol] as string | null;
         const cachedSlug = slugCache.get(`${printer.id}:${regionCode}`);
         const configTemplate = effectiveConfig ? (effectiveConfig as any)[regionMeta.configUrlCol] as string | null : null;
 
-        if (cachedSlug && configTemplate && configTemplate.includes("{slug}")) {
-          // Use the cached regional slug instead of the US slug
+        if (printerRegionalUrl) {
+          // Direct per-printer URL — highest priority (handles differ per region)
+          productUrl = printerRegionalUrl;
+        } else if (cachedSlug && configTemplate && configTemplate.includes("{slug}")) {
+          // Use the cached regional slug with template
           productUrl = configTemplate.replace("{slug}", cachedSlug);
           console.log(`[SlugCache] Using cached slug "${cachedSlug}" for ${printer.model_name} ${regionCode}`);
         } else if (configTemplate && configTemplate.includes("{slug}")) {
+          // Fallback: template with US slug (works when handles are consistent)
           productUrl = configTemplate.replace("{slug}", slug);
-        } else if (regionCode === "US" && printer.product_url) {
-          productUrl = printer.product_url;
-        } else {
-          const printerRegionalUrl = (printer as any)[regionMeta.urlCol] as string | null;
-          if (printerRegionalUrl) productUrl = printerRegionalUrl;
         }
 
         if (!productUrl) {
