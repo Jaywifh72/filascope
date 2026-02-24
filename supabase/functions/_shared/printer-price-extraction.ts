@@ -1294,7 +1294,9 @@ async function extractCrealityRegionalPrice(
     };
   }
 
-  const discoveredHandle = await discoverCrealityRegionalHandle(region, productTitle);
+  // Extract the US slug from the URL to help with handle discovery
+  const usSlug = url.match(/\/products\/([^/?#]+)/)?.[1] || null;
+  const discoveredHandle = await discoverCrealityRegionalHandle(region, productTitle, usSlug);
   if (!discoveredHandle) {
     console.log(`[Creality] Product "${productTitle}" not found in ${region} catalog — not_in_region`);
     return {
@@ -1409,7 +1411,8 @@ async function extractFromMyShopifyDirect(
  */
 async function discoverCrealityRegionalHandle(
   region: string,
-  productTitle: string
+  productTitle: string,
+  usSlug?: string | null
 ): Promise<string | null> {
   const shopifyDomain = CREALITY_MYSHOPIFY_MAP[region];
   if (!shopifyDomain) {
@@ -1469,6 +1472,42 @@ async function discoverCrealityRegionalHandle(
       if (pTitle === normalizedSearch) {
         console.log(`[Creality] Exact title match: "${product.title}" → handle "${product.handle}"`);
         return product.handle;
+      }
+    }
+
+    // Step 1b: Try matching by US slug — handles often match across regions
+    if (usSlug) {
+      for (const product of printerProducts) {
+        const pHandle = (product.handle || '').toLowerCase();
+        if (pHandle === usSlug.toLowerCase()) {
+          console.log(`[Creality] US slug match: "${usSlug}" found in ${region} catalog → handle "${product.handle}"`);
+          return product.handle;
+        }
+      }
+      // Also try slug without brand prefix
+      const strippedSlug = usSlug.replace(/^creality-/i, '').toLowerCase();
+      if (strippedSlug !== usSlug.toLowerCase()) {
+        for (const product of printerProducts) {
+          const pHandle = (product.handle || '').toLowerCase();
+          if (pHandle === strippedSlug || pHandle === `creality-${strippedSlug}`) {
+            console.log(`[Creality] Stripped US slug match: "${strippedSlug}" → handle "${product.handle}"`);
+            return product.handle;
+          }
+        }
+      }
+      // Try partial slug match: US slug contains or is contained by regional handle
+      for (const product of printerProducts) {
+        const pHandle = (product.handle || '').toLowerCase();
+        const usSlugLower = usSlug.toLowerCase();
+        // Only match if the overlap is substantial (>60% of the longer string)
+        if (pHandle.includes(usSlugLower) || usSlugLower.includes(pHandle)) {
+          const longer = Math.max(pHandle.length, usSlugLower.length);
+          const shorter = Math.min(pHandle.length, usSlugLower.length);
+          if (shorter / longer >= 0.6) {
+            console.log(`[Creality] Partial US slug match: US="${usSlug}" ↔ Regional="${product.handle}"`);
+            return product.handle;
+          }
+        }
       }
     }
 
