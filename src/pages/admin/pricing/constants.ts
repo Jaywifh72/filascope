@@ -24,7 +24,8 @@ export const REGION_URL_COLUMN_MAP: Record<string, string> = {
 
 type SubdomainConfig = { pattern: 'subdomain'; baseDomain: string; regions: Record<string, { subdomain?: string; domain?: string }> };
 type PathConfig = { pattern: 'path'; baseUrl: string; regions: Record<string, string> };
-type BrandRegionalConfig = SubdomainConfig | PathConfig;
+type SameUrlConfig = { pattern: 'same_url'; regions: string[] };
+type BrandRegionalConfig = SubdomainConfig | PathConfig | SameUrlConfig;
 
 export const BRAND_REGIONAL_CONFIGS: Record<string, BrandRegionalConfig> = {
   'Bambu Lab':    { pattern: 'subdomain', baseDomain: 'store.bambulab.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' }, JP: { subdomain: 'jp' } } },
@@ -32,6 +33,9 @@ export const BRAND_REGIONAL_CONFIGS: Record<string, BrandRegionalConfig> = {
   'Elegoo':       { pattern: 'subdomain', baseDomain: 'elegoo.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
   'Anycubic':     { pattern: 'subdomain', baseDomain: 'anycubic.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { domain: 'www.anycubic.au' } } },
   'Creality':     { pattern: 'path', baseUrl: 'https://store.creality.com', regions: { CA: 'ca', UK: 'uk', EU: 'eu', AU: 'au', JP: 'jp' } },
+  // Single global-store brands: same product URL serves multiple regions with geo-localized currency.
+  'Prusament':    { pattern: 'same_url', regions: ['EU', 'US'] },
+  'Prusa Research': { pattern: 'same_url', regions: ['EU', 'US'] },
 };
 
 export function deriveRegionalUrl(usUrl: string, vendor: string, region: string): string | null {
@@ -39,6 +43,11 @@ export function deriveRegionalUrl(usUrl: string, vendor: string, region: string)
   if (!config) return null;
 
   try {
+    if (config.pattern === 'same_url') {
+      if (!config.regions.includes(region)) return null;
+      return usUrl.replace(/[?#].*$/, '');
+    }
+
     if (config.pattern === 'path') {
       const regionPath = config.regions[region];
       if (!regionPath) return null;
@@ -46,20 +55,20 @@ export function deriveRegionalUrl(usUrl: string, vendor: string, region: string)
       if (!urlObj.hostname.includes('creality.com')) return null;
       const cleanPath = urlObj.pathname.replace(/^\/(ca|uk|eu|au|jp|us)\//, '/');
       return `${config.baseUrl}/${regionPath}${cleanPath}`.replace(/[?#].*$/, '');
-    } else {
-      if (!config.regions[region]) return null;
-      const urlObj = new URL(usUrl);
-      const regionConfig = config.regions[region];
-      if (regionConfig.domain) {
-        urlObj.hostname = regionConfig.domain;
-      } else if (regionConfig.subdomain) {
-        const parts = urlObj.hostname.split('.');
-        if (parts.length >= 3) parts[0] = regionConfig.subdomain;
-        else parts.unshift(regionConfig.subdomain);
-        urlObj.hostname = parts.join('.');
-      }
-      return urlObj.toString().replace(/[?#].*$/, '');
     }
+
+    if (!config.regions[region]) return null;
+    const urlObj = new URL(usUrl);
+    const regionConfig = config.regions[region];
+    if (regionConfig.domain) {
+      urlObj.hostname = regionConfig.domain;
+    } else if (regionConfig.subdomain) {
+      const parts = urlObj.hostname.split('.');
+      if (parts.length >= 3) parts[0] = regionConfig.subdomain;
+      else parts.unshift(regionConfig.subdomain);
+      urlObj.hostname = parts.join('.');
+    }
+    return urlObj.toString().replace(/[?#].*$/, '');
   } catch { return null; }
 }
 
