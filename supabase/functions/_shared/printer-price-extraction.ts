@@ -1416,17 +1416,27 @@ function parsePrusaMarkdownPrice(
   region?: string,
   config?: BrandSyncConfig
 ): ExtractionResult | null {
-  // Strategy 1: Look for prices near the product title (first 2000 chars)
-  const topSection = markdown.substring(0, 2000);
+  // Prusa injects zero-width non-joiner (U+200C) between currency symbol and digits
+  // e.g. "$‌1,299.00" — strip these invisible chars first for reliable parsing
+  const cleanMarkdown = markdown.replace(/[\u200B-\u200F\u00AD\uFEFF\u200C]/g, '');
+  
+  // Prusa's cheapest active printer is ~$429 (MINI+). Use $250 min to filter out
+  // accessories/shipping costs like "$200" that appear on product pages.
+  const PRUSA_MIN_PRICE = 250;
+  const PRUSA_MAX_PRICE = 5000;
 
-  // Pattern: "$X,XXX" or "$XXX" with optional "USD"/"EUR"
+  // Strategy 1: Look for prices near the product title (first 3000 chars — Prusa pages
+  // have lots of images before the price appears)
+  const topSection = cleanMarkdown.substring(0, 3000);
+
+  // Pattern: "$X,XXX" or "$XXX" or "€X,XXX" with optional currency code
   const priceRegex = /[\$€£]([\d,]+(?:\.\d{1,2})?)\s*(?:USD|EUR|CAD|GBP|AUD)?/g;
   const prices: { value: number; index: number; currency: string }[] = [];
 
   let match;
   while ((match = priceRegex.exec(topSection)) !== null) {
     const price = parseFloat(match[1].replace(/,/g, ''));
-    if (!isNaN(price) && price >= 100 && price <= 5000) {
+    if (!isNaN(price) && price >= PRUSA_MIN_PRICE && price <= PRUSA_MAX_PRICE) {
       const symbol = match[0].charAt(0);
       let currency = '';
       if (match[0].includes('USD') || symbol === '$') currency = 'USD';
@@ -1447,12 +1457,13 @@ function parsePrusaMarkdownPrice(
       compareAt = prices[1].value;
     }
 
+    console.log(`[Prusa:MD] Found ${prices.length} prices in top section. Best: ${best.currency} ${best.value}`);
     return {
       current_price: best.value,
       compare_at_price: compareAt,
-      currency: best.currency || detectCurrencyFromMarkdown(markdown) || '',
+      currency: best.currency || detectCurrencyFromMarkdown(cleanMarkdown) || '',
       variant_name: null,
-      extraction_method: 'meta_tags', // closest available type for Firecrawl extraction
+      extraction_method: 'firecrawl' as any,
       confidence: 'medium',
       raw_variants_found: prices.length,
       is_combo: false,
@@ -1460,23 +1471,24 @@ function parsePrusaMarkdownPrice(
     };
   }
 
-  // Strategy 2: Scan full markdown for price in $100-$5000 range
+  // Strategy 2: Scan full markdown for price in valid range
   const fullPriceRegex = /[\$€£]([\d,]+(?:\.\d{1,2})?)\s*(?:USD|EUR|CAD|GBP|AUD)?/g;
-  while ((match = fullPriceRegex.exec(markdown)) !== null) {
+  while ((match = fullPriceRegex.exec(cleanMarkdown)) !== null) {
     const price = parseFloat(match[1].replace(/,/g, ''));
-    if (!isNaN(price) && price >= 100 && price <= 5000) {
+    if (!isNaN(price) && price >= PRUSA_MIN_PRICE && price <= PRUSA_MAX_PRICE) {
       const symbol = match[0].charAt(0);
       let currency = '';
       if (match[0].includes('USD') || symbol === '$') currency = 'USD';
       else if (match[0].includes('EUR') || symbol === '€') currency = 'EUR';
       else if (match[0].includes('GBP') || symbol === '£') currency = 'GBP';
 
+      console.log(`[Prusa:MD] Found price in full scan: ${currency} ${price}`);
       return {
         current_price: price,
         compare_at_price: null,
-        currency: currency || detectCurrencyFromMarkdown(markdown) || '',
+        currency: currency || detectCurrencyFromMarkdown(cleanMarkdown) || '',
         variant_name: null,
-        extraction_method: 'meta_tags',
+        extraction_method: 'firecrawl' as any,
         confidence: 'low',
         raw_variants_found: 0,
         is_combo: false,
@@ -1485,6 +1497,7 @@ function parsePrusaMarkdownPrice(
     }
   }
 
+  console.log(`[Prusa:MD] No price found in ${cleanMarkdown.length} chars (min: ${PRUSA_MIN_PRICE})`);
   return null;
 }
 
@@ -1498,18 +1511,22 @@ function parsePrusaHtmlPrice(
   region?: string,
   expectedCurrency?: string
 ): ExtractionResult | null {
+  // Strip zero-width characters that Prusa injects (same issue as markdown)
+  const cleanHtml = html.replace(/[\u200B-\u200F\u00AD\uFEFF\u200C]/g, '');
+  const PRUSA_MIN_PRICE = 250;
+  
   // Strategy 1: Look for Global-e price elements (data-ge-price, data-price attributes)
-  const gePriceMatch = html.match(/data-ge-price="([\d.]+)"/);
+  const gePriceMatch = cleanHtml.match(/data-ge-price="([\d.]+)"/);
   if (gePriceMatch) {
     const price = parseFloat(gePriceMatch[1]);
-    if (!isNaN(price) && price >= 100 && price <= 5000) {
+    if (!isNaN(price) && price >= PRUSA_MIN_PRICE && price <= 5000) {
       console.log(`[Prusa:HTML] Found Global-e data attribute price: ${price}`);
       return {
         current_price: price,
         compare_at_price: null,
         currency: expectedCurrency || 'USD',
         variant_name: null,
-        extraction_method: 'meta_tags',
+        extraction_method: 'firecrawl' as any,
         confidence: 'medium',
         raw_variants_found: 1,
         is_combo: false,
@@ -1532,11 +1549,11 @@ function parsePrusaHtmlPrice(
 
   for (const pattern of pricePatterns) {
     let match;
-    while ((match = pattern.exec(html)) !== null) {
+    while ((match = pattern.exec(cleanHtml)) !== null) {
       const priceStr = match[1].replace(/,/g, '');
       const price = parseFloat(priceStr);
-      if (!isNaN(price) && price >= 100 && price <= 5000) {
-        const context = html.substring(Math.max(0, match.index - 20), match.index + match[0].length + 20);
+      if (!isNaN(price) && price >= PRUSA_MIN_PRICE && price <= 5000) {
+        const context = cleanHtml.substring(Math.max(0, match.index - 20), match.index + match[0].length + 20);
         let currency = expectedCurrency || 'USD';
         if (context.includes('\u20AC') || context.includes('EUR')) currency = 'EUR';
         else if (context.includes('\u00A3') || context.includes('GBP')) currency = 'GBP';
@@ -1549,7 +1566,7 @@ function parsePrusaHtmlPrice(
           compare_at_price: null,
           currency,
           variant_name: null,
-          extraction_method: 'meta_tags',
+          extraction_method: 'firecrawl' as any,
           confidence: 'medium',
           raw_variants_found: 1,
           is_combo: false,
@@ -1563,9 +1580,9 @@ function parsePrusaHtmlPrice(
   const broadRegex = /[\$\u20AC\u00A3]([\d,]+\.\d{2})/g;
   const foundPrices: { value: number; currency: string }[] = [];
   let bMatch;
-  while ((bMatch = broadRegex.exec(html)) !== null) {
+  while ((bMatch = broadRegex.exec(cleanHtml)) !== null) {
     const price = parseFloat(bMatch[1].replace(/,/g, ''));
-    if (!isNaN(price) && price >= 100 && price <= 5000) {
+    if (!isNaN(price) && price >= PRUSA_MIN_PRICE && price <= 5000) {
       const symbol = bMatch[0].charAt(0);
       let currency = symbol === '\u20AC' ? 'EUR' : symbol === '\u00A3' ? 'GBP' : 'USD';
       foundPrices.push({ value: price, currency });
@@ -1592,7 +1609,7 @@ function parsePrusaHtmlPrice(
       compare_at_price: null,
       currency: bestPrice.currency,
       variant_name: null,
-      extraction_method: 'meta_tags',
+      extraction_method: 'firecrawl' as any,
       confidence: 'low',
       raw_variants_found: foundPrices.length,
       is_combo: false,
