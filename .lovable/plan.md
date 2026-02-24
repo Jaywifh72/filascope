@@ -1,153 +1,97 @@
 
-# Robust Printer Price Sync for All Brands
 
-## Problem Summary
+# Fix Anycubic Regional Printer Price Sync
 
-After thorough analysis of every brand's website, database URLs, and sync configuration, I found significant issues preventing reliable "Resync Selected" across all brands. Here's the brand-by-brand status:
+## Summary
+Anycubic printers fail to sync prices for CA, UK, EU, and AU because: (1) Shopify JSON is disabled in config despite working endpoints, (2) no regional URL templates exist, (3) product handles differ across regions, and (4) AU store URL is wrong.
 
-| Brand | Status | Issue |
-|-------|--------|-------|
-| Bambu Lab | Partial | Working via Firecrawl for most regions |
-| Anycubic | Working | JSON-LD extraction works |
-| Creality | Partial | 2 printers have broken/wrong-domain URLs |
-| Elegoo | Broken | Some product URLs return 404 (discontinued pages) |
-| FlashForge | ALL BROKEN | Every URL uses dead domain `flashforgeshop.com`; correct domain is `flashforge.com` |
-| FLSUN | Blocked | Marked `manual_only` but has working Shopify store |
-| Prusa Research | Blocked | Marked `manual_only` but Firecrawl can extract prices |
-| QIDI Tech | Broken | Config points to `qidi3d.com` but store is now `us.qidi3d.com` |
-| Snapmaker | Broken | Config URL pattern is wrong; actual store is `us.snapmaker.com` |
-| Sovol | Partial | Some URLs are 404 for discontinued models |
-| LDO Motors | No config | Third-party reseller, no brand_sync_config entry |
+## Phase 1: Update brand_sync_config for Anycubic
 
-## Plan
+Change the Anycubic config to enable Shopify JSON and add regional URL templates:
 
-### Phase 1: Fix All Broken Product URLs in Database
+- `shopify_json_available` -> `true`
+- `primary_extraction` -> `shopify_json`
+- `store_url_ca` -> `https://ca.anycubic.com/products/{slug}`
+- `store_url_uk` -> `https://uk.anycubic.com/products/{slug}`
+- `store_url_eu` -> `https://eu.anycubic.com/products/{slug}`
+- `store_url_au` -> `https://www.anycubic.au/products/{slug}`
+- Remove `store_url_jp` (no JP store)
 
-Update the `printers` table with correct URLs for every active, non-discontinued printer:
+## Phase 2: Fix AU Regional Store entry
 
-- **FlashForge**: Update all 5 active product URLs from `flashforgeshop.com/product/...` to `flashforge.com/products/...` with correct new slugs. Mark Guider 4 and Guider 4 Pro with corrected URLs or as upcoming/unavailable.
-- **QIDI Tech**: Update URLs from `qidi3d.com` to `us.qidi3d.com` for all 4 models.
-- **Creality**: Fix `Sermoon D3` URL (wrong domain) and `Sermoon D3 Pro` URL (has `/ca/` prefix causing wrong-region extraction).
-- **Snapmaker**: Update URLs to use `us.snapmaker.com` and verify each product slug works. The Snapmaker U1 uses a non-standard path (`/en/snapmaker-u1`) -- needs special handling.
-- **Sovol**: Remove or mark discontinued models (SV06 returns 404). Verify remaining URLs.
+Update `brand_regional_stores` for Anycubic Australia:
+- Change `base_url` from `https://store.anycubic.com` to `https://www.anycubic.au`
+- Change `product_url_pattern` from `https://store.anycubic.com/products/{slug}` to `https://www.anycubic.au/products/{slug}`
 
-### Phase 2: Update `brand_sync_config` Table
+## Phase 3: Handle Regional Slug Mismatch in Extraction Engine
 
-Add or update configuration for every brand so the sync engine knows the correct extraction strategy:
+The core problem: when the sync engine builds a regional URL using the US slug (e.g., `anycubic-kobra-3`), the CA store may use a different slug (`kobra-3`), causing a 404 on the Shopify JSON endpoint.
 
-- **FlashForge**: Update `store_url_us` to `https://www.flashforge.com/products/{slug}`, set `shopify_json_available: true` (new Shopify store), change `primary_extraction` to `shopify_json`.
-- **FLSUN**: Change from `manual_only` to `shopify_json`, set `shopify_json_available: true`, update `store_url_us` to `https://us.store.flsun3d.com/products/{slug}`.
-- **QIDI Tech**: Update `store_url_us` to `https://us.qidi3d.com/products/{slug}`. Test Shopify JSON availability.
-- **Snapmaker**: Update `store_url_us` to `https://us.snapmaker.com/products/{slug}`, test Shopify JSON.
-- **Prusa Research**: Change from `manual_only` to `json_ld` with Firecrawl markdown fallback. Prusa's WooCommerce site has prices visible in markdown (e.g., "$1199 USD" in comparison tables). The Firecrawl markdown parser can extract these.
-- **LDO Motors**: Add config entry for Fabreeko (Shopify store) or keep as manual.
+**Solution: Add slug discovery fallback to `extractFromShopifyJson`**
 
-### Phase 3: Enhance Extraction Engine for Edge Cases
+When the `.json` endpoint returns 404:
+1. Try stripping the brand prefix: `anycubic-kobra-3` -> `kobra-3`
+2. Try adding the brand prefix: `kobra-3-max` -> `anycubic-kobra-3-max`
+3. If both fail, return null (product not available in that region)
 
-Updates to `printer-price-extraction.ts`:
+This is implemented directly in `printer-price-extraction.ts` inside `extractFromShopifyJson`, keeping it self-contained.
 
-1. **Prusa WooCommerce support**: The current `extractSlug` function handles `/product/{slug}/` (WooCommerce format) already, but Prusa's site doesn't use Shopify JSON or standard JSON-LD. Prices appear in the page HTML as text like "$1,199" and in comparison tables. Add a Firecrawl markdown strategy that looks for price patterns like `$X,XXX USD` near product configuration sections.
+## Phase 4: Add Anycubic Regional Domains to Geo-Bypass Maps
 
-2. **Snapmaker non-standard URLs**: The Snapmaker U1 uses `/en/snapmaker-u1` instead of `/products/{slug}`. The slug extractor needs to handle this. Add fallback to use the full `product_url` directly rather than building from template.
+Add these to `REGION_SPOOF_HEADERS` and `DOMAIN_REGION_MAP`:
+- `store.anycubic.com` -> US
+- `ca.anycubic.com` -> CA
+- `uk.anycubic.com` -> UK
+- `eu.anycubic.com` -> EU
+- `www.anycubic.au` -> AU
 
-3. **FlashForge regional stores**: FlashForge now has regional subdomains (`ca.flashforge.com`, `eu.flashforge.com`, `uk.flashforge.com`, `au.flashforge.com`). Add these to `brand_sync_config` regional URL templates.
+## Phase 5: Populate Regional URLs for Existing Printers
 
-4. **FLSUN regional stores**: FLSUN has regional Shopify stores (`us.store.flsun3d.com`). Add geo-aware spoof headers if needed, or add regional URL templates.
+For the 11 Anycubic printers that lack regional URLs, the sync engine will now auto-construct them from the brand_sync_config templates. No manual URL population needed -- the sync engine already builds URLs from `store_url_{region}` + slug.
 
-5. **Improved markdown price parser**: Enhance `parseMarkdownPrices` to also handle:
-   - Inline price patterns like `Sale price$299.00 USDRegular price$399.00 USD` (FlashForge format)
-   - Table-based pricing (Prusa comparison tables)
-   - Strikethrough patterns like `~~$1,499.00~~\n$599.00` (FLSUN format)
-
-### Phase 4: Add `REGION_SPOOF_HEADERS` for New Geo-Blocking Domains
-
-Several brands use regional subdomains that may geo-redirect:
-- `us.qidi3d.com`, `eu.qidi3d.com`
-- `us.store.flsun3d.com`
-- `us.snapmaker.com`, `eu.snapmaker.com`
-
-Add these to the `REGION_SPOOF_HEADERS` map so the Firecrawl fallback triggers correctly when direct fetch is geo-blocked.
+However, the slug mismatch means some will 404 on first attempt and be resolved by the slug discovery fallback (Phase 3).
 
 ## Technical Details
 
-### Database Migrations
+### Database Changes (via insert tool, not migrations)
 
-**URL fixes** (SQL UPDATE statements):
-```text
--- FlashForge URL migration
-UPDATE printers SET product_url = 'https://www.flashforge.com/products/flashforge-ad5x-3d-printer' WHERE model_name = 'AD5X' AND brand_id = (SELECT id FROM printer_brands WHERE brand = 'FlashForge');
-UPDATE printers SET product_url = 'https://www.flashforge.com/products/adventurer-5m-3d-printer' WHERE model_name = 'Adventurer 5M' AND ...;
--- (similar for all FlashForge models)
-
--- QIDI Tech URL migration  
-UPDATE printers SET product_url = 'https://us.qidi3d.com/products/q1-pro-3d-printer' WHERE model_name = 'Q1 PRO' AND ...;
--- (similar for all QIDI models)
-
--- Creality fixes
-UPDATE printers SET product_url = 'https://store.creality.com/products/sermoon-d3-3d-printer' WHERE model_name = 'Sermoon D3' AND ...;
-UPDATE printers SET product_url = 'https://store.creality.com/products/sermoon-d3-pro-3d-printer' WHERE model_name = 'Sermoon D3 Pro' AND ...;
-```
-
-**brand_sync_config updates**:
-```text
--- FlashForge: new Shopify store
-UPDATE brand_sync_config SET 
-  store_url_us = 'https://www.flashforge.com/products/{slug}',
+```sql
+-- Update brand_sync_config
+UPDATE brand_sync_config SET
   shopify_json_available = true,
   primary_extraction = 'shopify_json',
-  store_platform = 'shopify'
-WHERE brand_id = 'flashforge';
+  store_url_ca = 'https://ca.anycubic.com/products/{slug}',
+  store_url_uk = 'https://uk.anycubic.com/products/{slug}',
+  store_url_eu = 'https://eu.anycubic.com/products/{slug}',
+  store_url_au = 'https://www.anycubic.au/products/{slug}',
+  sync_notes = 'Shopify JSON works on all regional stores. Handles may differ across regions — slug discovery fallback handles this.'
+WHERE brand_id = 'anycubic';
 
--- FLSUN: enable auto-sync
-UPDATE brand_sync_config SET
-  primary_extraction = 'shopify_json',
-  shopify_json_available = true,
-  store_url_us = 'https://us.store.flsun3d.com/products/{slug}'
-WHERE brand_id = 'flsun';
-
--- Prusa: enable Firecrawl-based sync
-UPDATE brand_sync_config SET
-  primary_extraction = 'json_ld',
-  fallback_extraction = 'meta_tags'
-WHERE brand_id = 'prusa-research';
-
--- QIDI Tech: fix store URL
-UPDATE brand_sync_config SET
-  store_url_us = 'https://us.qidi3d.com/products/{slug}'
-WHERE brand_id = 'qidi-tech';
-
--- Snapmaker: fix store URL  
-UPDATE brand_sync_config SET
-  store_url_us = 'https://us.snapmaker.com/products/{slug}'
-WHERE brand_id = 'snapmaker';
+-- Fix AU regional store
+UPDATE brand_regional_stores SET
+  base_url = 'https://www.anycubic.au',
+  product_url_pattern = 'https://www.anycubic.au/products/{slug}'
+WHERE id = 'f8d5ffb9-0505-4a34-ac8d-545c513123ca';
 ```
 
-### Edge Function Changes
+### Edge Function Changes (`printer-price-extraction.ts`)
 
-**`printer-price-extraction.ts`**:
-- Add new domains to `REGION_SPOOF_HEADERS` for QIDI, FLSUN, Snapmaker, FlashForge regional stores
-- Enhance `parseMarkdownPrices` with 2 new strategies:
-  - Strategy 3: Inline sale/regular price pattern (`Sale price$XXX...Regular price$YYY`)
-  - Strategy 4: Strikethrough markdown pattern (`~~$OLD~~\n$NEW`)
-- Improve currency detection for CAD/AUD (both use `$` symbol)
+1. **Modify `extractFromShopifyJson`**: On 404 response, try alternate slugs (strip/add brand prefix). Log the successful alternate slug for debugging.
 
-**`sync-printer-prices/index.ts`**:
-- No structural changes needed -- the existing extraction pipeline handles the fallback correctly once configs and URLs are fixed
+2. **Add to `REGION_SPOOF_HEADERS`**:
+   - `store.anycubic.com`, `ca.anycubic.com`, `uk.anycubic.com`, `eu.anycubic.com`, `www.anycubic.au`
 
-### Expected Outcome After Implementation
+3. **Add to `DOMAIN_REGION_MAP`**:
+   - Same 5 domains mapped to their respective region codes
 
-| Brand | Before | After |
-|-------|--------|-------|
-| Bambu Lab | Partial (geo-blocked regions) | Full (Firecrawl bypass) |
-| Anycubic | Working | Working (no change) |
-| Creality | 2 broken URLs | Full (URLs fixed) |
-| Elegoo | Some 404s | Full (URLs updated) |
-| FlashForge | ALL broken (dead domain) | Full (new Shopify JSON) |
-| FLSUN | Manual only | Full (Shopify JSON auto-sync) |
-| Prusa Research | Manual only | Full (Firecrawl markdown) |
-| QIDI Tech | Wrong domain | Full (Shopify JSON) |
-| Snapmaker | Wrong domain | Full (Shopify JSON) |
-| Sovol | Partial (dead URLs) | Full (cleanup + Shopify JSON) |
-| LDO Motors | No config | Firecrawl markdown fallback |
+### Expected Results
 
-All brands will support "Resync Selected" with automatic price extraction, using the tiered strategy: Shopify JSON, JSON-LD, Meta Tags, Firecrawl Markdown.
+| Region | Before | After |
+|--------|--------|-------|
+| US | Working (JSON-LD) | Working (Shopify JSON -- faster, more reliable) |
+| CA | Failed (no URL template, wrong extraction) | Working (Shopify JSON + slug discovery) |
+| UK | Failed | Working (Shopify JSON + slug discovery) |
+| EU | Failed | Working (Shopify JSON + slug discovery) |
+| AU | Failed (wrong store URL) | Working (correct AU domain + Shopify JSON) |
+| JP | N/A (no store) | Skipped gracefully |
+
