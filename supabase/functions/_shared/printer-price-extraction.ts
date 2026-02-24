@@ -15,6 +15,8 @@ export interface ExtractionResult {
   raw_variants_found: number;
   is_combo: boolean;
   requires_review: boolean;
+  /** The slug that actually worked (may differ from URL slug if discovery was used) */
+  discovered_slug?: string;
 }
 
 /** Brand-specific extraction config loaded from brand_sync_config table */
@@ -134,7 +136,8 @@ export function selectBestVariant(
 export async function extractFromShopifyJson(
   url: string,
   region?: string,
-  config?: BrandSyncConfig
+  config?: BrandSyncConfig,
+  productTitle?: string
 ): Promise<ExtractionResult | null> {
   try {
     // Try the primary URL first
@@ -142,7 +145,6 @@ export async function extractFromShopifyJson(
     if (result) return result;
 
     // Slug discovery fallback: try alternate slugs on 404
-    // Handles cases like Anycubic where CA uses "kobra-3" but US uses "anycubic-kobra-3"
     const slugMatch = url.match(/\/products\/([^/?#]+)/);
     if (slugMatch) {
       const originalSlug = slugMatch[1];
@@ -169,13 +171,28 @@ export async function extractFromShopifyJson(
         const altResult = await _fetchShopifyJson(altUrl, region, config);
         if (altResult) {
           console.log(`[ShopifyJSON] Alternate slug "${altSlug}" worked for ${url}`);
+          altResult.discovered_slug = altSlug;
           return altResult;
+        }
+      }
+
+      // Last resort: search the regional store's product catalog by title
+      if (productTitle) {
+        const storeOrigin = new URL(url).origin;
+        const discoveredSlug = await discoverHandleFromCatalog(storeOrigin, originalSlug, productTitle);
+        if (discoveredSlug) {
+          const catUrl = url.replace(`/products/${originalSlug}`, `/products/${discoveredSlug}`);
+          console.log(`[ShopifyJSON] Catalog discovery found slug "${discoveredSlug}" for "${productTitle}"`);
+          const catResult = await _fetchShopifyJson(catUrl, region, config);
+          if (catResult) {
+            catResult.discovered_slug = discoveredSlug;
+            return catResult;
+          }
         }
       }
     }
 
     // All slug variants returned 404 — product likely doesn't exist in this region
-    // Return a special "not_in_region" result so the sync engine can handle it gracefully
     console.log(`[ShopifyJSON] Product not found in region for ${url} — marking as not_in_region`);
     return {
       current_price: null,
@@ -190,6 +207,73 @@ export async function extractFromShopifyJson(
     };
   } catch (e) {
     console.error(`Shopify JSON extraction failed for ${url}:`, e);
+    return null;
+  }
+}
+
+/**
+ * Search a Shopify store's product catalog to discover the correct handle
+ * when it differs from the source region's handle.
+ */
+async function discoverHandleFromCatalog(
+  storeOrigin: string,
+  expectedHandle: string,
+  productTitle: string
+): Promise<string | null> {
+  try {
+    console.log(`[CatalogDiscovery] Searching ${storeOrigin} for "${productTitle}"`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const resp = await fetch(`${storeOrigin}/products.json?limit=250`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; FilaScope/1.0)',
+        'Accept': 'application/json',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!resp.ok) {
+      await resp.text().catch(() => {});
+      return null;
+    }
+
+    const data = await resp.json();
+    const products = data?.products;
+    if (!Array.isArray(products)) return null;
+
+    // Normalize the expected title: strip brand prefix, lowercase
+    const normalizeTitle = (t: string) =>
+      t.replace(/^anycubic\s+/i, '')
+       .replace(/^elegoo\s+/i, '')
+       .replace(/^creality\s+/i, '')
+       .trim().toLowerCase();
+
+    const normalizedExpected = normalizeTitle(productTitle);
+    const normalizedHandle = expectedHandle.replace(/^anycubic-|^elegoo-|^creality-/i, '').replace(/-/g, ' ').toLowerCase();
+
+    for (const product of products) {
+      const pTitle = normalizeTitle(product.title || '');
+      const pHandle = (product.handle || '').replace(/-/g, ' ').toLowerCase();
+      const pHandleNormalized = pHandle.replace(/^anycubic |^elegoo |^creality /i, '');
+
+      // Match by normalized title
+      if (pTitle === normalizedExpected) {
+        console.log(`[CatalogDiscovery] Title match: "${product.title}" → handle "${product.handle}"`);
+        return product.handle;
+      }
+      // Match by normalized handle
+      if (pHandleNormalized === normalizedHandle) {
+        console.log(`[CatalogDiscovery] Handle match: "${product.handle}"`);
+        return product.handle;
+      }
+    }
+
+    console.log(`[CatalogDiscovery] No match found for "${productTitle}" in ${products.length} products`);
+    return null;
+  } catch (e) {
+    console.error(`[CatalogDiscovery] Error:`, e);
     return null;
   }
 }
@@ -497,7 +581,8 @@ export async function extractPrice(
   region?: string,
   oldPrice?: number | null,
   config?: BrandSyncConfig,
-  expectedCurrency?: string
+  expectedCurrency?: string,
+  productTitle?: string
 ): Promise<ExtractionResult> {
   const primary = config?.primary_extraction ?? 'shopify_json';
   const fallback = config?.fallback_extraction ?? 'meta_tags';
@@ -526,7 +611,7 @@ export async function extractPrice(
 
   for (const tier of tiers) {
     if (tier === 'shopify_json' && !skipShopify) {
-      const result = await extractFromShopifyJson(url, region, config);
+      const result = await extractFromShopifyJson(url, region, config, productTitle);
       if (result) {
         // If the product is not available in this region, return immediately
         if (result.extraction_method === 'not_in_region') {
