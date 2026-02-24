@@ -10,7 +10,7 @@ export interface ExtractionResult {
   compare_at_price: number | null;
   currency: string;
   variant_name: string | null;
-  extraction_method: 'shopify_json' | 'json_ld_product' | 'json_ld_product_group' | 'meta_tags' | 'manual' | 'geo_blocked';
+  extraction_method: 'shopify_json' | 'json_ld_product' | 'json_ld_product_group' | 'meta_tags' | 'manual' | 'geo_blocked' | 'not_in_region';
   confidence: 'high' | 'medium' | 'low';
   raw_variants_found: number;
   is_combo: boolean;
@@ -174,7 +174,20 @@ export async function extractFromShopifyJson(
       }
     }
 
-    return null;
+    // All slug variants returned 404 — product likely doesn't exist in this region
+    // Return a special "not_in_region" result so the sync engine can handle it gracefully
+    console.log(`[ShopifyJSON] Product not found in region for ${url} — marking as not_in_region`);
+    return {
+      current_price: null,
+      compare_at_price: null,
+      currency: '',
+      variant_name: null,
+      extraction_method: 'not_in_region' as const,
+      confidence: 'high',
+      raw_variants_found: 0,
+      is_combo: false,
+      requires_review: false,
+    };
   } catch (e) {
     console.error(`Shopify JSON extraction failed for ${url}:`, e);
     return null;
@@ -504,6 +517,7 @@ export async function extractPrice(
 
   // Skip shopify_json if config says it's not available
   const skipShopify = config?.shopify_json_available === false;
+  let shopifyNotInRegion = false;
 
   let html: string | null = null;
   let fetchAttempted = false;
@@ -513,8 +527,16 @@ export async function extractPrice(
   for (const tier of tiers) {
     if (tier === 'shopify_json' && !skipShopify) {
       const result = await extractFromShopifyJson(url, region, config);
-      if (result?.current_price && result.current_price > 0) {
-        return applyAnomalyCheck(result, oldPrice);
+      if (result) {
+        // If the product is not available in this region, return immediately
+        if (result.extraction_method === 'not_in_region') {
+          shopifyNotInRegion = true;
+          // Don't fall through to other tiers — the product genuinely doesn't exist here
+          break;
+        }
+        if (result.current_price && result.current_price > 0) {
+          return applyAnomalyCheck(result, oldPrice);
+        }
       }
     }
 
@@ -586,6 +608,21 @@ export async function extractPrice(
         return applyAnomalyCheck(mdResult, oldPrice);
       }
     }
+  }
+
+  // If Shopify JSON confirmed product doesn't exist in this region, return that status
+  if (shopifyNotInRegion) {
+    return {
+      current_price: null,
+      compare_at_price: null,
+      currency: '',
+      variant_name: null,
+      extraction_method: 'not_in_region',
+      confidence: 'high',
+      raw_variants_found: 0,
+      is_combo: false,
+      requires_review: false,
+    };
   }
 
   // If we were geo-blocked and nothing worked, return geo_blocked

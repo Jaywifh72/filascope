@@ -222,6 +222,14 @@ Deno.serve(async (req) => {
           lastConfidence = extraction.confidence;
 
           if (!extraction.current_price || extraction.current_price <= 0) {
+            if (extraction.extraction_method === "not_in_region") {
+              regionResults[regionCode] = {
+                status: "not_in_region",
+                extraction_method: extraction.extraction_method,
+              };
+              // Not counted as error — product genuinely doesn't exist in this region
+              continue;
+            }
             if (extraction.extraction_method === "geo_blocked") {
               regionResults[regionCode] = {
                 status: "geo_blocked",
