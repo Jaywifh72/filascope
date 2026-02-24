@@ -137,6 +137,57 @@ export async function extractFromShopifyJson(
   config?: BrandSyncConfig
 ): Promise<ExtractionResult | null> {
   try {
+    // Try the primary URL first
+    const result = await _fetchShopifyJson(url, region, config);
+    if (result) return result;
+
+    // Slug discovery fallback: try alternate slugs on 404
+    // Handles cases like Anycubic where CA uses "kobra-3" but US uses "anycubic-kobra-3"
+    const slugMatch = url.match(/\/products\/([^/?#]+)/);
+    if (slugMatch) {
+      const originalSlug = slugMatch[1];
+      const alternates: string[] = [];
+
+      // Try stripping common brand prefixes
+      const brandPrefixes = ['anycubic-', 'elegoo-', 'creality-', 'flashforge-', 'sovol-', 'qidi-', 'bambu-lab-', 'bambulab-'];
+      for (const prefix of brandPrefixes) {
+        if (originalSlug.startsWith(prefix)) {
+          alternates.push(originalSlug.slice(prefix.length));
+          break;
+        }
+      }
+
+      // Try adding brand prefix (if URL domain hints at brand)
+      const domain = new URL(url).hostname;
+      if (domain.includes('anycubic') && !originalSlug.startsWith('anycubic-')) {
+        alternates.push(`anycubic-${originalSlug}`);
+      }
+
+      for (const altSlug of alternates) {
+        const altUrl = url.replace(`/products/${originalSlug}`, `/products/${altSlug}`);
+        console.log(`[ShopifyJSON] Trying alternate slug: ${altSlug} for ${url}`);
+        const altResult = await _fetchShopifyJson(altUrl, region, config);
+        if (altResult) {
+          console.log(`[ShopifyJSON] Alternate slug "${altSlug}" worked for ${url}`);
+          return altResult;
+        }
+      }
+    }
+
+    return null;
+  } catch (e) {
+    console.error(`Shopify JSON extraction failed for ${url}:`, e);
+    return null;
+  }
+}
+
+/** Internal: fetch and parse a single Shopify .json endpoint */
+async function _fetchShopifyJson(
+  url: string,
+  region?: string,
+  config?: BrandSyncConfig
+): Promise<ExtractionResult | null> {
+  try {
     const jsonUrl = url.replace(/\/?(\?.*)?$/, '.json');
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -185,8 +236,7 @@ export async function extractFromShopifyJson(
       is_combo,
       requires_review: false,
     };
-  } catch (e) {
-    console.error(`Shopify JSON extraction failed for ${url}:`, e);
+  } catch {
     return null;
   }
 }
@@ -810,6 +860,12 @@ const REGION_SPOOF_HEADERS: Record<string, Record<string, string>> = {
   'eu.flashforge.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
   'uk.flashforge.com': { 'Accept-Language': 'en-GB,en;q=0.9', 'CF-IPCountry': 'GB', 'X-Forwarded-For': '81.2.69.142' },
   'au.flashforge.com': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
+  // Anycubic
+  'store.anycubic.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  'ca.anycubic.com': { 'Accept-Language': 'en-CA,en;q=0.9', 'CF-IPCountry': 'CA', 'X-Forwarded-For': '99.224.0.1' },
+  'uk.anycubic.com': { 'Accept-Language': 'en-GB,en;q=0.9', 'CF-IPCountry': 'GB', 'X-Forwarded-For': '81.2.69.142' },
+  'eu.anycubic.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
+  'www.anycubic.au': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
 };
 
 // Per-currency price validation ranges for printers
@@ -855,6 +911,12 @@ const DOMAIN_REGION_MAP: Record<string, string> = {
   'eu.flashforge.com': 'EU',
   'uk.flashforge.com': 'UK',
   'au.flashforge.com': 'AU',
+  // Anycubic
+  'store.anycubic.com': 'US',
+  'ca.anycubic.com': 'CA',
+  'uk.anycubic.com': 'UK',
+  'eu.anycubic.com': 'EU',
+  'www.anycubic.au': 'AU',
 };
 
 async function fetchHtml(url: string, targetRegion?: string): Promise<string | null> {
