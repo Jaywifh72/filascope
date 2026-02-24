@@ -35,8 +35,9 @@ function generateVerboseLog(
   const failures: string[] = [];
   const changes: string[] = [];
   const unchanged: string[] = [];
+  const discontinued: string[] = [];
   const notInRegion: string[] = [];
-  let updatedCount = 0, unchangedCount = 0, failedCount = 0, unavailableCount = 0, notInRegionCount = 0;
+  let updatedCount = 0, unchangedCount = 0, failedCount = 0, unavailableCount = 0, notInRegionCount = 0, discontinuedCount = 0;
 
   syncResults.forEach((result, storeKey) => {
     if (result.status === 'syncing') return;
@@ -44,7 +45,10 @@ function generateVerboseLog(
     const label = entry ? `${entry.group.cleanName} — ${entry.store.region}` : storeKey;
     const url = entry?.store.productUrl;
 
-    if (result.status === 'not_in_region') {
+    if (result.status === 'discontinued') {
+      discontinuedCount++;
+      discontinued.push(`[SKIPPED] ${label}${result.error ? ` — ${result.error}` : ' — discontinued'}`);
+    } else if (result.status === 'not_in_region') {
       notInRegionCount++;
       notInRegion.push(`[N/A] ${label}${result.error ? ` — ${result.error}` : ''}`);
     } else if (result.status === 'failed') {
@@ -80,13 +84,20 @@ function generateVerboseLog(
   lines.push(`=== PRICING DATA SYNC LOG ===`);
   lines.push(`Timestamp: ${timestamp}`);
   lines.push(`Product Type: ${config.pluralLabel}`);
-  lines.push(`Summary: ${total} synced — ${updatedCount} updated, ${unchangedCount} unchanged, ${failedCount} failed${unavailableCount > 0 ? `, ${unavailableCount} unavailable` : ''}${notInRegionCount > 0 ? `, ${notInRegionCount} not in region` : ''}`);
+  lines.push(`Summary: ${total} synced — ${updatedCount} updated, ${unchangedCount} unchanged, ${failedCount} failed${unavailableCount > 0 ? `, ${unavailableCount} unavailable` : ''}${notInRegionCount > 0 ? `, ${notInRegionCount} not in region` : ''}${discontinuedCount > 0 ? `, ${discontinuedCount} discontinued` : ''}`);
 
   if (failures.length > 0) {
     lines.push('');
     lines.push('--- FAILURES ---');
     lines.push('');
     failures.forEach(f => lines.push(f));
+  }
+
+  if (discontinued.length > 0) {
+    lines.push('');
+    lines.push('--- DISCONTINUED ---');
+    lines.push('');
+    discontinued.forEach(d => lines.push(d));
   }
 
   if (notInRegion.length > 0) {

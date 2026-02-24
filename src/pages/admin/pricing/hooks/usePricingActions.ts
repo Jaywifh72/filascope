@@ -316,12 +316,17 @@ export function usePricingActions(
         // Extract the result for this specific region from the sync response
         const printerResult = syncData.results?.[0];
 
-        // Handle manual_only / skipped printers gracefully (not a failure)
+        // Handle manual_only / skipped / discontinued printers gracefully (not a failure)
         if (printerResult?.skipped) {
           const reason = printerResult.reason || 'skipped';
-          const result: SyncResult = { status: 'unchanged', error: reason === 'manual_only' ? 'Manual-only brand (prices managed manually)' : reason };
+          const isDiscontinued = reason === 'discontinued';
+          const mappedStatus: SyncResult['status'] = isDiscontinued ? 'discontinued' : 'unchanged';
+          const errorMsg = isDiscontinued
+            ? `Discontinued${printerResult.msrp ? ` (MSRP: $${printerResult.msrp})` : ''}`
+            : reason === 'manual_only' ? 'Manual-only brand (prices managed manually)' : reason;
+          const result: SyncResult = { status: mappedStatus, error: errorMsg };
           setSyncResults(prev => new Map(prev).set(store.storeKey, result));
-          if (showToast) toast.info(`ℹ️ ${result.error}`);
+          if (showToast && !isDiscontinued) toast.info(`ℹ️ ${errorMsg}`);
           return result;
         }
 
