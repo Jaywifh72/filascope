@@ -143,7 +143,7 @@ export function getRegionFieldMap(productType: ProductType) {
 // Shared Types
 // =============================================
 
-export type LinkStatus = 'active' | 'stale' | 'broken' | 'failed' | 'alert' | 'unknown';
+export type LinkStatus = 'active' | 'stale' | 'broken' | 'failed' | 'alert' | 'unknown' | 'not_in_region';
 
 export interface TestResult {
   status: 'testing' | 'ok' | 'broken' | 'redirect' | 'timeout' | 'geo_restricted';
@@ -210,6 +210,7 @@ export interface ProductGroup {
   staleCount: number;
   brokenCount: number;
   alertCount: number;
+  notInRegionCount: number;
 }
 
 // =============================================

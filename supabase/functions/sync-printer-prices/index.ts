@@ -122,6 +122,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Pre-load active regional stores to skip inactive ones
+    const { data: allRegionalStores } = await supabase
+      .from("brand_regional_stores")
+      .select("brand_id, region_code, is_active");
+
+    const inactiveStoreSet = new Set<string>();
+    for (const rs of allRegionalStores || []) {
+      if (rs.is_active === false) {
+        inactiveStoreSet.add(`${rs.brand_id}:${rs.region_code}`);
+      }
+    }
+
     if (body.printer_id) {
       query = query.eq("id", body.printer_id);
     } else if (body.brand_id) {
@@ -208,6 +220,13 @@ Deno.serve(async (req) => {
 
       for (const regionCode of regionsToSync) {
         const regionMeta = REGION_MAP[regionCode];
+
+        // Skip regions where the brand's regional store is explicitly inactive
+        const brandId = (printer as any).printer_brands?.id;
+        if (regionCode !== "US" && brandId && inactiveStoreSet.has(`${brandId}:${regionCode}`)) {
+          regionResults[regionCode] = { status: "not_in_region", reason: "Regional store is inactive" };
+          continue;
+        }
 
         // Build URL: cached slug > config template > printer's own URL column > fallback
         let productUrl: string | null = null;
