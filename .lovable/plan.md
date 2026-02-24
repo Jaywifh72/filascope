@@ -1,87 +1,73 @@
 
+# Add Verbose Sync Log with Copy-to-Clipboard
 
-# Fix Elegoo Printer Regional Pricing
+## What this does
 
-## Problem
-All 7 Elegoo printers show "Not Tested" for regional prices. No regional syncing happens because:
-- `brand_sync_config` has no regional store URL templates (CA/UK/EU/AU all null)
-- No regional URLs are set on the printer rows themselves
-- JP and CN stores are marked active but aren't functional stores
-- Two printers use `www.elegoo.com` instead of `us.elegoo.com` for their US URL
+After every price sync completes (per-brand or all-brands), a detailed verbose text log is generated and displayed in a collapsible panel. The log includes every failure, skip, anomaly, and error with full context. A "Copy to Clipboard" button lets you grab the entire log instantly.
 
-## Solution (3 data updates + 1 config update, no code changes needed)
+## How it will look
 
-The existing sync engine already supports everything needed. This is purely a data/configuration fix.
+Below the existing "Price Changes" diff table, a new collapsible card titled "Sync Log" appears (auto-expanded when there are errors). It contains:
+- A pre-formatted monospace text block with the full verbose log
+- A "Copy Log" button in the card header that copies the entire log text
 
-### Step 1: Update brand_sync_config with regional store URLs
+The log format:
 
-Add Shopify JSON URL templates for all 5 functional regions:
+```text
+=== PRICE SYNC LOG ===
+Timestamp: 2026-02-24T17:30:00Z
+Brands synced: All | elegoo
+Summary: 42 checked, 35 updated, 3 skipped, 2 errors, 1 anomaly, 1 manual-only
 
-| Column | Value |
-|--------|-------|
-| store_url_us | `https://us.elegoo.com/products/{slug}` (already set) |
-| store_url_ca | `https://ca.elegoo.com/products/{slug}` |
-| store_url_uk | `https://uk.elegoo.com/products/{slug}` |
-| store_url_eu | `https://eu.elegoo.com/products/{slug}` |
-| store_url_au | `https://au.elegoo.com/products/{slug}` |
-| store_url_jp | null (not a store) |
+--- FAILURES & ISSUES ---
 
-### Step 2: Mark JP and CN stores inactive
+[ERROR] Elegoo Neptune 3 Pro (elegoo) — US
+  Status: extraction_failed
+  Method: shopify_json
+  Error: No valid price extracted
+  URL: https://us.elegoo.com/products/elegoo-neptune-3-pro-fdm-3d-printer-225x225x280mm
 
-Update `brand_regional_stores` to set `is_active = false` for:
-- Elegoo JP (`elegoo.co.jp`) -- WordPress blog, not a store
-- Elegoo CN (`www.elegoo.cn`) -- inaccessible outside China
+[ANOMALY] Creality Ender 3 V3 (creality) — CA
+  Status: anomaly_rejected (critical)
+  Method: json_ld
+  Error: Critical price anomaly detected
+  Reason: Cross-region ratio 0.12 vs US price
+  Old Price: $199.00 → New Price: $24.99
 
-### Step 3: Fix US product URLs
+[SKIPPED] Bambu Lab X1C (bambu-lab)
+  Reason: manual_only
 
-Two printers use `www.elegoo.com` instead of `us.elegoo.com`:
-- Neptune 4: `www.elegoo.com/products/...` -> `us.elegoo.com/products/...`
-- Neptune 3 Pro: `www.elegoo.com/products/...` -> `us.elegoo.com/products/...`
+[SKIPPED] Prusa MK4S (prusa)
+  Reason: No product URL or discontinued
 
-### Step 4: Populate regional URLs on all 7 printers
+--- ALL RESULTS ---
 
-Set `product_url_ca`, `product_url_uk`, `product_url_eu`, `product_url_au` for each printer using its verified handle (same handle works on all regions).
-
-## Why no code changes are needed
-
-The sync engine (`sync-printer-prices/index.ts`) already:
-- Reads `brand_sync_config` store URL templates and substitutes `{slug}`
-- Skips regions where `brand_regional_stores.is_active = false`
-- Uses Shopify JSON extraction when `shopify_json_available = true`
-- Handles subdomain-per-region Shopify stores (fetches `{domain}/products/{slug}.json`)
-
-## Expected Outcome
-
-- 7 printers x 5 regions (US, CA, UK, EU, AU) = 35 price points syncing
-- JP and CN show as "N/A" (inactive store) instead of "Failed"
-- Shopify JSON provides reliable structured price data
-
-## Technical Details
-
-### Database updates (using insert/update tool, not migrations)
-
-**1. Update `brand_sync_config`** where `brand_id = 'elegoo'`:
-```sql
-UPDATE brand_sync_config 
-SET store_url_ca = 'https://ca.elegoo.com/products/{slug}',
-    store_url_uk = 'https://uk.elegoo.com/products/{slug}',
-    store_url_eu = 'https://eu.elegoo.com/products/{slug}',
-    store_url_au = 'https://au.elegoo.com/products/{slug}'
-WHERE brand_id = 'elegoo';
+[OK] Elegoo Centauri Carbon — US: $289.00 (shopify_json, unchanged)
+[OK] Elegoo Centauri Carbon — CA: C$449.00 (shopify_json, updated, +3.2%)
+[OK] Elegoo Centauri Carbon — UK: £259.00 (shopify_json, new)
+...
 ```
 
-**2. Deactivate JP and CN stores:**
-```sql
-UPDATE brand_regional_stores SET is_active = false 
-WHERE id IN ('cba1ecae-3fab-4fbe-bd39-b5ca0ff07a6e', '2d23a44d-c400-44d8-b690-b241a448fc80');
-```
+## Technical Plan
 
-**3. Fix US URLs and populate regional URLs** for all 7 printers using their verified Shopify handles.
+### File to modify: `src/pages/admin/PriceSync.tsx`
 
-**4. Update `brand_regional_stores` `shopify_domain`** for the 5 active regions so the system can use Shopify JSON directly:
-- US: `us.elegoo.com`
-- CA: `ca.elegoo.com`
-- UK: `uk.elegoo.com`
-- EU: `eu.elegoo.com`
-- AU: `au.elegoo.com`
+1. **Add imports**: `Copy`, `Check`, `FileText` from lucide-react
 
+2. **Add `generateVerboseLog` function** that takes a `SyncResponse` and produces a formatted string:
+   - Header with timestamp and summary stats
+   - "FAILURES & ISSUES" section: all errors, anomalies, skipped items with full detail (status, method, error message, URL, old/new price, anomaly reason)
+   - "ALL RESULTS" section: every printer/region result on one line
+
+3. **Add state**: `logOpen` (boolean), `logCopied` (boolean)
+
+4. **Add UI section** after the diff view collapsible:
+   - Collapsible card with "Sync Log ({n} entries)" title
+   - Copy button in header
+   - `<pre>` block with the generated log text, styled with `font-mono text-xs bg-muted p-4 rounded overflow-auto max-h-[600px]`
+   - Auto-opens when errors > 0
+
+5. **Wire up copy handler**: uses `navigator.clipboard.writeText()`, shows checkmark for 2s after copy
+
+### No database or edge function changes needed
+This is purely a frontend formatting feature using data already returned by the sync endpoint.
