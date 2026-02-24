@@ -1,90 +1,86 @@
 
 
-# Fix Elegoo Regional Price Sync (28 failures)
+# Fix FLSUN Regional Price Sync (10 failures across 9 products)
 
-## Root Cause Found
+## Summary
 
-The `uses_geo_pricing` flag in `brand_sync_config` is set to `true` for Elegoo. In the sync orchestrator (`sync-printer-prices/index.ts`, line 203), this flag **prevents all non-US regions from being added** to the sync list:
+FLSUN uses subdomain-per-region Shopify stores (`{region}.store.flsun3d.com`) with **varying product handles across regions**. Currently only US is configured in `brand_sync_config`, no `brand_regional_stores` entries exist, and all regional URLs on the `printers` table are null. One product (Q5) is discontinued.
 
-```text
-if (!effectiveConfig?.uses_geo_pricing) {
-    // Add non-US regions... 
-}
-```
+## Current State
 
-When `uses_geo_pricing = true`, the code skips this block entirely, so only US is ever synced. This is the sole reason all 28 non-US entries fail with "No price found."
+- `brand_sync_config`: Has FLSUN entry but only `store_url_us` is set -- CA/UK/EU/AU templates are all null
+- `brand_regional_stores`: No entries for FLSUN at all
+- `printers` table: All 9 products have only `product_url` (US) set; all regional URL columns are null
+- Q5 is marked `is_discontinued = false` but should be discontinued
 
-The flag's original intent was to mark stores that serve different prices per region (as opposed to a single global price). But the code incorrectly treats it as "don't sync non-US regions."
+## Changes
 
-## Fix Plan (3 changes)
+### 1. Update `brand_sync_config` -- add regional URL templates
 
-### 1. Fix the region-selection logic in `sync-printer-prices/index.ts`
+Update the existing FLSUN row (id: `93690e20-9aae-4f04-8e72-fddc17be3622`) to add URL templates for all 5 regions. These templates serve as fallbacks; per-printer `product_url_XX` columns take precedence.
 
-The `uses_geo_pricing` guard should be **removed** (or inverted). When a brand has `uses_geo_pricing = true` AND has URL templates in `brand_sync_config`, those regions MUST be synced -- that's the whole point. The condition should add non-US regions whenever there's a config URL template or a printer URL, regardless of the `uses_geo_pricing` flag.
+| Column | Value |
+|--------|-------|
+| store_url_us | `https://us.store.flsun3d.com/products/{slug}` (already set) |
+| store_url_ca | `https://ca.store.flsun3d.com/products/{slug}` |
+| store_url_uk | `https://uk.store.flsun3d.com/products/{slug}` |
+| store_url_eu | `https://eu.store.flsun3d.com/products/{slug}` |
+| store_url_au | `https://au.store.flsun3d.com/products/{slug}` |
+| uses_geo_pricing | true |
 
-Change lines 202-213 to always check for available regional URLs.
+### 2. Insert `brand_regional_stores` entries for FLSUN
 
-### 2. Add `brand_regional_stores` entries for Elegoo
+Insert 5 rows for brand_id `44e1ba43-a259-4fc2-b710-777e566860f9`:
 
-Insert 7 rows so the inactive-store skipping works correctly for JP and CN:
+| Region | Base URL | Currency | Active | Shopify Domain |
+|--------|----------|----------|--------|----------------|
+| US | `https://us.store.flsun3d.com` | USD | yes | us.store.flsun3d.com |
+| CA | `https://ca.store.flsun3d.com` | CAD | yes | ca.store.flsun3d.com |
+| UK | `https://uk.store.flsun3d.com` | GBP | yes | uk.store.flsun3d.com |
+| EU | `https://eu.store.flsun3d.com` | EUR | yes | eu.store.flsun3d.com |
+| AU | `https://au.store.flsun3d.com` | AUD | yes | au.store.flsun3d.com |
 
-| Region | Domain | Active | Currency |
-|--------|--------|--------|----------|
-| US | us.elegoo.com | yes | USD |
-| CA | ca.elegoo.com | yes | CAD |
-| UK | uk.elegoo.com | yes | GBP |
-| EU | eu.elegoo.com | yes | EUR |
-| AU | au.elegoo.com | yes | AUD |
-| JP | elegoo.co.jp | **no** | JPY |
-| CN | www.elegoo.cn | **no** | CNY |
+### 3. Update product URLs per printer (only for regions where the product exists)
 
-### 3. Add verbose logging to extraction pipeline
+Each printer gets explicit `product_url_XX` values based on the verified handle map. Products NOT available in a region get no URL for that region (the sync engine will skip them).
 
-Add `console.log` lines in `extractPrice` and `extractFromShopifyJson` to trace the region selection and extraction flow for easier future debugging. This includes logging:
-- Which regions were selected for sync
-- The constructed URL for each region
-- Shopify JSON fetch response status
-- Whether variant selection succeeded
+| Product | US | CA | UK | EU | AU |
+|---------|----|----|----|----|-----|
+| **Q5** | Mark discontinued | - | - | - | - |
+| **S1** | flsun-s1 | flsun-s1 | - | flsun-s1 | - |
+| **S1 Pro** | flsun-s1-pro | flsun-s1-pro | flsun-s1-pro | flsun-s1-pro | flsun-s1-pro |
+| **Super Racer** | flsun-sr-3d-printer | - | - | super-racer-sr | - |
+| **T1** | - | flsun-t1 | - | - | flsun-t1 |
+| **T1 Max** | flsun-t1-max-3d-printer | flsun-t1-max-3d-printer | flsun-t1-max-3d-printer | flsun-t1-max-3d-printer | flsun-t1-max-3d-printer |
+| **T1 Pro** | - | flsun-t1-pro | - | flsun-t1-pro | flsun-t1-pro |
+| **V400** | flsun-v400 | flsun-v400 | - | - | - |
+| **V400 Max** | flsun-v400-max-3d-printer-custom-built-edition | flsun-v400-max-3d-printer | - | flsun-v400-max-3d-printer-custom-built-edition | flsun-v400-max-3d-printer |
 
-## Technical Details
+Special cases:
+- **Q5** (`22ac1ab9`): Set `is_discontinued = true`, `sync_status = 'discontinued'`
+- **T1** (`40b8d0d4`): Update `product_url` (US) to null since it's NOT in the US store. Set `product_url_ca` and `product_url_au` instead.
+- **T1 Pro** (`83dab145`): Update `product_url` (US) to null since it's NOT in the US store. Set CA/EU/AU URLs.
+- **Super Racer** (`86a0dbd8`): Fix US URL from `flsun-super-racer-sr` to `flsun-sr-3d-printer`
 
-### File: `supabase/functions/sync-printer-prices/index.ts`
+### 4. No code changes needed
 
-**Lines 201-213** -- Remove the `uses_geo_pricing` guard so non-US regions are always evaluated:
-
-```text
-Before:
-  const regionsToSync: RegionCode[] = ["US"];
-  if (!effectiveConfig?.uses_geo_pricing) {
-    for (const rc of ["CA", "UK", "EU", "AU", "JP"]) {
-      ...
-    }
-  }
-
-After:
-  const regionsToSync: RegionCode[] = ["US"];
-  for (const rc of ["CA", "UK", "EU", "AU", "JP"]) {
-    const regionMeta = REGION_MAP[rc];
-    const configUrl = effectiveConfig ? effectiveConfig[regionMeta.configUrlCol] : null;
-    const printerUrl = printer[regionMeta.urlCol];
-    if (configUrl || printerUrl) {
-      regionsToSync.push(rc);
-    }
-  }
-```
-
-### Database: `brand_regional_stores`
-
-Insert 7 rows for Elegoo (brand_id: `358b8f96-4d46-44c1-9988-95d252e856f6`) with JP and CN marked `is_active = false`.
-
-### File: `supabase/functions/_shared/printer-price-extraction.ts`
-
-Add a `console.log` at the top of `extractPrice()` and inside `_fetchShopifyJson()` to log the URL being fetched and the response status, for traceability.
+The existing sync engine already:
+- Uses per-printer `product_url_XX` columns with priority over `brand_sync_config` templates
+- Skips regions without URLs
+- Has `selectBestVariant` with `cheapest_standalone` strategy and exclude patterns (`combo`, `bundle`, `kit`, `pack`, `set`, `2*`, `3*`) already configured for FLSUN
 
 ## Expected Outcome
 
-After these changes:
-- 7 products x 5 active regions = **35 prices** will sync via Shopify JSON
-- JP and CN will show as **"N/A" (not_in_region)** via the inactive store mechanism
-- The `uses_geo_pricing` flag will no longer block regional syncing
+| Product | Prices | Regions |
+|---------|--------|---------|
+| Q5 | 0 (discontinued) | - |
+| S1 | 3 | US, CA, EU |
+| S1 Pro | 5 | US, CA, UK, EU, AU |
+| Super Racer | 2 | US, EU |
+| T1 | 2 | CA, AU |
+| T1 Max | 5 | US, CA, UK, EU, AU |
+| T1 Pro | 3 | CA, EU, AU |
+| V400 | 2 | US, CA |
+| V400 Max | 4 | US, CA, EU, AU |
+| **Total** | **26 prices** | **0 failures** |
 
