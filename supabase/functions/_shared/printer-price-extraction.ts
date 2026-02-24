@@ -17,6 +17,9 @@ export interface ExtractionResult {
   requires_review: boolean;
   /** The slug that actually worked (may differ from URL slug if discovery was used) */
   discovered_slug?: string;
+  /** Price anomaly detection results (populated by applyAnomalyCheck) */
+  anomaly_severity?: 'critical' | 'warning' | null;
+  anomaly_reason?: string | null;
 }
 
 /** Brand-specific extraction config loaded from brand_sync_config table */
@@ -75,9 +78,16 @@ const CREALITY_CURRENCY_MAP: Record<string, string> = {
   US: 'USD', CA: 'CAD', UK: 'GBP', EU: 'EUR', AU: 'AUD', JP: 'JPY',
 };
 
-// Rough exchange rates from USD for cross-region price sanity checks
-const CREALITY_ROUGH_EXCHANGE_RATES: Record<string, number> = {
+// Rough exchange rates from USD for cross-region price sanity checks (used by ALL brands)
+const ROUGH_USD_TO_REGIONAL: Record<string, number> = {
   CA: 1.36, UK: 0.79, EU: 0.92, AU: 1.55, JP: 150,
+};
+// Alias for backward compat in Creality-specific code
+const CREALITY_ROUGH_EXCHANGE_RATES = ROUGH_USD_TO_REGIONAL;
+
+// Inverse: approximate conversion TO USD (for universal anomaly detection)
+const TO_USD_RATE: Record<string, number> = {
+  USD: 1.0, CAD: 0.74, GBP: 1.27, EUR: 1.08, AUD: 0.65, JPY: 0.0067, CNY: 0.14,
 };
 
 function buildComboRegex(patterns: string[]): RegExp {
@@ -693,7 +703,7 @@ export async function extractPrice(
           break;
         }
         if (result.current_price && result.current_price > 0) {
-          return applyAnomalyCheck(result, oldPrice);
+          return applyAnomalyCheck(result, oldPrice, usPriceForSanity, expectedCurrency);
         }
       }
     }
@@ -721,7 +731,7 @@ export async function extractPrice(
         if (tier === 'json_ld') {
           const result = extractFromJsonLd(html, region, config);
           if (result?.current_price && result.current_price > 0) {
-            return applyAnomalyCheck(result, oldPrice);
+            return applyAnomalyCheck(result, oldPrice, usPriceForSanity, expectedCurrency);
           }
         }
         if (tier === 'meta_tags') {
@@ -735,7 +745,7 @@ export async function extractPrice(
               if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
                 console.log(`[Firecrawl-MD] Currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Rejecting.`);
               } else {
-                return applyAnomalyCheck(mdResult, oldPrice);
+                return applyAnomalyCheck(mdResult, oldPrice, usPriceForSanity, expectedCurrency);
               }
             }
             console.log(`[Firecrawl-MD] Markdown extraction failed, falling through to meta_tags`);
@@ -746,7 +756,7 @@ export async function extractPrice(
             if (usedFirecrawlHtml && expectedCurrency && result.currency && result.currency !== expectedCurrency) {
               console.log(`[Meta] Currency mismatch from Firecrawl HTML: got ${result.currency}, expected ${expectedCurrency}. Rejecting.`);
             } else {
-              return applyAnomalyCheck(result, oldPrice);
+              return applyAnomalyCheck(result, oldPrice, usPriceForSanity, expectedCurrency);
             }
           }
         }
@@ -763,7 +773,7 @@ export async function extractPrice(
       if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
         console.log(`[Firecrawl-MD] Currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Rejecting.`);
       } else {
-        return applyAnomalyCheck(mdResult, oldPrice);
+        return applyAnomalyCheck(mdResult, oldPrice, usPriceForSanity, expectedCurrency);
       }
     }
   }
@@ -1300,11 +1310,11 @@ async function extractCrealityRegionalPrice(
         const sanity = validateAgainstUsPrice(jsonLdResult.current_price);
         if (sanity === 'ok') {
           console.log(`[Creality] JSON-LD success on custom storefront: ${url} → ${jsonLdResult.current_price} ${jsonLdResult.currency}`);
-          return applyAnomalyCheck(jsonLdResult, oldPrice);
+          return applyAnomalyCheck(jsonLdResult, oldPrice, usPriceForSanity, currency);
         }
         if (sanity === 'too_high') {
           console.log(`[Creality-Sanity] Price too high (${jsonLdResult.current_price}), flagging for review`);
-          return { ...applyAnomalyCheck(jsonLdResult, oldPrice), requires_review: true };
+          return { ...applyAnomalyCheck(jsonLdResult, oldPrice, usPriceForSanity, currency), requires_review: true };
         }
         console.log(`[Creality-Sanity] Price too low (${jsonLdResult.current_price}), likely accessory — skipping`);
       }
@@ -1361,12 +1371,12 @@ async function extractCrealityRegionalPrice(
       if (sanity === 'ok') {
         myShopifyResult.discovered_slug = discoveredHandle;
         console.log(`[Creality] myshopify.com direct extraction: ${discoveredHandle} → ${myShopifyResult.current_price} ${myShopifyResult.currency}`);
-        return applyAnomalyCheck(myShopifyResult, oldPrice);
+        return applyAnomalyCheck(myShopifyResult, oldPrice, usPriceForSanity, currency);
       }
       if (sanity === 'too_high') {
         myShopifyResult.discovered_slug = discoveredHandle;
         console.log(`[Creality-Sanity] myshopify price too high (${myShopifyResult.current_price}), flagging for review`);
-        return { ...applyAnomalyCheck(myShopifyResult, oldPrice), requires_review: true };
+        return { ...applyAnomalyCheck(myShopifyResult, oldPrice, usPriceForSanity, currency), requires_review: true };
       }
       console.log(`[Creality-Sanity] myshopify price too low (${myShopifyResult.current_price}), likely accessory — trying next method`);
     }
@@ -1386,11 +1396,11 @@ async function extractCrealityRegionalPrice(
       const sanity = validateAgainstUsPrice(retryResult.current_price);
       if (sanity === 'ok') {
         retryResult.discovered_slug = discoveredHandle;
-        return applyAnomalyCheck(retryResult, oldPrice);
+        return applyAnomalyCheck(retryResult, oldPrice, usPriceForSanity, currency);
       }
       if (sanity === 'too_high') {
         retryResult.discovered_slug = discoveredHandle;
-        return { ...applyAnomalyCheck(retryResult, oldPrice), requires_review: true };
+        return { ...applyAnomalyCheck(retryResult, oldPrice, usPriceForSanity, currency), requires_review: true };
       }
       console.log(`[Creality-Sanity] JSON-LD retry price too low (${retryResult.current_price}), rejecting`);
     }
@@ -1824,8 +1834,13 @@ function geoBlockedFallback(): ExtractionResult {
  */
 function applyAnomalyCheck(
   result: ExtractionResult,
-  oldPrice?: number | null
+  oldPrice?: number | null,
+  usPriceForSanity?: number | null,
+  expectedCurrency?: string
 ): ExtractionResult {
+  let anomaly_severity: 'critical' | 'warning' | null = null;
+  let anomaly_reason: string | null = null;
+
   // Per-currency sanity check
   if (result.current_price && result.current_price > 0 && result.currency) {
     if (!validatePrinterPrice(result.current_price, result.currency)) {
@@ -1834,7 +1849,40 @@ function applyAnomalyCheck(
         ...result,
         confidence: 'low',
         requires_review: true,
+        anomaly_severity: 'warning',
+        anomaly_reason: `Price ${result.current_price} ${result.currency} outside valid range for this currency`,
       };
+    }
+  }
+
+  // Cross-region anomaly detection: compare regional price to US price
+  if (result.current_price && result.current_price > 0 && usPriceForSanity && usPriceForSanity > 0) {
+    const currency = expectedCurrency || result.currency;
+    const rate = TO_USD_RATE[currency];
+    if (rate) {
+      const equivalentUsd = result.current_price * rate;
+      const ratio = equivalentUsd / usPriceForSanity;
+
+      if (ratio < 0.15) {
+        anomaly_severity = 'critical';
+        anomaly_reason = `Price ${currency}${result.current_price} (~$${equivalentUsd.toFixed(0)}) is only ${(ratio * 100).toFixed(0)}% of US price $${usPriceForSanity} — likely matched wrong product (accessory?)`;
+        console.error(`[AnomalyCheck] CRITICAL: ${anomaly_reason}`);
+        return {
+          ...result,
+          confidence: 'low',
+          requires_review: true,
+          anomaly_severity,
+          anomaly_reason,
+        };
+      } else if (ratio < 0.30) {
+        anomaly_severity = 'warning';
+        anomaly_reason = `Price ${currency}${result.current_price} (~$${equivalentUsd.toFixed(0)}) is ${(ratio * 100).toFixed(0)}% of US price $${usPriceForSanity} — unusually low`;
+        console.warn(`[AnomalyCheck] WARNING: ${anomaly_reason}`);
+      } else if (ratio > 3.0) {
+        anomaly_severity = 'warning';
+        anomaly_reason = `Price ${currency}${result.current_price} (~$${equivalentUsd.toFixed(0)}) is ${(ratio * 100).toFixed(0)}% of US price $${usPriceForSanity} — unusually high`;
+        console.warn(`[AnomalyCheck] WARNING: ${anomaly_reason}`);
+      }
     }
   }
 
@@ -1846,8 +1894,16 @@ function applyAnomalyCheck(
         ...result,
         confidence: 'low',
         requires_review: true,
+        anomaly_severity: anomaly_severity || 'warning',
+        anomaly_reason: anomaly_reason || `Price changed by ${changePercent.toFixed(0)}% from previous value $${oldPrice}`,
       };
     }
   }
-  return result;
+
+  return {
+    ...result,
+    anomaly_severity,
+    anomaly_reason,
+    requires_review: result.requires_review || anomaly_severity === 'warning',
+  };
 }

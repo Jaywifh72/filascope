@@ -1,6 +1,7 @@
 import { TableRow, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react';
 import type { ProductGroup, ProductTypeConfig } from '../types';
 import { formatCurrency } from '../constants';
 import { StatusSummary, ColorSwatches } from './helpers';
@@ -30,7 +31,17 @@ export function PricingProductRow({ group, isExpanded, onToggleExpand, config }:
       </TableCell>
       <TableCell className="min-w-[220px]">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs font-semibold text-foreground truncate max-w-[300px] block">{group.cleanName}</span>
+          <span className="text-xs font-semibold text-foreground truncate max-w-[300px] flex items-center gap-1">
+            {group.cleanName}
+            {group.hasAnomalyFlag && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent>Price anomaly detected — requires review. Some regional prices may be from wrong products.</TooltipContent>
+              </Tooltip>
+            )}
+          </span>
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground">{group.brand}</span>
             {group.productSubtype && <span className="text-[10px] text-muted-foreground font-mono">· {group.productSubtype}</span>}
