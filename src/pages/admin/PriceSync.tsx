@@ -10,7 +10,7 @@ import {
 import {
   Collapsible, CollapsibleTrigger, CollapsibleContent,
 } from '@/components/ui/collapsible';
-import { RefreshCw, DollarSign, AlertTriangle, CheckCircle, ChevronDown, Clock, TrendingUp, Ban } from 'lucide-react';
+import { RefreshCw, DollarSign, AlertTriangle, CheckCircle, ChevronDown, Clock, TrendingUp, Ban, Copy, Check, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -65,13 +65,99 @@ interface BrandSyncState {
   lastResult: SyncResponse | null;
 }
 
+function generateVerboseLog(result: SyncResponse, brandFilter?: string): string {
+  const lines: string[] = [];
+  lines.push('=== PRICE SYNC LOG ===');
+  lines.push(`Timestamp: ${result.timestamp}`);
+  lines.push(`Brands synced: ${brandFilter || 'All'}`);
+  const s = result.summary;
+  lines.push(`Summary: ${s.printersChecked} checked, ${s.pricesUpdated} updated, ${s.skipped} skipped, ${s.errors} errors, ${s.anomalies} anomalies, ${s.manualOnly} manual-only`);
+  lines.push('');
+
+  // Failures & Issues
+  const issues: string[] = [];
+  for (const pr of result.results) {
+    if (pr.skipped) {
+      issues.push(`[SKIPPED] ${pr.printer} (${pr.brand})`);
+      issues.push(`  Reason: ${pr.reason || 'unknown'}`);
+      issues.push('');
+      continue;
+    }
+    if (pr.error) {
+      issues.push(`[ERROR] ${pr.printer} (${pr.brand})`);
+      issues.push(`  Error: ${pr.error}`);
+      issues.push('');
+      continue;
+    }
+    if (pr.regions) {
+      for (const [region, r] of Object.entries(pr.regions)) {
+        if (r.status === 'extraction_failed' || r.status === 'error' || r.status === 'not_found') {
+          issues.push(`[ERROR] ${pr.printer} (${pr.brand}) — ${region.toUpperCase()}`);
+          issues.push(`  Status: ${r.status}`);
+          if (r.extraction_method) issues.push(`  Method: ${r.extraction_method}`);
+          if (r.error) issues.push(`  Error: ${r.error}`);
+          issues.push('');
+        } else if (r.isAnomaly) {
+          issues.push(`[ANOMALY] ${pr.printer} (${pr.brand}) — ${region.toUpperCase()}`);
+          issues.push(`  Status: anomaly_rejected`);
+          if (r.extraction_method) issues.push(`  Method: ${r.extraction_method}`);
+          if (r.error) issues.push(`  Error: ${r.error}`);
+          if (r.oldPrice != null) issues.push(`  Old Price: $${r.oldPrice.toFixed(2)} → New Price: $${r.newPrice.toFixed(2)}`);
+          issues.push('');
+        }
+      }
+    }
+  }
+
+  if (issues.length > 0) {
+    lines.push('--- FAILURES & ISSUES ---');
+    lines.push('');
+    lines.push(...issues);
+  } else {
+    lines.push('--- NO FAILURES OR ISSUES ---');
+    lines.push('');
+  }
+
+  // All Results
+  lines.push('--- ALL RESULTS ---');
+  lines.push('');
+  for (const pr of result.results) {
+    if (pr.skipped) {
+      lines.push(`[SKIP] ${pr.printer} (${pr.brand}) — ${pr.reason || 'skipped'}`);
+      continue;
+    }
+    if (pr.error && !pr.regions) {
+      lines.push(`[FAIL] ${pr.printer} (${pr.brand}) — ${pr.error}`);
+      continue;
+    }
+    if (pr.regions) {
+      for (const [region, r] of Object.entries(pr.regions)) {
+        const tag = r.isAnomaly ? 'ANOMALY' :
+          (r.status === 'extraction_failed' || r.status === 'error' || r.status === 'not_found') ? 'FAIL' : 'OK';
+        const priceStr = r.newPrice != null ? `$${r.newPrice.toFixed(2)}` : 'N/A';
+        const parts = [`${r.extraction_method || '?'}`];
+        if (r.status) parts.push(r.status);
+        if (r.oldPrice != null && r.newPrice != null && r.oldPrice > 0) {
+          const pct = ((r.newPrice - r.oldPrice) / r.oldPrice * 100).toFixed(1);
+          parts.push(`${parseFloat(pct) > 0 ? '+' : ''}${pct}%`);
+        }
+        lines.push(`[${tag}] ${pr.printer} — ${region.toUpperCase()}: ${priceStr} (${parts.join(', ')})`);
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
 export default function PriceSync() {
   const [brands, setBrands] = useState<BrandConfig[]>([]);
   const [brandStates, setBrandStates] = useState<Record<string, BrandSyncState>>({});
   const [syncAllState, setSyncAllState] = useState<BrandSyncState>({ syncing: false, lastResult: null });
   const [diffOpen, setDiffOpen] = useState(true);
   const [activeDiffResult, setActiveDiffResult] = useState<SyncResponse | null>(null);
-
+  const [logOpen, setLogOpen] = useState(false);
+  const [logCopied, setLogCopied] = useState(false);
+  const [lastSyncedBrand, setLastSyncedBrand] = useState<string | undefined>(undefined);
   // Fetch brand configs
   useEffect(() => {
     async function fetchConfigs() {
@@ -101,6 +187,8 @@ export default function PriceSync() {
       const result = await invokeSyncFunction(brandId);
       setBrandStates(prev => ({ ...prev, [brandId]: { syncing: false, lastResult: result } }));
       setActiveDiffResult(result);
+      setLastSyncedBrand(brandId);
+      setLogOpen((result.summary.errors + result.summary.anomalies) > 0);
       if (result.success) {
         toast.success(`${brandId}: ${result.summary.pricesUpdated} updated, ${result.summary.errors} errors`);
       } else {
@@ -118,6 +206,8 @@ export default function PriceSync() {
       const result = await invokeSyncFunction();
       setSyncAllState({ syncing: false, lastResult: result });
       setActiveDiffResult(result);
+      setLastSyncedBrand(undefined);
+      setLogOpen((result.summary.errors + result.summary.anomalies) > 0);
       if (result.success) {
         toast.success(`All brands: ${result.summary.pricesUpdated} updated, ${result.summary.errors} errors, ${result.summary.manualOnly} manual-only`);
       } else {
@@ -388,6 +478,49 @@ export default function PriceSync() {
                       })}
                     </TableBody>
                   </Table>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )}
+        {/* Verbose Sync Log */}
+        {lastResult && (
+          <Collapsible open={logOpen} onOpenChange={setLogOpen}>
+            <Card>
+              <CardHeader>
+                <CollapsibleTrigger className="flex items-center gap-2 w-full">
+                  <FileText className="w-4 h-4 text-muted-foreground" />
+                  <CardTitle className="text-lg flex-1 text-left">
+                    Sync Log ({lastResult.results.length} entries)
+                  </CardTitle>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="mr-2"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const logText = generateVerboseLog(lastResult, lastSyncedBrand);
+                      try {
+                        await navigator.clipboard.writeText(logText);
+                        setLogCopied(true);
+                        toast.success('Log copied to clipboard');
+                        setTimeout(() => setLogCopied(false), 2000);
+                      } catch {
+                        toast.error('Failed to copy');
+                      }
+                    }}
+                  >
+                    {logCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    <span className="ml-1">{logCopied ? 'Copied' : 'Copy Log'}</span>
+                  </Button>
+                  <ChevronDown className={cn('w-4 h-4 transition-transform', logOpen && 'rotate-180')} />
+                </CollapsibleTrigger>
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent>
+                  <pre className="font-mono text-xs bg-muted p-4 rounded overflow-auto max-h-[600px] whitespace-pre-wrap text-foreground">
+                    {generateVerboseLog(lastResult, lastSyncedBrand)}
+                  </pre>
                 </CardContent>
               </CollapsibleContent>
             </Card>
