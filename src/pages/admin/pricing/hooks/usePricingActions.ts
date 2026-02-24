@@ -280,8 +280,9 @@ export function usePricingActions(
       if (!hasProductPath && !hasProductQuery) {
         return { status: 'failed', error: 'No product_url_pattern configured and no existing product_url' };
       }
-      const pathEndsWithSlash = urlObj.pathname.endsWith('/') && urlObj.pathname.length > 1;
-      if (pathEndsWithSlash && !hasProductQuery && urlObj.pathname.toLowerCase().includes('product')) {
+      const normalizedPath = urlObj.pathname.toLowerCase().replace(/\/+$/, '');
+      const isTemplatePathWithoutSlug = normalizedPath === '/product' || normalizedPath === '/products';
+      if (isTemplatePathWithoutSlug && !hasProductQuery) {
         return { status: 'failed', error: 'Incomplete product URL — slug/SKU substitution likely failed' };
       }
     } catch { /* proceed */ }
