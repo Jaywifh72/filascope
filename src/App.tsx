@@ -119,6 +119,7 @@ const AdminPricingData = lazy(() => import("./pages/admin/PricingData"));
 const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
 const AdminSearchAnalytics = lazy(() => import("./pages/admin/SearchAnalytics"));
 const AdminLinkHealth = lazy(() => import("./pages/AdminLinkHealth"));
+const AdminNewLayoutModule = lazy(() => import("./components/admin/AdminNewLayout").then(m => ({ default: m.AdminNewLayout })));
 const PrinterUrlHealth = lazy(() => import("./pages/admin/PrinterUrlHealth"));
 const PriceSync = lazy(() => import("./pages/admin/PriceSync"));
 const PrinterPriceAudit = lazy(() => import("./pages/admin/PrinterPriceAudit"));
@@ -278,15 +279,15 @@ const App = () => (
                   <Route path="/vault" element={<Vault />} />
                   <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
                   <Route path="/collections/:username/:slug" element={<PublicCollection />} />
-                  <Route path="/admin" element={<NewAdminPanel />} />
-                  <Route path="/admin/affiliate-hub" element={<AdminAffiliateHub />} />
-                  <Route path="/admin/pricing-data" element={<AdminPricingData />} />
-                  <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                  <Route path="/admin/search-analytics" element={<AdminSearchAnalytics />} />
-                  <Route path="/admin/link-health" element={<AdminLinkHealth />} />
-                  <Route path="/admin/printer-url-health" element={<PrinterUrlHealth />} />
-                  <Route path="/admin/price-sync" element={<PriceSync />} />
-                  <Route path="/admin/price-audit" element={<PrinterPriceAudit />} />
+                  <Route path="/admin" element={<AdminNewLayoutModule><NewAdminPanel /></AdminNewLayoutModule>} />
+                  <Route path="/admin/affiliate-hub" element={<AdminNewLayoutModule><AdminAffiliateHub /></AdminNewLayoutModule>} />
+                  <Route path="/admin/pricing-data" element={<AdminNewLayoutModule><AdminPricingData /></AdminNewLayoutModule>} />
+                  <Route path="/admin/analytics" element={<AdminNewLayoutModule><AdminAnalytics /></AdminNewLayoutModule>} />
+                  <Route path="/admin/search-analytics" element={<AdminNewLayoutModule><AdminSearchAnalytics /></AdminNewLayoutModule>} />
+                  <Route path="/admin/link-health" element={<AdminNewLayoutModule><AdminLinkHealth /></AdminNewLayoutModule>} />
+                  <Route path="/admin/printer-url-health" element={<AdminNewLayoutModule><PrinterUrlHealth /></AdminNewLayoutModule>} />
+                  <Route path="/admin/price-sync" element={<AdminNewLayoutModule><PriceSync /></AdminNewLayoutModule>} />
+                  <Route path="/admin/price-audit" element={<AdminNewLayoutModule><PrinterPriceAudit /></AdminNewLayoutModule>} />
                   <Route path="/admin/*" element={<AdminRedirect />} />
                   <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
                   <Route path="/old-admin/dashboard" element={<AdminDashboard />} />
