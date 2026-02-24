@@ -315,6 +315,7 @@ async function _fetchShopifyJson(
 ): Promise<ExtractionResult | null> {
   try {
     const jsonUrl = url.replace(/\/?(\?.*)?$/, '.json');
+    console.log(`[ShopifyJSON:fetch] Fetching ${jsonUrl} for region=${region ?? 'none'}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -326,6 +327,7 @@ async function _fetchShopifyJson(
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
+    console.log(`[ShopifyJSON:fetch] ${jsonUrl} → status=${resp.status}`);
 
     if (!resp.ok) {
       await resp.text().catch(() => {}); // drain body
@@ -660,6 +662,7 @@ export async function extractPrice(
 ): Promise<ExtractionResult> {
   const primary = config?.primary_extraction ?? 'shopify_json';
   const fallback = config?.fallback_extraction ?? 'meta_tags';
+  console.log(`[extractPrice] URL=${url} region=${region ?? 'none'} primary=${primary} fallback=${fallback} expectedCurrency=${expectedCurrency ?? 'none'}`);
 
   // If manual_only, skip all auto-extraction
   if (primary === 'manual_only') {
