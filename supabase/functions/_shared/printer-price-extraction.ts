@@ -319,10 +319,15 @@ async function _fetchShopifyJson(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+    // Use region spoof headers for known geo-restricted domains
+    const domain = new URL(url).hostname;
+    const spoofHeaders = REGION_SPOOF_HEADERS[domain] || {};
+
     const resp = await fetch(jsonUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; FilaScope/1.0)',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
+        ...spoofHeaders,
       },
       signal: controller.signal,
     });
@@ -336,6 +341,7 @@ async function _fetchShopifyJson(
 
     const data = await resp.json();
     const shopifyVariants: ShopifyVariant[] = data?.product?.variants || [];
+    console.log(`[ShopifyJSON:fetch] Product found: ${!!data?.product}, variants: ${shopifyVariants.length}`);
     if (shopifyVariants.length === 0) return null;
 
     const normalized: NormalizedVariant[] = shopifyVariants.map(v => ({
@@ -349,9 +355,13 @@ async function _fetchShopifyJson(
     if (normalized.length === 0) return null;
 
     const selection = selectBestVariant(normalized, region, config);
-    if (!selection) return null;
+    if (!selection) {
+      console.log(`[ShopifyJSON:fetch] selectBestVariant returned null for ${jsonUrl} (${normalized.length} valid variants)`);
+      return null;
+    }
 
     const { variant, is_combo } = selection;
+    console.log(`[ShopifyJSON:fetch] Selected variant: "${variant.name}" price=${variant.price} available=${variant.available}`);
 
     return {
       current_price: variant.price,
@@ -364,7 +374,8 @@ async function _fetchShopifyJson(
       is_combo,
       requires_review: false,
     };
-  } catch {
+  } catch (e) {
+    console.error(`[ShopifyJSON:fetch] Exception for ${url}:`, e);
     return null;
   }
 }
