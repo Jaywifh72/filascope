@@ -1344,11 +1344,14 @@ function extractPriceWithConfig(
   };
 }
 
+// Domains that use European comma-decimal pricing
+const EUROPEAN_DECIMAL_BRANDS = [
+  "azurefilm.com",
+] as const;
+
 // WooCommerce stores that should use direct HTML fetch + JSON-LD extraction
 // These stores use European comma-decimal pricing and/or are behind Cloudflare
-const WOOCOMMERCE_DIRECT_DOMAINS = [
-  "azurefilm.com",
-];
+const WOOCOMMERCE_DIRECT_DOMAINS = [...EUROPEAN_DECIMAL_BRANDS];
 
 // WooCommerce store default currencies
 const WOOCOMMERCE_STORE_CURRENCIES: Record<string, string> = {
@@ -1448,9 +1451,9 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
         const validOffers = flatOffers.filter((o: any) => o.price != null);
         if (validOffers.length === 0) continue;
 
-        // Parse prices using European-aware parser (handles "24,90" → 24.90)
+        // Parse prices with domain-aware parser (AzureFilm uses comma decimals)
         const prices = validOffers
-          .map((o: any) => parseEuropeanPrice(String(o.price)))
+          .map((o: any) => parsePriceForDomain(String(o.price), productUrl))
           .filter((p: number) => !isNaN(p) && p > 0);
 
         if (prices.length === 0) continue;
@@ -1471,8 +1474,8 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
         let salePriceCompareAt = compareAt;
         for (const o of [...offers, ...flatOffers]) {
           if (o.lowPrice != null && o.highPrice != null) {
-            const low = parseEuropeanPrice(String(o.lowPrice));
-            const high = parseEuropeanPrice(String(o.highPrice));
+            const low = parsePriceForDomain(String(o.lowPrice), productUrl);
+            const high = parsePriceForDomain(String(o.highPrice), productUrl);
             if (!isNaN(low) && !isNaN(high) && low > 0 && high > low) {
               salePrice = low;
               salePriceCompareAt = high;
@@ -1515,13 +1518,42 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
     const htmlPrices: number[] = [];
     let htmlMatch;
     while ((htmlMatch = priceAmountRegex.exec(html)) !== null) {
-      const p = parseEuropeanPrice(htmlMatch[1]);
+      const p = parsePriceForDomain(htmlMatch[1], productUrl);
       if (!isNaN(p) && p > 0 && validateFilamentPrice(p, storeCurrency)) {
         htmlPrices.push(p);
       }
     }
 
     if (htmlPrices.length > 0) {
+      // Prefer explicit WooCommerce struck-through original + active sale price when present
+      const delInsSaleMatch = html.match(/<del[^>]*>[\s\S]*?([\d.,]+)[\s\S]*?<\/del>[\s\S]*?<ins[^>]*>[\s\S]*?([\d.,]+)[\s\S]*?<\/ins>/i);
+      if (delInsSaleMatch?.[1] && delInsSaleMatch?.[2]) {
+        const oldPrice = parsePriceForDomain(delInsSaleMatch[1], productUrl);
+        const newPrice = parsePriceForDomain(delInsSaleMatch[2], productUrl);
+        if (!isNaN(oldPrice) && !isNaN(newPrice) && oldPrice > 0 && newPrice > 0) {
+          const salePrice = Math.min(oldPrice, newPrice);
+          const compareAt = Math.max(oldPrice, newPrice);
+          const isOOS = /class="out-of-stock"|out_of_stock|outofstock/i.test(html);
+
+          console.log(`[WOOCOMMERCE FETCH] ✓ HTML del/ins sale: price=${salePrice} ${storeCurrency}, compareAt=${compareAt}, oos=${isOOS}`);
+
+          return {
+            success: true,
+            price: salePrice,
+            compareAtPrice: compareAt > salePrice * 1.05 ? compareAt : null,
+            weightGrams: null,
+            diameterMm: null,
+            variantTitle: null,
+            currency: storeCurrency,
+            available: !isOOS,
+            stockStatus: isOOS ? "out_of_stock" as StockStatus : "in_stock" as StockStatus,
+            source: "html" as const,
+            fetchedAt: new Date().toISOString(),
+            sourceUrl: productUrl,
+          };
+        }
+      }
+
       // WooCommerce sale format: first price is original (strikethrough), second is sale price
       // Or if only one price, it's the current price
       const hasSale = htmlPrices.length >= 2 && htmlPrices[0] > htmlPrices[1];
@@ -1847,6 +1879,8 @@ async function updateFilamentStockStatus(
 
     // === DISCREPANCY DETECTION ===
     const regionCode = CURRENCY_TO_REGION[currency] || "US";
+    let shouldPersistPrice = priceDiffersSignificantly && price !== null;
+
     if (priceDiffersSignificantly && price !== null && currentPrice !== null) {
       const changePercent = ((price - currentPrice) / currentPrice) * 100;
       const absChangePercent = Math.abs(changePercent);
@@ -1881,20 +1915,21 @@ async function updateFilamentStockStatus(
           source_url: productUrl,
           notes: isUrgent ? "URGENT: Price change > 20%" : "Price change 5-20%, needs review",
         });
-        // Don't auto-update the price for large changes
-        return;
+        // Keep stock-state updates, but hold price write until reviewed
+        shouldPersistPrice = false;
       }
     }
 
     // Build update object — always update stock status, even for out-of-stock items
+    const nowIso = new Date().toISOString();
     const updateData: Record<string, unknown> = {
       variant_available: available,
-      last_scraped_at: new Date().toISOString(),
+      sync_status: "active", // Price is still trackable even when out of stock
+      last_scraped_at: nowIso,
     };
 
-    // Only update price if it changed significantly and we got a valid price
-    // Use the correct price column based on currency (e.g. price_eur for EUR)
-    if (priceDiffersSignificantly && price !== null) {
+    // Only update price when allowed by discrepancy policy
+    if (shouldPersistPrice && price !== null) {
       const priceColumn = getRegionalPriceColumn(currency);
       updateData[priceColumn] = price;
     }
@@ -1904,8 +1939,28 @@ async function updateFilamentStockStatus(
     if (error) {
       console.error("Failed to update filament stock status:", error);
     } else {
+      // Update pricing row stock flag (column is in_stock)
+      const pricingUpdate: Record<string, unknown> = {
+        in_stock: available,
+        last_verified_at: nowIso,
+      };
+
+      if (shouldPersistPrice && price !== null) {
+        pricingUpdate.price_cents = Math.round(price * 100);
+      }
+
+      const { error: pricingError } = await supabase
+        .from("filament_prices")
+        .update(pricingUpdate)
+        .eq("filament_id", filament.id)
+        .eq("currency_code", currency);
+
+      if (pricingError) {
+        console.error("Failed to update filament_prices stock flag:", pricingError);
+      }
+
       console.log(
-        `✓ Updated filament ${filament.id}: available=${available}, stockStatus=${stockStatus}${priceDiffersSignificantly ? `, price=${price}` : ""}`,
+        `✓ Updated filament ${filament.id}: available=${available}, stockStatus=${stockStatus}${shouldPersistPrice && price !== null ? `, price=${price}` : ""}`,
       );
     }
   } catch (err) {
@@ -2179,6 +2234,25 @@ function getMainProductSection(markdown: string): string {
   return markdown.substring(0, cutoff);
 }
 
+// Parse AzureFilm/EU-style decimal prices (comma decimal separator)
+function cleanEuropeanPrice(raw: string): number {
+  // Remove currency symbols, whitespace, nbsp and letter currency codes
+  let cleaned = raw.replace(/[€$£\s\u00a0]/g, "").replace(/[A-Za-z]/g, "");
+
+  // Simple European decimal: 24,90 → 24.90
+  if (/^\d+,\d{2}$/.test(cleaned)) {
+    cleaned = cleaned.replace(",", ".");
+  } else if (/\d+\.\d{3},\d{2}/.test(cleaned)) {
+    // Thousand + decimal: 1.234,90 → 1234.90
+    cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+  } else {
+    // Already dot decimal or integer; drop commas as thousand separators
+    cleaned = cleaned.replace(/,/g, "");
+  }
+
+  return parseFloat(cleaned);
+}
+
 // Parse a price string that may use European decimal format (comma as decimal separator)
 // Examples: "15,99" → 15.99, "1.299,00" → 1299.00, "15.99" → 15.99, "1,299.00" → 1299.00
 function parseEuropeanPrice(raw: string): number {
@@ -2196,6 +2270,18 @@ function parseEuropeanPrice(raw: string): number {
 
   // Standard format: commas are thousand separators, dot is decimal
   return parseFloat(trimmed.replace(/,/g, ""));
+}
+
+function isEuropeanDecimalBrand(url: string): boolean {
+  const normalized = url.toLowerCase();
+  return EUROPEAN_DECIMAL_BRANDS.some((domain) => normalized.includes(domain));
+}
+
+function parsePriceForDomain(raw: string, sourceUrl: string): number {
+  if (isEuropeanDecimalBrand(sourceUrl)) {
+    return cleanEuropeanPrice(raw);
+  }
+  return parseEuropeanPrice(raw);
 }
 
 // Helper: extract first valid price from matches (by page position, not lowest)
