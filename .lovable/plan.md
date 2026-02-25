@@ -1,104 +1,229 @@
 
 
-# Fix UltiMaker Printer Sync Failures
+# Comprehensive Regional Coverage Audit and Expansion Plan
 
-## Root Cause
+## Executive Summary
 
-UltiMaker printers are all tagged `sync_status = 'manual_only'` in the database, but the sync engine's skip logic relies on `brand_sync_config.primary_extraction = 'manual_only'` -- and **no `brand_sync_config` row exists for Ultimaker**. So the skip check fails silently, and the engine proceeds with the default Shopify JSON extraction against a Magento store, producing JSON parse errors and Firecrawl fallback waste.
+After auditing all brands in the database, I identified **significant regional gaps** across both filament and printer brands. The biggest issues are:
+- **FlashForge**: Has 4 confirmed Shopify regional stores (CA, EU, UK, AU) but only US+EU are configured
+- **Creality printers**: 17 active printers with zero regional URLs despite having CA/EU/UK/AU stores
+- **Anycubic printers**: 7 of 9 printers missing CA/EU/UK regional URLs despite stores being active
+- **Polymaker**: CA store confirmed working (Shopify JSON) but not in filament sync config; UK/AU DNS failures
+- **AnkerMake**: Migrated to EufyMake -- current URLs are stale redirects to a non-Shopify platform
+- **Two BRAND_REGIONAL_DOMAINS maps are out of sync** between `sync-regional-prices` and `sync-brand-products`
 
-### What happens on each sync attempt (per the logs):
-1. Shopify JSON: appends `.json` to URL, gets HTML back, throws `SyntaxError: Unexpected token '<'`
-2. Falls to JSON-LD: no JSON-LD exists in the Magento HTML
-3. Falls to Meta Tags: no `og:price:amount` tags on these pages
-4. Falls to Firecrawl Markdown (Tier 4): **this actually works** and returns 8,000-47,000 chars of markdown, but the price parser may not reliably extract from Magento bundle pages
-5. Result: "not_in_region" status because nothing matched -- expensive Firecrawl API calls wasted
+---
 
-## Platform Details
+## 1. Master Coverage Table -- Current State
 
-- **store.ultimaker.com**: Adobe Commerce (Magento 2), not Shopify
-- **No JSON-LD** structured data on product pages
-- **Price IS in HTML** via `data-price-amount="8999"` on `<span>` elements with class `price-wrapper`
-- **US-only** store -- no regional subdomains exist
-- **Some products point to wrong domains**: ultimaker.com (marketing site), dynamism.com (reseller)
+### Filament Brands
 
-## Current DB State (10 printers, all `manual_only`)
+| Brand | US | CA | EU | UK | AU | JP | Sync Method | Gap? |
+|-------|----|----|----|----|----|----|-------------|------|
+| Bambu Lab | Active | Active | Active | Active | Active | Active | firecrawl | No |
+| Elegoo | Active | Active | Active | Active | Active | -- | shopify_json | No |
+| Polymaker | Active | **MISSING** | Active | **DEAD** | **DEAD** | -- | shopify | **YES** |
+| Creality | Active | Active | Active | Active | Active | Active | firecrawl | No |
+| Anycubic | Active | Active | Active | Active | **DEAD** | -- | shopify | Partial |
+| eSun | Active | -- | Active | Active | -- | -- | shopify | No |
+| Eryone | Active | Active | Active | Active | Active | -- | shopify | No |
+| Sunlu | Active | Active | Active | Active | Active | -- | shopify | No |
+| Kingroon | Active | Active | Active | Active | Active | -- | shopify | No |
+| FlashForge | Active | **MISSING** | Active | **MISSING** | **MISSING** | -- | shopify | **YES** |
+| Jayo | Active | -- | Active | Active | -- | -- | shopify | No |
+| Sovol | Active | -- | Active | -- | -- | -- | shopify | No |
+| FLSUN | Active | Active | Active | Active | Active | -- | shopify | No |
+| Hatchbox | Active | -- | -- | -- | -- | -- | shopify | US-only store |
+| Fiberlogy | Active | -- | Active | -- | -- | -- | shopify | EU-only intl |
+| Fillamentum | Active | -- | Active | -- | -- | -- | firecrawl | EU-only intl |
+| FormFutura | Active | -- | Active | -- | -- | -- | firecrawl | EU-only store |
+| Proto-Pasta | Active | -- | -- | -- | -- | -- | shopify | US-only store |
+| Prusament | Active | -- | Active | -- | -- | -- | firecrawl | geo-pricing |
+| 3DXTech | Active | -- | Active | -- | -- | -- | shopify | No |
+| Amolen | Active | Active | Active | Active | -- | -- | shopify | No |
+| ColorFabb | Active | -- | Active | -- | -- | -- | firecrawl | EU-only store |
+| AzureFilm | Active | -- | Active | -- | -- | -- | woocommerce | EU-only store |
+| Geeetech | Active | -- | Active | -- | -- | -- | firecrawl | No |
+| 3D Fuel | Active | -- | -- | -- | -- | -- | shopify | US-only |
+| Atomic Filament | Active | -- | -- | -- | -- | -- | shopify | US-only |
+| Duramic 3D | Active | -- | -- | -- | -- | -- | shopify | US-only |
+| Gizmo Dorks | Active | -- | -- | -- | -- | -- | bigcommerce | US-only |
+| IC3D | Active | -- | -- | -- | -- | -- | firecrawl | US-only |
 
-| Model | product_url domain | Price | Issue |
-|-------|-------------------|-------|-------|
-| Factor 4 | shop3duniverse.com (reseller) | $19,500 | Wrong domain |
-| Method XL | store.ultimaker.com | $13,999 | OK |
-| S3 | ultimaker.com (marketing) | $2,999 | Wrong domain |
-| S5 | ultimaker.com (marketing) | $4,999 | Wrong domain |
-| S6 | ultimaker.com (marketing) | $6,999 | Wrong domain |
-| S6 Secure | ultimaker.com (marketing) | null | Wrong domain |
-| S7 | store.ultimaker.com | null | May be discontinued |
-| S8 | store.ultimaker.com | $8,999 | OK -- verified |
-| S8 Pro Bundle | ultimaker.com (marketing) | null | Wrong domain |
-| S8 Secure | dynamism.com (reseller) | $627 | Wrong domain, wrong price |
+### Printer Brands
 
-## Implementation Plan
+| Brand | US | CA | EU | UK | AU | JP | Sync Config? | Gap? |
+|-------|----|----|----|----|----|----|--------------|------|
+| Bambu Lab (8) | 8 URLs | 7 URLs | 7 URLs | 7 URLs | 7 URLs | -- | Yes | No |
+| Elegoo (7) | 7 URLs | 7 URLs | 7 URLs | 7 URLs | 7 URLs | -- | Yes | No |
+| QIDI Tech (7) | 7 URLs | 1 URL | 1 URL | 1 URL | 1 URL | -- | Yes | **YES** |
+| Creality (17) | 17 URLs | **0 URLs** | **0 URLs** | **0 URLs** | **0 URLs** | -- | Yes | **YES** |
+| Anycubic (9) | 9 URLs | 2 URLs | 2 URLs | 2 URLs | **0** | -- | Yes | **YES** |
+| FlashForge (7) | 4 URLs | **0 URLs** | **0 URLs** | **0 URLs** | **0 URLs** | -- | Partial | **YES** |
+| FLSUN (8) | 6 URLs | 7 URLs | 6 URLs | 2 URLs | 5 URLs | -- | No | **YES** |
+| Prusa Research (7) | 7 URLs | **0 URLs** | **0 URLs** | **0 URLs** | **0 URLs** | -- | Yes | **YES** |
+| Sovol (6) | 6 URLs | 0 URLs | 5 URLs | 0 URLs | 0 URLs | -- | Yes | Partial |
+| AnkerMake (2) | 2 URLs | 0 | 0 | 0 | 0 | -- | **No** | **YES** |
+| Raise3D (4) | 4 URLs | 0 | 0 | 0 | 0 | -- | Yes | Partial |
+| Snapmaker (2) | 2 URLs | 0 | 0 | 0 | 0 | -- | **No** | TBD |
+| UltiMaker (5) | 5 URLs | 0 | 0 | 0 | 0 | -- | Yes | US-only |
+| RatRig (1) | 1 URL | 0 | 0 | 0 | 0 | -- | Yes | EU-only |
+| Voron Design (3) | 3 URLs | 0 | 0 | 0 | 0 | -- | No | Kit-based |
 
-### Step 1: Create `brand_sync_config` row for Ultimaker
+---
 
-Insert a config row with `primary_extraction = 'manual_only'` so the sync engine properly skips all UltiMaker products at line 200 of `sync-printer-prices/index.ts`. This is the surgical fix that stops all wasted Firecrawl calls and false failures.
+## 2. Verified Regional Store Discovery
 
-Fields:
-- `brand_id`: 'ultimaker' (slug-based lookup)
-- `store_platform`: 'magento'
-- `primary_extraction`: 'manual_only'
-- `shopify_json_available`: false
-- `store_url_us`: null (no auto-sync)
-- `sync_notes`: 'Magento (Adobe Commerce) store at store.ultimaker.com. Enterprise quote-based pricing. No Shopify JSON, no JSON-LD. Prices are static MSRP maintained manually.'
+### FlashForge -- 4 NEW Regions Confirmed (Shopify)
+- **CA**: `ca.flashforge.com/products.json` -- returns valid Shopify JSON (CAD prices)
+- **EU**: `eu.flashforge.com/products.json` -- returns valid Shopify JSON (EUR prices)
+- **UK**: `uk.flashforge.com/products.json` -- returns valid Shopify JSON (GBP prices)
+- **AU**: `au.flashforge.com/products.json` -- returns valid Shopify JSON (AUD prices)
+- JP: `jp.flashforge.com` -- DNS failure, does not exist
+- **Implementation**: Low complexity. Add CA/UK/AU to BRAND_REGIONAL_DOMAINS maps. Populate printer regional URLs.
 
-### Step 2: Fix product URLs to point to the actual store
+### Polymaker -- 1 NEW Region Confirmed
+- **CA**: `ca.polymaker.com/products.json` -- returns valid Shopify JSON (CAD prices)
+- UK: `uk.polymaker.com` -- DNS failure (fetch fails)
+- AU: `au.polymaker.com` -- DNS failure (fetch fails)
+- **Implementation**: Low complexity. Add CA to both BRAND_REGIONAL_DOMAINS maps. Remove UK/AU from `sync-regional-prices` map (currently listed but dead).
 
-Update all printers to use `store.ultimaker.com` URLs where products exist. Based on the live store navigation and verified pages:
+### AnkerMake/EufyMake -- MIGRATION Issue
+- `ankermake.com` now **redirects to eufymake.com**
+- `eufymake.com/products.json` returns **404** -- NOT Shopify
+- EufyMake is a custom Anker platform (not scrapeable via Shopify JSON)
+- Current DB URLs (`ankermake.com/products/m5`, `ankermake.com/m5c`) are **stale redirects**
+- **Implementation**: High complexity. Need custom scraper or manual_only designation. URLs must be updated to eufymake.com equivalents.
 
-| Model | Corrected URL |
-|-------|--------------|
-| S3 | `https://store.ultimaker.com/3d-printers/s-series/ultimaker-s3-us` |
-| S5 | `https://store.ultimaker.com/3d-printers/s-series/ultimaker-s5-3d-printer` |
-| S6 | `https://store.ultimaker.com/3d-printers/s-series/ultimaker-s6-3d-printer-bundle` |
-| S6 Secure | `https://store.ultimaker.com/3d-printers/s-series/ultimaker-secure` |
-| S7 | `https://store.ultimaker.com/ultimaker-s7-3d-printer` (already correct) |
-| S8 | `https://store.ultimaker.com/ultimaker-s8-3d-printer` (already correct) |
-| Method XL | `https://store.ultimaker.com/method-xl-3d-printer` (already correct) |
-| S8 Pro Bundle | `https://store.ultimaker.com/ultimaker-s8-pro-bundle` (needs verification) |
-| S8 Secure | `https://store.ultimaker.com/ultimaker-s8-secure` (needs verification) |
-| Factor 4 | `https://store.ultimaker.com/ultimaker-factor-4` (needs verification) |
+### Anycubic -- AU/JP Do Not Exist
+- `store.anycubic.com` (US) -- Shopify confirmed
+- `ca.anycubic.com` (CA) -- Shopify confirmed  
+- `eu.anycubic.com` (EU) -- already configured
+- `uk.anycubic.com` (UK) -- already configured
+- `au.anycubic.com` -- **DNS failure**, does not exist
+- `jp.anycubic.com` -- **DNS failure**, does not exist
+- **Note**: The `sync-regional-prices` map lists `au.store.anycubic.com` -- this is wrong. The brand_sync_config correctly has AU as nil.
 
-### Step 3: Fix the S8 Secure price
+### Creality -- Stores Exist but Use Custom Storefront
+- `store.creality.com/ca`, `/eu`, `/uk`, `/au` -- all confirmed active (path-based routing)
+- `/products.json` returns 404 on all regional paths (custom Shopify storefront blocks JSON API)
+- Brand sync config already has correct URL templates
+- **Gap**: 17 printers have zero regional URLs populated despite config existing
+- **Implementation**: Medium complexity. Need to generate regional URLs from US URLs by inserting region prefix.
 
-Currently shows $627 (from dynamism.com reseller scrape). The actual MSRP is $11,499. Update both `current_price_usd_store` and `msrp_usd`.
+### Prusa Research -- Geo-Pricing on Single Domain
+- `prusa3d.com` serves all regions from one domain with IP-based currency switching
+- Brand sync config already has Firecrawl with location headers configured
+- **Gap**: 7 printers have zero regional URLs -- but they all use the same base URL
+- **Implementation**: Low complexity. Copy `product_url` to regional columns (same URL, different price via Firecrawl location).
 
-### Step 4: Verify S7 status
+### Snapmaker -- Not Shopify
+- `snapmaker.com/products.json` returns **404** -- custom platform
+- **Implementation**: Would need custom scraper. Skip for now (only 2 printers).
 
-The S7 page at store.ultimaker.com returns a product page (confirmed via logs showing Firecrawl got 8,222 chars of markdown). If it's being replaced by S8, consider marking as discontinued. If still actively sold, preserve the listing.
+---
 
-### Step 5: Ensure no EU/CA/UK/AU/JP sync attempts
+## 3. BRAND_REGIONAL_DOMAINS Map Discrepancies
 
-Verify that no regional URL columns (`product_url_eu`, etc.) or `brand_regional_stores` rows exist for Ultimaker. The DB audit already shows all regional URL columns are null -- this is correct.
+The two edge functions have **inconsistent** regional domain maps:
+
+| Brand | `sync-regional-prices` | `sync-brand-products` | Fix Needed |
+|-------|----------------------|---------------------|------------|
+| Polymaker | US, CA, UK, EU, AU | US, EU only | Remove dead UK/AU from regional; Add CA to brand-products |
+| Anycubic | Wrong AU domain (`au.store.anycubic.com`) | Correct (`au.anycubic.com`) | Fix regional to match (but AU is dead anyway -- remove) |
+| Sunlu | Has CA, UK, AU | Missing CA, UK, AU | Add to brand-products |
+| Eryone | Has CA, UK, EU, AU | Only US, EU | Add CA, UK, AU to brand-products |
+| Kingroon | Has CA, UK, EU, AU | Only US, EU | Add CA, UK, AU to brand-products |
+| FlashForge | US, EU | US, EU | Both need CA, UK, AU added |
+| FLSUN | Has full 5-region | Only US, EU | Add CA, UK, AU to brand-products |
+| Creality | Wrong domains (`ca.store.creality.com`) | Wrong (`ca.store.creality.com`) | Should be `store.creality.com/ca` path-based |
+| Sovol | US, EU | US only | Add EU to brand-products |
+
+---
+
+## 4. Implementation Plan
+
+### Phase 1: Fix Data Inconsistencies (Database Only)
+
+**A. FlashForge -- Add 4 Regions**
+- Insert `brand_regional_stores` rows for CA, UK, AU (EU already exists)
+- Update `brand_sync_config` with `store_url_ca`, `store_url_uk`, `store_url_au`
+- Update `automated_brands.supported_regions` to `[US, CA, EU, UK, AU]`
+- Generate printer regional URLs from US handles (same handles across all FlashForge stores)
+
+**B. Polymaker -- Add CA Region**
+- Insert `brand_regional_stores` row for CA
+- Update `brand_sync_config` with `store_url_ca`
+- Update `automated_brands.supported_regions` to include CA
+- Remove dead UK/AU entries from `brand_regional_stores` if they exist
+
+**C. Creality Printers -- Populate Regional URLs**
+- For each of 17 active printers: derive CA/EU/UK/AU URLs from US URL by inserting region path prefix
+- Example: `store.creality.com/products/k1-3d-printer` becomes `store.creality.com/ca/products/k1-3d-printer`
+
+**D. Anycubic Printers -- Populate Missing Regional URLs**  
+- For 7 printers missing CA/EU/UK URLs: derive from US handle using regional subdomain pattern
+- Example: `store.anycubic.com/products/kobra-3` becomes `ca.anycubic.com/products/kobra-3`
+- Remove AU from maps (confirmed dead)
+
+**E. QIDI Tech Printers -- Populate Regional URLs**
+- 6 of 7 printers missing CA/EU/UK/AU URLs despite stores being active
+- Derive from US handle pattern
+
+**F. Prusa Research Printers -- Set Regional URLs**
+- Copy `product_url` to all regional URL columns (same domain, geo-pricing handles currency)
+
+**G. AnkerMake -- Update to EufyMake**
+- Update product_url for M5 and M5C to eufymake.com equivalents
+- Mark as `manual_only` sync until custom scraper is built
+- Create `brand_sync_config` entry with `store_platform = 'custom'`
+
+### Phase 2: Sync Engine Updates (Edge Functions)
+
+**A. Unify BRAND_REGIONAL_DOMAINS maps**
+- Update `sync-brand-products/index.ts` to match the more complete map in `sync-regional-prices/index.ts`
+- Add FlashForge CA, UK, AU to both maps
+- Add Polymaker CA to both maps
+- Fix Anycubic AU (remove from both -- dead domain)
+- Fix Creality domains (path-based, not subdomain-based)
+- Remove Polymaker UK/AU (dead DNS)
+
+**B. Add FlashForge brand_sync_config**
+- Create or update config with all 5 regional store URL templates
+- Platform: `shopify`, extraction: `shopify_json`
+
+**C. Add AnkerMake/EufyMake brand_sync_config**
+- Platform: `custom`, extraction: `manual_only`
+- Sync notes documenting the migration from ankermake.com
+
+**D. Add FLSUN brand_sync_config**
+- Platform: `shopify`, extraction: `shopify_json`
+- 5 regions: US, CA, EU, UK, AU
+
+### Phase 3: Verification
+
+- Dry-run `sync-regional-prices` for FlashForge with regions CA, UK, AU
+- Dry-run `sync-printer-prices` for Creality, Anycubic, QIDI to verify regional URL resolution
+- Verify Polymaker CA prices populate correctly
+- Confirm AnkerMake URLs resolve to eufymake.com product pages
 
 ---
 
 ## Technical Details
 
-### Why the existing `sync_status = 'manual_only'` doesn't prevent sync
+### Files to Modify
+1. `supabase/functions/sync-regional-prices/index.ts` -- Fix BRAND_REGIONAL_DOMAINS (remove dead Polymaker UK/AU, remove dead Anycubic AU, add FlashForge CA/UK/AU, add Polymaker CA)
+2. `supabase/functions/sync-brand-products/index.ts` -- Sync BRAND_REGIONAL_DOMAINS to match (add Sunlu CA/UK/AU, Eryone CA/UK/AU, Kingroon CA/UK/AU, FlashForge CA/UK/AU, FLSUN full set, Polymaker CA, Sovol EU)
 
-The sync engine at `sync-printer-prices/index.ts` line 200 checks:
-```
-if (config?.primary_extraction === "manual_only") { skip }
-```
+### Database Changes (via insert tool)
+- `brand_regional_stores`: INSERT rows for FlashForge CA/UK/AU, Polymaker CA
+- `brand_sync_config`: UPDATE FlashForge, INSERT FLSUN, INSERT AnkerMake
+- `automated_brands`: UPDATE supported_regions for FlashForge, Polymaker
+- `printers`: UPDATE regional URL columns for ~50 printers across Creality (17), Anycubic (7), QIDI (6), Prusa (7), FlashForge (7), AnkerMake (2)
 
-It does NOT check `printer.sync_status`. The `sync_status` column is a UI/reporting field only. The actual skip logic requires a matching `brand_sync_config` row with `primary_extraction = 'manual_only'`.
+### Brands Confirmed as Correctly Configured (No Action)
+- Bambu Lab, Elegoo, eSun, Eryone, Sunlu, Kingroon, Sovol, QIDI (filament side), Jayo, Raise3D, RatRig, UltiMaker, Voron Design
 
-### What this fix achieves
-- Zero Firecrawl API calls wasted on Ultimaker products per sync run (saves ~10 calls x $0.01+ each)
-- Zero false failures in sync logs
-- Correct URLs for admin reference and "Buy" buttons
-- Accurate pricing data for all models
-
-### Files to modify
-- **Database only**: `brand_sync_config` (INSERT), `printers` (UPDATE URLs and prices)
-- **No edge function changes needed** -- the existing `manual_only` check at line 200 will work once the config row exists
+### Brands Confirmed as Single-Store (Skip)
+- 3D Fuel, 3DHOJOR, Atomic Filament, Duramic 3D, Gizmo Dorks, IC3D, Hatchbox, Proto-Pasta, Fusion Filaments, VoxelPLA, NuMakers, Recreus, YOUSU, ZIRO, Paramount 3D, Push Plastic, Matter3D, NinjaTek
 
