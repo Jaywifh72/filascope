@@ -1,184 +1,104 @@
 
-## Diagnosis Summary (what is actually happening)
 
-The recurring Sovol EU failures are not coming from the new brand constants anymore. They are coming from **legacy database URL fields + UI fallback behavior**.
+# Fix UltiMaker Printer Sync Failures
 
-On `/admin/pricing-data?type=printer`, printer sync is called via `sync-printer-prices`, and the failure text `No sync result returned for EU` is generated in the UI fallback path when an EU row exists in UI but backend did not return an EU region payload for that printer.
+## Root Cause
 
----
+UltiMaker printers are all tagged `sync_status = 'manual_only'` in the database, but the sync engine's skip logic relies on `brand_sync_config.primary_extraction = 'manual_only'` -- and **no `brand_sync_config` row exists for Ultimaker**. So the skip check fails silently, and the engine proceeds with the default Shopify JSON extraction against a Magento store, producing JSON parse errors and Firecrawl fallback waste.
 
-## 1) Full database audit for `eu.sovol3d.com`
+### What happens on each sync attempt (per the logs):
+1. Shopify JSON: appends `.json` to URL, gets HTML back, throws `SyntaxError: Unexpected token '<'`
+2. Falls to JSON-LD: no JSON-LD exists in the Magento HTML
+3. Falls to Meta Tags: no `og:price:amount` tags on these pages
+4. Falls to Firecrawl Markdown (Tier 4): **this actually works** and returns 8,000-47,000 chars of markdown, but the price parser may not reliably extract from Magento bundle pages
+5. Result: "not_in_region" status because nothing matched -- expensive Firecrawl API calls wasted
 
-I checked all public tables by scanning full row JSON text and then drilled into each hit.
+## Platform Details
 
-### Tables with matches
+- **store.ultimaker.com**: Adobe Commerce (Magento 2), not Shopify
+- **No JSON-LD** structured data on product pages
+- **Price IS in HTML** via `data-price-amount="8999"` on `<span>` elements with class `price-wrapper`
+- **US-only** store -- no regional subdomains exist
+- **Some products point to wrong domains**: ultimaker.com (marketing site), dynamism.com (reseller)
 
-1. **`printers`**
-   - **Column(s):** `official_store_url_eu`
-   - **Row count:** 9
-   - **Sample values:**
-     - `https://eu.sovol3d.com/products/sovol-sv06-best-budget-3d-printer-for-beginner`
-     - `https://eu.sovol3d.com/products/sovol-sv06-ace`
-     - `https://eu.sovol3d.com/products/sovol-sv08-3d-printer`
-     - `https://eu.sovol3d.com/products/sovol-zero-3d-printer`
-   - Important: `product_url_eu` is already null for these rows; dead URLs persist in the **official** EU column.
+## Current DB State (10 printers, all `manual_only`)
 
-2. **`brand_regional_stores`**
-   - **Column(s):** `base_url`, `product_url_pattern`
-   - **Row count:** 1
-   - **Sample row:**
-     - brand: Sovol
-     - region: EU
-     - `base_url = https://eu.sovol3d.com`
-     - `product_url_pattern = https://eu.sovol3d.com/products/{sku}`
-     - `is_active = true`
+| Model | product_url domain | Price | Issue |
+|-------|-------------------|-------|-------|
+| Factor 4 | shop3duniverse.com (reseller) | $19,500 | Wrong domain |
+| Method XL | store.ultimaker.com | $13,999 | OK |
+| S3 | ultimaker.com (marketing) | $2,999 | Wrong domain |
+| S5 | ultimaker.com (marketing) | $4,999 | Wrong domain |
+| S6 | ultimaker.com (marketing) | $6,999 | Wrong domain |
+| S6 Secure | ultimaker.com (marketing) | null | Wrong domain |
+| S7 | store.ultimaker.com | null | May be discontinued |
+| S8 | store.ultimaker.com | $8,999 | OK -- verified |
+| S8 Pro Bundle | ultimaker.com (marketing) | null | Wrong domain |
+| S8 Secure | dynamism.com (reseller) | $627 | Wrong domain, wrong price |
 
-3. **`brand_sync_config`**
-   - **Column(s):** `sync_notes` only
-   - **Row count:** 1
-   - `store_url_eu` is already null (good).
-   - Hit is only textual note mentioning old EU domain.
+## Implementation Plan
 
-4. **`url_validation_cache`**
-   - **Column(s):** `url`
-   - **Row count:** 1
-   - Sample: `https://eu.sovol3d.com` (status invalid/404)
+### Step 1: Create `brand_sync_config` row for Ultimaker
 
-### Explicitly checked and found **0** hits
-- `product_regional_prices`
-- `product_regional_urls`
-- `product_regional_slugs`
-- `printer_url_validations`
-- `price_extraction_logs`
+Insert a config row with `primary_extraction = 'manual_only'` so the sync engine properly skips all UltiMaker products at line 200 of `sync-printer-prices/index.ts`. This is the surgical fix that stops all wasted Firecrawl calls and false failures.
 
-So the persistent EU failures are **not** from regional join tables/slugs; they are from legacy Sovol EU references in `printers` + `brand_regional_stores`.
+Fields:
+- `brand_id`: 'ultimaker' (slug-based lookup)
+- `store_platform`: 'magento'
+- `primary_extraction`: 'manual_only'
+- `shopify_json_available`: false
+- `store_url_us`: null (no auto-sync)
+- `sync_notes`: 'Magento (Adobe Commerce) store at store.ultimaker.com. Enterprise quote-based pricing. No Shopify JSON, no JSON-LD. Prices are static MSRP maintained manually.'
 
----
+### Step 2: Fix product URLs to point to the actual store
 
-## 2) Sync engine URL source and precedence (for this UI flow)
+Update all printers to use `store.ultimaker.com` URLs where products exist. Based on the live store navigation and verified pages:
 
-### Actual function used by `/admin/pricing-data` printer sync
-- Frontend calls `supabase.functions.invoke('sync-printer-prices', { printer_id })`.
+| Model | Corrected URL |
+|-------|--------------|
+| S3 | `https://store.ultimaker.com/3d-printers/s-series/ultimaker-s3-us` |
+| S5 | `https://store.ultimaker.com/3d-printers/s-series/ultimaker-s5-3d-printer` |
+| S6 | `https://store.ultimaker.com/3d-printers/s-series/ultimaker-s6-3d-printer-bundle` |
+| S6 Secure | `https://store.ultimaker.com/3d-printers/s-series/ultimaker-secure` |
+| S7 | `https://store.ultimaker.com/ultimaker-s7-3d-printer` (already correct) |
+| S8 | `https://store.ultimaker.com/ultimaker-s8-3d-printer` (already correct) |
+| Method XL | `https://store.ultimaker.com/method-xl-3d-printer` (already correct) |
+| S8 Pro Bundle | `https://store.ultimaker.com/ultimaker-s8-pro-bundle` (needs verification) |
+| S8 Secure | `https://store.ultimaker.com/ultimaker-s8-secure` (needs verification) |
+| Factor 4 | `https://store.ultimaker.com/ultimaker-factor-4` (needs verification) |
 
-### In `sync-printer-prices`:
-It loads **database** config (`brand_sync_config`) and uses DB columns to build regional URL attempts.
+### Step 3: Fix the S8 Secure price
 
-Region inclusion logic:
-- Regions are synced if either:
-  - brand config has regional template (`store_url_eu`, etc.), **or**
-  - printer has direct regional URL (`product_url_eu`, etc.)
+Currently shows $627 (from dynamism.com reseller scrape). The actual MSRP is $11,499. Update both `current_price_usd_store` and `msrp_usd`.
 
-URL precedence per region:
-1. `printers.product_url_{region}` (highest)
-2. cached slug (`product_regional_slugs`) + `brand_sync_config.store_url_{region}` template
-3. template + US slug fallback
+### Step 4: Verify S7 status
 
-It does **not** read `BRAND_REGIONAL_DOMAINS` constants here.
+The S7 page at store.ultimaker.com returns a product page (confirmed via logs showing Firecrawl got 8,222 chars of markdown). If it's being replaced by S8, consider marking as discontinued. If still actively sold, preserve the listing.
 
-### Why UI still shows EU and fails:
-`usePricingData` currently backfills missing `product_url_eu` from `official_store_url_eu`.  
-Because `official_store_url_eu` still contains `eu.sovol3d.com`, UI creates EU store rows.  
-Then sync returns no EU region payload for those printers, and UI sets:
-- `No sync result returned for EU` (marked as failed in log panel).
+### Step 5: Ensure no EU/CA/UK/AU/JP sync attempts
 
-So this is a DB+UI shaping issue, not just edge-function constants.
+Verify that no regional URL columns (`product_url_eu`, etc.) or `brand_regional_stores` rows exist for Ultimaker. The DB audit already shows all regional URL columns are null -- this is correct.
 
 ---
 
-## 3) `sovol.eu` replacement investigation
+## Technical Details
 
-### Platform check
-- `https://sovol.eu/products.json?limit=5` returns valid Shopify JSON.
-- `https://www.sovol.eu/products.json?limit=5` also works.
-- `https://sovol.eu` is a Shopify storefront.
+### Why the existing `sync_status = 'manual_only'` doesn't prevent sync
 
-### Handle availability checked
-- Exists on `sovol.eu`:
-  - `sovol-sv06-ace`
-  - `sovol-sv06-plus-ace-3d-printer`
-  - `sovol-sv08-3d-printer`
-  - `sovol-sv08-max-3d-printer`
-  - `sovol-zero-3d-printer`
-- Missing / 404 on `sovol.eu`:
-  - `sovol-sv06-best-budget-3d-printer-for-beginner`
-  - `sovol-sv07-klipper-direct-drive-3d-printer-print-speed-250mm-s`
-  - `sovol-sv07-plus-large-klipper-3d-printer`
+The sync engine at `sync-printer-prices/index.ts` line 200 checks:
+```
+if (config?.primary_extraction === "manual_only") { skip }
+```
 
-This confirms `sovol.eu` is real and usable, but product coverage differs from US handles.
+It does NOT check `printer.sync_status`. The `sync_status` column is a UI/reporting field only. The actual skip logic requires a matching `brand_sync_config` row with `primary_extraction = 'manual_only'`.
 
----
+### What this fix achieves
+- Zero Firecrawl API calls wasted on Ultimaker products per sync run (saves ~10 calls x $0.01+ each)
+- Zero false failures in sync logs
+- Correct URLs for admin reference and "Buy" buttons
+- Accurate pricing data for all models
 
-## 4) SV07 duplicate audit
+### Files to modify
+- **Database only**: `brand_sync_config` (INSERT), `printers` (UPDATE URLs and prices)
+- **No edge function changes needed** -- the existing `manual_only` check at line 200 will work once the config row exists
 
-Current DB state (Sovol):
-- `SV07` (id `139e...`)  
-  - active, `sync_status = never_synced`, same dead SV07 URL
-- `SV07 KLIPPER DIRECT DRIVE` (id `8f8c...`)  
-  - same URL, `is_discontinued = true`, `sync_status = manual_only`
-- No `product_regional_slugs` rows for either SV07 record.
-- The shared URL returns 404 (`.json` endpoint) on current storefront checks.
-
-### Canonical recommendation
-- Keep **`SV07`** as canonical product identity (cleaner name and existing primary record).
-- Merge duplicate metadata/history from `SV07 KLIPPER DIRECT DRIVE` into canonical.
-- Mark canonical as discontinued/manual_only unless a valid new SV07 handle is discovered.
-- Retire duplicate with explicit merge note (no hard delete required).
-
----
-
-## Surgical implementation plan
-
-## Phase A — Immediate stop-the-bleeding (eliminate false EU failures)
-1. **Data cleanup**
-   - Remove all `eu.sovol3d.com` values from:
-     - `printers.official_store_url_eu` (all Sovol rows)
-     - `brand_regional_stores` Sovol EU row (`is_active=false` or replace base/pattern if moving to sovol.eu)
-     - `url_validation_cache` dead entry (optional cleanup)
-2. **UI row generation hardening**
-   - In pricing data hook, stop unconditional fallback:
-     - `product_url_eu <- official_store_url_eu`
-   - Only backfill official regional URLs when:
-     - region is active for brand, and
-     - URL domain is not on blocked/deprecated list.
-   - This prevents phantom EU store rows.
-
-## Phase B — Prevent re-creation by engine/paths
-3. **Sync source-of-truth alignment**
-   - Keep `brand_sync_config.store_url_eu` null for Sovol unless explicitly migrating to `sovol.eu`.
-   - Ensure Sovol EU is controlled by one source only (active regional store + config template), not legacy official URL remnants.
-4. **Defensive sync behavior**
-   - In `sync-printer-prices`, explicitly log skipped regions with reason (`inactive_region` / `not_configured`) so UI can classify as `not_in_region`, not failure.
-   - In pricing UI, when requested region is missing in backend payload and brand-region is inactive/not configured, map to `not_in_region` instead of failed.
-
-## Phase C — Choose Sovol strategy (recommended: adopt sovol.eu)
-5. **Option A (recommended): migrate EU to `sovol.eu`**
-   - Update Sovol EU row in `brand_regional_stores`:
-     - base URL and pattern to `https://sovol.eu`
-   - Populate/verify EU handles for existing active models:
-     - SV06 ACE, SV06 Plus ACE, SV08, SV08 MAX, ZERO
-   - Mark missing EU products (`SV06` old handle, SV07, SV07 Plus) as `not_in_region` or discontinued/manual_only per product.
-6. **Option B: US-only permanently**
-   - Keep EU inactive and no EU templates.
-   - Ensure no UI EU rows render for Sovol.
-   - Mark products that previously expected EU as `not_in_region` state only (non-failure).
-
-## Phase D — SV07 de-duplication without data loss
-7. **Canonicalize records**
-   - Canonical = `SV07`.
-   - Reassign any related rows from duplicate ID to canonical ID (history/validations/inventory references).
-   - Set duplicate as archived/discontinued with merge note (or soft-retire).
-   - If no valid live handle is found, set canonical `sync_status=manual_only`, clear broken product URL, and preserve MSRP as historical reference.
-
----
-
-## Validation checklist (must pass)
-
-1. `/admin/pricing-data?type=printer` shows Sovol with correct store count (no phantom dead EU rows).
-2. Running single/batch Sovol sync produces:
-   - no `No sync result returned for EU` for unsupported regions,
-   - unsupported regions appear as `Not sold in this region` (not failed).
-3. Sovol EU strategy chosen:
-   - If `sovol.eu` enabled: EU prices update for available handles.
-   - If US-only: no EU attempts at all.
-4. SV07 appears once as canonical; duplicate no longer causes split statuses.
-5. End-to-end test from UI sync action to sync log panel confirms failures drop and status classification is accurate.
