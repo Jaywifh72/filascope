@@ -1088,6 +1088,10 @@ const REGION_SPOOF_HEADERS: Record<string, Record<string, string>> = {
   'au.qidi3d.com': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
   // FLSUN
   'us.store.flsun3d.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  'ca.store.flsun3d.com': { 'Accept-Language': 'en-CA,en;q=0.9', 'CF-IPCountry': 'CA', 'X-Forwarded-For': '99.224.0.1' },
+  'uk.store.flsun3d.com': { 'Accept-Language': 'en-GB,en;q=0.9', 'CF-IPCountry': 'GB', 'X-Forwarded-For': '81.2.69.142' },
+  'eu.store.flsun3d.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
+  'au.store.flsun3d.com': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
   // Snapmaker
   'us.snapmaker.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
   'eu.snapmaker.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
@@ -1149,6 +1153,10 @@ const DOMAIN_REGION_MAP: Record<string, string> = {
   'uk.qidi3d.com': 'UK',
   'au.qidi3d.com': 'AU',
   'us.store.flsun3d.com': 'US',
+  'ca.store.flsun3d.com': 'CA',
+  'uk.store.flsun3d.com': 'UK',
+  'eu.store.flsun3d.com': 'EU',
+  'au.store.flsun3d.com': 'AU',
   'us.snapmaker.com': 'US',
   'eu.snapmaker.com': 'EU',
   'www.flashforge.com': 'US',
