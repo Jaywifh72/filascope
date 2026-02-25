@@ -1221,6 +1221,7 @@ function extractPriceWithConfig(
   markdown: string,
   config: BrandExtractionConfig,
   preferredCurrency: string,
+  sourceUrl?: string,
 ): {
   price: number | null;
   compareAtPrice: number | null;
@@ -1231,6 +1232,17 @@ function extractPriceWithConfig(
   // Use higher minimum for filament to avoid capturing weights/discounts
   const priceRangeMin = config.priceRangeMin ?? 10;
   const priceRangeMax = config.priceRangeMax ?? 150;
+
+  const parseDomainPrice = (raw: string): number => {
+    if (!raw) return NaN;
+    return sourceUrl ? parsePriceForDomain(raw, sourceUrl) : parseEuropeanPrice(raw);
+  };
+
+  const isEuropeanDomain = sourceUrl ? isEuropeanDecimalBrand(sourceUrl) : false;
+  const getInlinePriceRegex = (): RegExp =>
+    isEuropeanDomain
+      ? /(?:€|EUR)?\s*([\d]+(?:[.,]\d{2}))/gi
+      : /\$(\d+(?:\.\d{2})?)/g;
 
   // First, try to extract using the Creality sale format pattern
   const saleResult = extractSalePriceBeforeSave(markdown);
@@ -1267,7 +1279,7 @@ function extractPriceWithConfig(
     try {
       const lineExcludeRegex = new RegExp(`^.*${pattern}.*$`, "gim");
       cleanedMarkdown = cleanedMarkdown.replace(lineExcludeRegex, "");
-    } catch (e) {
+    } catch (_e) {
       // Ignore invalid patterns
     }
   }
@@ -1289,14 +1301,15 @@ function extractPriceWithConfig(
         const regex = new RegExp(pattern, "i");
         const match = priceSection.match(regex);
         if (match && match[1]) {
-          const price = parseFloat(match[1].replace(",", ""));
+          const price = parseDomainPrice(match[1]);
           if (price >= priceRangeMin && price <= priceRangeMax) {
             console.log(`Pattern match: ${pattern} -> $${price}`);
 
             let compareAt: number | null = null;
-            const allPrices = [...priceSection.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
-              .map((m) => parseFloat(m[1]))
+            const allPrices = [...priceSection.matchAll(getInlinePriceRegex())]
+              .map((m) => parseDomainPrice(m[1]))
               .filter((p) => p >= priceRangeMin && p <= priceRangeMax && p !== price);
+
             if (allPrices.length > 0) {
               const higherPrice = allPrices.find((p) => p > price);
               if (higherPrice) compareAt = higherPrice;
@@ -1311,15 +1324,15 @@ function extractPriceWithConfig(
             };
           }
         }
-      } catch (e) {
+      } catch (_e) {
         console.log(`Invalid price pattern: ${pattern}`);
       }
     }
   }
 
   // Fallback: find all prices in cleaned section, filter to valid range
-  const allPrices = [...priceSection.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
-    .map((m) => parseFloat(m[1]))
+  const allPrices = [...priceSection.matchAll(getInlinePriceRegex())]
+    .map((m) => parseDomainPrice(m[1]))
     .filter((p) => p >= priceRangeMin && p <= priceRangeMax)
     .sort((a, b) => a - b);
 
@@ -1440,7 +1453,7 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
         // Also handle OfferList wrapper (common in WooCommerce)
         const flatOffers: any[] = [];
         for (const o of offers) {
-          if (o["@type"] === "AggregateOffer" || o.offers) {
+          if (o?.["@type"] === "AggregateOffer" || o?.offers) {
             const inner = Array.isArray(o.offers) ? o.offers : [o.offers];
             flatOffers.push(...inner.filter(Boolean));
           } else {
@@ -1448,46 +1461,57 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
           }
         }
 
-        const validOffers = flatOffers.filter((o: any) => o.price != null);
-        if (validOffers.length === 0) continue;
-
-        // Parse prices with domain-aware parser (AzureFilm uses comma decimals)
-        const prices = validOffers
+        const directPriceOffers = flatOffers.filter((o: any) => o?.price != null);
+        const directPrices = directPriceOffers
           .map((o: any) => parsePriceForDomain(String(o.price), productUrl))
           .filter((p: number) => !isNaN(p) && p > 0);
 
-        if (prices.length === 0) continue;
-
-        const lowestPrice = Math.min(...prices);
-        const highestPrice = Math.max(...prices);
-        const compareAt = highestPrice > lowestPrice * 1.05 ? highestPrice : null;
-        const detectedCurrency = (validOffers[0].priceCurrency as string) || storeCurrency;
-
-        // Check availability — but NEVER bail on out-of-stock
-        const inStockOffers = validOffers.filter((o: any) =>
-          String(o.availability || "").toLowerCase().includes("instock")
-        );
-        const available = inStockOffers.length > 0;
-
-        // Also check for WooCommerce sale price via lowPrice/highPrice on AggregateOffer
-        let salePrice = lowestPrice;
-        let salePriceCompareAt = compareAt;
+        // Handle AggregateOffer lowPrice/highPrice even when no direct offer.price exists
+        let aggregateSalePrice: number | null = null;
+        let aggregateCompareAt: number | null = null;
         for (const o of [...offers, ...flatOffers]) {
-          if (o.lowPrice != null && o.highPrice != null) {
+          if (o?.lowPrice != null && o?.highPrice != null) {
             const low = parsePriceForDomain(String(o.lowPrice), productUrl);
             const high = parsePriceForDomain(String(o.highPrice), productUrl);
             if (!isNaN(low) && !isNaN(high) && low > 0 && high > low) {
-              salePrice = low;
-              salePriceCompareAt = high;
+              aggregateSalePrice = low;
+              aggregateCompareAt = high;
               console.log(`[WOOCOMMERCE FETCH] AggregateOffer sale: low=${low}, high=${high}`);
               break;
             }
           }
         }
 
+        const candidatePrices = [...directPrices];
+        if (aggregateSalePrice !== null) candidatePrices.push(aggregateSalePrice);
+        if (aggregateCompareAt !== null) candidatePrices.push(aggregateCompareAt);
+
+        if (candidatePrices.length === 0) continue;
+
+        const lowestPrice = Math.min(...candidatePrices);
+        const highestPrice = Math.max(...candidatePrices);
+        const compareAt = highestPrice > lowestPrice * 1.05 ? highestPrice : null;
+
+        const firstCurrencyOffer =
+          directPriceOffers.find((o: any) => o?.priceCurrency) ||
+          [...offers, ...flatOffers].find((o: any) => o?.priceCurrency);
+        const detectedCurrency = (firstCurrencyOffer?.priceCurrency as string) || storeCurrency;
+
+        // Check availability — but NEVER bail on out-of-stock
+        const availabilityPool = [...directPriceOffers, ...offers, ...flatOffers].filter((o: any) => o?.availability != null);
+        const inStockOffers = availabilityPool.filter((o: any) =>
+          String(o.availability || "").toLowerCase().includes("instock")
+        );
+        const available = inStockOffers.length > 0;
+
+        const salePrice = aggregateSalePrice ?? lowestPrice;
+        const salePriceCompareAt =
+          aggregateCompareAt ?? (compareAt && compareAt > salePrice * 1.05 ? compareAt : null);
+
         console.log(
           `[WOOCOMMERCE FETCH] ✓ JSON-LD: price=${salePrice} ${detectedCurrency}, compareAt=${salePriceCompareAt}, inStock=${available}`,
         );
+
 
         return {
           success: true,
@@ -2877,6 +2901,7 @@ async function fetchPriceWithFirecrawl(
         markdown,
         brandConfig.price_extraction_config || {},
         brandConfig.default_currency || preferredCurrency,
+        urlToFetch,
       );
       priceData = configResult;
 
