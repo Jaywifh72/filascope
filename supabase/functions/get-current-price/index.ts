@@ -1497,12 +1497,80 @@ async function fetchWcStoreApiPrice(
   }
 }
 
+// Fetch variations for a WC Store API variable product and return cheapest in-stock variant price
+async function fetchWcVariationPrice(
+  productId: number,
+  storeDomain: string,
+  minorUnit: number,
+): Promise<{ price: number; compareAtPrice: number | null; currency: string; available: boolean } | null> {
+  const apiUrl = `https://${storeDomain}/wp-json/wc/store/v1/products/${productId}/variations`;
+  console.log(`[WC STORE API] Fetching variations: ${apiUrl}`);
+
+  try {
+    const response = await fetch(apiUrl, {
+      headers: WOOCOMMERCE_HEADERS,
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      console.log(`[WC STORE API] Variations fetch failed: HTTP ${response.status}`);
+      return null;
+    }
+
+    const variations: any[] = await response.json();
+    if (!Array.isArray(variations) || variations.length === 0) {
+      console.log("[WC STORE API] No variations returned");
+      return null;
+    }
+
+    const divisor = Math.pow(10, minorUnit);
+    let bestPrice: number | null = null;
+    let bestCompareAt: number | null = null;
+    let bestCurrency = "EUR";
+    let anyInStock = false;
+
+    for (const v of variations) {
+      const vPrices = v.prices;
+      if (!vPrices?.price) continue;
+
+      const vPrice = parseInt(vPrices.price, 10) / divisor;
+      const vRegular = parseInt(vPrices.regular_price || vPrices.price, 10) / divisor;
+      const vSale = vPrices.sale_price ? parseInt(vPrices.sale_price, 10) / divisor : null;
+      const vCurrency = (vPrices.currency_code || "EUR").toUpperCase();
+      const vInStock = v.is_in_stock === true;
+
+      if (vInStock) anyInStock = true;
+
+      // Use sale price if available, otherwise regular price
+      const effectivePrice = (vSale && vSale > 0 && vSale < vRegular) ? vSale : vPrice;
+      const effectiveCompareAt = (vSale && vSale > 0 && vSale < vRegular) ? vRegular : (vRegular > vPrice ? vRegular : null);
+
+      if (effectivePrice <= 0) continue;
+
+      // Prefer cheapest in-stock variant; if none in stock, cheapest overall
+      if (bestPrice === null || (vInStock && effectivePrice < bestPrice) || (!anyInStock && effectivePrice < bestPrice)) {
+        bestPrice = effectivePrice;
+        bestCompareAt = effectiveCompareAt ?? null;
+        bestCurrency = vCurrency;
+      }
+    }
+
+    if (bestPrice === null) return null;
+
+    console.log(`[WC STORE API] Best variation: price=${bestPrice} ${bestCurrency}, inStock=${anyInStock}, from ${variations.length} variations`);
+    return { price: bestPrice, compareAtPrice: bestCompareAt, currency: bestCurrency, available: anyInStock };
+  } catch (error) {
+    console.error("[WC STORE API] Variations fetch error:", error instanceof Error ? error.message : String(error));
+    return null;
+  }
+}
+
 // Parse WC Store API response into PriceResponse
-function parseWcStoreApiResponse(
+async function parseWcStoreApiResponse(
   data: any[],
   productUrl: string,
   storeDomain: string,
-): PriceResponse | null {
+): Promise<PriceResponse | null> {
   if (!Array.isArray(data) || data.length === 0) {
     console.log("[WC STORE API] Empty response or product not found");
     return null;
@@ -1557,6 +1625,31 @@ function parseWcStoreApiResponse(
 
   console.log(`[WC STORE API] ✓ price=${price} ${currencyCode}, compareAt=${compareAtPrice}, inStock=${available}, type=${product.type}`);
 
+  // For variable products, fetch variations to get cheapest in-stock variant price
+  if (product.type === "variable" && product.id) {
+    console.log(`[WC STORE API] Variable product detected (id=${product.id}), fetching variations...`);
+    const variationResult = await fetchWcVariationPrice(product.id, storeDomain, minorUnit);
+    if (variationResult && variationResult.price > 0) {
+      console.log(`[WC STORE API] Using variation price: ${variationResult.price} ${variationResult.currency} (was parent: ${price} ${currencyCode})`);
+      return {
+        success: true,
+        price: variationResult.price,
+        compareAtPrice: variationResult.compareAtPrice && variationResult.compareAtPrice > variationResult.price * 1.05 ? variationResult.compareAtPrice : null,
+        weightGrams: null,
+        diameterMm: null,
+        variantTitle: null,
+        currency: variationResult.currency,
+        available: variationResult.available,
+        stockStatus: variationResult.available ? "in_stock" : "out_of_stock" as StockStatus,
+        source: "html" as const,
+        fetchedAt: new Date().toISOString(),
+        sourceUrl: productUrl,
+        detectedCurrency: variationResult.currency,
+      };
+    }
+    console.log("[WC STORE API] Variation fetch returned no results, using parent price");
+  }
+
   return {
     success: true,
     price,
@@ -1565,7 +1658,7 @@ function parseWcStoreApiResponse(
     diameterMm: null,
     variantTitle: null,
     currency: currencyCode,
-    available, // false for OOS — price is still extracted
+    available,
     stockStatus,
     source: "html" as const,
     fetchedAt: new Date().toISOString(),
