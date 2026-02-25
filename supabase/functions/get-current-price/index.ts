@@ -1,4 +1,4 @@
-// TreeD direct API v2 — deployed 2026-02-19
+// WooCommerce + TreeD direct API v2 — deployed 2026-02-25
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import {
@@ -1344,13 +1344,34 @@ function extractPriceWithConfig(
   };
 }
 
-// Legacy: Detect custom storefronts that don't support Shopify JSON API
-function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" | "creality" | "extrudr" | "treed" | null {
+// WooCommerce stores that should use direct HTML fetch + JSON-LD extraction
+// These stores use European comma-decimal pricing and/or are behind Cloudflare
+const WOOCOMMERCE_DIRECT_DOMAINS = [
+  "azurefilm.com",
+];
+
+// WooCommerce store default currencies
+const WOOCOMMERCE_STORE_CURRENCIES: Record<string, string> = {
+  "azurefilm.com": "EUR",
+};
+
+// Get default currency for a WooCommerce domain
+function getWooCommerceCurrency(url: string): string {
+  for (const [domain, currency] of Object.entries(WOOCOMMERCE_STORE_CURRENCIES)) {
+    if (url.includes(domain)) return currency;
+  }
+  return "EUR";
+}
+
+// Detect custom storefronts that don't support Shopify JSON API
+function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" | "creality" | "extrudr" | "treed" | "woocommerce" | null {
   if (url.includes("store.bambulab.com")) return "bambulab";
   if (url.includes("prusa3d.com")) return "prusa";
   if (url.includes("geeetech.com")) return "opencart";
   if (url.includes("extrudr.com")) return "extrudr";
   if (url.includes("treedfilaments.com")) return "treed";
+  // WooCommerce stores with European decimal pricing
+  if (WOOCOMMERCE_DIRECT_DOMAINS.some(d => url.includes(d))) return "woocommerce";
   // Creality: catch all domain/path variations
   if (
     url.includes("store.creality.com") ||
@@ -1362,6 +1383,184 @@ function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" 
     url.includes("creality.com/jp/")
   ) return "creality";
   return null;
+}
+
+// ===== WOOCOMMERCE DIRECT PRICE FETCH =====
+// For European WooCommerce stores (AzureFilm etc.) that use comma decimals
+// and may be behind Cloudflare. Fetches HTML directly and extracts JSON-LD.
+async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency: string): Promise<PriceResponse> {
+  const storeCurrency = getWooCommerceCurrency(productUrl);
+  console.log(`[WOOCOMMERCE FETCH] URL: ${productUrl}, store currency: ${storeCurrency}`);
+
+  try {
+    const response = await fetch(productUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,sl;q=0.8,de;q=0.7",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(15000),
+    });
+
+    console.log(`[WOOCOMMERCE FETCH] HTTP ${response.status}`);
+
+    if (!response.ok) {
+      if (response.status === 403) {
+        // Cloudflare block — fall back to Firecrawl
+        console.log(`[WOOCOMMERCE FETCH] 403 Cloudflare block, falling back to Firecrawl`);
+        return await fetchPriceWithFirecrawl(productUrl, preferredCurrency, null, false, "filament");
+      }
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: storeCurrency,
+        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        error: `HTTP ${response.status}`,
+        is404: response.status === 404,
+      };
+    }
+
+    const html = await response.text();
+    console.log(`[WOOCOMMERCE FETCH] HTML size: ${html.length} bytes`);
+
+    // Extract JSON-LD Product data
+    const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+    let scriptMatch;
+    while ((scriptMatch = jsonLdRegex.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(scriptMatch[1].trim());
+        const items: any[] = Array.isArray(parsed) ? parsed : [parsed];
+        const product = items.find((item: any) => item["@type"] === "Product");
+        if (!product?.offers) continue;
+
+        const offers: any[] = Array.isArray(product.offers) ? product.offers : [product.offers];
+        // Also handle OfferList wrapper (common in WooCommerce)
+        const flatOffers: any[] = [];
+        for (const o of offers) {
+          if (o["@type"] === "AggregateOffer" || o.offers) {
+            const inner = Array.isArray(o.offers) ? o.offers : [o.offers];
+            flatOffers.push(...inner.filter(Boolean));
+          } else {
+            flatOffers.push(o);
+          }
+        }
+
+        const validOffers = flatOffers.filter((o: any) => o.price != null);
+        if (validOffers.length === 0) continue;
+
+        // Parse prices using European-aware parser (handles "24,90" → 24.90)
+        const prices = validOffers
+          .map((o: any) => parseEuropeanPrice(String(o.price)))
+          .filter((p: number) => !isNaN(p) && p > 0);
+
+        if (prices.length === 0) continue;
+
+        const lowestPrice = Math.min(...prices);
+        const highestPrice = Math.max(...prices);
+        const compareAt = highestPrice > lowestPrice * 1.05 ? highestPrice : null;
+        const detectedCurrency = (validOffers[0].priceCurrency as string) || storeCurrency;
+
+        // Check availability — but NEVER bail on out-of-stock
+        const inStockOffers = validOffers.filter((o: any) =>
+          String(o.availability || "").toLowerCase().includes("instock")
+        );
+        const available = inStockOffers.length > 0;
+
+        // Also check for WooCommerce sale price via lowPrice/highPrice on AggregateOffer
+        let salePrice = lowestPrice;
+        let salePriceCompareAt = compareAt;
+        for (const o of [...offers, ...flatOffers]) {
+          if (o.lowPrice != null && o.highPrice != null) {
+            const low = parseEuropeanPrice(String(o.lowPrice));
+            const high = parseEuropeanPrice(String(o.highPrice));
+            if (!isNaN(low) && !isNaN(high) && low > 0 && high > low) {
+              salePrice = low;
+              salePriceCompareAt = high;
+              console.log(`[WOOCOMMERCE FETCH] AggregateOffer sale: low=${low}, high=${high}`);
+              break;
+            }
+          }
+        }
+
+        console.log(
+          `[WOOCOMMERCE FETCH] ✓ JSON-LD: price=${salePrice} ${detectedCurrency}, compareAt=${salePriceCompareAt}, inStock=${available}`,
+        );
+
+        return {
+          success: true,
+          price: salePrice,
+          compareAtPrice: salePriceCompareAt,
+          weightGrams: null,
+          diameterMm: null,
+          variantTitle: null,
+          currency: detectedCurrency,
+          available, // false for OOS — but price is still extracted
+          stockStatus: available ? "in_stock" : ("out_of_stock" as StockStatus),
+          source: "html" as const,
+          fetchedAt: new Date().toISOString(),
+          detectedCurrency,
+          sourceUrl: productUrl,
+        };
+      } catch (_e) {
+        console.log("[WOOCOMMERCE FETCH] JSON-LD parse attempt failed, trying next");
+      }
+    }
+
+    // JSON-LD failed — try HTML meta/microdata fallback for WooCommerce
+    console.log("[WOOCOMMERCE FETCH] No JSON-LD Product found, trying HTML price extraction");
+
+    // WooCommerce often has price in <meta> or class="woocommerce-Price-amount"
+    // Pattern: <span class="woocommerce-Price-amount amount"><bdi>24,90&nbsp;<span class="woocommerce-Price-currencySymbol">€</span></bdi></span>
+    const priceAmountRegex = /class="woocommerce-Price-amount[^"]*"[^>]*>(?:<[^>]+>)*([\d.,]+)\s*(?:&nbsp;)?(?:<[^>]+>)*[€£$]/gi;
+    const htmlPrices: number[] = [];
+    let htmlMatch;
+    while ((htmlMatch = priceAmountRegex.exec(html)) !== null) {
+      const p = parseEuropeanPrice(htmlMatch[1]);
+      if (!isNaN(p) && p > 0 && validateFilamentPrice(p, storeCurrency)) {
+        htmlPrices.push(p);
+      }
+    }
+
+    if (htmlPrices.length > 0) {
+      // WooCommerce sale format: first price is original (strikethrough), second is sale price
+      // Or if only one price, it's the current price
+      const hasSale = htmlPrices.length >= 2 && htmlPrices[0] > htmlPrices[1];
+      const price = hasSale ? htmlPrices[1] : htmlPrices[0];
+      const compareAtHtml = hasSale ? htmlPrices[0] : (htmlPrices.length >= 2 && htmlPrices[1] > price * 1.05 ? htmlPrices[1] : null);
+
+      // Check stock status from HTML
+      const isOOS = /class="out-of-stock"|out_of_stock|outofstock/i.test(html);
+
+      console.log(`[WOOCOMMERCE FETCH] ✓ HTML fallback: price=${price} ${storeCurrency}, compareAt=${compareAtHtml}, oos=${isOOS}`);
+
+      return {
+        success: true,
+        price,
+        compareAtPrice: compareAtHtml,
+        weightGrams: null,
+        diameterMm: null,
+        variantTitle: null,
+        currency: storeCurrency,
+        available: !isOOS,
+        stockStatus: isOOS ? "out_of_stock" as StockStatus : "in_stock" as StockStatus,
+        source: "html" as const,
+        fetchedAt: new Date().toISOString(),
+        sourceUrl: productUrl,
+      };
+    }
+
+    console.log("[WOOCOMMERCE FETCH] ❌ No price found via JSON-LD or HTML");
+
+    // Last resort: try Firecrawl which may bypass Cloudflare
+    console.log("[WOOCOMMERCE FETCH] Falling back to Firecrawl");
+    return await fetchPriceWithFirecrawl(productUrl, preferredCurrency, null, false, "filament");
+
+  } catch (error) {
+    console.error("[WOOCOMMERCE FETCH] Error:", error);
+    // On network error, try Firecrawl as fallback
+    console.log("[WOOCOMMERCE FETCH] Direct fetch failed, trying Firecrawl fallback");
+    return await fetchPriceWithFirecrawl(productUrl, preferredCurrency, null, false, "filament");
+  }
 }
 
 // Product type for price validation (filament default, printer has higher range)
@@ -3854,6 +4053,9 @@ serve(async (req) => {
       result = await fetchExtrudrPriceDirect(urlToFetch, expectedCurrency);
       // Extrudr is EUR-only — normalise the currency response so the caller
       // receives EUR even when it requested USD (currencyMismatch handled below)
+    } else if (customStorefront === "woocommerce") {
+      console.log(`[WOOCOMMERCE ROUTING] ✓ Direct WooCommerce JSON-LD fetch path selected`);
+      result = await fetchWooCommercePriceDirect(urlToFetch, expectedCurrency);
     } else if (customStorefront === "treed") {
       // TreeD Filaments — uses direct backend API (web-gateway.treedfilaments.com)
       console.log(`[TREED ROUTING] ✓ TreeD Direct API path selected`);
