@@ -687,6 +687,14 @@ export async function extractPrice(
     return extractPrusaPrice(url, region, oldPrice, config, expectedCurrency, usPriceForSanity);
   }
 
+  // ========== ULTIMAKER DEDICATED PATH ==========
+  // Ultimaker uses Adobe Commerce (Magento). No Shopify JSON, no JSON-LD typically.
+  // Uses CSS selector extraction (data-price-amount) with JSON-LD as first attempt.
+  if (isUltimakerUrl(url)) {
+    console.log(`[Ultimaker] Detected Ultimaker URL, using dedicated extraction`);
+    return extractUltimakerPrice(url, oldPrice, usPriceForSanity);
+  }
+
   // ========== CREALITY DEDICATED PATH ==========
   // Creality uses a custom storefront that blocks Shopify JSON and often fails JSON-LD.
   // Route directly to dedicated extraction pipeline (myshopify.com backend).
@@ -1293,6 +1301,188 @@ async function fetchHtmlViaFirecrawl(url: string): Promise<string | null> {
   } catch (e) {
     console.error(`[Firecrawl] Error:`, e);
     return null;
+  }
+}
+
+/**
+ * Check if a URL belongs to UltiMaker's storefront (Adobe Commerce/Magento)
+ */
+function isUltimakerUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname === 'store.ultimaker.com';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Ultimaker-specific price extraction.
+ * store.ultimaker.com is Adobe Commerce (Magento 2) — NOT Shopify.
+ * /products.json returns 404. No JSON-LD on product pages.
+ * Prices are in HTML via data-price-amount attributes and .price CSS classes.
+ * 
+ * Extraction priority:
+ * 1. JSON-LD (in case they add it later)
+ * 2. CSS selectors: [data-price-amount], .price-wrapper, itemprop="price"
+ * 3. Manual fallback
+ * 
+ * US-only store, no regional pricing.
+ */
+async function extractUltimakerPrice(
+  url: string,
+  oldPrice?: number | null,
+  usPriceForSanity?: number | null
+): Promise<ExtractionResult> {
+  const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+  try {
+    // Rate limiting: 750ms delay
+    await new Promise(r => setTimeout(r, 750));
+
+    console.log(`[Ultimaker] Fetching ${url}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    const resp = await fetch(url, {
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (resp.status === 404) {
+      console.log(`[Ultimaker] 404 for ${url} — product not found`);
+      return {
+        current_price: null,
+        compare_at_price: null,
+        currency: 'USD',
+        variant_name: null,
+        extraction_method: 'not_in_region',
+        confidence: 'high',
+        raw_variants_found: 0,
+        is_combo: false,
+        requires_review: false,
+      };
+    }
+
+    // Check for redirect to a different product (S7 → S8 transition)
+    const finalUrl = resp.url;
+    if (finalUrl !== url && !finalUrl.includes(new URL(url).pathname)) {
+      console.log(`[Ultimaker] Redirected from ${url} to ${finalUrl} — possible EOL`);
+    }
+
+    if (!resp.ok) {
+      console.error(`[Ultimaker] HTTP ${resp.status} for ${url}`);
+      return manualFallback();
+    }
+
+    const html = await resp.text();
+    console.log(`[Ultimaker] Got ${html.length} chars HTML`);
+
+    // === Step 1: Try JSON-LD ===
+    const jsonLdResult = extractFromJsonLd(html, 'US');
+    if (jsonLdResult?.current_price && jsonLdResult.current_price > 100 && jsonLdResult.current_price < 50000) {
+      console.log(`[Ultimaker] JSON-LD extracted: $${jsonLdResult.current_price}`);
+      jsonLdResult.currency = 'USD';
+      return applyAnomalyCheck(jsonLdResult, oldPrice, usPriceForSanity, 'USD');
+    }
+
+    // === Step 2: CSS selector extraction ===
+    let price: number | null = null;
+
+    // 2a. data-price-amount (most reliable for Magento)
+    const dataPriceMatch = html.match(/data-price-amount="([\d.]+)"/);
+    if (dataPriceMatch) {
+      const p = parseFloat(dataPriceMatch[1]);
+      if (!isNaN(p) && p > 100 && p < 50000) {
+        price = p;
+        console.log(`[Ultimaker] data-price-amount: $${price}`);
+      }
+    }
+
+    // 2b. itemprop="price" content
+    if (!price) {
+      const itemPropMatch = html.match(/itemprop="price"\s+content="([\d.]+)"/);
+      if (itemPropMatch) {
+        const p = parseFloat(itemPropMatch[1]);
+        if (!isNaN(p) && p > 100 && p < 50000) {
+          price = p;
+          console.log(`[Ultimaker] itemprop price: $${price}`);
+        }
+      }
+    }
+
+    // 2c. .price-wrapper span with data-price-amount
+    if (!price) {
+      const priceWrapperMatch = html.match(/class="price-wrapper[^"]*"[^>]*data-price-amount="([\d.]+)"/);
+      if (priceWrapperMatch) {
+        const p = parseFloat(priceWrapperMatch[1]);
+        if (!isNaN(p) && p > 100 && p < 50000) {
+          price = p;
+          console.log(`[Ultimaker] price-wrapper: $${price}`);
+        }
+      }
+    }
+
+    // 2d. Generic price pattern in .product-info-price section
+    if (!price) {
+      const priceInfoSection = html.match(/class="product-info-price"[\s\S]{0,2000}/);
+      if (priceInfoSection) {
+        const dollarMatch = priceInfoSection[0].match(/\$([\d,]+(?:\.\d{2})?)/);
+        if (dollarMatch) {
+          const p = parseFloat(dollarMatch[1].replace(/,/g, ''));
+          if (!isNaN(p) && p > 100 && p < 50000) {
+            price = p;
+            console.log(`[Ultimaker] product-info-price: $${price}`);
+          }
+        }
+      }
+    }
+
+    // 2e. meta product:price:amount
+    if (!price) {
+      const metaResult = extractFromMetaTags(html);
+      if (metaResult?.current_price && metaResult.current_price > 100 && metaResult.current_price < 50000) {
+        price = metaResult.current_price;
+        console.log(`[Ultimaker] meta tags: $${price}`);
+      }
+    }
+
+    if (price !== null) {
+      const result: ExtractionResult = {
+        current_price: price,
+        compare_at_price: null,
+        currency: 'USD',
+        variant_name: null,
+        extraction_method: 'meta_tags', // closest available enum value
+        confidence: 'medium',
+        raw_variants_found: 1,
+        is_combo: false,
+        requires_review: false,
+      };
+      return applyAnomalyCheck(result, oldPrice, usPriceForSanity, 'USD');
+    }
+
+    // === Step 3: Manual fallback ===
+    console.log(`[Ultimaker] No price found via any method for ${url}`);
+    return {
+      current_price: null,
+      compare_at_price: null,
+      currency: 'USD',
+      variant_name: null,
+      extraction_method: 'manual',
+      confidence: 'low',
+      raw_variants_found: 0,
+      is_combo: false,
+      requires_review: true,
+    };
+  } catch (e) {
+    console.error(`[Ultimaker] Error extracting price from ${url}:`, e);
+    return manualFallback();
   }
 }
 
