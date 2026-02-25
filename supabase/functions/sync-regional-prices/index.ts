@@ -49,8 +49,11 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     AU: 'au.store.anycubic.com' 
   },
   'qidi': { 
-    US: 'qidi3d.com', 
-    EU: 'eu.qidi3d.com' 
+    US: 'us.qidi3d.com', 
+    CA: 'ca.qidi3d.com', 
+    UK: 'uk.qidi3d.com', 
+    EU: 'eu.qidi3d.com', 
+    AU: 'au.qidi3d.com' 
   },
   'flashforge': { 
     US: 'www.flashforge.com', 
