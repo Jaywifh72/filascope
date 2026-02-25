@@ -1,96 +1,84 @@
 
 
-# Fix Prusa US Price Extraction (Currency Mismatch Issue)
+# Fix QIDI Tech Printer Pricing Sync
 
-## Root Cause
+## Overview
+QIDI Tech printer sync is failing because the backend configuration only knows about 2 regional stores (US + EU), uses the wrong extraction method (JSON-LD instead of Shopify JSON), and is missing regional URL templates. Additionally, X-Smart 3 needs to be marked as discontinued.
 
-The Prusa extraction pipeline IS working -- Firecrawl successfully renders the page and returns 60K+ chars of content. The problem is a **currency mismatch rejection**:
+## Root Cause Analysis
 
-1. For US region, the code requests `expectedCurrency = 'USD'`
-2. Firecrawl's servers render from the EU, so Prusa's geo-detection shows EUR prices
-3. The markdown parser finds `€1,349` and correctly identifies it as `EUR`
-4. The currency mismatch check at line 1365 rejects the result: `got EUR, expected USD`
-5. The HTML parser also finds EUR and gets rejected at line 1378
-6. Both strategies fail, so it falls through to `manualFallback()`
+| Issue | Current State | Required State |
+|-------|--------------|----------------|
+| Regional stores | US + EU only | US, CA, UK, EU, AU |
+| US store URL | `www.qidi3d.com` | `us.qidi3d.com` |
+| Extraction method | `json_ld` (blocked) | `shopify_json` (bypasses geo-fence) |
+| Shopify JSON flag | `false` | `true` |
+| Regional URL templates | US only | All 5 regions with `{slug}` templates |
+| X-Smart 3 status | Active | Discontinued |
+| AU handle for Q2C | Not configured | Needs slug cache entry |
 
-This is confirmed by the edge function logs:
+## Implementation Steps
+
+### Step 1: Update `brand_sync_config` for QIDI Tech
+
+Update the existing row (id: `6e997ff9-f680-4ebf-8ef2-4578c183cd95`) to:
+- Set `primary_extraction` = `shopify_json`
+- Set `shopify_json_available` = `true`
+- Set `uses_geo_pricing` = `true`
+- Add all 5 regional URL templates:
+  - `store_url_us`: `https://us.qidi3d.com/products/{slug}`
+  - `store_url_ca`: `https://ca.qidi3d.com/products/{slug}`
+  - `store_url_uk`: `https://uk.qidi3d.com/products/{slug}`
+  - `store_url_eu`: `https://eu.qidi3d.com/products/{slug}`
+  - `store_url_au`: `https://au.qidi3d.com/products/{slug}`
+- Update `sync_notes` to reflect Shopify JSON strategy
+
+### Step 2: Add missing regional stores to `brand_regional_stores`
+
+Insert 3 new rows for QIDI's brand_id (`dc238e56-e0a8-471b-a785-66e984f41a4c`):
+- CA: `ca.qidi3d.com`, CAD, ships_from: CA
+- UK: `uk.qidi3d.com`, GBP, ships_from: GB
+- AU: `au.qidi3d.com`, AUD, ships_from: AU
+
+Also update the existing US store base_url from `https://www.qidi3d.com` to `https://us.qidi3d.com`.
+
+### Step 3: Mark X-Smart 3 as discontinued
+
+Update printer `504ec5a8-951d-4810-86a3-fd475b52593e`:
+- Set `status` = `discontinued`
+- Set `is_discontinued` = `true`
+- Set `msrp_usd` = `419`
+- Set `discontinued_note` = `No longer available in any QIDI regional store`
+
+### Step 4: Cache AU slug for Q2C
+
+Insert into `product_regional_slugs`:
+- `printer_id`: `0c3566eb-275d-45c0-9ad2-1eaba4da270c` (Q2C)
+- `region_code`: `AU`
+- `slug`: `qidi-q2c-3d-printer`
+- `verified`: `true`
+
+### Step 5: Add QIDI to frontend `BRAND_REGIONAL_CONFIGS`
+
+In `src/pages/admin/pricing/constants.ts`, add a QIDI Tech subdomain config so the admin UI can derive regional URLs for display:
+
+```typescript
+'QIDI Tech': {
+  pattern: 'subdomain',
+  baseDomain: 'qidi3d.com',
+  regions: {
+    CA: { subdomain: 'ca' },
+    UK: { subdomain: 'uk' },
+    EU: { subdomain: 'eu' },
+    AU: { subdomain: 'au' },
+  }
+},
 ```
-[Prusa] Firecrawl scrape: region=US → Got 60150 chars markdown
-→ "No price found in markdown or HTML — returning manual fallback"
-```
-Meanwhile EU works perfectly because `expectedCurrency = EUR` matches the rendered currency.
-
-## Solution
-
-Since Prusa uses a **single global store** with the same prices worldwide (just different currency display based on geo-detection), the fix is:
-
-### Change 1: Accept cross-currency prices for Prusa with conversion
-
-In `extractPrusaPrice()` (lines 1361-1385), instead of rejecting currency mismatches, accept the extracted price and convert it to the expected currency using the exchange rates already in the database.
-
-When a currency mismatch occurs:
-- Log it as informational (not an error)
-- Look up the exchange rate from `exchange_rates` table
-- Convert the extracted price to the expected currency
-- Mark with `confidence: 'low'` and `requires_review: true` to flag for manual verification
-- Set `extraction_method` to `'firecrawl_converted'` for auditability
-
-### Change 2: Fallback -- accept EUR price as-is for US when currencies share the same base price
-
-Prusa's pricing is nearly 1:1 between USD and EUR (e.g., Core One is $1,349 USD and EUR 1,349). So as a simpler first approach:
-- If the extracted currency is EUR and expectedCurrency is USD, and they're within 5% of each other (which they are for Prusa), accept the numeric value as the USD price
-- This avoids needing exchange rate lookups for Prusa specifically
-
-### Change 3: Add logging for diagnostic clarity
-
-Add a log line when currency mismatch occurs that includes the actual prices found, making future debugging easier.
-
-## Files to Modify
-
-1. **`supabase/functions/_shared/printer-price-extraction.ts`** (lines 1361-1385):
-   - Remove the strict currency rejection in `extractPrusaPrice()`
-   - For Prusa specifically, accept the extracted price regardless of detected currency symbol when the brand uses a single global store (`uses_geo_pricing = true`)
-   - Override the currency field to match the expected currency since Prusa uses 1:1 pricing
-   - Add `requires_review: true` flag for converted prices
-
-2. **Redeploy `sync-printer-prices`** edge function after changes
 
 ## Technical Details
 
-Current code (lines 1364-1371):
-```text
-if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
-  console.log(`[Prusa] MD currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Trying HTML.`);
-  // Falls through to HTML, which also fails → manual fallback
-}
-```
-
-New behavior:
-```text
-if (expectedCurrency && mdResult.currency && mdResult.currency !== expectedCurrency) {
-  console.log(`[Prusa] Currency mismatch: got ${mdResult.currency}, expected ${expectedCurrency}. Accepting price (single global store).`);
-  mdResult.currency = expectedCurrency;  // Override since Prusa uses ~1:1 pricing
-  mdResult.requires_review = true;
-  mdResult.confidence = 'low';
-  return applyAnomalyCheck(mdResult, oldPrice, usPriceForSanity, expectedCurrency);
-}
-```
-
-Same pattern applied to the HTML extraction path.
-
-## Expected Outcome
-
-| Product | US Before | US After | EU Before | EU After |
-|---------|-----------|----------|-----------|----------|
-| Core One | extraction_failed | $1,349 (from EUR) | $1,349 EUR | $1,349 EUR |
-| Core One L | extraction_failed | $1,699 (from EUR) | $1,699 EUR | $1,699 EUR |
-| CORE One+ Ultimate | extraction_failed | price extracted | price extracted | price extracted |
-| MK4S | extraction_failed | price extracted | price extracted | price extracted |
-| XL (3 variants) | extraction_failed | price extracted | price extracted | price extracted |
-
-All 7 active products should sync for both US and EU regions. Prices marked `requires_review: true` for manual verification that EUR = USD assumption holds.
-
-## Risk
-
-Low. Prusa is well-known for having identical numeric prices in USD and EUR ($1,349 = EUR 1,349). The `requires_review` flag ensures any discrepancy is caught during manual review. The anomaly detection (`applyAnomalyCheck`) provides an additional safety net.
+- All changes are database data updates (Steps 1-4) plus one frontend constants file edit (Step 5)
+- No edge function code changes needed -- the sync engine already supports Shopify JSON extraction and `{slug}` URL templates; it just needs the correct config data
+- The Shopify JSON endpoint (`/products/{handle}.json`) bypasses QIDI's geo-fencing that blocks HTML page scraping
+- After these changes, syncing QIDI should produce 30 successful regional price extractions (6 printers x 5 regions) plus 1 discontinued skip (X-Smart 3)
 
