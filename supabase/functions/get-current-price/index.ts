@@ -49,6 +49,7 @@ interface PriceResponse {
   fetchedAt: string;
   error?: string;
   is404?: boolean; // Indicates product page not found
+  notAvailableInRegion?: boolean; // Indicates product is not sold in this region (graceful skip)
   refreshedAt?: string; // ISO timestamp when forceRefresh was used
   // New fields for currency validation
   sourceUrl?: string; // The actual URL that was scraped (may differ from input after regional transformation)
