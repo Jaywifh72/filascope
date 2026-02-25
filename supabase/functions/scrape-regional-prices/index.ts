@@ -28,7 +28,10 @@ const BRAND_REGIONAL_STORES: Record<string, {
     baseDomain: 'polymaker.com',
     regions: {
       US: { subdomain: 'us', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
       EU: { subdomain: 'eu', currency: 'EUR' },
+      AU: { subdomain: 'au', currency: 'AUD' },
     }
   },
   'Creality': {
@@ -68,13 +71,47 @@ const BRAND_REGIONAL_STORES: Record<string, {
     pattern: 'subdomain',
     baseDomain: 'sunlu.com',
     regions: {
-      US: { subdomain: 'www', currency: 'USD' },
-      EU: { subdomain: 'eu', currency: 'EUR' },
+      US: { subdomain: 'store', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      AU: { subdomain: 'au', currency: 'AUD' },
+      EU: { subdomain: 'store', currency: 'EUR' },
     }
   },
   'Eryone': {
     pattern: 'subdomain',
     baseDomain: 'eryone3d.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      EU: { subdomain: 'de', currency: 'EUR' },
+      AU: { subdomain: 'au', currency: 'AUD' },
+    }
+  },
+  'eSun': {
+    pattern: 'subdomain',
+    baseDomain: 'esun3dstore.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      // eSun uses separate domains per region, not subdomains
+      // EU: esun3dstoreeu.com, UK: esun3dstore.uk — handled via brand_sync_config
+    }
+  },
+  'Kingroon': {
+    pattern: 'subdomain',
+    baseDomain: 'kingroon.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+      AU: { subdomain: 'au', currency: 'AUD' },
+    }
+  },
+  'Sovol': {
+    pattern: 'subdomain',
+    baseDomain: 'sovol3d.com',
     regions: {
       US: { subdomain: 'www', currency: 'USD' },
       EU: { subdomain: 'eu', currency: 'EUR' },
@@ -86,22 +123,6 @@ const BRAND_REGIONAL_STORES: Record<string, {
     regions: {
       US: { subdomain: 'www', currency: 'USD' },
       UK: { subdomain: 'uk', currency: 'GBP' },
-      EU: { subdomain: 'eu', currency: 'EUR' },
-    }
-  },
-  'Kingroon': {
-    pattern: 'subdomain',
-    baseDomain: 'kingroon.com',
-    regions: {
-      US: { subdomain: 'www', currency: 'USD' },
-      EU: { subdomain: 'eu', currency: 'EUR' },
-    }
-  },
-  'Sovol': {
-    pattern: 'subdomain',
-    baseDomain: 'sovol3d.com',
-    regions: {
-      US: { subdomain: 'www', currency: 'USD' },
       EU: { subdomain: 'eu', currency: 'EUR' },
     }
   },
@@ -118,7 +139,21 @@ const BRAND_REGIONAL_STORES: Record<string, {
     baseDomain: 'qidi3d.com',
     regions: {
       US: { subdomain: 'www', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
       EU: { subdomain: 'eu', currency: 'EUR' },
+      AU: { subdomain: 'au', currency: 'AUD' },
+    }
+  },
+  'FLSUN': {
+    pattern: 'subdomain',
+    baseDomain: 'store.flsun3d.com',
+    regions: {
+      US: { subdomain: 'us', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+      AU: { subdomain: 'au', currency: 'AUD' },
     }
   },
 };
