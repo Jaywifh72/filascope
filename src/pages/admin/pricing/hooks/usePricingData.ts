@@ -186,11 +186,14 @@ export function usePricingData(productType: ProductType) {
           item.product_url = item.official_store_url || item.official_product_url;
         }
         // Regional URL fallbacks to official_store_url_XX
-        if (!item.product_url_ca && item.official_store_url_ca) item.product_url_ca = item.official_store_url_ca;
-        if (!item.product_url_uk && item.official_store_url_uk) item.product_url_uk = item.official_store_url_uk;
-        if (!item.product_url_eu && item.official_store_url_eu) item.product_url_eu = item.official_store_url_eu;
-        if (!item.product_url_au && item.official_store_url_au) item.product_url_au = item.official_store_url_au;
-        if (!item.product_url_jp && item.official_store_url_jp) item.product_url_jp = item.official_store_url_jp;
+        // Only backfill if the brand has an active store in that region
+        // to prevent phantom rows from dead regional domains
+        const brandRegions = activeStoreRegions?.get(brandName.toLowerCase());
+        if (!item.product_url_ca && item.official_store_url_ca && brandRegions?.has('CA')) item.product_url_ca = item.official_store_url_ca;
+        if (!item.product_url_uk && item.official_store_url_uk && brandRegions?.has('UK')) item.product_url_uk = item.official_store_url_uk;
+        if (!item.product_url_eu && item.official_store_url_eu && brandRegions?.has('EU')) item.product_url_eu = item.official_store_url_eu;
+        if (!item.product_url_au && item.official_store_url_au && brandRegions?.has('AU')) item.product_url_au = item.official_store_url_au;
+        if (!item.product_url_jp && item.official_store_url_jp && brandRegions?.has('JP')) item.product_url_jp = item.official_store_url_jp;
         // If current_price_usd_store is null, fall back to variant_price or msrp_usd
         if (item.current_price_usd_store == null) {
           item.current_price_usd_store = item.variant_price ?? item.msrp_usd ?? null;
