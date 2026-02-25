@@ -137,6 +137,10 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     CA: 'atomicfilament.com',
     AU: 'atomicfilament.com',
   },
+  // AzureFilm - Slovenian WooCommerce, EUR only, no other regional stores
+  'azurefilm': {
+    EU: 'azurefilm.com',
+  },
 };
 
 // Expected price ratios for validation (vs USD base)
