@@ -1404,29 +1404,214 @@ function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" 
 
 // ===== WOOCOMMERCE DIRECT PRICE FETCH =====
 // For European WooCommerce stores (AzureFilm etc.) that use comma decimals
-// and may be behind Cloudflare. Fetches HTML directly and extracts JSON-LD.
+// and may be behind Cloudflare. Uses WC Store API v1 as primary method.
+
+// Common headers for AzureFilm/WooCommerce requests
+const WOOCOMMERCE_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+  "Accept": "application/json",
+  "Accept-Language": "en-US,en;q=0.9",
+};
+
+// AzureFilm price validation range (EUR filaments)
+const AZUREFILM_PRICE_RANGE = { min: 5, max: 200 };
+
+// Check if a response is a Cloudflare block page
+function isCloudflareBlock(text: string): boolean {
+  return text.includes("cf-browser-verification") || text.includes("Just a moment") || text.includes("Checking your browser");
+}
+
+// Extract slug from an AzureFilm product URL
+// e.g. https://azurefilm.com/product/abs-plus-filament-yellow/ → abs-plus-filament-yellow
+function extractWooCommerceSlug(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    const path = urlObj.pathname;
+    // Match /product/{slug}/ or /product/{slug}
+    const match = path.match(/\/product\/([^/?#]+)/);
+    if (match) return match[1].replace(/\/$/, "");
+    // Fallback: last non-empty path segment
+    const segments = path.split("/").filter(Boolean);
+    return segments[segments.length - 1] || null;
+  } catch {
+    return null;
+  }
+}
+
+// PRIMARY METHOD: WC Store API v1
+async function fetchWcStoreApiPrice(
+  productUrl: string,
+  storeDomain: string,
+): Promise<PriceResponse | null> {
+  const slug = extractWooCommerceSlug(productUrl);
+  if (!slug) {
+    console.log("[WC STORE API] Could not extract slug from URL:", productUrl);
+    return null;
+  }
+
+  const apiUrl = `https://${storeDomain}/wp-json/wc/store/v1/products?slug=${encodeURIComponent(slug)}`;
+  console.log(`[WC STORE API] Fetching: ${apiUrl}`);
+
+  try {
+    const response = await fetch(apiUrl, {
+      headers: WOOCOMMERCE_HEADERS,
+      signal: AbortSignal.timeout(15000),
+    });
+
+    console.log(`[WC STORE API] HTTP ${response.status}`);
+
+    // Handle rate limiting
+    if (response.status === 429) {
+      console.log("[WC STORE API] Rate limited, waiting 2s and retrying once...");
+      await new Promise(r => setTimeout(r, 2000));
+      const retryResp = await fetch(apiUrl, {
+        headers: WOOCOMMERCE_HEADERS,
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!retryResp.ok) {
+        console.log(`[WC STORE API] Retry failed: HTTP ${retryResp.status}`);
+        return null;
+      }
+      const retryData = await retryResp.json();
+      return parseWcStoreApiResponse(retryData, productUrl, storeDomain);
+    }
+
+    if (!response.ok) {
+      // Check for Cloudflare block on non-JSON response
+      if (response.status === 403) {
+        const text = await response.text();
+        if (isCloudflareBlock(text)) {
+          console.log("[WC STORE API] Cloudflare block detected");
+          return null; // Fall through to JSON-LD fallback
+        }
+      }
+      console.log(`[WC STORE API] HTTP error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return parseWcStoreApiResponse(data, productUrl, storeDomain);
+  } catch (error) {
+    console.error("[WC STORE API] Fetch error:", error instanceof Error ? error.message : String(error));
+    return null;
+  }
+}
+
+// Parse WC Store API response into PriceResponse
+function parseWcStoreApiResponse(
+  data: any[],
+  productUrl: string,
+  storeDomain: string,
+): PriceResponse | null {
+  if (!Array.isArray(data) || data.length === 0) {
+    console.log("[WC STORE API] Empty response or product not found");
+    return null;
+  }
+
+  const product = data[0];
+  const prices = product.prices;
+
+  if (!prices || !prices.price) {
+    console.log("[WC STORE API] No prices object in response");
+    return null;
+  }
+
+  // CRITICAL: Store API returns prices as integers with implied decimal places
+  // e.g. "2490" = €24.90, currency_minor_unit = 2
+  const minorUnit = prices.currency_minor_unit ?? 2;
+  const divisor = Math.pow(10, minorUnit);
+  const currencyCode = (prices.currency_code || "EUR").toUpperCase();
+
+  const rawPrice = parseInt(prices.price, 10);
+  const rawRegularPrice = parseInt(prices.regular_price || prices.price, 10);
+  const rawSalePrice = prices.sale_price ? parseInt(prices.sale_price, 10) : null;
+
+  if (isNaN(rawPrice) || rawPrice <= 0) {
+    console.log(`[WC STORE API] Invalid price value: ${prices.price}`);
+    return null;
+  }
+
+  let price = rawPrice / divisor;
+  let compareAtPrice: number | null = null;
+
+  // If there's a sale, sale_price is the current and regular_price is the original
+  if (rawSalePrice && rawSalePrice > 0 && rawSalePrice < rawRegularPrice) {
+    price = rawSalePrice / divisor;
+    compareAtPrice = rawRegularPrice / divisor;
+  } else if (rawRegularPrice > rawPrice) {
+    compareAtPrice = rawRegularPrice / divisor;
+  }
+
+  // Validate price range
+  if (price < AZUREFILM_PRICE_RANGE.min || price > AZUREFILM_PRICE_RANGE.max) {
+    console.log(`[WC STORE API] ⚠ Price ${price} ${currencyCode} outside expected range (${AZUREFILM_PRICE_RANGE.min}-${AZUREFILM_PRICE_RANGE.max}), flagging as anomalous`);
+  }
+
+  // Currency validation
+  if (currencyCode !== "EUR" && storeDomain.includes("azurefilm.com")) {
+    console.log(`[WC STORE API] ⚠ Unexpected currency ${currencyCode} from AzureFilm (expected EUR)`);
+  }
+
+  const available = product.is_in_stock === true;
+  const stockStatus: StockStatus = available ? "in_stock" : "out_of_stock";
+
+  console.log(`[WC STORE API] ✓ price=${price} ${currencyCode}, compareAt=${compareAtPrice}, inStock=${available}, type=${product.type}`);
+
+  return {
+    success: true,
+    price,
+    compareAtPrice: compareAtPrice && compareAtPrice > price * 1.05 ? compareAtPrice : null,
+    weightGrams: null,
+    diameterMm: null,
+    variantTitle: null,
+    currency: currencyCode,
+    available, // false for OOS — price is still extracted
+    stockStatus,
+    source: "html" as const,
+    fetchedAt: new Date().toISOString(),
+    sourceUrl: productUrl,
+    detectedCurrency: currencyCode,
+  };
+}
+
 async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency: string): Promise<PriceResponse> {
   const storeCurrency = getWooCommerceCurrency(productUrl);
-  console.log(`[WOOCOMMERCE FETCH] URL: ${productUrl}, store currency: ${storeCurrency}`);
+  const storeDomain = extractDomain(productUrl);
+  console.log(`[WOOCOMMERCE FETCH] URL: ${productUrl}, store currency: ${storeCurrency}, domain: ${storeDomain}`);
 
+  // === PRIMARY METHOD: WC Store API v1 ===
+  const storeApiResult = await fetchWcStoreApiPrice(productUrl, storeDomain);
+  if (storeApiResult) {
+    console.log(`[WOOCOMMERCE FETCH] ✓ WC Store API succeeded: ${storeApiResult.price} ${storeApiResult.currency}`);
+    return storeApiResult;
+  }
+  console.log("[WOOCOMMERCE FETCH] WC Store API failed, falling back to JSON-LD HTML extraction");
+
+  // === FALLBACK METHOD: Direct HTML fetch + JSON-LD ===
   try {
     const response = await fetch(productUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        ...WOOCOMMERCE_HEADERS,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9,sl;q=0.8,de;q=0.7",
       },
       redirect: "follow",
       signal: AbortSignal.timeout(15000),
     });
 
-    console.log(`[WOOCOMMERCE FETCH] HTTP ${response.status}`);
+    console.log(`[WOOCOMMERCE FETCH] HTML fallback HTTP ${response.status}`);
 
     if (!response.ok) {
       if (response.status === 403) {
-        // Cloudflare block — fall back to Firecrawl
-        console.log(`[WOOCOMMERCE FETCH] 403 Cloudflare block, falling back to Firecrawl`);
-        return await fetchPriceWithFirecrawl(productUrl, preferredCurrency, null, false, "filament");
+        const text = await response.text();
+        if (isCloudflareBlock(text)) {
+          console.log(`[WOOCOMMERCE FETCH] Cloudflare block on HTML fallback`);
+          return {
+            success: false, price: null, compareAtPrice: null, weightGrams: null,
+            diameterMm: null, variantTitle: null, currency: storeCurrency,
+            available: false, source: "html", fetchedAt: new Date().toISOString(),
+            error: "Cloudflare block - both Store API and HTML blocked",
+          };
+        }
       }
       return {
         success: false, price: null, compareAtPrice: null, weightGrams: null,
@@ -1440,6 +1625,16 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
     const html = await response.text();
     console.log(`[WOOCOMMERCE FETCH] HTML size: ${html.length} bytes`);
 
+    // Check for Cloudflare block in HTML content
+    if (isCloudflareBlock(html)) {
+      console.log("[WOOCOMMERCE FETCH] Cloudflare block detected in HTML body");
+      return {
+        success: false, price: null, compareAtPrice: null, weightGrams: null,
+        diameterMm: null, variantTitle: null, currency: storeCurrency,
+        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        error: "Cloudflare block detected",
+      };
+    }
     // Extract JSON-LD Product data
     const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
     let scriptMatch;
