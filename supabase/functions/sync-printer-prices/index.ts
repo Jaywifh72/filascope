@@ -343,6 +343,25 @@ Deno.serve(async (req) => {
             status = "updated";
           }
 
+          // Phase 2: Re-validate "unchanged" prices against US price to catch stale bad data
+          // This prevents the P1S/P2S AU $69 scenario from persisting unchecked
+          if (status === "unchanged" && usSalePrice && usSalePrice > 0 && newPrice > 0 && regionCode !== "US") {
+            const TO_USD_RATE: Record<string, number> = {
+              CAD: 0.74, GBP: 1.27, EUR: 1.08, AUD: 0.65, JPY: 0.0067,
+            };
+            const rate = TO_USD_RATE[regionMeta.currency];
+            if (rate) {
+              const ratio = (newPrice * rate) / usSalePrice;
+              if (ratio < 0.15) {
+                // Existing price is critically wrong — clear it
+                console.warn(`[AnomalyClear] ${printer.model_name} ${regionCode}: existing price ${newPrice} ${regionMeta.currency} is ${(ratio * 100).toFixed(1)}% of US $${usSalePrice} — clearing stale bad price`);
+                priceUpdates[regionMeta.priceCol] = null;
+                status = "anomaly_cleared";
+                totalUpdated++;
+              }
+            }
+          }
+
           let isAnomaly = false;
           if (extraction.requires_review || extraction.anomaly_severity === 'warning') {
             isAnomaly = true;
