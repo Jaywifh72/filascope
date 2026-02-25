@@ -680,6 +680,14 @@ export async function extractPrice(
     return manualFallback();
   }
 
+  // ========== EUFYMAKE (ANKERMAKE) DEDICATED PATH ==========
+  // EufyMake uses a custom Next.js storefront (not Shopify). No JSON-LD, no Shopify JSON.
+  // Requires Firecrawl with JS rendering + location spoofing for regional prices.
+  if (isEufyMakeUrl(url)) {
+    console.log(`[EufyMake] Detected EufyMake URL, using dedicated Firecrawl extraction`);
+    return extractEufyMakePrice(url, region, oldPrice, expectedCurrency, usPriceForSanity);
+  }
+
   // ========== PRUSA DEDICATED PATH ==========
   // Prusa uses WooCommerce/Next.js with JS-rendered prices. Skip all standard tiers.
   if (isPrusaUrl(url)) {
@@ -1490,6 +1498,153 @@ async function extractUltimakerPrice(
     };
   } catch (e) {
     console.error(`[Ultimaker] Error extracting price from ${url}:`, e);
+    return manualFallback();
+  }
+}
+
+/**
+ * Check if a URL belongs to EufyMake (AnkerMake) storefront
+ */
+function isEufyMakeUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.includes('eufymake.com');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * EufyMake region-path to currency mapping
+ */
+const EUFYMAKE_REGION_CURRENCY: Record<string, string> = {
+  US: 'USD', CA: 'CAD', UK: 'GBP', EU: 'EUR', AU: 'AUD',
+};
+
+/**
+ * EufyMake-specific price extraction via Firecrawl.
+ * EufyMake uses a custom Next.js storefront (NOT Shopify) with client-side rendered prices.
+ * No JSON-LD, no og:price meta tags. Requires Firecrawl with JS rendering.
+ * Regional pricing uses path-based routing: /ca/, /uk/, /eu-en/, /au/
+ */
+async function extractEufyMakePrice(
+  url: string,
+  region?: string,
+  oldPrice?: number | null,
+  expectedCurrency?: string,
+  usPriceForSanity?: number | null
+): Promise<ExtractionResult> {
+  const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!apiKey) {
+    console.log(`[EufyMake] No FIRECRAWL_API_KEY, falling back to manual`);
+    return manualFallback();
+  }
+
+  const REGION_TO_LOCATION: Record<string, { country: string; languages: string[] }> = {
+    US: { country: 'US', languages: ['en-US'] },
+    CA: { country: 'CA', languages: ['en-CA'] },
+    UK: { country: 'GB', languages: ['en-GB'] },
+    EU: { country: 'DE', languages: ['de-DE', 'en'] },
+    AU: { country: 'AU', languages: ['en-AU'] },
+  };
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 35000);
+
+    const locationParam = region ? REGION_TO_LOCATION[region] : undefined;
+    const currency = region ? (EUFYMAKE_REGION_CURRENCY[region] || 'USD') : 'USD';
+
+    console.log(`[EufyMake] Scraping ${url} with region=${region}, location=${locationParam?.country}`);
+
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown'],
+        waitFor: 5000,
+        onlyMainContent: true,
+        ...(locationParam && { location: locationParam }),
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error(`[EufyMake] Firecrawl API error: ${response.status}`);
+      await response.text().catch(() => {});
+      return manualFallback();
+    }
+
+    const data = await response.json();
+    const markdown = data?.data?.markdown || data?.markdown;
+    if (!markdown || typeof markdown !== 'string') {
+      console.log(`[EufyMake] No markdown content returned`);
+      return manualFallback();
+    }
+
+    console.log(`[EufyMake] Got ${markdown.length} chars of markdown`);
+
+    // Strategy 1: Sale/regular price pattern
+    const saleMatch = markdown.match(/Sale\s*price\s*[\$£€]?\s*(?:CA\$|A\$)?([\d,]+(?:\.\d{1,2})?)/i);
+    if (saleMatch) {
+      const price = parseFloat(saleMatch[1].replace(/,/g, ''));
+      if (!isNaN(price) && price >= 50) {
+        const regularMatch = markdown.match(/Regular\s*price\s*[\$£€]?\s*(?:CA\$|A\$)?([\d,]+(?:\.\d{1,2})?)/i);
+        const compareAt = regularMatch ? parseFloat(regularMatch[1].replace(/,/g, '')) : null;
+        
+        const result: ExtractionResult = {
+          current_price: price,
+          compare_at_price: compareAt && compareAt > price ? compareAt : null,
+          currency,
+          variant_name: null,
+          extraction_method: 'firecrawl',
+          confidence: 'medium',
+          raw_variants_found: 0,
+          is_combo: false,
+          requires_review: false,
+        };
+        console.log(`[EufyMake] Sale price found: ${price} ${currency}`);
+        return applyAnomalyCheck(result, oldPrice, usPriceForSanity, expectedCurrency);
+      }
+    }
+
+    // Strategy 2: Look for prominent prices (>$100, <$5000) — printer range
+    const priceRegex = /(?:CA\$|A\$|[\$£€¥])\s*([\d,]+(?:\.\d{1,2})?)/g;
+    const allPrices: number[] = [];
+    let match;
+    while ((match = priceRegex.exec(markdown)) !== null) {
+      const p = parseFloat(match[1].replace(/,/g, ''));
+      if (!isNaN(p) && p >= 100 && p <= 5000) {
+        allPrices.push(p);
+      }
+    }
+
+    if (allPrices.length > 0) {
+      const price = allPrices[0];
+      console.log(`[EufyMake] First prominent price: ${price} ${currency} (${allPrices.length} candidates)`);
+      
+      const result: ExtractionResult = {
+        current_price: price,
+        compare_at_price: allPrices.length > 1 && allPrices[1] > price ? allPrices[1] : null,
+        currency,
+        variant_name: null,
+        extraction_method: 'firecrawl',
+        confidence: 'medium',
+        raw_variants_found: allPrices.length,
+        is_combo: false,
+        requires_review: true,
+      };
+      return applyAnomalyCheck(result, oldPrice, usPriceForSanity, expectedCurrency);
+    }
+
+    console.log(`[EufyMake] No valid price found in markdown`);
+    return manualFallback();
+  } catch (e) {
+    console.error(`[EufyMake] Error:`, e);
     return manualFallback();
   }
 }

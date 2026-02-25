@@ -80,6 +80,8 @@ const GEO_REDIRECT_DOMAINS = [
   'shop.raise3d.com',
   'eu.raise3d.com',
   'www.ratrig.com',
+  'eufymake.com',
+  'www.eufymake.com',
 ];
 
 export type FetchMethod = 'direct' | 'spoofed' | 'redirected';
