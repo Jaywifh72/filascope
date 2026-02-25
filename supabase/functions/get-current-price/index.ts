@@ -38,7 +38,6 @@ type StockStatus = "in_stock" | "out_of_stock" | "low_stock" | "preorder" | "unk
 interface PriceResponse {
   success: boolean;
   price: number | null;
-  g;
   compareAtPrice: number | null;
   weightGrams: number | null;
   diameterMm: number | null;
