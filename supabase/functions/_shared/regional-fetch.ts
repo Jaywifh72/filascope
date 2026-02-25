@@ -56,6 +56,7 @@ const GEO_REDIRECT_DOMAINS = [
   'polymaker.com',
   'elegoo.com',
   'anycubic.com',
+  'anycubic.au',
   'store.creality.com',
   'creality.com',
   'qidi3d.com',
