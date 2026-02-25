@@ -44,7 +44,8 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     US: 'store.anycubic.com', 
     CA: 'ca.anycubic.com', 
     UK: 'uk.anycubic.com', 
-    EU: 'eu.anycubic.com'
+    EU: 'eu.anycubic.com',
+    AU: 'www.anycubic.au'
   },
   'sunlu': {
     US: 'store.sunlu.com',
