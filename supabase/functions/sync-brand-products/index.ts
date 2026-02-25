@@ -146,9 +146,12 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     EU: 'eu.store.flsun3d.com',
     AU: 'au.store.flsun3d.com'
   },
-  // Atomic Filament - Single Shopify store, US-only (Shopify Markets does not expose CAD/AUD via public URLs)
+  // Atomic Filament - Single Shopify store with Shopify Markets multi-currency
+  // Same domain for all regions — use ?currency=CAD or ?currency=AUD for regional prices
   'atomic-filament': {
     US: 'atomicfilament.com',
+    CA: 'atomicfilament.com',
+    AU: 'atomicfilament.com',
   },
   'tronxy': {
     US: 'www.tronxy.com',

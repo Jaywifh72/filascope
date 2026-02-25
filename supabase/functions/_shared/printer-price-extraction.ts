@@ -1183,6 +1183,8 @@ const DOMAIN_REGION_MAP: Record<string, string> = {
   'eu.raise3d.com': 'EU',
   // RatRig
   'www.ratrig.com': 'EU',
+  // Atomic Filament - single domain, default to US (currency param determines actual region)
+  'atomicfilament.com': 'US',
 };
 
 async function fetchHtml(url: string, targetRegion?: string): Promise<string | null> {
