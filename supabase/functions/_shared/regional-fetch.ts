@@ -67,6 +67,9 @@ const GEO_REDIRECT_DOMAINS = [
   'flashforge.com',
   'www.extrudr.com',
   'extrudr.com',
+  'shop.raise3d.com',
+  'eu.raise3d.com',
+  'www.ratrig.com',
 ];
 
 export type FetchMethod = 'direct' | 'spoofed' | 'redirected';

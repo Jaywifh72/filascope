@@ -1095,6 +1095,11 @@ const REGION_SPOOF_HEADERS: Record<string, Record<string, string>> = {
   'uk.anycubic.com': { 'Accept-Language': 'en-GB,en;q=0.9', 'CF-IPCountry': 'GB', 'X-Forwarded-For': '81.2.69.142' },
   'eu.anycubic.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
   'www.anycubic.au': { 'Accept-Language': 'en-AU,en;q=0.9', 'CF-IPCountry': 'AU', 'X-Forwarded-For': '1.128.0.1' },
+  // Raise3D
+  'shop.raise3d.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'US', 'X-Forwarded-For': '8.8.8.8' },
+  'eu.raise3d.com': { 'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8', 'CF-IPCountry': 'DE', 'X-Forwarded-For': '85.214.132.117' },
+  // RatRig
+  'www.ratrig.com': { 'Accept-Language': 'en-US,en;q=0.9', 'CF-IPCountry': 'PT', 'X-Forwarded-For': '85.214.132.117' },
 };
 
 // Per-currency price validation ranges for printers
@@ -1149,6 +1154,11 @@ const DOMAIN_REGION_MAP: Record<string, string> = {
   'uk.anycubic.com': 'UK',
   'eu.anycubic.com': 'EU',
   'www.anycubic.au': 'AU',
+  // Raise3D
+  'shop.raise3d.com': 'US',
+  'eu.raise3d.com': 'EU',
+  // RatRig
+  'www.ratrig.com': 'EU',
 };
 
 async function fetchHtml(url: string, targetRegion?: string): Promise<string | null> {

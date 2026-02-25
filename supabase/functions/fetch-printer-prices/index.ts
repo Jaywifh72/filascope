@@ -298,6 +298,25 @@ function correctUrlForPricing(url: string, brand: string): string | null {
       }
     }
 
+    // Raise3D: ensure shop.raise3d.com (Shopify store, not www.raise3d.com marketing site)
+    if (brandLower.includes('raise3d')) {
+      if (!hostname.includes('shop.raise3d.com') && !hostname.includes('eu.raise3d.com')) {
+        if (pathname.includes('/products/')) {
+          const productSlug = pathname.split('/products/')[1]?.split('/')[0];
+          return `https://shop.raise3d.com/products/${productSlug}`;
+        }
+        return url.replace(/^https?:\/\/[^\/]+/, 'https://shop.raise3d.com');
+      }
+    }
+
+    // RatRig: ensure www.ratrig.com Shopify store
+    if (brandLower.includes('ratrig') || brandLower.includes('rat rig')) {
+      if (hostname.includes('us.ratrig.com')) {
+        // us.ratrig.com is NOT a Shopify store — redirect to www.ratrig.com
+        return url.replace(/^https?:\/\/us\.ratrig\.com/, 'https://www.ratrig.com');
+      }
+    }
+
     // Snapmaker: ensure www.snapmaker.com
     if (brandLower.includes('snapmaker')) {
       if (!hostname.includes('www.snapmaker.com')) {
