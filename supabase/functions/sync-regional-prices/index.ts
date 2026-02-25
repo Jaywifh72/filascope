@@ -78,8 +78,14 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     EU: 'eu.kingroon.com'
   },
   'sovol': {
-    US: 'www.sovol3d.com',
-    EU: 'eu.sovol3d.com'
+    US: 'www.sovol3d.com'
+  },
+  'raise3d': {
+    US: 'shop.raise3d.com',
+    EU: 'eu.raise3d.com'
+  },
+  'ratrig': {
+    EU: 'www.ratrig.com'
   },
   'artillery': {
     US: 'artillery3d.com',
