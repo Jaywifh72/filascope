@@ -371,6 +371,7 @@ export function usePricingData(productType: ProductType) {
         alertCount: stores.filter(s => s.linkStatus === 'alert').length,
         notInRegionCount: stores.filter(s => s.linkStatus === 'not_in_region').length,
         hasAnomalyFlag: productType === 'printer' && variants.some((v: any) => v.price_requires_review === true),
+        syncStatus: productType === 'printer' ? rep.sync_status : null,
       });
     }
 
@@ -397,6 +398,8 @@ export function usePricingData(productType: ProductType) {
     }
 
     const stalePrices = productGroups.reduce((acc, g) => {
+      // Don't count manual_only products as stale — they're intentionally not auto-synced
+      if (g.syncStatus === 'manual_only') return acc;
       return acc + g.stores.filter(s => {
         if (!s.lastScrapedAt) return true;
         return (Date.now() - new Date(s.lastScrapedAt).getTime()) > 7 * 24 * 60 * 60 * 1000;
