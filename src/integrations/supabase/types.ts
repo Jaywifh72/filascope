@@ -7155,7 +7155,7 @@ export type Database = {
       product_regional_slugs: {
         Row: {
           created_at: string | null
-          filament_id: string
+          filament_id: string | null
           http_status: number | null
           id: string
           printer_id: string | null
@@ -7167,7 +7167,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          filament_id: string
+          filament_id?: string | null
           http_status?: number | null
           id?: string
           printer_id?: string | null
@@ -7179,7 +7179,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          filament_id?: string
+          filament_id?: string | null
           http_status?: number | null
           id?: string
           printer_id?: string | null
