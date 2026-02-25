@@ -1573,32 +1573,73 @@ function detectSoldOutStatus(markdown: string): boolean {
   return status === "out_of_stock";
 }
 
+// Map currency to regional price column name
+function getRegionalPriceColumn(currency: string): string {
+  const map: Record<string, string> = {
+    USD: "variant_price",
+    CAD: "price_cad",
+    EUR: "price_eur",
+    GBP: "price_gbp",
+    AUD: "price_aud",
+    JPY: "price_jpy",
+  };
+  return map[currency] || "variant_price";
+}
+
 // Update filament stock status in database when live check detects changes
 async function updateFilamentStockStatus(
   productUrl: string,
   available: boolean,
   stockStatus: StockStatus,
   price: number | null,
+  currency: string = "USD",
 ): Promise<void> {
   try {
     const supabase = getSupabaseClient();
 
-    // Find the filament by URL (try both exact match and partial match)
-    const { data: filament } = await supabase
+    // Find the filament by URL — try product_url first, then regional URL columns
+    const selectCols = "id, variant_available, variant_price, price_eur, price_cad, price_gbp, price_aud, price_jpy";
+    let filament: { id: string; variant_available: boolean | null; variant_price: number | null; price_eur: number | null; price_cad: number | null; price_gbp: number | null; price_aud: number | null; price_jpy: number | null } | null = null;
+
+    // Try exact match on product_url (US)
+    const { data: exactMatch } = await supabase
       .from("filaments")
-      .select("id, variant_available, variant_price")
+      .select(selectCols)
       .eq("product_url", productUrl)
       .maybeSingle();
 
+    if (exactMatch) {
+      filament = exactMatch;
+    } else {
+      // Try regional URL columns (EU, CA, UK, AU, JP)
+      const regionalColumns = ["product_url_eu", "product_url_ca", "product_url_uk", "product_url_au", "product_url_jp"] as const;
+      for (const col of regionalColumns) {
+        const { data: regionalMatch } = await supabase
+          .from("filaments")
+          .select(selectCols)
+          .eq(col, productUrl)
+          .maybeSingle();
+        if (regionalMatch) {
+          filament = regionalMatch;
+          console.log(`Found filament via ${col}: ${regionalMatch.id}`);
+          break;
+        }
+      }
+    }
+
     if (!filament) {
-      console.log("No filament found for URL, skipping DB update:", productUrl);
+      console.log("No filament found for URL (checked all regional columns), skipping DB update:", productUrl);
       return;
     }
+
+    // Get the current price from the correct column based on currency
+    const priceColumn = getRegionalPriceColumn(currency);
+    const currentPrice = (filament as Record<string, unknown>)[priceColumn] as number | null;
 
     // Determine if we need to update
     const stockChanged = filament.variant_available !== available;
     const priceDiffersSignificantly =
-      price !== null && filament.variant_price !== null && Math.abs(price - filament.variant_price) > 0.5;
+      price !== null && currentPrice !== null && Math.abs(price - currentPrice) > 0.5;
 
     if (!stockChanged && !priceDiffersSignificantly) {
       console.log("No significant changes detected, skipping DB update");
@@ -1606,8 +1647,9 @@ async function updateFilamentStockStatus(
     }
 
     // === DISCREPANCY DETECTION ===
-    if (priceDiffersSignificantly && price !== null && filament.variant_price !== null) {
-      const changePercent = ((price - filament.variant_price) / filament.variant_price) * 100;
+    const regionCode = CURRENCY_TO_REGION[currency] || "US";
+    if (priceDiffersSignificantly && price !== null && currentPrice !== null) {
+      const changePercent = ((price - currentPrice) / currentPrice) * 100;
       const absChangePercent = Math.abs(changePercent);
 
       if (absChangePercent < 5) {
@@ -1615,11 +1657,11 @@ async function updateFilamentStockStatus(
         console.log(`Price change ${changePercent.toFixed(1)}% < 5%, auto-approving`);
         await supabase.from("price_discrepancies").insert({
           filament_id: filament.id,
-          old_price: filament.variant_price,
+          old_price: currentPrice,
           new_price: price,
           price_change_percent: Math.round(changePercent * 100) / 100,
-          currency: "USD",
-          region: "US",
+          currency,
+          region: regionCode,
           status: "auto_approved",
           source_url: productUrl,
           reviewed_at: new Date().toISOString(),
@@ -1631,11 +1673,11 @@ async function updateFilamentStockStatus(
         console.log(`Price change ${changePercent.toFixed(1)}% requires manual review${isUrgent ? " (URGENT)" : ""}`);
         await supabase.from("price_discrepancies").insert({
           filament_id: filament.id,
-          old_price: filament.variant_price,
+          old_price: currentPrice,
           new_price: price,
           price_change_percent: Math.round(changePercent * 100) / 100,
-          currency: "USD",
-          region: "US",
+          currency,
+          region: regionCode,
           status: "manual_review",
           source_url: productUrl,
           notes: isUrgent ? "URGENT: Price change > 20%" : "Price change 5-20%, needs review",
@@ -1645,15 +1687,17 @@ async function updateFilamentStockStatus(
       }
     }
 
-    // Build update object
+    // Build update object — always update stock status, even for out-of-stock items
     const updateData: Record<string, unknown> = {
       variant_available: available,
       last_scraped_at: new Date().toISOString(),
     };
 
     // Only update price if it changed significantly and we got a valid price
+    // Use the correct price column based on currency (e.g. price_eur for EUR)
     if (priceDiffersSignificantly && price !== null) {
-      updateData.variant_price = price;
+      const priceColumn = getRegionalPriceColumn(currency);
+      updateData[priceColumn] = price;
     }
 
     const { error } = await supabase.from("filaments").update(updateData).eq("id", filament.id);
@@ -1999,12 +2043,38 @@ function extractBambuLabPrice(
   // PRIORITY 1: Look for prices in the preferred currency FIRST
   const preferredSymbol = getCurrencySymbol(preferredCurrency);
 
-  // EUR-specific patterns for Bambu Lab EU store and Extrudr (inlt) format
+  // EUR-specific patterns for Bambu Lab EU store, Extrudr, and WooCommerce (AzureFilm etc.)
   if (preferredCurrency === "EUR") {
+    // PRIORITY 0: WooCommerce sale price pattern — strikethrough original + current price
+    // Matches: ~~€35,87~~ €26,90  or  ~~€35.87~~ €26.90  or  ~~35,87 €~~ 26,90 €
+    const wooSalePatterns = [
+      // ~~€OLD~~ €NEW (symbol before price)
+      /~~€\s*([\d.,]+)~~\s*€\s*([\d.,]+)/g,
+      // ~~OLD €~~ NEW € (symbol after price)
+      /~~([\d.,]+)\s*€~~\s*([\d.,]+)\s*€/g,
+      // del/strike format from markdown: €OLD ... €NEW on same line
+      /€([\d.,]+)\s+€([\d.,]+)/g,
+    ];
+
+    for (const pattern of wooSalePatterns) {
+      const saleMatches = [...upperMarkdown.matchAll(new RegExp(pattern.source, pattern.flags))];
+      if (saleMatches.length > 0) {
+        const oldPrice = parseEuropeanPrice(saleMatches[0][1]);
+        const newPrice = parseEuropeanPrice(saleMatches[0][2]);
+        if (!isNaN(oldPrice) && !isNaN(newPrice) && newPrice > 0 && validateFilamentPrice(newPrice, "EUR")) {
+          // The lower price is the sale price, the higher is compare-at
+          const salePrice = Math.min(oldPrice, newPrice);
+          const compareAt = Math.max(oldPrice, newPrice);
+          console.log(`Found EUR WooCommerce sale price: €${salePrice}, compare-at: €${compareAt}`);
+          return { price: salePrice, compareAtPrice: compareAt > salePrice * 1.05 ? compareAt : null, currency: "EUR", available: true };
+        }
+      }
+    }
+
     const eurPatterns = [
       /From\s*€\s*([\d.,]+(?:\.\d{2})?)\s*EUR/gi,
       /€\s*([\d.,]+(?:\.\d{2})?)\s*EUR/gi,
-      /€\s*([\d.,]+)/g, // Matches €15,99 and €15.99
+      /€\s*([\d.,]+)/g, // Matches €15,99 and €15.99 (European comma decimal)
       // Extrudr & European stores: number BEFORE € symbol — e.g. "25,76 €" or "25,76 EUR"
       /([\d]+[,.][\d]{2})\s*€/g,
       /([\d]+[,.][\d]{2})\s*EUR/gi,
@@ -3866,6 +3936,7 @@ serve(async (req) => {
         result.available,
         result.stockStatus || (result.available ? "in_stock" : "out_of_stock"),
         result.price,
+        result.currency, // Pass currency so correct regional price column is updated
       ).catch((err) => console.error("Background stock update failed:", err));
     }
 
