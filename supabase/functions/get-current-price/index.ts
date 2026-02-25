@@ -45,7 +45,7 @@ interface PriceResponse {
   currency: string;
   available: boolean;
   stockStatus?: StockStatus; // Granular stock status for UI display
-  source: "shopify" | "firecrawl" | "html" | "cached";
+  source: "shopify" | "firecrawl" | "html" | "cached" | "woocommerce";
   fetchedAt: string;
   error?: string;
   is404?: boolean; // Indicates product page not found
@@ -56,6 +56,9 @@ interface PriceResponse {
   detectedCurrency?: string; // Currency detected from page content (may differ from expected)
   currencyMismatch?: boolean; // True if detected currency doesn't match expected
   requestedCurrency?: string; // The currency the caller requested
+  status?: "ok" | "blocked" | "rate_limited" | "anomalous";
+  method?: "wc_store_api" | "wc_store_api_variations" | "json_ld" | "cloudflare";
+  price_alert?: boolean;
 }
 
 interface BrandExtractionConfig {
@@ -1422,17 +1425,13 @@ function isCloudflareBlock(text: string): boolean {
 }
 
 // Extract slug from an AzureFilm product URL
-// e.g. https://azurefilm.com/product/abs-plus-filament-yellow/ → abs-plus-filament-yellow
+// Required strategy: url.split('/product/')[1].replace(/\//g, '')
 function extractWooCommerceSlug(url: string): string | null {
   try {
-    const urlObj = new URL(url);
-    const path = urlObj.pathname;
-    // Match /product/{slug}/ or /product/{slug}
-    const match = path.match(/\/product\/([^/?#]+)/);
-    if (match) return match[1].replace(/\/$/, "");
-    // Fallback: last non-empty path segment
-    const segments = path.split("/").filter(Boolean);
-    return segments[segments.length - 1] || null;
+    const afterProduct = url.split('/product/')[1];
+    if (!afterProduct) return null;
+    const slug = afterProduct.split(/[?#]/)[0].replace(/\//g, '').trim();
+    return slug || null;
   } catch {
     return null;
   }
@@ -1453,44 +1452,75 @@ async function fetchWcStoreApiPrice(
   console.log(`[WC STORE API] Fetching: ${apiUrl}`);
 
   try {
-    const response = await fetch(apiUrl, {
+    let response = await fetch(apiUrl, {
       headers: WOOCOMMERCE_HEADERS,
       signal: AbortSignal.timeout(15000),
     });
 
-    console.log(`[WC STORE API] HTTP ${response.status}`);
-
-    // Handle rate limiting
+    // 429 handling: wait 2s and retry once
     if (response.status === 429) {
       console.log("[WC STORE API] Rate limited, waiting 2s and retrying once...");
-      await new Promise(r => setTimeout(r, 2000));
-      const retryResp = await fetch(apiUrl, {
+      await new Promise((r) => setTimeout(r, 2000));
+      response = await fetch(apiUrl, {
         headers: WOOCOMMERCE_HEADERS,
         signal: AbortSignal.timeout(15000),
       });
-      if (!retryResp.ok) {
-        console.log(`[WC STORE API] Retry failed: HTTP ${retryResp.status}`);
-        return null;
+
+      if (response.status === 429) {
+        return {
+          success: false,
+          price: null,
+          compareAtPrice: null,
+          weightGrams: null,
+          diameterMm: null,
+          variantTitle: null,
+          currency: "EUR",
+          available: false,
+          source: "woocommerce",
+          fetchedAt: new Date().toISOString(),
+          status: "rate_limited",
+          method: "wc_store_api",
+          error: "rate_limited",
+        };
       }
-      const retryData = await retryResp.json();
-      return parseWcStoreApiResponse(retryData, productUrl, storeDomain);
+    }
+
+    // Fallback to JSON-LD only when empty/404 from Store API
+    if (response.status === 404) {
+      console.log("[WC STORE API] 404 from Store API, using JSON-LD fallback");
+      return null;
     }
 
     if (!response.ok) {
-      // Check for Cloudflare block on non-JSON response
-      if (response.status === 403) {
-        const text = await response.text();
-        if (isCloudflareBlock(text)) {
-          console.log("[WC STORE API] Cloudflare block detected");
-          return null; // Fall through to JSON-LD fallback
-        }
+      const body = await response.text().catch(() => "");
+      if (isCloudflareBlock(body)) {
+        return {
+          success: false,
+          price: null,
+          compareAtPrice: null,
+          weightGrams: null,
+          diameterMm: null,
+          variantTitle: null,
+          currency: "EUR",
+          available: false,
+          source: "woocommerce",
+          fetchedAt: new Date().toISOString(),
+          status: "blocked",
+          method: "cloudflare",
+          error: "cloudflare_blocked",
+        };
       }
-      console.log(`[WC STORE API] HTTP error: ${response.status}`);
+      console.log(`[WC STORE API] HTTP ${response.status}, using JSON-LD fallback`);
       return null;
     }
 
     const data = await response.json();
-    return parseWcStoreApiResponse(data, productUrl, storeDomain);
+    if (!Array.isArray(data) || data.length === 0) {
+      console.log("[WC STORE API] Empty response, using JSON-LD fallback");
+      return null;
+    }
+
+    return await parseWcStoreApiResponse(data, productUrl, storeDomain);
   } catch (error) {
     console.error("[WC STORE API] Fetch error:", error instanceof Error ? error.message : String(error));
     return null;
@@ -1501,16 +1531,24 @@ async function fetchWcStoreApiPrice(
 async function fetchWcVariationPrice(
   productId: number,
   storeDomain: string,
-  minorUnit: number,
+  fallbackMinorUnit: number,
 ): Promise<{ price: number; compareAtPrice: number | null; currency: string; available: boolean } | null> {
   const apiUrl = `https://${storeDomain}/wp-json/wc/store/v1/products/${productId}/variations`;
   console.log(`[WC STORE API] Fetching variations: ${apiUrl}`);
 
   try {
-    const response = await fetch(apiUrl, {
+    let response = await fetch(apiUrl, {
       headers: WOOCOMMERCE_HEADERS,
       signal: AbortSignal.timeout(15000),
     });
+
+    if (response.status === 429) {
+      await new Promise((r) => setTimeout(r, 2000));
+      response = await fetch(apiUrl, {
+        headers: WOOCOMMERCE_HEADERS,
+        signal: AbortSignal.timeout(15000),
+      });
+    }
 
     if (!response.ok) {
       console.log(`[WC STORE API] Variations fetch failed: HTTP ${response.status}`);
@@ -1523,42 +1561,59 @@ async function fetchWcVariationPrice(
       return null;
     }
 
-    const divisor = Math.pow(10, minorUnit);
-    let bestPrice: number | null = null;
-    let bestCompareAt: number | null = null;
-    let bestCurrency = "EUR";
-    let anyInStock = false;
+    const inStockCandidates: Array<{ price: number; compareAtPrice: number | null; currency: string }> = [];
+    const allCandidates: Array<{ price: number; compareAtPrice: number | null; currency: string }> = [];
 
-    for (const v of variations) {
-      const vPrices = v.prices;
-      if (!vPrices?.price) continue;
+    for (const variation of variations) {
+      const prices = variation?.prices;
+      if (!prices?.price) continue;
 
-      const vPrice = parseInt(vPrices.price, 10) / divisor;
-      const vRegular = parseInt(vPrices.regular_price || vPrices.price, 10) / divisor;
-      const vSale = vPrices.sale_price ? parseInt(vPrices.sale_price, 10) / divisor : null;
-      const vCurrency = (vPrices.currency_code || "EUR").toUpperCase();
-      const vInStock = v.is_in_stock === true;
+      const minorUnit = Number.isFinite(Number(prices.currency_minor_unit))
+        ? Number(prices.currency_minor_unit)
+        : fallbackMinorUnit;
+      const divisor = Math.pow(10, minorUnit);
 
-      if (vInStock) anyInStock = true;
+      const rawPrice = parseInt(prices.price, 10);
+      const rawRegular = parseInt(prices.regular_price || prices.price, 10);
+      const rawSale = prices.sale_price ? parseInt(prices.sale_price, 10) : null;
 
-      // Use sale price if available, otherwise regular price
-      const effectivePrice = (vSale && vSale > 0 && vSale < vRegular) ? vSale : vPrice;
-      const effectiveCompareAt = (vSale && vSale > 0 && vSale < vRegular) ? vRegular : (vRegular > vPrice ? vRegular : null);
+      if (isNaN(rawPrice) || rawPrice <= 0) continue;
 
+      const listPrice = rawPrice / divisor;
+      const regularPrice = !isNaN(rawRegular) && rawRegular > 0 ? rawRegular / divisor : listPrice;
+      const salePrice = rawSale !== null && !isNaN(rawSale) && rawSale > 0 ? rawSale / divisor : null;
+
+      const effectivePrice = salePrice !== null && salePrice < regularPrice ? salePrice : listPrice;
       if (effectivePrice <= 0) continue;
 
-      // Prefer cheapest in-stock variant; if none in stock, cheapest overall
-      if (bestPrice === null || (vInStock && effectivePrice < bestPrice) || (!anyInStock && effectivePrice < bestPrice)) {
-        bestPrice = effectivePrice;
-        bestCompareAt = effectiveCompareAt ?? null;
-        bestCurrency = vCurrency;
+      const compareAtPrice = salePrice !== null && salePrice < regularPrice
+        ? regularPrice
+        : (regularPrice > effectivePrice ? regularPrice : null);
+
+      const candidate = {
+        price: effectivePrice,
+        compareAtPrice,
+        currency: String(prices.currency_code || "EUR").toUpperCase(),
+      };
+
+      allCandidates.push(candidate);
+      if (variation.is_in_stock === true) {
+        inStockCandidates.push(candidate);
       }
     }
 
-    if (bestPrice === null) return null;
+    const pool = inStockCandidates.length > 0 ? inStockCandidates : allCandidates;
+    if (pool.length === 0) return null;
 
-    console.log(`[WC STORE API] Best variation: price=${bestPrice} ${bestCurrency}, inStock=${anyInStock}, from ${variations.length} variations`);
-    return { price: bestPrice, compareAtPrice: bestCompareAt, currency: bestCurrency, available: anyInStock };
+    pool.sort((a, b) => a.price - b.price);
+    const best = pool[0];
+
+    return {
+      price: best.price,
+      compareAtPrice: best.compareAtPrice,
+      currency: best.currency,
+      available: inStockCandidates.length > 0,
+    };
   } catch (error) {
     console.error("[WC STORE API] Variations fetch error:", error instanceof Error ? error.message : String(error));
     return null;
@@ -1571,24 +1626,14 @@ async function parseWcStoreApiResponse(
   productUrl: string,
   storeDomain: string,
 ): Promise<PriceResponse | null> {
-  if (!Array.isArray(data) || data.length === 0) {
-    console.log("[WC STORE API] Empty response or product not found");
-    return null;
-  }
+  if (!Array.isArray(data) || data.length === 0) return null;
 
   const product = data[0];
-  const prices = product.prices;
+  const prices = product?.prices;
+  if (!prices?.price) return null;
 
-  if (!prices || !prices.price) {
-    console.log("[WC STORE API] No prices object in response");
-    return null;
-  }
-
-  // CRITICAL: Store API returns prices as integers with implied decimal places
-  // e.g. "2490" = €24.90, currency_minor_unit = 2
-  const minorUnit = prices.currency_minor_unit ?? 2;
+  const minorUnit = Number.isFinite(Number(prices.currency_minor_unit)) ? Number(prices.currency_minor_unit) : 2;
   const divisor = Math.pow(10, minorUnit);
-  const currencyCode = (prices.currency_code || "EUR").toUpperCase();
 
   const rawPrice = parseInt(prices.price, 10);
   const rawRegularPrice = parseInt(prices.regular_price || prices.price, 10);
@@ -1599,55 +1644,41 @@ async function parseWcStoreApiResponse(
     return null;
   }
 
+  const currencyCode = String(prices.currency_code || "EUR").toUpperCase();
+
   let price = rawPrice / divisor;
   let compareAtPrice: number | null = null;
 
-  // If there's a sale, sale_price is the current and regular_price is the original
-  if (rawSalePrice && rawSalePrice > 0 && rawSalePrice < rawRegularPrice) {
+  if (rawSalePrice !== null && !isNaN(rawSalePrice) && rawSalePrice > 0 && rawSalePrice < rawRegularPrice) {
     price = rawSalePrice / divisor;
     compareAtPrice = rawRegularPrice / divisor;
-  } else if (rawRegularPrice > rawPrice) {
+  } else if (!isNaN(rawRegularPrice) && rawRegularPrice > rawPrice) {
     compareAtPrice = rawRegularPrice / divisor;
   }
 
-  // Validate price range
-  if (price < AZUREFILM_PRICE_RANGE.min || price > AZUREFILM_PRICE_RANGE.max) {
-    console.log(`[WC STORE API] ⚠ Price ${price} ${currencyCode} outside expected range (${AZUREFILM_PRICE_RANGE.min}-${AZUREFILM_PRICE_RANGE.max}), flagging as anomalous`);
-  }
+  if (!Number.isFinite(price) || price <= 0) return null;
 
-  // Currency validation
-  if (currencyCode !== "EUR" && storeDomain.includes("azurefilm.com")) {
-    console.log(`[WC STORE API] ⚠ Unexpected currency ${currencyCode} from AzureFilm (expected EUR)`);
-  }
-
-  const available = product.is_in_stock === true;
-  const stockStatus: StockStatus = available ? "in_stock" : "out_of_stock";
-
-  console.log(`[WC STORE API] ✓ price=${price} ${currencyCode}, compareAt=${compareAtPrice}, inStock=${available}, type=${product.type}`);
-
-  // For variable products, fetch variations to get cheapest in-stock variant price
+  // Variable products: fetch variations and pick cheapest in-stock variant
+  let available = product.is_in_stock === true;
+  let method: PriceResponse["method"] = "wc_store_api";
   if (product.type === "variable" && product.id) {
-    console.log(`[WC STORE API] Variable product detected (id=${product.id}), fetching variations...`);
-    const variationResult = await fetchWcVariationPrice(product.id, storeDomain, minorUnit);
-    if (variationResult && variationResult.price > 0) {
-      console.log(`[WC STORE API] Using variation price: ${variationResult.price} ${variationResult.currency} (was parent: ${price} ${currencyCode})`);
-      return {
-        success: true,
-        price: variationResult.price,
-        compareAtPrice: variationResult.compareAtPrice && variationResult.compareAtPrice > variationResult.price * 1.05 ? variationResult.compareAtPrice : null,
-        weightGrams: null,
-        diameterMm: null,
-        variantTitle: null,
-        currency: variationResult.currency,
-        available: variationResult.available,
-        stockStatus: variationResult.available ? "in_stock" : "out_of_stock" as StockStatus,
-        source: "html" as const,
-        fetchedAt: new Date().toISOString(),
-        sourceUrl: productUrl,
-        detectedCurrency: variationResult.currency,
-      };
+    const variation = await fetchWcVariationPrice(Number(product.id), storeDomain, minorUnit);
+    if (variation && variation.price > 0) {
+      price = variation.price;
+      compareAtPrice = variation.compareAtPrice;
+      available = variation.available;
+      method = "wc_store_api_variations";
     }
-    console.log("[WC STORE API] Variation fetch returned no results, using parent price");
+  }
+
+  const priceAlert = price < AZUREFILM_PRICE_RANGE.min || price > AZUREFILM_PRICE_RANGE.max;
+  const currencyAlert = storeDomain.includes("azurefilm.com") && currencyCode !== "EUR";
+
+  if (priceAlert) {
+    console.log(`[WC STORE API] Price anomaly flagged: ${price} ${currencyCode}`);
+  }
+  if (currencyAlert) {
+    console.log(`[WC STORE API] Currency anomaly flagged: ${currencyCode} (expected EUR)`);
   }
 
   return {
@@ -1659,11 +1690,14 @@ async function parseWcStoreApiResponse(
     variantTitle: null,
     currency: currencyCode,
     available,
-    stockStatus,
-    source: "html" as const,
+    stockStatus: available ? "in_stock" : "out_of_stock",
+    source: "woocommerce",
     fetchedAt: new Date().toISOString(),
     sourceUrl: productUrl,
     detectedCurrency: currencyCode,
+    status: priceAlert || currencyAlert ? "anomalous" : "ok",
+    method,
+    price_alert: priceAlert,
   };
 }
 
@@ -1675,236 +1709,217 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
   // === PRIMARY METHOD: WC Store API v1 ===
   const storeApiResult = await fetchWcStoreApiPrice(productUrl, storeDomain);
   if (storeApiResult) {
-    console.log(`[WOOCOMMERCE FETCH] ✓ WC Store API succeeded: ${storeApiResult.price} ${storeApiResult.currency}`);
-    return storeApiResult;
-  }
-  console.log("[WOOCOMMERCE FETCH] WC Store API failed, falling back to JSON-LD HTML extraction");
+    // For blocked/rate-limited responses, do not attempt HTML fallback
+    if (!storeApiResult.success && (storeApiResult.status === "blocked" || storeApiResult.status === "rate_limited")) {
+      return storeApiResult;
+    }
 
-  // === FALLBACK METHOD: Direct HTML fetch + JSON-LD ===
+    if (storeApiResult.success) {
+      console.log(`[WOOCOMMERCE FETCH] ✓ WC Store API succeeded: ${storeApiResult.price} ${storeApiResult.currency}`);
+      return storeApiResult;
+    }
+  }
+
+  console.log("[WOOCOMMERCE FETCH] WC Store API empty/404, using JSON-LD fallback");
+
+  // === FALLBACK METHOD: Product page JSON-LD ===
   try {
-    const response = await fetch(productUrl, {
+    let response = await fetch(productUrl, {
       headers: {
-        ...WOOCOMMERCE_HEADERS,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": WOOCOMMERCE_HEADERS["User-Agent"],
+        "Accept-Language": WOOCOMMERCE_HEADERS["Accept-Language"],
       },
       redirect: "follow",
       signal: AbortSignal.timeout(15000),
     });
 
-    console.log(`[WOOCOMMERCE FETCH] HTML fallback HTTP ${response.status}`);
+    if (response.status === 429) {
+      await new Promise((r) => setTimeout(r, 2000));
+      response = await fetch(productUrl, {
+        headers: {
+          "User-Agent": WOOCOMMERCE_HEADERS["User-Agent"],
+          "Accept-Language": WOOCOMMERCE_HEADERS["Accept-Language"],
+        },
+        redirect: "follow",
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (response.status === 429) {
+        return {
+          success: false,
+          price: null,
+          compareAtPrice: null,
+          weightGrams: null,
+          diameterMm: null,
+          variantTitle: null,
+          currency: storeCurrency,
+          available: false,
+          source: "html",
+          fetchedAt: new Date().toISOString(),
+          status: "rate_limited",
+          method: "json_ld",
+          error: "rate_limited",
+        };
+      }
+    }
 
     if (!response.ok) {
-      if (response.status === 403) {
-        const text = await response.text();
-        if (isCloudflareBlock(text)) {
-          console.log(`[WOOCOMMERCE FETCH] Cloudflare block on HTML fallback`);
-          return {
-            success: false, price: null, compareAtPrice: null, weightGrams: null,
-            diameterMm: null, variantTitle: null, currency: storeCurrency,
-            available: false, source: "html", fetchedAt: new Date().toISOString(),
-            error: "Cloudflare block - both Store API and HTML blocked",
-          };
-        }
-      }
       return {
-        success: false, price: null, compareAtPrice: null, weightGrams: null,
-        diameterMm: null, variantTitle: null, currency: storeCurrency,
-        available: false, source: "html", fetchedAt: new Date().toISOString(),
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        weightGrams: null,
+        diameterMm: null,
+        variantTitle: null,
+        currency: storeCurrency,
+        available: false,
+        source: "html",
+        fetchedAt: new Date().toISOString(),
         error: `HTTP ${response.status}`,
         is404: response.status === 404,
       };
     }
 
     const html = await response.text();
-    console.log(`[WOOCOMMERCE FETCH] HTML size: ${html.length} bytes`);
-
-    // Check for Cloudflare block in HTML content
     if (isCloudflareBlock(html)) {
-      console.log("[WOOCOMMERCE FETCH] Cloudflare block detected in HTML body");
       return {
-        success: false, price: null, compareAtPrice: null, weightGrams: null,
-        diameterMm: null, variantTitle: null, currency: storeCurrency,
-        available: false, source: "html", fetchedAt: new Date().toISOString(),
-        error: "Cloudflare block detected",
-      };
-    }
-    // Extract JSON-LD Product data
-    const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
-    let scriptMatch;
-    while ((scriptMatch = jsonLdRegex.exec(html)) !== null) {
-      try {
-        const parsed = JSON.parse(scriptMatch[1].trim());
-        const items: any[] = Array.isArray(parsed) ? parsed : [parsed];
-        const product = items.find((item: any) => item["@type"] === "Product");
-        if (!product?.offers) continue;
-
-        const offers: any[] = Array.isArray(product.offers) ? product.offers : [product.offers];
-        // Also handle OfferList wrapper (common in WooCommerce)
-        const flatOffers: any[] = [];
-        for (const o of offers) {
-          if (o?.["@type"] === "AggregateOffer" || o?.offers) {
-            const inner = Array.isArray(o.offers) ? o.offers : [o.offers];
-            flatOffers.push(...inner.filter(Boolean));
-          } else {
-            flatOffers.push(o);
-          }
-        }
-
-        const directPriceOffers = flatOffers.filter((o: any) => o?.price != null);
-        const directPrices = directPriceOffers
-          .map((o: any) => parsePriceForDomain(String(o.price), productUrl))
-          .filter((p: number) => !isNaN(p) && p > 0);
-
-        // Handle AggregateOffer lowPrice/highPrice even when no direct offer.price exists
-        let aggregateSalePrice: number | null = null;
-        let aggregateCompareAt: number | null = null;
-        for (const o of [...offers, ...flatOffers]) {
-          if (o?.lowPrice != null && o?.highPrice != null) {
-            const low = parsePriceForDomain(String(o.lowPrice), productUrl);
-            const high = parsePriceForDomain(String(o.highPrice), productUrl);
-            if (!isNaN(low) && !isNaN(high) && low > 0 && high > low) {
-              aggregateSalePrice = low;
-              aggregateCompareAt = high;
-              console.log(`[WOOCOMMERCE FETCH] AggregateOffer sale: low=${low}, high=${high}`);
-              break;
-            }
-          }
-        }
-
-        const candidatePrices = [...directPrices];
-        if (aggregateSalePrice !== null) candidatePrices.push(aggregateSalePrice);
-        if (aggregateCompareAt !== null) candidatePrices.push(aggregateCompareAt);
-
-        if (candidatePrices.length === 0) continue;
-
-        const lowestPrice = Math.min(...candidatePrices);
-        const highestPrice = Math.max(...candidatePrices);
-        const compareAt = highestPrice > lowestPrice * 1.05 ? highestPrice : null;
-
-        const firstCurrencyOffer =
-          directPriceOffers.find((o: any) => o?.priceCurrency) ||
-          [...offers, ...flatOffers].find((o: any) => o?.priceCurrency);
-        const detectedCurrency = (firstCurrencyOffer?.priceCurrency as string) || storeCurrency;
-
-        // Check availability — but NEVER bail on out-of-stock
-        const availabilityPool = [...directPriceOffers, ...offers, ...flatOffers].filter((o: any) => o?.availability != null);
-        const inStockOffers = availabilityPool.filter((o: any) =>
-          String(o.availability || "").toLowerCase().includes("instock")
-        );
-        const available = inStockOffers.length > 0;
-
-        const salePrice = aggregateSalePrice ?? lowestPrice;
-        const salePriceCompareAt =
-          aggregateCompareAt ?? (compareAt && compareAt > salePrice * 1.05 ? compareAt : null);
-
-        console.log(
-          `[WOOCOMMERCE FETCH] ✓ JSON-LD: price=${salePrice} ${detectedCurrency}, compareAt=${salePriceCompareAt}, inStock=${available}`,
-        );
-
-
-        return {
-          success: true,
-          price: salePrice,
-          compareAtPrice: salePriceCompareAt,
-          weightGrams: null,
-          diameterMm: null,
-          variantTitle: null,
-          currency: detectedCurrency,
-          available, // false for OOS — but price is still extracted
-          stockStatus: available ? "in_stock" : ("out_of_stock" as StockStatus),
-          source: "html" as const,
-          fetchedAt: new Date().toISOString(),
-          detectedCurrency,
-          sourceUrl: productUrl,
-        };
-      } catch (_e) {
-        console.log("[WOOCOMMERCE FETCH] JSON-LD parse attempt failed, trying next");
-      }
-    }
-
-    // JSON-LD failed — try HTML meta/microdata fallback for WooCommerce
-    console.log("[WOOCOMMERCE FETCH] No JSON-LD Product found, trying HTML price extraction");
-
-    // WooCommerce often has price in <meta> or class="woocommerce-Price-amount"
-    // Pattern: <span class="woocommerce-Price-amount amount"><bdi>24,90&nbsp;<span class="woocommerce-Price-currencySymbol">€</span></bdi></span>
-    const priceAmountRegex = /class="woocommerce-Price-amount[^"]*"[^>]*>(?:<[^>]+>)*([\d.,]+)\s*(?:&nbsp;)?(?:<[^>]+>)*[€£$]/gi;
-    const htmlPrices: number[] = [];
-    let htmlMatch;
-    while ((htmlMatch = priceAmountRegex.exec(html)) !== null) {
-      const p = parsePriceForDomain(htmlMatch[1], productUrl);
-      if (!isNaN(p) && p > 0 && validateFilamentPrice(p, storeCurrency)) {
-        htmlPrices.push(p);
-      }
-    }
-
-    if (htmlPrices.length > 0) {
-      // Prefer explicit WooCommerce struck-through original + active sale price when present
-      const delInsSaleMatch = html.match(/<del[^>]*>[\s\S]*?([\d.,]+)[\s\S]*?<\/del>[\s\S]*?<ins[^>]*>[\s\S]*?([\d.,]+)[\s\S]*?<\/ins>/i);
-      if (delInsSaleMatch?.[1] && delInsSaleMatch?.[2]) {
-        const oldPrice = parsePriceForDomain(delInsSaleMatch[1], productUrl);
-        const newPrice = parsePriceForDomain(delInsSaleMatch[2], productUrl);
-        if (!isNaN(oldPrice) && !isNaN(newPrice) && oldPrice > 0 && newPrice > 0) {
-          const salePrice = Math.min(oldPrice, newPrice);
-          const compareAt = Math.max(oldPrice, newPrice);
-          const isOOS = /class="out-of-stock"|out_of_stock|outofstock/i.test(html);
-
-          console.log(`[WOOCOMMERCE FETCH] ✓ HTML del/ins sale: price=${salePrice} ${storeCurrency}, compareAt=${compareAt}, oos=${isOOS}`);
-
-          return {
-            success: true,
-            price: salePrice,
-            compareAtPrice: compareAt > salePrice * 1.05 ? compareAt : null,
-            weightGrams: null,
-            diameterMm: null,
-            variantTitle: null,
-            currency: storeCurrency,
-            available: !isOOS,
-            stockStatus: isOOS ? "out_of_stock" as StockStatus : "in_stock" as StockStatus,
-            source: "html" as const,
-            fetchedAt: new Date().toISOString(),
-            sourceUrl: productUrl,
-          };
-        }
-      }
-
-      // WooCommerce sale format: first price is original (strikethrough), second is sale price
-      // Or if only one price, it's the current price
-      const hasSale = htmlPrices.length >= 2 && htmlPrices[0] > htmlPrices[1];
-      const price = hasSale ? htmlPrices[1] : htmlPrices[0];
-      const compareAtHtml = hasSale ? htmlPrices[0] : (htmlPrices.length >= 2 && htmlPrices[1] > price * 1.05 ? htmlPrices[1] : null);
-
-      // Check stock status from HTML
-      const isOOS = /class="out-of-stock"|out_of_stock|outofstock/i.test(html);
-
-      console.log(`[WOOCOMMERCE FETCH] ✓ HTML fallback: price=${price} ${storeCurrency}, compareAt=${compareAtHtml}, oos=${isOOS}`);
-
-      return {
-        success: true,
-        price,
-        compareAtPrice: compareAtHtml,
+        success: false,
+        price: null,
+        compareAtPrice: null,
         weightGrams: null,
         diameterMm: null,
         variantTitle: null,
         currency: storeCurrency,
-        available: !isOOS,
-        stockStatus: isOOS ? "out_of_stock" as StockStatus : "in_stock" as StockStatus,
-        source: "html" as const,
+        available: false,
+        source: "html",
         fetchedAt: new Date().toISOString(),
-        sourceUrl: productUrl,
+        status: "blocked",
+        method: "cloudflare",
+        error: "cloudflare_blocked",
       };
     }
 
-    console.log("[WOOCOMMERCE FETCH] ❌ No price found via JSON-LD or HTML");
+    const jsonLdRegex = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+    let scriptMatch: RegExpExecArray | null;
 
-    // Last resort: try Firecrawl which may bypass Cloudflare
-    console.log("[WOOCOMMERCE FETCH] Falling back to Firecrawl");
-    return await fetchPriceWithFirecrawl(productUrl, preferredCurrency, null, false, "filament");
+    while ((scriptMatch = jsonLdRegex.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(scriptMatch[1].trim());
+        const rootItems = Array.isArray(parsed) ? parsed : [parsed];
 
+        // Required fallback path: data["@graph"][0].hasVariant[0].offers
+        for (const item of rootItems) {
+          const graph = Array.isArray(item?.["@graph"]) ? item["@graph"] : [];
+          if (graph.length > 0) {
+            const maybeOffer = graph?.[0]?.hasVariant?.[0]?.offers;
+            if (maybeOffer?.price != null) {
+              const price = parseFloat(String(maybeOffer.price));
+              if (!isNaN(price) && price > 0) {
+                const detectedCurrency = String(maybeOffer.priceCurrency || storeCurrency).toUpperCase();
+                const available = String(maybeOffer.availability || "").includes("InStock");
+                const priceAlert = price < AZUREFILM_PRICE_RANGE.min || price > AZUREFILM_PRICE_RANGE.max;
+
+                return {
+                  success: true,
+                  price,
+                  compareAtPrice: null,
+                  weightGrams: null,
+                  diameterMm: null,
+                  variantTitle: null,
+                  currency: detectedCurrency,
+                  available,
+                  stockStatus: available ? "in_stock" : "out_of_stock",
+                  source: "html",
+                  fetchedAt: new Date().toISOString(),
+                  method: "json_ld",
+                  status: priceAlert || detectedCurrency !== "EUR" ? "anomalous" : "ok",
+                  price_alert: priceAlert,
+                };
+              }
+            }
+          }
+        }
+
+        // Generic Product → offers fallback
+        const candidates = rootItems.flatMap((item) => {
+          const graph = Array.isArray(item?.["@graph"]) ? item["@graph"] : [];
+          return [item, ...graph];
+        });
+
+        const productNode = candidates.find((node: any) => node?.["@type"] === "Product" || node?.offers);
+        const offersRaw = productNode?.offers;
+        const offers = Array.isArray(offersRaw) ? offersRaw : offersRaw ? [offersRaw] : [];
+
+        if (offers.length > 0) {
+          const validOffers = offers.filter((o: any) => o?.price != null)
+            .map((o: any) => ({
+              price: parseFloat(String(o.price)),
+              currency: String(o.priceCurrency || storeCurrency).toUpperCase(),
+              inStock: String(o.availability || "").includes("InStock"),
+            }))
+            .filter((o: any) => Number.isFinite(o.price) && o.price > 0);
+
+          if (validOffers.length > 0) {
+            const inStock = validOffers.filter((o: any) => o.inStock);
+            const pool = inStock.length > 0 ? inStock : validOffers;
+            pool.sort((a: any, b: any) => a.price - b.price);
+
+            const best = pool[0];
+            const available = inStock.length > 0;
+            const priceAlert = best.price < AZUREFILM_PRICE_RANGE.min || best.price > AZUREFILM_PRICE_RANGE.max;
+
+            return {
+              success: true,
+              price: best.price,
+              compareAtPrice: null,
+              weightGrams: null,
+              diameterMm: null,
+              variantTitle: null,
+              currency: best.currency,
+              available,
+              stockStatus: available ? "in_stock" : "out_of_stock",
+              source: "html",
+              fetchedAt: new Date().toISOString(),
+              method: "json_ld",
+              status: priceAlert || best.currency !== "EUR" ? "anomalous" : "ok",
+              price_alert: priceAlert,
+            } satisfies PriceResponse;
+          }
+        }
+      } catch {
+        // continue to next JSON-LD block
+      }
+    }
+
+    return {
+      success: false,
+      price: null,
+      compareAtPrice: null,
+      weightGrams: null,
+      diameterMm: null,
+      variantTitle: null,
+      currency: storeCurrency,
+      available: false,
+      source: "html",
+      fetchedAt: new Date().toISOString(),
+      method: "json_ld",
+      error: "Could not extract JSON-LD price",
+    };
   } catch (error) {
-    console.error("[WOOCOMMERCE FETCH] Error:", error);
-    // On network error, try Firecrawl as fallback
-    console.log("[WOOCOMMERCE FETCH] Direct fetch failed, trying Firecrawl fallback");
-    return await fetchPriceWithFirecrawl(productUrl, preferredCurrency, null, false, "filament");
+    return {
+      success: false,
+      price: null,
+      compareAtPrice: null,
+      weightGrams: null,
+      diameterMm: null,
+      variantTitle: null,
+      currency: storeCurrency,
+      available: false,
+      source: "html",
+      fetchedAt: new Date().toISOString(),
+      method: "json_ld",
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
