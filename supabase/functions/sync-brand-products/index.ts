@@ -54,23 +54,23 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   },
   'polymaker': { 
     US: 'us.polymaker.com', 
+    CA: 'ca.polymaker.com',
     EU: 'eu.polymaker.com' 
   },
-  // Creality - FIXED: uses store.creality.com prefix for Shopify
+  // Creality - FIXED: uses path-based routing (store.creality.com/XX/products/slug)
   'creality': { 
     US: 'store.creality.com', 
-    CA: 'ca.store.creality.com', 
-    UK: 'uk.store.creality.com', 
-    EU: 'eu.store.creality.com', 
-    AU: 'au.store.creality.com' 
+    CA: 'store.creality.com', 
+    UK: 'store.creality.com', 
+    EU: 'store.creality.com', 
+    AU: 'store.creality.com' 
   },
-  // Anycubic - Uses regional subdomains (e.g., ca.anycubic.com)
+  // Anycubic - Uses regional subdomains (no AU - DNS failure)
   'anycubic': { 
     US: 'store.anycubic.com', 
     CA: 'ca.anycubic.com', 
     UK: 'uk.anycubic.com', 
-    EU: 'eu.anycubic.com', 
-    AU: 'au.anycubic.com' 
+    EU: 'eu.anycubic.com'
   },
   'qidi': { 
     US: 'us.qidi3d.com', 
@@ -81,17 +81,26 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   },
   'flashforge': { 
     US: 'www.flashforge.com', 
-    EU: 'eu.flashforge.com' 
+    CA: 'ca.flashforge.com',
+    EU: 'eu.flashforge.com',
+    UK: 'uk.flashforge.com',
+    AU: 'au.flashforge.com'
   },
   // === ADDITIONAL BRANDS WITH REGIONAL STORES ===
   // Sunlu - ADDED regional domains
   'sunlu': {
-    US: 'www.sunlu.com',
-    EU: 'eu.sunlu.com'
+    US: 'store.sunlu.com',
+    CA: 'ca.sunlu.com',
+    UK: 'uk.sunlu.com',
+    AU: 'au.sunlu.com',
+    EU: 'store.sunlu.com'
   },
   'eryone': {
     US: 'eryone3d.com',
-    EU: 'eu.eryone3d.com'
+    CA: 'ca.eryone3d.com',
+    UK: 'uk.eryone3d.com',
+    EU: 'de.eryone3d.com',
+    AU: 'au.eryone3d.com'
   },
   'jayo': {
     US: 'www.jayo3d.com',
@@ -100,12 +109,15 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   },
   // Kingroon - FIXED: added www prefix
   'kingroon': {
-    US: 'www.kingroon.com',
-    EU: 'eu.kingroon.com'
+    US: 'kingroon.com',
+    CA: 'ca.kingroon.com',
+    UK: 'uk.kingroon.com',
+    EU: 'eu.kingroon.com',
+    AU: 'au.kingroon.com'
   },
-  // Sovol - FIXED: added www prefix  
   'sovol': {
-    US: 'www.sovol3d.com'
+    US: 'www.sovol3d.com',
+    EU: 'sovol.eu'
   },
   'raise3d': {
     US: 'shop.raise3d.com',
@@ -127,8 +139,11 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     EU: 'eu.twotrees3d.com'
   },
   'flsun': {
-    US: 'flsun3d.com',
-    EU: 'eu.flsun3d.com'
+    US: 'us.store.flsun3d.com',
+    CA: 'ca.store.flsun3d.com',
+    UK: 'uk.store.flsun3d.com',
+    EU: 'eu.store.flsun3d.com',
+    AU: 'au.store.flsun3d.com'
   },
   'tronxy': {
     US: 'www.tronxy.com',

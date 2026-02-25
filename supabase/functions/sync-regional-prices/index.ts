@@ -31,23 +31,20 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   'polymaker': { 
     US: 'us.polymaker.com', 
     CA: 'ca.polymaker.com',
-    UK: 'uk.polymaker.com',
-    EU: 'eu.polymaker.com',
-    AU: 'au.polymaker.com'
+    EU: 'eu.polymaker.com'
   },
   'creality': { 
     US: 'store.creality.com', 
-    CA: 'ca.store.creality.com', 
-    UK: 'uk.store.creality.com', 
-    EU: 'eu.store.creality.com', 
-    AU: 'au.store.creality.com' 
+    CA: 'store.creality.com', 
+    UK: 'store.creality.com', 
+    EU: 'store.creality.com', 
+    AU: 'store.creality.com' 
   },
   'anycubic': { 
     US: 'store.anycubic.com', 
-    CA: 'ca.store.anycubic.com', 
-    UK: 'uk.store.anycubic.com', 
-    EU: 'eu.store.anycubic.com', 
-    AU: 'au.store.anycubic.com' 
+    CA: 'ca.anycubic.com', 
+    UK: 'uk.anycubic.com', 
+    EU: 'eu.anycubic.com'
   },
   'sunlu': {
     US: 'store.sunlu.com',
@@ -88,7 +85,10 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   },
   'flashforge': { 
     US: 'www.flashforge.com', 
-    EU: 'eu.flashforge.com' 
+    CA: 'ca.flashforge.com',
+    EU: 'eu.flashforge.com',
+    UK: 'uk.flashforge.com',
+    AU: 'au.flashforge.com'
   },
   'jayo': {
     US: 'www.jayo3d.com',
