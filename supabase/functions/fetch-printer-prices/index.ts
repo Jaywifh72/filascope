@@ -278,13 +278,16 @@ function correctUrlForPricing(url: string, brand: string): string | null {
       }
     }
 
-    // QIDI: ensure qidi3d.com
+    // QIDI: ensure us.qidi3d.com (regional subdomain, not international store)
     if (brandLower.includes('qidi')) {
       if (!hostname.includes('qidi3d.com')) {
         if (pathname.includes('/products/')) {
           const productSlug = pathname.split('/products/')[1]?.split('/')[0];
-          return `https://qidi3d.com/products/${productSlug}`;
+          return `https://us.qidi3d.com/products/${productSlug}`;
         }
+      } else if (hostname === 'qidi3d.com' || hostname === 'www.qidi3d.com') {
+        // Fix: redirect bare qidi3d.com to us.qidi3d.com
+        return url.replace(/^https?:\/\/(www\.)?qidi3d\.com/, 'https://us.qidi3d.com');
       }
     }
 
