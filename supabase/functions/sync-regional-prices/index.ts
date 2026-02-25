@@ -10,7 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Regional store domains - CORRECTED mappings
+// Regional store domains - COMPLETE mappings with all verified regional subdomains
 const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   // === MAJOR BRANDS WITH VERIFIED REGIONAL STORES ===
   'bambu-lab': { 
@@ -30,9 +30,11 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   },
   'polymaker': { 
     US: 'us.polymaker.com', 
-    EU: 'eu.polymaker.com' 
+    CA: 'ca.polymaker.com',
+    UK: 'uk.polymaker.com',
+    EU: 'eu.polymaker.com',
+    AU: 'au.polymaker.com'
   },
-  // Creality - uses store.creality.com prefix
   'creality': { 
     US: 'store.creality.com', 
     CA: 'ca.store.creality.com', 
@@ -40,13 +42,42 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     EU: 'eu.store.creality.com', 
     AU: 'au.store.creality.com' 
   },
-  // Anycubic - uses store.anycubic.com prefix
   'anycubic': { 
     US: 'store.anycubic.com', 
     CA: 'ca.store.anycubic.com', 
     UK: 'uk.store.anycubic.com', 
     EU: 'eu.store.anycubic.com', 
     AU: 'au.store.anycubic.com' 
+  },
+  'sunlu': {
+    US: 'store.sunlu.com',
+    CA: 'ca.sunlu.com',
+    UK: 'uk.sunlu.com',
+    AU: 'au.sunlu.com',
+    EU: 'store.sunlu.com'  // EU shares US domain with geo-pricing
+  },
+  'eryone': {
+    US: 'eryone3d.com',
+    CA: 'ca.eryone3d.com',
+    UK: 'uk.eryone3d.com',
+    EU: 'de.eryone3d.com',
+    AU: 'au.eryone3d.com'
+  },
+  'esun': {
+    US: 'esun3dstore.com',
+    EU: 'esun3dstoreeu.com',
+    UK: 'esun3dstore.uk'
+  },
+  'kingroon': {
+    US: 'kingroon.com',
+    CA: 'ca.kingroon.com',
+    UK: 'uk.kingroon.com',
+    EU: 'eu.kingroon.com',
+    AU: 'au.kingroon.com'
+  },
+  'sovol': {
+    US: 'www.sovol3d.com',
+    EU: 'sovol.eu'
   },
   'qidi': { 
     US: 'us.qidi3d.com', 
@@ -59,26 +90,10 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     US: 'www.flashforge.com', 
     EU: 'eu.flashforge.com' 
   },
-  // === ADDITIONAL BRANDS ===
-  'sunlu': {
-    US: 'www.sunlu.com',
-    EU: 'eu.sunlu.com'
-  },
-  'eryone': {
-    US: 'eryone3d.com',
-    EU: 'eu.eryone3d.com'
-  },
   'jayo': {
     US: 'www.jayo3d.com',
     UK: 'uk.jayo3d.com',
     EU: 'eu.jayo3d.com'
-  },
-  'kingroon': {
-    US: 'www.kingroon.com',
-    EU: 'eu.kingroon.com'
-  },
-  'sovol': {
-    US: 'www.sovol3d.com'
   },
   'raise3d': {
     US: 'shop.raise3d.com',
@@ -106,6 +121,13 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   'voxelab': {
     US: 'www.voxelab3dp.com',
     EU: 'eu.voxelab3dp.com'
+  },
+  'flsun': {
+    US: 'us.store.flsun3d.com',
+    CA: 'ca.store.flsun3d.com',
+    UK: 'uk.store.flsun3d.com',
+    EU: 'eu.store.flsun3d.com',
+    AU: 'au.store.flsun3d.com'
   },
 };
 
