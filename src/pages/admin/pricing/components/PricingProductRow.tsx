@@ -1,10 +1,16 @@
 import { TableRow, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react';
+import { ChevronRight, ChevronDown, AlertTriangle, HandCoins, Box } from 'lucide-react';
 import type { ProductGroup, ProductTypeConfig } from '../types';
 import { formatCurrency } from '../constants';
 import { StatusSummary, ColorSwatches } from './helpers';
+
+/** Brand-level pricing model badges for non-syncable products */
+const MANUAL_PRICING_BRANDS: Record<string, { label: string; tooltip: string; className: string; icon: typeof HandCoins }> = {
+  'UltiMaker': { label: 'Quote-Based', tooltip: 'Enterprise pricing — request a quote from UltiMaker or authorized dealer', className: 'bg-blue-500/15 text-blue-600 border-blue-500/30', icon: HandCoins },
+  'Voron Design': { label: 'Est. BOM Cost', tooltip: 'Open-source project — price is community-estimated Bill of Materials cost', className: 'bg-purple-500/15 text-purple-600 border-purple-500/30', icon: Box },
+};
 
 interface PricingProductRowProps {
   group: ProductGroup;
@@ -45,6 +51,21 @@ export function PricingProductRow({ group, isExpanded, onToggleExpand, config }:
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground">{group.brand}</span>
             {group.productSubtype && <span className="text-[10px] text-muted-foreground font-mono">· {group.productSubtype}</span>}
+            {group.syncStatus === 'manual_only' && MANUAL_PRICING_BRANDS[group.brand] && (() => {
+              const cfg = MANUAL_PRICING_BRANDS[group.brand];
+              const BadgeIcon = cfg.icon;
+              return (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className={`text-[9px] px-1.5 py-0 gap-0.5 ${cfg.className}`}>
+                      <BadgeIcon className="w-2.5 h-2.5" />
+                      {cfg.label}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>{cfg.tooltip}</TooltipContent>
+                </Tooltip>
+              );
+            })()}
           </div>
         </div>
       </TableCell>
