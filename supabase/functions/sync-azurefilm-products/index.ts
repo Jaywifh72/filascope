@@ -255,7 +255,7 @@ async function scrapeProductPages(
           return {
             url: product.url,
             h1Title,
-            price: priceEur ? priceEur * EUR_TO_USD_RATE : null,
+            price: null, // No USD store — EUR only
             priceEur,
             imageUrl,
             category: product.category,
@@ -465,10 +465,9 @@ Deno.serve(async (req) => {
           product_line_id: enrichment.productLineId,
           color_family: colorName,
           color_hex: colorHex,
-          variant_price: product.price,
           price_eur: product.priceEur,
           featured_image: product.imageUrl,
-          product_url: product.url,
+          product_url_eu: product.url,
           net_weight_g: weightGrams,
           diameter_nominal_mm: 1.75,
           nozzle_temp_min_c: enrichment.nozzleTempMin,
