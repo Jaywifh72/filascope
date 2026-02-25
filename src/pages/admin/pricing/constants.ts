@@ -32,6 +32,7 @@ export const BRAND_REGIONAL_CONFIGS: Record<string, BrandRegionalConfig> = {
   'Polymaker':    { pattern: 'subdomain', baseDomain: 'polymaker.com', regions: { CA: { subdomain: 'ca' } } },
   'Elegoo':       { pattern: 'subdomain', baseDomain: 'elegoo.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
   'Anycubic':     { pattern: 'subdomain', baseDomain: 'anycubic.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { domain: 'www.anycubic.au' } } },
+  'QIDI Tech':    { pattern: 'subdomain', baseDomain: 'qidi3d.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
   'Creality':     { pattern: 'path', baseUrl: 'https://store.creality.com', regions: { CA: 'ca', UK: 'uk', EU: 'eu', AU: 'au', JP: 'jp' } },
   // Single global-store brands: same product URL serves multiple regions with geo-localized currency.
   'Prusament':    { pattern: 'same_url', regions: ['EU', 'US'] },
