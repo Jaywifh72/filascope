@@ -107,9 +107,16 @@ async function tryShopifyJson(url: string): Promise<ExtractionResult> {
 }
 
 // Call get-current-price Edge Function for Firecrawl-based extraction
+interface CurrentPriceOptions {
+  currency?: string | null;
+  filamentId?: string | null;
+  productType?: 'filament' | 'printer';
+}
+
 async function callGetCurrentPrice(
   productUrl: string,
   targetWeightGrams?: number | null,
+  options?: CurrentPriceOptions,
 ): Promise<ExtractionResult> {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -131,6 +138,9 @@ async function callGetCurrentPrice(
         // Default sync should not use manual-refresh rate-limited mode
         forceRefresh: false,
         targetWeightGrams: targetWeightGrams ?? null,
+        currency: options?.currency ?? undefined,
+        filamentId: options?.filamentId ?? undefined,
+        productType: options?.productType || 'filament',
       })
     });
     
@@ -185,6 +195,7 @@ async function extractPrice(
   productUrl: string,
   brandConfig: BrandConfig | null,
   targetWeightGrams?: number | null,
+  options?: CurrentPriceOptions,
 ): Promise<ExtractionResult> {
   const platformType = brandConfig?.platform_type || 'unknown';
   
@@ -199,7 +210,7 @@ async function extractPrice(
   
   // Strategy 2: Firecrawl for supported platforms
   if (['shopify', 'woocommerce', 'firecrawl', 'custom'].includes(platformType)) {
-    return await callGetCurrentPrice(productUrl, targetWeightGrams);
+    return await callGetCurrentPrice(productUrl, targetWeightGrams, options);
   }
   
   // Strategy 3: Skip unsupported platforms
@@ -208,7 +219,7 @@ async function extractPrice(
   }
   
   // Default: try Firecrawl anyway
-  return await callGetCurrentPrice(productUrl, targetWeightGrams);
+  return await callGetCurrentPrice(productUrl, targetWeightGrams, options);
 }
 
 function isUnavailableExtraction(extraction: ExtractionResult): boolean {
@@ -517,7 +528,11 @@ Deno.serve(async (req) => {
           
           const extractionStart = Date.now();
           const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
-          const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams);
+          const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams, {
+            currency: null,
+            filamentId: productType === 'filament' ? product.id : null,
+            productType,
+          });
           const responseTime = Date.now() - extractionStart;
           
           // Log extraction
@@ -625,7 +640,11 @@ Deno.serve(async (req) => {
           
           const extractionStart = Date.now();
           const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
-          const extraction = await extractPrice(storeUrl, brandConfig, targetWeightGrams);
+          const extraction = await extractPrice(storeUrl, brandConfig, targetWeightGrams, {
+            currency: regionalUrl.currency_code,
+            filamentId: productType === 'filament' ? product.id : null,
+            productType,
+          });
           const responseTime = Date.now() - extractionStart;
           
           // Log extraction with region info
@@ -744,7 +763,11 @@ Deno.serve(async (req) => {
         
         const extractionStart = Date.now();
         const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
-        const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams);
+        const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams, {
+          currency: null,
+          filamentId: productType === 'filament' ? product.id : null,
+          productType,
+        });
         const responseTime = Date.now() - extractionStart;
         
         // Log extraction attempt
