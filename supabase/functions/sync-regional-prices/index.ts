@@ -202,6 +202,13 @@ async function fetchShopifyProducts(domain: string, limit: number = 250): Promis
         console.error(`[sync-regional-prices] Failed to fetch from ${domain}: ${response.status}`);
         break;
       }
+
+      // Verify the response is JSON before parsing (prevents crashes on non-Shopify stores)
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        console.error(`[sync-regional-prices] Non-JSON response from ${domain}: ${contentType}`);
+        break;
+      }
       
       const data = await response.json();
       const products = data.products || [];
@@ -370,9 +377,43 @@ Deno.serve(async (req) => {
       console.log(`[sync-regional-prices] Processing ${region} from ${domain}`);
       regionBreakdown[region] = { found: 0, matched: 0, updated: 0, skipped: 0, rejected: 0 };
 
-      // Fetch products from regional store
-      const rawProducts = await fetchShopifyProducts(domain, limit);
-      const regionalProducts = parseShopifyProducts(rawProducts, region);
+      // Check if this is a non-Shopify Bambu Lab store (all except JP)
+      const isBambuLabNonShopify = domain.includes('store.bambulab.com') && !domain.includes('jp.store.bambulab.com');
+
+      let regionalProducts: RegionalProduct[];
+
+      if (isBambuLabNonShopify) {
+        // Bambu Lab migrated to custom Next.js store — no /products.json endpoint
+        // Use existing filaments from DB and fetch prices individually via get-current-price-v2
+        console.log(`[sync-regional-prices] ${domain} is non-Shopify Bambu Lab, using DB filaments for ${region}`);
+
+        if (!existingFilaments?.length) {
+          console.log(`[sync-regional-prices] No Bambu Lab filaments found in DB for ${region}`);
+          regionBreakdown[region] = { found: 0, matched: 0, updated: 0, skipped: 0, rejected: 0 };
+          continue;
+        }
+
+        // Convert DB filaments to RegionalProduct format
+        regionalProducts = existingFilaments.map(f => ({
+          productId: f.product_id || String(f.id),
+          handle: f.product_handle || '',
+          title: f.product_title || '',
+          price: f.variant_price ? parseFloat(String(f.variant_price)) : null,
+          compareAtPrice: null,
+          url: `https://${domain}/products/${f.product_handle || ''}`,
+          available: true,
+          sku: f.variant_sku || undefined,
+          region,
+          currency: REGION_CURRENCIES[region as RegionCode] || 'USD',
+        }));
+
+        console.log(`[sync-regional-prices] Found ${regionalProducts.length} Bambu Lab filaments from DB for ${region}`);
+      } else {
+        // Standard Shopify product fetching
+        const rawProducts = await fetchShopifyProducts(domain, limit);
+        regionalProducts = parseShopifyProducts(rawProducts, region);
+      }
+
       regionBreakdown[region].found = regionalProducts.length;
 
       console.log(`[sync-regional-prices] Found ${regionalProducts.length} filament products in ${region} store`);
