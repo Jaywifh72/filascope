@@ -74,7 +74,6 @@ function parseWeightGrams(name: string): number | null {
 function scoreVariant(variant: any, targetWeightGrams?: number | null): number {
   let score = 0;
   const name = (variant.name || "").toLowerCase();
-  const desc = (variant.description || "").toLowerCase();
 
   if (variant.offers?.availability?.includes("InStock")) score += 20;
   if (variant.offers?.price > 0) score += 5;
@@ -85,12 +84,9 @@ function scoreVariant(variant: any, targetWeightGrams?: number | null): number {
     if (variantWeight && Math.abs(variantWeight - targetWeightGrams) < 50) {
       score += 50; // strong match bonus
     }
-  } else {
-    // No target weight — mild preferences (kept low so cheapest-in-stock wins in tiebreak)
-    if (name.includes("refill") || desc.includes("refill")) score += 3;
-    if (name.includes("spool") || desc.includes("spool")) score += 2;
   }
 
+  // Discourage tiny sample packs when present
   if (name.includes("250g") || name.includes("0.25kg")) score -= 5;
 
   return score;
@@ -107,22 +103,44 @@ function extractPriceFromJsonLd(
 
       if (candidates.length === 0) continue;
 
-      // Score all candidates
-      const scored = candidates.map((v: any) => ({
+      if (targetWeightGrams) {
+        // Targeted mode: score by weight match first, then cheapest tie-break
+        const scored = candidates.map((v: any) => ({
+          variant: v,
+          score: scoreVariant(v, targetWeightGrams),
+          price: parseFloat(String(v.offers.price)),
+        }));
+
+        scored.sort((a, b) => b.score - a.score || a.price - b.price);
+        const best = scored[0];
+        console.log(`[BAMBULAB] Variant selected: "${best.variant.name}" price=${best.price} score=${best.score} (of ${scored.length} candidates, targetWeight=${targetWeightGrams})`);
+
+        return {
+          price: best.price,
+          currency: best.variant.offers.priceCurrency || "USD",
+          available: best.variant.offers.availability?.includes("InStock") ?? false,
+        };
+      }
+
+      // Default mode (no target weight): choose the cheapest in-stock variant,
+      // matching storefront "From $X" behavior for multi-size products.
+      const normalized = candidates.map((v: any) => ({
         variant: v,
-        score: scoreVariant(v, targetWeightGrams),
         price: parseFloat(String(v.offers.price)),
+        available: v.offers.availability?.includes("InStock") ?? false,
       }));
 
-      // Sort: highest score first, then cheapest price as tiebreak
-      scored.sort((a, b) => b.score - a.score || a.price - b.price);
+      const inStock = normalized.filter((v) => v.available);
+      const pool = inStock.length > 0 ? inStock : normalized;
+      pool.sort((a, b) => a.price - b.price);
 
-      const best = scored[0];
-      console.log(`[BAMBULAB] Variant selected: "${best.variant.name}" price=${best.price} score=${best.score} (of ${scored.length} candidates, targetWeight=${targetWeightGrams || "none"})`);
+      const best = pool[0];
+      console.log(`[BAMBULAB] Variant selected (cheapest${inStock.length > 0 ? " in-stock" : ""}): "${best.variant.name}" price=${best.price}`);
+
       return {
         price: best.price,
         currency: best.variant.offers.priceCurrency || "USD",
-        available: best.variant.offers.availability?.includes("InStock") ?? false,
+        available: best.available,
       };
     }
 

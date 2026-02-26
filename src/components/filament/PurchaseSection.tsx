@@ -88,7 +88,8 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
   } = useCurrentPrice(
     regionalUrl || filament.product_url,
     regionalPrice || filament.variant_price,
-    fallbackUrl
+    fallbackUrl,
+    filament.net_weight_g
   );
   
   // Check if discontinued

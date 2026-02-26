@@ -88,7 +88,8 @@ function isTransientError(error: any): boolean {
 export function useCurrentPrice(
   productUrl: string | null | undefined,
   fallbackPrice: number | null,
-  fallbackUrl?: string | null // Original US URL to try if regional URL fails
+  fallbackUrl?: string | null, // Original US URL to try if regional URL fails
+  targetWeightGrams?: number | null,
 ): CurrentPriceResult {
   const { currency: userCurrency, convertPrice, getConversionRate } = useRegion();
   
@@ -130,13 +131,15 @@ export function useCurrentPrice(
       return;
     }
 
-    // Avoid duplicate fetches for same URL
-    if (fetchedUrlRef.current === productUrl) {
+    const requestKey = `${productUrl}::${targetWeightGrams ?? 'none'}`;
+
+    // Avoid duplicate fetches for same URL + target weight
+    if (fetchedUrlRef.current === requestKey) {
       return;
     }
 
-    // Use raw currency for cache key since we convert after
-    const cacheKey = productUrl;
+    // Include target weight in cache key to avoid cross-variant contamination
+    const cacheKey = requestKey;
     
     // Check cache first - also verify cache version matches to invalidate stale extraction logic
     const cached = priceCache.get(cacheKey);
@@ -152,7 +155,7 @@ export function useCurrentPrice(
         fetchedAt: cached.fetchedAt,
         isSuspicious: false,
       });
-      fetchedUrlRef.current = productUrl;
+      fetchedUrlRef.current = requestKey;
       return;
     }
 
@@ -167,7 +170,10 @@ export function useCurrentPrice(
         // Don't pass currency preference - let the edge function return the store's native currency
         const fnName = getPriceEndpoint(url);
         const result = await supabase.functions.invoke(fnName, {
-          body: { productUrl: url },
+          body: {
+            productUrl: url,
+            targetWeightGrams: targetWeightGrams ?? null,
+          },
         });
         
         // Retry on transient boot errors
@@ -229,7 +235,7 @@ export function useCurrentPrice(
               isSuspicious: true,
               error: 'Price extraction returned suspicious value',
             }));
-            fetchedUrlRef.current = productUrl;
+            fetchedUrlRef.current = requestKey;
             return;
           }
           
@@ -278,7 +284,7 @@ export function useCurrentPrice(
         }));
       }
       
-      fetchedUrlRef.current = productUrl;
+      fetchedUrlRef.current = requestKey;
     };
 
     fetchCurrentPrice();
@@ -288,7 +294,7 @@ export function useCurrentPrice(
         abortControllerRef.current.abort();
       }
     };
-  }, [productUrl, fallbackPrice, fallbackUrl]);
+  }, [productUrl, fallbackPrice, fallbackUrl, targetWeightGrams]);
 
   // Convert prices to user's currency
   const convertedState = useMemo((): CurrentPriceResult => {
