@@ -110,7 +110,9 @@ async function callGetCurrentPrice(productUrl: string): Promise<ExtractionResult
       return { success: false, price: null, compareAtPrice: null, error: 'Missing env vars' };
     }
     
-    const response = await fetch(`${supabaseUrl}/functions/v1/get-current-price`, {
+    const isWc = productUrl.includes('azurefilm.com');
+    const fnPath = isWc ? 'get-current-price-wc' : 'get-current-price';
+    const response = await fetch(`${supabaseUrl}/functions/v1/${fnPath}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

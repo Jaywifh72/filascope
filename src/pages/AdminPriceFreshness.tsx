@@ -163,7 +163,8 @@ const AdminPriceFreshness = () => {
 
     setRefreshingIds((prev) => new Set([...prev, productId]));
     try {
-      const { error } = await supabase.functions.invoke('get-current-price', {
+      const fnName = productUrl.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const { error } = await supabase.functions.invoke(fnName, {
         body: { 
           url: productUrl,
           filamentId: productId,

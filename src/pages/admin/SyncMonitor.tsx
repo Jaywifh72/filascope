@@ -468,7 +468,8 @@ export function SyncMonitorContent() {
         url = data?.product_url ?? undefined;
       }
       if (!url) { toast.error('No product URL available'); return; }
-      const res = await supabase.functions.invoke('get-current-price', {
+      const fnName = url.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const res = await supabase.functions.invoke(fnName, {
         body: { filamentId, productUrl: url },
       });
       if (res.error) toast.error(res.error.message);

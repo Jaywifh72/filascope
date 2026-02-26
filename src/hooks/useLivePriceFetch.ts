@@ -89,7 +89,8 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
 
   const fetchFromUrl = useCallback(async (url: string, currency: string, retryCount = 0): Promise<{ data: any; error: any }> => {
     try {
-      const result = await supabase.functions.invoke('get-current-price', {
+      const fnName = url.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const result = await supabase.functions.invoke(fnName, {
         body: { productUrl: url, currency },
       });
       

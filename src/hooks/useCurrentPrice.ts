@@ -164,7 +164,8 @@ export function useCurrentPrice(
     const fetchPriceFromUrl = async (url: string, retryCount = 0): Promise<{ data: any; error: any }> => {
       try {
         // Don't pass currency preference - let the edge function return the store's native currency
-        const result = await supabase.functions.invoke('get-current-price', {
+        const fnName = url.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+        const result = await supabase.functions.invoke(fnName, {
           body: { productUrl: url },
         });
         

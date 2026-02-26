@@ -159,7 +159,8 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
       const dbDataParsed = dbData as Record<string, unknown> | null;
       
       // Then call the live edge function
-      const { data, error } = await supabase.functions.invoke('get-current-price', {
+      const fnName = testUrl.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const { data, error } = await supabase.functions.invoke(fnName, {
         body: {
           productUrl: testUrl,
           preferredCurrency: 'USD',

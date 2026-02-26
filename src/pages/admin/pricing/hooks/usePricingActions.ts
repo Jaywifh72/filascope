@@ -456,7 +456,8 @@ export function usePricingActions(
         return fallbackResult;
       }
 
-      const { data, error } = await supabase.functions.invoke('get-current-price', {
+      const fnName = store.productUrl.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const { data, error } = await supabase.functions.invoke(fnName, {
         body: {
           productUrl: store.productUrl,
           currency: store.currency,
