@@ -1,178 +1,324 @@
+// @ts-nocheck
 /**
- * BAMBU LAB JSON-LD PRICE EXTRACTOR
- * Dedicated extractor for Bambu Lab's Next.js stores (US/CA/UK/EU/AU).
- * JP remains on Shopify and is handled by the Shopify extractor.
- *
- * Fetches product HTML with geo-spoofed headers, parses JSON-LD
- * (ProductGroup / Product), and applies Bambu Lab–specific variant
- * selection (prefer Refill 1kg → Spool 1kg → first available).
+ * BAMBU LAB PRICE EXTRACTOR
+ * 
+ * Extracts prices from Bambu Lab's custom Next.js store using JSON-LD.
+ * Bambu Lab migrated from Shopify to a custom platform in early 2025.
+ * Only JP remains on Shopify. All other regions (US, CA, UK, EU, AU) 
+ * use this extractor.
+ * 
+ * Data source: Server-side rendered JSON-LD with ProductGroup schema
+ * containing all variants with prices, currencies, and availability.
  */
+import type { PriceResponse } from './price-types.ts';
+import { withTimeout } from './price-timeout.ts';
+import { 
+  getRegionHeaders, getSpoofedHeaders, isGeoRedirectDomain
+} from './regional-fetch.ts';
+import { logBrokenUrl } from './price-db.ts';
+import { parseWeightFromTitle, parseDiameter } from './price-utils.ts';
 
-import type { PriceResponse } from "./price-types.ts";
-import { withTimeout } from "./price-timeout.ts";
-import { fetchRegionalStore, detectRegionFromUrl } from "./regional-fetch.ts";
+const TIMEOUT_MS = 15000; // 15 second timeout
 
-const TIMEOUT_MS = 12_000;
-
-// ── Variant scoring ─────────────────────────────────────────
-
-interface BambuVariant {
+interface BambuLabVariant {
   name: string;
-  price: number;
-  currency: string;
-  available: boolean;
-  compareAtPrice: number | null;
+  sku: string;
+  offers: {
+    price: number;
+    priceCurrency: string;
+    availability: string;
+  };
 }
 
-function parseVariants(product: any): BambuVariant[] {
-  const variants: BambuVariant[] = [];
+interface BambuLabProductJsonLd {
+  '@type': string;
+  name: string;
+  productGroupID: string;
+  hasVariant: BambuLabVariant[];
+  url: string;
+}
 
-  const items: any[] = product.hasVariant ?? [];
-  if (items.length === 0 && product.offers) {
-    // Flat product – treat offers as a single variant
-    const offers = Array.isArray(product.offers) ? product.offers : [product.offers];
-    for (const o of offers) {
-      variants.push({
-        name: product.name ?? "",
-        price: parseFloat(String(o.price ?? "0").replace(",", ".")),
-        currency: String(o.priceCurrency ?? "USD").toUpperCase(),
-        available: String(o.availability ?? "").includes("InStock"),
-        compareAtPrice: null,
-      });
-    }
-    return variants;
+/**
+ * Extract JSON-LD ProductGroup data from HTML
+ */
+function extractProductJsonLd(html: string): BambuLabProductJsonLd | null {
+  // Find all JSON-LD script blocks
+  const blocks: string[] = [];
+  let searchFrom = 0;
+  const marker = 'application/ld+json">';
+
+  while (true) {
+    const idx = html.indexOf(marker, searchFrom);
+    if (idx === -1) break;
+    const contentStart = idx + marker.length;
+    const endIdx = html.indexOf('</script>', contentStart);
+    if (endIdx === -1) break;
+    blocks.push(html.substring(contentStart, endIdx).trim());
+    searchFrom = endIdx;
   }
 
-  for (const v of items) {
-    const offers = Array.isArray(v.offers) ? v.offers : v.offers ? [v.offers] : [];
-    for (const o of offers) {
-      variants.push({
-        name: v.name ?? "",
-        price: parseFloat(String(o.price ?? "0").replace(",", ".")),
-        currency: String(o.priceCurrency ?? "USD").toUpperCase(),
-        available: String(o.availability ?? "").includes("InStock"),
-        compareAtPrice: null,
-      });
-    }
-  }
-  return variants;
-}
-
-function scoreVariant(v: BambuVariant, targetWeightGrams: number | null): number {
-  const lower = v.name.toLowerCase();
-  let score = 0;
-
-  // Weight matching (if target provided)
-  if (targetWeightGrams) {
-    if (targetWeightGrams <= 500 && lower.includes("0.25kg")) score += 50;
-    else if (targetWeightGrams <= 750 && lower.includes("0.5kg")) score += 50;
-    else if (targetWeightGrams <= 1100 && lower.includes("1kg")) score += 50;
-    else if (lower.includes("1kg")) score += 20;
-  } else {
-    // Default: prefer 1kg
-    if (lower.includes("1kg")) score += 30;
-  }
-
-  // Prefer refill (cheaper, standard SKU)
-  if (lower.includes("refill")) score += 20;
-  // Next: spool
-  if (lower.includes("spool") || lower.includes("filament with spool")) score += 10;
-
-  // Prefer available
-  if (v.available) score += 5;
-
-  return score;
-}
-
-function selectBestVariant(variants: BambuVariant[], targetWeightGrams: number | null): BambuVariant {
-  if (variants.length <= 1) return variants[0];
-
-  const scored = variants.map(v => ({ v, s: scoreVariant(v, targetWeightGrams) }));
-  scored.sort((a, b) => b.s - a.s);
-  return scored[0].v;
-}
-
-// ── JSON-LD parsing ─────────────────────────────────────────
-
-function extractProductJsonLd(html: string): any | null {
-  const re = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
-  let match;
-  while ((match = re.exec(html)) !== null) {
+  // Find the ProductGroup block
+  for (const block of blocks) {
     try {
-      const parsed = JSON.parse(match[1].trim());
-      const items = Array.isArray(parsed) ? parsed : [parsed];
-      for (const item of items) {
-        if (item["@graph"]) {
-          const found = item["@graph"].find(
-            (g: any) => g["@type"] === "ProductGroup" || g["@type"] === "Product",
-          );
-          if (found) return found;
-        }
-        if (item["@type"] === "ProductGroup" || item["@type"] === "Product") return item;
+      const parsed = JSON.parse(block);
+
+      if (parsed['@type'] === 'ProductGroup' && parsed.hasVariant?.length > 0) {
+        return parsed as BambuLabProductJsonLd;
       }
-    } catch { /* skip malformed block */ }
+
+      // Some pages might use Product instead of ProductGroup
+      if (parsed['@type'] === 'Product' && parsed.offers) {
+        return {
+          '@type': 'Product',
+          name: parsed.name,
+          productGroupID: parsed.sku || '',
+          url: parsed.url || '',
+          hasVariant: [{
+            name: parsed.name,
+            sku: parsed.sku || '',
+            offers: {
+              price: typeof parsed.offers.price === 'number' ? parsed.offers.price : parseFloat(parsed.offers.price),
+              priceCurrency: parsed.offers.priceCurrency,
+              availability: parsed.offers.availability || '',
+            }
+          }]
+        } as BambuLabProductJsonLd;
+      }
+    } catch (e) {
+      // Invalid JSON, skip this block
+      continue;
+    }
   }
+
   return null;
 }
 
-// ── Main extractor ──────────────────────────────────────────
+/**
+ * Select the best variant for price display.
+ * Prefer: 1kg Refill > 1kg Spool > any available > first variant
+ */
+function selectBestBambuLabVariant(
+  variants: BambuLabVariant[],
+  targetWeightGrams: number | null,
+  productTitle: string,
+): BambuLabVariant {
+  if (variants.length === 1) return variants[0];
 
+  const targetWeight = targetWeightGrams || 1000; // Default to 1kg
+
+  // Score variants
+  const scored = variants.map(v => {
+    let score = 0;
+    const name = v.name.toLowerCase();
+    const isAvailable = v.offers.availability?.includes('InStock');
+
+    // Weight matching
+    if (name.includes('1kg') || name.includes('1000g')) {
+      score += 100; // Strong preference for 1kg
+    } else if (name.includes('250g') || name.includes('0.25kg')) {
+      score += 10; // Low preference for 250g samples
+    }
+
+    // Type preference: Refill > Spool
+    if (name.includes('refill')) score += 50;
+    if (name.includes('filament with spool') || name.includes('with spool')) score += 30;
+
+    // Availability bonus
+    if (isAvailable) score += 20;
+
+    // Price validity
+    if (v.offers.price > 0) score += 10;
+
+    return { variant: v, score };
+  });
+
+  // Sort by score descending
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0].variant;
+}
+
+/**
+ * Detect the expected currency for a Bambu Lab regional URL
+ */
+function detectBambuLabCurrency(url: string): string {
+  const l = url.toLowerCase();
+  if (l.includes('us.store') || l.includes('/us/')) return 'USD';
+  if (l.includes('ca.store') || l.includes('/ca/')) return 'CAD';
+  if (l.includes('uk.store') || l.includes('/uk/')) return 'GBP';
+  if (l.includes('eu.store') || l.includes('/eu/')) return 'EUR';
+  if (l.includes('au.store') || l.includes('/au/')) return 'AUD';
+  if (l.includes('jp.store') || l.includes('/jp/')) return 'JPY';
+  if (l.includes('cn.store') || l.includes('/cn/')) return 'CNY';
+  return 'USD'; // Default
+}
+
+/**
+ * Main extraction function
+ */
 export async function extractBambuLabPrice(
   productUrl: string,
   preferredCurrency: string,
   targetWeightGrams: number | null = null,
 ): Promise<PriceResponse> {
-  const region = detectRegionFromUrl(productUrl) || "US";
+  const expectedCurrency = preferredCurrency || detectBambuLabCurrency(productUrl);
+
+  console.log(`[BAMBULAB] Extracting price from ${productUrl}, expected currency: ${expectedCurrency}`);
 
   try {
-    const fetchResult = await withTimeout(
-      fetchRegionalStore(productUrl, region, { timeoutMs: TIMEOUT_MS }),
-      TIMEOUT_MS + 2000,
+    // Determine target region from currency
+    const currencyToRegion: Record<string, string> = {
+      USD: 'US', CAD: 'CA', GBP: 'UK', EUR: 'EU', AUD: 'AU', JPY: 'JP', CNY: 'CN'
+    };
+    const targetRegion = currencyToRegion[expectedCurrency] || 'US';
+
+    // Build headers with geo-spoofing for the target region
+    const regionHeaders = getRegionHeaders(targetRegion);
+    const spoofedHeaders = getSpoofedHeaders(targetRegion);
+    const headers: Record<string, string> = {
+      ...regionHeaders,
+      ...spoofedHeaders,
+      'Accept': 'text/html,application/xhtml+xml',
+    };
+
+    // First attempt: fetch with manual redirect to detect geo-redirect
+    let response = await withTimeout(
+      fetch(productUrl, { headers, redirect: 'manual' }),
+      TIMEOUT_MS
     );
 
-    if (!fetchResult.success || !fetchResult.response) {
-      if (fetchResult.statusCode === 404) {
-        return { success: false, price: null, compareAtPrice: null, currency: preferredCurrency, available: false, source: "bambulab-jsonld", fetchedAt: new Date().toISOString(), is404: true, error: "HTTP 404" };
+    let finalUrl = productUrl;
+
+    // Handle redirect
+    if (response.status >= 300 && response.status < 400) {
+      const redirectUrl = response.headers.get('location') || '';
+      const fullRedirectUrl = redirectUrl.startsWith('/') 
+        ? `${new URL(productUrl).origin}${redirectUrl}` 
+        : redirectUrl;
+
+      console.log(`[BAMBULAB] Redirected to ${fullRedirectUrl}`);
+
+      // Follow the redirect with spoofed headers
+      if (fullRedirectUrl) {
+        response = await withTimeout(
+          fetch(fullRedirectUrl, { headers, redirect: 'follow' }),
+          TIMEOUT_MS
+        );
+        finalUrl = fullRedirectUrl;
       }
-      return { success: false, price: null, compareAtPrice: null, currency: preferredCurrency, available: false, source: "bambulab-jsonld", fetchedAt: new Date().toISOString(), error: `Fetch failed (${fetchResult.statusCode})` };
     }
 
-    if (fetchResult.warning) {
-      console.warn(`[BAMBULAB] ${fetchResult.warning}`);
+    // If still not OK, try following redirects
+    if (!response.ok) {
+      console.log(`[BAMBULAB] First attempt got ${response.status}, retrying with follow`);
+      response = await withTimeout(
+        fetch(productUrl, { headers, redirect: 'follow' }),
+        TIMEOUT_MS
+      );
     }
 
-    const html = await fetchResult.response.text();
-    const product = extractProductJsonLd(html);
-
-    if (!product) {
-      return { success: false, price: null, compareAtPrice: null, currency: preferredCurrency, available: false, source: "bambulab-jsonld", fetchedAt: new Date().toISOString(), error: "No ProductGroup/Product JSON-LD found" };
+    if (!response.ok) {
+      if (response.status === 404) {
+        await logBrokenUrl(productUrl, '404_http');
+      }
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        currency: expectedCurrency,
+        available: false,
+        source: 'bambulab-jsonld',
+        fetchedAt: new Date().toISOString(),
+        is404: response.status === 404,
+      };
     }
 
-    const variants = parseVariants(product);
-    if (variants.length === 0) {
-      return { success: false, price: null, compareAtPrice: null, currency: preferredCurrency, available: false, source: "bambulab-jsonld", fetchedAt: new Date().toISOString(), error: "No variants in JSON-LD" };
+    const html = await response.text();
+
+    if (!html || html.length < 1000) {
+      console.log(`[BAMBULAB] HTML too short (${html.length} chars), likely error page`);
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        currency: expectedCurrency,
+        available: false,
+        source: 'bambulab-jsonld',
+        fetchedAt: new Date().toISOString(),
+      };
     }
 
-    const best = selectBestVariant(variants, targetWeightGrams);
+    // Extract JSON-LD
+    const productData = extractProductJsonLd(html);
 
-    // Currency check
-    if (best.currency !== preferredCurrency.toUpperCase()) {
-      console.warn(`[BAMBULAB] Currency mismatch: JSON-LD=${best.currency}, expected=${preferredCurrency}`);
+    if (!productData) {
+      console.log(`[BAMBULAB] No ProductGroup JSON-LD found in HTML`);
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        currency: expectedCurrency,
+        available: false,
+        source: 'bambulab-jsonld',
+        fetchedAt: new Date().toISOString(),
+      };
     }
+
+    console.log(`[BAMBULAB] Found ${productData.hasVariant.length} variants for "${productData.name}"`);
+
+    // Select best variant
+    const variant = selectBestBambuLabVariant(
+      productData.hasVariant,
+      targetWeightGrams,
+      productData.name
+    );
+
+    const price = typeof variant.offers.price === 'number' 
+      ? variant.offers.price 
+      : parseFloat(String(variant.offers.price));
+    const currency = variant.offers.priceCurrency || expectedCurrency;
+    const isAvailable = variant.offers.availability?.includes('InStock') ?? false;
+
+    // Warn if currency mismatch
+    if (currency !== expectedCurrency) {
+      console.log(`[BAMBULAB] Currency mismatch: got ${currency}, expected ${expectedCurrency}. URL may have geo-redirected.`);
+    }
+
+    // Validate price
+    if (isNaN(price) || price <= 0) {
+      console.log(`[BAMBULAB] Invalid price: ${price}`);
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        currency: expectedCurrency,
+        available: false,
+        source: 'bambulab-jsonld',
+        fetchedAt: new Date().toISOString(),
+      };
+    }
+
+    console.log(`[BAMBULAB] Success: ${productData.name} = ${price} ${currency} (${isAvailable ? 'in stock' : 'out of stock'})`);
 
     return {
       success: true,
-      price: best.price,
-      compareAtPrice: best.compareAtPrice,
-      currency: best.currency,
-      available: best.available,
-      variantTitle: best.name || null,
-      source: "bambulab-jsonld",
-      method: "bambulab_jsonld",
+      price,
+      compareAtPrice: null, // JSON-LD doesn't include compare price
+      currency,
+      available: isAvailable,
+      source: 'bambulab-jsonld',
       fetchedAt: new Date().toISOString(),
     };
+
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, price: null, compareAtPrice: null, currency: preferredCurrency, available: false, source: "bambulab-jsonld", fetchedAt: new Date().toISOString(), error: msg === "TIMEOUT" ? "timeout" : msg };
+    console.error(`[BAMBULAB] Error extracting price: ${error.message}`);
+    return {
+      success: false,
+      price: null,
+      compareAtPrice: null,
+      currency: expectedCurrency,
+      available: false,
+      source: 'bambulab-jsonld',
+      fetchedAt: new Date().toISOString(),
+    };
   }
 }
