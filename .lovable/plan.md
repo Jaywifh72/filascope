@@ -1,54 +1,60 @@
 
 
-# Bambu Lab Platform Detection and JSON-LD Extractor
+# Diagnosis: Why ALL 240 Bambu Lab Stores Show Failed
 
-## Summary
-Bambu Lab migrated US/CA/UK/EU/AU stores from Shopify to Next.js. JP remains on Shopify. The fix adds a dedicated `'bambulab'` platform type and a new JSON-LD extractor that fetches product pages with geo-spoofed headers.
+## Root Cause (Single Point of Failure)
 
-## Changes
+**File:** `supabase/functions/_shared/price-extract-bambulab.ts`, **line 14**
 
-### 1. `supabase/functions/_shared/price-platforms.ts`
-- Add `"bambulab"` to the `Platform` type union
-- Add detection rule before the default `return "shopify"`: if URL contains `store.bambulab.com` or `bambulab.com`, return `"bambulab"` -- except JP URLs which stay as `"shopify"`
-
-### 2. `supabase/functions/_shared/price-types.ts`
-- Add `"bambulab-jsonld"` to the `source` union on `PriceResponse` (line 36)
-- Add `"bambulab_jsonld"` to the `method` union (line 47)
-
-### 3. `supabase/functions/_shared/price-extract-bambulab.ts` (NEW, ~120 lines)
-Dedicated extractor for Bambu Lab's Next.js stores:
-
-- **Fetch**: Use `fetchRegionalStore()` from `regional-fetch.ts` with the detected region to handle geo-redirect cascading automatically
-- **Parse**: Extract all `<script type="application/ld+json">` blocks, find the one with `@type: "ProductGroup"` or `"Product"`
-- **Variant selection** (Bambu Lab-specific):
-  - Iterate `hasVariant` array (or `offers` array)
-  - Score each variant: prefer "Refill" + "1kg" (highest priority), then "Filament with spool"/"spool" + "1kg", then first available
-  - If `targetWeightGrams` is provided, use weight matching instead
-- **Currency**: Trust `priceCurrency` from JSON-LD, log warning if it mismatches expected currency
-- **Return**: Standard `PriceResponse` with `source: "bambulab-jsonld"`, `method: "bambulab_jsonld"`
-- **Error handling**: Return `is404: true` on 404, timeout errors via `withTimeout`
-
-### 4. `supabase/functions/get-current-price-v2/index.ts`
-- Import `extractBambuLabPrice` from `../_shared/price-extract-bambulab.ts`
-- Add `case "bambulab":` in the switch statement (between the direct-store cases and the shopify default):
-```text
-case "bambulab":
-  result = await extractBambuLabPrice(urlToFetch, expectedCurrency, targetWeightGrams);
-  break;
+```
+import { withTimeout } from './price-db.ts';
 ```
 
-## Architecture Notes
-- JP Bambu Lab URLs (`jp.store.bambulab.com`) continue routing through the Shopify extractor -- no change needed
-- No Firecrawl fallback required -- JSON-LD is server-side rendered and sufficient
-- `regional-fetch.ts` already lists `store.bambulab.com` and `bambulab.com` in `GEO_REDIRECT_DOMAINS` -- the `fetchRegionalStore()` function handles the full cascade (direct -> spoofed -> follow redirect)
-- The existing `extractJsonLdPrice()` in `price-extract-jsonld.ts` picks the cheapest variant globally; the new Bambu Lab extractor needs custom variant selection (Refill vs Spool) so it parses JSON-LD directly rather than delegating to the generic function
+`withTimeout` does NOT exist in `price-db.ts`. It is exported from `price-timeout.ts`. This causes a **boot failure** for every edge function that imports `price-extract-bambulab.ts` -- including `get-current-price-v2`.
 
-## File Summary
+The edge function logs confirm this with hundreds of identical errors:
+```
+worker boot error: Uncaught SyntaxError: The requested module './price-db.ts'
+does not provide an export named 'withTimeout'
+```
 
-| File | Action | Lines changed |
+Because `get-current-price-v2` crashes at boot, **no price extraction works at all** -- not just Bambu Lab, but potentially all brands routed through v2.
+
+## The Fix (1 line change)
+
+In `supabase/functions/_shared/price-extract-bambulab.ts`, change line 14 from:
+
+```typescript
+import { withTimeout } from './price-db.ts';
+```
+
+to:
+
+```typescript
+import { withTimeout } from './price-timeout.ts';
+```
+
+All other imports in the file are correct:
+- `getRegionHeaders`, `getSpoofedHeaders`, `isGeoRedirectDomain` -- correctly from `./regional-fetch.ts`
+- `logBrokenUrl` -- correctly from `./price-db.ts`
+- `parseWeightFromTitle`, `parseDiameter` -- correctly from `./price-utils.ts`
+
+## Verification of Other Components
+
+| Component | Status | Notes |
 |---|---|---|
-| `_shared/price-platforms.ts` | Edit | ~5 lines added |
-| `_shared/price-types.ts` | Edit | 2 union members added |
-| `_shared/price-extract-bambulab.ts` | New | ~120 lines |
-| `get-current-price-v2/index.ts` | Edit | ~5 lines added |
+| Platform detection (`price-platforms.ts`) | Correct | Matches `store.bambulab.com`, excludes JP |
+| v2 router (`get-current-price-v2`) | Correct | Has `case "bambulab":` and correct import |
+| JSON-LD parser | Correct | String-based parsing (Deno-safe), handles ProductGroup and Product |
+| Variant scoring | Correct | 1kg+Refill (150) > 1kg+Spool (130) > first available |
+| sync-regional-prices | Correct | Skips fetchShopifyProducts for non-JP Bambu Lab |
+| Error handling | Correct | Returns `{ success: false }`, never throws |
+
+## Why This Wasn't Caught Earlier
+
+Previous audit messages confirmed the file "exists" and the logic is "correct" -- but never checked whether the **imports resolve** at runtime. The file compiles with `// @ts-nocheck` at the top, so TypeScript didn't flag the bad import either.
+
+## After the Fix
+
+Once redeployed, `get-current-price-v2` will boot successfully, and all Bambu Lab regions (US, CA, UK, EU, AU) will extract prices via JSON-LD. JP will continue routing through the Shopify extractor.
 
