@@ -1,134 +1,180 @@
 
 
-# Regional Store Gap Resolution Plan
+# Refactor: Split `get-current-price` Monolith into Deployable Modules
 
-## Investigation Results Summary
+## Problem
 
-### 1. EufyMake (AnkerMake M5/M5C)
+The `get-current-price` edge function is ~4,600 lines in a single `index.ts` file. It consistently fails to deploy with Supabase platform 500 errors due to size. Both `get-current-price` and `get-current-price-v2` are essentially identical copies of the same monolith. The only reliably deployable price function is `get-current-price-wc` at ~390 lines.
 
-**All 5 regional URLs load successfully** (HTTP 200) with correct regional routing:
-- US: `eufymake.com/m5` and `/m5c`
-- CA: `eufymake.com/ca/m5` and `/ca/m5c`
-- UK: `eufymake.com/uk/m5` and `/uk/m5c`
-- EU: `eufymake.com/eu-en/m5` and `/eu-en/m5c`
-- AU: `eufymake.com/au/m5` and `/au/m5c`
+## Architecture
 
-**Extraction challenge:** EufyMake uses a Next.js SSR app (not Shopify). No JSON-LD Product schema, no `og:price:amount` meta tags, and no Shopify JSON endpoint. Prices are rendered client-side via JavaScript. The scraped markdown shows only accessory prices ($399.99 UV printer attachments) but NOT the M5/M5C printer price.
+Split the monolith into **4 platform-specific edge functions** + **shared modules** in `_shared/`. The frontend already routes AzureFilm to `get-current-price-wc`; we extend this pattern to all brands.
 
-**Extraction method required:** Firecrawl with `waitFor` (JS rendering) + location spoofing per region. The price will need to be extracted from rendered HTML using CSS selectors or regex on the Firecrawl markdown output.
+```text
+Frontend / Orchestrator
+       |
+       +-- azurefilm.com ---------> get-current-price-wc     (~390 lines, EXISTS)
+       +-- store.creality.com ----> get-current-price-direct  (~700 lines, NEW)
+       |   extrudr.com
+       |   treedfilaments.com
+       |   prusa3d.com
+       |   geeetech.com
+       +-- *.shopify.com --------> get-current-price-shopify (~900 lines, NEW)
+       |   (polymaker, elegoo,
+       |    esun, sunlu, etc.)
+       +-- everything else ------> get-current-price-scrape  (~600 lines, NEW)
+           (firecrawl-based)
+```
 
-### 2. Raise3D
+## New Shared Modules
 
-**EU store confirmed:** `eu.raise3d.com` redirects to `eushop.raise3d.com` (Shopify). Verified via `/products.json`.
+### `_shared/price-types.ts` (~80 lines)
+All shared interfaces and type definitions extracted from the monolith:
+- `PriceResponse` interface (with all fields: status, method, price_alert, etc.)
+- `StockStatus` type
+- `BrandExtractionConfig` and `BrandConfig` interfaces
+- `RegionalStoreConfig` interface
+- `ShopifyVariant` and `ShopifyProduct` interfaces
 
-**Product availability on EU store:**
-| Model | EU Handle | Status | Price |
-|-------|-----------|--------|-------|
-| Pro3 Series | `raise3d-pro3-3d-printer-hyper-speed-package` | Available (sold out) | EUR 2,499 |
-| E2 Series | `raise3d-e2-3d-printer` | 404 - Not found | N/A |
-| Pro2 | `raise3d-pro2-3d-printer` | 404 - Not found | N/A |
-| RMF Series | `raise3d-rmf500` | 404 - Not found | N/A |
+### `_shared/price-utils.ts` (~250 lines)
+Pure utility functions with no external dependencies:
+- `parseEuropeanPrice()`, `cleanEuropeanPrice()`, `parsePriceForDomain()`
+- `extractSalePriceBeforeSave()`, `removeSavingsAmounts()`
+- `validateFilamentPrice()`, `validateProductPrice()`, `CURRENCY_PRICE_RANGES`
+- `detectCurrencyFromContent()`, `getCurrencySymbol()`, `buildCurrencyPricePattern()`
+- `extractWeightFromContent()`, `extractDiameterFromContent()`
+- `parseWeightFromTitle()`, `parseDiameter()`, `parsePackQuantity()`
+- `is404Content()`, `isCloudflareBlock()`
+- `detectStockStatus()`
 
-**No CA/UK/AU stores exist.** Only US (`shop.raise3d.com`) and EU (`eushop.raise3d.com`).
+### `_shared/price-db.ts` (~300 lines)
+All database interaction helpers:
+- `getSupabaseClient()` (service role)
+- `findBrandConfigByUrl()` - brand config lookup
+- `logExtractionAttempt()` - extraction log insert
+- `canForceRefresh()` - rate limit check
+- `logBrokenUrl()` - broken URL tracking
+- `updateFilamentStockStatus()` - stock + discrepancy detection + price persistence
+- `getRegionalPriceColumn()` - currency-to-column mapping
 
-### 3. FlashForge Missing Models
+### `_shared/price-regional.ts` (~250 lines)
+Regional URL transformation logic (supplements existing `_shared/regional-fetch.ts`):
+- `REGIONAL_STORE_CONFIGS` map (BambuLab, Polymaker, Elegoo, Anycubic, Creality, Extrudr, Prusa)
+- `transformToRegionalUrl()`
+- `normalizeCrealityUrl()`
+- `CURRENCY_TO_REGION` map
+- `getFirecrawlLocation()`
 
-**Guider 4, Guider 4 Pro:** Both return 404 on `www.flashforge.com` with all tested handles (`guider-4`, `flashforge-guider-4-3d-printer`, `guider4`). The store navigation only lists Guider 3 Ultra under the Guider Series. These models are not yet released on the FlashForge store.
+## New Edge Functions
 
-**Guider 3 Plus:** Also 404. The Guider 3 Plus is listed in the DB with MSRP $2,499 but has no store presence. The previous sync log already marked it as `[SKIPPED] Guider 3 Plus -- US -- Discontinued`.
+### 1. `get-current-price-shopify` (~900 lines)
+Handles all Shopify-based stores (the majority of brands).
 
-### 4. FLSUN UK Coverage
+Contains:
+- `fetchShopifyPrice()` - JSON API fetch with geo-bypass headers
+- `selectBestVariantByWeight()` - smart variant selection (consumer spool preference)
+- `fetchPriceWithFirecrawl()` - Firecrawl fallback when Shopify JSON fails
+- `extractBambuLabPrice()` / `extractPriceWithConfig()` - markdown price extraction
+- `getMainProductSection()` - cross-sell/accessory content filtering
+- 404 resolution system: `attemptSearchResolution()`, `handle404WithResolution()`, `handleUrlRedirect()`
+- `extractPrinterPrice()` - printer-specific extraction (higher price range)
+- Main router: Shopify JSON first, Firecrawl fallback, multi-currency handling
 
-**Database state for all 9 FLSUN printers (excluding discontinued Q5):**
+Imports from `_shared/`: price-types, price-utils, price-db, price-regional, regional-fetch
 
-| Model | US Handle | UK URL | UK Status |
-|-------|-----------|--------|-----------|
-| S1 | `flsun-s1` | NULL | Redirects to homepage -- NOT on UK store |
-| S1 Pro | `flsun-s1-pro` | Populated | Working (has price) |
-| Super Racer | `flsun-sr-3d-printer` | NULL | Redirects to homepage -- NOT on UK store |
-| T1 | N/A (no US URL) | NULL | Redirects to homepage -- NOT on UK store |
-| T1 Max | `flsun-t1-max-3d-printer` | Populated | Working (has price) |
-| T1 Pro | N/A (no US URL) | NULL | **Found: handle `flsun-t1-pro`, price GBP 509** |
-| V400 | `flsun-v400` | NULL | Redirects to homepage -- NOT on UK store |
-| V400 Max | `flsun-v400-max-3d-printer-custom-built-edition` | NULL | Redirects to homepage -- NOT on UK store |
+### 2. `get-current-price-direct` (~700 lines)
+Handles custom storefronts that use direct HTML fetch + JSON-LD extraction.
 
-**Result:** Only 3 of 8 active FLSUN printers are on the UK store: S1 Pro, T1 Max, and T1 Pro. The rest genuinely aren't sold in UK.
+Contains:
+- `fetchCrealityPriceDirect()` - Creality HTML fetch + JSON-LD
+- `extractCrealityPriceFromHtml()` - Creality JSON-LD parser
+- `generateCrealitySlugVariants()` + `attemptCrealitySlugDiscovery()` - slug discovery for regional 404s
+- `fetchExtrudrPriceDirect()` - Extrudr JSON-LD (EUR-only)
+- `normalizeExtrudrUrl()` - region code injection
+- `fetchTreeDPrice()` - TreeD backend API (EUR cents/kg)
+- `extractCrealityPrice()` - legacy markdown fallback
+- `extractOpenCartPrice()` - Geeetech legacy
+- Main router: detects storefront type from URL domain, dispatches to correct handler
 
----
+Imports from `_shared/`: price-types, price-utils, price-db, price-regional
 
-## Implementation Plan
+### 3. `get-current-price-scrape` (~600 lines)
+Pure Firecrawl-based extraction for unknown or generic platforms.
 
-### Phase 1: EufyMake Regional URLs + Firecrawl Extraction
+Contains:
+- `fetchPriceWithFirecrawl()` - Firecrawl API call with retries, location spoofing
+- `extractPriceWithConfig()` - configured brand extraction patterns
+- `extractBambuLabPrice()` - generic multi-currency price extraction
+- Prusa MK404 location-gate detection
+- Main router: brand config lookup, Firecrawl dispatch
 
-**Database updates:**
-- Set `product_url_ca`, `_uk`, `_eu`, `_au` for M5 and M5C using confirmed path-based URLs
-- Change `sync_status` from `manual_only` to `firecrawl_required`
+Imports from `_shared/`: price-types, price-utils, price-db, price-regional, regional-fetch
 
-**Code changes in `_shared/printer-price-extraction.ts`:**
-- Add EufyMake to Firecrawl extraction path with `waitFor: 3000` for JS rendering
-- Add CSS selector pattern for EufyMake price element (will need to inspect rendered DOM)
-- Map regional paths to currencies: `/ca/` = CAD, `/uk/` = GBP, `/eu-en/` = EUR, `/au/` = AUD
+### 4. `get-current-price-wc` (EXISTS, no changes needed)
+Already deployed and working for WooCommerce stores (AzureFilm).
 
-**Code changes in `_shared/regional-fetch.ts`:**
-- Add `eufymake.com` to `GEO_REDIRECT_DOMAINS` list
+## Frontend Routing Changes
 
-### Phase 2: Raise3D EU URL Population
+Update the routing logic in **8 files** that currently do:
+```typescript
+const fnName = url.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+```
 
-**Database updates:**
-- Set `product_url_eu` for Pro3 Series to `https://eu.raise3d.com/products/raise3d-pro3-3d-printer-hyper-speed-package`
-- Set `product_url_eu = NULL` for E2, Pro2, RMF (confirmed 404 on EU store)
-- Mark E2, Pro2, RMF as `not_in_region` for EU
-- No CA/UK/AU stores exist -- leave those NULL
+Replace with a shared routing function:
 
-**Note:** The EU store domain `eu.raise3d.com` redirects to `eushop.raise3d.com`. Store the user-facing `eu.raise3d.com` URL (it resolves correctly).
+```typescript
+// src/utils/priceEndpointRouter.ts
+export function getPriceEndpoint(url: string): string {
+  const lower = url.toLowerCase();
+  
+  // WooCommerce stores
+  if (lower.includes('azurefilm.com')) return 'get-current-price-wc';
+  
+  // Direct HTML/JSON-LD stores
+  if (lower.includes('store.creality.com') || lower.includes('creality.com'))
+    return 'get-current-price-direct';
+  if (lower.includes('extrudr.com')) return 'get-current-price-direct';
+  if (lower.includes('treedfilaments.com')) return 'get-current-price-direct';
+  if (lower.includes('prusa3d.com')) return 'get-current-price-direct';
+  if (lower.includes('geeetech.com')) return 'get-current-price-direct';
+  
+  // Shopify stores (default for most brands)
+  return 'get-current-price-shopify';
+}
+```
 
-### Phase 3: FlashForge Discontinued Models
+Files to update:
+- `src/hooks/useCurrentPrice.ts`
+- `src/hooks/useLivePriceFetch.ts`
+- `src/hooks/useAdminPriceRefresh.ts`
+- `src/pages/AdminPriceFreshness.tsx`
+- `src/pages/admin/SyncMonitor.tsx`
+- `src/components/admin/BrandExtractionEditor.tsx`
+- `src/pages/admin/pricing/hooks/usePricingActions.ts`
+- `src/pages/admin/pricing/constants.ts`
 
-**Database updates:**
-- Set `is_discontinued = true` for Guider 4, Guider 4 Pro, and Guider 3 Plus
-- Set `discontinued_note` explaining they are not listed on any FlashForge regional store
-- Keep MSRP values for historical reference
+Also update `supabase/functions/sync-prices/index.ts` to use the same routing logic server-side.
 
-### Phase 4: FLSUN UK URL Gaps
+## Implementation Order
 
-**Database updates:**
-- Set `product_url_uk = 'https://uk.store.flsun3d.com/products/flsun-t1-pro'` for T1 Pro (confirmed working, GBP 509)
-- Mark S1, Super Racer, T1, V400, V400 Max as `not_in_region` for UK (confirmed homepage redirects)
-- Cache `flsun-t1-pro` in `product_regional_slugs` for UK region
+1. Create `_shared/price-types.ts` -- interfaces only, no risk
+2. Create `_shared/price-utils.ts` -- pure functions, testable
+3. Create `_shared/price-db.ts` -- database helpers
+4. Create `_shared/price-regional.ts` -- URL transformation
+5. Create `get-current-price-direct/index.ts` -- Creality/Extrudr/TreeD
+6. Create `get-current-price-shopify/index.ts` -- Shopify + Firecrawl fallback
+7. Create `get-current-price-scrape/index.ts` -- generic Firecrawl
+8. Create `src/utils/priceEndpointRouter.ts` -- shared frontend routing
+9. Update all 8 frontend call sites to use the router
+10. Update `sync-prices` to use server-side routing
+11. Verify all 3 new functions deploy successfully (each under 1,000 lines)
+12. Delete `get-current-price-v2` (redundant copy of the monolith)
+13. Keep `get-current-price` frozen as legacy fallback (do not redeploy)
 
-### Phase 5: Sync Engine Updates
+## Risk Mitigation
 
-**File: `supabase/functions/_shared/printer-price-extraction.ts`**
-- Add EufyMake domain handling to Firecrawl extraction tier
-- Add `eufymake.com` region-path mapping: `{'/ca/': 'CA', '/uk/': 'UK', '/eu-en/': 'EU', '/au/': 'AU'}`
-
-**File: `supabase/functions/_shared/regional-fetch.ts`**
-- Add `eufymake.com` to `GEO_REDIRECT_DOMAINS`
-
-**File: `supabase/functions/sync-printer-prices/index.ts`**
-- Add EufyMake/AnkerMake to the brand routing logic so it uses Firecrawl with location parameter instead of Shopify JSON
-
----
-
-## Technical Details
-
-### EufyMake Extraction Strategy
-
-EufyMake is NOT Shopify despite using `cdn.shopify.com` for images. It's a custom Next.js storefront. The extraction path will be:
-
-1. Skip Shopify JSON (will fail)
-2. Skip JSON-LD (none present)
-3. Use Firecrawl with `waitFor: 3000` and `location: {country: region}` to render JS
-4. Extract price from rendered markdown using regex pattern matching for currency + amount
-
-### Files to Modify
-
-| File | Changes |
-|------|---------|
-| `_shared/printer-price-extraction.ts` | Add EufyMake Firecrawl extraction logic + region-path mapping |
-| `_shared/regional-fetch.ts` | Add `eufymake.com` to GEO_REDIRECT_DOMAINS |
-| `sync-printer-prices/index.ts` | Add AnkerMake/EufyMake brand routing for Firecrawl path |
-| Database: `printers` table | URL updates for M5, M5C, Raise3D Pro3, FLSUN T1 Pro |
-| Database: `printers` table | Discontinue FlashForge Guider 4, 4 Pro, 3 Plus |
-| Database: `printers` table | Mark not_in_region for confirmed missing FLSUN UK models |
+- The existing `get-current-price` remains deployed and functional as a fallback
+- Each new function can be tested independently via the admin "Test" button
+- The `get-current-price-wc` pattern is proven (deployed and working)
+- If any new function fails to deploy, the router can temporarily fall back to `get-current-price`
 
