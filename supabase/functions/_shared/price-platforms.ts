@@ -19,8 +19,10 @@ export function detectPlatform(url: string): Platform {
   if (l.includes("treedfilaments.com")) return "treed";
   if (l.includes("prusa3d.com")) return "prusa";
   if (l.includes("geeetech.com")) return "geeetech";
-  if (l.includes("store.bambulab.com") || l.includes("bambulab.com")) {
-    if (l.includes("jp.store.bambulab.com") || l.includes("jp.")) return "shopify";
+  // Bambu Lab: custom Next.js store (migrated from Shopify in 2025)
+  // JP is still on Shopify, so exclude it
+  if (l.includes("store.bambulab.com") || l.includes("bambulab.com/products")) {
+    if (l.includes("jp.store.bambulab.com")) return "shopify";
     return "bambulab";
   }
   return "shopify";
