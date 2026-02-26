@@ -1,60 +1,56 @@
 
 
-# Fix Bambu Lab Sync Failures: Root Cause Analysis and Resolution
+# Fix: Bambu Lab Variant Selection Picks Wrong Size
 
-## Two Distinct Failure Categories
+## Root Cause
 
-### Category 1: `geo_redirect_contamination` (14 failures)
+The `scoreVariant()` function in `price-extract-bambulab.ts` (line 64-77) awards bonus points for "1kg" (+10) and "refill" (+15), causing it to always select the **largest/most expensive variant**. For specialty filaments that have multiple sizes (0.5kg and 1kg), this picks the 1kg price instead of the standard consumer size.
 
-**Root cause**: Firecrawl's geo-targeting proxy is intermittently unreliable. For ~6% of product/region combinations, Firecrawl returns HTML from a different region despite the `location` parameter. The strict currency validation correctly rejects this, then the direct-fetch fallback also fails (expected -- Frankfurt IP always gets wrong region). Both paths return null, so the error `geo_redirect_contamination` is returned.
+**Evidence:**
+- PA6-CF page says "From $42.99 USD" (0.5kg) but extractor returns $79.99 (1kg)
+- The page offers two sizes: "0.5kg" and "1kg"
+- The scoring: 1kg variant scores ~40 (InStock+1kg+price>0) vs 0.5kg scores ~25 (InStock+price>0)
 
-**Affected**: UK (7), EU (3), AU (2) regions -- specific products only.
+## Affected Products (10 filaments with sub-1kg standard weight)
 
-**Fix**: Add a single Firecrawl retry with a 2-second backoff when the first attempt returns a currency mismatch. Firecrawl's geo-proxy is probabilistic -- a second attempt often routes through a different exit node. This matches the retry pattern already used in `price-extract-firecrawl.ts` (line 30-35).
+| Product | DB Weight | Current Price | Likely Correct |
+|---------|-----------|---------------|----------------|
+| PA6-CF | 500g | $79.99 | ~$42.99 |
+| PAHT-CF | 500g | $94.99 | ~$49.99 |
+| PET-CF | 500g | $84.99 | ~$44.99 |
+| PPA-CF | 750g | $149.99 | needs verification |
+| PPS-CF | 750g | $129.99 | needs verification |
+| PVA | 500g | $39.99 | needs verification |
+| Support for ABS | 500g | $14.99 | likely correct (may only have one size) |
+| Support for PA/PET | 500g | $39.99 | needs verification |
+| Support for PLA (New Version) | 500g | $22.99 | needs verification |
+| Support for PLA/PETG | 500g | $34.99 | needs verification |
 
-### Category 2: `HTTP 404` on JP (3 failures)
+## The Fix
 
-**Root cause**: These products genuinely don't exist on the JP Shopify store. PLA Matte, PLA Tough+, and Support for PA/PET are not sold in Japan. The Shopify `.json` endpoint returns 404.
+### Change 1: Use `targetWeightGrams` in variant scoring (price-extract-bambulab.ts)
 
-**Affected**: JP only -- `pla-matte`, `pla-tough-upgrade`, `support-for-pa-pet`.
+The `extractBambuLabPrice` function already receives `targetWeightGrams` but ignores it (parameter named `_targetWeightGrams`). The fix:
 
-**Fix**: When the bambulab extractor receives a 404 from JP (which goes through the Shopify path), the response should include `notAvailableInRegion: true` so the UI shows a grey "N/A" badge instead of a red "Failed" badge. This is already supported by the `PriceResponse` type but not set for Bambu Lab JP 404s. The fix is in `get-current-price-v2` -- after the Shopify extractor returns `is404: true` for a `jp.store.bambulab.com` URL, set `notAvailableInRegion: true`.
+1. **Rename** `_targetWeightGrams` to `targetWeightGrams` and pass it to `extractPriceFromJsonLd`
+2. **Add weight-aware scoring** to `scoreVariant`: if `targetWeightGrams` is provided, give a large bonus (+50) to variants whose name contains a matching weight (e.g., "0.5kg" matches 500g target)
+3. **Fallback behavior** (no targetWeight): pick the **cheapest in-stock variant** instead of the most-scored one. This matches the "From $X" price shown on the product page, which is the most natural comparison price.
 
-## Changes
+### Change 2: Pass `net_weight_g` from the database during syncs
 
-### File 1: `supabase/functions/_shared/price-extract-bambulab.ts`
+The `get-current-price-v2` router already receives and passes `targetWeightGrams`. The calling code (frontend `priceEndpointRouter`, manual refresh buttons) needs to pass the filament's `net_weight_g` value. This is already happening via the `targetWeightGrams` body parameter -- the sync system sends it.
 
-**Change in `extractViaFirecrawl`**: When currency mismatch is detected, retry once with a 2-second delay before returning null.
+No changes needed in the router.
 
-Current flow:
-```
-Firecrawl attempt -> currency mismatch -> return null (immediate)
-```
+### Technical Implementation in `price-extract-bambulab.ts`
 
-New flow:
-```
-Firecrawl attempt -> currency mismatch -> wait 2s -> retry -> currency mismatch again -> return null
-```
+**`scoreVariant` modification:** Add a `targetWeightGrams` parameter. When provided, variants matching the target weight get +50 bonus. Parse weight from variant name using patterns like "0.5kg", "500g", "1kg", "750g".
 
-This is a ~6 line change inside the `extractViaFirecrawl` function, wrapping the currency mismatch check (lines 182-186) in a retry loop.
+**`extractPriceFromJsonLd` modification:** Accept optional `targetWeightGrams`. When no target weight is given, sort candidates by price ascending (cheapest first) among in-stock variants, instead of by score descending.
 
-### File 2: `supabase/functions/get-current-price-v2/index.ts`
+**`extractBambuLabPrice` signature:** Change `_targetWeightGrams` to `targetWeightGrams` and thread it through to `extractPriceFromJsonLd`.
 
-**Change in the Shopify default case**: After the Shopify extractor returns a result, check if it's a 404 for a `bambulab.com` JP URL and add `notAvailableInRegion: true` to the response. This ensures JP 404s show as grey "N/A" badges.
+### Data Correction
 
-Add after line 85 (after Firecrawl fallback block):
-```typescript
-// Mark Bambu Lab JP 404s as not-in-region (graceful skip)
-if (result.is404 && productUrl.includes("jp.store.bambulab.com")) {
-  result.notAvailableInRegion = true;
-}
-```
+After deploying the fix, a price re-sync for all Bambu Lab filaments will automatically correct the stored prices across all regions, since the extractor will now select the correct variant.
 
-## Expected Outcome After Deploy
-
-| Failure | Current Error | After Fix |
-|---------|--------------|-----------|
-| 14x geo_redirect_contamination | Hard fail, red badge | Most will succeed on retry; remaining few stay as failures (acceptable) |
-| 3x JP 404 | Red "Failed" badge | Grey "N/A" badge (not_in_region) |
-
-Net effect: ~14 failures reduced to ~2-3 (Firecrawl retry will resolve most geo mismatches). JP 404s reclassified from "failed" to "not available in region".
