@@ -83,6 +83,10 @@ serve(async (req: Request) => {
           console.log("[PRICE-V2] Shopify JSON failed, trying Firecrawl fallback");
           result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType);
         }
+        // Mark Bambu Lab JP 404s as not-in-region (graceful skip)
+        if (result.is404 && productUrl.includes("jp.store.bambulab.com")) {
+          result.notAvailableInRegion = true;
+        }
         break;
       }
     }

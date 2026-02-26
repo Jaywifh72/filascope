@@ -179,9 +179,34 @@ async function extractViaFirecrawl(
       return null;
     }
 
-    // Strict currency validation
+    // Strict currency validation — retry once on mismatch (Firecrawl geo-proxy is probabilistic)
     if (result.currency !== expectedCurrency) {
-      console.error(`[BAMBULAB] Firecrawl currency mismatch: got ${result.currency}, expected ${expectedCurrency}`);
+      console.warn(`[BAMBULAB] Firecrawl currency mismatch (attempt 1): got ${result.currency}, expected ${expectedCurrency}. Retrying in 2s...`);
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Retry: Firecrawl often routes through a different exit node on second attempt
+      try {
+        const retry = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ url, formats: ["rawHtml"], waitFor: 3000, location: { country, languages: [country === "DE" ? "de" : "en"] } }),
+        });
+        if (retry.ok) {
+          const retryData = await retry.json();
+          const retryHtml = retryData.data?.rawHtml || retryData.rawHtml || retryData.data?.html || retryData.html || "";
+          if (retryHtml.length >= 500) {
+            const retryBlocks = extractJsonLdBlocks(retryHtml);
+            const retryResult = retryBlocks.length > 0 ? extractPriceFromJsonLd(retryBlocks) : null;
+            if (retryResult && retryResult.currency === expectedCurrency) {
+              console.log(`[BAMBULAB] Firecrawl retry ✓ ${retryResult.price} ${retryResult.currency}`);
+              return retryResult;
+            }
+            console.error(`[BAMBULAB] Firecrawl retry still mismatched: got ${retryResult?.currency || "null"}, expected ${expectedCurrency}`);
+          }
+        }
+      } catch (retryErr) {
+        console.error(`[BAMBULAB] Firecrawl retry error: ${retryErr instanceof Error ? retryErr.message : "Unknown"}`);
+      }
       return null;
     }
 
