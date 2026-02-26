@@ -61,40 +61,69 @@ function extractJsonLdBlocks(html: string): any[] {
   return results;
 }
 
-function scoreVariant(variant: any): number {
+/** Parse weight in grams from a variant name like "0.5kg", "1kg", "750g" */
+function parseWeightGrams(name: string): number | null {
+  const lower = name.toLowerCase();
+  const kgMatch = lower.match(/([\d.]+)\s*kg/);
+  if (kgMatch) return Math.round(parseFloat(kgMatch[1]) * 1000);
+  const gMatch = lower.match(/([\d]+)\s*g(?:\b|$)/);
+  if (gMatch) return parseInt(gMatch[1], 10);
+  return null;
+}
+
+function scoreVariant(variant: any, targetWeightGrams?: number | null): number {
   let score = 0;
   const name = (variant.name || "").toLowerCase();
   const desc = (variant.description || "").toLowerCase();
 
   if (variant.offers?.availability?.includes("InStock")) score += 20;
-  if (name.includes("1kg") || name.includes("1000g") || name.includes("1 kg")) score += 10;
-  if (name.includes("250g") || name.includes("0.25kg")) score -= 5;
-  if (name.includes("refill") || desc.includes("refill")) score += 15;
-  if (name.includes("spool") || desc.includes("spool")) score += 5;
   if (variant.offers?.price > 0) score += 5;
+
+  // Weight-aware scoring: strongly prefer variant matching target weight
+  if (targetWeightGrams) {
+    const variantWeight = parseWeightGrams(name);
+    if (variantWeight && Math.abs(variantWeight - targetWeightGrams) < 50) {
+      score += 50; // strong match bonus
+    }
+  } else {
+    // No target weight — mild preferences (kept low so cheapest-in-stock wins in tiebreak)
+    if (name.includes("refill") || desc.includes("refill")) score += 3;
+    if (name.includes("spool") || desc.includes("spool")) score += 2;
+  }
+
+  if (name.includes("250g") || name.includes("0.25kg")) score -= 5;
 
   return score;
 }
 
 function extractPriceFromJsonLd(
   blocks: any[],
+  targetWeightGrams?: number | null,
 ): { price: number; currency: string; available: boolean } | null {
   for (const block of blocks) {
     if (block["@type"] === "ProductGroup" && Array.isArray(block.hasVariant)) {
       const candidates = block.hasVariant
-        .filter((v: any) => v.offers?.price != null)
-        .sort((a: any, b: any) => scoreVariant(b) - scoreVariant(a));
-      if (candidates.length > 0) {
-        const best = candidates[0];
-        const price = parseFloat(String(best.offers.price));
-        if (!isNaN(price) && price > 0) {
-          return {
-            price,
-            currency: best.offers.priceCurrency || "USD",
-            available: best.offers.availability?.includes("InStock") ?? false,
-          };
-        }
-      }
+        .filter((v: any) => v.offers?.price != null && parseFloat(String(v.offers.price)) > 0);
+
+      if (candidates.length === 0) continue;
+
+      // Score all candidates
+      const scored = candidates.map((v: any) => ({
+        variant: v,
+        score: scoreVariant(v, targetWeightGrams),
+        price: parseFloat(String(v.offers.price)),
+      }));
+
+      // Sort: highest score first, then cheapest price as tiebreak
+      scored.sort((a, b) => b.score - a.score || a.price - b.price);
+
+      const best = scored[0];
+      console.log(`[BAMBULAB] Variant selected: "${best.variant.name}" price=${best.price} score=${best.score} (of ${scored.length} candidates, targetWeight=${targetWeightGrams || "none"})`);
+      return {
+        price: best.price,
+        currency: best.variant.offers.priceCurrency || "USD",
+        available: best.variant.offers.availability?.includes("InStock") ?? false,
+      };
     }
 
     if (block["@type"] === "Product" && block.offers && !Array.isArray(block.offers)) {
@@ -131,6 +160,7 @@ async function extractViaFirecrawl(
   url: string,
   region: string,
   expectedCurrency: string,
+  targetWeightGrams?: number | null,
 ): Promise<{ price: number; currency: string; available: boolean } | null> {
   const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
   if (!apiKey) return null;
@@ -173,7 +203,7 @@ async function extractViaFirecrawl(
       return null;
     }
 
-    const result = extractPriceFromJsonLd(blocks);
+    const result = extractPriceFromJsonLd(blocks, targetWeightGrams);
     if (!result) {
       console.error(`[BAMBULAB] Firecrawl: JSON-LD found but no price`);
       return null;
@@ -196,7 +226,7 @@ async function extractViaFirecrawl(
           const retryHtml = retryData.data?.rawHtml || retryData.rawHtml || retryData.data?.html || retryData.html || "";
           if (retryHtml.length >= 500) {
             const retryBlocks = extractJsonLdBlocks(retryHtml);
-            const retryResult = retryBlocks.length > 0 ? extractPriceFromJsonLd(retryBlocks) : null;
+            const retryResult = retryBlocks.length > 0 ? extractPriceFromJsonLd(retryBlocks, targetWeightGrams) : null;
             if (retryResult && retryResult.currency === expectedCurrency) {
               console.log(`[BAMBULAB] Firecrawl retry ✓ ${retryResult.price} ${retryResult.currency}`);
               return retryResult;
@@ -225,6 +255,7 @@ async function extractViaDirect(
   url: string,
   region: string,
   expectedCurrency: string,
+  targetWeightGrams?: number | null,
 ): Promise<{ result: { price: number; currency: string; available: boolean } | null; contaminated: boolean }> {
   const regionHeaders = REGIONAL_HEADERS[region] || REGIONAL_HEADERS.US;
 
@@ -261,7 +292,7 @@ async function extractViaDirect(
       return { result: null, contaminated: false };
     }
 
-    const result = extractPriceFromJsonLd(blocks);
+    const result = extractPriceFromJsonLd(blocks, targetWeightGrams);
     if (!result) {
       return { result: null, contaminated: false };
     }
@@ -285,13 +316,13 @@ async function extractViaDirect(
 export async function extractBambuLabPrice(
   productUrl: string,
   preferredCurrency?: string,
-  _targetWeightGrams?: number | null,
+  targetWeightGrams?: number | null,
 ): Promise<PriceResponse> {
   const inferredRegion = inferRegionFromUrl(productUrl);
   const expectedCurrency = preferredCurrency || REGION_TO_CURRENCY[inferredRegion] || "USD";
   const cleanUrl = buildCleanUrl(productUrl);
 
-  console.log(`[BAMBULAB] Extracting: ${cleanUrl} region=${inferredRegion} currency=${expectedCurrency}`);
+  console.log(`[BAMBULAB] Extracting: ${cleanUrl} region=${inferredRegion} currency=${expectedCurrency} targetWeight=${targetWeightGrams || "none"}`);
 
   const fail = (error?: string, is404 = false): PriceResponse => ({
     success: false,
@@ -306,7 +337,7 @@ export async function extractBambuLabPrice(
   });
 
   // 1. Try Firecrawl with geo-targeting (primary)
-  const firecrawlResult = await extractViaFirecrawl(cleanUrl, inferredRegion, expectedCurrency);
+  const firecrawlResult = await extractViaFirecrawl(cleanUrl, inferredRegion, expectedCurrency, targetWeightGrams);
   if (firecrawlResult) {
     return {
       success: true,
@@ -322,7 +353,7 @@ export async function extractBambuLabPrice(
 
   // 2. Fallback: direct fetch (with strict currency validation)
   console.log(`[BAMBULAB] Firecrawl failed/unavailable, trying direct fetch fallback`);
-  const { result: directResult, contaminated } = await extractViaDirect(cleanUrl, inferredRegion, expectedCurrency);
+  const { result: directResult, contaminated } = await extractViaDirect(cleanUrl, inferredRegion, expectedCurrency, targetWeightGrams);
 
   if (directResult) {
     console.log(`[BAMBULAB] Direct ✓ ${directResult.price} ${directResult.currency} available=${directResult.available}`);
