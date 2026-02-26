@@ -33,7 +33,7 @@ export interface PriceResponse {
   currency: string;
   available: boolean;
   stockStatus?: StockStatus;
-  source: "shopify" | "firecrawl" | "html" | "cached" | "woocommerce";
+  source: "shopify" | "firecrawl" | "html" | "cached" | "woocommerce" | "bambulab-jsonld";
   fetchedAt: string;
   error?: string;
   is404?: boolean;
@@ -44,7 +44,7 @@ export interface PriceResponse {
   currencyMismatch?: boolean;
   requestedCurrency?: string;
   status?: "ok" | "blocked" | "rate_limited" | "anomalous";
-  method?: "wc_store_api" | "wc_store_api_variations" | "json_ld" | "cloudflare";
+  method?: "wc_store_api" | "wc_store_api_variations" | "json_ld" | "cloudflare" | "bambulab_jsonld";
   price_alert?: boolean;
   rawSample?: string;
 }

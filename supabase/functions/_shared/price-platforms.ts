@@ -6,6 +6,7 @@
 export type Platform =
   | "shopify" | "woocommerce"
   | "creality" | "extrudr" | "treed" | "prusa" | "geeetech"
+  | "bambulab"
   | "unknown";
 
 export function detectPlatform(url: string): Platform {
@@ -18,6 +19,10 @@ export function detectPlatform(url: string): Platform {
   if (l.includes("treedfilaments.com")) return "treed";
   if (l.includes("prusa3d.com")) return "prusa";
   if (l.includes("geeetech.com")) return "geeetech";
+  if (l.includes("store.bambulab.com") || l.includes("bambulab.com")) {
+    if (l.includes("jp.store.bambulab.com") || l.includes("jp.")) return "shopify";
+    return "bambulab";
+  }
   return "shopify";
 }
 
