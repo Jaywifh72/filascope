@@ -158,3 +158,21 @@ export function transformToRegionalUrl(
 
   return { url, expectedCurrency: requestedCurrency, transformed: false };
 }
+
+// ============================================================
+// Price Endpoint Router (server-side)
+// ============================================================
+
+export function getPriceEndpoint(url: string): string {
+  const lower = url.toLowerCase();
+  if (lower.includes('azurefilm.com')) return 'get-current-price-wc';
+  if (lower.includes('store.creality.com') || lower.includes('creality.com/ca/') ||
+      lower.includes('creality.com/uk/') || lower.includes('creality.com/eu/') ||
+      lower.includes('creality.com/au/') || lower.includes('creality.com/jp/'))
+    return 'get-current-price-direct';
+  if (lower.includes('extrudr.com')) return 'get-current-price-direct';
+  if (lower.includes('treedfilaments.com')) return 'get-current-price-direct';
+  if (lower.includes('prusa3d.com')) return 'get-current-price-direct';
+  if (lower.includes('geeetech.com')) return 'get-current-price-direct';
+  return 'get-current-price-shopify';
+}

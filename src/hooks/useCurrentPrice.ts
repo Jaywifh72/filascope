@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getPriceEndpoint } from '@/utils/priceEndpointRouter';
 import { useRegion } from '@/contexts/RegionContext';
 import { CurrencyCode } from '@/types/regional';
 
@@ -164,7 +165,7 @@ export function useCurrentPrice(
     const fetchPriceFromUrl = async (url: string, retryCount = 0): Promise<{ data: any; error: any }> => {
       try {
         // Don't pass currency preference - let the edge function return the store's native currency
-        const fnName = url.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+        const fnName = getPriceEndpoint(url);
         const result = await supabase.functions.invoke(fnName, {
           body: { productUrl: url },
         });

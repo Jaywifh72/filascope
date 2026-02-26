@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { invalidatePriceCache } from './useCurrentPrice';
+import { getPriceEndpoint } from '@/utils/priceEndpointRouter';
 
 export interface AdminPriceRefreshResult {
   success: boolean;
@@ -82,7 +83,7 @@ export function useAdminPriceRefresh(
       let retryCount = 0;
 
       while (retryCount <= MAX_RETRIES) {
-        const fnName = productUrl.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+        const fnName = getPriceEndpoint(productUrl);
         const result = await supabase.functions.invoke(fnName, {
           body: { 
             productUrl, 

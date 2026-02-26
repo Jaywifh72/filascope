@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { getPriceEndpoint } from '@/utils/priceEndpointRouter';
 import { AuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { downloadCSV } from '@/lib/csvExport';
@@ -468,7 +469,7 @@ export function SyncMonitorContent() {
         url = data?.product_url ?? undefined;
       }
       if (!url) { toast.error('No product URL available'); return; }
-      const fnName = url.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const fnName = getPriceEndpoint(url);
       const res = await supabase.functions.invoke(fnName, {
         body: { filamentId, productUrl: url },
       });

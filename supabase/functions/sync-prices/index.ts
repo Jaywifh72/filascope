@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getPriceEndpoint as getPriceEndpointServer } from '../_shared/price-regional.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -110,8 +111,7 @@ async function callGetCurrentPrice(productUrl: string): Promise<ExtractionResult
       return { success: false, price: null, compareAtPrice: null, error: 'Missing env vars' };
     }
     
-    const isWc = productUrl.includes('azurefilm.com');
-    const fnPath = isWc ? 'get-current-price-wc' : 'get-current-price';
+    const fnPath = getPriceEndpointServer(productUrl);
     const response = await fetch(`${supabaseUrl}/functions/v1/${fnPath}`, {
       method: 'POST',
       headers: {
