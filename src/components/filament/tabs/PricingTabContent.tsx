@@ -267,7 +267,7 @@ export function PricingTabContent({
     weightGrams: liveWeightGrams,
     isLivePrice,
     currency: livePriceCurrency
-  } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
+  } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl, filament.net_weight_g);
 
   // Get price history data — raw USD values from DB
   const { 

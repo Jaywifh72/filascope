@@ -85,7 +85,7 @@ export function FilamentHeroPurchaseCard({
     isLoading: priceLoading, 
     isLivePrice,
     currency: priceCurrency
-  } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
+  } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl, weightGrams);
 
   // Determine the primary retailer name
   const displayRetailer = retailerName || vendor || 'Store';
