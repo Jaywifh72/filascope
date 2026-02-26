@@ -392,9 +392,13 @@ export async function validateRegionalUrl(
   method: FetchMethod;
   isGeoRedirected: boolean;
   lastChecked: string;
+  platformNote?: string;
 }> {
   const targetRegion = region || detectRegionFromUrl(url) || 'US';
   const now = new Date().toISOString();
+
+  // Detect Bambu Lab custom platform (non-JP)
+  const isBambuLabCustom = isBambuLabCustomStore(url);
 
   const result = await fetchRegionalStore(url, targetRegion, {
     method: 'HEAD',
@@ -416,6 +420,22 @@ export async function validateRegionalUrl(
   const isGeoRedirected = result.method === 'redirected' && !!result.warning;
 
   if (status === 200 || status === 204) {
+    // For Bambu Lab custom stores, a geo-redirect within *.store.bambulab.com is expected/valid
+    if (isBambuLabCustom && isGeoRedirected && result.redirectedTo) {
+      const isSameBrand = result.redirectedTo.includes('store.bambulab.com') || result.redirectedTo.includes('bambulab.com');
+      if (isSameBrand) {
+        return {
+          status: 'valid',
+          statusCode: status,
+          redirectUrl: result.redirectedTo,
+          method: result.method,
+          isGeoRedirected: true,
+          lastChecked: now,
+          platformNote: 'bambulab_custom',
+        };
+      }
+    }
+
     return {
       status: isGeoRedirected ? 'geo_restricted' : 'valid',
       statusCode: status,
@@ -423,6 +443,7 @@ export async function validateRegionalUrl(
       method: result.method,
       isGeoRedirected,
       lastChecked: now,
+      platformNote: isBambuLabCustom ? 'bambulab_custom' : undefined,
     };
   }
 
@@ -438,6 +459,22 @@ export async function validateRegionalUrl(
   }
 
   if (status >= 300 && status < 400) {
+    // For Bambu Lab custom stores, a redirect within the same brand is OK
+    if (isBambuLabCustom && result.redirectedTo) {
+      const isSameBrand = result.redirectedTo.includes('store.bambulab.com') || result.redirectedTo.includes('bambulab.com');
+      if (isSameBrand) {
+        return {
+          status: 'valid',
+          statusCode: status,
+          redirectUrl: result.redirectedTo,
+          method: result.method,
+          isGeoRedirected: true,
+          lastChecked: now,
+          platformNote: 'bambulab_custom',
+        };
+      }
+    }
+
     return {
       status: 'redirect',
       statusCode: status,
@@ -456,6 +493,17 @@ export async function validateRegionalUrl(
     isGeoRedirected: false,
     lastChecked: now,
   };
+}
+
+/**
+ * Check if a URL is a Bambu Lab custom (non-Shopify) store.
+ * JP remains on Shopify.
+ */
+export function isBambuLabCustomStore(url: string): boolean {
+  const l = url.toLowerCase();
+  if (!l.includes('store.bambulab.com') && !l.includes('bambulab.com/products')) return false;
+  if (l.includes('jp.store.bambulab.com')) return false;
+  return true;
 }
 
 /**

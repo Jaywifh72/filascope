@@ -62,10 +62,18 @@ interface StoreWithValidation {
   is_active: boolean;
   is_primary: boolean;
   updated_at: string;
-  validation_status?: 'valid' | 'invalid' | 'redirect' | 'unknown' | 'pending' | 'checking';
+  validation_status?: 'valid' | 'invalid' | 'redirect' | 'geo_restricted' | 'unknown' | 'pending' | 'checking';
   validation_code?: number | null;
   validation_redirect?: string | null;
   validation_checked?: Date;
+}
+
+/** Check if a store URL is a Bambu Lab custom (non-Shopify) store */
+function isBambuLabCustomStore(url: string): boolean {
+  const l = url.toLowerCase();
+  if (!l.includes('store.bambulab.com') && !l.includes('bambulab.com/products')) return false;
+  if (l.includes('jp.store.bambulab.com')) return false;
+  return true;
 }
 
 interface ValidationCache {
@@ -191,9 +199,25 @@ export default function AdminStoreUrls() {
   // Calculate stats
   const stats = useMemo(() => {
     const total = storesWithValidation.length;
-    const valid = storesWithValidation.filter(s => s.validation_status === 'valid').length;
+    const valid = storesWithValidation.filter(s => {
+      if (s.validation_status === 'valid') return true;
+      // Count Bambu Lab custom stores with geo_restricted or same-brand redirect as valid
+      if (isBambuLabCustomStore(s.base_url)) {
+        if (s.validation_status === 'geo_restricted') return true;
+        if (s.validation_status === 'redirect' && s.validation_redirect?.includes('bambulab.com')) return true;
+      }
+      return false;
+    }).length;
     const invalid = storesWithValidation.filter(s => s.validation_status === 'invalid').length;
-    const redirects = storesWithValidation.filter(s => s.validation_status === 'redirect').length;
+    const redirects = storesWithValidation.filter(s => {
+      if (s.validation_status !== 'redirect' && s.validation_status !== 'geo_restricted') return false;
+      // Don't count Bambu Lab custom store geo-redirects as problematic
+      if (isBambuLabCustomStore(s.base_url)) {
+        if (s.validation_status === 'geo_restricted') return false;
+        if (s.validation_redirect?.includes('bambulab.com')) return false;
+      }
+      return true;
+    }).length;
     const unchecked = storesWithValidation.filter(s => s.validation_status === 'unknown').length;
     
     return { total, valid, invalid, redirects, unchecked };
@@ -359,13 +383,31 @@ export default function AdminStoreUrls() {
     setEditingShopifyId(null);
   };
 
-  const getStatusBadge = (status: string | undefined) => {
+  const getStatusBadge = (status: string | undefined, store?: StoreWithValidation) => {
+    const isCustomBambu = store ? isBambuLabCustomStore(store.base_url) : false;
+    
     switch (status) {
       case 'valid':
         return (
           <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
             <CheckCircle2 className="w-3 h-3 mr-1" />
-            Valid
+            {isCustomBambu ? 'Valid (custom)' : 'Valid'}
+          </Badge>
+        );
+      case 'geo_restricted':
+        // For Bambu Lab custom stores, geo-redirect within the brand is expected
+        if (isCustomBambu) {
+          return (
+            <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              Valid (geo-redirected)
+            </Badge>
+          );
+        }
+        return (
+          <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30">
+            <Globe className="w-3 h-3 mr-1" />
+            Geo-restricted
           </Badge>
         );
       case 'invalid':
@@ -376,6 +418,15 @@ export default function AdminStoreUrls() {
           </Badge>
         );
       case 'redirect':
+        // For Bambu Lab custom stores, redirects within bambulab.com are OK
+        if (isCustomBambu && store?.validation_redirect?.includes('bambulab.com')) {
+          return (
+            <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              Valid (geo-redirected)
+            </Badge>
+          );
+        }
         return (
           <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30">
             <RefreshCw className="w-3 h-3 mr-1" />
@@ -640,6 +691,8 @@ export default function AdminStoreUrls() {
                                   <p className="text-xs text-muted-foreground mt-1">Enables direct API pricing instead of scraping</p>
                                 </TooltipContent>
                               </Tooltip>
+                            ) : isBambuLabCustomStore(store.base_url) ? (
+                              <span className="text-xs text-muted-foreground italic">N/A (custom)</span>
                             ) : (
                               <span className="text-xs text-muted-foreground opacity-0 group-hover/shopify:opacity-100 transition-opacity">
                                 + Add domain
@@ -652,8 +705,8 @@ export default function AdminStoreUrls() {
                         <Badge variant="outline">{store.currency_code}</Badge>
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(store.validation_status)}
-                        {store.validation_status === 'redirect' && store.validation_redirect && (
+                        {getStatusBadge(store.validation_status, store)}
+                        {store.validation_status === 'redirect' && store.validation_redirect && !isBambuLabCustomStore(store.base_url) && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className="block text-xs text-muted-foreground mt-1 truncate max-w-[100px]">
