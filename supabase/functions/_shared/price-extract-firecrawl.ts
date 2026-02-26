@@ -54,7 +54,7 @@ export async function extractFirecrawlPrice(
     }
 
     const isColorFabb = /colorfabb\.(us|com)/i.test(productUrl);
-    const stockStatus = detectStockStatus(markdown);
+    let stockStatus = detectStockStatus(markdown);
     const priceRange = productType === "printer"
       ? { min: 99, max: 10000 }
       : { min: 10, max: isColorFabb ? 300 : 150 };
@@ -130,6 +130,43 @@ export async function extractFirecrawlPrice(
           source: "firecrawl", fetchedAt: new Date().toISOString(),
           currencyMismatch: true, detectedCurrency: detected, requestedCurrency: preferredCurrency,
         };
+      }
+    }
+
+    // Secondary pass for ColorFabb: some templates hide stock markers outside main content.
+    if (prices.length === 0 && stockStatus === "unknown" && isColorFabb) {
+      try {
+        const fallbackResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ url: productUrl, formats: ["markdown"], onlyMainContent: false, waitFor: waitForMs, location }),
+        });
+
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          const fallbackMarkdown = fallbackData.data?.markdown || fallbackData.markdown || "";
+
+          if (fallbackMarkdown) {
+            if (is404Content(fallbackMarkdown)) {
+              await logBrokenUrl(productUrl, "404_content");
+              return {
+                success: false,
+                price: null,
+                compareAtPrice: null,
+                currency: preferredCurrency,
+                available: false,
+                source: "firecrawl",
+                fetchedAt: new Date().toISOString(),
+                error: "PRODUCT_PAGE_NOT_FOUND",
+                is404: true,
+              };
+            }
+
+            stockStatus = detectStockStatus(fallbackMarkdown);
+          }
+        }
+      } catch (fallbackErr) {
+        console.warn("[FIRECRAWL] ColorFabb fallback check failed:", fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr));
       }
     }
 
