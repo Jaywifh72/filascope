@@ -140,18 +140,23 @@ function normalizeExtrudrUrl(url: string): string {
   return url;
 }
 
-export async function fetchExtrudrPrice(productUrl: string): Promise<PriceResponse> {
+export async function fetchExtrudrPrice(productUrl: string, expectedCurrency?: string): Promise<PriceResponse> {
+  const currency = expectedCurrency || "EUR";
   const url = normalizeExtrudrUrl(productUrl);
   try {
     const resp = await withTimeout(fetch(url, { headers: BROWSER_HEADERS, redirect: "follow" }), TIMEOUT_MS);
-    if (!resp.ok) return fail("EUR", `HTTP ${resp.status}`);
+    if (!resp.ok) return fail(currency, `HTTP ${resp.status}`, { is404: resp.status === 404 });
+
     const html = await resp.text();
-    const r = extractJsonLdPrice(html, "EUR", url);
+    if (is404Content(html)) return fail(currency, "soft_404", { is404: true });
+
+    const r = extractJsonLdPrice(html, currency, url);
     if (r) return { success: true, ...r, source: "html", fetchedAt: new Date().toISOString(), sourceUrl: url };
-    return fail("EUR", "No JSON-LD price");
+
+    return fail(currency, "No JSON-LD price");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return fail("EUR", msg === "TIMEOUT" ? "timeout" : msg);
+    return fail(currency, msg === "TIMEOUT" ? "timeout" : msg);
   }
 }
 

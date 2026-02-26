@@ -59,7 +59,7 @@ serve(async (req: Request) => {
         result = await fetchCrealityPrice(urlToFetch, expectedCurrency, filamentId);
         break;
       case "extrudr":
-        result = await fetchExtrudrPrice(urlToFetch);
+        result = await fetchExtrudrPrice(urlToFetch, expectedCurrency);
         break;
       case "treed":
         result = await fetchTreeDPrice(urlToFetch);
