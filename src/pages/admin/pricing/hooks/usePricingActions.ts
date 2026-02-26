@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { downloadCSV } from '@/lib/csvExport';
 import { invalidatePriceCache } from '@/hooks/useCurrentPrice';
+import { getPriceEndpoint } from '@/utils/priceEndpointRouter';
 import type { ProductType, ProductGroup, StoreRow, TestResult, SyncResult, DiagnosisResult } from '../types';
 import { PRODUCT_TYPE_CONFIGS } from '../types';
 import { REGION_URL_COLUMN_MAP, BRAND_REGIONAL_CONFIGS } from '../constants';
@@ -456,7 +457,7 @@ export function usePricingActions(
         return fallbackResult;
       }
 
-      const fnName = store.productUrl.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const fnName = getPriceEndpoint(store.productUrl);
       const { data, error } = await supabase.functions.invoke(fnName, {
         body: {
           productUrl: store.productUrl,

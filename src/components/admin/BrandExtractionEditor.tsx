@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, FlaskConical, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getPriceEndpoint } from '@/utils/priceEndpointRouter';
 
 interface ExtractionConfig {
   priceSectionAnchor?: string;
@@ -159,7 +160,7 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
       const dbDataParsed = dbData as Record<string, unknown> | null;
       
       // Then call the live edge function
-      const fnName = testUrl.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const fnName = getPriceEndpoint(testUrl);
       const { data, error } = await supabase.functions.invoke(fnName, {
         body: {
           productUrl: testUrl,

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getPriceEndpoint } from '@/utils/priceEndpointRouter';
 import { useRegion } from '@/contexts/RegionContext';
 import { CurrencyCode } from '@/types/regional';
 import { formatPrice } from '@/config/currencies';
@@ -89,7 +90,7 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
 
   const fetchFromUrl = useCallback(async (url: string, currency: string, retryCount = 0): Promise<{ data: any; error: any }> => {
     try {
-      const fnName = url.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const fnName = getPriceEndpoint(url);
       const result = await supabase.functions.invoke(fnName, {
         body: { productUrl: url, currency },
       });

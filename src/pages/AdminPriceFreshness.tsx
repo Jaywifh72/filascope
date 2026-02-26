@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { getPriceEndpoint } from '@/utils/priceEndpointRouter';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, RefreshCw, AlertTriangle, CheckCircle, Search, Calendar, Timer, Zap } from 'lucide-react';
 import { formatDistanceToNow, differenceInDays, differenceInHours } from 'date-fns';
@@ -163,7 +164,7 @@ const AdminPriceFreshness = () => {
 
     setRefreshingIds((prev) => new Set([...prev, productId]));
     try {
-      const fnName = productUrl.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+      const fnName = getPriceEndpoint(productUrl);
       const { error } = await supabase.functions.invoke(fnName, {
         body: { 
           url: productUrl,
