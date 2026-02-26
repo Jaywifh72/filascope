@@ -127,7 +127,7 @@ export async function fetchCrealityPrice(
 // EXTRUDR
 // ============================================================
 
-const EXTRUDR_REGIONS = ["de", "at", "gb", "fr", "it", "es", "nl", "pl", "cz", "eu", "ch"];
+const EXTRUDR_REGIONS = ["de", "at", "gb", "fr", "it", "es", "nl", "pl", "cz", "eu", "ch", "inlt"];
 
 function normalizeExtrudrUrl(url: string): string {
   try {
