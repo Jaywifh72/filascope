@@ -13,6 +13,7 @@ import { logBrokenUrl } from "./price-db.ts";
 
 export async function extractFirecrawlPrice(
   productUrl: string, preferredCurrency: string, productType: ProductType = "filament",
+  waitForMs: number = 3000,
 ): Promise<PriceResponse> {
   const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
   if (!apiKey) {
@@ -28,7 +29,7 @@ export async function extractFirecrawlPrice(
         response = await fetch("https://api.firecrawl.dev/v1/scrape", {
           method: "POST",
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url: productUrl, formats: ["markdown"], onlyMainContent: true, waitFor: 3000, location }),
+          body: JSON.stringify({ url: productUrl, formats: ["markdown"], onlyMainContent: true, waitFor: waitForMs, location }),
         });
         if (response.ok) break;
         if (attempt < 2 && [408, 500, 502, 503].includes(response.status)) {

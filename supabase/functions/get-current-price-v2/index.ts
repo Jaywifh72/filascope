@@ -75,6 +75,10 @@ serve(async (req: Request) => {
         result = await extractBambuLabPrice(urlToFetch, expectedCurrency, targetWeightGrams);
         break;
 
+      case "magento":
+        result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType, 5000);
+        break;
+
       case "shopify":
       default: {
         result = await extractShopifyPrice(urlToFetch, expectedCurrency, targetWeightGrams);
