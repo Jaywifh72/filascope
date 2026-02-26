@@ -1,43 +1,43 @@
 
 
-# Fix: "Failed" Alerts on Bambu Lab ABS (US/CA) During Admin Sync
+# Fix: ColorFabb Sync Failures (All 25 Products)
 
-## Problem
-When syncing Bambu Lab products on the admin pricing page, the first few stores (US, CA for ABS) show "Failed" alerts with "Rate limited" (HTTP 429). This happens because **two code paths** can still send `forceRefresh: true` to the price extraction endpoint, triggering the 1-per-URL-per-minute rate limiter:
+## Root Cause
 
-1. **`usePricingActions.ts`** -- Already fixed to `forceRefresh: false` (the last diff).
-2. **`useAdminPriceRefresh.ts`** -- Still sends `forceRefresh: true`. If an admin visits a product detail page and clicks "Refresh Price", then goes to the pricing-data page and syncs within 60 seconds, the rate limiter's DB record can interfere if the edge function receives `forceRefresh: true` from any remaining path.
+ColorFabb.us is a **Magento** e-commerce store, but the platform detector (`price-platforms.ts`) has no rule for it, so it defaults to `"shopify"`. This causes two cascading failures:
 
-Additionally, the edge function itself has no graceful handling when a 429 occurs during batch syncs -- the UI just shows a hard "Failed" with no distinction from real extraction failures.
+1. The Shopify extractor tries `https://colorfabb.us/pla-silk-red.json` -- Magento doesn't support this endpoint, so it returns **HTTP 404**
+2. The `get-current-price-v2` router sees `is404: true` and **skips the Firecrawl fallback** entirely (the code says: `if (!result.success && !result.is404)` -- meaning Firecrawl is only tried when the page exists but Shopify JSON parsing failed)
+
+Result: every single ColorFabb product fails with "HTTP 404" without ever attempting the Firecrawl HTML scraper that could actually read the Magento page.
 
 ## Solution
 
-### 1. Remove `forceRefresh` from all admin bulk/batch code paths
-Ensure that `useAdminPriceRefresh.ts` (the manual single-product refresh button) also uses `forceRefresh: false`. The rate limiter was designed to prevent public abuse, but admin callers should not be rate-limited since they are authenticated and intentional.
+### 1. Add ColorFabb to platform detection as "magento" (Firecrawl-routed)
 
-**File:** `src/hooks/useAdminPriceRefresh.ts`
-- Change `forceRefresh: true` to `forceRefresh: false`
+**File:** `supabase/functions/_shared/price-platforms.ts`
+- Add `"magento"` to the `Platform` type
+- Add detection rule: `if (l.includes("colorfabb.us") || l.includes("colorfabb.com"))` return `"magento"`
 
-### 2. Add 429 retry logic in `syncSinglePrice`
-As a safety net, if the edge function returns a 429, wait 2 seconds and retry once. This prevents transient rate-limit hits from showing as permanent failures in the UI.
+### 2. Route "magento" directly to Firecrawl in the v2 router
 
-**File:** `src/pages/admin/pricing/hooks/usePricingActions.ts`
-- In the `syncSinglePrice` function (around line 460-488), detect 429 errors and retry once after a short delay before marking as failed.
+**File:** `supabase/functions/get-current-price-v2/index.ts`
+- Add a `case "magento":` that calls `extractFirecrawlPrice()` directly, skipping the Shopify JSON attempt entirely
 
-### 3. Classify 429 errors distinctly in the UI
-Instead of showing a generic "Failed" badge for rate-limit responses, show a more informative "Rate Limited - Retrying" or "Skipped (rate limit)" status so the admin understands it's not an extraction failure.
+### 3. Increase Firecrawl wait time for Magento stores
 
-**File:** `src/pages/admin/pricing/hooks/usePricingActions.ts`
-- Check if the error message contains "Rate limited" and set status to `'rate_limited'` or retry transparently.
+**File:** `supabase/functions/_shared/price-extract-firecrawl.ts`
+- The current `waitFor: 3000` may be insufficient for Magento's heavy JavaScript rendering. Pass `waitFor: 5000` for Magento domains to give the page time to render prices.
 
 ## Technical Details
 
-The changes are minimal and focused:
-
 ```text
-useAdminPriceRefresh.ts:  forceRefresh: true  -->  forceRefresh: false
-usePricingActions.ts:     Add retry-on-429 with 2s delay (single retry)
+price-platforms.ts:   Add Platform "magento", detect colorfabb.us/colorfabb.com
+get-current-price-v2: Add case "magento" -> extractFirecrawlPrice() directly
+price-extract-firecrawl.ts: Accept optional waitFor override parameter
 ```
 
-This ensures all admin-initiated sync operations bypass the rate limiter while still allowing the rate limiter to protect against public/automated abuse via the edge function's `forceRefresh` guard.
+The Firecrawl extractor already handles price extraction from markdown, stock detection ("out of stock"), and currency matching -- it just was never being reached for ColorFabb URLs due to the premature 404 exit.
+
+Note: Some ColorFabb products may genuinely be out of stock or discontinued (the store shows "Out of stock" or 404/405 pages). These will correctly return `available: false` or `is404: true` from Firecrawl, which is the expected behavior -- the fix ensures we at least *try* Firecrawl rather than failing at the Shopify JSON step.
 
