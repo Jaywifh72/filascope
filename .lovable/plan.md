@@ -1,180 +1,145 @@
 
 
-# Refactor: Split `get-current-price` Monolith into Deployable Modules
+# Refactor: Consolidate Price Functions into `get-current-price-v2`
 
-## Problem
+## Constraint: Supabase Edge Function File Structure
 
-The `get-current-price` edge function is ~4,600 lines in a single `index.ts` file. It consistently fails to deploy with Supabase platform 500 errors due to size. Both `get-current-price` and `get-current-price-v2` are essentially identical copies of the same monolith. The only reliably deployable price function is `get-current-price-wc` at ~390 lines.
+Supabase edge functions only support a single `index.ts` per function directory -- no subfolders like `extractors/` or `utils/` are allowed within a function. However, functions **can** import from `supabase/functions/_shared/`. The architecture must use `_shared/` for all module files, with `index.ts` as a thin router.
 
-## Architecture
-
-Split the monolith into **4 platform-specific edge functions** + **shared modules** in `_shared/`. The frontend already routes AzureFilm to `get-current-price-wc`; we extend this pattern to all brands.
+## Target Architecture
 
 ```text
-Frontend / Orchestrator
-       |
-       +-- azurefilm.com ---------> get-current-price-wc     (~390 lines, EXISTS)
-       +-- store.creality.com ----> get-current-price-direct  (~700 lines, NEW)
-       |   extrudr.com
-       |   treedfilaments.com
-       |   prusa3d.com
-       |   geeetech.com
-       +-- *.shopify.com --------> get-current-price-shopify (~900 lines, NEW)
-       |   (polymaker, elegoo,
-       |    esun, sunlu, etc.)
-       +-- everything else ------> get-current-price-scrape  (~600 lines, NEW)
-           (firecrawl-based)
+supabase/functions/
+  _shared/
+    price-types.ts          (EXISTS, ~90 lines)  -- PriceResult, PriceResponse, etc.
+    price-utils.ts          (EXISTS, ~260 lines) -- parseEuropeanPrice, validation, etc.
+    price-db.ts             (EXISTS, ~213 lines) -- writePrice, updateStockStatus, lookupFilament
+    price-regional.ts       (EXISTS, ~170 lines) -- regional URL transforms
+    price-extract-shopify.ts   (NEW, ~180 lines) -- Shopify JSON API extraction
+    price-extract-wc.ts        (NEW, ~170 lines) -- WooCommerce WC Store API v1 + JSON-LD
+    price-extract-jsonld.ts    (NEW, ~80 lines)  -- Generic JSON-LD structured data
+    price-extract-firecrawl.ts (NEW, ~120 lines) -- Firecrawl markdown scraping
+    price-timeout.ts           (NEW, ~20 lines)  -- withTimeout(promise, ms) wrapper
+    price-platforms.ts         (NEW, ~60 lines)  -- detectPlatform, isShopify, isWooCommerce
+  get-current-price-v2/
+    index.ts                   (NEW, ~100 lines) -- Router only
 ```
 
-## New Shared Modules
+## File Responsibilities
 
-### `_shared/price-types.ts` (~80 lines)
-All shared interfaces and type definitions extracted from the monolith:
-- `PriceResponse` interface (with all fields: status, method, price_alert, etc.)
-- `StockStatus` type
-- `BrandExtractionConfig` and `BrandConfig` interfaces
-- `RegionalStoreConfig` interface
-- `ShopifyVariant` and `ShopifyProduct` interfaces
+### `_shared/price-timeout.ts` (~20 lines)
+- `withTimeout<T>(promise: Promise<T>, ms: number): Promise<T>` -- wraps any promise with a timeout race
+- Single reusable utility replacing the 4 duplicated `fetchWithTimeout` functions
 
-### `_shared/price-utils.ts` (~250 lines)
-Pure utility functions with no external dependencies:
-- `parseEuropeanPrice()`, `cleanEuropeanPrice()`, `parsePriceForDomain()`
-- `extractSalePriceBeforeSave()`, `removeSavingsAmounts()`
-- `validateFilamentPrice()`, `validateProductPrice()`, `CURRENCY_PRICE_RANGES`
-- `detectCurrencyFromContent()`, `getCurrencySymbol()`, `buildCurrencyPricePattern()`
-- `extractWeightFromContent()`, `extractDiameterFromContent()`
-- `parseWeightFromTitle()`, `parseDiameter()`, `parsePackQuantity()`
-- `is404Content()`, `isCloudflareBlock()`
-- `detectStockStatus()`
+### `_shared/price-platforms.ts` (~60 lines)
+- `detectPlatform(url): "shopify" | "woocommerce" | "creality" | "extrudr" | "treed" | "prusa" | "geeetech" | "unknown"`
+- `isShopify(url): boolean`
+- `isWooCommerce(url): boolean`
+- `extractSlug(url): string | null` -- WooCommerce `/product/slug` extraction
+- `extractHandle(url): string | null` -- Shopify `/products/handle` extraction
+- Consolidates platform detection currently scattered across 4 functions
 
-### `_shared/price-db.ts` (~300 lines)
-All database interaction helpers:
-- `getSupabaseClient()` (service role)
-- `findBrandConfigByUrl()` - brand config lookup
-- `logExtractionAttempt()` - extraction log insert
-- `canForceRefresh()` - rate limit check
-- `logBrokenUrl()` - broken URL tracking
-- `updateFilamentStockStatus()` - stock + discrepancy detection + price persistence
-- `getRegionalPriceColumn()` - currency-to-column mapping
+### `_shared/price-extract-shopify.ts` (~180 lines)
+- `extractShopifyPrice(url, currency, targetWeightGrams?): Promise<PriceResult>`
+- `selectBestVariantByWeight(variants, title, targetWeight): ShopifyVariant`
+- Geo-redirect handling (direct, spoofed headers, follow redirect)
+- Returns standard `PriceResult` type
+- Imports: `price-timeout`, `price-utils` (for weight/diameter parsing), `price-types`
 
-### `_shared/price-regional.ts` (~250 lines)
-Regional URL transformation logic (supplements existing `_shared/regional-fetch.ts`):
-- `REGIONAL_STORE_CONFIGS` map (BambuLab, Polymaker, Elegoo, Anycubic, Creality, Extrudr, Prusa)
-- `transformToRegionalUrl()`
-- `normalizeCrealityUrl()`
-- `CURRENCY_TO_REGION` map
-- `getFirecrawlLocation()`
+### `_shared/price-extract-wc.ts` (~170 lines)
+- `extractWooCommercePrice(url, domain): Promise<PriceResult>`
+- WC Store API v1: `GET /wp-json/wc/store/v1/products?slug={slug}`
+- Price parsing: `prices.price / 10^prices.currency_minor_unit`
+- Variable products: fetch `/variations`, return cheapest in-stock
+- `jsonLdFallback(url, domain): Promise<PriceResult | null>` -- fallback path
+- Cloudflare detection, 429 retry
+- Imports: `price-timeout`, `price-types`
 
-## New Edge Functions
+### `_shared/price-extract-jsonld.ts` (~80 lines)
+- `extractJsonLdPrice(html, expectedCurrency, sourceUrl): PriceResult | null`
+- Parses `<script type="application/ld+json">` blocks for Product/@type with offers
+- Handles both single and array offers
+- Used by Creality, Extrudr, Prusa, Geeetech extractors and as WC fallback
+- Pure function (no fetch, no side effects)
 
-### 1. `get-current-price-shopify` (~900 lines)
-Handles all Shopify-based stores (the majority of brands).
+### `_shared/price-extract-firecrawl.ts` (~120 lines)
+- `extractFirecrawlPrice(url, currency, productType?): Promise<PriceResult>`
+- Firecrawl API call with retry (up to 3 attempts)
+- Sale price extraction, generic currency-symbol price extraction
+- Currency mismatch detection
+- Imports: `price-utils` (getCurrencySymbol, removeSavingsAmounts, extractSalePriceBeforeSave)
 
-Contains:
-- `fetchShopifyPrice()` - JSON API fetch with geo-bypass headers
-- `selectBestVariantByWeight()` - smart variant selection (consumer spool preference)
-- `fetchPriceWithFirecrawl()` - Firecrawl fallback when Shopify JSON fails
-- `extractBambuLabPrice()` / `extractPriceWithConfig()` - markdown price extraction
-- `getMainProductSection()` - cross-sell/accessory content filtering
-- 404 resolution system: `attemptSearchResolution()`, `handle404WithResolution()`, `handleUrlRedirect()`
-- `extractPrinterPrice()` - printer-specific extraction (higher price range)
-- Main router: Shopify JSON first, Firecrawl fallback, multi-currency handling
+### `get-current-price-v2/index.ts` (~100 lines)
+Router-only entry point:
+1. Parse request body (`productUrl`, `currency`, `forceRefresh`, `targetWeightGrams`, `productType`)
+2. Call `detectPlatform(url)` to determine extractor
+3. Apply regional URL transform
+4. Check rate limit if `forceRefresh`
+5. Dispatch to correct extractor:
+   - `shopify` -> `extractShopifyPrice()`, fallback to `extractFirecrawlPrice()`
+   - `woocommerce` -> `extractWooCommercePrice()`
+   - `creality/extrudr/treed/prusa/geeetech` -> direct HTML fetch + `extractJsonLdPrice()`, platform-specific logic stays inline (Creality slug discovery, Extrudr URL normalization, TreeD API) -- these are small enough to keep in the router OR split into a `price-extract-direct.ts` (~150 lines)
+   - `unknown` -> `extractFirecrawlPrice()`
+6. Log extraction attempt via `logExtractionAttempt()`
+7. Persist via `updateFilamentStockStatus()` on success
+8. Return JSON response
 
-Imports from `_shared/`: price-types, price-utils, price-db, price-regional, regional-fetch
+## Standard Return Type
 
-### 2. `get-current-price-direct` (~700 lines)
-Handles custom storefronts that use direct HTML fetch + JSON-LD extraction.
-
-Contains:
-- `fetchCrealityPriceDirect()` - Creality HTML fetch + JSON-LD
-- `extractCrealityPriceFromHtml()` - Creality JSON-LD parser
-- `generateCrealitySlugVariants()` + `attemptCrealitySlugDiscovery()` - slug discovery for regional 404s
-- `fetchExtrudrPriceDirect()` - Extrudr JSON-LD (EUR-only)
-- `normalizeExtrudrUrl()` - region code injection
-- `fetchTreeDPrice()` - TreeD backend API (EUR cents/kg)
-- `extractCrealityPrice()` - legacy markdown fallback
-- `extractOpenCartPrice()` - Geeetech legacy
-- Main router: detects storefront type from URL domain, dispatches to correct handler
-
-Imports from `_shared/`: price-types, price-utils, price-db, price-regional
-
-### 3. `get-current-price-scrape` (~600 lines)
-Pure Firecrawl-based extraction for unknown or generic platforms.
-
-Contains:
-- `fetchPriceWithFirecrawl()` - Firecrawl API call with retries, location spoofing
-- `extractPriceWithConfig()` - configured brand extraction patterns
-- `extractBambuLabPrice()` - generic multi-currency price extraction
-- Prusa MK404 location-gate detection
-- Main router: brand config lookup, Firecrawl dispatch
-
-Imports from `_shared/`: price-types, price-utils, price-db, price-regional, regional-fetch
-
-### 4. `get-current-price-wc` (EXISTS, no changes needed)
-Already deployed and working for WooCommerce stores (AzureFilm).
-
-## Frontend Routing Changes
-
-Update the routing logic in **8 files** that currently do:
-```typescript
-const fnName = url.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
-```
-
-Replace with a shared routing function:
+All extractors return the same `PriceResult` interface (added to `price-types.ts`):
 
 ```typescript
-// src/utils/priceEndpointRouter.ts
-export function getPriceEndpoint(url: string): string {
-  const lower = url.toLowerCase();
-  
-  // WooCommerce stores
-  if (lower.includes('azurefilm.com')) return 'get-current-price-wc';
-  
-  // Direct HTML/JSON-LD stores
-  if (lower.includes('store.creality.com') || lower.includes('creality.com'))
-    return 'get-current-price-direct';
-  if (lower.includes('extrudr.com')) return 'get-current-price-direct';
-  if (lower.includes('treedfilaments.com')) return 'get-current-price-direct';
-  if (lower.includes('prusa3d.com')) return 'get-current-price-direct';
-  if (lower.includes('geeetech.com')) return 'get-current-price-direct';
-  
-  // Shopify stores (default for most brands)
-  return 'get-current-price-shopify';
+interface PriceResult {
+  price: number | null;
+  compareAtPrice: number | null;
+  currency: string;
+  available: boolean;
+  stockStatus: StockStatus;
+  method: string;       // "shopify_json" | "wc_store_api" | "json_ld" | "firecrawl" | ...
+  source: string;       // "shopify" | "woocommerce" | "html" | "firecrawl"
+  error?: string;
+  is404?: boolean;
+  weightGrams?: number | null;
+  diameterMm?: number | null;
+  variantTitle?: string | null;
 }
 ```
 
-Files to update:
-- `src/hooks/useCurrentPrice.ts`
-- `src/hooks/useLivePriceFetch.ts`
-- `src/hooks/useAdminPriceRefresh.ts`
-- `src/pages/AdminPriceFreshness.tsx`
-- `src/pages/admin/SyncMonitor.tsx`
-- `src/components/admin/BrandExtractionEditor.tsx`
-- `src/pages/admin/pricing/hooks/usePricingActions.ts`
-- `src/pages/admin/pricing/constants.ts`
+## What Happens to Existing Functions
 
-Also update `supabase/functions/sync-prices/index.ts` to use the same routing logic server-side.
+| Function | Action |
+|---|---|
+| `get-current-price-wc` | Keep deployed as-is (proven, working for AzureFilm) |
+| `get-current-price-shopify` | Delete after v2 verified |
+| `get-current-price-direct` | Delete after v2 verified |
+| `get-current-price-scrape` | Delete after v2 verified |
+| `get-current-price` | Keep frozen as legacy fallback |
 
 ## Implementation Order
 
-1. Create `_shared/price-types.ts` -- interfaces only, no risk
-2. Create `_shared/price-utils.ts` -- pure functions, testable
-3. Create `_shared/price-db.ts` -- database helpers
-4. Create `_shared/price-regional.ts` -- URL transformation
-5. Create `get-current-price-direct/index.ts` -- Creality/Extrudr/TreeD
-6. Create `get-current-price-shopify/index.ts` -- Shopify + Firecrawl fallback
-7. Create `get-current-price-scrape/index.ts` -- generic Firecrawl
-8. Create `src/utils/priceEndpointRouter.ts` -- shared frontend routing
-9. Update all 8 frontend call sites to use the router
-10. Update `sync-prices` to use server-side routing
-11. Verify all 3 new functions deploy successfully (each under 1,000 lines)
-12. Delete `get-current-price-v2` (redundant copy of the monolith)
-13. Keep `get-current-price` frozen as legacy fallback (do not redeploy)
+1. Create `_shared/price-timeout.ts` (trivial, no risk)
+2. Create `_shared/price-platforms.ts` (pure detection logic)
+3. Create `_shared/price-extract-jsonld.ts` (extract from direct/wc functions)
+4. Create `_shared/price-extract-shopify.ts` (extract from shopify function)
+5. Create `_shared/price-extract-wc.ts` (extract from wc function)
+6. Create `_shared/price-extract-firecrawl.ts` (extract from scrape function)
+7. Create `get-current-price-v2/index.ts` (thin router importing all extractors)
+8. Update `src/utils/priceEndpointRouter.ts` to route everything to `get-current-price-v2` (except AzureFilm which stays on `get-current-price-wc`)
+9. Deploy and verify
+10. Delete old `get-current-price-shopify`, `get-current-price-direct`, `get-current-price-scrape` directories
 
-## Risk Mitigation
+## Line Count Summary
 
-- The existing `get-current-price` remains deployed and functional as a fallback
-- Each new function can be tested independently via the admin "Test" button
-- The `get-current-price-wc` pattern is proven (deployed and working)
-- If any new function fails to deploy, the router can temporarily fall back to `get-current-price`
+| File | Lines | Role |
+|---|---|---|
+| `_shared/price-timeout.ts` | ~20 | Timeout wrapper |
+| `_shared/price-platforms.ts` | ~60 | Platform detection |
+| `_shared/price-extract-jsonld.ts` | ~80 | JSON-LD parser |
+| `_shared/price-extract-firecrawl.ts` | ~120 | Firecrawl scraper |
+| `_shared/price-extract-wc.ts` | ~170 | WooCommerce extractor |
+| `_shared/price-extract-shopify.ts` | ~180 | Shopify extractor |
+| `get-current-price-v2/index.ts` | ~100 | Router + direct-store handlers |
+| **Total new code** | **~730** | |
+
+Every extractor stays under 200 lines. All number parsing lives in `price-utils.ts`. The router contains zero extraction logic.
 
