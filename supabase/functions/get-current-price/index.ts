@@ -9,6 +9,7 @@ import {
   detectRegionFromUrl,
   type FetchMethod,
 } from "../_shared/regional-fetch.ts";
+import { extractBambuLabPrice } from "../_shared/price-extract-bambulab.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1385,7 +1386,10 @@ function getWooCommerceCurrency(url: string): string {
 
 // Detect custom storefronts that don't support Shopify JSON API
 function detectCustomStorefront(url: string): "bambulab" | "prusa" | "opencart" | "creality" | "extrudr" | "treed" | "woocommerce" | null {
-  if (url.includes("store.bambulab.com")) return "bambulab";
+  // Bambu Lab: non-JP stores migrated to custom Next.js platform (2025)
+  // JP remains on Shopify, so exclude it from custom detection
+  if (url.includes("store.bambulab.com") && !url.includes("jp.store.bambulab.com")) return "bambulab";
+  if (url.includes("jp.store.bambulab.com")) return null; // Let JP fall through to Shopify
   if (url.includes("prusa3d.com")) return "prusa";
   if (url.includes("geeetech.com")) return "opencart";
   if (url.includes("extrudr.com")) return "extrudr";
@@ -4483,6 +4487,9 @@ serve(async (req) => {
       console.log(`[CREALITY ROUTING] Expected currency: ${expectedCurrency}`);
       console.log(`[CREALITY ROUTING] Was transformed: ${transformed}`);
       result = await fetchCrealityPriceDirect(urlToFetch, expectedCurrency, filamentId, regionCode);
+    } else if (customStorefront === "bambulab") {
+      console.log(`[BAMBULAB ROUTING] ✓ Bambu Lab JSON-LD extractor selected`);
+      result = await extractBambuLabPrice(urlToFetch, expectedCurrency, targetWeightGrams);
     } else if (customStorefront) {
       console.log(`[ROUTING] Custom storefront: ${customStorefront}, using Firecrawl`);
       console.log(`[ROUTING] URL: ${urlToFetch}, currency: ${expectedCurrency}`);
