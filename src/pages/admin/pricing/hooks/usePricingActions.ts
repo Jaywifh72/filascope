@@ -515,12 +515,22 @@ export function usePricingActions(
       }
 
       if (!data?.success || data.price == null) {
-        if (data?.notAvailableInRegion) {
-          const result: SyncResult = { status: 'unavailable', error: data.error || 'Product not available in this region' };
+        const unavailableByAvailability = data?.stockStatus === 'out_of_stock' || data?.error === 'OUT_OF_STOCK_NO_PRICE';
+        const unavailableByMissingPage = !!data?.is404;
+
+        if (data?.notAvailableInRegion || unavailableByAvailability || unavailableByMissingPage) {
+          const reason = data?.notAvailableInRegion
+            ? (data.error || 'Product not available in this region')
+            : unavailableByMissingPage
+              ? 'Product page not found (404)'
+              : 'Out of stock (no active price available)';
+
+          const result: SyncResult = { status: 'unavailable', error: reason };
           setSyncResults(prev => new Map(prev).set(store.storeKey, result));
-          if (showToast) toast.warning(`⚪ Not available in this region`);
+          if (showToast) toast.warning(`⚪ ${reason}`);
           return result;
         }
+
         const errorMsg = data?.error || 'Invalid price data';
         const result: SyncResult = { status: 'failed', error: errorMsg };
         setSyncResults(prev => new Map(prev).set(store.storeKey, result));
@@ -679,7 +689,7 @@ export function usePricingActions(
     setBulkSyncProgress({ done: 0, total: deduped.length, variants: totalVariants });
     abortSyncRef.current = false;
     const startTime = Date.now();
-    let done = 0, updated = 0, unchanged = 0, failed = 0, priceUp = 0, priceDown = 0;
+    let done = 0, updated = 0, unchanged = 0, unavailable = 0, failed = 0, priceUp = 0, priceDown = 0;
 
     for (let i = 0; i < deduped.length; i += 2) {
       if (abortSyncRef.current) break;
@@ -690,9 +700,17 @@ export function usePricingActions(
       }));
       results.forEach(r => {
         done++;
-        if (r.status === 'success') { updated++; if (r.percentChange && r.percentChange > 0) priceUp++; else if (r.percentChange && r.percentChange < 0) priceDown++; }
-        else if (r.status === 'unchanged') unchanged++;
-        else failed++;
+        if (r.status === 'success') {
+          updated++;
+          if (r.percentChange && r.percentChange > 0) priceUp++;
+          else if (r.percentChange && r.percentChange < 0) priceDown++;
+        } else if (r.status === 'unchanged' || r.status === 'discontinued') {
+          unchanged++;
+        } else if (r.status === 'unavailable') {
+          unavailable++;
+        } else {
+          failed++;
+        }
       });
       setBulkSyncProgress({ done, total: deduped.length, variants: totalVariants });
     }
@@ -704,10 +722,11 @@ export function usePricingActions(
     queryClient.invalidateQueries({ queryKey: ['admin-recent-price-changes', productType] });
 
     const updatedDetail = updated > 0 ? ` (↑${priceUp} ↓${priceDown})` : '';
+    const unavailableDetail = unavailable > 0 ? `, ${unavailable} unavailable` : '';
     if (abortSyncRef.current) {
-      toast.info(`⚠️ Sync cancelled — ${done}/${deduped.length} stores: ${updated} updated${updatedDetail}, ${unchanged} unchanged, ${failed} failed`);
+      toast.info(`⚠️ Sync cancelled — ${done}/${deduped.length} stores: ${updated} updated${updatedDetail}, ${unchanged} unchanged${unavailableDetail}, ${failed} failed`);
     } else {
-      toast.success(`Synced ${done} stores: ${updated} updated${updatedDetail}, ${unchanged} unchanged, ${failed} failed`);
+      toast.success(`Synced ${done} stores: ${updated} updated${updatedDetail}, ${unchanged} unchanged${unavailableDetail}, ${failed} failed`);
     }
     setSyncBatchCompleteCount(c => c + 1);
   }, [syncSinglePrice, queryClient, productType]);

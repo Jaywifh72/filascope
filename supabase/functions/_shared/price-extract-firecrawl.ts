@@ -53,39 +53,57 @@ export async function extractFirecrawlPrice(
       return { success: false, price: null, compareAtPrice: null, currency: preferredCurrency, available: false, source: "firecrawl", fetchedAt: new Date().toISOString(), error: "PRODUCT_PAGE_NOT_FOUND", is404: true };
     }
 
-    const priceRange = productType === "printer" ? { min: 99, max: 10000 } : { min: 10, max: 150 };
+    const isColorFabb = /colorfabb\.(us|com)/i.test(productUrl);
+    const stockStatus = detectStockStatus(markdown);
+    const priceRange = productType === "printer"
+      ? { min: 99, max: 10000 }
+      : { min: 10, max: isColorFabb ? 300 : 150 };
 
     // Sale format
     const addToCartIdx = markdown.search(/Add\s*to\s*Cart/i);
-    const section = addToCartIdx > -1 ? markdown.slice(0, addToCartIdx + 200) : markdown.slice(0, Math.floor(markdown.length * 0.4));
+    const section = addToCartIdx > -1
+      ? markdown.slice(0, addToCartIdx + 200)
+      : markdown.slice(0, Math.floor(markdown.length * (stockStatus === "out_of_stock" ? 0.9 : 0.4)));
     const sale = extractSalePriceBeforeSave(section);
     if (sale.salePrice && sale.salePrice >= priceRange.min && sale.salePrice <= priceRange.max) {
       return {
         success: true, price: sale.salePrice,
         compareAtPrice: sale.compareAtPrice && sale.compareAtPrice > sale.salePrice * 1.05 ? sale.compareAtPrice : null,
-        currency: preferredCurrency, available: true, source: "firecrawl", fetchedAt: new Date().toISOString(),
+        currency: preferredCurrency,
+        available: stockStatus !== "out_of_stock",
+        stockStatus: stockStatus === "unknown" ? "in_stock" : stockStatus,
+        source: "firecrawl", fetchedAt: new Date().toISOString(),
         weightGrams: extractWeightFromContent(markdown),
         diameterMm: extractDiameterFromContent(markdown, productUrl),
       };
     }
 
     // Generic extraction
-    const cleaned = removeSavingsAmounts(section);
+    let cleaned = removeSavingsAmounts(section);
     const symbol = getCurrencySymbol(preferredCurrency);
     const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const pattern = new RegExp(`${escaped}\\s*([\\d,]+(?:\\.\\d{2})?)`, "g");
-    const prices = [...cleaned.matchAll(pattern)]
+    let prices = [...cleaned.matchAll(pattern)]
       .map(m => parseFloat(m[1].replace(",", "")))
       .filter(p => !isNaN(p) && p >= priceRange.min && p <= priceRange.max)
       .sort((a, b) => a - b);
 
+    // Fallback to full markdown when short section misses the price (common on Magento/out-of-stock templates)
+    if (prices.length === 0 && section !== markdown) {
+      cleaned = removeSavingsAmounts(markdown);
+      prices = [...cleaned.matchAll(pattern)]
+        .map(m => parseFloat(m[1].replace(",", "")))
+        .filter(p => !isNaN(p) && p >= priceRange.min && p <= priceRange.max)
+        .sort((a, b) => a - b);
+    }
+
     if (prices.length > 0) {
-      const stock = detectStockStatus(markdown);
       return {
         success: true, price: prices[0],
         compareAtPrice: prices.length > 1 && prices[1] > prices[0] * 1.1 ? prices[1] : null,
-        currency: preferredCurrency, available: stock !== "out_of_stock",
-        stockStatus: stock === "unknown" ? "in_stock" : stock,
+        currency: preferredCurrency,
+        available: stockStatus !== "out_of_stock",
+        stockStatus: stockStatus === "unknown" ? "in_stock" : stockStatus,
         source: "firecrawl", fetchedAt: new Date().toISOString(),
         weightGrams: extractWeightFromContent(markdown),
         diameterMm: extractDiameterFromContent(markdown, productUrl),
@@ -106,13 +124,40 @@ export async function extractFirecrawlPrice(
         return {
           success: true, price: altPrices[0],
           compareAtPrice: altPrices.length > 1 && altPrices[1] > altPrices[0] * 1.1 ? altPrices[1] : null,
-          currency: detected, available: true, source: "firecrawl", fetchedAt: new Date().toISOString(),
+          currency: detected,
+          available: stockStatus !== "out_of_stock",
+          stockStatus: stockStatus === "unknown" ? "in_stock" : stockStatus,
+          source: "firecrawl", fetchedAt: new Date().toISOString(),
           currencyMismatch: true, detectedCurrency: detected, requestedCurrency: preferredCurrency,
         };
       }
     }
 
-    return { success: false, price: null, compareAtPrice: null, currency: preferredCurrency, available: false, source: "firecrawl", fetchedAt: new Date().toISOString(), error: "No valid price found" };
+    if (stockStatus === "out_of_stock") {
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        currency: preferredCurrency,
+        available: false,
+        stockStatus: "out_of_stock",
+        source: "firecrawl",
+        fetchedAt: new Date().toISOString(),
+        error: "OUT_OF_STOCK_NO_PRICE",
+      };
+    }
+
+    return {
+      success: false,
+      price: null,
+      compareAtPrice: null,
+      currency: preferredCurrency,
+      available: false,
+      stockStatus,
+      source: "firecrawl",
+      fetchedAt: new Date().toISOString(),
+      error: "No valid price found",
+    };
   } catch (error) {
     return { success: false, price: null, compareAtPrice: null, currency: preferredCurrency, available: false, source: "firecrawl", fetchedAt: new Date().toISOString(), error: error instanceof Error ? error.message : "Unknown error" };
   }
