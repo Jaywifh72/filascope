@@ -33,7 +33,8 @@ export const BRAND_REGIONAL_CONFIGS: Record<string, BrandRegionalConfig> = {
   'Elegoo':       { pattern: 'subdomain', baseDomain: 'elegoo.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
   'Anycubic':     { pattern: 'subdomain', baseDomain: 'anycubic.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { domain: 'www.anycubic.au' } } },
   'QIDI Tech':    { pattern: 'subdomain', baseDomain: 'qidi3d.com', regions: { CA: { subdomain: 'ca' }, UK: { subdomain: 'uk' }, EU: { subdomain: 'eu' }, AU: { subdomain: 'au' } } },
-  'Creality':     { pattern: 'path', baseUrl: 'https://store.creality.com', regions: { CA: 'ca', UK: 'uk', EU: 'eu', AU: 'au', JP: 'jp' } },
+  // Creality: NOT derivable — regional slugs differ from US slugs (see creality-url-management-standards)
+  // Regional URLs must be stored explicitly via product_url_eu, product_url_uk, etc.
   // Single global-store brands: same product URL serves multiple regions with geo-localized currency.
   'Prusament':    { pattern: 'same_url', regions: ['EU', 'US'] },
   'Prusa Research': { pattern: 'same_url', regions: ['EU', 'US'] },
