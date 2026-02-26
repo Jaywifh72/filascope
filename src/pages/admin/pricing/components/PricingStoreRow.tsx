@@ -76,12 +76,17 @@ export function PricingStoreRow({
           {syncResult?.source && (syncResult.status === 'success' || syncResult.status === 'unchanged') && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className={`text-[9px] px-1 py-0 leading-tight ${syncResult.source === 'firecrawl' ? 'border-purple-400 text-purple-400' : syncResult.source === 'html' ? 'border-green-400 text-green-400' : 'border-emerald-400 text-emerald-400'}`}>
-                  {syncResult.source === 'firecrawl' ? '🔥' : syncResult.source === 'html' ? '🌐' : '🛒'}
+                <Badge variant="outline" className={`text-[9px] px-1 py-0 leading-tight ${
+                  syncResult.source === 'firecrawl' ? 'border-purple-400 text-purple-400' 
+                  : syncResult.source === 'html' ? 'border-green-400 text-green-400' 
+                  : syncResult.source === 'bambulab-jsonld' ? 'border-amber-400 text-amber-400'
+                  : 'border-emerald-400 text-emerald-400'
+                }`}>
+                  {syncResult.source === 'firecrawl' ? '🔥' : syncResult.source === 'html' ? '🌐' : syncResult.source === 'bambulab-jsonld' ? '🏭' : '🛒'}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
-                {syncResult.source === 'firecrawl' ? 'Firecrawl' : syncResult.source === 'html' ? 'Direct Fetch' : 'Shopify JSON'}
+                {syncResult.source === 'firecrawl' ? 'Firecrawl' : syncResult.source === 'html' ? 'Direct Fetch' : syncResult.source === 'bambulab-jsonld' ? 'Bambu Lab JSON-LD' : 'Shopify JSON'}
                 {syncResult.location ? ` · ${syncResult.location}` : ''}
               </TooltipContent>
             </Tooltip>
