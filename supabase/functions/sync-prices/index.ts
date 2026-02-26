@@ -34,6 +34,10 @@ interface ExtractionResult {
   compareAtPrice: number | null;
   error?: string;
   method?: string;
+  is404?: boolean;
+  stockStatus?: string | null;
+  notAvailableInRegion?: boolean;
+  isUnavailable?: boolean;
 }
 
 interface RegionalUrl {
@@ -52,6 +56,7 @@ interface RegionStats {
   attempted: number;
   successful: number;
   failed: number;
+  unavailable: number;
   priceChanges: number;
 }
 
@@ -134,17 +139,37 @@ async function callGetCurrentPrice(
     }
     
     const data = await response.json();
-    
-    if (data.price !== null && data.price !== undefined) {
-      return { 
-        success: true, 
-        price: data.price, 
+    const isUnavailable =
+      !!data?.notAvailableInRegion ||
+      !!data?.is404 ||
+      data?.stockStatus === 'out_of_stock' ||
+      data?.error === 'OUT_OF_STOCK_NO_PRICE' ||
+      data?.error === 'PRODUCT_PAGE_NOT_FOUND';
+
+    if (data?.success && data.price !== null && data.price !== undefined) {
+      return {
+        success: true,
+        price: data.price,
         compareAtPrice: data.compareAtPrice || null,
-        method: 'firecrawl'
+        method: data.source || 'firecrawl',
+        is404: !!data?.is404,
+        stockStatus: data?.stockStatus || null,
+        notAvailableInRegion: !!data?.notAvailableInRegion,
+        isUnavailable,
       };
     }
-    
-    return { success: false, price: null, compareAtPrice: null, error: data.error || 'No price extracted' };
+
+    return {
+      success: false,
+      price: null,
+      compareAtPrice: null,
+      error: data?.error || 'No price extracted',
+      method: data?.source || 'firecrawl',
+      is404: !!data?.is404,
+      stockStatus: data?.stockStatus || null,
+      notAvailableInRegion: !!data?.notAvailableInRegion,
+      isUnavailable,
+    };
   } catch (error) {
     return { 
       success: false, 
@@ -184,6 +209,12 @@ async function extractPrice(
   
   // Default: try Firecrawl anyway
   return await callGetCurrentPrice(productUrl, targetWeightGrams);
+}
+
+function isUnavailableExtraction(extraction: ExtractionResult): boolean {
+  if (extraction.isUnavailable || extraction.notAvailableInRegion || extraction.is404) return true;
+  if (extraction.stockStatus === 'out_of_stock') return true;
+  return extraction.error === 'OUT_OF_STOCK_NO_PRICE' || extraction.error === 'PRODUCT_PAGE_NOT_FOUND';
 }
 
 // Fetch regional URLs for a product
@@ -233,7 +264,8 @@ async function updateRegionalPrice(
   compareAtPrice: number | null,
   storeUrlId: string,
   success: boolean,
-  errorMessage?: string
+  errorMessage?: string,
+  statusOverride?: 'unavailable'
 ): Promise<boolean> {
   const { error } = await supabase
     .from('product_regional_prices')
@@ -246,7 +278,7 @@ async function updateRegionalPrice(
       compare_at_price: compareAtPrice,
       store_url_id: storeUrlId,
       last_sync_at: new Date().toISOString(),
-      last_sync_status: success ? 'success' : 'failed',
+      last_sync_status: statusOverride || (success ? 'success' : 'failed'),
       last_sync_error: errorMessage || null,
       price_source: 'sync',
     }, {
@@ -427,6 +459,7 @@ Deno.serve(async (req) => {
     // Process products
     let successful = 0;
     let failed = 0;
+    let unavailable = 0;
     let skipped = 0;
     let priceChanges = 0;
     let totalRegionalUrls = 0;
@@ -437,11 +470,11 @@ Deno.serve(async (req) => {
     // Helper to update region stats
     function updateRegionStats(
       regionCode: string, 
-      type: 'attempted' | 'successful' | 'failed', 
+      type: 'attempted' | 'successful' | 'failed' | 'unavailable', 
       priceChanged = false
     ) {
       if (!regionStats[regionCode]) {
-        regionStats[regionCode] = { attempted: 0, successful: 0, failed: 0, priceChanges: 0 };
+        regionStats[regionCode] = { attempted: 0, successful: 0, failed: 0, unavailable: 0, priceChanges: 0 };
       }
       regionStats[regionCode][type]++;
       if (priceChanged) {
@@ -537,6 +570,27 @@ Deno.serve(async (req) => {
             } else {
               successful++;
             }
+          } else if (isUnavailableExtraction(extraction)) {
+            unavailable++;
+
+            if (!dryRun) {
+              const unavailableData: Record<string, unknown> = {
+                last_sync_error: extraction.error || 'Unavailable in store',
+                last_scraped_at: new Date().toISOString(),
+              };
+
+              if (productType === 'printer') {
+                unavailableData.last_sync_status = 'unavailable';
+              }
+              if (productType === 'filament') {
+                unavailableData.sync_status = 'unavailable';
+              }
+
+              await supabase
+                .from(tableName)
+                .update(unavailableData)
+                .eq('id', product.id);
+            }
           } else {
             failed++;
             errors.push({ productId: product.id, error: extraction.error || 'Unknown error' });
@@ -629,6 +683,25 @@ Deno.serve(async (req) => {
               successful++;
               updateRegionStats(regionCode, 'successful', priceChanged);
               console.log(`  [${regionCode}] [DRY RUN] Would set price to ${extraction.price} ${regionalUrl.currency_code}`);
+            }
+          } else if (isUnavailableExtraction(extraction)) {
+            unavailable++;
+            updateRegionStats(regionCode, 'unavailable');
+
+            if (!dryRun) {
+              await updateRegionalPrice(
+                supabase,
+                product.id,
+                productType,
+                regionCode,
+                regionalUrl.currency_code,
+                null,
+                null,
+                regionalUrl.id,
+                false,
+                extraction.error,
+                'unavailable'
+              );
             }
           } else {
             failed++;
@@ -730,6 +803,28 @@ Deno.serve(async (req) => {
             successful++;
             console.log(`[DRY RUN] Would update ${product.id}: $${currentPrice} -> $${extraction.price}`);
           }
+        } else if (isUnavailableExtraction(extraction)) {
+          unavailable++;
+          
+          if (!dryRun) {
+            // Update product with unavailable status (not a hard failure)
+            const unavailableData: Record<string, unknown> = {
+              last_sync_error: extraction.error || 'Unavailable in store',
+              last_scraped_at: new Date().toISOString(),
+            };
+            
+            if (productType === 'printer') {
+              unavailableData.last_sync_status = 'unavailable';
+            }
+            if (productType === 'filament') {
+              unavailableData.sync_status = 'unavailable';
+            }
+            
+            await supabase
+              .from(tableName)
+              .update(unavailableData)
+              .eq('id', product.id);
+          }
         } else {
           failed++;
           errors.push({ productId: product.id, error: extraction.error || 'Unknown error' });
@@ -772,6 +867,7 @@ Deno.serve(async (req) => {
         success_details: { 
           regionStats, 
           totalRegionalUrls,
+          unavailable,
           dryRun 
         },
         error_details: errors.length > 0 ? { errors: errors.slice(0, 20) } : null
@@ -789,6 +885,7 @@ Deno.serve(async (req) => {
       totalRegionalUrls,
       successful,
       failed,
+      unavailable,
       skipped,
       priceChanges,
       regionStats,
