@@ -18,6 +18,7 @@ import {
   fetchCrealityPrice, fetchExtrudrPrice, fetchTreeDPrice,
   fetchPrusaPrice, fetchGeeetechPrice,
 } from "../_shared/price-extract-direct.ts";
+import { extractBambuLabPrice } from "../_shared/price-extract-bambulab.ts";
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -68,6 +69,10 @@ serve(async (req: Request) => {
         break;
       case "geeetech":
         result = await fetchGeeetechPrice(urlToFetch);
+        break;
+
+      case "bambulab":
+        result = await extractBambuLabPrice(urlToFetch, expectedCurrency, targetWeightGrams);
         break;
 
       case "shopify":
