@@ -71,6 +71,8 @@ interface ScrapeError {
   error_type: string | null;
   error_message: string | null;
   url: string | null;
+  url_attempted: string | null;
+  http_status: number | null;
   is_resolved: boolean;
   created_at: string;
 }
@@ -1212,8 +1214,8 @@ export function SyncMonitorContent() {
                         </TableCell>
                         <TableCell className="text-xs max-w-[200px] truncate">{err.error_message || '—'}</TableCell>
                         <TableCell className="text-xs">
-                          {err.url && (
-                            <a href={err.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center gap-1">
+                          {(err.url || err.url_attempted) && (
+                            <a href={err.url || err.url_attempted!} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center gap-1">
                               <ExternalLink className="w-3 h-3" /> Link
                             </a>
                           )}

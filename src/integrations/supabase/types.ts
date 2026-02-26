@@ -8403,6 +8403,7 @@ export type Database = {
           error_message: string | null
           error_type: string | null
           filament_id: string | null
+          http_status: number | null
           id: string
           is_resolved: boolean
           region: string | null
@@ -8410,6 +8411,7 @@ export type Database = {
           stack_trace: string | null
           sync_run_id: string | null
           url: string | null
+          url_attempted: string | null
         }
         Insert: {
           brand_slug: string
@@ -8417,6 +8419,7 @@ export type Database = {
           error_message?: string | null
           error_type?: string | null
           filament_id?: string | null
+          http_status?: number | null
           id?: string
           is_resolved?: boolean
           region?: string | null
@@ -8424,6 +8427,7 @@ export type Database = {
           stack_trace?: string | null
           sync_run_id?: string | null
           url?: string | null
+          url_attempted?: string | null
         }
         Update: {
           brand_slug?: string
@@ -8431,6 +8435,7 @@ export type Database = {
           error_message?: string | null
           error_type?: string | null
           filament_id?: string | null
+          http_status?: number | null
           id?: string
           is_resolved?: boolean
           region?: string | null
@@ -8438,6 +8443,7 @@ export type Database = {
           stack_trace?: string | null
           sync_run_id?: string | null
           url?: string | null
+          url_attempted?: string | null
         }
         Relationships: [
           {
