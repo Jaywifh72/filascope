@@ -1,56 +1,43 @@
 
 
-# Fix: Bambu Lab Variant Selection Picks Wrong Size
+# Fix: "Failed" Alerts on Bambu Lab ABS (US/CA) During Admin Sync
 
-## Root Cause
+## Problem
+When syncing Bambu Lab products on the admin pricing page, the first few stores (US, CA for ABS) show "Failed" alerts with "Rate limited" (HTTP 429). This happens because **two code paths** can still send `forceRefresh: true` to the price extraction endpoint, triggering the 1-per-URL-per-minute rate limiter:
 
-The `scoreVariant()` function in `price-extract-bambulab.ts` (line 64-77) awards bonus points for "1kg" (+10) and "refill" (+15), causing it to always select the **largest/most expensive variant**. For specialty filaments that have multiple sizes (0.5kg and 1kg), this picks the 1kg price instead of the standard consumer size.
+1. **`usePricingActions.ts`** -- Already fixed to `forceRefresh: false` (the last diff).
+2. **`useAdminPriceRefresh.ts`** -- Still sends `forceRefresh: true`. If an admin visits a product detail page and clicks "Refresh Price", then goes to the pricing-data page and syncs within 60 seconds, the rate limiter's DB record can interfere if the edge function receives `forceRefresh: true` from any remaining path.
 
-**Evidence:**
-- PA6-CF page says "From $42.99 USD" (0.5kg) but extractor returns $79.99 (1kg)
-- The page offers two sizes: "0.5kg" and "1kg"
-- The scoring: 1kg variant scores ~40 (InStock+1kg+price>0) vs 0.5kg scores ~25 (InStock+price>0)
+Additionally, the edge function itself has no graceful handling when a 429 occurs during batch syncs -- the UI just shows a hard "Failed" with no distinction from real extraction failures.
 
-## Affected Products (10 filaments with sub-1kg standard weight)
+## Solution
 
-| Product | DB Weight | Current Price | Likely Correct |
-|---------|-----------|---------------|----------------|
-| PA6-CF | 500g | $79.99 | ~$42.99 |
-| PAHT-CF | 500g | $94.99 | ~$49.99 |
-| PET-CF | 500g | $84.99 | ~$44.99 |
-| PPA-CF | 750g | $149.99 | needs verification |
-| PPS-CF | 750g | $129.99 | needs verification |
-| PVA | 500g | $39.99 | needs verification |
-| Support for ABS | 500g | $14.99 | likely correct (may only have one size) |
-| Support for PA/PET | 500g | $39.99 | needs verification |
-| Support for PLA (New Version) | 500g | $22.99 | needs verification |
-| Support for PLA/PETG | 500g | $34.99 | needs verification |
+### 1. Remove `forceRefresh` from all admin bulk/batch code paths
+Ensure that `useAdminPriceRefresh.ts` (the manual single-product refresh button) also uses `forceRefresh: false`. The rate limiter was designed to prevent public abuse, but admin callers should not be rate-limited since they are authenticated and intentional.
 
-## The Fix
+**File:** `src/hooks/useAdminPriceRefresh.ts`
+- Change `forceRefresh: true` to `forceRefresh: false`
 
-### Change 1: Use `targetWeightGrams` in variant scoring (price-extract-bambulab.ts)
+### 2. Add 429 retry logic in `syncSinglePrice`
+As a safety net, if the edge function returns a 429, wait 2 seconds and retry once. This prevents transient rate-limit hits from showing as permanent failures in the UI.
 
-The `extractBambuLabPrice` function already receives `targetWeightGrams` but ignores it (parameter named `_targetWeightGrams`). The fix:
+**File:** `src/pages/admin/pricing/hooks/usePricingActions.ts`
+- In the `syncSinglePrice` function (around line 460-488), detect 429 errors and retry once after a short delay before marking as failed.
 
-1. **Rename** `_targetWeightGrams` to `targetWeightGrams` and pass it to `extractPriceFromJsonLd`
-2. **Add weight-aware scoring** to `scoreVariant`: if `targetWeightGrams` is provided, give a large bonus (+50) to variants whose name contains a matching weight (e.g., "0.5kg" matches 500g target)
-3. **Fallback behavior** (no targetWeight): pick the **cheapest in-stock variant** instead of the most-scored one. This matches the "From $X" price shown on the product page, which is the most natural comparison price.
+### 3. Classify 429 errors distinctly in the UI
+Instead of showing a generic "Failed" badge for rate-limit responses, show a more informative "Rate Limited - Retrying" or "Skipped (rate limit)" status so the admin understands it's not an extraction failure.
 
-### Change 2: Pass `net_weight_g` from the database during syncs
+**File:** `src/pages/admin/pricing/hooks/usePricingActions.ts`
+- Check if the error message contains "Rate limited" and set status to `'rate_limited'` or retry transparently.
 
-The `get-current-price-v2` router already receives and passes `targetWeightGrams`. The calling code (frontend `priceEndpointRouter`, manual refresh buttons) needs to pass the filament's `net_weight_g` value. This is already happening via the `targetWeightGrams` body parameter -- the sync system sends it.
+## Technical Details
 
-No changes needed in the router.
+The changes are minimal and focused:
 
-### Technical Implementation in `price-extract-bambulab.ts`
+```text
+useAdminPriceRefresh.ts:  forceRefresh: true  -->  forceRefresh: false
+usePricingActions.ts:     Add retry-on-429 with 2s delay (single retry)
+```
 
-**`scoreVariant` modification:** Add a `targetWeightGrams` parameter. When provided, variants matching the target weight get +50 bonus. Parse weight from variant name using patterns like "0.5kg", "500g", "1kg", "750g".
-
-**`extractPriceFromJsonLd` modification:** Accept optional `targetWeightGrams`. When no target weight is given, sort candidates by price ascending (cheapest first) among in-stock variants, instead of by score descending.
-
-**`extractBambuLabPrice` signature:** Change `_targetWeightGrams` to `targetWeightGrams` and thread it through to `extractPriceFromJsonLd`.
-
-### Data Correction
-
-After deploying the fix, a price re-sync for all Bambu Lab filaments will automatically correct the stored prices across all regions, since the extractor will now select the correct variant.
+This ensures all admin-initiated sync operations bypass the rate limiter while still allowing the rate limiter to protect against public/automated abuse via the edge function's `forceRefresh` guard.
 
