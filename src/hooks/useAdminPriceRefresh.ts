@@ -82,7 +82,8 @@ export function useAdminPriceRefresh(
       let retryCount = 0;
 
       while (retryCount <= MAX_RETRIES) {
-        const result = await supabase.functions.invoke('get-current-price', {
+        const fnName = productUrl.includes('azurefilm.com') ? 'get-current-price-wc' : 'get-current-price';
+        const result = await supabase.functions.invoke(fnName, {
           body: { 
             productUrl, 
             forceRefresh: true,

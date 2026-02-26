@@ -1452,19 +1452,23 @@ async function fetchWcStoreApiPrice(
   console.log(`[WC STORE API] Fetching: ${apiUrl}`);
 
   try {
-    let response = await fetch(apiUrl, {
-      headers: WOOCOMMERCE_HEADERS,
-      signal: AbortSignal.timeout(15000),
-    });
+    let response = await Promise.race([
+      fetch(apiUrl, {
+        headers: WOOCOMMERCE_HEADERS,
+      }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('WC_STORE_API_TIMEOUT')), 8000)),
+    ]) as Response;
 
     // 429 handling: wait 2s and retry once
     if (response.status === 429) {
       console.log("[WC STORE API] Rate limited, waiting 2s and retrying once...");
       await new Promise((r) => setTimeout(r, 2000));
-      response = await fetch(apiUrl, {
-        headers: WOOCOMMERCE_HEADERS,
-        signal: AbortSignal.timeout(15000),
-      });
+      response = await Promise.race([
+        fetch(apiUrl, {
+          headers: WOOCOMMERCE_HEADERS,
+        }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('WC_STORE_API_TIMEOUT')), 8000)),
+      ]) as Response;
 
       if (response.status === 429) {
         return {
@@ -1522,7 +1526,26 @@ async function fetchWcStoreApiPrice(
 
     return await parseWcStoreApiResponse(data, productUrl, storeDomain);
   } catch (error) {
-    console.error("[WC STORE API] Fetch error:", error instanceof Error ? error.message : String(error));
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg === 'WC_STORE_API_TIMEOUT') {
+      console.log(`[WC STORE API] Timeout after 8s for slug extracted from: ${productUrl}`);
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        weightGrams: null,
+        diameterMm: null,
+        variantTitle: null,
+        currency: "EUR",
+        available: false,
+        source: "woocommerce" as const,
+        fetchedAt: new Date().toISOString(),
+        status: "rate_limited" as const,
+        method: "wc_store_api" as const,
+        error: "timeout",
+      };
+    }
+    console.error("[WC STORE API] Fetch error:", msg);
     return null;
   }
 }
@@ -1537,9 +1560,10 @@ async function fetchWcVariationPrice(
   console.log(`[WC STORE API] Fetching variations: ${apiUrl}`);
 
   try {
-    let response = await fetch(apiUrl, {
-      headers: WOOCOMMERCE_HEADERS,
-      signal: AbortSignal.timeout(15000),
+    let response = await Promise.race([
+      fetch(apiUrl, { headers: WOOCOMMERCE_HEADERS }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('WC_VARIATIONS_TIMEOUT')), 8000)),
+    ]) as Response;
     });
 
     if (response.status === 429) {
@@ -1730,7 +1754,7 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
         "Accept-Language": WOOCOMMERCE_HEADERS["Accept-Language"],
       },
       redirect: "follow",
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (response.status === 429) {
@@ -1741,7 +1765,7 @@ async function fetchWooCommercePriceDirect(productUrl: string, preferredCurrency
           "Accept-Language": WOOCOMMERCE_HEADERS["Accept-Language"],
         },
         redirect: "follow",
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (response.status === 429) {
