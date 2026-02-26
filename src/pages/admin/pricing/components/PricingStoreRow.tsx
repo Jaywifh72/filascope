@@ -132,7 +132,7 @@ export function PricingStoreRow({
             getSyncMethodBadge(syncResult.source)
           )}
           {syncResult?.status === 'unavailable' && (
-            <Badge className="bg-muted/60 text-muted-foreground border-muted text-[10px]">⊘ Not in Region</Badge>
+            <Badge className="bg-muted/60 text-muted-foreground border-muted text-[10px]">⊘ Unavailable</Badge>
           )}
         </div>
       </TableCell>
