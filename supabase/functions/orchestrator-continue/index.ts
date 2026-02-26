@@ -41,6 +41,41 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function timeoutPromise(ms: number): Promise<never> {
+  return new Promise((_, reject) => setTimeout(() => reject(new Error(`TIMEOUT_${ms}ms`)), ms));
+}
+
+const BRAND_TIMEOUT_MS = 180_000;
+const RETRY_DELAY_MS = 5_000;
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  slug: string,
+): Promise<{ response: Response; retried: boolean }> {
+  const doFetch = () => Promise.race([fetch(url, init), timeoutPromise(BRAND_TIMEOUT_MS)]);
+
+  let response: Response;
+  try {
+    response = await doFetch();
+  } catch (err) {
+    throw err;
+  }
+
+  if (response.status === 504) {
+    console.warn(`[CONTINUE] ⚠️ ${slug} got 504, retrying in ${RETRY_DELAY_MS / 1000}s...`);
+    await sleep(RETRY_DELAY_MS);
+    try {
+      response = await doFetch();
+      return { response, retried: true };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  return { response, retried: false };
+}
+
 async function processBrand(
   brand: { slug: string; syncType: string },
   supabaseUrl: string,
@@ -52,23 +87,27 @@ async function processBrand(
   const { slug, syncType } = brand;
 
   try {
-    let syncResponse: Response;
+    let url: string;
+    let init: RequestInit;
 
     if (syncType === 'regional') {
-      syncResponse = await fetch(`${supabaseUrl}/functions/v1/sync-regional-prices`, {
+      url = `${supabaseUrl}/functions/v1/sync-regional-prices`;
+      init = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
         body: JSON.stringify({ brandSlug: slug, regions: ['US', 'CA', 'EU', 'UK', 'AU'], dryRun: false }),
-      });
+      };
     } else {
       const functionSlug = getFunctionSlug(slug);
-      syncResponse = await fetch(`${supabaseUrl}/functions/v1/sync-${functionSlug}-products`, {
+      url = `${supabaseUrl}/functions/v1/sync-${functionSlug}-products`;
+      init = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceRoleKey}` },
         body: JSON.stringify({ dryRun: false, triggeredBy: 'orchestrator' }),
-      });
+      };
     }
 
+    const { response: syncResponse, retried } = await fetchWithRetry(url, init, slug);
     const syncResult = await syncResponse.json().catch(() => null);
 
     if (syncResponse.ok) {
@@ -78,26 +117,32 @@ async function processBrand(
         || syncResult?.updated
         || syncResult?.summary?.totalMatched
         || 0;
-      console.log(`[CONTINUE] ✅ ${slug} synced (${updated} updated)`);
+      console.log(`[CONTINUE] ✅ ${slug} synced (${updated} updated${retried ? ', after retry' : ''})`);
       return { success: true, productsUpdated: updated };
     } else {
       const errorMsg = syncResult?.error || syncResponse.statusText;
-      console.error(`[CONTINUE] ❌ ${slug} failed: ${errorMsg}`);
+      const region = syncType === 'regional' ? 'MULTI' : (slug === 'azurefilm' ? 'EU' : 'US');
+      console.error(`[CONTINUE] ❌ ${slug} failed: HTTP ${syncResponse.status} — ${errorMsg}`);
       await supabase.from('scrape_errors').insert({
         brand_slug: slug,
         error_type: `http_${syncResponse.status}`,
         error_message: `Sync failed: ${String(errorMsg).slice(0, 500)}`,
+        http_status: syncResponse.status,
+        url_attempted: url,
+        region,
         sync_run_id: runId,
       });
       return { success: false, productsUpdated: 0, error: String(errorMsg) };
     }
   } catch (err) {
-    console.error(`[CONTINUE] ❌ ${slug} error: ${err}`);
+    const isTimeout = String(err).includes('TIMEOUT_');
+    const region = brand.syncType === 'regional' ? 'MULTI' : (slug === 'azurefilm' ? 'EU' : 'US');
+    console.error(`[CONTINUE] ❌ ${slug} ${isTimeout ? 'TIMEOUT' : 'error'}: ${err}`);
     await supabase.from('scrape_errors').insert({
       brand_slug: slug,
-      error_type: 'network',
-      error_message: String(err).slice(0, 500),
-      stack_trace: err instanceof Error ? err.stack?.slice(0, 2000) : null,
+      error_type: isTimeout ? 'timeout' : 'network',
+      error_message: `${isTimeout ? 'Timed out after 180s' : String(err).slice(0, 500)}`,
+      region,
       sync_run_id: runId,
     });
     return { success: false, productsUpdated: 0, error: String(err) };

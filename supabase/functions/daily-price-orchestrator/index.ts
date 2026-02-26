@@ -106,6 +106,45 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function timeoutPromise(ms: number): Promise<never> {
+  return new Promise((_, reject) => setTimeout(() => reject(new Error(`TIMEOUT_${ms}ms`)), ms));
+}
+
+const BRAND_TIMEOUT_MS = 180_000; // 3 minutes per brand
+const RETRY_DELAY_MS = 5_000;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SHARED: Fetch with timeout + single retry on 504
+// ═══════════════════════════════════════════════════════════════════════════
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  slug: string,
+): Promise<{ response: Response; retried: boolean }> {
+  const doFetch = () => Promise.race([fetch(url, init), timeoutPromise(BRAND_TIMEOUT_MS)]);
+
+  let response: Response;
+  try {
+    response = await doFetch();
+  } catch (err) {
+    throw err; // timeout or network error — let caller handle
+  }
+
+  // Single retry on 504 with 5s backoff
+  if (response.status === 504) {
+    console.warn(`[ORCHESTRATOR] ⚠️ ${slug} got 504, retrying in ${RETRY_DELAY_MS / 1000}s...`);
+    await sleep(RETRY_DELAY_MS);
+    try {
+      response = await doFetch();
+      return { response, retried: true };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  return { response, retried: false };
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARED: Process a single brand (used by both orchestrator and continue)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -120,32 +159,27 @@ export async function processBrand(
   const { slug, syncType } = brand;
 
   try {
-    let syncResponse: Response;
+    let url: string;
+    let init: RequestInit;
 
     if (syncType === 'regional') {
-      const syncUrl = `${supabaseUrl}/functions/v1/sync-regional-prices`;
-      syncResponse = await fetch(syncUrl, {
+      url = `${supabaseUrl}/functions/v1/sync-regional-prices`;
+      init = {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${anonKey}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
         body: JSON.stringify({ brandSlug: slug, regions: ['US', 'CA', 'EU', 'UK', 'AU'], dryRun: false }),
-      });
+      };
     } else {
       const functionSlug = getFunctionSlug(slug);
-      const functionName = `sync-${functionSlug}-products`;
-      const syncUrl = `${supabaseUrl}/functions/v1/${functionName}`;
-      syncResponse = await fetch(syncUrl, {
+      url = `${supabaseUrl}/functions/v1/sync-${functionSlug}-products`;
+      init = {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${serviceRoleKey}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceRoleKey}` },
         body: JSON.stringify({ dryRun: false, triggeredBy: 'orchestrator' }),
-      });
+      };
     }
 
+    const { response: syncResponse, retried } = await fetchWithRetry(url, init, slug);
     const syncResult = await syncResponse.json().catch(() => null);
 
     if (syncResponse.ok) {
@@ -156,26 +190,32 @@ export async function processBrand(
         || syncResult?.summary?.totalMatched
         || 0;
       const regionalData = syncResult?.regionBreakdown || syncResult?.regional_breakdown || null;
-      console.log(`[ORCHESTRATOR] ✅ ${slug} synced (${updated} updated)`);
+      console.log(`[ORCHESTRATOR] ✅ ${slug} synced (${updated} updated${retried ? ', after retry' : ''})`);
       return { success: true, productsUpdated: updated, regionalData };
     } else {
       const errorMsg = syncResult?.error || syncResponse.statusText;
-      console.error(`[ORCHESTRATOR] ❌ ${slug} failed: ${errorMsg}`);
+      const region = syncType === 'regional' ? 'MULTI' : (slug === 'azurefilm' ? 'EU' : 'US');
+      console.error(`[ORCHESTRATOR] ❌ ${slug} failed: HTTP ${syncResponse.status} — ${errorMsg}`);
       await supabase.from('scrape_errors').insert({
         brand_slug: slug,
         error_type: `http_${syncResponse.status}`,
         error_message: `Sync failed: ${String(errorMsg).slice(0, 500)}`,
+        http_status: syncResponse.status,
+        url_attempted: url,
+        region,
         sync_run_id: runId,
       });
       return { success: false, productsUpdated: 0, error: String(errorMsg) };
     }
   } catch (err) {
-    console.error(`[ORCHESTRATOR] ❌ ${slug} error: ${err}`);
+    const isTimeout = String(err).includes('TIMEOUT_');
+    const region = brand.syncType === 'regional' ? 'MULTI' : (slug === 'azurefilm' ? 'EU' : 'US');
+    console.error(`[ORCHESTRATOR] ❌ ${slug} ${isTimeout ? 'TIMEOUT' : 'error'}: ${err}`);
     await supabase.from('scrape_errors').insert({
       brand_slug: slug,
-      error_type: 'network',
-      error_message: String(err).slice(0, 500),
-      stack_trace: err instanceof Error ? err.stack?.slice(0, 2000) : null,
+      error_type: isTimeout ? 'timeout' : 'network',
+      error_message: `${isTimeout ? 'Timed out after 180s' : String(err).slice(0, 500)}`,
+      region,
       sync_run_id: runId,
     });
     return { success: false, productsUpdated: 0, error: String(err) };
