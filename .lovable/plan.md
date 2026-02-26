@@ -1,117 +1,60 @@
 
 
-# Bambu Lab Geo-Redirect Price Contamination: Diagnosis and Fix
+# Fix Bambu Lab Sync Failures: Root Cause Analysis and Resolution
 
-## Confirmed Root Cause
+## Two Distinct Failure Categories
 
-The edge function logs prove the contamination conclusively:
+### Category 1: `geo_redirect_contamination` (14 failures)
 
+**Root cause**: Firecrawl's geo-targeting proxy is intermittently unreliable. For ~6% of product/region combinations, Firecrawl returns HTML from a different region despite the `location` parameter. The strict currency validation correctly rejects this, then the direct-fetch fallback also fails (expected -- Frankfurt IP always gets wrong region). Both paths return null, so the error `geo_redirect_contamination` is returned.
+
+**Affected**: UK (7), EU (3), AU (2) regions -- specific products only.
+
+**Fix**: Add a single Firecrawl retry with a 2-second backoff when the first attempt returns a currency mismatch. Firecrawl's geo-proxy is probabilistic -- a second attempt often routes through a different exit node. This matches the retry pattern already used in `price-extract-firecrawl.ts` (line 30-35).
+
+### Category 2: `HTTP 404` on JP (3 failures)
+
+**Root cause**: These products genuinely don't exist on the JP Shopify store. PLA Matte, PLA Tough+, and Support for PA/PET are not sold in Japan. The Shopify `.json` endpoint returns 404.
+
+**Affected**: JP only -- `pla-matte`, `pla-tough-upgrade`, `support-for-pa-pet`.
+
+**Fix**: When the bambulab extractor receives a 404 from JP (which goes through the Shopify path), the response should include `notAvailableInRegion: true` so the UI shows a grey "N/A" badge instead of a red "Failed" badge. This is already supported by the `PriceResponse` type but not set for Bambu Lab JP 404s. The fix is in `get-current-price-v2` -- after the Shopify extractor returns `is404: true` for a `jp.store.bambulab.com` URL, set `notAvailableInRegion: true`.
+
+## Changes
+
+### File 1: `supabase/functions/_shared/price-extract-bambulab.ts`
+
+**Change in `extractViaFirecrawl`**: When currency mismatch is detected, retry once with a 2-second delay before returning null.
+
+Current flow:
 ```
-[BAMBULAB] Extracting: https://us.store.bambulab.com/products/pla-sparkle region=US currency=USD
-[BAMBULAB] ✓ 31.99 CAD available=true
-[BAMBULAB] Currency mismatch: got CAD, expected USD
-
-[BAMBULAB] Extracting: https://eu.store.bambulab.com/products/pla-sparkle region=EU currency=EUR
-[BAMBULAB] ✓ 31.99 CAD available=true
-[BAMBULAB] Currency mismatch: got CAD, expected EUR
-
-[BAMBULAB] Extracting: https://au.store.bambulab.com/products/pla-sparkle region=AU currency=AUD
-[BAMBULAB] ✓ 31.99 CAD available=true
-[BAMBULAB] Currency mismatch: got CAD, expected AUD
-```
-
-**Every region returns the same price (31.99 CAD)**. Bambu Lab's server detects the Edge Function's IP (eu-central-1, Frankfurt) and serves Canadian pricing regardless of which subdomain (us./uk./eu./au.) is requested. The spoofed `CF-IPCountry` and `Accept-Language` headers are ignored because Bambu Lab's CDN performs its own IP-based geo-detection server-side.
-
-## Audit Task Results
-
-### Task 1: Redirect Behavior
-- `redirect: "follow"` is used (line 172) -- so any server-side redirect is followed silently
-- The response URL is never logged, so we can't see if a redirect occurred
-- The JSON-LD `priceCurrency` field contains `CAD` for all regions, confirming the server is serving Canadian content
-
-### Task 2: Currency Source
-- Currency is read correctly from JSON-LD `priceCurrency` (line 95 in extractPriceFromJsonLd) -- this is **not** the bug
-- The bug is that the **price value itself** is wrong. The page serves Canadian pricing to our German IP, so we get 31.99 CAD even when requesting the US store
-- The extractor correctly reports the mismatch but still returns the contaminated price as "success"
-
-### Task 3: Firecrawl Availability
-- `FIRECRAWL_API_KEY` is configured in secrets (confirmed)
-- `price-extract-firecrawl.ts` exists in `_shared/` with full retry logic
-- `get-current-price-v2` already imports and uses `extractFirecrawlPrice` as a Shopify fallback
-- The Firecrawl extractor uses `getFirecrawlLocation(currency)` which maps currencies to country codes
-- API pattern: `POST https://api.firecrawl.dev/v1/scrape` with `Authorization: Bearer ${apiKey}`
-
-### Task 4: Firecrawl Geo-Targeting
-- Firecrawl supports `location: { country: "US", languages: ["en"] }` parameter
-- `getFirecrawlLocation()` in `price-utils.ts` already maps USD->US, CAD->CA, GBP->GB, EUR->DE, AUD->AU
-- Firecrawl proxies from the target country, bypassing Bambu Lab's IP-based geo-detection
-- However, Firecrawl returns **markdown** by default, which strips JSON-LD. We need `formats: ["html"]` to preserve structured data
-
-## The Fix: Firecrawl-Powered Bambu Lab Extractor
-
-Replace direct `fetch()` with Firecrawl scraping using geo-targeted `location` parameter, then parse JSON-LD from the returned HTML.
-
-### Changes to `price-extract-bambulab.ts`
-
-1. Add Firecrawl as the **primary** extraction method with geo-targeting
-2. Keep direct fetch as a **fallback** (for when Firecrawl is unavailable or rate-limited)
-3. When currency mismatch is detected on direct fetch, flag it as contaminated and return failure instead of success
-4. Log both requested URL and actual response URL for redirect debugging
-
-#### Implementation detail:
-
-```text
-extractBambuLabPrice(url, currency)
-  |
-  v
-[1] Try Firecrawl with location: { country: regionFromCurrency }
-    - formats: ["html"] to preserve JSON-LD
-    - Parse JSON-LD from returned HTML
-    - If priceCurrency matches expected -> return success
-  |
-  v (if Firecrawl fails or not configured)
-[2] Fallback: Direct fetch (current method)
-    - If priceCurrency matches expected -> return success
-    - If priceCurrency MISMATCHES -> return failure with "geo_redirect_contamination" error
-      (instead of current behavior of returning wrong price as success)
+Firecrawl attempt -> currency mismatch -> return null (immediate)
 ```
 
-### Currency mismatch = failure (critical behavioral change)
+New flow:
+```
+Firecrawl attempt -> currency mismatch -> wait 2s -> retry -> currency mismatch again -> return null
+```
 
-Currently, when the extractor gets CAD but expected USD, it logs a warning but returns `success: true` with the wrong price. This is the most damaging behavior -- it writes incorrect prices to the database.
+This is a ~6 line change inside the `extractViaFirecrawl` function, wrapping the currency mismatch check (lines 182-186) in a retry loop.
 
-After the fix: currency mismatch on direct fetch = `success: false` with error `"geo_redirect_contamination"`. This prevents bad data from being persisted.
+### File 2: `supabase/functions/get-current-price-v2/index.ts`
 
-### Specific code changes
+**Change in the Shopify default case**: After the Shopify extractor returns a result, check if it's a 404 for a `bambulab.com` JP URL and add `notAvailableInRegion: true` to the response. This ensures JP 404s show as grey "N/A" badges.
 
-**File: `supabase/functions/_shared/price-extract-bambulab.ts`**
+Add after line 85 (after Firecrawl fallback block):
+```typescript
+// Mark Bambu Lab JP 404s as not-in-region (graceful skip)
+if (result.is404 && productUrl.includes("jp.store.bambulab.com")) {
+  result.notAvailableInRegion = true;
+}
+```
 
-- Add `FIRECRAWL_API_KEY` check at the start
-- Add new function `extractViaFirecrawl(url, region, currency)` that:
-  - Calls Firecrawl API with `formats: ["html"]` and `location: { country: X }`
-  - Parses JSON-LD from the returned HTML using existing `extractJsonLdBlocks()`
-  - Returns price only if `priceCurrency` matches expected currency
-- Modify `extractBambuLabPrice()` to:
-  - Try Firecrawl first
-  - Fall back to direct fetch
-  - On direct fetch: treat currency mismatch as failure, not success
-- Add region-to-country mapping: `{ US: "US", CA: "CA", UK: "GB", EU: "DE", AU: "AU" }`
+## Expected Outcome After Deploy
 
-**File: `supabase/functions/get-current-price-v2/index.ts`**
+| Failure | Current Error | After Fix |
+|---------|--------------|-----------|
+| 14x geo_redirect_contamination | Hard fail, red badge | Most will succeed on retry; remaining few stay as failures (acceptable) |
+| 3x JP 404 | Red "Failed" badge | Grey "N/A" badge (not_in_region) |
 
-- No changes needed. The bambulab case already calls `extractBambuLabPrice` and handles the PriceResponse.
-
-**File: `supabase/functions/_shared/price-platforms.ts`**
-
-- No changes needed. Detection is correct.
-
-### Expected outcome after deployment
-
-| Region | Before (contaminated) | After (Firecrawl geo-targeted) |
-|--------|----------------------|-------------------------------|
-| US | 31.99 CAD (wrong) | ~25.99 USD (correct) |
-| CA | 31.99 CAD | 31.99 CAD (correct) |
-| UK | 31.99 CAD (wrong) | ~19.99 GBP (correct) |
-| EU | 31.99 CAD (wrong) | ~23.99 EUR (correct) |
-| AU | 31.99 CAD (wrong) | ~39.99 AUD (correct) |
-
+Net effect: ~14 failures reduced to ~2-3 (Firecrawl retry will resolve most geo mismatches). JP 404s reclassified from "failed" to "not available in region".
