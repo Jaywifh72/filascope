@@ -1,145 +1,54 @@
 
 
-# Refactor: Consolidate Price Functions into `get-current-price-v2`
+# Bambu Lab Platform Detection and JSON-LD Extractor
 
-## Constraint: Supabase Edge Function File Structure
+## Summary
+Bambu Lab migrated US/CA/UK/EU/AU stores from Shopify to Next.js. JP remains on Shopify. The fix adds a dedicated `'bambulab'` platform type and a new JSON-LD extractor that fetches product pages with geo-spoofed headers.
 
-Supabase edge functions only support a single `index.ts` per function directory -- no subfolders like `extractors/` or `utils/` are allowed within a function. However, functions **can** import from `supabase/functions/_shared/`. The architecture must use `_shared/` for all module files, with `index.ts` as a thin router.
+## Changes
 
-## Target Architecture
+### 1. `supabase/functions/_shared/price-platforms.ts`
+- Add `"bambulab"` to the `Platform` type union
+- Add detection rule before the default `return "shopify"`: if URL contains `store.bambulab.com` or `bambulab.com`, return `"bambulab"` -- except JP URLs which stay as `"shopify"`
 
+### 2. `supabase/functions/_shared/price-types.ts`
+- Add `"bambulab-jsonld"` to the `source` union on `PriceResponse` (line 36)
+- Add `"bambulab_jsonld"` to the `method` union (line 47)
+
+### 3. `supabase/functions/_shared/price-extract-bambulab.ts` (NEW, ~120 lines)
+Dedicated extractor for Bambu Lab's Next.js stores:
+
+- **Fetch**: Use `fetchRegionalStore()` from `regional-fetch.ts` with the detected region to handle geo-redirect cascading automatically
+- **Parse**: Extract all `<script type="application/ld+json">` blocks, find the one with `@type: "ProductGroup"` or `"Product"`
+- **Variant selection** (Bambu Lab-specific):
+  - Iterate `hasVariant` array (or `offers` array)
+  - Score each variant: prefer "Refill" + "1kg" (highest priority), then "Filament with spool"/"spool" + "1kg", then first available
+  - If `targetWeightGrams` is provided, use weight matching instead
+- **Currency**: Trust `priceCurrency` from JSON-LD, log warning if it mismatches expected currency
+- **Return**: Standard `PriceResponse` with `source: "bambulab-jsonld"`, `method: "bambulab_jsonld"`
+- **Error handling**: Return `is404: true` on 404, timeout errors via `withTimeout`
+
+### 4. `supabase/functions/get-current-price-v2/index.ts`
+- Import `extractBambuLabPrice` from `../_shared/price-extract-bambulab.ts`
+- Add `case "bambulab":` in the switch statement (between the direct-store cases and the shopify default):
 ```text
-supabase/functions/
-  _shared/
-    price-types.ts          (EXISTS, ~90 lines)  -- PriceResult, PriceResponse, etc.
-    price-utils.ts          (EXISTS, ~260 lines) -- parseEuropeanPrice, validation, etc.
-    price-db.ts             (EXISTS, ~213 lines) -- writePrice, updateStockStatus, lookupFilament
-    price-regional.ts       (EXISTS, ~170 lines) -- regional URL transforms
-    price-extract-shopify.ts   (NEW, ~180 lines) -- Shopify JSON API extraction
-    price-extract-wc.ts        (NEW, ~170 lines) -- WooCommerce WC Store API v1 + JSON-LD
-    price-extract-jsonld.ts    (NEW, ~80 lines)  -- Generic JSON-LD structured data
-    price-extract-firecrawl.ts (NEW, ~120 lines) -- Firecrawl markdown scraping
-    price-timeout.ts           (NEW, ~20 lines)  -- withTimeout(promise, ms) wrapper
-    price-platforms.ts         (NEW, ~60 lines)  -- detectPlatform, isShopify, isWooCommerce
-  get-current-price-v2/
-    index.ts                   (NEW, ~100 lines) -- Router only
+case "bambulab":
+  result = await extractBambuLabPrice(urlToFetch, expectedCurrency, targetWeightGrams);
+  break;
 ```
 
-## File Responsibilities
+## Architecture Notes
+- JP Bambu Lab URLs (`jp.store.bambulab.com`) continue routing through the Shopify extractor -- no change needed
+- No Firecrawl fallback required -- JSON-LD is server-side rendered and sufficient
+- `regional-fetch.ts` already lists `store.bambulab.com` and `bambulab.com` in `GEO_REDIRECT_DOMAINS` -- the `fetchRegionalStore()` function handles the full cascade (direct -> spoofed -> follow redirect)
+- The existing `extractJsonLdPrice()` in `price-extract-jsonld.ts` picks the cheapest variant globally; the new Bambu Lab extractor needs custom variant selection (Refill vs Spool) so it parses JSON-LD directly rather than delegating to the generic function
 
-### `_shared/price-timeout.ts` (~20 lines)
-- `withTimeout<T>(promise: Promise<T>, ms: number): Promise<T>` -- wraps any promise with a timeout race
-- Single reusable utility replacing the 4 duplicated `fetchWithTimeout` functions
+## File Summary
 
-### `_shared/price-platforms.ts` (~60 lines)
-- `detectPlatform(url): "shopify" | "woocommerce" | "creality" | "extrudr" | "treed" | "prusa" | "geeetech" | "unknown"`
-- `isShopify(url): boolean`
-- `isWooCommerce(url): boolean`
-- `extractSlug(url): string | null` -- WooCommerce `/product/slug` extraction
-- `extractHandle(url): string | null` -- Shopify `/products/handle` extraction
-- Consolidates platform detection currently scattered across 4 functions
-
-### `_shared/price-extract-shopify.ts` (~180 lines)
-- `extractShopifyPrice(url, currency, targetWeightGrams?): Promise<PriceResult>`
-- `selectBestVariantByWeight(variants, title, targetWeight): ShopifyVariant`
-- Geo-redirect handling (direct, spoofed headers, follow redirect)
-- Returns standard `PriceResult` type
-- Imports: `price-timeout`, `price-utils` (for weight/diameter parsing), `price-types`
-
-### `_shared/price-extract-wc.ts` (~170 lines)
-- `extractWooCommercePrice(url, domain): Promise<PriceResult>`
-- WC Store API v1: `GET /wp-json/wc/store/v1/products?slug={slug}`
-- Price parsing: `prices.price / 10^prices.currency_minor_unit`
-- Variable products: fetch `/variations`, return cheapest in-stock
-- `jsonLdFallback(url, domain): Promise<PriceResult | null>` -- fallback path
-- Cloudflare detection, 429 retry
-- Imports: `price-timeout`, `price-types`
-
-### `_shared/price-extract-jsonld.ts` (~80 lines)
-- `extractJsonLdPrice(html, expectedCurrency, sourceUrl): PriceResult | null`
-- Parses `<script type="application/ld+json">` blocks for Product/@type with offers
-- Handles both single and array offers
-- Used by Creality, Extrudr, Prusa, Geeetech extractors and as WC fallback
-- Pure function (no fetch, no side effects)
-
-### `_shared/price-extract-firecrawl.ts` (~120 lines)
-- `extractFirecrawlPrice(url, currency, productType?): Promise<PriceResult>`
-- Firecrawl API call with retry (up to 3 attempts)
-- Sale price extraction, generic currency-symbol price extraction
-- Currency mismatch detection
-- Imports: `price-utils` (getCurrencySymbol, removeSavingsAmounts, extractSalePriceBeforeSave)
-
-### `get-current-price-v2/index.ts` (~100 lines)
-Router-only entry point:
-1. Parse request body (`productUrl`, `currency`, `forceRefresh`, `targetWeightGrams`, `productType`)
-2. Call `detectPlatform(url)` to determine extractor
-3. Apply regional URL transform
-4. Check rate limit if `forceRefresh`
-5. Dispatch to correct extractor:
-   - `shopify` -> `extractShopifyPrice()`, fallback to `extractFirecrawlPrice()`
-   - `woocommerce` -> `extractWooCommercePrice()`
-   - `creality/extrudr/treed/prusa/geeetech` -> direct HTML fetch + `extractJsonLdPrice()`, platform-specific logic stays inline (Creality slug discovery, Extrudr URL normalization, TreeD API) -- these are small enough to keep in the router OR split into a `price-extract-direct.ts` (~150 lines)
-   - `unknown` -> `extractFirecrawlPrice()`
-6. Log extraction attempt via `logExtractionAttempt()`
-7. Persist via `updateFilamentStockStatus()` on success
-8. Return JSON response
-
-## Standard Return Type
-
-All extractors return the same `PriceResult` interface (added to `price-types.ts`):
-
-```typescript
-interface PriceResult {
-  price: number | null;
-  compareAtPrice: number | null;
-  currency: string;
-  available: boolean;
-  stockStatus: StockStatus;
-  method: string;       // "shopify_json" | "wc_store_api" | "json_ld" | "firecrawl" | ...
-  source: string;       // "shopify" | "woocommerce" | "html" | "firecrawl"
-  error?: string;
-  is404?: boolean;
-  weightGrams?: number | null;
-  diameterMm?: number | null;
-  variantTitle?: string | null;
-}
-```
-
-## What Happens to Existing Functions
-
-| Function | Action |
-|---|---|
-| `get-current-price-wc` | Keep deployed as-is (proven, working for AzureFilm) |
-| `get-current-price-shopify` | Delete after v2 verified |
-| `get-current-price-direct` | Delete after v2 verified |
-| `get-current-price-scrape` | Delete after v2 verified |
-| `get-current-price` | Keep frozen as legacy fallback |
-
-## Implementation Order
-
-1. Create `_shared/price-timeout.ts` (trivial, no risk)
-2. Create `_shared/price-platforms.ts` (pure detection logic)
-3. Create `_shared/price-extract-jsonld.ts` (extract from direct/wc functions)
-4. Create `_shared/price-extract-shopify.ts` (extract from shopify function)
-5. Create `_shared/price-extract-wc.ts` (extract from wc function)
-6. Create `_shared/price-extract-firecrawl.ts` (extract from scrape function)
-7. Create `get-current-price-v2/index.ts` (thin router importing all extractors)
-8. Update `src/utils/priceEndpointRouter.ts` to route everything to `get-current-price-v2` (except AzureFilm which stays on `get-current-price-wc`)
-9. Deploy and verify
-10. Delete old `get-current-price-shopify`, `get-current-price-direct`, `get-current-price-scrape` directories
-
-## Line Count Summary
-
-| File | Lines | Role |
+| File | Action | Lines changed |
 |---|---|---|
-| `_shared/price-timeout.ts` | ~20 | Timeout wrapper |
-| `_shared/price-platforms.ts` | ~60 | Platform detection |
-| `_shared/price-extract-jsonld.ts` | ~80 | JSON-LD parser |
-| `_shared/price-extract-firecrawl.ts` | ~120 | Firecrawl scraper |
-| `_shared/price-extract-wc.ts` | ~170 | WooCommerce extractor |
-| `_shared/price-extract-shopify.ts` | ~180 | Shopify extractor |
-| `get-current-price-v2/index.ts` | ~100 | Router + direct-store handlers |
-| **Total new code** | **~730** | |
-
-Every extractor stays under 200 lines. All number parsing lives in `price-utils.ts`. The router contains zero extraction logic.
+| `_shared/price-platforms.ts` | Edit | ~5 lines added |
+| `_shared/price-types.ts` | Edit | 2 union members added |
+| `_shared/price-extract-bambulab.ts` | New | ~120 lines |
+| `get-current-price-v2/index.ts` | Edit | ~5 lines added |
 
