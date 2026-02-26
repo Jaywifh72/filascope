@@ -36,6 +36,7 @@ interface SyncResponse {
   totalRegionalUrls?: number;
   successful: number;
   failed: number;
+  unavailable?: number;
   skipped: number;
   priceChanges: number;
   duration_ms: number;
@@ -239,8 +240,9 @@ export function usePriceSync() {
       queryClient.invalidateQueries({ queryKey: ['running-syncs'] });
 
       const duration = (data.duration_ms / 1000).toFixed(1);
+      const unavailableText = data.unavailable && data.unavailable > 0 ? `, ${data.unavailable} unavailable` : '';
       toast.success(`Sync completed in ${duration}s`, {
-        description: `${data.successful} updated, ${data.failed} failed, ${data.priceChanges} price changes`,
+        description: `${data.successful} updated, ${data.failed} failed${unavailableText}, ${data.priceChanges} price changes`,
         action: {
           label: 'View Details',
           onClick: () => {
