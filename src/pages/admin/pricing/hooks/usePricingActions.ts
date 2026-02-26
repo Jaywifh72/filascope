@@ -458,7 +458,7 @@ export function usePricingActions(
       }
 
       const fnName = getPriceEndpoint(store.productUrl);
-      const { data, error } = await supabase.functions.invoke(fnName, {
+      let { data, error } = await supabase.functions.invoke(fnName, {
         body: {
           productUrl: store.productUrl,
           currency: store.currency,
@@ -471,20 +471,47 @@ export function usePricingActions(
 
       if (error) {
         const errorMsg = data?.error || error.message || 'Failed to fetch price';
-        const result: SyncResult = { status: 'failed', error: errorMsg };
-        setSyncResults(prev => new Map(prev).set(store.storeKey, result));
-        if (showToast) toast.error(`✗ Failed to sync — ${errorMsg}`);
-        if (store.productUrl) {
-          try {
-            await supabase.from('url_validation_cache').upsert({
-              url: store.productUrl.replace(/\?.*$/, ''),
-              status: 'sync_failed',
-              last_checked: new Date().toISOString(),
-              consecutive_failures: 1,
-            }, { onConflict: 'url' });
-          } catch {}
+        const isRateLimited = errorMsg.includes('Rate limited') || errorMsg.includes('429');
+
+        // Retry once after 2s delay if rate-limited
+        if (isRateLimited) {
+          await new Promise(r => setTimeout(r, 2000));
+          const retry = await supabase.functions.invoke(fnName, {
+            body: {
+              productUrl: store.productUrl,
+              currency: store.currency,
+              forceRefresh: false,
+              targetWeightGrams: store.netWeightG,
+              filamentId: store.representativeId,
+              productType,
+            },
+          });
+          if (!retry.error && retry.data?.success && retry.data.price != null) {
+            // Retry succeeded — reassign data and fall through to normal processing
+            data = retry.data;
+            error = null;
+          } else {
+            const result: SyncResult = { status: 'failed', error: 'Rate limited — retry also failed' };
+            setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+            if (showToast) toast.error(`✗ Rate limited — retry failed`);
+            return result;
+          }
+        } else {
+          const result: SyncResult = { status: 'failed', error: errorMsg };
+          setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+          if (showToast) toast.error(`✗ Failed to sync — ${errorMsg}`);
+          if (store.productUrl) {
+            try {
+              await supabase.from('url_validation_cache').upsert({
+                url: store.productUrl.replace(/\?.*$/, ''),
+                status: 'sync_failed',
+                last_checked: new Date().toISOString(),
+                consecutive_failures: 1,
+              }, { onConflict: 'url' });
+            } catch {}
+          }
+          return result;
         }
-        return result;
       }
 
       if (!data?.success || data.price == null) {
