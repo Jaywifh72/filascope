@@ -123,7 +123,8 @@ async function callGetCurrentPrice(
       },
       body: JSON.stringify({
         productUrl,
-        forceRefresh: true,
+        // Default sync should not use manual-refresh rate-limited mode
+        forceRefresh: false,
         targetWeightGrams: targetWeightGrams ?? null,
       })
     });
