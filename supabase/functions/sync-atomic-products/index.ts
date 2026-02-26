@@ -40,8 +40,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Safety threshold - Atomic should have at least 50 products
-const MINIMUM_PRODUCTS_THRESHOLD = 50;
+// Baseline product count for anomaly detection (updated to match current catalog)
+const BASELINE_PRODUCT_COUNT = 150;
+// Drop >20% from baseline triggers a warning anomaly alert
+const CATALOG_DROP_WARN_PERCENT = 0.20;
 
 interface SyncRequest {
   dryRun?: boolean;
@@ -70,14 +72,66 @@ function generateProductLineId(collectionMaterial: string): string {
 }
 
 /**
- * Scrape product URLs from a collection page using Firecrawl
+ * Scrape product URLs from a Shopify collection using /products.json pagination
+ * Falls back to Firecrawl if Shopify JSON fails
  */
 async function scrapeCollectionProducts(
   collectionUrl: string,
   firecrawlKey: string
 ): Promise<string[]> {
-  console.log(`[ATOMIC-SYNC] Scraping collection: ${collectionUrl}`);
+  // Extract collection handle from URL
+  const collectionHandle = collectionUrl.split('/collections/')[1]?.split('?')[0];
+  if (!collectionHandle) {
+    console.error(`[ATOMIC-SYNC] Cannot extract collection handle from: ${collectionUrl}`);
+    return [];
+  }
+
+  // Try Shopify JSON API with pagination first
+  const allProductUrls: string[] = [];
+  let page = 1;
+  const LIMIT = 250;
+
+  console.log(`[ATOMIC-SYNC] Fetching collection via Shopify JSON: ${collectionHandle}`);
   
+  try {
+    while (true) {
+      const jsonUrl = `https://atomicfilament.com/collections/${collectionHandle}/products.json?limit=${LIMIT}&page=${page}`;
+      const response = await fetch(jsonUrl, {
+        headers: { Accept: 'application/json' },
+      });
+
+      if (!response.ok) {
+        console.warn(`[ATOMIC-SYNC] Shopify JSON failed (${response.status}), falling back to Firecrawl`);
+        await response.text().catch(() => {});
+        break;
+      }
+
+      const data = await response.json();
+      const products = data.products || [];
+      
+      if (products.length === 0) break; // No more pages
+
+      for (const product of products) {
+        if (product.handle) {
+          allProductUrls.push(`https://atomicfilament.com/products/${product.handle}`);
+        }
+      }
+
+      console.log(`[ATOMIC-SYNC] Page ${page}: ${products.length} products`);
+      if (products.length < LIMIT) break; // Last page
+      page++;
+    }
+  } catch (err) {
+    console.warn(`[ATOMIC-SYNC] Shopify JSON error, falling back to Firecrawl:`, err);
+  }
+
+  if (allProductUrls.length > 0) {
+    console.log(`[ATOMIC-SYNC] Found ${allProductUrls.length} products via Shopify JSON in ${collectionHandle}`);
+    return allProductUrls;
+  }
+
+  // Fallback: Firecrawl scraping
+  console.log(`[ATOMIC-SYNC] Falling back to Firecrawl for collection: ${collectionUrl}`);
   try {
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -85,11 +139,7 @@ async function scrapeCollectionProducts(
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        url: collectionUrl,
-        formats: ['links'],
-        waitFor: 3000,
-      }),
+      body: JSON.stringify({ url: collectionUrl, formats: ['links'], waitFor: 3000 }),
     });
 
     if (!response.ok) {
@@ -100,31 +150,20 @@ async function scrapeCollectionProducts(
     const data = await response.json();
     const allLinks = data.data?.links || data.links || [];
     
-    // Filter to only product URLs
-    // Note: Shopify URLs may be /collections/xxx/products/yyy OR /products/yyy
     const productUrls = allLinks.filter((url: string) => {
-      // Must be atomicfilament.com
       if (!url.includes('atomicfilament.com')) return false;
-      // Must contain /products/ somewhere
       if (!url.includes('/products/')) return false;
-      // Skip variant URLs (we want base product)
       if (url.includes('?variant=')) return false;
       return true;
     });
     
-    // Normalize URLs to base /products/xxx format and deduplicate
     const normalizedUrls = productUrls.map((url: string) => {
       const match = url.match(/\/products\/([^?#\/]+)/);
-      if (match) {
-        return `https://atomicfilament.com/products/${match[1]}`;
-      }
-      return url;
+      return match ? `https://atomicfilament.com/products/${match[1]}` : url;
     });
     
     const uniqueUrls = [...new Set(normalizedUrls)] as string[];
-    const collectionName = collectionUrl.split('/').pop() || 'unknown';
-    console.log(`[ATOMIC-SYNC] Found ${uniqueUrls.length} products in ${collectionName}`);
-    
+    console.log(`[ATOMIC-SYNC] Found ${uniqueUrls.length} products via Firecrawl in ${collectionHandle}`);
     return uniqueUrls;
   } catch (err) {
     console.error(`[ATOMIC-SYNC] Error scraping collection:`, err);
@@ -593,11 +632,11 @@ Deno.serve(async (req) => {
     console.log('[ATOMIC-SYNC] ─────────────────────────────────────────────────────');
     console.log('[ATOMIC-SYNC] STEP 3: Safety validation');
     
-    if (productsToInsert.length < MINIMUM_PRODUCTS_THRESHOLD) {
-      const errorMessage = `Only ${productsToInsert.length} products found (expected ${MINIMUM_PRODUCTS_THRESHOLD}+). Aborting to preserve existing data.`;
+    // Hard-abort only on zero products (clear fetch failure)
+    if (productsToInsert.length === 0) {
+      const errorMessage = `0 products found — fetch failure. Aborting to preserve existing data.`;
       console.error(`[ATOMIC-SYNC] ❌ Safety check FAILED: ${errorMessage}`);
       
-      // Update sync log as failed
       if (syncLogId && supabase) {
         await supabase.from('brand_sync_logs').update({
           status: 'failed',
@@ -613,20 +652,36 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({
         success: false,
         error: errorMessage,
-        summary: {
-          totalDiscovered: uniqueProducts.size,
-          created: 0,
-          updated: 0,
-          skipped: filtered,
-          errors: 0,
-        },
+        summary: { totalDiscovered: uniqueProducts.size, created: 0, updated: 0, skipped: filtered, errors: 0 },
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    
-    console.log(`[ATOMIC-SYNC] ✓ Safety check passed: ${productsToInsert.length} products ready`);
+
+    // Warn (but continue) if catalog dropped >20% from baseline
+    let syncStatus = 'completed';
+    const dropPercent = (BASELINE_PRODUCT_COUNT - productsToInsert.length) / BASELINE_PRODUCT_COUNT;
+    if (productsToInsert.length < BASELINE_PRODUCT_COUNT && dropPercent > CATALOG_DROP_WARN_PERCENT) {
+      syncStatus = 'partial';
+      console.warn(`[ATOMIC-SYNC] ⚠️ Catalog drop detected: ${productsToInsert.length} products (baseline ${BASELINE_PRODUCT_COUNT}, -${(dropPercent * 100).toFixed(0)}%). Continuing with partial catalog.`);
+      
+      // Log a price anomaly alert for admin review
+      if (supabase) {
+        await supabase.from('price_discrepancies').insert({
+          source_url: 'https://atomicfilament.com',
+          old_price: BASELINE_PRODUCT_COUNT,
+          new_price: productsToInsert.length,
+          price_change_percent: -(dropPercent * 100),
+          status: 'pending',
+          notes: `[Catalog Count Drop] Atomic Filament: ${BASELINE_PRODUCT_COUNT} → ${productsToInsert.length} (-${(dropPercent * 100).toFixed(0)}%). Sync continued with partial catalog.`,
+        }).then(({ error }) => {
+          if (error) console.warn('[ATOMIC-SYNC] Could not log catalog anomaly:', error.message);
+        });
+      }
+    } else {
+      console.log(`[ATOMIC-SYNC] ✓ Safety check passed: ${productsToInsert.length} products ready`);
+    }
 
     // =========================================================================
     // STEP 4: DELETE old products (only AFTER successful scraping)
@@ -686,7 +741,7 @@ Deno.serve(async (req) => {
     // =========================================================================
     if (syncLogId && supabase) {
       await supabase.from('brand_sync_logs').update({
-        status: errors > 0 ? 'partial' : 'completed',
+        status: errors > 0 ? 'partial' : syncStatus,
         completed_at: new Date().toISOString(),
         duration_seconds: Math.round((Date.now() - startTime) / 1000),
         products_discovered: uniqueProducts.size,
