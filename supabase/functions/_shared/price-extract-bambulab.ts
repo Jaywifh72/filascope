@@ -11,7 +11,7 @@
  * containing all variants with prices, currencies, and availability.
  */
 import type { PriceResponse } from './price-types.ts';
-import { withTimeout } from './price-db.ts';
+import { withTimeout } from './price-timeout.ts';
 import { 
   getRegionHeaders, getSpoofedHeaders, isGeoRedirectDomain
 } from './regional-fetch.ts';
