@@ -102,7 +102,10 @@ async function tryShopifyJson(url: string): Promise<ExtractionResult> {
 }
 
 // Call get-current-price Edge Function for Firecrawl-based extraction
-async function callGetCurrentPrice(productUrl: string): Promise<ExtractionResult> {
+async function callGetCurrentPrice(
+  productUrl: string,
+  targetWeightGrams?: number | null,
+): Promise<ExtractionResult> {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -118,7 +121,11 @@ async function callGetCurrentPrice(productUrl: string): Promise<ExtractionResult
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${serviceKey}`
       },
-      body: JSON.stringify({ productUrl, forceRefresh: true })
+      body: JSON.stringify({
+        productUrl,
+        forceRefresh: true,
+        targetWeightGrams: targetWeightGrams ?? null,
+      })
     });
     
     if (!response.ok) {
@@ -149,8 +156,9 @@ async function callGetCurrentPrice(productUrl: string): Promise<ExtractionResult
 
 // Main extraction logic with strategy selection
 async function extractPrice(
-  productUrl: string, 
-  brandConfig: BrandConfig | null
+  productUrl: string,
+  brandConfig: BrandConfig | null,
+  targetWeightGrams?: number | null,
 ): Promise<ExtractionResult> {
   const platformType = brandConfig?.platform_type || 'unknown';
   
@@ -165,7 +173,7 @@ async function extractPrice(
   
   // Strategy 2: Firecrawl for supported platforms
   if (['shopify', 'woocommerce', 'firecrawl', 'custom'].includes(platformType)) {
-    return await callGetCurrentPrice(productUrl);
+    return await callGetCurrentPrice(productUrl, targetWeightGrams);
   }
   
   // Strategy 3: Skip unsupported platforms
@@ -174,7 +182,7 @@ async function extractPrice(
   }
   
   // Default: try Firecrawl anyway
-  return await callGetCurrentPrice(productUrl);
+  return await callGetCurrentPrice(productUrl, targetWeightGrams);
 }
 
 // Fetch regional URLs for a product
@@ -330,10 +338,13 @@ Deno.serve(async (req) => {
     const tableName = productType === 'filament' ? 'filaments' : 'printers';
     const priceColumn = productType === 'filament' ? 'variant_price' : 'current_price_usd_store';
     const msrpColumn = productType === 'filament' ? 'msrp' : 'msrp_usd';
+    const selectColumns = productType === 'filament'
+      ? `id, product_title, product_url, vendor, net_weight_g, ${priceColumn}, ${msrpColumn}`
+      : `id, product_title, product_url, vendor, ${priceColumn}, ${msrpColumn}`;
     
     let query = supabase
       .from(tableName)
-      .select(`id, product_title, product_url, vendor, ${priceColumn}, ${msrpColumn}`)
+      .select(selectColumns)
       .not('product_url', 'is', null);
     
     // For filaments, check sync_enabled
@@ -471,7 +482,8 @@ Deno.serve(async (req) => {
           console.log(`No regional URLs for ${product.id}, using legacy product_url`);
           
           const extractionStart = Date.now();
-          const extraction = await extractPrice(productUrl, brandConfig);
+          const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
+          const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams);
           const responseTime = Date.now() - extractionStart;
           
           // Log extraction
@@ -557,7 +569,8 @@ Deno.serve(async (req) => {
           console.log(`  [${regionCode}] Extracting from ${storeUrl.substring(0, 60)}...`);
           
           const extractionStart = Date.now();
-          const extraction = await extractPrice(storeUrl, brandConfig);
+          const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
+          const extraction = await extractPrice(storeUrl, brandConfig, targetWeightGrams);
           const responseTime = Date.now() - extractionStart;
           
           // Log extraction with region info
@@ -656,7 +669,8 @@ Deno.serve(async (req) => {
         console.log(`Processing: ${product.product_title?.substring(0, 50)}...`);
         
         const extractionStart = Date.now();
-        const extraction = await extractPrice(productUrl, brandConfig);
+        const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
+        const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams);
         const responseTime = Date.now() - extractionStart;
         
         // Log extraction attempt
