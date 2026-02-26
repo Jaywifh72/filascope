@@ -87,7 +87,7 @@ export function useAdminPriceRefresh(
         const result = await supabase.functions.invoke(fnName, {
           body: { 
             productUrl, 
-            forceRefresh: true,
+            forceRefresh: false,
             targetWeightGrams: netWeightGrams,
           },
         });
