@@ -462,7 +462,7 @@ export function usePricingActions(
         body: {
           productUrl: store.productUrl,
           currency: store.currency,
-          forceRefresh: true,
+          forceRefresh: false,
           targetWeightGrams: store.netWeightG,
           filamentId: store.representativeId,
           productType,
