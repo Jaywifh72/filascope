@@ -4,7 +4,7 @@
  */
 
 export type Platform =
-  | "shopify" | "woocommerce" | "magento"
+  | "shopify" | "woocommerce" | "magento" | "odoo"
   | "creality" | "extrudr" | "treed" | "prusa" | "geeetech"
   | "bambulab"
   | "unknown";
@@ -12,7 +12,7 @@ export type Platform =
 export function detectPlatform(url: string): Platform {
   const l = url.toLowerCase();
   if (l.includes("colorfabb.us") || l.includes("colorfabb.com")) return "magento";
-  if (l.includes("formfutura.com")) return "magento";
+  if (l.includes("formfutura.com")) return "odoo";
   if (l.includes("azurefilm.com")) return "woocommerce";
   if (l.includes("store.creality.com") || l.includes("creality.com/ca/") ||
       l.includes("creality.com/uk/") || l.includes("creality.com/eu/") ||
