@@ -1,7 +1,6 @@
 /**
  * ODOO E-COMMERCE PRICE EXTRACTOR
  * Dedicated extractor for Odoo-based stores (e.g. FormFutura).
- * Uses JSON-LD first, then HTML regex fallback with European decimal handling.
  */
 
 import type { PriceResponse, StockStatus } from "./price-types.ts";
@@ -30,119 +29,133 @@ const fail = (error: string, extra?: Partial<PriceResponse>): PriceResponse => (
 });
 
 /**
- * Parse a European-formatted price string to a number.
- * "16,52" → 16.52 | "1.234,56" → 1234.56 | "234" → 234
+ * Normalize price strings with explicit European handling.
+ * - "16,52" => 16.52
+ * - "1.652" => 1652 (thousands separator)
+ * - "1.652,50" => 1652.50
  */
-function parseEuropeanPrice(raw: string): number {
-  let cleaned = raw.replace(/[^\d.,]/g, "").trim();
-  if (!cleaned) return NaN;
+function normalizeOdooEuroPrice(raw: string): number {
+  let cleaned = raw.replace(/[€$£\s]/g, "").trim();
 
-  // "1.234,56" — dot is thousands, comma is decimal
-  if (cleaned.includes(".") && cleaned.includes(",") && cleaned.lastIndexOf(",") > cleaned.lastIndexOf(".")) {
-    return parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
+  // Remove any remaining non-numeric separators/characters
+  cleaned = cleaned.replace(/[^\d,\.]/g, "");
+
+  // Decimal comma at end => comma decimal; dots are thousands
+  if (/,[\d]{2}$/.test(cleaned)) {
+    cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+  } else if (/\.[\d]{3}$/.test(cleaned) && !cleaned.includes(",")) {
+    // Dot with 3 trailing digits => thousands separator
+    cleaned = cleaned.replace(/\./g, "");
+  } else {
+    // Default simple normalization
+    cleaned = cleaned.replace(/,/g, ".");
   }
-  // "16,52" — comma followed by exactly 2 digits → decimal comma
-  if (/,\d{2}$/.test(cleaned) && !cleaned.includes(".")) {
-    return parseFloat(cleaned.replace(",", "."));
-  }
-  // "1.652" with 3 digits after dot → thousands separator (unlikely for prices, but guard)
-  if (/\.\d{3}$/.test(cleaned) && !cleaned.includes(",")) {
-    return parseFloat(cleaned.replace(".", ""));
-  }
-  // Standard "16.52" or plain integer
-  return parseFloat(cleaned.replace(",", ""));
+
+  return parseFloat(cleaned);
 }
 
-/**
- * Detect stock status from Odoo HTML.
- */
 function detectOdooStock(html: string): { available: boolean; stockStatus: StockStatus } {
-  const lower = html.toLowerCase();
-  const outOfStockPatterns = [
-    "out of stock",
-    "uitverkocht",
-    "niet beschikbaar",
-    "niet leverbaar",
-    "temporarily unavailable",
-    "currently unavailable",
-    "sold out",
-  ];
-  for (const pattern of outOfStockPatterns) {
-    if (lower.includes(pattern)) {
-      return { available: false, stockStatus: "out_of_stock" };
-    }
-  }
-  return { available: true, stockStatus: "in_stock" };
+  const outOfStock = /(out\s+of\s+stock|uitverkocht|niet\s+beschikbaar)/i.test(html);
+  return outOfStock
+    ? { available: false, stockStatus: "out_of_stock" }
+    : { available: true, stockStatus: "in_stock" };
 }
 
 /**
- * Try to extract price from JSON-LD structured data.
+ * Strategy A: JSON-LD offers.price
  */
-function extractJsonLdOdoo(html: string): { price: number; currency: string } | null {
+function extractJsonLdOdooPrice(html: string): number | null {
   const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let match: RegExpExecArray | null;
 
   while ((match = scriptRegex.exec(html)) !== null) {
     try {
-      const data = JSON.parse(match[1]);
-      const items = Array.isArray(data) ? data : [data];
-      for (const item of items) {
-        if (item["@type"] === "Product" || item["@type"] === "IndividualProduct") {
-          const offers = item.offers || item.Offers;
-          if (!offers) continue;
+      const parsed = JSON.parse(match[1]);
+      const stack: unknown[] = [parsed];
+
+      while (stack.length > 0) {
+        const current = stack.pop();
+        if (!current) continue;
+
+        if (Array.isArray(current)) {
+          for (const item of current) stack.push(item);
+          continue;
+        }
+
+        if (typeof current !== "object") continue;
+        const node = current as Record<string, unknown>;
+
+        const offers = node.offers;
+        if (offers) {
           const offerList = Array.isArray(offers) ? offers : [offers];
           for (const offer of offerList) {
-            const rawPrice = offer.price ?? offer.Price;
+            if (!offer || typeof offer !== "object") continue;
+            const offerNode = offer as Record<string, unknown>;
+            const rawPrice = offerNode.price;
             if (rawPrice == null) continue;
-            const price = typeof rawPrice === "string" ? parseEuropeanPrice(rawPrice) : Number(rawPrice);
-            if (!isNaN(price) && price > 0 && price < 500) {
-              const currency = offer.priceCurrency || offer.PriceCurrency || "EUR";
-              return { price, currency: currency.toUpperCase() };
+
+            const price = typeof rawPrice === "number"
+              ? rawPrice
+              : normalizeOdooEuroPrice(String(rawPrice));
+
+            if (!Number.isNaN(price) && price > 0 && price <= 500) {
+              return price;
             }
+          }
+        }
+
+        for (const value of Object.values(node)) {
+          if (value && (typeof value === "object" || Array.isArray(value))) {
+            stack.push(value);
           }
         }
       }
     } catch {
-      // malformed JSON-LD, continue
+      // malformed JSON-LD block: continue
     }
   }
+
   return null;
 }
 
 /**
- * Extract price from HTML using € symbol patterns.
+ * Strategy B: First € price near product title H1.
  */
-function extractHtmlPrice(html: string): number | null {
-  // Pattern: €\s*price (with optional thousands sep and decimal comma)
-  const euroPatterns = [
-    /€\s*([\d]{1,3}(?:\.?\d{3})*,\d{2})\b/g,   // €16,52 or €1.234,56
-    /€\s*([\d]+(?:\.\d{2})?)\b/g,                 // €16.52 or €16
-    /EUR\s*([\d]{1,3}(?:\.?\d{3})*,\d{2})\b/gi,  // EUR 16,52
-  ];
+function extractEuroPriceNearH1(html: string): number | null {
+  const h1Match = html.match(/<h1[^>]*>[\s\S]*?<\/h1>/i);
+  if (!h1Match || h1Match.index == null) return null;
 
-  const candidates: number[] = [];
+  const start = Math.max(0, h1Match.index - 400);
+  const end = Math.min(html.length, h1Match.index + h1Match[0].length + 2400);
+  const windowHtml = html.slice(start, end);
 
-  for (const pattern of euroPatterns) {
-    let m: RegExpExecArray | null;
-    while ((m = pattern.exec(html)) !== null) {
-      const price = parseEuropeanPrice(m[1]);
-      if (!isNaN(price) && price >= 5 && price < 500) {
-        candidates.push(price);
-      }
-    }
-    if (candidates.length > 0) break; // use first matching pattern group
-  }
+  const nearMatch = windowHtml.match(/€\s*([\d]+[,.][\d]+|[\d]+)/);
+  if (!nearMatch) return null;
 
-  if (candidates.length === 0) return null;
-
-  // Return the lowest reasonable price (likely the product price, not a "was" price)
-  candidates.sort((a, b) => a - b);
-  return candidates[0];
+  const price = normalizeOdooEuroPrice(nearMatch[1]);
+  if (Number.isNaN(price) || price <= 0 || price > 500) return null;
+  return price;
 }
 
 /**
- * Main Odoo price extraction function.
+ * Strategy C: Fallback to first € token from page text.
  */
+function extractAnyEuroPrice(html: string): number | null {
+  const textOnly = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ");
+
+  const fallbackMatch = textOnly.match(/€\s*[\d,\.]+/);
+  if (!fallbackMatch) return null;
+
+  const raw = fallbackMatch[0].replace(/€\s*/i, "");
+  const price = normalizeOdooEuroPrice(raw);
+
+  if (Number.isNaN(price) || price <= 0 || price > 500) return null;
+  return price;
+}
+
 export async function fetchOdooPrice(productUrl: string): Promise<PriceResponse> {
   try {
     const resp = await withTimeout(
@@ -153,43 +166,23 @@ export async function fetchOdooPrice(productUrl: string): Promise<PriceResponse>
     if (resp.status === 404 || resp.status === 410) {
       return fail(`HTTP ${resp.status}`, { is404: true });
     }
+
     if (!resp.ok) {
       return fail(`HTTP ${resp.status}`);
     }
 
     const html = await resp.text();
-
     if (is404Content(html)) {
       return fail("soft_404", { is404: true });
     }
 
     const { available, stockStatus } = detectOdooStock(html);
 
-    // Strategy 1: JSON-LD
-    const jsonLd = extractJsonLdOdoo(html);
-    if (jsonLd) {
-      console.log(`[ODOO] JSON-LD price: ${jsonLd.price} ${jsonLd.currency} from ${productUrl}`);
+    const jsonLdPrice = extractJsonLdOdooPrice(html);
+    if (jsonLdPrice !== null) {
       return {
         success: true,
-        price: jsonLd.price,
-        compareAtPrice: null,
-        currency: jsonLd.currency,
-        available,
-        stockStatus,
-        source: "html",
-        method: "json_ld" as any,
-        fetchedAt: new Date().toISOString(),
-        sourceUrl: productUrl,
-      };
-    }
-
-    // Strategy 2: HTML regex
-    const htmlPrice = extractHtmlPrice(html);
-    if (htmlPrice) {
-      console.log(`[ODOO] HTML regex price: ${htmlPrice} EUR from ${productUrl}`);
-      return {
-        success: true,
-        price: htmlPrice,
+        price: jsonLdPrice,
         compareAtPrice: null,
         currency: "EUR",
         available,
@@ -200,12 +193,41 @@ export async function fetchOdooPrice(productUrl: string): Promise<PriceResponse>
       };
     }
 
-    // No price found — if page loaded but no price, may be out of stock
+    const nearH1Price = extractEuroPriceNearH1(html);
+    if (nearH1Price !== null) {
+      return {
+        success: true,
+        price: nearH1Price,
+        compareAtPrice: null,
+        currency: "EUR",
+        available,
+        stockStatus,
+        source: "html",
+        fetchedAt: new Date().toISOString(),
+        sourceUrl: productUrl,
+      };
+    }
+
+    const fallbackPrice = extractAnyEuroPrice(html);
+    if (fallbackPrice !== null) {
+      return {
+        success: true,
+        price: fallbackPrice,
+        compareAtPrice: null,
+        currency: "EUR",
+        available,
+        stockStatus,
+        source: "html",
+        fetchedAt: new Date().toISOString(),
+        sourceUrl: productUrl,
+      };
+    }
+
     if (!available) {
       return fail("OUT_OF_STOCK_NO_PRICE", { available: false, stockStatus: "out_of_stock" });
     }
 
-    return fail("No price found on Odoo page");
+    return fail("No price found on Odoo page", { available, stockStatus });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return fail(msg === "TIMEOUT" ? "timeout" : msg);
