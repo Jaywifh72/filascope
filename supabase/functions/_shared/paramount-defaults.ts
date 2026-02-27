@@ -72,6 +72,7 @@ const PARAMOUNT_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'PVA': { nozzle_temp_min_c: 180, nozzle_temp_max_c: 210, bed_temp_min_c: 50, bed_temp_max_c: 60 },
   'PA': { nozzle_temp_min_c: 240, nozzle_temp_max_c: 270, bed_temp_min_c: 70, bed_temp_max_c: 90, requiresEnclosure: true },
   'PA-CF': { nozzle_temp_min_c: 250, nozzle_temp_max_c: 280, bed_temp_min_c: 70, bed_temp_max_c: 100, requiresEnclosure: true, requiresHardenedNozzle: true },
+  'Nylon CF': { nozzle_temp_min_c: 250, nozzle_temp_max_c: 280, bed_temp_min_c: 70, bed_temp_max_c: 100, requiresEnclosure: true, requiresHardenedNozzle: true },
 };
 
 export function getParamountPrintSettings(material: string): PrintSettings | null {

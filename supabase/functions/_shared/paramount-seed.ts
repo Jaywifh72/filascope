@@ -230,6 +230,7 @@ export function getParamountDefaultPrice(material: string): number {
     'TPU': 34.99,
     'PVA': 49.99,
     'Nylon': 39.99,
+    'Nylon CF': 49.99,
     'PETG-CF': 44.99,
     'ABS-CF': 44.99,
     'PA-CF': 54.99,
@@ -360,16 +361,16 @@ export const PARAMOUNT_SEED_DATA: ParamountSeedEntry[] = [
   { material: 'FlexPLA', filamentLine: 'FlexPLA (Gray) 1.75mm 1kg Filament', productUrl: 'https://www.paramount-3d.com/flexpla', color: 'Gray', imageUrl: '', colorHex: '#808080' },
   
   // ===== TPU (4 colors) =====
-  { material: 'TPU', filamentLine: 'TPU (Black) 1.75mm 1kg Filament', productUrl: 'https://www.paramount-3d.com/copy-of-flexpla', color: 'Black', imageUrl: '', colorHex: '#000000' },
-  { material: 'TPU', filamentLine: 'TPU (White) 1.75mm 1kg Filament', productUrl: 'https://www.paramount-3d.com/copy-of-flexpla', color: 'White', imageUrl: '', colorHex: '#FFFFFF' },
-  { material: 'TPU', filamentLine: 'TPU (Red) 1.75mm 1kg Filament', productUrl: 'https://www.paramount-3d.com/copy-of-flexpla', color: 'Red', imageUrl: '', colorHex: '#FF0000' },
-  { material: 'TPU', filamentLine: 'TPU (Blue) 1.75mm 1kg Filament', productUrl: 'https://www.paramount-3d.com/copy-of-flexpla', color: 'Blue', imageUrl: '', colorHex: '#0000FF' },
+  { material: 'TPU', filamentLine: 'TPU (Black) 1.75mm 1kg Filament', productUrl: 'https://www.paramount-3d.com/product-page/tpu-black-1-75mm-1kg-filament', color: 'Black', imageUrl: '', colorHex: '#000000' },
+  { material: 'TPU', filamentLine: 'TPU (Military Green) 1.75mm 1kg Filament [OGRL6003_7764U]', productUrl: 'https://www.paramount-3d.com/product-page/tpu-military-green-1-75mm-1kg-filament-ogrl6003-7764u', color: 'Military Green', imageUrl: '', colorHex: '#4B5320' },
+  { material: 'TPU', filamentLine: 'TPU (Mid Century Teal) 1.75mm 1kg Filament [ATRL50217718U]', productUrl: 'https://www.paramount-3d.com/product-page/copy-of-tpu-mid-century-teal-1-75mm-1kg-filament', color: 'Mid Century Teal', imageUrl: '', colorHex: '#008B8B' },
+  { material: 'TPU', filamentLine: 'TPU (Iron Red) 1.75mm 1kg Filament [IRRL30111815U]', productUrl: 'https://www.paramount-3d.com/product-page/tpu-iron-red-1-75mm-1kg-filament', color: 'Iron Red', imageUrl: '', colorHex: '#8B3A3A' },
   
   // ===== PVA (1 color - Support Material) =====
   { material: 'PVA', filamentLine: 'PVA 1.75mm 1kg Filament', productUrl: 'https://www.paramount-3d.com/pva', color: 'Natural', imageUrl: '', colorHex: '#F5F5DC' },
   
-  // ===== Nylon (1 color) =====
-  { material: 'Nylon', filamentLine: 'Nylon 1.75mm 1kg Filament', productUrl: 'https://www.paramount-3d.com/copy-of-pva', color: 'Natural', imageUrl: '', colorHex: '#F5F5DC' },
+  // ===== Nylon Carbon Fiber (1 color) =====
+  { material: 'Nylon CF', filamentLine: 'Nylon Carbon Fiber 1.75mm 1kg Filament [NCF810031560738]', productUrl: 'https://www.paramount-3d.com/product-page/paramount-3d-nylon-carbon-fiber', color: 'Natural', imageUrl: '', colorHex: '#1A1A1A' },
 ];
 
 // ============================================================================
