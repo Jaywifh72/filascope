@@ -1,29 +1,62 @@
 
 
-## Plan: Complete FormFutura Sync (Remaining 47 URLs)
+# Fix Gizmo Dorks Price Extraction
 
-Since all 33 attempted URLs succeeded with zero errors, no code fixes are needed. The only issue is the edge function timeout — 47 URLs remain unprocessed.
+## Problem
+Gizmo Dorks (BigCommerce store) is misidentified as Shopify, causing all price fetches to 404. No BigCommerce handler exists in the price router.
 
-### Actions
+## Changes
 
-**1. Trigger a second sync pass**
-Call `sync-prices` again with `{ "brand": "FormFutura", "region": "EU", "force": true, "useRegionalUrls": true }`. The URL dedup cache and the fact that already-synced URLs have recent `last_sync_at` timestamps means the function should skip completed ones and pick up where it left off, processing the next batch of ~33 URLs.
+### 1. Add `gizmodorks.com` to platform detection
+**File**: `supabase/functions/_shared/price-platforms.ts`
+- Add `"bigcommerce"` as a new Platform type
+- Add detection rule: `gizmodorks.com` returns `"bigcommerce"`
 
-**2. Trigger a third sync pass (if needed)**
-If the second pass doesn't complete all 47 remaining, run one more pass. With 600ms delays, 47 URLs need ~28 seconds of fetch time plus processing — it should fit in one pass.
+### 2. Add BigCommerce handler in price-extract-direct.ts
+**File**: `supabase/functions/_shared/price-extract-direct.ts`
+- New `fetchBigCommercePrice(productUrl, expectedCurrency)` function
+- Strategy: fetch HTML, try JSON-LD first (BigCommerce embeds structured data), then fall back to HTML regex
+- JSON-LD should capture the correct product price directly
+- No BigCommerce Storefront API needed -- JSON-LD in the page HTML is sufficient
 
-**3. Verify final state**
-After all passes complete, re-run the audit queries to confirm:
-- `has_eur_price` count is close to 460 (some products may be genuinely unavailable/404)
-- `stale_count` drops to near 0
-- All 80 regional URL rows have a corresponding `product_regional_prices` entry
+### 3. Add Afterpay/installment price guard
+**File**: `supabase/functions/_shared/price-utils.ts`
+- Add installment removal to `removeSavingsAmounts()`:
+  - Strip lines matching patterns like "4 payments of $X.XX", "pay in 4", "interest-free payments", "Afterpay", "Sezzle", "Klarna"
+- This protects all extractors that use this utility, not just BigCommerce
 
-### Technical Detail
-No file changes needed. The existing `sync-prices` edge function already has:
-- EUR-only brand routing for FormFutura
-- URL deduplication cache
-- Correct `price_eur` column targeting
-- `sync_status = 'active'` marking
+### 4. Add `bigcommerce` case to the router
+**File**: `supabase/functions/get-current-price-v2/index.ts`
+- Import `fetchBigCommercePrice`
+- Add `case "bigcommerce"` that calls the new handler with Firecrawl fallback (without the is404 guard)
 
-This is purely an operational task — re-invoke the function to process the remaining batch.
+### 5. Deploy and verify
+- Redeploy `get-current-price-v2`
+- Live test against `https://gizmodorks.com/pla-3d-printer-filament/`
+- Confirm extracted price is $23.95 (not $5.99 installment)
+
+## Technical Details
+
+The BigCommerce handler will follow the same pattern as the Geeetech handler:
+
+```text
+fetchBigCommercePrice(url, currency)
+  1. Fetch HTML with browser headers
+  2. Try extractJsonLdPrice() -- BigCommerce embeds Product schema
+  3. Return result or fail
+```
+
+Router case:
+```text
+case "bigcommerce":
+  result = fetchBigCommercePrice(urlToFetch, expectedCurrency)
+  if (!result.success) -> Firecrawl fallback (no is404 guard)
+```
+
+Installment guard additions to `removeSavingsAmounts()`:
+```text
+- /\d+\s*(interest-free\s+)?payments?\s+of\s+\$[\d,.]+/gi
+- /pay\s+in\s+\d+/gi
+- /(?:afterpay|sezzle|klarna|zip\s+pay)[^$]*\$[\d,.]+/gi
+```
 
