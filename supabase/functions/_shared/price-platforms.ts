@@ -12,6 +12,7 @@ export type Platform =
 export function detectPlatform(url: string): Platform {
   const l = url.toLowerCase();
   if (l.includes("colorfabb.us") || l.includes("colorfabb.com")) return "magento";
+  if (l.includes("formfutura.com")) return "magento";
   if (l.includes("azurefilm.com")) return "woocommerce";
   if (l.includes("store.creality.com") || l.includes("creality.com/ca/") ||
       l.includes("creality.com/uk/") || l.includes("creality.com/eu/") ||
