@@ -118,13 +118,21 @@ export const FORMFUTURA_PRINT_SETTINGS: Record<string, PrintSettings> = {
   // ASA
   'APOLLOX': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
   'APOLLOX CF10': { nozzleTempMin: 240, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true, isAbrasive: true },
+  'ATHENAX': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
+  'ATHENAX CF10': { nozzleTempMin: 240, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true, isAbrasive: true },
+  'ATHENAX GF10': { nozzleTempMin: 235, nozzleTempMax: 255, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true, isAbrasive: true },
+  'PREMIUM ASA': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
+  'RAPOLLO': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
   
   // ABS
   'CLEARSCENT ABS': { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
+  'TITANX': { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
+  'ABSPRO': { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
   
   // PA/Nylon
   'STYX PA6': { nozzleTempMin: 240, nozzleTempMax: 260, bedTempMin: 80, bedTempMax: 100, requiresEnclosure: true },
   'STYX PA6-GF30': { nozzleTempMin: 240, nozzleTempMax: 270, bedTempMin: 80, bedTempMax: 100, requiresEnclosure: true, isAbrasive: true },
+  'STYX PA6-CF15': { nozzleTempMin: 240, nozzleTempMax: 270, bedTempMin: 80, bedTempMax: 100, requiresEnclosure: true, isAbrasive: true },
   
   // High-performance
   'LUVOCOM': { nozzleTempMin: 280, nozzleTempMax: 320, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true, isAbrasive: true },
@@ -134,11 +142,16 @@ export const FORMFUTURA_PRINT_SETTINGS: Record<string, PrintSettings> = {
   // Flexible
   'PYTHON FLEX 90A': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 40 },
   'PYTHON FLEX 98A': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 40 },
+  'FLEXIFIL TPC': { nozzleTempMin: 210, nozzleTempMax: 230, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 40 },
   
   // Specialty
   'BIOFIL PCL': { nozzleTempMin: 55, nozzleTempMax: 80, bedTempMin: 0, bedTempMax: 30 },
   'HIPS': { nozzleTempMin: 220, nozzleTempMax: 250, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
   'PVA': { nozzleTempMin: 190, nozzleTempMax: 210, bedTempMin: 45, bedTempMax: 60 },
+  'METALFIL': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
+  'STONEFIL': { nozzleTempMin: 190, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60, isAbrasive: true },
+  'CARBONFIL': { nozzleTempMin: 225, nozzleTempMax: 245, bedTempMin: 80, bedTempMax: 90, isAbrasive: true },
+  'KRATOS PC': { nozzleTempMin: 250, nozzleTempMax: 280, bedTempMin: 100, bedTempMax: 120, requiresEnclosure: true },
   
   // Generic fallbacks
   'PLA': { nozzleTempMin: 190, nozzleTempMax: 230, bedTempMin: 50, bedTempMax: 60 },
@@ -146,7 +159,9 @@ export const FORMFUTURA_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'ABS': { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
   'ASA': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 90, bedTempMax: 110, requiresEnclosure: true },
   'TPU': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 40 },
+  'TPC': { nozzleTempMin: 210, nozzleTempMax: 230, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 40 },
   'PA': { nozzleTempMin: 240, nozzleTempMax: 270, bedTempMin: 80, bedTempMax: 100, requiresEnclosure: true },
+  'PC': { nozzleTempMin: 250, nozzleTempMax: 280, bedTempMin: 100, bedTempMax: 120, requiresEnclosure: true },
 };
 
 export function getFormFuturaPrintSettings(title: string, material: string | null): PrintSettings | null {
@@ -207,45 +222,63 @@ export function normalizeFormFuturaMaterial(title: string): string | null {
   if (/ppsu/i.test(t)) return 'PPSU';
   if (/pei|ultem/i.test(t)) return 'PEI';
   
-  // Carbon fiber composites
-  if (/apollox[- ]?cf|asa[- ]?cf/i.test(t)) return 'ASA-CF';
+  // Carbon/Glass fiber composites
+  if (/apollox[- ]?cf|athenax[- ]?cf|asa[- ]?cf/i.test(t)) return 'ASA-CF';
+  if (/athenax[- ]?gf|asa[- ]?gf/i.test(t)) return 'ASA-GF';
   if (/premium[- ]?pla[- ]?cf|pla[- ]?cf/i.test(t)) return 'PLA-CF';
   if (/pa6?[- ]?gf|styx.*gf/i.test(t)) return 'PA-GF';
-  if (/pa[- ]?cf|nylon[- ]?cf/i.test(t)) return 'PA-CF';
-  if (/pc[- ]?cf/i.test(t)) return 'PC-CF';
+  if (/pa[- ]?cf|nylon[- ]?cf|styx.*cf/i.test(t)) return 'PA-CF';
+  if (/pc[- ]?cf|kratos.*cf/i.test(t)) return 'PC-CF';
+  if (/carbonfil/i.test(t)) return 'PETG-CF';
   
   // Nylon/PA
   if (/styx|pa6|nylon/i.test(t)) return 'PA';
   
-  // ASA
-  if (/apollox|asa/i.test(t)) return 'ASA';
+  // ASA (must be after ASA-CF/GF checks)
+  if (/apollox|athenax|rapollo/i.test(t)) return 'ASA';
+  if (/premium[- ]?asa/i.test(t)) return 'ASA';
+  
+  // ABS (TitanX is ABS-based)
+  if (/titanx/i.test(t)) return 'ABS';
+  if (/clearscent|abspro/i.test(t)) return 'ABS';
+  if (/\babs\b/i.test(t)) return 'ABS';
   
   // PETG variants
   if (/hdglass|hd[- ]?glass/i.test(t)) return 'PETG';
   if (/petg/i.test(t)) return 'PETG';
   
-  // ABS
-  if (/clearscent|abs/i.test(t)) return 'ABS';
-  
   // TPU/Flexible
   if (/python[- ]?flex.*90a/i.test(t)) return 'TPU-90A';
   if (/python[- ]?flex.*98a/i.test(t)) return 'TPU-98A';
   if (/python[- ]?flex|tpu/i.test(t)) return 'TPU';
+  if (/flexifil|tpc/i.test(t)) return 'TPC';
   
   // Specialty
-  if (/easywood|wood/i.test(t)) return 'PLA-Wood';
+  if (/metalfil/i.test(t)) return 'PLA-Metal';
+  if (/stonefil/i.test(t)) return 'PLA-Stone';
+  if (/easywood|biofil.*wood/i.test(t)) return 'PLA-Wood';
   if (/biofil[- ]?pcl|pcl/i.test(t)) return 'PCL';
   if (/centaur|polypropylene|\bpp\b/i.test(t)) return 'PP';
-  if (/polycarbonate|\bpc\b/i.test(t)) return 'PC';
+  if (/kratos|\bpc\b/i.test(t)) return 'PC';
   if (/hips/i.test(t)) return 'HIPS';
-  if (/pva/i.test(t)) return 'PVA';
+  if (/pva|aquasolve/i.test(t)) return 'PVA';
+  if (/bvoh/i.test(t)) return 'BVOH';
+  if (/atlas.*support/i.test(t)) return 'PVA';
+  
+  // Recycled materials  
+  if (/reform.*rpet(?!g)/i.test(t)) return 'rPET';
+  if (/reform.*rtitan/i.test(t)) return 'rABS';
+  if (/reform.*rtpu/i.test(t)) return 'rTPU';
+  if (/reform.*rpetg|recycled.*petg|rpetg/i.test(t)) return 'rPETG';
   
   // PLA variants (check last since many products contain "PLA")
   if (/volcano[- ]?pla/i.test(t)) return 'PLA';
   if (/tough[- ]?pla/i.test(t)) return 'PLA+';
   if (/reform.*rpla|recycled.*pla|rpla/i.test(t)) return 'rPLA';
-  if (/reform.*rpetg|recycled.*petg|rpetg/i.test(t)) return 'rPETG';
   if (/epla|easyfil|premium[- ]?pla|matt[- ]?pla|matte[- ]?pla|galaxy[- ]?pla|glow[- ]?pla|high[- ]?gloss[- ]?pla|colormorph|\bpla\b/i.test(t)) return 'PLA';
+  
+  // Refill system
+  if (/refill.*system/i.test(t)) return 'Other';
   
   return null;
 }
