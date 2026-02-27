@@ -16,6 +16,13 @@ const BROWSER_HEADERS = {
 
 const TIMEOUT_MS = 10000;
 
+/** Detect currency from URL domain */
+function detectOdooCurrency(url: string): string {
+  const l = url.toLowerCase();
+  if (l.includes("fusionfilaments.com")) return "USD";
+  return "EUR";
+}
+
 const fail = (error: string, extra?: Partial<PriceResponse>): PriceResponse => ({
   success: false,
   price: null,
@@ -119,9 +126,9 @@ function extractJsonLdOdooPrice(html: string): number | null {
 }
 
 /**
- * Strategy B: First € price near product title H1.
+ * Strategy B: First currency price near product title H1.
  */
-function extractEuroPriceNearH1(html: string): number | null {
+function extractCurrencyPriceNearH1(html: string, currencySymbol: string): number | null {
   const h1Match = html.match(/<h1[^>]*>[\s\S]*?<\/h1>/i);
   if (!h1Match || h1Match.index == null) return null;
 
@@ -129,7 +136,8 @@ function extractEuroPriceNearH1(html: string): number | null {
   const end = Math.min(html.length, h1Match.index + h1Match[0].length + 2400);
   const windowHtml = html.slice(start, end);
 
-  const nearMatch = windowHtml.match(/€\s*([\d]+[,.][\d]+|[\d]+)/);
+  const escaped = currencySymbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const nearMatch = windowHtml.match(new RegExp(escaped + '\\s*([\\d]+[,.][\\d]+|[\\d]+)'));
   if (!nearMatch) return null;
 
   const price = normalizeOdooEuroPrice(nearMatch[1]);
@@ -138,18 +146,19 @@ function extractEuroPriceNearH1(html: string): number | null {
 }
 
 /**
- * Strategy C: Fallback to first € token from page text.
+ * Strategy C: Fallback to first currency token from page text.
  */
-function extractAnyEuroPrice(html: string): number | null {
+function extractAnyCurrencyPrice(html: string, currencySymbol: string): number | null {
   const textOnly = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ");
 
-  const fallbackMatch = textOnly.match(/€\s*[\d,\.]+/);
+  const escaped = currencySymbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const fallbackMatch = textOnly.match(new RegExp(escaped + '\\s*[\\d,\\.]+'));
   if (!fallbackMatch) return null;
 
-  const raw = fallbackMatch[0].replace(/€\s*/i, "");
+  const raw = fallbackMatch[0].replace(new RegExp(escaped + '\\s*'), "");
   const price = normalizeOdooEuroPrice(raw);
 
   if (Number.isNaN(price) || price <= 0 || price > 500) return null;
@@ -157,6 +166,9 @@ function extractAnyEuroPrice(html: string): number | null {
 }
 
 export async function fetchOdooPrice(productUrl: string): Promise<PriceResponse> {
+  const currency = detectOdooCurrency(productUrl);
+  const currencySymbol = currency === "USD" ? "$" : "€";
+
   try {
     const resp = await withTimeout(
       fetch(productUrl, { headers: BROWSER_HEADERS, redirect: "follow" }),
@@ -164,16 +176,16 @@ export async function fetchOdooPrice(productUrl: string): Promise<PriceResponse>
     );
 
     if (resp.status === 404 || resp.status === 410) {
-      return fail(`HTTP ${resp.status}`, { is404: true });
+      return fail(`HTTP ${resp.status}`, { is404: true, currency });
     }
 
     if (!resp.ok) {
-      return fail(`HTTP ${resp.status}`);
+      return fail(`HTTP ${resp.status}`, { currency });
     }
 
     const html = await resp.text();
     if (is404Content(html)) {
-      return fail("soft_404", { is404: true });
+      return fail("soft_404", { is404: true, currency });
     }
 
     const { available, stockStatus } = detectOdooStock(html);
@@ -181,55 +193,37 @@ export async function fetchOdooPrice(productUrl: string): Promise<PriceResponse>
     const jsonLdPrice = extractJsonLdOdooPrice(html);
     if (jsonLdPrice !== null) {
       return {
-        success: true,
-        price: jsonLdPrice,
-        compareAtPrice: null,
-        currency: "EUR",
-        available,
-        stockStatus,
-        source: "html",
-        fetchedAt: new Date().toISOString(),
-        sourceUrl: productUrl,
+        success: true, price: jsonLdPrice, compareAtPrice: null, currency,
+        available, stockStatus, source: "html",
+        fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
       };
     }
 
-    const nearH1Price = extractEuroPriceNearH1(html);
+    const nearH1Price = extractCurrencyPriceNearH1(html, currencySymbol);
     if (nearH1Price !== null) {
       return {
-        success: true,
-        price: nearH1Price,
-        compareAtPrice: null,
-        currency: "EUR",
-        available,
-        stockStatus,
-        source: "html",
-        fetchedAt: new Date().toISOString(),
-        sourceUrl: productUrl,
+        success: true, price: nearH1Price, compareAtPrice: null, currency,
+        available, stockStatus, source: "html",
+        fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
       };
     }
 
-    const fallbackPrice = extractAnyEuroPrice(html);
+    const fallbackPrice = extractAnyCurrencyPrice(html, currencySymbol);
     if (fallbackPrice !== null) {
       return {
-        success: true,
-        price: fallbackPrice,
-        compareAtPrice: null,
-        currency: "EUR",
-        available,
-        stockStatus,
-        source: "html",
-        fetchedAt: new Date().toISOString(),
-        sourceUrl: productUrl,
+        success: true, price: fallbackPrice, compareAtPrice: null, currency,
+        available, stockStatus, source: "html",
+        fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
       };
     }
 
     if (!available) {
-      return fail("OUT_OF_STOCK_NO_PRICE", { available: false, stockStatus: "out_of_stock" });
+      return fail("OUT_OF_STOCK_NO_PRICE", { available: false, stockStatus: "out_of_stock", currency });
     }
 
-    return fail("No price found on Odoo page", { available, stockStatus });
+    return fail("No price found on Odoo page", { available, stockStatus, currency });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return fail(msg === "TIMEOUT" ? "timeout" : msg);
+    return fail(msg === "TIMEOUT" ? "timeout" : msg, { currency });
   }
 }
