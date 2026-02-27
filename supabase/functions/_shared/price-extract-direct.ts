@@ -265,3 +265,37 @@ export async function fetchGeeetechPrice(productUrl: string): Promise<PriceRespo
     return fail("USD", msg === "TIMEOUT" ? "timeout" : msg);
   }
 }
+
+// ============================================================
+// BIGCOMMERCE (Gizmo Dorks etc.)
+// ============================================================
+
+export async function fetchBigCommercePrice(productUrl: string, expectedCurrency: string = "USD"): Promise<PriceResponse> {
+  try {
+    const resp = await withTimeout(fetch(productUrl, { headers: BROWSER_HEADERS, redirect: "follow" }), TIMEOUT_MS);
+    if (!resp.ok) return fail(expectedCurrency, `HTTP ${resp.status}`, { is404: resp.status === 404 });
+    const html = await resp.text();
+    if (is404Content(html)) return fail(expectedCurrency, "soft_404", { is404: true });
+
+    // 1. Try JSON-LD (BigCommerce embeds Product structured data)
+    const r = extractJsonLdPrice(html, expectedCurrency, productUrl);
+    if (r) return { success: true, ...r, source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl };
+
+    // 2. HTML regex fallback — look for price in common BigCommerce selectors
+    const priceMatch = html.match(/class="price\s+price--withoutTax[^"]*"[^>]*>\s*\$\s*([\d]+(?:[.,]\d+)?)/);
+    if (priceMatch) {
+      const price = parseFloat(priceMatch[1].replace(",", ""));
+      if (price > 0 && price < 500) {
+        return {
+          success: true, price, compareAtPrice: null, currency: expectedCurrency, available: true,
+          stockStatus: "in_stock", source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+        };
+      }
+    }
+
+    return fail(expectedCurrency, "No price found in JSON-LD or HTML");
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return fail(expectedCurrency, msg === "TIMEOUT" ? "timeout" : msg);
+  }
+}

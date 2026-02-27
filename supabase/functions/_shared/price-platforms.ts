@@ -6,7 +6,7 @@
 export type Platform =
   | "shopify" | "woocommerce" | "magento" | "odoo"
   | "creality" | "extrudr" | "treed" | "prusa" | "geeetech"
-  | "bambulab"
+  | "bambulab" | "bigcommerce"
   | "unknown";
 
 export function detectPlatform(url: string): Platform {
@@ -22,6 +22,7 @@ export function detectPlatform(url: string): Platform {
   if (l.includes("treedfilaments.com")) return "treed";
   if (l.includes("prusa3d.com")) return "prusa";
   if (l.includes("geeetech.com")) return "geeetech";
+  if (l.includes("gizmodorks.com")) return "bigcommerce";
   // Bambu Lab: custom Next.js store (migrated from Shopify in 2025)
   // JP is still on Shopify, so exclude it
   if (l.includes("store.bambulab.com") || l.includes("bambulab.com/products")) {

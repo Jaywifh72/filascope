@@ -17,7 +17,7 @@ import { extractWooCommercePrice } from "../_shared/price-extract-wc.ts";
 import { extractFirecrawlPrice } from "../_shared/price-extract-firecrawl.ts";
 import {
   fetchCrealityPrice, fetchExtrudrPrice, fetchTreeDPrice,
-  fetchPrusaPrice, fetchGeeetechPrice,
+  fetchPrusaPrice, fetchGeeetechPrice, fetchBigCommercePrice,
 } from "../_shared/price-extract-direct.ts";
 import { extractBambuLabPrice } from "../_shared/price-extract-bambulab.ts";
 
@@ -77,6 +77,14 @@ serve(async (req: Request) => {
         result = await fetchGeeetechPrice(urlToFetch);
         if (!result.success && !result.is404) {
           console.log("[PRICE-V2] Geeetech direct failed, trying Firecrawl fallback");
+          result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType);
+        }
+        break;
+
+      case "bigcommerce":
+        result = await fetchBigCommercePrice(urlToFetch, expectedCurrency);
+        if (!result.success) {
+          console.log("[PRICE-V2] BigCommerce direct failed, trying Firecrawl fallback");
           result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType);
         }
         break;

@@ -82,7 +82,11 @@ export function removeSavingsAmounts(text: string): string {
     .replace(/Save\s+\$[\d,.]+/gi, "")
     .replace(/You\s+save\s+\$[\d,.]+/gi, "")
     .replace(/Discount:?\s+\$[\d,.]+/gi, "")
-    .replace(/\$[\d,.]+\s+off/gi, "");
+    .replace(/\$[\d,.]+\s+off/gi, "")
+    // Installment / BNPL price guards
+    .replace(/\d+\s*(?:interest-free\s+)?payments?\s+of\s+\$[\d,.]+/gi, "")
+    .replace(/pay\s+in\s+\d+/gi, "")
+    .replace(/(?:afterpay|sezzle|klarna|zip\s+pay)[^$]*\$[\d,.]+/gi, "");
 }
 
 export function extractSalePriceBeforeSave(markdown: string): {
