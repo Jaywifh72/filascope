@@ -4,14 +4,7 @@
 /llms.txt     https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms   302
 /a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key   302
 
-# Sitemap routes — 302 redirect to prerender edge function
-/sitemap.xml           https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml           302
-/sitemap-pages.xml     https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml     302
-/sitemap-filaments.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-filaments.xml 302
-/sitemap-brands.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-brands.xml    302
-/sitemap-printers.xml  https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-printers.xml  302
-/sitemap-guides.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-guides.xml    302
-/sitemap-colors.xml    https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-colors.xml    302
+# SPA catch-all — MUST be last
 
 # SPA catch-all — MUST be last
 /* /index.html 200
