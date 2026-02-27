@@ -681,11 +681,23 @@ Deno.serve(async (req) => {
           
           const extractionStart = Date.now();
           const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
-          const extraction = await extractPrice(storeUrl, brandConfig, targetWeightGrams, {
-            currency: regionalUrl.currency_code,
-            filamentId: productType === 'filament' ? product.id : null,
-            productType,
-          });
+          
+          // URL dedup: reuse cached extraction for same URL+currency
+          const regionalCacheKey = `${storeUrl}|${regionalUrl.currency_code}`;
+          let extraction: ExtractionResult;
+          if (urlExtractionCache.has(regionalCacheKey)) {
+            extraction = urlExtractionCache.get(regionalCacheKey)!;
+            console.log(`  [${regionCode}] URL cache hit for ${storeUrl.substring(0, 60)}...`);
+          } else {
+            extraction = await extractPrice(storeUrl, brandConfig, targetWeightGrams, {
+              currency: regionalUrl.currency_code,
+              filamentId: productType === 'filament' ? product.id : null,
+              productType,
+            });
+            urlExtractionCache.set(regionalCacheKey, extraction);
+            // Only rate-limit on actual fetches
+            await sleep(brandConfig?.rate_limit_ms || DEFAULT_RATE_LIMIT_MS);
+          }
           const responseTime = Date.now() - extractionStart;
           
           // Log extraction with region info
@@ -734,6 +746,26 @@ Deno.serve(async (req) => {
               if (updated) {
                 successful++;
                 updateRegionStats(regionCode, 'successful', priceChanged);
+                
+                // Also update the filaments table price column for this currency
+                if (productType === 'filament') {
+                  const currencyToPriceCol: Record<string, string> = {
+                    'EUR': 'price_eur', 'CAD': 'price_cad', 'GBP': 'price_gbp',
+                    'AUD': 'price_aud', 'JPY': 'price_jpy', 'USD': 'variant_price',
+                  };
+                  const priceCol = currencyToPriceCol[regionalUrl.currency_code];
+                  if (priceCol) {
+                    const filamentUpdate: Record<string, unknown> = {
+                      [priceCol]: extraction.price,
+                      last_scraped_at: new Date().toISOString(),
+                      sync_status: 'active',
+                    };
+                    if (extraction.compareAtPrice) {
+                      filamentUpdate.variant_compare_at_price = extraction.compareAtPrice;
+                    }
+                    await supabase.from('filaments').update(filamentUpdate).eq('id', product.id);
+                  }
+                }
               } else {
                 failed++;
                 updateRegionStats(regionCode, 'failed');
