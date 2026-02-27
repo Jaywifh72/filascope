@@ -1032,9 +1032,9 @@ const Finder = () => {
       ]} />
       <DocumentHead
         title="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        description={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`}
+        description="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web."
         ogTitle="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        ogDescription={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`}
+        ogDescription="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web."
         ogType="website"
         ogUrl="https://filascope.com"
         ogSiteName="FilaScope"
@@ -1042,7 +1042,7 @@ const Finder = () => {
         twitterCard="summary_large_image"
         twitterSite="@FilaScope"
         twitterTitle="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        twitterDescription={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`}
+        twitterDescription="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web."
         twitterImage="https://filascope.com/og-image.png"
       />
       {/* JSON-LD Structured Data for Homepage */}
@@ -1740,10 +1740,10 @@ const Finder = () => {
           The Internet's Most Complete 3D Printer Filament Database
         </h2>
         <p className="text-[14px] leading-relaxed mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          FilaScope indexes over 1,078 filaments from 48+ manufacturers across 15+ retailers worldwide. Every filament listing includes detailed specifications — nozzle temperature, bed temperature, density, tensile strength, and shore hardness — plus live regional pricing in USD, CAD, EUR, GBP, and AUD. FilaScope also maintains the world's largest verified HueForge Transmissivity Distance (TD) database, making it the go-to resource for lithophane and multicolor 3D printing projects.
+          FilaScope is the most powerful <strong>filament comparison tool</strong> on the web — letting you <strong>compare 3D printer filaments</strong> across 1,078+ products from 48+ manufacturers and 15+ retailers worldwide. Every listing in our <strong>filament specs database</strong> includes nozzle temperature, bed temperature, density, tensile strength, and shore hardness — plus live <strong>filament prices</strong> in USD, CAD, EUR, GBP, and AUD. FilaScope also maintains the world's largest verified database of <strong>HueForge TD values</strong>, making it the go-to resource for lithophane and multicolor 3D printing projects.
         </p>
         <p className="text-[14px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          Whether you're a beginner choosing your first PLA or an advanced maker sourcing carbon-fiber PETG, FilaScope's comparison tools, printer compatibility filters, and real-time deal tracking help you find the right filament at the best price.
+          Whether you're a beginner choosing your first PLA or an advanced maker sourcing carbon-fiber PETG, FilaScope's <strong>printer compatibility</strong> filters, real-time deal tracking, and side-by-side comparison tools help you find the right filament at the best price — every time.
         </p>
       </div>
 
