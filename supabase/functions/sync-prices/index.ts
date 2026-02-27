@@ -526,10 +526,15 @@ Deno.serve(async (req) => {
           
           console.log(`No regional URLs for ${product.id}, using legacy product_url`);
           
+          // For EUR-only brands like Extrudr, override currency and target column
+          const isEurOnlyBrand = vendor.toLowerCase() === 'extrudr';
+          const legacyCurrency = isEurOnlyBrand ? 'EUR' : null;
+          const legacyPriceColumn = isEurOnlyBrand ? 'price_eur' : priceColumn;
+          
           const extractionStart = Date.now();
           const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
           const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams, {
-            currency: null,
+            currency: legacyCurrency,
             filamentId: productType === 'filament' ? product.id : null,
             productType,
           });
@@ -557,7 +562,7 @@ Deno.serve(async (req) => {
             
             if (!dryRun) {
               const updateData: Record<string, unknown> = {
-                [priceColumn]: extraction.price,
+                [legacyPriceColumn]: extraction.price,
                 last_scraped_at: new Date().toISOString(),
               };
               

@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
           vendor: EXTRUDR_STORE_INFO.vendor,
           product_url: seed.productUrl,
           featured_image: seed.imageUrl || null,
-          variant_price: defaultPrice,
+          variant_price: null,
           price_eur: defaultPrice,
           variant_available: true,
           material: enrichment.material,
