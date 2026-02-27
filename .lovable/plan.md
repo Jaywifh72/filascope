@@ -1,43 +1,64 @@
 
+# Fix Extrudr EUR-Only Pricing Architecture
 
-# Fix: ColorFabb Sync Failures (All 25 Products)
+## Problem
+Extrudr is an Austrian manufacturer that only sells in EUR. However, the current system stores Extrudr prices in `variant_price` (the USD column) without any currency indicator, creating a mismatch. The legacy sync path passes no currency context, so downstream consumers assume USD.
 
-## Root Cause
+## Current State (from DB investigation)
+- `variant_price` = 29.74 (a EUR-to-USD converted value using the hardcoded 1.08 exchange rate)
+- `price_eur` = 34.9 (the actual EUR price from the store)
+- No `product_regional_urls` or `product_regional_prices` entries exist for Extrudr
+- `sync-extrudr-products` sets both `variant_price` and `price_eur` to the same default EUR price
+- `price-regional.ts` already correctly maps all Extrudr regions to EUR
 
-ColorFabb.us is a **Magento** e-commerce store, but the platform detector (`price-platforms.ts`) has no rule for it, so it defaults to `"shopify"`. This causes two cascading failures:
+## Solution (Option A: EUR-only, accurate)
 
-1. The Shopify extractor tries `https://colorfabb.us/pla-silk-red.json` -- Magento doesn't support this endpoint, so it returns **HTTP 404**
-2. The `get-current-price-v2` router sees `is404: true` and **skips the Firecrawl fallback** entirely (the code says: `if (!result.success && !result.is404)` -- meaning Firecrawl is only tried when the page exists but Shopify JSON parsing failed)
+### 1. Database Update: Fix existing Extrudr `variant_price` values
+Set `variant_price = NULL` for all Extrudr products since there is no USD price. The EUR price lives in `price_eur`. This prevents the UI from showing a fake "USD" price that's actually EUR.
 
-Result: every single ColorFabb product fails with "HTTP 404" without ever attempting the Firecrawl HTML scraper that could actually read the Magento page.
+```sql
+UPDATE filaments
+SET variant_price = NULL
+WHERE LOWER(vendor) = 'extrudr';
+```
 
-## Solution
+### 2. Update `sync-extrudr-products` to stop setting `variant_price`
+In `supabase/functions/sync-extrudr-products/index.ts`, change:
+- `variant_price: defaultPrice` to `variant_price: null` (no USD price exists)
+- Keep `price_eur: defaultPrice` as-is
 
-### 1. Add ColorFabb to platform detection as "magento" (Firecrawl-routed)
+### 3. Update `sync-prices` legacy fallback for Extrudr
+In `supabase/functions/sync-prices/index.ts`, when the legacy (non-regional-URL) flow processes an Extrudr product, it should:
+- Pass `currency: 'EUR'` to the extraction call
+- Write the result to `price_eur` instead of `variant_price`
 
-**File:** `supabase/functions/_shared/price-platforms.ts`
-- Add `"magento"` to the `Platform` type
-- Add detection rule: `if (l.includes("colorfabb.us") || l.includes("colorfabb.com"))` return `"magento"`
+Add a vendor-aware currency override in the legacy sync path (around line 530-560):
+```typescript
+// For EUR-only brands like Extrudr, override currency and target column
+const isEurOnlyBrand = vendor.toLowerCase() === 'extrudr';
+const legacyCurrency = isEurOnlyBrand ? 'EUR' : null;
+const legacyPriceColumn = isEurOnlyBrand ? 'price_eur' : priceColumn;
+```
 
-### 2. Route "magento" directly to Firecrawl in the v2 router
+### 4. No changes needed to `price-regional.ts`
+Already correctly configured with `currency: "EUR"` for all Extrudr regions.
 
-**File:** `supabase/functions/get-current-price-v2/index.ts`
-- Add a `case "magento":` that calls `extractFirecrawlPrice()` directly, skipping the Shopify JSON attempt entirely
+### 5. Redeploy affected edge functions
+- `sync-prices`
+- `sync-extrudr-products`
 
-### 3. Increase Firecrawl wait time for Magento stores
-
-**File:** `supabase/functions/_shared/price-extract-firecrawl.ts`
-- The current `waitFor: 3000` may be insufficient for Magento's heavy JavaScript rendering. Pass `waitFor: 5000` for Magento domains to give the page time to render prices.
+### 6. Re-run Extrudr sync
+After deployment, trigger a brand sync for Extrudr to populate correct EUR prices in `price_eur`.
 
 ## Technical Details
 
-```text
-price-platforms.ts:   Add Platform "magento", detect colorfabb.us/colorfabb.com
-get-current-price-v2: Add case "magento" -> extractFirecrawlPrice() directly
-price-extract-firecrawl.ts: Accept optional waitFor override parameter
-```
+### Files to modify:
+1. **`supabase/functions/sync-extrudr-products/index.ts`** -- Set `variant_price: null` instead of `defaultPrice`
+2. **`supabase/functions/sync-prices/index.ts`** -- Add EUR-only brand detection in legacy sync path, write to `price_eur` column
+3. **Database migration** -- `UPDATE filaments SET variant_price = NULL WHERE LOWER(vendor) = 'extrudr'`
 
-The Firecrawl extractor already handles price extraction from markdown, stock detection ("out of stock"), and currency matching -- it just was never being reached for ColorFabb URLs due to the premature 404 exit.
-
-Note: Some ColorFabb products may genuinely be out of stock or discontinued (the store shows "Out of stock" or 404/405 pages). These will correctly return `available: false` or `is404: true` from Firecrawl, which is the expected behavior -- the fix ensures we at least *try* Firecrawl rather than failing at the Shopify JSON step.
-
+### Impact
+- Extrudr products will show EUR prices everywhere (accurate)
+- US/CA/UK/AU users see the same EUR price (which is what Extrudr actually charges)
+- The `useFilamentStorePricing` hook already handles currency conversion via exchange rates, so converted display prices will still work
+- No impact on other brands
