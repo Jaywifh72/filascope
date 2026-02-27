@@ -1,12 +1,19 @@
 
-# IC3D Printers Scraping Pipeline Audit
+# NinjaTek Scraping Pipeline Audit
 
-## 1. Platform Detection and Routing
+## 1. Platform Detection
 
-**`detectPlatform("ic3dprinters.com")` returns `"shopify"` (incorrect).** IC3D is not listed in any platform detection rule, so it falls through to the default `return "shopify"`. IC3D is a WooCommerce store.
+| Domain | `detectPlatform()` returns | Correct? |
+|--------|--------------------------|----------|
+| `ninjatek.com` | `"shopify"` (default fallback) | **NO** -- WooCommerce store |
+| `ninjatek.ca` | `"shopify"` (default fallback) | **YES** -- Shopify store |
 
-**Live test result** for `https://www.ic3dprinters.com/shop/pla-filaments/`:
-```json
+`ninjatek.com` is not listed in any detection rule, so it falls through to the default `return "shopify"`. This causes all price syncs to attempt `ninjatek.com/shop/ninjaflex/.json` which returns **HTTP 404**. The `is404` guard then blocks the Firecrawl fallback.
+
+## 2. Live Test Results
+
+### US Store (ninjatek.com/shop/ninjaflex/)
+```text
 {
   "success": false,
   "price": null,
@@ -15,50 +22,76 @@
   "source": "shopify"
 }
 ```
-The Shopify JSON fetch (`/shop/pla-filaments/.json`) returns 404, and the `is404` guard in the router blocks the Firecrawl fallback. No price is extracted.
+**Expected**: $102.46 USD (1kg, 1.75mm). Page renders price correctly in HTML but:
+- No JSON-LD structured data on page
+- WC Store API (`/wp-json/wc/store/v1/products?slug=ninjaflex`) returns **empty array** `[]`
+- This means the WC extractor's primary method (Store API) will not work even after fixing platform detection
+- Firecrawl fallback would be required, or the JSON-LD fallback in the WC handler needs to parse the raw HTML price
 
-## 2. WooCommerce Handler Analysis
+### CA Store (ninjatek.ca Shopify JSON)
+`ninjatek.ca/products/shop-ninjaflex.json` returns valid Shopify JSON with product data. This store would work correctly with the existing Shopify extractor since `detectPlatform("ninjatek.ca")` already returns `"shopify"`.
 
-The existing WooCommerce extractor (`price-extract-wc.ts`) has a critical limitation for IC3D:
-- **Slug extraction** uses `/product/` path: `pathname.split("/product/")` -- but IC3D uses `/shop/` URLs (e.g., `/shop/pla-filaments/`), so `extractSlug()` returns `null`
-- Without a slug, the WC Store API call is skipped, falling through to JSON-LD fallback only
-- **No handling for WooCommerce price ranges** (e.g., "$34.99 -- $199.99") -- the JSON-LD fallback takes `offers[0].price` which should be the lowest price
-
-## 3. Sync Pipeline
-
-- **`automated_brands` config**: `brand_slug: 'ic3d-printers'`, `platform_type: 'firecrawl'`, `supported_regions: ['US']`, `scraping_enabled: true`
-- Sync-prices routes `firecrawl` platform type through `callGetCurrentPrice()` which calls `get-current-price-v2`, where IC3D hits the Shopify default path and fails
-- Prices write to `variant_price` (USD) on the `filaments` table
-- **No entries in `product_regional_urls`** (0 rows)
-
-## 4. Database State
+## 3. Database State
 
 | Metric | Value |
 |--------|-------|
-| Total IC3D variants | 55 |
-| With non-null variant_price | 55 |
-| Last successful sync | 2026-02-25 07:11:39 |
-| Regional URLs | 0 |
+| Total NinjaTek variants | 72 |
+| With non-null `variant_price` (USD) | **0** |
+| With non-null `price_cad` | **0** |
+| With `product_url_ca` | **0** |
+| Regional URLs (`product_regional_urls`) | **0** |
+| `sync_status` | `synced` (misleading -- no prices stored) |
+| `automated_brands` config | `platform_type: 'shopify'`, `supported_regions: ['EU', 'US']` |
 
-Prices range from $33.00 to $37.00. All 55 variants have prices from the initial catalog scrape (`method: auto`). All 21 subsequent `v2_shopify` sync attempts have **failed**.
+All 72 variants have `variant_price = NULL`. Despite `sync_status = 'synced'`, no prices have ever been successfully extracted. The `products_with_prices: 0` field in `automated_brands` confirms this.
 
-**URL pattern**: Material-level category pages, not per-variant:
-- `https://www.ic3dprinters.com/shop/pla-filaments/`
-- `https://www.ic3dprinters.com/shop/petg/`
-- `https://www.ic3dprinters.com/shop/abs-filaments/`
+### Stored URLs (all US store, WooCommerce `/shop/` pattern):
+- `https://ninjatek.com/shop/ninjaflex/`
+- `https://ninjatek.com/shop/cheetah/`
+- `https://ninjatek.com/shop/chinchilla/`
+- `https://ninjatek.com/shop/armadillo/`
+- `https://ninjatek.com/shop/edge/`
+- `https://ninjatek.com/shop/colorfabb-pla/`
+- `https://ninjatek.com/shop/colorfabb-asa/`
+- `https://ninjatek.com/shop/colorfabb-co-polyesters/`
+- `https://ninjatek.com/shop/colorfabb-specials/`
 
-Multiple color variants share the same product URL (e.g., 2 PLA variants both point to `/shop/ic3d-pla-3d-printer-filament/`).
+No CA store URLs are stored anywhere.
 
-## 5. Critical Issues
+## 4. Critical Issues
 
-1. **Platform misidentification**: IC3D detected as Shopify instead of WooCommerce -- all price syncs fail with 404
-2. **WooCommerce slug extraction fails**: IC3D uses `/shop/slug/` not `/product/slug/`, so `extractSlug()` returns null
-3. **Price range risk**: IC3D product pages display price ranges ("$34.99 -- $199.99" for 1kg vs 10kg). If WC Store API is used with variations, it should pick the cheapest. If JSON-LD is used, the lowest offer price should be correct. But Firecrawl markdown parsing could grab the wrong price.
-4. **Promo code risk**: The "WelcomeTo2026" 50% promo code is a coupon code, not a site-wide displayed price change -- it should NOT affect the scraped price unless the site renders a sale price on the product page itself.
+1. **Platform misidentification**: `ninjatek.com` detected as Shopify instead of WooCommerce. All syncs 404.
+2. **WC Store API returns empty**: Even after fixing platform detection, the WC Store API slug lookup returns `[]` for NinjaTek products. The store appears to use a custom WooCommerce page builder that doesn't expose products through the standard Store API.
+3. **No JSON-LD on page**: The WC handler's JSON-LD fallback will also fail because ninjatek.com pages contain no `application/ld+json` structured data.
+4. **Price only in rendered HTML**: The price `$102.46` appears in the rendered DOM but requires HTML parsing or Firecrawl to extract.
+5. **Variable product with weight variants**: Each product page has 0.5kg/1kg/2kg spool weight options. The correct target is the 1kg price. Firecrawl would need to correctly identify which price corresponds to which weight.
+6. **No CA store coverage**: `ninjatek.ca` (Shopify, CAD pricing) is not configured anywhere. `supported_regions` includes EU but not CA.
+7. **`automated_brands` misconfigured**: Lists `platform_type: 'shopify'` and `supported_regions: ['EU', 'US']`. Should be WooCommerce for US, and CA should be added for the Shopify store.
 
-## Proposed Fix (for future implementation)
+## 5. Proposed Fixes
 
-1. **Add `ic3dprinters.com` to platform detection** as `"woocommerce"`
-2. **Fix WooCommerce slug extraction** to also handle `/shop/slug/` pattern (not just `/product/slug/`)
-3. **Verify WC Store API works** for IC3D (test `/wp-json/wc/store/v1/products?slug=pla-filaments`)
-4. **Ensure variation handling picks cheapest 1kg variant**, not the 10kg bulk price
+### Fix 1: Add `ninjatek.com` to platform detection as WooCommerce
+**File**: `supabase/functions/_shared/price-platforms.ts`
+- Add `if (l.includes("ninjatek.com") && !l.includes("ninjatek.ca")) return "woocommerce";`
+
+### Fix 2: Add HTML price extraction fallback to WC handler
+**File**: `supabase/functions/_shared/price-extract-wc.ts`
+- After the JSON-LD fallback fails, add an HTML regex fallback that looks for common WC price patterns in the rendered HTML
+- NinjaTek renders prices in a format like `$102.46` within product summary sections
+- Target pattern: look for price inside `.summary .price`, `.woocommerce-Price-amount`, or raw `$XX.XX` near "Add to Cart"
+
+### Fix 3: Ensure Firecrawl fallback is not blocked
+**File**: `supabase/functions/get-current-price-v2/index.ts`
+- The WooCommerce case already falls through to Firecrawl fallback (no `is404` guard), so once platform detection is fixed, Firecrawl will be tried if WC extraction fails
+
+### Fix 4: Add NinjaTek CA store
+- Add `ninjatek.ca` URLs to `product_url_ca` column for matching products
+- Update `automated_brands.supported_regions` from `['EU', 'US']` to `['US', 'CA']` (EU is unlikely to work without a EU-specific store)
+- CA store uses standard Shopify and will work out of the box
+
+### Fix 5: Update `automated_brands` config
+- Change `platform_type` from `shopify` to `woocommerce` (or `firecrawl` to force Firecrawl path)
+- Fix `supported_regions` to `['US', 'CA']`
+
+### Fix 6: Weight variant selection
+- When extracting from Firecrawl markdown, the existing `removeSavingsAmounts()` and price selection logic should pick the default-selected variant (1kg). However, NinjaTek's page lists all variants as a dropdown, so Firecrawl may capture the pre-selected default price ($102.46 for 1kg). This needs verification after the fix is deployed.
