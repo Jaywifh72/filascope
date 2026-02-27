@@ -551,6 +551,8 @@ Deno.serve(async (req) => {
               productType,
             });
             urlExtractionCache.set(cacheKey, extraction);
+            // Only rate-limit on actual fetches, not cache hits
+            await sleep(rateLimitMs);
           }
           const responseTime = Date.now() - extractionStart;
           
@@ -579,7 +581,11 @@ Deno.serve(async (req) => {
                 [legacyPriceColumn]: extraction.price,
                 last_scraped_at: new Date().toISOString(),
               };
-              
+
+              // For EUR-only brands, mark variant as actively synced
+              if (isEurOnlyBrand && productType === 'filament') {
+                updateData.sync_status = 'active';
+              }
               if (productType === 'filament' && extraction.compareAtPrice) {
                 updateData.compare_at_price = extraction.compareAtPrice;
               }
@@ -646,8 +652,8 @@ Deno.serve(async (req) => {
             }
           }
           
-          await sleep(rateLimitMs);
-          continue;
+          // Rate limit already applied on cache miss above
+          
         }
         
         // Process each regional URL
@@ -813,13 +819,30 @@ Deno.serve(async (req) => {
         
         console.log(`Processing: ${product.product_title?.substring(0, 50)}...`);
         
+        // For EUR-only brands like Extrudr/FormFutura, override currency and target column
+        const isEurOnlyBrand = ['extrudr', 'formfutura'].includes(vendor.toLowerCase());
+        const legacyCurrency = isEurOnlyBrand ? 'EUR' : null;
+        const legacyPriceColumn = isEurOnlyBrand ? 'price_eur' : priceColumn;
+        
         const extractionStart = Date.now();
         const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
-        const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams, {
-          currency: null,
-          filamentId: productType === 'filament' ? product.id : null,
-          productType,
-        });
+        
+        // URL dedup: reuse cached extraction if another variant already fetched this URL
+        let extraction: ExtractionResult;
+        const cacheKey = `${productUrl}|${legacyCurrency || 'USD'}`;
+        if (urlExtractionCache.has(cacheKey)) {
+          extraction = urlExtractionCache.get(cacheKey)!;
+          console.log(`  URL cache hit for ${productUrl.substring(0, 60)}...`);
+        } else {
+          extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams, {
+            currency: legacyCurrency,
+            filamentId: productType === 'filament' ? product.id : null,
+            productType,
+          });
+          urlExtractionCache.set(cacheKey, extraction);
+          // Only rate-limit on actual fetches, not cache hits
+          await sleep(rateLimitMs);
+        }
         const responseTime = Date.now() - extractionStart;
         
         // Log extraction attempt
@@ -846,9 +869,14 @@ Deno.serve(async (req) => {
           if (!dryRun) {
             // Update product with new price
             const updateData: Record<string, unknown> = {
-              [priceColumn]: extraction.price,
+              [legacyPriceColumn]: extraction.price,
               last_scraped_at: new Date().toISOString(),
             };
+            
+            // For EUR-only brands, clear variant_price to avoid stale USD values
+            if (isEurOnlyBrand) {
+              updateData.sync_status = 'active';
+            }
             
             // Add compare_at_price for filaments
             if (productType === 'filament' && extraction.compareAtPrice) {
@@ -876,7 +904,7 @@ Deno.serve(async (req) => {
           } else {
             // Dry run - count as successful
             successful++;
-            console.log(`[DRY RUN] Would update ${product.id}: $${currentPrice} -> $${extraction.price}`);
+            console.log(`[DRY RUN] Would update ${product.id}: ${legacyPriceColumn}=${extraction.price}`);
           }
         } else if (isUnavailableExtraction(extraction)) {
           unavailable++;
@@ -913,7 +941,7 @@ Deno.serve(async (req) => {
                 : 'extraction_failed',
               error_message: extraction.error || 'Unknown extraction error',
               url_attempted: product.product_url,
-              region: ['extrudr', 'formfutura'].includes(vendor.toLowerCase()) ? 'EU' : 'US',
+              region: isEurOnlyBrand ? 'EU' : 'US',
               filament_id: productType === 'filament' ? product.id : null,
             });
           } catch (scrapeLogErr) {
@@ -936,9 +964,6 @@ Deno.serve(async (req) => {
               .eq('id', product.id);
           }
         }
-        
-        // Rate limit
-        await sleep(rateLimitMs);
       }
     }
     
