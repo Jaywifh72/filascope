@@ -299,3 +299,70 @@ export async function fetchBigCommercePrice(productUrl: string, expectedCurrency
     return fail(expectedCurrency, msg === "TIMEOUT" ? "timeout" : msg);
   }
 }
+
+// ============================================================
+// WIX ECOMMERCE (Paramount 3D etc.)
+// ============================================================
+
+export async function fetchWixPrice(productUrl: string): Promise<PriceResponse> {
+  try {
+    const resp = await withTimeout(fetch(productUrl, {
+      headers: BROWSER_HEADERS,
+      redirect: "follow",
+    }), TIMEOUT_MS);
+
+    if (resp.status === 404 || !resp.ok) {
+      return fail("USD", `HTTP ${resp.status}`, { is404: resp.status === 404 });
+    }
+
+    const html = await resp.text();
+    if (is404Content(html)) return fail("USD", "soft_404", { is404: true });
+
+    // STEP A: Try JSON-LD first (Wix sometimes injects via SEO settings)
+    const jsonLdResult = extractJsonLdPrice(html, "USD", productUrl);
+    if (jsonLdResult) {
+      return { success: true, ...jsonLdResult, source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl };
+    }
+
+    // STEP B: Wix SSR price pattern
+    // Format: `$23.99\nPrice` — dollar sign + amount immediately before the word "Price"
+    // Strip shipping text first to avoid false matches
+    const cleanedHtml = html
+      .replace(/Free\s+Ground\s+Shipping/gi, "")
+      .replace(/Free\s+Shipping/gi, "");
+
+    // Primary pattern: price followed by "Price" label (Wix product page SSR pattern)
+    const wixPriceMatch = cleanedHtml.match(/\$\s*([\d]+\.[\d]{2})\s*(?:\n|\r|\s)*Price/i);
+    if (wixPriceMatch) {
+      const price = parseFloat(wixPriceMatch[1]);
+      if (price >= 5 && price <= 500) {
+        // Wix stock status is JS-rendered — not available in raw SSR HTML.
+        // Default to in_stock; stock detection requires Firecrawl (headless render).
+        return {
+          success: true, price, compareAtPrice: null, currency: "USD",
+          available: true, stockStatus: "unknown" as any,
+          source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+        };
+      }
+    }
+
+    // Fallback pattern: any $ amount on the page (after shipping text removal)
+    const fallbackMatch = cleanedHtml.match(/\$\s*([\d]+\.[\d]{2})/);
+    if (fallbackMatch) {
+      const price = parseFloat(fallbackMatch[1]);
+      if (price >= 5 && price <= 500) {
+        // Same note: Wix stock status is JS-rendered, not in SSR HTML.
+        return {
+          success: true, price, compareAtPrice: null, currency: "USD",
+          available: true, stockStatus: "unknown" as any,
+          source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+        };
+      }
+    }
+
+    return fail("USD", "No price found in Wix HTML");
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return fail("USD", msg === "TIMEOUT" ? "timeout" : msg);
+  }
+}

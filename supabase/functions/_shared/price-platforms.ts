@@ -26,6 +26,8 @@ export function detectPlatform(url: string): Platform {
   if (l.includes("geeetech.com")) return "geeetech";
   if (l.includes("gizmodorks.com")) return "bigcommerce";
   if (l.includes("paramount-3d.com")) return "wix";
+  // Generic Wix eCommerce fingerprint: /product-page/ slug pattern
+  if (l.includes("/product-page/")) return "wix";
   // Bambu Lab: custom Next.js store (migrated from Shopify in 2025)
   // JP is still on Shopify, so exclude it
   if (l.includes("store.bambulab.com") || l.includes("bambulab.com/products")) {

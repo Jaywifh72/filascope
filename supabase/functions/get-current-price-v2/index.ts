@@ -18,6 +18,7 @@ import { extractFirecrawlPrice } from "../_shared/price-extract-firecrawl.ts";
 import {
   fetchCrealityPrice, fetchExtrudrPrice, fetchTreeDPrice,
   fetchPrusaPrice, fetchGeeetechPrice, fetchBigCommercePrice,
+  fetchWixPrice,
 } from "../_shared/price-extract-direct.ts";
 import { extractBambuLabPrice } from "../_shared/price-extract-bambulab.ts";
 
@@ -109,9 +110,23 @@ serve(async (req: Request) => {
         break;
 
       case "wix":
-      case "magento":
-        result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType, 5000);
+        result = await fetchWixPrice(urlToFetch);
+        // Firecrawl fallback if Wix SSR extraction fails (but not on 404)
+        if (!result.success && !result.is404) {
+          console.log("[PRICE-V2] Wix direct failed, trying Firecrawl fallback");
+          result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType, 5000);
+        }
+        // Paramount 3D price validation guard
+        // PLA: ~$23.99, ABS: ~$21.99, ASA: ~$24.99, Nylon CF: ~$49.99
+        if (result.success && result.price !== null && productUrl.includes("paramount-3d.com")) {
+          if (result.price < 10 || result.price > 100) {
+            console.warn(`[PRICE-V2] Paramount 3D price anomaly: $${result.price} at ${productUrl}`);
+            result = { ...result, status: "anomalous", price_alert: true };
+          }
+        }
         break;
+
+      case "magento":
 
       case "shopify":
       default: {
