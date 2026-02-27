@@ -115,6 +115,128 @@ async function fetchVariations(productId: number, domain: string, minorUnit: num
 }
 
 // ============================================================
+// NinjaTek 1kg variant extraction
+// ============================================================
+
+/**
+ * NinjaTek uses a custom WC product page with <option> elements containing
+ * data-pa_spool-weight, data-pa_diameter, data-price, and data-stock-status.
+ * We target 1kg + 1.75mm variants specifically.
+ */
+function extractNinjaTek1kgPrice(
+  html: string, productUrl: string, defaultCurrency: string,
+): PriceResponse | null {
+  // Strategy 1: Parse <option> elements with data-pa_spool-weight and data-price
+  // Format: <option value="931" data-pa_spool-weight="1kg" data-pa_diameter="1-75mm" data-price="102.461" data-stock-status="instock">
+  const optionPattern = /<option[^>]*data-pa_spool-weight="([^"]*)"[^>]*data-pa_diameter="([^"]*)"[^>]*data-price="([^"]*)"[^>]*data-stock-status="([^"]*)"[^>]*>/gi;
+  const variants: { weight: string; diameter: string; price: number; inStock: boolean }[] = [];
+
+  let match: RegExpExecArray | null;
+  while ((match = optionPattern.exec(html)) !== null) {
+    const weight = match[1];
+    const diameter = match[2];
+    const price = parseFloat(match[3]);
+    const inStock = match[4] === "instock";
+    if (!isNaN(price) && price > 0) {
+      variants.push({ weight, diameter, price, inStock });
+    }
+  }
+
+  // Also try reverse attribute order (data-price before data-pa_spool-weight)
+  if (variants.length === 0) {
+    const altPattern = /<option[^>]*data-price="([^"]*)"[^>]*data-pa_spool-weight="([^"]*)"[^>]*data-stock-status="([^"]*)"[^>]*>/gi;
+    while ((match = altPattern.exec(html)) !== null) {
+      const price = parseFloat(match[1]);
+      const weight = match[2];
+      const inStock = match[3] === "instock";
+      if (!isNaN(price) && price > 0) {
+        variants.push({ weight, diameter: "1-75mm", price, inStock });
+      }
+    }
+  }
+
+  if (variants.length > 0) {
+    console.log(`[WC-NinjaTek] Found ${variants.length} option variants`);
+
+    // Prefer 1kg + 1.75mm + in stock
+    const target = variants.find(v => v.weight === "1kg" && v.diameter === "1-75mm" && v.inStock)
+      || variants.find(v => v.weight === "1kg" && v.diameter === "1-75mm")
+      || variants.find(v => v.weight === "1kg" && v.inStock)
+      || variants.find(v => v.weight === "1kg");
+
+    if (target) {
+      const price = Math.round(target.price * 100) / 100; // Round to 2 decimal places
+      console.log(`[WC-NinjaTek] 1kg variant: $${price} (${target.diameter}, ${target.inStock ? "in stock" : "out of stock"})`);
+      return {
+        success: true, price, compareAtPrice: null,
+        currency: defaultCurrency, available: target.inStock,
+        stockStatus: target.inStock ? "in_stock" : "out_of_stock",
+        source: "woocommerce", method: "wc_store_api" as any,
+        weightGrams: 1000,
+        fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+      } as PriceResponse;
+    }
+
+    // No 1kg found — dedupe prices, pick middle (assumed 1kg tier)
+    const uniquePrices = [...new Set(variants.filter(v => v.inStock).map(v => Math.round(v.price * 100) / 100))].sort((a, b) => a - b);
+    if (uniquePrices.length >= 3) {
+      const mid = uniquePrices[Math.floor(uniquePrices.length / 2)];
+      console.log(`[WC-NinjaTek] Middle price tier (assumed 1kg): $${mid}`);
+      return {
+        success: true, price: mid, compareAtPrice: null,
+        currency: defaultCurrency, available: true,
+        stockStatus: "in_stock",
+        source: "woocommerce", method: "wc_store_api" as any,
+        weightGrams: 1000,
+        fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+      } as PriceResponse;
+    } else if (uniquePrices.length > 0) {
+      const price = uniquePrices.find(p => p >= 50) ?? uniquePrices[0];
+      console.log(`[WC-NinjaTek] Fallback price: $${price}`);
+      return {
+        success: true, price, compareAtPrice: null,
+        currency: defaultCurrency, available: true,
+        stockStatus: "in_stock",
+        source: "woocommerce", method: "wc_store_api" as any,
+        weightGrams: 1000,
+        fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+      } as PriceResponse;
+    }
+  }
+
+  // Strategy 2: Generic dollar price extraction as last resort
+  const allPrices = [...html.matchAll(/\$\s*([\d]+\.[\d]{2})/g)]
+    .map(m => parseFloat(m[1]))
+    .filter(p => p > 30 && p < 300);
+  const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b);
+
+  if (uniquePrices.length >= 3) {
+    const price = uniquePrices[Math.floor(uniquePrices.length / 2)];
+    console.log(`[WC-NinjaTek] HTML middle price: $${price}`);
+    return {
+      success: true, price, compareAtPrice: null,
+      currency: defaultCurrency, available: !html.includes("Out of stock"),
+      stockStatus: html.includes("Out of stock") ? "out_of_stock" : "in_stock",
+      source: "woocommerce", method: "wc_store_api" as any,
+      weightGrams: 1000,
+      fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+    } as PriceResponse;
+  } else if (uniquePrices.length > 0) {
+    const price = uniquePrices.find(p => p >= 50) ?? uniquePrices[0];
+    return {
+      success: true, price, compareAtPrice: null,
+      currency: defaultCurrency, available: !html.includes("Out of stock"),
+      stockStatus: html.includes("Out of stock") ? "out_of_stock" : "in_stock",
+      source: "woocommerce", method: "wc_store_api" as any,
+      weightGrams: 1000,
+      fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+    } as PriceResponse;
+  }
+
+  return null;
+}
+
+// ============================================================
 // Main Extraction
 // ============================================================
 
@@ -166,16 +288,18 @@ export async function extractWooCommercePrice(
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      if (msg === "TIMEOUT") return { success: false, price: null, compareAtPrice: null, currency: defaultCurrency, available: false, source: "woocommerce", fetchedAt: new Date().toISOString(), error: "timeout" };
+      console.log(`[WC] Store API error for ${d}: ${msg}`);
+      // Don't return on timeout — fall through to HTML fallback
     }
   }
 
-  // JSON-LD fallback
+  // JSON-LD / HTML fallback
+  const htmlTimeout = d.includes("ninjatek.com") ? 15000 : TIMEOUT_MS;
   try {
-    let res = await withTimeout(fetch(productUrl, { headers: { "User-Agent": WC_HEADERS["User-Agent"], "Accept-Language": WC_HEADERS["Accept-Language"] }, redirect: "follow" }), TIMEOUT_MS);
+    let res = await withTimeout(fetch(productUrl, { headers: { "User-Agent": WC_HEADERS["User-Agent"], "Accept-Language": WC_HEADERS["Accept-Language"] }, redirect: "follow" }), htmlTimeout);
     if (res.status === 429) {
       await new Promise(r => setTimeout(r, 2000));
-      res = await withTimeout(fetch(productUrl, { headers: { "User-Agent": WC_HEADERS["User-Agent"] }, redirect: "follow" }), TIMEOUT_MS);
+      res = await withTimeout(fetch(productUrl, { headers: { "User-Agent": WC_HEADERS["User-Agent"] }, redirect: "follow" }), htmlTimeout);
       if (res.status === 429) return { success: false, price: null, compareAtPrice: null, currency: defaultCurrency, available: false, source: "woocommerce", fetchedAt: new Date().toISOString(), error: "rate_limited" };
     }
     if (!res.ok) {
@@ -185,6 +309,12 @@ export async function extractWooCommercePrice(
     }
     const html = await res.text();
     if (isCloudflareBlock(html)) return { success: false, price: null, compareAtPrice: null, currency: defaultCurrency, available: false, source: "woocommerce", fetchedAt: new Date().toISOString(), error: "cloudflare_blocked" };
+
+    // NinjaTek-specific: extract 1kg variant price from embedded variation data
+    if (d.includes("ninjatek.com")) {
+      const ntkResult = extractNinjaTek1kgPrice(html, productUrl, defaultCurrency);
+      if (ntkResult) return ntkResult;
+    }
 
     const ldMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/i);
     if (ldMatch) {
@@ -209,7 +339,9 @@ export async function extractWooCommercePrice(
         }
       }
     }
-  } catch (_) { /* fall through */ }
+  } catch (e) {
+    console.log(`[WC] HTML fallback error for ${d}: ${e instanceof Error ? e.message : String(e)}`);
+  }
 
   return { success: false, price: null, compareAtPrice: null, currency: defaultCurrency, available: false, source: "woocommerce", fetchedAt: new Date().toISOString(), error: "No price extracted" };
 }
