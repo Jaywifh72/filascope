@@ -78,8 +78,8 @@ serve(async (req: Request) => {
         break;
       case "prusa":
         result = await fetchPrusaPrice(urlToFetch);
-        // Firecrawl fallback if direct fetch fails (geo-gate or no price found)
-        if (!result.success && !result.is404) {
+        // Firecrawl fallback only for transient extractor misses (not discontinued/404/geo-gated pages)
+        if (!result.success && !result.is404 && !result.notAvailableInRegion) {
           console.log("[PRICE-V2] Prusa direct failed, trying Firecrawl fallback");
           result = await extractFirecrawlPrice(urlToFetch, expectedCurrency || "EUR", productType as ProductType);
         }

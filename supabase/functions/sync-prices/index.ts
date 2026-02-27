@@ -154,7 +154,8 @@ async function callGetCurrentPrice(
       !!data?.is404 ||
       data?.stockStatus === 'out_of_stock' ||
       data?.error === 'OUT_OF_STOCK_NO_PRICE' ||
-      data?.error === 'PRODUCT_PAGE_NOT_FOUND';
+      data?.error === 'PRODUCT_PAGE_NOT_FOUND' ||
+      data?.error === 'PRODUCT_DISCONTINUED';
 
     if (data?.success && data.price !== null && data.price !== undefined) {
       return {
@@ -644,7 +645,17 @@ Deno.serve(async (req) => {
                 unavailableData.last_sync_status = 'unavailable';
               }
               if (productType === 'filament') {
-                unavailableData.sync_status = 'unavailable';
+                const isTerminalMissingUrl =
+                  extraction.is404 ||
+                  extraction.error === 'PRODUCT_PAGE_NOT_FOUND' ||
+                  extraction.error === 'PRODUCT_DISCONTINUED';
+
+                if (isTerminalMissingUrl) {
+                  unavailableData.sync_status = 'url_missing';
+                  unavailableData.product_url = null;
+                } else {
+                  unavailableData.sync_status = 'unavailable';
+                }
               }
 
               await supabase
@@ -973,7 +984,17 @@ Deno.serve(async (req) => {
               unavailableData.last_sync_status = 'unavailable';
             }
             if (productType === 'filament') {
-              unavailableData.sync_status = 'unavailable';
+              const isTerminalMissingUrl =
+                extraction.is404 ||
+                extraction.error === 'PRODUCT_PAGE_NOT_FOUND' ||
+                extraction.error === 'PRODUCT_DISCONTINUED';
+
+              if (isTerminalMissingUrl) {
+                unavailableData.sync_status = 'url_missing';
+                unavailableData.product_url = null;
+              } else {
+                unavailableData.sync_status = 'unavailable';
+              }
             }
             
             await supabase

@@ -221,10 +221,19 @@ export async function fetchPrusaPrice(productUrl: string): Promise<PriceResponse
       } catch (_) { /* ignore */ }
     }
 
-    // 3. Geo-gate detection — only check visible body text (strip script/style tags first)
-    //    to avoid false positives from JS bundle contents mentioning "mk404" as a route
+    // 3. Page state detection on visible body text (strip script/style to avoid bundle noise)
     const visibleText = html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "");
+
+    // Discontinued/retired product pages should be treated as terminal missing URLs
+    if (/\bdiscontinued\b/i.test(visibleText)) {
+      return fail("EUR", "PRODUCT_DISCONTINUED", { is404: true });
+    }
     if (/mk404/i.test(visibleText) || /top\s*secret\s*printer/i.test(visibleText)) {
+      return fail("EUR", "PRODUCT_PAGE_NOT_FOUND", { is404: true });
+    }
+
+    // Keep explicit geo-gate signal separate from missing/discontinued pages
+    if (/not\s+available\s+in\s+your\s+region|region\s+not\s+supported/i.test(visibleText)) {
       return fail("EUR", "LOCATION_GATE", { notAvailableInRegion: true });
     }
 
