@@ -474,6 +474,10 @@ Deno.serve(async (req) => {
     let skipped = 0;
     let priceChanges = 0;
     let totalRegionalUrls = 0;
+    
+    // URL-level extraction cache: avoids duplicate Firecrawl calls when
+    // multiple variants share the same product_url (e.g. FormFutura: 460 variants → 80 URLs)
+    const urlExtractionCache = new Map<string, ExtractionResult>();
     const regionStats: Record<string, RegionStats> = {};
     const regionsProcessed = new Set<string>();
     const errors: Array<{ productId: string; regionCode?: string; error: string }> = [];
@@ -526,18 +530,28 @@ Deno.serve(async (req) => {
           
           console.log(`No regional URLs for ${product.id}, using legacy product_url`);
           
-          // For EUR-only brands like Extrudr, override currency and target column
-          const isEurOnlyBrand = vendor.toLowerCase() === 'extrudr';
+          // For EUR-only brands like Extrudr/FormFutura, override currency and target column
+          const isEurOnlyBrand = ['extrudr', 'formfutura'].includes(vendor.toLowerCase());
           const legacyCurrency = isEurOnlyBrand ? 'EUR' : null;
           const legacyPriceColumn = isEurOnlyBrand ? 'price_eur' : priceColumn;
           
           const extractionStart = Date.now();
           const targetWeightGrams = productType === 'filament' ? (product.net_weight_g ?? null) : null;
-          const extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams, {
-            currency: legacyCurrency,
-            filamentId: productType === 'filament' ? product.id : null,
-            productType,
-          });
+          
+          // URL dedup: reuse cached extraction if another variant already fetched this URL
+          let extraction: ExtractionResult;
+          const cacheKey = `${productUrl}|${legacyCurrency || 'USD'}`;
+          if (urlExtractionCache.has(cacheKey)) {
+            extraction = urlExtractionCache.get(cacheKey)!;
+            console.log(`  URL cache hit for ${productUrl.substring(0, 60)}...`);
+          } else {
+            extraction = await extractPrice(productUrl, brandConfig, targetWeightGrams, {
+              currency: legacyCurrency,
+              filamentId: productType === 'filament' ? product.id : null,
+              productType,
+            });
+            urlExtractionCache.set(cacheKey, extraction);
+          }
           const responseTime = Date.now() - extractionStart;
           
           // Log extraction
@@ -899,7 +913,7 @@ Deno.serve(async (req) => {
                 : 'extraction_failed',
               error_message: extraction.error || 'Unknown extraction error',
               url_attempted: product.product_url,
-              region: vendor.toLowerCase() === 'extrudr' ? 'EU' : 'US',
+              region: ['extrudr', 'formfutura'].includes(vendor.toLowerCase()) ? 'EU' : 'US',
               filament_id: productType === 'filament' ? product.id : null,
             });
           } catch (scrapeLogErr) {
