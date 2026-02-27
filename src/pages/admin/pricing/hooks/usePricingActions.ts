@@ -284,6 +284,17 @@ export function usePricingActions(
     if (!store.productUrl) return { status: 'failed', error: 'No product URL' };
     if (store.linkStatus === 'broken') return { status: 'failed', error: 'Link is broken' };
 
+    // Skip brands with manual/CSV-seeded pricing — their URLs are info pages, not stores
+    const MANUAL_PRICING_DOMAINS = ['ultimaker.com'];
+    try {
+      const urlHost = new URL(store.productUrl).hostname.toLowerCase();
+      if (MANUAL_PRICING_DOMAINS.some(d => urlHost.includes(d))) {
+        const result: SyncResult = { status: 'unchanged', error: 'Manual pricing — prices set via CSV seed sync' };
+        setSyncResults(prev => new Map(prev).set(store.storeKey, result));
+        return result;
+      }
+    } catch { /* proceed */ }
+
     try {
       const urlObj = new URL(store.productUrl);
       const hasProductPath = urlObj.pathname.length > 1;
