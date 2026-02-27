@@ -19,6 +19,7 @@ const TIMEOUT_MS = 8000;
 const WC_STORE_CURRENCIES: Record<string, string> = {
   "azurefilm.com": "EUR",
   "ic3dprinters.com": "USD",
+  "ninjatek.com": "USD",
 };
 
 function extractSlug(url: string): string | null {

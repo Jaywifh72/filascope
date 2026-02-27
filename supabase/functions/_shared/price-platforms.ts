@@ -16,6 +16,7 @@ export function detectPlatform(url: string): Platform {
   if (l.includes("fusionfilaments.com")) return "odoo";
   if (l.includes("azurefilm.com")) return "woocommerce";
   if (l.includes("ic3dprinters.com")) return "woocommerce";
+  if (l.includes("ninjatek.com") && !l.includes("ninjatek.ca")) return "woocommerce";
   if (l.includes("store.creality.com") || l.includes("creality.com/ca/") ||
       l.includes("creality.com/uk/") || l.includes("creality.com/eu/") ||
       l.includes("creality.com/au/") || l.includes("creality.com/jp/")) return "creality";

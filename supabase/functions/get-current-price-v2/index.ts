@@ -54,6 +54,11 @@ serve(async (req: Request) => {
     switch (platform) {
       case "woocommerce":
         result = await extractWooCommercePrice(urlToFetch);
+        // Firecrawl fallback if WC extraction fails (but not on 404)
+        if (!result.success && !result.is404) {
+          console.log("[PRICE-V2] WooCommerce failed, trying Firecrawl fallback");
+          result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType);
+        }
         break;
 
       case "creality":
