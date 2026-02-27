@@ -402,7 +402,8 @@ Deno.serve(async (req) => {
       query = query.ilike('vendor', brandSlug);
     }
     
-    query = query.limit(limit);
+    // Prioritize products that haven't been synced recently
+    query = query.order('last_scraped_at', { ascending: true, nullsFirst: true }).limit(limit);
     
     const { data: products, error: queryError } = await query;
     
