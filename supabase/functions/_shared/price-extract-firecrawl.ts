@@ -54,10 +54,27 @@ export async function extractFirecrawlPrice(
     }
 
     const isColorFabb = /colorfabb\.(us|com)/i.test(productUrl);
+    const isEuropeanStore = /formfutura\.com/i.test(productUrl);
     let stockStatus = detectStockStatus(markdown);
     const priceRange = productType === "printer"
       ? { min: 99, max: 10000 }
       : { min: 10, max: isColorFabb ? 300 : 150 };
+
+    // Helper to parse a price string, handling European decimal format (e.g. "16,52" → 16.52)
+    function parseExtractedPrice(raw: string, currency: string): number {
+      // European format: "16,52" or "1.234,56" (dot = thousands, comma = decimal)
+      if ((currency === "EUR" || isEuropeanStore) && raw.includes(",")) {
+        // "1.234,56" → remove dots, replace comma with period
+        if (raw.includes(".") && raw.lastIndexOf(",") > raw.lastIndexOf(".")) {
+          return parseFloat(raw.replace(/\./g, "").replace(",", "."));
+        }
+        // "16,52" → comma is decimal
+        if (/,\d{2}$/.test(raw)) {
+          return parseFloat(raw.replace(",", "."));
+        }
+      }
+      return parseFloat(raw.replace(",", ""));
+    }
 
     // Sale format
     const addToCartIdx = markdown.search(/Add\s*to\s*Cart/i);
@@ -82,9 +99,10 @@ export async function extractFirecrawlPrice(
     let cleaned = removeSavingsAmounts(section);
     const symbol = getCurrencySymbol(preferredCurrency);
     const escaped = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp(`${escaped}\\s*([\\d,]+(?:\\.\\d{2})?)`, "g");
+    // Updated pattern: capture digits with commas and optional dot-decimals OR comma-decimals (European)
+    const pattern = new RegExp(`${escaped}\\s*([\\d]+(?:[.,]\\d{2,3})?)`, "g");
     let prices = [...cleaned.matchAll(pattern)]
-      .map(m => parseFloat(m[1].replace(",", "")))
+      .map(m => parseExtractedPrice(m[1], preferredCurrency))
       .filter(p => !isNaN(p) && p >= priceRange.min && p <= priceRange.max)
       .sort((a, b) => a - b);
 
@@ -92,7 +110,7 @@ export async function extractFirecrawlPrice(
     if (prices.length === 0 && section !== markdown) {
       cleaned = removeSavingsAmounts(markdown);
       prices = [...cleaned.matchAll(pattern)]
-        .map(m => parseFloat(m[1].replace(",", "")))
+        .map(m => parseExtractedPrice(m[1], preferredCurrency))
         .filter(p => !isNaN(p) && p >= priceRange.min && p <= priceRange.max)
         .sort((a, b) => a - b);
     }
@@ -115,9 +133,9 @@ export async function extractFirecrawlPrice(
     if (detected && detected !== preferredCurrency) {
       const altSymbol = getCurrencySymbol(detected);
       const altEsc = altSymbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const altPattern = new RegExp(`${altEsc}\\s*([\\d,]+(?:\\.\\d{2})?)`, "g");
+      const altPattern = new RegExp(`${altEsc}\\s*([\\d]+(?:[.,]\\d{2,3})?)`, "g");
       const altPrices = [...cleaned.matchAll(altPattern)]
-        .map(m => parseFloat(m[1].replace(",", "")))
+        .map(m => parseExtractedPrice(m[1], detected))
         .filter(p => !isNaN(p) && p > 5 && p < 200)
         .sort((a, b) => a - b);
       if (altPrices.length > 0) {
