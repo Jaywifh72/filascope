@@ -331,16 +331,28 @@ export async function fetchWixPrice(productUrl: string): Promise<PriceResponse> 
       .replace(/Free\s+Ground\s+Shipping/gi, "")
       .replace(/Free\s+Shipping/gi, "");
 
+    // Wix stock detection helper — works on full HTML (before shipping text removal)
+    // Wix SSR renders these reliable markers:
+    //   In-stock:  <button ...>Add to Cart</button>  and  og:availability = InStock
+    //   Out-of-stock:  data-hook="out-of-stock-indicator">Out of Stock</div>
+    //                  <button ...>Notify When Available</button>
+    // NOTE: "Out of Stock" text also appears in gallery items for OTHER products,
+    // so we must check for the specific data-hook attribute, not just the text.
+    const isOos = html.includes('data-hook="out-of-stock-indicator"') ||
+                  html.includes("Notify When Available</span></button>");
+    const isInStock = html.includes("Add to Cart</span></button>");
+    // Determine availability: explicit OOS indicator wins; then check for Add to Cart
+    const wixAvailable = isOos ? false : (isInStock ? true : true);
+    const wixStockStatus = isOos ? "out_of_stock" : (isInStock ? "in_stock" : "unknown");
+
     // Primary pattern: price followed by "Price" label (Wix product page SSR pattern)
     const wixPriceMatch = cleanedHtml.match(/\$\s*([\d]+\.[\d]{2})\s*(?:\n|\r|\s)*Price/i);
     if (wixPriceMatch) {
       const price = parseFloat(wixPriceMatch[1]);
       if (price >= 5 && price <= 500) {
-        // Wix stock status is JS-rendered — not available in raw SSR HTML.
-        // Default to in_stock; stock detection requires Firecrawl (headless render).
         return {
           success: true, price, compareAtPrice: null, currency: "USD",
-          available: true, stockStatus: "unknown" as any,
+          available: wixAvailable, stockStatus: wixStockStatus,
           source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
         };
       }
@@ -351,10 +363,9 @@ export async function fetchWixPrice(productUrl: string): Promise<PriceResponse> 
     if (fallbackMatch) {
       const price = parseFloat(fallbackMatch[1]);
       if (price >= 5 && price <= 500) {
-        // Same note: Wix stock status is JS-rendered, not in SSR HTML.
         return {
           success: true, price, compareAtPrice: null, currency: "USD",
-          available: true, stockStatus: "unknown" as any,
+          available: wixAvailable, stockStatus: wixStockStatus,
           source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
         };
       }
