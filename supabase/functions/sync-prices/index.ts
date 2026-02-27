@@ -587,7 +587,7 @@ Deno.serve(async (req) => {
                 updateData.sync_status = 'active';
               }
               if (productType === 'filament' && extraction.compareAtPrice) {
-                updateData.compare_at_price = extraction.compareAtPrice;
+                updateData.variant_compare_at_price = extraction.compareAtPrice;
               }
               
               if (productType === 'printer') {
@@ -880,7 +880,7 @@ Deno.serve(async (req) => {
             
             // Add compare_at_price for filaments
             if (productType === 'filament' && extraction.compareAtPrice) {
-              updateData.compare_at_price = extraction.compareAtPrice;
+              updateData.variant_compare_at_price = extraction.compareAtPrice;
             }
             
             // Add sync status for printers
