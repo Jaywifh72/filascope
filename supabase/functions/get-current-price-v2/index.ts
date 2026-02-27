@@ -104,6 +104,16 @@ serve(async (req: Request) => {
         result = await extractBambuLabPrice(urlToFetch, expectedCurrency, targetWeightGrams);
         break;
 
+      case "ultimaker":
+        // Ultimaker prices are CSV-seeded (manual pricing model).
+        // ultimaker.com/materials/* are info pages, not store pages — skip scraping.
+        result = {
+          success: false, price: null, compareAtPrice: null, currency: "USD",
+          available: false, source: "html" as const, fetchedAt: new Date().toISOString(),
+          error: "Manual pricing — prices set via CSV seed sync",
+        };
+        break;
+
       case "odoo":
         result = await fetchOdooPrice(productUrl);
         // Firecrawl fallback if direct fetch fails (including soft 404s from wrong platform detection)
