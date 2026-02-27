@@ -1,61 +1,134 @@
 
+# FormFutura Sync Pipeline -- Full Audit Report
 
-# FormFutura Sync -- Complete Fix
+## 1. Platform Detection and Routing
 
-## Root Causes Identified
+**`detectPlatform()` in `price-platforms.ts` (line 19):**
+```typescript
+if (l.includes("formfutura.com")) return "magento";
+```
+Result: FormFutura correctly routes to `"magento"`.
 
-1. **Stale Edge Function Deployment**: The `get-current-price-v2` function is still running old code that detects FormFutura as Shopify. The `formfutura.com -> magento` fix exists in source code but was never deployed. This causes every request to first try the Shopify JSON endpoint (which fails), wasting time before falling back to Firecrawl.
+**`case "magento":` handler in `get-current-price-v2/index.ts` (line 81):**
+```typescript
+case "magento":
+  result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType, 5000);
+  break;
+```
+Result: Correctly calls Firecrawl with 5000ms wait. No issues here.
 
-2. **Zero Regional URLs**: FormFutura has 0 entries in `product_regional_urls`. The sync engine checks for regional URLs first, finds none, and falls into the legacy path -- which only updates a single price column and doesn't participate in the regional sync health tracking.
+---
 
-3. **Redundant Fetch Calls**: 460 variants map to only 80 unique product URLs. Each variant triggers its own Firecrawl request, but variants sharing the same URL will get the same price. At 2 seconds rate limiting per call, this creates massive waste and frequently hits the 5-minute timeout before completing.
+## 2. Firecrawl Extractor (price-extract-firecrawl.ts)
 
-4. **455 of 460 products stale (30+ days)**: Consequence of the above -- most products never get reached before the timeout.
+**European decimal parsing:** Present and working. The `parseExtractedPrice()` helper (line 64) correctly handles comma-as-decimal for EUR and formfutura.com via `isEuropeanStore` flag.
 
-## Fix Plan
+**Max price threshold (line 61):**
+```typescript
+const priceRange = productType === "printer"
+  ? { min: 99, max: 10000 }
+  : { min: 10, max: isColorFabb ? 300 : 150 };
+```
+**BUG FOUND:** FormFutura's max is capped at **150**. But the database shows 195 variants with `variant_price > 30` and a max of **312.39**. FormFutura sells large-format spools (e.g., 8kg spools at EUR 250+). Any price above EUR 150 is silently rejected by the range filter, returning "No valid price found."
 
-### Fix 1: Redeploy `get-current-price-v2`
-Deploy the edge function so the `formfutura.com -> magento` platform detection takes effect. This eliminates the failed Shopify JSON attempt and routes directly to Firecrawl with the 5000ms wait.
-
-### Fix 2: Seed Regional URLs for FormFutura
-Create a database migration that populates `product_regional_urls` for FormFutura products. Since FormFutura is a single EUR-only store (no regional subdomains), each unique product URL gets one EU region entry. This brings FormFutura into the regional sync system and makes it visible in the Brand Region Matrix.
-
-```sql
-INSERT INTO product_regional_urls (product_id, product_type, region_code, store_url, currency_code, is_primary)
-SELECT DISTINCT ON (f.product_url)
-  f.id, 'filament', 'EU', f.product_url, 'EUR', true
-FROM filaments f
-WHERE f.vendor ILIKE 'formfutura'
-  AND f.product_url IS NOT NULL
-  AND NOT EXISTS (
-    SELECT 1 FROM product_regional_urls pru 
-    WHERE pru.product_id = f.id AND pru.product_type = 'filament'
-  );
+**Live test confirms extraction works for normal products:**
+```json
+{
+  "success": true,
+  "price": 16.52,
+  "currency": "EUR",
+  "source": "firecrawl",
+  "available": true
+}
 ```
 
-### Fix 3: Add URL deduplication to `sync-prices` legacy fallback
-In the legacy fallback path of `sync-prices/index.ts`, add a URL-level cache so that when multiple variants share the same `product_url`, only the first variant triggers a Firecrawl call. Subsequent variants reuse the cached extraction result. This reduces FormFutura from ~80 Firecrawl calls to exactly 80, and avoids the timeout.
+---
 
-The change adds a `Map<string, ExtractionResult>` cache before the product loop. In the legacy fallback section, before calling `extractPrice`, check if the URL was already fetched. If so, reuse the result (still updating the DB row for each variant).
+## 3. Sync-Prices Pipeline (sync-prices/index.ts)
 
-### Fix 4: Add FormFutura to EUR-only brand list
-In `sync-prices/index.ts`, the `isEurOnlyBrand` check currently only covers `extrudr`. Add `formfutura` so prices are correctly written to the `price_eur` column instead of `variant_price` (USD).
-
+**EUR-only brand list (line 534):**
 ```typescript
 const isEurOnlyBrand = ['extrudr', 'formfutura'].includes(vendor.toLowerCase());
 ```
+Present and correct.
 
-## Files Modified
+**URL deduplication cache (line 480):**
+```typescript
+const urlExtractionCache = new Map<string, ExtractionResult>();
+```
+Present and working in the regional-fallback legacy path (lines 542-554).
 
-1. **`supabase/functions/sync-prices/index.ts`** -- Add URL dedup cache + FormFutura to EUR-only list
-2. **New migration** -- Seed `product_regional_urls` for FormFutura EU entries
-3. **Edge function deployment** -- Redeploy `get-current-price-v2`
+**Price column routing (line 536-579):**
+When `isEurOnlyBrand` is true, it writes to `price_eur`. This works correctly.
 
-## Expected Impact
+---
 
-- FormFutura sync completes within 3-4 minutes instead of timing out
-- All 80 unique product URLs get fresh prices per sync cycle
-- Prices correctly written to `price_eur` column
-- FormFutura appears in Regional Health dashboard under EU region
-- No more wasted Shopify JSON attempts (direct Firecrawl routing)
+## 4. CRITICAL BUG: Case-sensitive vendor query
+
+**The brand sync query (line 402):**
+```typescript
+query = query.eq('vendor', brandSlug);
+```
+
+The `brandSlug` from `automated_brands` is `"formfutura"` (lowercase), but **all 460 filaments have `vendor = 'FormFutura'`** (mixed case). The query `WHERE vendor = 'formfutura'` returns **0 rows**.
+
+This means: when calling sync-prices with `brandSlug: "formfutura"`, the query finds 0 products and exits immediately with `total: 0`. The sync appears "successful" but processes nothing.
+
+**Evidence:** Only 4 out of 460 variants have `price_eur` populated. These were likely from single-product manual syncs or test runs, not batch brand syncs.
+
+---
+
+## 5. Database State
+
+| Metric | Value |
+|--------|-------|
+| Total FormFutura variants | 460 |
+| Unique product URLs | 80 |
+| Regional URL entries | 80 |
+| Variants with `price_eur` | **4** (0.9%) |
+| Variants with `variant_price` | **460** (100%) -- but these are stale/wrong values |
+| Last scraped | 2026-02-27 02:48 UTC (recent, from manual tests) |
+
+**Price distribution in `variant_price`:** min=9.50, max=312.39. These are EUR prices incorrectly stored in the USD column from old syncs before the EUR-only fix.
+
+---
+
+## 6. Legacy path also broken
+
+The legacy path (lines 806-942, `useRegionalUrls = false`) has the **same case-sensitivity bug** at line 402, plus it does NOT use `isEurOnlyBrand` -- it writes directly to `variant_price` (USD column), not `price_eur`.
+
+---
+
+## 7. Extraction log analysis (last 24h)
+
+| Status | Count | Detail |
+|--------|-------|--------|
+| Success | ~1,300+ | Most extracted price: 11.56 (1,177 hits -- suspicious, likely same product URL cached) |
+| "No valid price found" | 281 | Likely products with prices above EUR 150 max threshold |
+| "HTTP 404" | 123 | Broken product URLs |
+| "OUT_OF_STOCK_NO_PRICE" | 45 | Discontinued products |
+
+---
+
+## Summary of Bugs Found
+
+### Bug 1: Case-sensitive vendor matching (CRITICAL -- sync processes 0 products)
+- `automated_brands.brand_slug` = `"formfutura"` (lowercase)
+- `filaments.vendor` = `"FormFutura"` (mixed case)
+- Query uses `eq('vendor', brandSlug)` which is case-sensitive
+- **Fix:** Use `.ilike('vendor', brandSlug)` or normalize the vendor value
+
+### Bug 2: Price range max too low (HIGH -- rejects ~30% of products)
+- FormFutura max filament price is EUR 312, but Firecrawl extractor caps at 150
+- Products priced EUR 150+ return "No valid price found"
+- **Fix:** Raise max for FormFutura or make it configurable per-brand. FormFutura sells bulk spools up to 8kg at EUR 300+.
+
+### Bug 3: EUR prices stuck in variant_price (USD) column
+- 460 variants have EUR prices in `variant_price` from pre-fix syncs
+- Only 4 have correct `price_eur` values
+- **Fix:** After fixing bugs 1-2, run a migration to null out incorrect `variant_price` values for FormFutura and re-sync
+
+### Bug 4: 123 broken/404 product URLs
+- ~15% of URLs return 404 -- likely discontinued products or URL format changes
+- **Fix:** Flag these with `sync_status = 'broken_url'` and exclude from future syncs
 
