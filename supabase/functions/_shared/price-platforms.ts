@@ -7,7 +7,7 @@ export type Platform =
   | "shopify" | "woocommerce" | "magento" | "odoo"
   | "creality" | "extrudr" | "treed" | "prusa" | "geeetech"
   | "bambulab" | "bigcommerce" | "wix"
-  | "ultimaker"
+  | "ultimaker" | "ueeshop"
   | "unknown";
 
 export function detectPlatform(url: string): Platform {
@@ -27,6 +27,7 @@ export function detectPlatform(url: string): Platform {
   if (l.includes("geeetech.com")) return "geeetech";
   if (l.includes("gizmodorks.com")) return "bigcommerce";
   if (l.includes("ultimaker.com")) return "ultimaker";
+  if (l.includes("ysfilament.com")) return "ueeshop";
   if (l.includes("paramount-3d.com")) return "wix";
   // Generic Wix eCommerce fingerprint: /product-page/ slug pattern
   if (l.includes("/product-page/")) return "wix";
