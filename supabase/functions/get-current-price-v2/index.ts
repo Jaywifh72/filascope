@@ -1,5 +1,6 @@
 // @ts-nocheck
 // get-current-price-v2: Thin router dispatching to shared extractors.
+// v2.4: Added ueeshop platform for esun3dstore.com (UeeShop/Shoplazza)
 // No extraction logic in this file.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -35,8 +36,15 @@ serve(async (req: Request) => {
     }
 
     const startTime = Date.now();
-    const platform = detectPlatform(productUrl);
+    let platform = detectPlatform(productUrl);
     const preferredCurrency = currency || "USD";
+    
+    // Override: esun3dstore.com is UeeShop, not Shopify (shared module may be cached)
+    const lowerUrl = productUrl.toLowerCase();
+    if (lowerUrl.includes("esun3dstore.com") || lowerUrl.includes("esun3dstoreeu.com")) {
+      platform = "ueeshop";
+    }
+    
     const { url: urlToFetch, expectedCurrency } = transformToRegionalUrl(productUrl, preferredCurrency);
 
     console.log(`[PRICE-V2] platform=${platform} url=${productUrl} currency=${expectedCurrency}`);
