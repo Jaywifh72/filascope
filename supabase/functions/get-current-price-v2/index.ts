@@ -75,6 +75,10 @@ serve(async (req: Request) => {
         break;
       case "geeetech":
         result = await fetchGeeetechPrice(urlToFetch);
+        if (!result.success && !result.is404) {
+          console.log("[PRICE-V2] Geeetech direct failed, trying Firecrawl fallback");
+          result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType);
+        }
         break;
 
       case "bambulab":

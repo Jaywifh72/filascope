@@ -234,11 +234,32 @@ export async function fetchPrusaPrice(productUrl: string): Promise<PriceResponse
 export async function fetchGeeetechPrice(productUrl: string): Promise<PriceResponse> {
   try {
     const resp = await withTimeout(fetch(productUrl, { headers: BROWSER_HEADERS, redirect: "follow" }), TIMEOUT_MS);
-    if (!resp.ok) return fail("USD", `HTTP ${resp.status}`);
+    if (!resp.ok) return fail("USD", `HTTP ${resp.status}`, { is404: resp.status === 404 });
     const html = await resp.text();
+    if (is404Content(html)) return fail("USD", "soft_404", { is404: true });
+
+    // 1. Try JSON-LD first
     const r = extractJsonLdPrice(html, "USD", productUrl);
     if (r) return { success: true, ...r, source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl };
-    return fail("USD", "No JSON-LD price");
+
+    // 2. HTML extraction for Zen Cart: sale price in .products-info-price-special, MSRP in .products-info-price-normal
+    const saleMatch = html.match(/products-info-price-special[^>]*>\s*\$\s*([\d]+(?:[.,]\d+)?)/);
+    const msrpMatch = html.match(/products-info-price-normal[^>]*>\s*\$\s*([\d]+(?:[.,]\d+)?)/);
+
+    const salePrice = saleMatch ? parseFloat(saleMatch[1].replace(",", "")) : null;
+    const msrpPrice = msrpMatch ? parseFloat(msrpMatch[1].replace(",", "")) : null;
+
+    // Use sale price if available, otherwise fall back to MSRP
+    const price = salePrice ?? msrpPrice;
+    if (price && price > 0 && price < 500) {
+      const compareAtPrice = salePrice && msrpPrice && msrpPrice > salePrice * 1.05 ? msrpPrice : null;
+      return {
+        success: true, price, compareAtPrice, currency: "USD", available: true,
+        stockStatus: "in_stock", source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+      };
+    }
+
+    return fail("USD", "No price found in JSON-LD or HTML");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return fail("USD", msg === "TIMEOUT" ? "timeout" : msg);
