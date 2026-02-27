@@ -58,7 +58,7 @@ export async function extractFirecrawlPrice(
     let stockStatus = detectStockStatus(markdown);
     const priceRange = productType === "printer"
       ? { min: 99, max: 10000 }
-      : { min: 10, max: (isColorFabb || isEuropeanStore) ? 350 : 150 };
+      : { min: 10, max: (isColorFabb || isEuropeanStore) ? 500 : 150 };
 
     // Helper to parse a price string, handling European decimal format (e.g. "16,52" → 16.52)
     function parseExtractedPrice(raw: string, currency: string): number {
