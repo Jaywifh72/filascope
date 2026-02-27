@@ -114,6 +114,11 @@ serve(async (req: Request) => {
         };
         break;
 
+      case "ueeshop":
+        // UeeShop/Shoplazza platform (e.g., ysfilament.com) — no API, use Firecrawl directly
+        result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType, 5000);
+        break;
+
       case "odoo":
         result = await fetchOdooPrice(productUrl);
         // Firecrawl fallback if direct fetch fails (including soft 404s from wrong platform detection)
