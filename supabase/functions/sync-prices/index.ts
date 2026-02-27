@@ -614,6 +614,22 @@ Deno.serve(async (req) => {
           } else {
             failed++;
             errors.push({ productId: product.id, error: extraction.error || 'Unknown error' });
+            // Log to scrape_errors for visibility in Sync Monitor
+            try {
+              await supabase.from('scrape_errors').insert({
+                brand_slug: vendor,
+                error_type: extraction.error?.includes('timeout') ? 'timeout'
+                  : extraction.error?.includes('404') ? '404'
+                  : extraction.error?.includes('blocked') ? 'cloudflare'
+                  : 'extraction_failed',
+                error_message: extraction.error || 'Unknown extraction error',
+                url_attempted: productUrl,
+                region: isEurOnlyBrand ? 'EU' : 'US',
+                filament_id: productType === 'filament' ? product.id : null,
+              });
+            } catch (scrapeLogErr) {
+              console.error('Failed to log scrape error:', scrapeLogErr);
+            }
           }
           
           await sleep(rateLimitMs);
@@ -736,6 +752,23 @@ Deno.serve(async (req) => {
               error: extraction.error || 'Unknown error' 
             });
             
+            // Log to scrape_errors for visibility in Sync Monitor
+            try {
+              await supabase.from('scrape_errors').insert({
+                brand_slug: vendor,
+                error_type: extraction.error?.includes('timeout') ? 'timeout'
+                  : extraction.error?.includes('404') ? '404'
+                  : extraction.error?.includes('blocked') ? 'cloudflare'
+                  : 'extraction_failed',
+                error_message: extraction.error || 'Unknown extraction error',
+                url_attempted: storeUrl,
+                region: regionCode,
+                filament_id: productType === 'filament' ? product.id : null,
+              });
+            } catch (scrapeLogErr) {
+              console.error('Failed to log scrape error:', scrapeLogErr);
+            }
+
             if (!dryRun) {
               // Update regional price with error status
               await updateRegionalPrice(
@@ -856,6 +889,22 @@ Deno.serve(async (req) => {
         } else {
           failed++;
           errors.push({ productId: product.id, error: extraction.error || 'Unknown error' });
+          // Log to scrape_errors for visibility in Sync Monitor
+          try {
+            await supabase.from('scrape_errors').insert({
+              brand_slug: vendor,
+              error_type: extraction.error?.includes('timeout') ? 'timeout'
+                : extraction.error?.includes('404') ? '404'
+                : extraction.error?.includes('blocked') ? 'cloudflare'
+                : 'extraction_failed',
+              error_message: extraction.error || 'Unknown extraction error',
+              url_attempted: product.product_url,
+              region: vendor.toLowerCase() === 'extrudr' ? 'EU' : 'US',
+              filament_id: productType === 'filament' ? product.id : null,
+            });
+          } catch (scrapeLogErr) {
+            console.error('Failed to log scrape error:', scrapeLogErr);
+          }
           
           if (!dryRun) {
             // Update product with error

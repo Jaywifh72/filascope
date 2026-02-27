@@ -60,6 +60,11 @@ serve(async (req: Request) => {
         break;
       case "extrudr":
         result = await fetchExtrudrPrice(urlToFetch, expectedCurrency);
+        // Firecrawl fallback if direct fetch fails (but not on 404)
+        if (!result.success && !result.is404) {
+          console.log("[PRICE-V2] Extrudr direct failed, trying Firecrawl fallback");
+          result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType);
+        }
         break;
       case "treed":
         result = await fetchTreeDPrice(urlToFetch);
