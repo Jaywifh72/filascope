@@ -12,6 +12,7 @@ import {
   canForceRefresh, updateFilamentStockStatus,
 } from "../_shared/price-db.ts";
 import { extractShopifyPrice } from "../_shared/price-extract-shopify.ts";
+import { fetchOdooPrice } from "../_shared/price-extract-odoo.ts";
 import { extractWooCommercePrice } from "../_shared/price-extract-wc.ts";
 import { extractFirecrawlPrice } from "../_shared/price-extract-firecrawl.ts";
 import {
@@ -78,6 +79,15 @@ serve(async (req: Request) => {
 
       case "bambulab":
         result = await extractBambuLabPrice(urlToFetch, expectedCurrency, targetWeightGrams);
+        break;
+
+      case "odoo":
+        result = await fetchOdooPrice(urlToFetch);
+        // Firecrawl fallback if direct fetch fails (but not on 404)
+        if (!result.success && !result.is404) {
+          console.log("[PRICE-V2] Odoo direct failed, trying Firecrawl fallback");
+          result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType, 5000);
+        }
         break;
 
       case "magento":
