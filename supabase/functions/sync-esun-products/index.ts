@@ -279,16 +279,17 @@ Deno.serve(async (req) => {
     for (let i = 0; i < productsToInsert.length; i += BATCH_SIZE) {
       const batch = productsToInsert.slice(i, i + BATCH_SIZE);
       
-      const { error: insertError } = await supabase
+      const { error: upsertError, data: upsertData } = await supabase
         .from('filaments')
-        .insert(batch);
+        .upsert(batch, { onConflict: 'vendor,product_id', ignoreDuplicates: false })
+        .select('id');
 
-      if (insertError) {
-        console.error(`[sync-esun-products] Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, insertError.message);
+      if (upsertError) {
+        console.error(`[sync-esun-products] Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, upsertError.message);
         stats.errors += batch.length;
       } else {
-        stats.created += batch.length;
-        console.log(`[sync-esun-products] Inserted batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(productsToInsert.length / BATCH_SIZE)}`);
+        stats.updated += batch.length;
+        console.log(`[sync-esun-products] Upserted batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(productsToInsert.length / BATCH_SIZE)} (${upsertData?.length || batch.length} rows)`);
       }
     }
 
@@ -315,7 +316,7 @@ Deno.serve(async (req) => {
           brand_id: brandId,
           brand_slug: 'esun',
           sync_type: cleanSlate ? 'clean_slate' : 'incremental',
-          status: stats.errors > stats.created ? 'failed' : stats.errors > 0 ? 'partial' : 'completed',
+          status: stats.errors > (stats.created + stats.updated) ? 'failed' : stats.errors > 0 ? 'partial' : 'completed',
           triggered_by: 'admin_ui',
           completed_at: new Date().toISOString(),
           duration_seconds: Math.round((Date.now() - startTime) / 1000),
@@ -382,12 +383,12 @@ Deno.serve(async (req) => {
     // =========================================================================
     // STEP 7: FINAL RESPONSE
     // =========================================================================
-    const message = `eSUN CSV-seeded sync complete: ${stats.created} created, ${stats.errors} errors, ${Object.keys(productLineStats).length} product lines`;
+    const message = `eSUN sync complete: ${stats.created} created, ${stats.updated} updated, ${stats.errors} errors, ${Object.keys(productLineStats).length} product lines`;
     console.log(`[sync-esun-products] ${message}`);
 
     return new Response(
       JSON.stringify({
-        success: stats.errors < stats.created,
+        success: stats.errors < (stats.created + stats.updated),
         message,
         stats: {
           productsDiscovered: stats.discovered,
