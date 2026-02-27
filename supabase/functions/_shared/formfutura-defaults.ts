@@ -47,6 +47,34 @@ export const FORMFUTURA_TDS_PATTERNS: Record<string, string> = {
   'METALFIL - BRASS': 'https://www.formfutura.com/web/content/256596?download=true',
   'METALFIL BRASS': 'https://www.formfutura.com/web/content/256596?download=true',
   
+  // ASA/ABS engineering lines
+  'ATHENAX CF10': 'https://www.formfutura.com/datasheets/athenax-cf10-tds.pdf',
+  'ATHENAX GF10': 'https://www.formfutura.com/datasheets/athenax-gf10-tds.pdf',
+  'ATHENAX': 'https://www.formfutura.com/datasheets/athenax-tds.pdf',
+  'TITANX': 'https://www.formfutura.com/datasheets/titanx-tds.pdf',
+  'CARBONFIL CF03': 'https://www.formfutura.com/datasheets/carbonfil-cf03-tds.pdf',
+  'CARBONFIL': 'https://www.formfutura.com/datasheets/carbonfil-tds.pdf',
+  
+  // Recycled / ReForm
+  'REFORM - RAPOLLO': 'https://www.formfutura.com/datasheets/reform-rapollo-tds.pdf',
+  'REFORM RAPOLLO': 'https://www.formfutura.com/datasheets/reform-rapollo-tds.pdf',
+  'REFORM - RPET': 'https://www.formfutura.com/datasheets/reform-rpet-tds.pdf',
+  'REFORM RPET': 'https://www.formfutura.com/datasheets/reform-rpet-tds.pdf',
+  'REFORM - RTITAN': 'https://www.formfutura.com/datasheets/reform-rtitan-tds.pdf',
+  'REFORM RTITAN': 'https://www.formfutura.com/datasheets/reform-rtitan-tds.pdf',
+  
+  // Flexible
+  'FLEXIFIL TPC 30D': 'https://www.formfutura.com/datasheets/flexifil-tpc-30d-tds.pdf',
+  'FLEXIFIL TPC 40D': 'https://www.formfutura.com/datasheets/flexifil-tpc-40d-tds.pdf',
+  'FLEXIFIL TPC': 'https://www.formfutura.com/datasheets/flexifil-tpc-tds.pdf',
+  'FLEXIFIL': 'https://www.formfutura.com/datasheets/flexifil-tpc-tds.pdf',
+  
+  // Support / Specialty
+  'BVOH': 'https://www.formfutura.com/datasheets/bvoh-tds.pdf',
+  'ATLAS SUPPORT': 'https://www.formfutura.com/datasheets/atlas-support-tds.pdf',
+  'KRATOS PC': 'https://www.formfutura.com/datasheets/kratos-pc-tds.pdf',
+  'KRATOS': 'https://www.formfutura.com/datasheets/kratos-pc-tds.pdf',
+  
   // Legacy fallback patterns for other product lines
   'HDGLASS': 'https://www.formfutura.com/datasheets/hdglass-tds.pdf',
   'HD GLASS': 'https://www.formfutura.com/datasheets/hdglass-tds.pdf',

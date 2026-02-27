@@ -230,17 +230,18 @@ Deno.serve(async (req) => {
     for (let i = 0; i < filamentRecords.length; i += BATCH_SIZE) {
       const batch = filamentRecords.slice(i, i + BATCH_SIZE);
 
-      const { error: insertError } = await supabase
+      const { data: upsertData, error: upsertError } = await supabase
         .from('filaments')
-        .insert(batch);
+        .upsert(batch, { onConflict: 'product_id', ignoreDuplicates: false })
+        .select('id');
 
-      if (insertError) {
-        console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} insert error:`, insertError);
+      if (upsertError) {
+        console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} upsert error:`, upsertError);
         stats.failed += batch.length;
-        stats.errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${insertError.message}`);
+        stats.errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${upsertError.message}`);
       } else {
         stats.created += batch.length;
-        console.log(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: Inserted ${batch.length} products`);
+        console.log(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: Upserted ${batch.length} products`);
       }
     }
 
