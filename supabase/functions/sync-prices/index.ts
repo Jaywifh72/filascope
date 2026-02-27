@@ -399,7 +399,7 @@ Deno.serve(async (req) => {
     if (syncType === 'single' && targetId) {
       query = query.eq('id', targetId);
     } else if (syncType === 'brand' && brandSlug) {
-      query = query.eq('vendor', brandSlug);
+      query = query.ilike('vendor', brandSlug);
     }
     
     query = query.limit(limit);
