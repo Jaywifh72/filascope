@@ -126,32 +126,19 @@ async function fetchVariations(productId: number, domain: string, minorUnit: num
 function extractNinjaTek1kgPrice(
   html: string, productUrl: string, defaultCurrency: string,
 ): PriceResponse | null {
-  // Strategy 1: Parse <option> elements with data-pa_spool-weight and data-price
-  // Format: <option value="931" data-pa_spool-weight="1kg" data-pa_diameter="1-75mm" data-price="102.461" data-stock-status="instock">
-  const optionPattern = /<option[^>]*data-pa_spool-weight="([^"]*)"[^>]*data-pa_diameter="([^"]*)"[^>]*data-price="([^"]*)"[^>]*data-stock-status="([^"]*)"[^>]*>/gi;
+  // Strategy 1: Parse all <option> elements and extract data attributes generically
+  // Attributes can appear in any order: data-pa_spool-weight, data-pa_diameter, data-price, data-stock-status, etc.
+  const optionTags = html.match(/<option[^>]+data-price="[^"]*"[^>]*>/gi) || [];
   const variants: { weight: string; diameter: string; price: number; inStock: boolean }[] = [];
 
-  let match: RegExpExecArray | null;
-  while ((match = optionPattern.exec(html)) !== null) {
-    const weight = match[1];
-    const diameter = match[2];
-    const price = parseFloat(match[3]);
-    const inStock = match[4] === "instock";
-    if (!isNaN(price) && price > 0) {
-      variants.push({ weight, diameter, price, inStock });
-    }
-  }
-
-  // Also try reverse attribute order (data-price before data-pa_spool-weight)
-  if (variants.length === 0) {
-    const altPattern = /<option[^>]*data-price="([^"]*)"[^>]*data-pa_spool-weight="([^"]*)"[^>]*data-stock-status="([^"]*)"[^>]*>/gi;
-    while ((match = altPattern.exec(html)) !== null) {
-      const price = parseFloat(match[1]);
-      const weight = match[2];
-      const inStock = match[3] === "instock";
-      if (!isNaN(price) && price > 0) {
-        variants.push({ weight, diameter: "1-75mm", price, inStock });
-      }
+  for (const tag of optionTags) {
+    const weight = tag.match(/data-pa_spool-weight="([^"]*)"/i)?.[1] || "";
+    const diameter = tag.match(/data-pa_diameter="([^"]*)"/i)?.[1] || "";
+    const priceStr = tag.match(/data-price="([^"]*)"/i)?.[1] || "";
+    const stockStatus = tag.match(/data-stock-status="([^"]*)"/i)?.[1] || "";
+    const price = parseFloat(priceStr);
+    if (!isNaN(price) && price > 0 && weight) {
+      variants.push({ weight, diameter, price, inStock: stockStatus === "instock" });
     }
   }
 
@@ -165,7 +152,7 @@ function extractNinjaTek1kgPrice(
       || variants.find(v => v.weight === "1kg");
 
     if (target) {
-      const price = Math.round(target.price * 100) / 100; // Round to 2 decimal places
+      const price = Math.round(target.price * 100) / 100;
       console.log(`[WC-NinjaTek] 1kg variant: $${price} (${target.diameter}, ${target.inStock ? "in stock" : "out of stock"})`);
       return {
         success: true, price, compareAtPrice: null,
