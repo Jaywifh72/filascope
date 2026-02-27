@@ -238,10 +238,10 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               className="animate-fade-in mb-4"
             >
               <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-white">
-                Find Your Perfect{' '}
+                3D Printer Filament Comparison{' '}
               </span>
               <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-primary">
-                3D Printer Filament.
+                — Find Your Perfect Filament
               </span>
             </h1>
             
