@@ -108,6 +108,7 @@ serve(async (req: Request) => {
         }
         break;
 
+      case "wix":
       case "magento":
         result = await extractFirecrawlPrice(urlToFetch, expectedCurrency, productType as ProductType, 5000);
         break;
