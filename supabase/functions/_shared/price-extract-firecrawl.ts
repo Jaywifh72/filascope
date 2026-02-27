@@ -58,22 +58,26 @@ export async function extractFirecrawlPrice(
     let stockStatus = detectStockStatus(markdown);
     const priceRange = productType === "printer"
       ? { min: 99, max: 10000 }
-      : { min: 10, max: (isColorFabb || isEuropeanStore) ? 500 : 150 };
+      : { min: 10, max: (isColorFabb || isEuropeanStore || preferredCurrency === "EUR") ? 500 : 150 };
 
     // Helper to parse a price string, handling European decimal format (e.g. "16,52" → 16.52)
-    function parseExtractedPrice(raw: string, currency: string): number {
-      // European format: "16,52" or "1.234,56" (dot = thousands, comma = decimal)
-      if ((currency === "EUR" || isEuropeanStore) && raw.includes(",")) {
-        // "1.234,56" → remove dots, replace comma with period
-        if (raw.includes(".") && raw.lastIndexOf(",") > raw.lastIndexOf(".")) {
-          return parseFloat(raw.replace(/\./g, "").replace(",", "."));
-        }
-        // "16,52" → comma is decimal
-        if (/,\d{2}$/.test(raw)) {
-          return parseFloat(raw.replace(",", "."));
-        }
+    function normalizeEuropeanPrice(raw: string): number {
+      // Remove currency symbols and whitespace
+      let cleaned = raw.replace(/[€$£\s]/g, '').trim();
+
+      // Detect European format: comma as decimal (e.g. "16,52" or "1.652,50")
+      if (/^\d{1,3}(\.\d{3})*(,\d{2})?$/.test(cleaned)) {
+        // European: dots are thousands separators, comma is decimal
+        cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+      } else if (/^\d{1,3}(,\d{3})*(\.[\d]{1,2})?$/.test(cleaned)) {
+        // US format: commas are thousands separators, dot is decimal
+        cleaned = cleaned.replace(/,/g, '');
+      } else {
+        // Simple comma decimal: "16,52"
+        cleaned = cleaned.replace(',', '.');
       }
-      return parseFloat(raw.replace(",", ""));
+
+      return parseFloat(cleaned);
     }
 
     // Sale format
@@ -102,7 +106,7 @@ export async function extractFirecrawlPrice(
     // Updated pattern: capture digits with commas and optional dot-decimals OR comma-decimals (European)
     const pattern = new RegExp(`${escaped}\\s*([\\d]+(?:[.,]\\d{2,3})?)`, "g");
     let prices = [...cleaned.matchAll(pattern)]
-      .map(m => parseExtractedPrice(m[1], preferredCurrency))
+      .map(m => normalizeEuropeanPrice(m[1]))
       .filter(p => !isNaN(p) && p >= priceRange.min && p <= priceRange.max)
       .sort((a, b) => a - b);
 
@@ -110,7 +114,7 @@ export async function extractFirecrawlPrice(
     if (prices.length === 0 && section !== markdown) {
       cleaned = removeSavingsAmounts(markdown);
       prices = [...cleaned.matchAll(pattern)]
-        .map(m => parseExtractedPrice(m[1], preferredCurrency))
+        .map(m => normalizeEuropeanPrice(m[1]))
         .filter(p => !isNaN(p) && p >= priceRange.min && p <= priceRange.max)
         .sort((a, b) => a - b);
     }
@@ -135,7 +139,7 @@ export async function extractFirecrawlPrice(
       const altEsc = altSymbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const altPattern = new RegExp(`${altEsc}\\s*([\\d]+(?:[.,]\\d{2,3})?)`, "g");
       const altPrices = [...cleaned.matchAll(altPattern)]
-        .map(m => parseExtractedPrice(m[1], detected))
+        .map(m => normalizeEuropeanPrice(m[1]))
         .filter(p => !isNaN(p) && p > 5 && p < 200)
         .sort((a, b) => a - b);
       if (altPrices.length > 0) {
