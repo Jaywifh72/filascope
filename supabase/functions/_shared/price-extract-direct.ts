@@ -167,27 +167,55 @@ export async function fetchExtrudrPrice(productUrl: string, expectedCurrency?: s
 export async function fetchTreeDPrice(productUrl: string): Promise<PriceResponse> {
   try {
     const urlObj = new URL(productUrl);
-    let searchTerm = urlObj.pathname.split("/").pop() || "";
-    searchTerm = searchTerm.replace(/-/g, " ");
-    const apiUrl = `https://web-gateway.treedfilaments.com/s/search?q=${encodeURIComponent(searchTerm)}`;
-    const resp = await withTimeout(fetch(apiUrl, {
-      headers: { "User-Agent": BROWSER_HEADERS["User-Agent"], Accept: "application/json", Origin: "https://treedfilaments.com", Referer: "https://treedfilaments.com/" },
+
+    // Extract SKU from query param (?sku=PLAECO)
+    // Use raw search string to preserve literal '+' characters (URLSearchParams decodes '+' as space)
+    const rawSku = urlObj.search.match(/[?&]sku=([^&]+)/)?.[1];
+    const sku = rawSku ? decodeURIComponent(rawSku) : urlObj.searchParams.get("sku");
+    if (!sku?.trim()) return fail("EUR", "No SKU in URL");
+
+    const trimmedSku = sku.trim();
+
+    // TreeD Direct API: POST /v1/product with SKU
+    const apiResp = await withTimeout(fetch("https://web-gateway.treedfilaments.com/v1/product", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Origin": "https://treedfilaments.com",
+        "Referer": "https://treedfilaments.com/shop/product/",
+        "User-Agent": BROWSER_HEADERS["User-Agent"],
+      },
+      body: JSON.stringify({ sku: trimmedSku, email: "", token: "" }),
     }), TIMEOUT_MS);
-    if (!resp.ok) return fail("EUR", `API ${resp.status}`);
-    const data = await resp.json();
-    const products = data?.hits || data?.products || [];
-    if (products.length === 0) return fail("EUR", "No products found");
-    const product = products[0];
-    const priceCents = product.price || product.salePrice;
-    if (!priceCents) return fail("EUR", "No price in API");
-    const price = priceCents / 100;
-    const compareAt = product.listPrice ? product.listPrice / 100 : null;
+
+    if (!apiResp.ok) return fail("EUR", `TreeD API HTTP ${apiResp.status}`);
+
+    const d = await apiResp.json() as {
+      price?: number; discount?: number; name?: string;
+      weights?: number[]; d175?: boolean; d285?: boolean;
+    };
+
+    // API price is EUR cents per kg
+    const pricePerKgEur = (d.price ?? 0) / 100;
+    if (pricePerKgEur <= 0) return fail("EUR", "No price in TreeD API response");
+
+    const firstWeight = d.weights?.[0] ?? 1000;
+    const spoolPrice = Math.round(pricePerKgEur * (firstWeight / 1000) * 100) / 100;
+    const discount = d.discount ?? 0;
+    const compareAt = discount > 0
+      ? Math.round(((d.price! + discount) / 100) * (firstWeight / 1000) * 100) / 100
+      : null;
+
     return {
-      success: true, price,
-      compareAtPrice: compareAt && compareAt > price * 1.05 ? compareAt : null,
-      currency: "EUR", available: product.inStock !== false,
-      stockStatus: product.inStock !== false ? "in_stock" : "out_of_stock",
-      source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl,
+      success: true,
+      price: spoolPrice,
+      compareAtPrice: compareAt && compareAt > spoolPrice * 1.05 ? compareAt : null,
+      currency: "EUR",
+      available: true,
+      stockStatus: "in_stock",
+      source: "html",
+      fetchedAt: new Date().toISOString(),
+      sourceUrl: productUrl,
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
