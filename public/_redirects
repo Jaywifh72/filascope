@@ -1,10 +1,10 @@
-# Static SEO files — serve-robots edge function handles robots.txt since
-# Lovable hosting serves its own robots.txt at CDN level (overrides public/robots.txt).
-# /llms.txt works fine via 302 — use same pattern for robots.txt.
+# Static SEO files
 /llms.txt     https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms   302
 /a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key   302
 
-# SPA catch-all — MUST be last
+# Serve static files directly — bypass SPA catch-all
+/robots.txt    /robots.txt    200
+/sitemap.xml   /sitemap.xml   200
 
 # SPA catch-all — MUST be last
 /* /index.html 200
