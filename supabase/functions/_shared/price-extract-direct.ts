@@ -204,12 +204,12 @@ export async function fetchPrusaPrice(productUrl: string): Promise<PriceResponse
     const resp = await withTimeout(fetch(productUrl, { headers: BROWSER_HEADERS, redirect: "follow" }), TIMEOUT_MS);
     if (!resp.ok) return fail("EUR", `HTTP ${resp.status}`);
     const html = await resp.text();
-    if (/mk404/i.test(html) || /top\s*secret\s*printer/i.test(html)) {
-      return fail("EUR", "LOCATION_GATE", { notAvailableInRegion: true });
-    }
+
+    // 1. Try JSON-LD first (most reliable, unaffected by geo-gating false positives)
     const r = extractJsonLdPrice(html, "EUR", productUrl);
     if (r) return { success: true, ...r, source: "html", fetchedAt: new Date().toISOString(), sourceUrl: productUrl };
-    // __NEXT_DATA__ fallback
+
+    // 2. __NEXT_DATA__ fallback
     const nextMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
     if (nextMatch) {
       try {
@@ -220,6 +220,14 @@ export async function fetchPrusaPrice(productUrl: string): Promise<PriceResponse
         }
       } catch (_) { /* ignore */ }
     }
+
+    // 3. Geo-gate detection — only check visible body text (strip script/style tags first)
+    //    to avoid false positives from JS bundle contents mentioning "mk404" as a route
+    const visibleText = html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "");
+    if (/mk404/i.test(visibleText) || /top\s*secret\s*printer/i.test(visibleText)) {
+      return fail("EUR", "LOCATION_GATE", { notAvailableInRegion: true });
+    }
+
     return fail("EUR", "No price found");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
