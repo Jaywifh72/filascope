@@ -391,15 +391,24 @@ Deno.serve(async (req) => {
       .select(selectColumns)
       .not('product_url', 'is', null);
     
-    // For filaments, check sync_enabled
+    // For filaments, check sync_enabled and skip unsyncable URL-missing rows
     if (productType === 'filament') {
-      query = query.eq('sync_enabled', true);
+      query = query
+        .eq('sync_enabled', true)
+        .neq('sync_status', 'url_missing');
     }
     
     if (syncType === 'single' && targetId) {
       query = query.eq('id', targetId);
     } else if (syncType === 'brand' && brandSlug) {
-      query = query.ilike('vendor', brandSlug);
+      const { data: brandMeta } = await supabase
+        .from('automated_brands')
+        .select('brand_name')
+        .eq('brand_slug', brandSlug)
+        .maybeSingle();
+
+      const vendorMatch = brandMeta?.brand_name || brandSlug.replace(/-/g, ' ');
+      query = query.ilike('vendor', vendorMatch);
     }
     
     // Prioritize products that haven't been synced recently
@@ -454,18 +463,29 @@ Deno.serve(async (req) => {
     const brandConfigCache: Record<string, BrandConfig | null> = {};
     
     async function getBrandConfig(vendor: string): Promise<BrandConfig | null> {
-      if (brandConfigCache[vendor] !== undefined) {
-        return brandConfigCache[vendor];
+      const vendorKey = vendor.trim().toLowerCase();
+      if (brandConfigCache[vendorKey] !== undefined) {
+        return brandConfigCache[vendorKey];
       }
-      
-      const { data } = await supabase
+
+      const normalizedSlug = vendorKey.replace(/\s+/g, '-');
+      let { data } = await supabase
         .from('automated_brands')
         .select('brand_slug, platform_type, rate_limit_ms, price_extraction_config, extraction_method')
-        .eq('brand_slug', vendor)
-        .single();
-      
-      brandConfigCache[vendor] = data || null;
-      return brandConfigCache[vendor];
+        .eq('brand_slug', normalizedSlug)
+        .maybeSingle();
+
+      if (!data) {
+        const byName = await supabase
+          .from('automated_brands')
+          .select('brand_slug, platform_type, rate_limit_ms, price_extraction_config, extraction_method')
+          .ilike('brand_name', vendor)
+          .maybeSingle();
+        data = byName.data || null;
+      }
+
+      brandConfigCache[vendorKey] = data || null;
+      return brandConfigCache[vendorKey];
     }
     
     // Process products
