@@ -83,10 +83,11 @@ serve(async (req: Request) => {
 
       case "odoo":
         result = await fetchOdooPrice(productUrl);
-        // Firecrawl fallback if direct fetch fails (but not on 404)
-        if (!result.success && !result.is404) {
+        // Firecrawl fallback if direct fetch fails (including soft 404s from wrong platform detection)
+        if (!result.success) {
           console.log("[PRICE-V2] Odoo direct failed, trying Firecrawl fallback");
-          result = await extractFirecrawlPrice(productUrl, "EUR", productType as ProductType, 5000);
+          const odooCurrency = result.currency || "EUR";
+          result = await extractFirecrawlPrice(productUrl, odooCurrency, productType as ProductType, 5000);
         }
         break;
 
