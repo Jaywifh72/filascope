@@ -18,13 +18,16 @@ const TIMEOUT_MS = 8000;
 
 const WC_STORE_CURRENCIES: Record<string, string> = {
   "azurefilm.com": "EUR",
+  "ic3dprinters.com": "USD",
 };
 
 function extractSlug(url: string): string | null {
   try {
-    const parts = new URL(url).pathname.split("/product/");
-    if (parts.length < 2) return null;
-    return parts[1].replace(/\//g, "").trim() || null;
+    const pathname = new URL(url).pathname;
+    // Support both /product/slug/ and /shop/slug/ patterns
+    const productMatch = pathname.match(/\/(?:product|shop)\/([^/?#]+)/);
+    if (productMatch) return productMatch[1].trim() || null;
+    return null;
   } catch { return null; }
 }
 
@@ -133,6 +136,24 @@ export async function extractWooCommercePrice(
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
+          // If API returned variations instead of the parent, fetch parent's variations
+          const firstItem = data[0];
+          if (firstItem.type === "variation" && firstItem.parent > 0) {
+            console.log(`[WC] Slug returned variation (parent=${firstItem.parent}), fetching parent variations`);
+            const variation = await fetchVariations(firstItem.parent, d, 2);
+            if (variation && variation.price > 0) {
+              const alert = variation.price < PRICE_RANGE.min || variation.price > PRICE_RANGE.max;
+              return {
+                success: true, price: variation.price,
+                compareAtPrice: variation.compareAt && variation.compareAt > variation.price * 1.05 ? variation.compareAt : null,
+                currency: String(firstItem.prices?.currency_code || defaultCurrency).toUpperCase(),
+                available: variation.available, stockStatus: variation.available ? "in_stock" : "out_of_stock",
+                source: "woocommerce" as const, method: "wc_store_api_variations",
+                status: alert ? "anomalous" : "ok", price_alert: alert,
+                sourceUrl: productUrl, fetchedAt: new Date().toISOString(),
+              } as PriceResponse;
+            }
+          }
           const parent = data.find((p: any) => p.type === "variable" && p.parent === 0);
           const product = parent || data.find((p: any) => p.type === "simple") || data[0];
           const result = await parseProduct(product, productUrl, d);

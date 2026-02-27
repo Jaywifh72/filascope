@@ -15,6 +15,7 @@ export function detectPlatform(url: string): Platform {
   if (l.includes("formfutura.com")) return "odoo";
   if (l.includes("fusionfilaments.com")) return "odoo";
   if (l.includes("azurefilm.com")) return "woocommerce";
+  if (l.includes("ic3dprinters.com")) return "woocommerce";
   if (l.includes("store.creality.com") || l.includes("creality.com/ca/") ||
       l.includes("creality.com/uk/") || l.includes("creality.com/eu/") ||
       l.includes("creality.com/au/") || l.includes("creality.com/jp/")) return "creality";
@@ -40,12 +41,11 @@ export function isWooCommerce(url: string): boolean {
   return detectPlatform(url) === "woocommerce";
 }
 
-/** Extract WooCommerce product slug from /product/slug URL */
+/** Extract WooCommerce product slug from /product/slug or /shop/slug URL */
 export function extractSlug(url: string): string | null {
   try {
-    const parts = new URL(url).pathname.split("/product/");
-    if (parts.length < 2) return null;
-    return parts[1].replace(/\//g, "").trim() || null;
+    const match = new URL(url).pathname.match(/\/(?:product|shop)\/([^/?#]+)/);
+    return match ? match[1].trim() || null : null;
   } catch { return null; }
 }
 
