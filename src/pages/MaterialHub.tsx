@@ -910,9 +910,18 @@ export default function MaterialHub() {
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           {label} Filament — Complete Guide & {count.toLocaleString()} Products
         </h1>
-        <p className="text-muted-foreground mb-6 max-w-2xl">
+        <p className="text-muted-foreground mb-4 max-w-2xl">
           Browse {count.toLocaleString()} {label} filaments from {stats?.brandCount}+ brands. Compare prices, specs, and HueForge TD values to find the best {label} for your printer.
         </p>
+
+        {/* CTA: cross-link to catalog page */}
+        <Link
+          to={`/filaments/${slug === "pc" ? "polycarbonate" : slug}`}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors text-sm font-medium mb-6"
+        >
+          <Layers className="w-4 h-4" />
+          Browse all {count.toLocaleString()} {label} filaments →
+        </Link>
 
         {/* Stats bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
