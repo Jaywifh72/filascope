@@ -703,6 +703,24 @@ const BrandDetail = () => {
           rating={null}
         />
 
+        {/* Brand Answer Block for AEO */}
+        {filaments && filaments.length > 0 && (
+          <p className="text-sm text-muted-foreground mx-auto max-w-4xl mb-6 leading-relaxed">
+            {displayName} is a 3D printer filament manufacturer
+            {brandInfo?.founded ? ` founded in ${brandInfo.founded}` : ''}
+            {brandInfo?.location ? ` and headquartered in ${brandInfo.location}` : ''}.
+            {' '}FilaScope indexes {groupedProducts.length} {displayName} filament product{groupedProducts.length !== 1 ? 's' : ''}
+            {' '}({filaments.length.toLocaleString()} color variant{filaments.length !== 1 ? 's' : ''})
+            {' '}across {availableMaterials.length} material type{availableMaterials.length !== 1 ? 's' : ''}
+            {availableMaterials.length > 0
+              ? ` including ${availableMaterials.slice(0, 6).join(', ')}${availableMaterials.length > 6 ? `, and more` : ''}`
+              : ''}.
+            {brandPriceRange
+              ? ` Prices range from ${formatPrice(brandPriceRange.min)} to ${formatPrice(brandPriceRange.max)} with real-time pricing tracked from multiple retailers.`
+              : ' Real-time pricing is tracked from multiple retailers.'}
+          </p>
+        )}
+
         {/* Brand Badges */}
         {brandBadges.length > 0 && (
           <div className="mb-6">
