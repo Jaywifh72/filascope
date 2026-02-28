@@ -15,6 +15,7 @@ import { GuideComparisonTable } from './GuideComparisonTable';
 import { GuideVSComparison } from './GuideVSComparison';
 import { ArticleSchema } from '@/components/seo/ArticleSchema';
 import { BreadcrumbSchema } from '@/components/seo/BreadcrumbSchema';
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { FAQSchema } from '@/components/seo/FAQSchema';
 import { RelatedQuestionsSection } from '@/components/seo/RelatedQuestionsSection';
 import { ItemListSchema } from '@/components/seo/ItemListSchema';
@@ -155,13 +156,13 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
 
       {/* Header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-40">
-        <div className="max-w-5xl mx-auto px-4 py-3">
-          <Button variant="ghost" size="sm" asChild className="gap-2">
-            <Link to="/learn">
-              <ArrowLeft className="w-4 h-4" />
-              All Guides
-            </Link>
-          </Button>
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Breadcrumbs
+            items={[
+              { name: "Guides", url: "/learn" },
+              { name: config.title, url: `/guides/${config.slug}` },
+            ]}
+          />
         </div>
       </header>
 

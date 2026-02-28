@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import type { Database } from "@/integrations/supabase/types";
 import { MatrixPrinterSelector } from "@/components/matrix/MatrixPrinterSelector";
@@ -150,6 +151,8 @@ const Matrix = () => {
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
+          {/* Breadcrumb */}
+          <Breadcrumbs items={[{ name: "Compatibility Matrix", url: "/matrix" }]} />
           {/* Header */}
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">

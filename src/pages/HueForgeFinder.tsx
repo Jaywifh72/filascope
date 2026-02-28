@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/hooks/useCurrency';
 import { ItemListSchema, FAQSchema, BreadcrumbSchema } from '@/components/seo';
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const hueforgeFaqs = [
@@ -153,6 +154,10 @@ export default function HueForgeFinder() {
       />
       
       <FAQSchema faqs={hueforgeFaqs} />
+
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-1">
+        <Breadcrumbs items={[{ name: "HueForge Filament Finder", url: "/hueforge-filaments" }]} />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Hero Section */}
