@@ -14,6 +14,9 @@
 const PRERENDER_URL =
   "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender";
 
+const SERVE_ROBOTS_URL =
+  "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots";
+
 /** Lower-cased substrings that identify bot User-Agents */
 const CRAWLER_AGENTS = [
   // Search engines
@@ -86,7 +89,40 @@ export default {
     const pathname = url.pathname;
     const userAgent = request.headers.get("User-Agent") || "";
 
-    // 1. Always serve static files directly — never prerender
+    // 1. Intercept /robots.txt and /llms.txt — proxy to serve-robots edge function
+    if (pathname === "/robots.txt") {
+      try {
+        const res = await fetch(SERVE_ROBOTS_URL);
+        return new Response(res.body, {
+          status: res.status,
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "public, max-age=3600, s-maxage=3600",
+          },
+        });
+      } catch (err) {
+        console.error("[_worker.js] robots.txt fetch failed:", err);
+        return env.ASSETS.fetch(request);
+      }
+    }
+
+    if (pathname === "/llms.txt") {
+      try {
+        const res = await fetch(SERVE_ROBOTS_URL + "?file=llms");
+        return new Response(res.body, {
+          status: res.status,
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "public, max-age=86400, s-maxage=86400",
+          },
+        });
+      } catch (err) {
+        console.error("[_worker.js] llms.txt fetch failed:", err);
+        return env.ASSETS.fetch(request);
+      }
+    }
+
+    // 2. Always serve static files directly — never prerender
     if (isStaticAsset(pathname)) {
       return env.ASSETS.fetch(request);
     }
