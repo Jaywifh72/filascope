@@ -2150,14 +2150,14 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
   'best-tpu-filaments': {
     slug: 'best-tpu-filaments',
     title: 'Best TPU Filaments in 2026',
-    seoTitle: 'Best TPU & Flexible Filaments 2026 — Top Picks Compared | FilaScope',
-    seoDescription: 'Best TPU and flexible filaments ranked by flexibility, print ease, and durability. Compare NinjaFlex, Polymaker TPU, eSUN TPU & more.',
+    seoTitle: 'Best TPU Filaments 2026 — Top Flexible Filaments Ranked | FilaScope',
+    seoDescription: 'The best TPU flexible filaments ranked by print quality, flexibility & value. Compare Bambu Lab, Polymaker, NinjaTek & more with specs, pricing data, and print tips.',
     description: 'The best TPU and flexible filaments ranked by shore hardness, printability, and durability using FilaScore data.',
     category: 'buying-guide',
     readTime: 16,
     publishedAt: '2026-02-28',
     updatedAt: '2026-02-28',
-    keywords: ['best TPU filament', 'best flexible filament', 'TPU filament comparison', 'NinjaFlex alternative', 'TPU shore hardness', 'flexible 3D printing'],
+    keywords: ['best TPU filament', 'best flexible filament', 'TPU filament 2026', 'TPU filament comparison', 'NinjaTek alternative', 'TPU shore hardness', 'flexible 3D printing', 'TPU print settings'],
     filters: { material: 'TPU', sortBy: 'score', limit: 10 },
     layout: 'ranked-list',
     editorialSections: [
@@ -2220,7 +2220,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     ],
     relatedSlugs: ['best-petg-filaments', 'best-filaments-for-functional-parts', 'best-filaments-for-cosplay', 'best-pla-filaments'],
     aiSnippet: {
-      summaryText: 'Polymaker PolyFlex TPU95 is the best TPU filament for most users in 2026 — it balances flexibility, print reliability, and documentation. Start with 95A shore hardness if you\'re new to flexible printing, and use a direct drive extruder for best results.',
+      summaryText: 'The best TPU filaments in 2026 are Polymaker PolyFlex TPU95 for print reliability, NinjaTek NinjaFlex for maximum flexibility at 85A, and eSUN TPU 95A for budget value. Rankings are based on shore hardness, printability, durability, and pricing from FilaScope\'s database. Direct drive extruders are recommended for all TPU printing.',
       topPick: { name: 'PolyFlex TPU95', brand: 'Polymaker', reason: 'best combination of print reliability and flexibility with comprehensive specs' },
       runnerUp: { name: 'NinjaFlex', brand: 'NinjaTek', reason: 'the original flexible filament with proven 85A performance for experienced users' },
       budgetPick: { name: 'TPU 95A', brand: 'eSUN', reason: 'solid TPU performance at entry-level pricing' },
