@@ -249,9 +249,9 @@ export default function HueForgeTDDatabase() {
 
   // ── SEO meta ────────────────────────────────────────────────────────
   const seoTitle = 'HueForge TD Value Database — Filament Transmissivity Data for Lithophanes | FilaScope';
-  const seoDescription = totalCount > 10
+  const seoDescription = totalCount > 100
     ? `Search the world's largest HueForge TD value database with transmissivity data for ${totalCount}+ filaments from ${brandCount}+ brands. Find the perfect filament for lithophane printing.`
-    : "Search the world's largest HueForge TD value database with transmissivity data for hundreds of filaments across 40+ brands. Find the perfect filament for lithophane printing with FilaScope.";
+    : "Search the world's largest HueForge TD value database with transmissivity data for 500+ filaments from 40+ brands. Find the perfect filament for lithophane printing with FilaScope.";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
