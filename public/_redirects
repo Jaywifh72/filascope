@@ -1,12 +1,2 @@
-# Static SEO files
-/llms.txt     https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms   302
-/a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c.txt   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=indexnow-key   302
-
-# Serve static files directly — bypass SPA catch-all
-/robots.txt    /robots.txt    200
-
-# Dynamic sitemap — generated from database
-/sitemap.xml   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-generator   302
-
 # SPA catch-all — MUST be last
 /* /index.html 200
