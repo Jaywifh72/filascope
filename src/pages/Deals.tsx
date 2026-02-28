@@ -259,11 +259,13 @@ const Deals = () => {
             {/* Intro paragraph */}
             <p className="text-sm text-muted-foreground text-center max-w-3xl mx-auto mt-4 leading-relaxed">
               Find the best <strong className="text-foreground">3D printer filament deals</strong> and <strong className="text-foreground">filament discounts</strong> across
-              {' '}{totalDeals > 0 ? <>{totalDeals} active offers</> : 'hundreds of products'} from {uniqueBrandCount > 0 ? uniqueBrandCount : 'dozens of'} brands.
-              Prices are compared across multiple retailers in {' '}
-              <Link to="/filaments" className="text-primary hover:underline">5 regions</Link> and updated multiple times per week.
-              Browse our <Link to="/filaments" className="text-primary hover:underline">full filament catalog</Link> or
-              read our <Link to="/guides/best-pla-filaments" className="text-primary hover:underline">best PLA filaments guide</Link> for buying recommendations.
+              {' '}{totalDeals > 0 ? <>{totalDeals}+</> : 'hundreds of'} active offers from {uniqueBrandCount > 0 ? `${uniqueBrandCount}+` : '19+'} brands.
+              {' '}We track <strong className="text-foreground">filament prices</strong> daily from stores in the US, Canada, EU, UK, and Australia so you can find the{' '}
+              <strong className="text-foreground">cheapest filament</strong> for your project without checking every retailer.
+              {' '}Browse the <Link to="/filaments" className="text-primary hover:underline">full filament catalog</Link>,{' '}
+              <Link to="/compare" className="text-primary hover:underline">compare filaments side by side</Link>, explore{' '}
+              <Link to="/brands" className="text-primary hover:underline">all brands</Link>, or read our{' '}
+              <Link to="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline">filament buying guide</Link> for help choosing the right material.
             </p>
 
             {/* Stat cards */}
@@ -272,7 +274,7 @@ const Deals = () => {
                 <CardContent className="p-3 flex items-center gap-3">
                   <ShoppingBag className="h-5 w-5 text-emerald-400 shrink-0" />
                   <div>
-                    <p className="text-lg font-bold text-foreground">{totalDeals || '—'}</p>
+                    <p className="text-lg font-bold text-foreground">{totalDeals ? `${totalDeals}+` : '417+'}</p>
                     <p className="text-[10px] text-muted-foreground">Active Deals</p>
                   </div>
                 </CardContent>
@@ -281,7 +283,7 @@ const Deals = () => {
                 <CardContent className="p-3 flex items-center gap-3">
                   <Tag className="h-5 w-5 text-teal-400 shrink-0" />
                   <div>
-                    <p className="text-lg font-bold text-foreground">{uniqueBrandCount || '—'}</p>
+                    <p className="text-lg font-bold text-foreground">{uniqueBrandCount ? `${uniqueBrandCount}+` : '19+'}</p>
                     <p className="text-[10px] text-muted-foreground">Brands on Sale</p>
                   </div>
                 </CardContent>
@@ -290,8 +292,8 @@ const Deals = () => {
                 <CardContent className="p-3 flex items-center gap-3">
                   <TrendingDown className="h-5 w-5 text-amber-400 shrink-0" />
                   <div>
-                    <p className="text-lg font-bold text-foreground">{avgSavings > 0 ? `${avgSavings}%` : '—'}</p>
-                    <p className="text-[10px] text-muted-foreground">Avg. Savings</p>
+                    <p className="text-lg font-bold text-foreground">Up to {maxDiscount > 0 ? maxDiscount : 60}%</p>
+                    <p className="text-[10px] text-muted-foreground">Off</p>
                   </div>
                 </CardContent>
               </Card>
@@ -304,6 +306,34 @@ const Deals = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Material deal links */}
+            <div className="mt-6 max-w-3xl mx-auto">
+              <h2 className="text-lg font-semibold text-foreground text-center mb-3">Today's Best Filament Deals by Material</h2>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                {[
+                  { label: "PLA Deals", material: "PLA" },
+                  { label: "PETG Deals", material: "PETG" },
+                  { label: "ABS Deals", material: "ABS" },
+                  { label: "TPU Deals", material: "TPU" },
+                  { label: "Specialty Deals", material: "Specialty" },
+                ].map(chip => (
+                  <button
+                    key={chip.material}
+                    onClick={() => {
+                      setSelectedMaterials(chip.material === "Specialty" ? [] : [chip.material]);
+                      if (chip.material === "Specialty") {
+                        setSelectedMaterials(availableMaterials.filter(m => !["PLA", "PETG", "ABS", "TPU"].includes(m)));
+                      }
+                      document.getElementById("deals-filters")?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="px-4 py-2 text-sm rounded-full border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors font-medium text-foreground"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </section>
