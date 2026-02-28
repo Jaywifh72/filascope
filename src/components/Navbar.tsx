@@ -240,6 +240,7 @@ const Navbar = () => {
   // Flattened items for tablet/mobile "More" dropdown
   const learnItemsFlat = learnMenuSections.flatMap(section => section.items);
   return <>
+      <header>
       <nav className={cn(
          "sticky top-0 z-50 bg-background/95 backdrop-blur-md transition-all duration-300",
          hasScrolled ? "border-b border-border/50 shadow-xl shadow-black/20" : "border-b border-transparent shadow-sm"
@@ -736,6 +737,7 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
+      </header>
       
       {/* Trending Panel */}
       <TrendingPanel isOpen={trendingPanel.isOpen} onClose={trendingPanel.closePanel} selectedTab={trendingPanel.selectedTab} onTabChange={trendingPanel.setSelectedTab} activeTrends={trendingPanel.activeTrends} predictions={trendingPanel.predictions} isLoading={trendingPanel.isLoading} error={trendingPanel.error} viewedTrendIds={trendingPanel.viewedTrendIds} />
