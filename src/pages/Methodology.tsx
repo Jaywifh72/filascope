@@ -1,4 +1,5 @@
 import { LegalPageLayout, LegalSection, LegalList } from "@/components/legal/LegalPageLayout";
+import { ArticleSchema } from "@/components/seo";
 
 export default function Methodology() {
   return (
@@ -8,6 +9,13 @@ export default function Methodology() {
       breadcrumbUrl="/methodology"
       metaDescription="FilaScope Methodology - How we collect data, score products, track prices, and ensure data quality across our 3D printing filament and printer database."
     >
+      <ArticleSchema
+        headline="FilaScope Methodology — How We Rank & Compare Filaments"
+        description="FilaScope Methodology - How we collect data, score products, track prices, and ensure data quality across our 3D printing filament and printer database."
+        datePublished="2025-01-01"
+        dateModified="2026-02-28"
+        url="/methodology"
+      />
       <LegalSection title="How We Collect Data">
         <p>
           FilaScope aggregates information from multiple sources to build the most complete 

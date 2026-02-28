@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { OrganizationSchema, FAQSchema, BreadcrumbSchema } from '@/components/seo';
+import { useJsonLd } from '@/components/seo/useJsonLd';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ENTITY_DESCRIPTION =
@@ -35,6 +36,14 @@ const FAQS = [
 ];
 
 export default function About() {
+  useJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About FilaScope',
+    url: 'https://filascope.com/about',
+    mainEntityOfPage: 'https://filascope.com/about',
+  });
+
   return (
     <>
       <Helmet>
