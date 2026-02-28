@@ -642,7 +642,17 @@ export default function FilamentCategoryPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
               {metaConfig.h1}
             </h1>
-            <p className="text-muted-foreground mb-3 max-w-2xl leading-relaxed">{intro}</p>
+             <p className="text-muted-foreground mb-2 max-w-2xl leading-relaxed">{intro}</p>
+             {slug && (
+               <p className="text-sm mb-3">
+                 <Link
+                   to={`/materials/${slug === "polycarbonate" ? "pc" : slug}`}
+                   className="text-primary hover:underline"
+                 >
+                   Learn about {label} material properties, print settings & specs →
+                 </Link>
+               </p>
+             )}
           </>
         )}
 
