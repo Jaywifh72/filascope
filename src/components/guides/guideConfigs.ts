@@ -43,6 +43,8 @@ export interface GuideConfig {
   faqs: FAQItem[];
   relatedSlugs: string[];
   aiSnippet?: AiSnippetData;
+  quickAnswer?: string;
+  howTo?: { name: string; description: string; steps: { name: string; text: string }[] };
   relatedQuestions?: FAQItem[];
   rankAnnotations?: Record<number, RankAnnotation>;
 }
@@ -2522,6 +2524,148 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       2: { bestFor: 'Best for large functional parts', tempRange: '235–250°C nozzle / 75–80°C bed', justification: 'Reliable PETG for structural parts that need impact and heat resistance on the large build volume.' },
       3: { bestFor: 'Best ABS for enclosed printing', tempRange: '245–260°C nozzle / 100°C bed', justification: 'Low-warp ABS formulation that handles the K1 Max\'s large bed without lifting.' },
     },
+  },
+
+  'how-to-choose-filament': {
+    slug: 'how-to-choose-filament',
+    title: 'How to Choose 3D Printer Filament — A Complete Decision Guide',
+    seoTitle: 'How to Choose 3D Printer Filament — Complete Guide | FilaScope',
+    seoDescription: 'Learn how to choose the right 3D printer filament for your project. Compare PLA, PETG, ABS, TPU, and more by strength, temperature, price, and use case. Data-driven guide from FilaScope.',
+    description: 'A comprehensive, data-driven guide to selecting the right 3D printer filament based on material properties, printer compatibility, pricing, and project requirements.',
+    category: 'buying-guide',
+    readTime: 15,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['how to choose filament', 'filament selection guide', '3D printer filament guide', 'PLA vs PETG vs ABS', 'filament buying guide', 'best filament for my printer', 'filament comparison'],
+    filters: { sortBy: 'score', limit: 5 },
+    layout: 'editorial',
+    quickAnswer: "The best way to choose 3D printer filament is to match the material to your project requirements. PLA is ideal for beginners and decorative prints (190–220°C, no enclosure needed). PETG offers more strength and heat resistance for functional parts (220–250°C). ABS and ASA are best for high-heat or outdoor applications. TPU provides flexibility. Compare specs, pricing, and printer compatibility for 1,080+ filaments on FilaScope.",
+    howTo: {
+      name: 'How to Choose 3D Printer Filament',
+      description: 'A step-by-step process for selecting the right 3D printer filament for your project.',
+      steps: [
+        { name: 'Identify your project requirements', text: 'Determine what your printed part needs to withstand — heat, impact, UV exposure, flexibility, or food contact. This narrows your material choices significantly.' },
+        { name: 'Choose a material type', text: 'Match requirements to a material: PLA for decorative/easy prints, PETG for functional parts, ABS/ASA for high-heat or outdoor use, TPU for flexible parts, Nylon for maximum strength.' },
+        { name: 'Check printer compatibility', text: 'Verify your printer can reach the required nozzle and bed temperatures for your chosen material. Some materials also require an enclosure or hardened nozzle.' },
+        { name: 'Compare prices across brands', text: 'Compare pricing from multiple retailers. Filament prices vary significantly by brand, region, and spool size. Look for the best value per kilogram.' },
+        { name: 'Read reviews and check FilaScore ratings', text: 'Check community reviews and FilaScore ratings to confirm print quality, consistency, and reliability before purchasing.' },
+      ],
+    },
+    editorialSections: [
+      {
+        heading: 'What Filament Material Should I Use?',
+        content: `<p>Choosing the right material is the most important decision. Each filament type has distinct strengths and trade-offs. Use this comparison table to narrow your options:</p>
+<table>
+<thead><tr><th>Material</th><th>Best For</th><th>Nozzle Temp</th><th>Bed Temp</th><th>Enclosure</th><th>Difficulty</th><th>Summary</th></tr></thead>
+<tbody>
+<tr><td><strong><a href="/filaments/pla">PLA</a></strong></td><td>Decorative prints, prototypes, beginners</td><td>190–220°C</td><td>50–60°C</td><td>No</td><td>Easy</td><td>The easiest filament to print. Great surface quality, low warp, biodegradable. Limited heat resistance (~60°C).</td></tr>
+<tr><td><strong><a href="/filaments/petg">PETG</a></strong></td><td>Functional parts, outdoor, food-adjacent</td><td>220–250°C</td><td>70–80°C</td><td>No</td><td>Moderate</td><td>Stronger and more heat-resistant than PLA. Good chemical resistance. Strings more than PLA.</td></tr>
+<tr><td><strong><a href="/filaments/abs">ABS</a></strong></td><td>Engineering parts, high-heat applications</td><td>230–260°C</td><td>90–110°C</td><td>Yes</td><td>Hard</td><td>High heat resistance (~100°C), can be acetone-smoothed. Warps easily, emits fumes, requires enclosure.</td></tr>
+<tr><td><strong><a href="/filaments/tpu">TPU</a></strong></td><td>Flexible parts, phone cases, gaskets</td><td>210–230°C</td><td>40–60°C</td><td>No</td><td>Moderate</td><td>Flexible and impact-resistant. Requires direct-drive extruder for best results. Print slowly (20–40mm/s).</td></tr>
+<tr><td><strong><a href="/filaments/asa">ASA</a></strong></td><td>Outdoor parts, UV-resistant applications</td><td>240–260°C</td><td>90–110°C</td><td>Yes</td><td>Hard</td><td>UV-resistant alternative to ABS. Excellent for outdoor use. Similar printing challenges to ABS.</td></tr>
+<tr><td><strong><a href="/filaments/nylon">Nylon</a></strong></td><td>Gears, hinges, high-strength parts</td><td>240–270°C</td><td>70–90°C</td><td>Yes</td><td>Hard</td><td>Extremely strong and wear-resistant. Very hygroscopic — must be dried before printing. Warps significantly.</td></tr>
+</tbody>
+</table>
+<p><strong>Rule of thumb:</strong> Start with PLA if you're unsure. Move to PETG when you need more strength. Only use ABS, ASA, or Nylon when your application specifically demands their properties.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How Do Temperature Requirements Affect My Choice?',
+        content: `<p>Every filament has a specific nozzle temperature and bed temperature range. Printing outside these ranges causes failed prints, poor adhesion, or material degradation.</p>
+<p><strong>Key considerations:</strong></p>
+<ul>
+<li><strong>Nozzle temperature:</strong> Your printer's hotend must reach the filament's minimum nozzle temp. Most budget printers max out at 260°C, which excludes some Nylon and polycarbonate filaments.</li>
+<li><strong>Bed temperature:</strong> ABS and ASA need 90–110°C bed temps. If your printer's bed only reaches 80°C, stick with PLA or PETG.</li>
+<li><strong>Enclosure:</strong> ABS, ASA, and Nylon benefit significantly from an enclosed build chamber to prevent warping from temperature fluctuations. Printing these materials on an open-frame printer often results in cracking and layer separation.</li>
+<li><strong>Ambient temperature:</strong> Even with PLA, printing in a cold room (below 18°C) can cause warping. Maintain a stable room temperature for consistent results.</li>
+</ul>
+<p>FilaScope lists the exact nozzle and bed temperature ranges for every filament in our database, so you can verify compatibility before purchasing.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Does My Printer Support This Filament?',
+        content: `<p>Not every printer can handle every filament. Before purchasing, verify these compatibility factors:</p>
+<ul>
+<li><strong>Maximum nozzle temperature:</strong> Ensure your hotend reaches the filament's required range.</li>
+<li><strong>Heated bed:</strong> Most filaments beyond PLA require a heated bed. Check your bed's max temperature.</li>
+<li><strong>Extruder type:</strong> Flexible filaments (TPU) print best with direct-drive extruders. Bowden-tube printers can print TPU but only at very slow speeds (15–25mm/s).</li>
+<li><strong>Nozzle material:</strong> Abrasive filaments (carbon fiber, glass fiber, glow-in-the-dark) require a hardened steel nozzle to avoid rapid wear.</li>
+<li><strong>Enclosure:</strong> ABS, ASA, and Nylon print best in enclosed printers.</li>
+</ul>
+<p>Use <a href="/printers">FilaScope's printer database</a> to check which filaments are compatible with your specific printer model. Our compatibility filter cross-references your printer's specs with each filament's requirements.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How Much Does 3D Printer Filament Cost?',
+        content: `<p>Filament prices vary by material, brand, and region. Here are typical price ranges per 1kg spool (USD):</p>
+<ul>
+<li><strong>PLA:</strong> $15–25/kg — the most affordable option with frequent sales and bulk discounts.</li>
+<li><strong>PETG:</strong> $18–28/kg — slightly more expensive than PLA but excellent value for functional parts.</li>
+<li><strong>ABS:</strong> $16–25/kg — comparable to PLA pricing, though quality varies more between brands.</li>
+<li><strong>TPU:</strong> $25–40/kg — premium pricing due to specialized manufacturing.</li>
+<li><strong>ASA:</strong> $22–35/kg — similar to PETG pricing with a slight premium for UV resistance.</li>
+<li><strong>Nylon:</strong> $30–50/kg — the most expensive common material, but its durability often justifies the cost.</li>
+</ul>
+<p><strong>Saving money:</strong> Buy in bulk (2–3kg spools save 15–30%), watch for seasonal sales, and compare prices across retailers. FilaScope tracks real-time pricing from 15+ retailers across the US, EU, UK, Canada, Australia, and Japan — helping you find the best deal in your region.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'What About Specialty Filaments?',
+        content: `<p>Beyond the standard materials, specialty filaments offer unique properties and visual effects:</p>
+<ul>
+<li><strong>Silk PLA:</strong> Adds a glossy, metallic sheen to prints. Easy to print but slightly weaker than standard PLA.</li>
+<li><strong>Carbon fiber composites:</strong> PLA-CF, PETG-CF, and Nylon-CF blends add stiffness and reduce weight. Require a hardened nozzle.</li>
+<li><strong>Wood/metal fill:</strong> PLA blended with wood fibers or metal powder for unique textures. Best for decorative pieces.</li>
+<li><strong>Glow-in-the-dark:</strong> Contains phosphorescent pigments. Highly abrasive — hardened nozzle required.</li>
+<li><strong>Dual-color / multicolor:</strong> Color-changing filaments that shift hue based on viewing angle or along the spool.</li>
+<li><strong>High-speed PLA:</strong> Formulated for printers capable of 150–300mm/s. Modified flow properties prevent under-extrusion at speed.</li>
+</ul>
+<p>Specialty filaments typically cost 20–50% more than their standard counterparts. Start with standard materials and explore specialty options once you're comfortable with your printer's capabilities.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Filament Selection Decision Flowchart',
+        content: `<p>Use this decision tree to quickly narrow down your filament choice:</p>
+<p><strong>Step 1: What does your part need?</strong></p>
+<ul>
+<li>Just looks good → <strong>PLA</strong> (done)</li>
+<li>Needs to be strong → go to Step 2</li>
+<li>Needs to be flexible → <strong>TPU</strong> (done)</li>
+<li>Needs to survive outdoors → go to Step 3</li>
+</ul>
+<p><strong>Step 2: How much strength?</strong></p>
+<ul>
+<li>Moderate strength (handles, brackets) → <strong>PETG</strong></li>
+<li>High strength (gears, structural) → <strong>Nylon</strong></li>
+<li>Needs heat resistance above 80°C → <strong>ABS</strong></li>
+</ul>
+<p><strong>Step 3: Outdoor use?</strong></p>
+<ul>
+<li>Needs UV resistance → <strong>ASA</strong></li>
+<li>UV not critical, needs strength → <strong>PETG</strong></li>
+<li>Needs to withstand 80°C+ heat → <strong>ABS</strong></li>
+</ul>
+<p><strong>Still unsure?</strong> Try our <a href="/wizard">Material Wizard</a> — it asks a few questions about your project and recommends the best filament in under 2 minutes.</p>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What is the easiest filament to print with?', answer: 'PLA, because it prints at low temperatures, doesn\'t need a heated bed or enclosure, and rarely warps.' },
+      { question: 'Can I use any filament in my 3D printer?', answer: 'No. Check your printer\'s maximum nozzle temperature and bed temperature. FilaScope\'s compatibility filter shows which filaments work with your specific printer.' },
+      { question: 'Is PETG stronger than PLA?', answer: 'Yes. PETG has higher impact resistance and heat deflection temperature than PLA, making it better for functional parts.' },
+      { question: 'Do I need an enclosure to print ABS?', answer: 'Yes, an enclosure is strongly recommended for ABS to prevent warping and cracking from temperature fluctuations.' },
+      { question: 'What filament is best for outdoor use?', answer: 'ASA is the best choice for outdoor prints due to its UV resistance. ABS also works but degrades faster in sunlight.' },
+      { question: 'What is the cheapest 3D printer filament?', answer: 'PLA is generally the most affordable at $15–25 USD per 1kg spool, though prices vary by brand and region.' },
+      { question: 'What filament should I use for food-safe prints?', answer: 'Certain PETG filaments are FDA-compliant for food contact. Always check the specific brand\'s food safety certification.' },
+      { question: 'How do I know what temperature to print at?', answer: 'Check the manufacturer\'s recommended settings on the filament\'s product page. FilaScope lists nozzle and bed temperature ranges for every filament.' },
+    ],
+    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'best-filaments-for-beginners', 'filament-temperature-guide'],
+    relatedQuestions: [
+      { question: 'What is the best all-around 3D printer filament?', answer: 'PLA is the best all-around filament for most users. It offers excellent print quality, low failure rates, and works on virtually every FDM printer. For users who need more durability, PETG is the best all-around functional material.' },
+      { question: 'How long does 3D printer filament last in storage?', answer: 'Unopened filament stored in a cool, dry place lasts 1–2 years. Once opened, filament absorbs moisture over weeks to months depending on the material. PLA is moderately hygroscopic; Nylon absorbs moisture very quickly. Store opened spools in sealed containers with desiccant.' },
+      { question: 'Does filament brand really matter?', answer: 'Yes. Premium brands offer tighter diameter tolerances (±0.02mm vs ±0.05mm), better color consistency between batches, and more reliable spool winding. For critical prints, the extra $5–10 per spool is worth the reduced failure rate.' },
+      { question: 'Can I mix different filament brands in the same print?', answer: 'Yes, as long as both filaments are the same material type (e.g., two PLAs) and similar diameter (1.75mm). Different brands of the same material are generally compatible, though slight color and texture differences may be visible at the transition.' },
+    ],
   },
 };
 

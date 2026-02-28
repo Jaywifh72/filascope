@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft, Clock, Calendar, ChevronRight,
-  BookOpen, Sparkles, ShoppingBag, List
+  BookOpen, Sparkles, ShoppingBag, List, Zap
 } from 'lucide-react';
 import { useGuideFilaments } from '@/hooks/useGuideFilaments';
 import { type GuideConfig } from './guideConfigs';
@@ -17,6 +17,7 @@ import { ArticleSchema } from '@/components/seo/ArticleSchema';
 import { BreadcrumbSchema } from '@/components/seo/BreadcrumbSchema';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { FAQSchema } from '@/components/seo/FAQSchema';
+import { HowToSchema } from '@/components/seo/HowToSchema';
 import { RelatedQuestionsSection } from '@/components/seo/RelatedQuestionsSection';
 import { ItemListSchema } from '@/components/seo/ItemListSchema';
 import { generateFilamentSlug } from '@/lib/seoSlugUtils';
@@ -133,6 +134,13 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
       {(config.faqs.length > 0 || (config.relatedQuestions && config.relatedQuestions.length > 0)) && (
         <FAQSchema faqs={[...config.faqs, ...(config.relatedQuestions ?? [])]} />
       )}
+      {config.howTo && (
+        <HowToSchema
+          name={config.howTo.name}
+          description={config.howTo.description}
+          steps={config.howTo.steps}
+        />
+      )}
       {config.layout === 'ranked-list' && filaments && filaments.length > 0 && (
         <ItemListSchema
           name={config.title}
@@ -204,6 +212,26 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           />
         )}
 
+        {/* Quick Answer block — text-only variant for guides without product picks */}
+        {!config.aiSnippet && config.quickAnswer && (
+          <div role="region" aria-label="Quick answer summary" className="mb-8" data-ai-summary="true">
+            <div className="rounded-lg border border-border bg-card/60 border-l-2 border-l-primary pl-0 overflow-hidden">
+              <div className="pl-4 pr-5 py-4">
+                <header className="flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+                  <span className="text-primary text-xs font-semibold uppercase tracking-wider">
+                    Quick Answer
+                  </span>
+                </header>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {config.quickAnswer}
+                </p>
+              </div>
+            </div>
+            <p className="sr-only">Quick Answer: {config.quickAnswer}</p>
+          </div>
+        )}
+
         {/* Table of Contents */}
         {tocItems.length > 2 && (
           <nav aria-label="Table of contents" className="mb-10">
@@ -236,8 +264,8 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           <section key={i} id={slugify(section.heading)} className="mb-8 scroll-mt-24">
             <h2 className="text-xl font-bold mb-3">{section.heading}</h2>
             <div
-              className="prose prose-invert prose-sm max-w-none text-muted-foreground [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content, { ALLOWED_TAGS: ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'h3', 'h4'], ALLOWED_ATTR: ['href', 'class', 'target', 'rel'] }) }}
+              className="prose prose-invert prose-sm max-w-none text-muted-foreground [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline [&_table]:w-full [&_table]:border-collapse [&_table]:text-sm [&_th]:border [&_th]:border-border [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:bg-muted/50 [&_th]:font-semibold [&_th]:text-foreground [&_td]:border [&_td]:border-border [&_td]:px-3 [&_td]:py-2"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content, { ALLOWED_TAGS: ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'h3', 'h4', 'table', 'thead', 'tbody', 'tr', 'th', 'td'], ALLOWED_ATTR: ['href', 'class', 'target', 'rel'] }) }}
             />
           </section>
         ))}
@@ -282,8 +310,8 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           <section key={i} id={slugify(section.heading)} className="mb-8 scroll-mt-24">
             <h2 className="text-xl font-bold mb-3">{section.heading}</h2>
             <div
-              className="prose prose-invert prose-sm max-w-none text-muted-foreground [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content, { ALLOWED_TAGS: ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'h3', 'h4'], ALLOWED_ATTR: ['href', 'class', 'target', 'rel'] }) }}
+              className="prose prose-invert prose-sm max-w-none text-muted-foreground [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline [&_table]:w-full [&_table]:border-collapse [&_table]:text-sm [&_th]:border [&_th]:border-border [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:bg-muted/50 [&_th]:font-semibold [&_th]:text-foreground [&_td]:border [&_td]:border-border [&_td]:px-3 [&_td]:py-2"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content, { ALLOWED_TAGS: ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'h3', 'h4', 'table', 'thead', 'tbody', 'tr', 'th', 'td'], ALLOWED_ATTR: ['href', 'class', 'target', 'rel'] }) }}
             />
           </section>
         ))}
