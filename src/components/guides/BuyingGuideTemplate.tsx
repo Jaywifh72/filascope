@@ -260,7 +260,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
                 <h2 className="text-xl font-bold mb-4">Our Top Picks for Beginners</h2>
               )}
               {filaments.map((f, i) => (
-                <GuideProductCard key={f.id} filament={f} rank={i + 1} />
+                <GuideProductCard key={f.id} filament={f} rank={i + 1} annotation={config.rankAnnotations?.[i + 1]} />
               ))}
             </div>
           ) : (

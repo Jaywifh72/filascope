@@ -2,9 +2,10 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trophy, Medal, Award, ExternalLink, ChevronRight, Info } from 'lucide-react';
+import { Trophy, Medal, Award, ExternalLink, ChevronRight, Info, Target } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { type GuideFilament } from '@/hooks/useGuideFilaments';
+import { type RankAnnotation } from './guideConfigs';
 import { useResolvedPrice, type FormattedResolvedPrice } from '@/hooks/useResolvedPrice';
 import { cleanFilamentDisplayName } from '@/lib/productNameUtils';
 import { getScoreNumberColor } from '@/lib/unifiedFilamentScore';
@@ -14,6 +15,7 @@ import { generateFilamentSlug } from '@/lib/seoSlugUtils';
 interface GuideProductCardProps {
   filament: GuideFilament;
   rank: number;
+  annotation?: RankAnnotation;
 }
 
 function RankBadge({ rank }: { rank: number }) {
@@ -115,7 +117,7 @@ function PriceDisplay({ filament }: { filament: GuideFilament }) {
   );
 }
 
-export function GuideProductCard({ filament, rank }: GuideProductCardProps) {
+export function GuideProductCard({ filament, rank, annotation }: GuideProductCardProps) {
   const displayTitle = cleanFilamentDisplayName(
     (filament.product_title || '').replace(new RegExp(`^${filament.vendor || ''}\\s*`, 'i'), '').trim()
   );
@@ -194,6 +196,23 @@ export function GuideProductCard({ filament, rank }: GuideProductCardProps) {
                 </Badge>
               )}
             </div>
+
+            {/* Rank Annotation */}
+            {annotation && (
+              <div className="mb-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                <p className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                  <Target className="w-3.5 h-3.5 text-primary" />
+                  Best for: <span className="text-primary">{annotation.bestFor}</span>
+                </p>
+                {annotation.tempRange && (
+                  <p className="text-xs text-muted-foreground mb-0.5">🌡️ Recommended: {annotation.tempRange}</p>
+                )}
+                {annotation.hueforgeSuitability && (
+                  <p className="text-xs text-muted-foreground mb-0.5">🎨 HueForge: {annotation.hueforgeSuitability}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">{annotation.justification}</p>
+              </div>
+            )}
 
             {/* Price */}
             <div className="mb-3">
