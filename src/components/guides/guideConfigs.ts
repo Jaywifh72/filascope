@@ -2898,6 +2898,111 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can I print directly from a dry box?', answer: 'Yes, many dry boxes and filament dryers include PTFE tube outputs that allow you to feed filament directly to your printer while keeping the spool sealed. This is the ideal setup for moisture-sensitive materials like Nylon and TPU, as it prevents re-absorption during long prints.' },
     ],
   },
+
+  'how-to-dry-filament': {
+    slug: 'how-to-dry-filament',
+    title: 'How to Dry 3D Printer Filament — Complete Temperature & Time Guide',
+    seoTitle: 'How to Dry 3D Printer Filament — Temperature & Time Guide | FilaScope',
+    seoDescription: 'Complete guide to drying 3D printer filament. Exact temperatures and times for PLA, PETG, ABS, TPU, Nylon, and ASA. Oven, dehydrator, and filament dryer methods compared.',
+    description: 'Learn how to properly dry 3D printer filament with exact temperatures and times for every material type.',
+    category: 'how-to',
+    readTime: 8,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['dry filament', 'filament dryer', 'filament drying temperature', 'wet filament', 'dry PLA', 'dry PETG', 'dry Nylon', 'food dehydrator filament', '2026'],
+    filters: { sortBy: 'score', limit: 5 },
+    layout: 'editorial',
+    quickAnswer: 'To dry 3D printer filament, place it in a filament dryer or food dehydrator at the correct temperature for 4–8 hours. PLA dries at 40–45°C, PETG at 60–65°C, ABS at 65–70°C, Nylon at 70–75°C, and TPU at 50–55°C. Never exceed the filament\'s glass transition temperature or it will deform. Signs of wet filament include popping during extrusion, stringing, bubbling, and poor layer adhesion.',
+    howTo: {
+      name: 'How to Dry 3D Printer Filament',
+      description: 'Step-by-step process for drying moisture-damaged 3D printer filament using a filament dryer, food dehydrator, or oven.',
+      steps: [
+        { name: 'Remove filament from packaging', text: 'Take the spool out of any bags or containers. If the filament has been sitting out, check for visible signs of moisture damage such as brittleness or discoloration.' },
+        { name: 'Set dryer to correct temperature', text: 'Set your filament dryer or food dehydrator to the recommended temperature for your material: PLA 40–45°C, PETG 60–65°C, ABS 65–70°C, Nylon 70–75°C, TPU 50–55°C, ASA 65–70°C. Never exceed the glass transition temperature.' },
+        { name: 'Place spool in dryer', text: 'Place the spool inside the dryer. Ensure it sits flat and the filament is not tangled. If using a food dehydrator, remove extra trays to make room for the spool.' },
+        { name: 'Dry for recommended time', text: 'Dry the filament for the recommended duration: PLA 4–6 hours, PETG 4–6 hours, ABS 4–6 hours, Nylon 6–8 hours, TPU 4–6 hours. Heavily saturated filament may need additional time.' },
+        { name: 'Test print to verify quality', text: 'Print a small test piece and inspect for signs of remaining moisture — popping sounds, stringing, bubbling, or rough surfaces. If symptoms persist, dry for an additional 2–4 hours.' },
+        { name: 'Store immediately in airtight container', text: 'After drying, transfer the spool immediately into an airtight container with silica gel desiccant. Do not leave dried filament exposed to ambient air, as it will begin reabsorbing moisture within hours in humid environments.' },
+      ],
+    },
+    editorialSections: [
+      {
+        heading: 'Filament Drying Temperature and Time Chart',
+        position: 'before',
+        content: `<p>Use this reference table to find the correct drying temperature and time for your filament material. These values are conservative — staying well below glass transition temperatures to prevent spool deformation.</p>
+<table>
+<thead><tr><th>Material</th><th>Drying Temp (°C)</th><th>Drying Time (hours)</th><th>Glass Transition Temp (°C)</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>PLA</td><td>40–45</td><td>4–6</td><td>~60</td><td>Low temperature critical — PLA softens easily</td></tr>
+<tr><td>PETG</td><td>60–65</td><td>4–6</td><td>~80</td><td>Moderate sensitivity; dries relatively quickly</td></tr>
+<tr><td>ABS</td><td>65–70</td><td>4–6</td><td>~105</td><td>Less moisture-sensitive but benefits from drying</td></tr>
+<tr><td>Nylon</td><td>70–75</td><td>6–8</td><td>~70–80</td><td>Extremely hygroscopic — dry before every print</td></tr>
+<tr><td>TPU</td><td>50–55</td><td>4–6</td><td>Varies</td><td>Flexible material; absorbs moisture quickly</td></tr>
+<tr><td>ASA</td><td>65–70</td><td>4–6</td><td>~100</td><td>Similar to ABS; good moisture tolerance</td></tr>
+<tr><td>PVA</td><td>45–50</td><td>6–8</td><td>~85</td><td>Support material — extremely moisture-sensitive</td></tr>
+</tbody>
+</table>`,
+      },
+      {
+        heading: 'Drying Methods Compared',
+        position: 'before',
+        content: `<p>There are three main ways to dry 3D printer filament, each with trade-offs in cost, reliability, and convenience.</p>
+<h3>Filament Dryer (Recommended)</h3>
+<p>Purpose-built filament dryers like the Sunlu S2 or EIBOS Cyclopes are the most reliable option. They maintain accurate temperatures, fit standard spools, and many allow printing directly from the dryer. Cost: $40–$80.</p>
+<h3>Food Dehydrator</h3>
+<p>Food dehydrators work well for drying filament. Choose a model with adjustable temperature control and enough interior space for a spool. Remove extra trays and set the temperature per the chart above. Cost: $30–$60. The main downside is that most don't allow printing while drying.</p>
+<h3>Oven (Use With Caution)</h3>
+<p>Conventional ovens can dry filament but are risky. Most household ovens are inaccurate at low temperatures and can overshoot by 10–20°C, potentially warping spools — especially PLA. If you must use an oven, verify the actual temperature with a thermometer and use the lowest possible setting. Never use a microwave.</p>`,
+      },
+      {
+        heading: 'Step-by-Step: How to Dry Filament',
+        position: 'before',
+        content: `<p>Follow these steps for the best results when drying any 3D printer filament.</p>
+<ol>
+<li><strong>Identify the material.</strong> Check the label on your spool for the material type. This determines the correct drying temperature and time.</li>
+<li><strong>Select your drying method.</strong> A dedicated filament dryer is ideal, but a food dehydrator or oven will work. Avoid ovens for PLA unless you've verified the temperature accuracy.</li>
+<li><strong>Set the temperature.</strong> Refer to the drying chart above. Always stay at least 10–15°C below the glass transition temperature to prevent warping.</li>
+<li><strong>Place the spool and start drying.</strong> Ensure the spool sits flat and the filament end is secured. Close the dryer and set a timer for the recommended duration.</li>
+<li><strong>Test print after drying.</strong> Print a small calibration cube or test piece. Listen for popping sounds and inspect for bubbles, stringing, or rough surfaces. If issues persist, dry for 2–4 more hours.</li>
+<li><strong>Store immediately.</strong> Transfer the dried spool into an airtight container with 50–100g of silica gel desiccant. Filament begins reabsorbing moisture within hours in humid environments.</li>
+</ol>`,
+      },
+      {
+        heading: 'How to Know When Filament Is Dry',
+        position: 'before',
+        content: `<p>There is no consumer-grade moisture meter for filament, so you need to rely on practical indicators during printing.</p>
+<h3>Signs filament is still wet</h3>
+<ul>
+<li><strong>Popping or hissing</strong> during extrusion — the most obvious and reliable indicator</li>
+<li><strong>Excessive stringing</strong> between printed features</li>
+<li><strong>Surface bubbles</strong> or a rough, matte texture on printed surfaces</li>
+<li><strong>Poor layer adhesion</strong> — layers separate more easily than expected</li>
+<li><strong>Unexpected oozing</strong> from the nozzle during travel moves</li>
+</ul>
+<h3>Signs filament is properly dried</h3>
+<ul>
+<li>Smooth, consistent extrusion with no audible popping</li>
+<li>Clean retractions with minimal stringing</li>
+<li>Glossy, smooth surface finish (material-dependent)</li>
+<li>Strong layer adhesion matching the material's expected strength</li>
+</ul>
+<p>If you're unsure, dry for an additional 2 hours and test again. Over-drying at the correct temperature does not damage filament.</p>`,
+      },
+    ],
+    faqs: [
+      { question: 'Can I dry filament in my oven?', answer: 'It\'s possible but risky. Most household ovens are inaccurate at the low temperatures required for filament drying and can overshoot by 10–20°C. This is especially dangerous for PLA, which softens at around 60°C. A filament dryer or food dehydrator provides much more reliable temperature control and consistent results.' },
+      { question: 'How long does it take to dry PLA?', answer: 'PLA takes 4–6 hours at 40–45°C in a filament dryer or food dehydrator. Heavily moisture-saturated PLA that has been left out for months may need up to 8 hours. The key is maintaining a temperature well below PLA\'s glass transition point of ~60°C to prevent warping.' },
+      { question: 'Will drying filament fix print quality?', answer: 'If moisture was the root cause of your print quality issues — popping, stringing, bubbles, poor adhesion — then drying will restore print quality in most cases. However, filament that has been chemically degraded by prolonged moisture exposure (especially Nylon and PVA) may be permanently damaged and cannot be fully recovered by drying alone.' },
+      { question: 'Can I print directly from a filament dryer?', answer: 'Yes, many filament dryers such as the Sunlu S2 and EIBOS Cyclopes include PTFE tube outputs that allow you to feed filament directly to your printer while keeping the spool heated and dry. This is the ideal setup for hygroscopic materials like Nylon and TPU that reabsorb moisture quickly during long prints.' },
+      { question: 'How often should I dry my filament?', answer: 'It depends on the material and your storage conditions. Nylon and TPU should be dried before every print session if not stored in airtight containers. PETG benefits from drying every few weeks in humid climates. PLA and ABS are more forgiving and typically only need drying if you notice print quality degradation or if the spool has been left out for extended periods.' },
+    ],
+    relatedSlugs: ['how-to-store-filament', 'how-to-choose-filament', 'strongest-3d-printer-filament', 'best-pla-filaments'],
+    relatedQuestions: [
+      { question: 'Does wet filament ruin prints permanently?', answer: 'Wet filament produces poor-quality prints but doesn\'t permanently ruin your printer or the filament itself in most cases. Drying the filament will restore print quality. The exception is severely degraded Nylon or PVA, which can undergo hydrolysis (chemical breakdown from water) if stored wet for extended periods — this damage is irreversible.' },
+      { question: 'Can I microwave filament to dry it?', answer: 'No — never microwave filament. Microwaves heat unevenly and can create hotspots that melt or ignite the plastic. Microwaves also heat water molecules directly, which can cause rapid steam expansion inside the filament and create voids or bubbles. Always use a filament dryer, food dehydrator, or conventional oven with verified temperature accuracy.' },
+      { question: 'What is the best budget filament dryer?', answer: 'The Sunlu S1 is widely regarded as the best budget filament dryer at around $40. It handles spools up to 1kg, has adjustable temperature settings, and includes a PTFE tube output for printing while drying. For larger spools or higher temperatures, the Sunlu S2 ($50–$60) offers a larger chamber and better insulation.' },
+    ],
+  },
 };
 
 export const BUYING_GUIDE_SLUGS = Object.keys(BUYING_GUIDE_CONFIGS);

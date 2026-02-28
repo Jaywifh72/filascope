@@ -169,6 +169,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://filascope.com/guides/how-to-dry-filament</loc>
+    <lastmod>2026-02-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://filascope.com/methodology</loc>
     <lastmod>2026-02-28</lastmod>
     <changefreq>monthly</changefreq>
