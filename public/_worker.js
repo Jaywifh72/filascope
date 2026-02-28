@@ -156,37 +156,9 @@ export default {
       }
     }
 
+    // llms-full.txt is served as a static file from public/ — no edge function proxy
     if (pathname === "/llms-full.txt") {
-      try {
-        const res = await fetch(SERVE_ROBOTS_URL + "?file=llms-full", {
-          headers: { Accept: "text/plain" },
-        });
-        const body = await res.text();
-
-        if (!res.ok || /<!doctype html|<html[\s>]/i.test(body)) {
-          throw new Error(`Unexpected llms-full response: ${res.status}`);
-        }
-
-        return new Response(body, {
-          status: 200,
-          headers: {
-            "Content-Type": "text/plain; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-          },
-        });
-      } catch (err) {
-        console.error("[_worker.js] llms-full.txt fetch failed:", err);
-        return new Response(
-          "# FilaScope\n\nThe llms-full.txt endpoint is temporarily unavailable.\n",
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "text/plain; charset=utf-8",
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-            },
-          }
-        );
-      }
+      return env.ASSETS.fetch(request);
     }
 
     if (isStaticAsset(pathname)) {
