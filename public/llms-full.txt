@@ -1,0 +1,115 @@
+# FilaScope — The World's Most Complete 3D Printer Filament Comparison Platform
+
+> FilaScope is a free, data-driven filament comparison platform that indexes 1,080+ 3D printer filaments from 48+ brands. It features real-time pricing from 15+ retailers across the US, Canada, EU, UK, and Australia, the largest public HueForge Transmission Distance (TD) database, printer compatibility filtering, and FilaScore quality ratings. Updated daily.
+
+## What Is FilaScope?
+
+FilaScope is a free 3D printer filament comparison platform that helps makers find the perfect filament for any project. It indexes 1,080+ filaments from 48+ brands with detailed specifications including nozzle temperature, bed temperature, diameter, material type, density, and tensile strength. FilaScope tracks real-time pricing from 15+ retailers worldwide with currency normalization across 6 regional markets (US, Canada, EU, UK, Australia, Japan). It features the world's largest public HueForge Transmission Distance (TD) database for lithophane and multicolor printing, printer compatibility filtering for 119+ printers, and a proprietary FilaScore quality rating system.
+
+## Key Data Points
+
+- Total filaments indexed: 1,080+
+- Total filament variants (colors): 8,277+
+- Brands tracked: 48+
+- Retailers monitored: 15+
+- 3D printers in database: 119+
+- Regional markets: US, Canada, EU, UK, Australia, Japan
+- HueForge TD values tracked: largest public database
+- Price updates: Daily
+- FilaScore ratings: Every filament scored 1-10
+
+## Material Types Covered
+
+### PLA (Polylactic Acid)
+
+PLA is the most popular 3D printing filament. It prints at 190-220C nozzle temperature, requires minimal bed heating (25-60C), is biodegradable, and produces excellent surface quality. Ideal for beginners, prototypes, and decorative prints. FilaScope tracks 4,296+ PLA variants.
+
+### PETG (Polyethylene Terephthalate Glycol)
+
+PETG offers better strength and heat resistance than PLA. It prints at 220-250C with bed at 70-80C. More durable and suitable for functional parts and outdoor items. FilaScope tracks 1,048+ PETG variants.
+
+### ABS (Acrylonitrile Butadiene Styrene)
+
+ABS is a strong, heat-resistant engineering filament printing at 230-260C. Requires an enclosed printer. Ideal for mechanical parts and automotive components. FilaScope tracks 865+ ABS variants.
+
+### TPU (Thermoplastic Polyurethane)
+
+TPU is a flexible rubber-like filament with Shore hardness 85A-98A. Prints at 210-230C. Used for phone cases, gaskets, and wearables. FilaScope tracks 381+ TPU variants.
+
+### ASA (Acrylonitrile Styrene Acrylate)
+
+ASA is UV-resistant, ideal for outdoor applications. Prints at 235-260C with similar strength to ABS but superior weathering. FilaScope tracks 408+ ASA variants.
+
+### Nylon/PA (Polyamide)
+
+Nylon has excellent strength, flexibility, and wear resistance. Prints at 240-270C. Used for gears, hinges, and load-bearing parts. FilaScope tracks 101+ Nylon variants.
+
+## HueForge Transmission Distance (TD)
+
+TD measures how many millimeters of light pass through a filament. Lower TD (0.1-1.0) indicates opaque filaments; higher TD (4.0-10.0+) indicates translucent. TD is critical for HueForge multicolor lithophane printing. FilaScope maintains the worlds largest public TD database.
+
+TD Value Ranges:
+- Black/Dark Colors: TD 0.3-0.8 (very opaque)
+- Standard Colors: TD 1.5-3.0 (moderate)
+- White: TD 3.5-5.0+ (translucent)
+- Translucent/Clear: TD 5.0-10.0+ (highly translucent)
+
+## Core Pages
+
+- Homepage: https://filascope.com/
+- Filament Database: https://filascope.com/filaments
+- PLA Filaments: https://filascope.com/filaments/pla
+- PETG Filaments: https://filascope.com/filaments/petg
+- ABS Filaments: https://filascope.com/filaments/abs
+- TPU Filaments: https://filascope.com/filaments/tpu
+- ASA Filaments: https://filascope.com/filaments/asa
+- Nylon Filaments: https://filascope.com/filaments/nylon
+- 3D Printer Database: https://filascope.com/printers
+- Brand Directory: https://filascope.com/brands
+- HueForge TD Database: https://filascope.com/hueforge-td-database
+- Filament Deals: https://filascope.com/deals
+- Comparison Tool: https://filascope.com/compare
+- Color Finder: https://filascope.com/color-finder
+- Learning Center: https://filascope.com/learn
+
+## Buying Guides
+
+- Best PLA Filaments 2026: https://filascope.com/guides/best-pla-filaments
+- Best PETG Filaments 2026: https://filascope.com/guides/best-petg-filaments
+- Best ABS Filaments 2026: https://filascope.com/guides/best-abs-filaments
+- Best Filaments for Beginners: https://filascope.com/best-filaments-for-beginners
+- Best Filaments for HueForge: https://filascope.com/best-filaments-for-hueforge
+- Best Filaments for Outdoor Use: https://filascope.com/guides/best-filaments-for-outdoor-use
+- PLA vs PETG Comparison: https://filascope.com/pla-vs-petg
+- What is HueForge TD: https://filascope.com/guides/what-is-hueforge-td
+- HueForge Complete Guide: https://filascope.com/learn/hueforge
+
+## Top Brands
+
+- Bambu Lab: https://filascope.com/brands/bambu-lab
+- Polymaker: https://filascope.com/brands/polymaker
+- eSUN: https://filascope.com/brands/esun
+- Prusament: https://filascope.com/brands/prusament
+- Overture: https://filascope.com/brands/overture
+- Creality: https://filascope.com/brands/creality
+- Hatchbox: https://filascope.com/brands/hatchbox
+- FormFutura: https://filascope.com/brands/formfutura
+
+## Frequently Asked Questions
+
+Q: What is the best PLA filament in 2026?
+A: Based on FilaScope rankings, top PLA filaments are Polymaker PolySonic PLA Pro for speed and quality, Bambu Lab PLA Basic for value, and Prusament PLA for accuracy. Rankings use FilaScore ratings weighing print quality, pricing, and brand trust across 4,296+ PLA variants.
+
+Q: What temperature should I print PLA at?
+A: PLA prints at 190-220C nozzle temperature with 25-60C bed temperature. Optimal temperature varies by brand. Check manufacturer settings on each FilaScope filament page.
+
+Q: What is HueForge Transmission Distance (TD)?
+A: TD measures how many millimeters of light pass through a filament, ranging from 0.3 (very opaque) to 10.0+ (highly translucent). Essential for HueForge multicolor lithophane printing. FilaScope has the worlds largest public TD database.
+
+Q: What is the difference between PLA and PETG?
+A: PLA prints easier (190-220C, no enclosure) with better surface quality. PETG is stronger, more heat-resistant (220-250C), better for functional parts. See full comparison at https://filascope.com/pla-vs-petg
+
+Q: What filament should I use for HueForge?
+A: Choose filaments with known TD values. Use black (TD 0.5-1.0) for base, white (TD 3.5-5.0) for highlights, mid-tones (TD 1.5-3.0). Standard PLA is most popular. Browse TD database at https://filascope.com/hueforge-td-database
+
+Last updated: February 28, 2026
