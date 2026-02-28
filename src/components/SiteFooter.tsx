@@ -127,53 +127,39 @@ export function SiteFooter() {
   };
 
   const materialLinks = [
+    { name: "All Filaments", href: "/filaments" },
     { name: "PLA Filaments", href: "/filaments/pla" },
     { name: "PETG Filaments", href: "/filaments/petg" },
     { name: "ABS Filaments", href: "/filaments/abs" },
     { name: "TPU Filaments", href: "/filaments/tpu" },
-    { name: "ASA Filaments", href: "/filaments/asa" },
-    { name: "Silk PLA Filaments", href: "/filaments/silk-pla" },
-    { name: "High Speed PLA", href: "/filaments/high-speed-pla" },
     { name: "Nylon Filaments", href: "/filaments/nylon" },
-    { name: "All Filaments →", href: "/filaments" },
-  ];
-
-  const brandLinks = [
-    { name: "Bambu Lab", href: "/brands/bambu-lab" },
-    { name: "Polymaker", href: "/brands/polymaker" },
-    { name: "eSUN", href: "/brands/esun" },
-    { name: "Prusament", href: "/brands/prusament" },
-    { name: "Overture", href: "/brands/overture" },
-    { name: "Hatchbox", href: "/brands/hatchbox" },
-    { name: "ColorFabb", href: "/brands/colorfabb" },
-    { name: "All Brands →", href: "/brands" },
-  ];
-
-  const guideLinks = [
-    { name: "Best Filaments for Beginners", href: "/guides/best-filaments-for-beginners" },
-    { name: "Filament Temperature Guide", href: "/filament-temperature-guide" },
-    { name: "Filament Storage Guide", href: "/filament-storage-guide" },
-    { name: "Best Filaments for HueForge", href: "/guides/best-filaments-for-hueforge" },
-    { name: "PLA vs PETG", href: "/guides/pla-vs-petg" },
-    { name: "Best PLA Filaments", href: "/guides/best-pla-filaments" },
-    { name: "All Guides →", href: "/learn" },
+    { name: "Filament Deals", href: "/deals" },
   ];
 
   const toolLinks = [
-    { name: "Filament Database", href: "/filament-database" },
+    { name: "Compare Filaments", href: "/compare" },
     { name: "HueForge TD Database", href: "/hueforge-td-database" },
-    { name: "Color Finder", href: "/color-finder" },
-    { name: "Filament Compare", href: "/compare" },
-    { name: "Filament Wizard", href: "/wizard" },
-    { name: "Diagnose My Print", href: "/diagnose" },
-    { name: "Today's Deals", href: "/deals" },
+    { name: "Compatibility Matrix", href: "/matrix" },
+    { name: "Filament Quiz", href: "/wizard" },
+    { name: "Color Finder", href: "/colors" },
+    { name: "3D Printers", href: "/printers" },
+  ];
+
+  const guideLinks = [
+    { name: "Best PLA Filaments", href: "/guides/best-pla-filaments" },
+    { name: "PLA vs PETG", href: "/guides/pla-vs-petg" },
+    { name: "How to Choose Filament", href: "/guides/how-to-choose-3d-printer-filament" },
+    { name: "Filament Types Explained", href: "/guides/3d-printer-filament-types-explained" },
+    { name: "Temperature Guide", href: "/guides/filament-temperature-guide" },
+    { name: "All Guides →", href: "/learn" },
   ];
 
   const aboutLinks: { name: string; href: string; external?: boolean; badge?: string; icon?: React.ComponentType<{ className?: string }> }[] = [
-    { name: "About FilaScope", href: "/about" },
+    { name: "About", href: "/about" },
     { name: "Methodology", href: "/methodology" },
     { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
     { name: "Privacy Policy", href: "/privacy" },
+    { name: "Terms", href: "/terms" },
     { name: "Feature Roadmap", href: "/roadmap", badge: "New" },
     { name: "Request a Feature", href: "/request-feature", icon: Lightbulb },
     { name: "Contact", href: "mailto:hello@filascope.com", external: true },
@@ -251,11 +237,11 @@ export function SiteFooter() {
       {/* Main Footer Content */}
       <div className="bg-card border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
-          {/* SEO Link Grid - 5 columns + newsletter */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
-            {/* Column 1 - Browse by Material */}
-            <nav aria-label="Browse by Material">
-              <FooterColumnHeader>Browse by Material</FooterColumnHeader>
+          {/* Explore FilaScope — SEO Link Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-6">
+            {/* Column 1 — Filaments */}
+            <nav aria-label="Filaments">
+              <FooterColumnHeader>Filaments</FooterColumnHeader>
               <ul className="space-y-3">
                 {materialLinks.map((link) => (
                   <li key={link.name}>
@@ -270,41 +256,7 @@ export function SiteFooter() {
               </ul>
             </nav>
 
-            {/* Column 2 - Popular Brands */}
-            <nav aria-label="Popular Brands">
-              <FooterColumnHeader>Popular Brands</FooterColumnHeader>
-              <ul className="space-y-3">
-                {brandLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link 
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-
-            {/* Column 3 - Guides & Resources */}
-            <nav aria-label="Guides and Resources">
-              <FooterColumnHeader>Guides & Resources</FooterColumnHeader>
-              <ul className="space-y-3">
-                {guideLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link 
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-
-            {/* Column 4 - Tools */}
+            {/* Column 2 — Tools */}
             <nav aria-label="Tools">
               <FooterColumnHeader>Tools</FooterColumnHeader>
               <ul className="space-y-3">
@@ -321,9 +273,26 @@ export function SiteFooter() {
               </ul>
             </nav>
 
-            {/* Column 5 - About */}
-            <nav aria-label="About">
-              <FooterColumnHeader>About</FooterColumnHeader>
+            {/* Column 3 — Guides */}
+            <nav aria-label="Guides">
+              <FooterColumnHeader>Guides</FooterColumnHeader>
+              <ul className="space-y-3">
+                {guideLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link 
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Column 4 — Company */}
+            <nav aria-label="Company">
+              <FooterColumnHeader>Company</FooterColumnHeader>
               <ul className="space-y-3">
                 {aboutLinks.map((link) => (
                   <li key={link.name}>
