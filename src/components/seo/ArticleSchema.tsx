@@ -40,7 +40,7 @@ export function ArticleSchema({
     datePublished,
     ...(dateModified && { dateModified }),
     url: fullUrl,
-    ...(imageUrl && { image: imageUrl }),
+    image: [imageUrl || `${BASE_URL}/og-image.png`],
     author: { '@type': 'Organization', name: 'FilaScope', url: BASE_URL },
     publisher: {
       '@type': 'Organization',
