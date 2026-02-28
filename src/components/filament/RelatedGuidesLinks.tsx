@@ -1,4 +1,4 @@
-import { BookOpen, Layers, GitCompare, Sparkles } from 'lucide-react';
+import { BookOpen, Layers, GitCompare, Sparkles, ArrowRight } from 'lucide-react';
 import { toBrandSlug } from '@/utils/brandSlug';
 
 interface RelatedGuidesLinksProps {
@@ -13,13 +13,37 @@ function getMaterialSlug(material: string): string {
   return material.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-// Material-specific comparison guides
-const MATERIAL_COMPARISONS: Record<string, { href: string; label: string }> = {
-  PLA: { href: '/pla-vs-petg', label: 'PLA vs PETG: Which Should You Choose?' },
-  'PLA+': { href: '/pla-vs-petg', label: 'PLA+ vs PETG: Which Should You Choose?' },
-  PETG: { href: '/pla-vs-petg', label: 'PETG vs PLA: Complete Material Comparison' },
-  ABS: { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ABS vs ASA for Outdoor Printing' },
-  ASA: { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ASA vs ABS for Outdoor Printing' },
+// Material-specific comparison guides (using /guides/ prefix)
+const MATERIAL_COMPARISONS: Record<string, { href: string; label: string }[]> = {
+  PLA: [
+    { href: '/guides/pla-vs-petg', label: 'PLA vs PETG: Which Should You Choose?' },
+    { href: '/guides/pla-vs-abs', label: 'PLA vs ABS: Strength & Ease Compared' },
+  ],
+  'PLA+': [
+    { href: '/guides/pla-vs-petg', label: 'PLA+ vs PETG: Which Should You Choose?' },
+    { href: '/guides/pla-plus-vs-pla-pro', label: 'PLA+ vs PLA Pro: What\'s the Difference?' },
+  ],
+  PETG: [
+    { href: '/guides/pla-vs-petg', label: 'PETG vs PLA: Complete Material Comparison' },
+    { href: '/guides/petg-vs-abs', label: 'PETG vs ABS: Strength & Heat Resistance' },
+    { href: '/guides/nylon-vs-petg', label: 'Nylon vs PETG: Engineering Filament Guide' },
+  ],
+  ABS: [
+    { href: '/guides/pla-vs-abs', label: 'PLA vs ABS: Strength & Ease Compared' },
+    { href: '/guides/petg-vs-abs', label: 'PETG vs ABS: Which Is Better?' },
+    { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ABS vs ASA for Outdoor Printing' },
+  ],
+  ASA: [
+    { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ASA vs ABS for Outdoor Printing' },
+  ],
+  TPU: [
+    { href: '/guides/tpu-vs-petg', label: 'TPU vs PETG: Flexible vs Rigid Compared' },
+    { href: '/guides/best-tpu-filaments', label: 'Best TPU & Flexible Filaments 2026' },
+  ],
+  NYLON: [
+    { href: '/guides/nylon-vs-petg', label: 'Nylon vs PETG: Engineering Filament Guide' },
+    { href: '/guides/best-filaments-for-functional-parts', label: 'Best Filaments for Functional Parts' },
+  ],
 };
 
 // Material-specific "Best of" guide slugs
@@ -28,6 +52,7 @@ const BEST_OF_GUIDES: Record<string, string> = {
   'PLA+': '/guides/best-pla-filaments',
   PETG: '/guides/best-petg-filaments',
   ABS: '/guides/best-abs-filaments',
+  TPU: '/guides/best-tpu-filaments',
 };
 
 export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissionDistance }: RelatedGuidesLinksProps) {
@@ -36,16 +61,16 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
   const materialKey = material?.toUpperCase().split(/[^A-Z+]/)[0] || '';
   const materialSlug = material ? getMaterialSlug(material) : null;
   const brandSlug = brand ? toBrandSlug(brand) : null;
-  const comparisonGuide = MATERIAL_COMPARISONS[material || ''] || MATERIAL_COMPARISONS[materialKey];
+  const comparisonGuides = MATERIAL_COMPARISONS[material || ''] || MATERIAL_COMPARISONS[materialKey] || [];
   const bestOfGuide = BEST_OF_GUIDES[material || ''] || BEST_OF_GUIDES[materialKey];
 
   const links: Array<{ href: string; label: string; icon: React.ReactNode }> = [];
 
-  // 1. Material hub
+  // 1. "Learn about [Material]" — descriptive anchor text for material hub
   if (materialSlug && material) {
     links.push({
       href: `/materials/${materialSlug}`,
-      label: `All ${material} Filaments — Material Hub`,
+      label: `Learn more about ${material} filament properties and print settings`,
       icon: <Layers className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }
@@ -60,35 +85,35 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
     });
   }
 
-  // 3. HueForge guide — always shown, highlighted when TD data exists
-  links.push({
-    href: '/best-filaments-for-hueforge',
-    label: hasTransmissionDistance
-      ? 'Best Filaments for HueForge — TD Value Guide'
-      : 'Best Filaments for HueForge Lithophanes',
-    icon: <Sparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
-  });
-
-  // 4. Material comparison guide
-  if (comparisonGuide) {
+  // 3. HueForge guide — highlighted when TD data exists
+  if (hasTransmissionDistance) {
     links.push({
-      href: comparisonGuide.href,
-      label: comparisonGuide.label,
+      href: '/guides/best-filaments-for-hueforge',
+      label: 'Best Filaments for HueForge — TD Value Guide',
+      icon: <Sparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
+    });
+  }
+
+  // 4. Material comparison guides (up to 2)
+  for (const guide of comparisonGuides.slice(0, 2)) {
+    links.push({
+      href: guide.href,
+      label: guide.label,
       icon: <GitCompare className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }
 
-  // 5. Brand collection
+  // 5. "Browse all [Brand] filaments" — descriptive anchor text
   if (brand && brandSlug) {
     links.push({
       href: `/brands/${brandSlug}`,
-      label: `${brand} Filament Collection — All Products`,
-      icon: <BookOpen className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
+      label: `Browse all ${brand} filaments`,
+      icon: <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }
 
-  // Cap at 5 links
-  const visibleLinks = links.slice(0, 5);
+  // Cap at 6 links
+  const visibleLinks = links.slice(0, 6);
 
   return (
     <section aria-label="Related guides and comparisons" className="mt-4 mb-6">

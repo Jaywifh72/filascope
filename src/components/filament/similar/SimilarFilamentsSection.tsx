@@ -16,18 +16,29 @@ const MATERIAL_GUIDES: Record<string, { slug: string; title: string }[]> = {
   PLA: [
     { slug: 'best-pla-filaments', title: 'Best PLA Filaments in 2026' },
     { slug: 'pla-vs-petg', title: 'PLA vs PETG: Which Should You Choose?' },
-    { slug: 'pla-vs-petg-vs-abs', title: 'PLA vs PETG vs ABS Comparison' },
+    { slug: 'pla-vs-abs', title: 'PLA vs ABS: Strength & Ease Compared' },
   ],
   PETG: [
     { slug: 'best-petg-filaments', title: 'Best PETG Filaments in 2026' },
     { slug: 'pla-vs-petg', title: 'PLA vs PETG: Which Should You Choose?' },
+    { slug: 'petg-vs-abs', title: 'PETG vs ABS: Strength & Heat Resistance' },
   ],
   ABS: [
     { slug: 'best-abs-filaments', title: 'Best ABS Filaments in 2026' },
-    { slug: 'pla-vs-petg-vs-abs', title: 'PLA vs PETG vs ABS Comparison' },
+    { slug: 'pla-vs-abs', title: 'PLA vs ABS: Strength & Ease Compared' },
+    { slug: 'petg-vs-abs', title: 'PETG vs ABS: Strength & Heat Resistance' },
   ],
-  TPU: [],
-  ASA: [],
+  TPU: [
+    { slug: 'best-tpu-filaments', title: 'Best TPU & Flexible Filaments 2026' },
+    { slug: 'tpu-vs-petg', title: 'TPU vs PETG: Flexible vs Rigid Compared' },
+  ],
+  ASA: [
+    { slug: 'asa-vs-abs-outdoor-printing', title: 'ASA vs ABS for Outdoor Printing' },
+  ],
+  NYLON: [
+    { slug: 'nylon-vs-petg', title: 'Nylon vs PETG: Engineering Filament Guide' },
+    { slug: 'best-filaments-for-functional-parts', title: 'Best Filaments for Functional Parts' },
+  ],
 };
 
 interface CurrentFilament {
@@ -140,7 +151,7 @@ function RelatedCategoriesNav({
         {guides.map((guide) => (
           <Link
             key={guide.slug}
-            to={`/learn/${guide.slug}`}
+            to={`/guides/${guide.slug}`}
             className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 hover:underline decoration-primary/50 transition-colors"
           >
             <BookOpen className="w-3.5 h-3.5" />
