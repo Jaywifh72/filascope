@@ -370,7 +370,7 @@ const GUIDE_DATES: Record<string,{date:string;tl?:boolean;learn?:boolean}> = {
   "best-filament-for-bambu-lab-p1s":{date:"2026-01-14"},"silk-pla-comparison":{date:"2026-01-18"},
   "asa-vs-abs-outdoor-printing":{date:"2026-01-16"},"pla-plus-vs-pla-pro":{date:"2026-01-12"},
   "pla-vs-petg":{date:"2026-01-15"},"best-filaments-for-beginners":{date:"2026-01-08"},
-  "best-filaments-for-hueforge":{date:"2026-01-20"},"hueforge":{date:"2026-02-20",learn:true},
+  "best-filaments-for-hueforge":{date:"2026-01-20"},
   "what-is-hueforge-td":{date:"2026-02-20"},"best-white-filaments-for-hueforge":{date:"2026-02-20"},
   "how-to-measure-filament-td":{date:"2026-02-20"},"best-filaments-for-outdoor-use":{date:"2026-02-20"},
   "best-filaments-for-lithophanes":{date:"2026-02-20"},
@@ -404,6 +404,7 @@ const GUIDE_REDIRECTS: Record<string,string> = {
   "/best-filaments-for-hueforge":`${BASE_URL}/guides/best-filaments-for-hueforge`,
   "/best-filaments-for-beginners":`${BASE_URL}/guides/best-filaments-for-beginners`,
   "/pla-vs-petg":`${BASE_URL}/guides/pla-vs-petg`,
+  "/learn/hueforge":`${BASE_URL}/guides/what-is-hueforge-td`,
 };
 
 // ── Main handler ──

@@ -351,7 +351,7 @@ const App = () => (
                   <Route path="/td-database" element={<TDDatabase />} />
                   <Route path="/hueforge-td-database" element={<HueForgeTDDatabase />} />
                   <Route path="/learn" element={<LearningCenter />} />
-                  <Route path="/learn/hueforge" element={<HueForgeHub />} />
+                  <Route path="/learn/hueforge" element={<Navigate to="/guides/what-is-hueforge-td" replace />} />
                   <Route path="/learn/:slug" element={<GuideDetail />} />
                   <Route path="/guides/print-settings" element={<GuidePrintSettings />} />
                   <Route path="/guides/troubleshooting" element={<GuideTroubleshooting />} />
