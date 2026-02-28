@@ -142,8 +142,27 @@ export default function HueForgeTDDatabase() {
     };
   }, [filaments]);
 
-  const brandCount = brands.length;
-  const totalCount = filaments?.length || 0;
+  // Lightweight count query for accurate SEO meta (not capped by row limit)
+  const { data: tdCounts } = useQuery({
+    queryKey: ['hueforge-td-counts'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('filaments')
+        .select('id', { count: 'exact', head: true })
+        .not('transmission_distance', 'is', null);
+      const { data: brandData } = await supabase
+        .from('filaments')
+        .select('vendor')
+        .not('transmission_distance', 'is', null)
+        .not('vendor', 'is', null);
+      const uniqueBrands = new Set((brandData ?? []).map((f: { vendor: string }) => f.vendor));
+      return { totalFilaments: count ?? 0, totalBrands: uniqueBrands.size };
+    },
+    staleTime: 10 * 60_000,
+  });
+
+  const brandCount = tdCounts?.totalBrands || brands.length;
+  const totalCount = tdCounts?.totalFilaments || filaments?.length || 0;
 
   // ── Filter + sort logic ─────────────────────────────────────────────
   const filteredData = useMemo(() => {
@@ -230,7 +249,9 @@ export default function HueForgeTDDatabase() {
 
   // ── SEO meta ────────────────────────────────────────────────────────
   const seoTitle = 'HueForge TD Value Database — Filament Transmissivity Data for Lithophanes | FilaScope';
-  const seoDescription = `Search the world's largest HueForge TD value database with transmissivity data for ${totalCount}+ filaments from ${brandCount}+ brands. Find the perfect filament for lithophane printing.`;
+  const seoDescription = totalCount > 10
+    ? `Search the world's largest HueForge TD value database with transmissivity data for ${totalCount}+ filaments from ${brandCount}+ brands. Find the perfect filament for lithophane printing.`
+    : "Search the world's largest HueForge TD value database with transmissivity data for hundreds of filaments across 40+ brands. Find the perfect filament for lithophane printing with FilaScope.";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
