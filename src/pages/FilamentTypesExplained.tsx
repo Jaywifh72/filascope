@@ -373,16 +373,17 @@ export default function FilamentTypesExplained() {
           <h2 className="text-lg font-semibold mb-4">Related Guides</h2>
           <div className="flex flex-wrap gap-2">
             {[
-              { href: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose Filament' },
+              { href: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose 3D Printer Filament' },
+              { href: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
+              { href: '/guides/petg-vs-abs', label: 'PETG vs ABS Comparison' },
               { href: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
               { href: '/guides/best-petg-filaments', label: 'Best PETG Filaments 2026' },
               { href: '/guides/best-abs-filaments', label: 'Best ABS Filaments 2026' },
               { href: '/guides/best-tpu-filaments', label: 'Best TPU Filaments 2026' },
-              { href: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
-              { href: '/guides/filament-temperature-guide', label: 'Temperature Guide' },
-              { href: '/filaments', label: 'Browse All Filaments' },
-              { href: '/compare', label: 'Compare Filaments' },
-              { href: '/matrix', label: 'Compatibility Matrix' },
+              { href: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide' },
+              { href: '/filaments', label: 'Browse all filaments on FilaScope' },
+              { href: '/compare', label: 'Compare filaments side by side' },
+              { href: '/matrix', label: 'Printer–Filament Compatibility Matrix' },
             ].map(g => (
               <Link
                 key={g.href}

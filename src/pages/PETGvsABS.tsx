@@ -297,15 +297,14 @@ export default function PETGvsABS() {
           <h2 className="text-lg font-semibold mb-4">Related Guides</h2>
           <div className="flex flex-wrap gap-2">
             {[
-              { href: '/guides/pla-vs-petg', label: 'PLA vs PETG' },
-              { href: '/guides/pla-vs-abs', label: 'PLA vs ABS' },
-              { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ASA vs ABS' },
-              { href: '/guides/best-petg-filaments', label: 'Best PETG Filaments' },
-              { href: '/guides/best-abs-filaments', label: 'Best ABS Filaments' },
-              { href: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose Filament' },
-              { href: '/filaments/petg', label: 'Browse PETG' },
-              { href: '/filaments/abs', label: 'Browse ABS' },
-              { href: '/compare', label: 'Compare Filaments' },
+              { href: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
+              { href: '/guides/pla-vs-abs', label: 'PLA vs ABS Comparison' },
+              { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ASA vs ABS for Outdoor Printing' },
+              { href: '/guides/best-petg-filaments', label: 'Best PETG Filaments 2026' },
+              { href: '/guides/best-abs-filaments', label: 'Best ABS Filaments 2026' },
+              { href: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose 3D Printer Filament' },
+              { href: '/filaments', label: 'Browse all filaments on FilaScope' },
+              { href: '/compare', label: 'Compare filaments side by side' },
             ].map(g => (
               <Link
                 key={g.href}

@@ -130,7 +130,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can I use PLA filament outdoors?', answer: 'PLA is not suitable for long-term outdoor use. Its glass transition temperature is only ~60°C, meaning it will soften and deform in direct sunlight or hot weather. UV exposure also causes PLA to become brittle over time. For outdoor applications, use ASA (best UV resistance), PETG (good all-around outdoor performance), or apply a UV-resistant clear coat to PLA as a short-term solution.' },
       { question: 'What is the difference between PLA and PLA+?', answer: 'PLA+ (also sold as PLA Pro, ePLA, or Enhanced PLA) is standard PLA blended with impact modifiers and plasticizers. Compared to regular PLA, PLA+ offers: 20–40% better impact resistance, slightly better layer adhesion, reduced brittleness, and marginally higher heat resistance. The trade-offs are a slightly higher printing temperature (5–10°C hotter), 10–20% higher cost, and sometimes slightly less sharp detail on very fine features. For most users, PLA+ is the better default choice. Read our full PLA vs PLA+ comparison at /guides/pla-plus-vs-pla-pro for detailed test data.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'pla-vs-petg', 'beginners-guide', 'pla-plus-vs-pla-pro', 'silk-pla-comparison'],
+    relatedSlugs: ['best-petg-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament', 'pla-plus-vs-pla-pro', 'silk-pla-comparison', 'best-budget-filaments'],
     aiSnippet: {
       summaryText: "The best PLA filaments in 2026 are Bambu Lab PLA Basic for value, Polymaker PolyTerra PLA for sustainability, and Prusament PLA for precision. Rankings are based on print quality, consistency, pricing, and community reviews from FilaScope's database of 4,296+ PLA options.",
       topPick: { name: 'PolySonic PLA Pro', brand: 'Polymaker', reason: 'fastest print speed support with excellent surface quality' },
@@ -251,7 +251,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Does PETG need a heated bed?', answer: 'Yes, a heated bed set to 70–80°C is strongly recommended for PETG. Without it, you\'ll experience poor first-layer adhesion and edge lifting. A textured PEI spring-steel sheet at 75°C is the ideal setup for PETG — it provides excellent adhesion during printing and easy release when the bed cools.' },
       { question: 'Is PETG or ABS better for functional parts?', answer: 'For most functional parts, PETG is the better choice. It\'s easier to print (no enclosure needed), doesn\'t emit harmful fumes, and has comparable impact strength. ABS is only better when you need heat resistance above 80°C, acetone vapor smoothing, or compatibility with specific industrial processes.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-abs-filaments', 'pla-vs-petg', 'best-filament-for-bambu-lab-p1s', 'asa-vs-abs-outdoor-printing'],
+    relatedSlugs: ['best-pla-filaments', 'best-abs-filaments', 'pla-vs-petg', 'petg-vs-abs', 'how-to-choose-3d-printer-filament', 'asa-vs-abs-outdoor-printing'],
     aiSnippet: {
       summaryText: "The best PETG filaments in 2026 are Bambu Lab PETG HF for high-flow functional printing, Polymaker PolyLite PETG for dimensional accuracy, and Hatchbox PETG for budget reliability. Rankings use FilaScope's data-driven scoring across strength, heat resistance, and pricing from 1,200+ PETG options.",
       topPick: { name: 'PETG HF', brand: 'Bambu Lab', reason: 'high-flow formula with outstanding layer adhesion for functional parts' },
@@ -369,7 +369,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'What is low-warp ABS?', answer: 'Low-warp ABS is a modified formulation that blends ABS with additives (often ASA-derived) to reduce the thermal shrinkage that causes warping. It costs 10–15% more than standard ABS but dramatically reduces failed prints, especially on parts larger than 100mm. Brands like Bambu Lab and Polymaker offer low-warp ABS variants.' },
       { question: 'Does ABS need to be dried?', answer: 'ABS is moderately hygroscopic — less than nylon but more than PLA. Wet ABS causes surface roughness, bubbling, and weakened layer adhesion. Dry ABS at 80°C for 2–4 hours if you notice these symptoms. For best results, store ABS in sealed containers with desiccant, especially in humid climates.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'best-pla-filaments', 'pla-vs-petg', 'asa-vs-abs-outdoor-printing', 'best-filament-for-bambu-lab-p1s'],
+    relatedSlugs: ['best-petg-filaments', 'best-pla-filaments', 'pla-vs-petg', 'petg-vs-abs', 'asa-vs-abs-outdoor-printing', 'how-to-choose-3d-printer-filament'],
     aiSnippet: {
       summaryText: "The best ABS filaments in 2026 are Bambu Lab ABS for low-warp enclosed printing, Prusament ABS for engineering-grade tolerances, and Hatchbox ABS for budget reliability. ABS requires an enclosure and 230–260°C nozzle temps. Rankings use FilaScope's data from 580+ ABS options.",
       topPick: { name: 'ABS', brand: 'Bambu Lab', reason: 'low-warp formulation optimized for high-speed enclosed printing' },
@@ -484,7 +484,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Does PLA or PETG have better surface quality?', answer: 'PLA produces superior surface quality with sharper details, smoother layers, and less stringing. PETG has a slight natural translucency and tendency to string, which can affect cosmetic finish. For display pieces, miniatures, and detailed models, PLA wins. For parts where function matters more than appearance, PETG is fine.' },
       { question: 'Can I mix PLA and PETG in multi-material prints?', answer: 'Not recommended. PLA and PETG have very different printing temperatures (30–40°C gap) and do not bond well at layer interfaces. Multi-material printers can technically switch between them, but the joint between materials will be weak. Use the same material family for multi-color prints instead.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'beginners-guide', 'pla-plus-vs-pla-pro', 'silk-pla-comparison'],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'how-to-choose-3d-printer-filament', 'petg-vs-abs', 'pla-plus-vs-pla-pro', 'best-filaments-for-beginners'],
     aiSnippet: {
       summaryText: "Choose PLA for detail, ease of printing, and low cost. Choose PETG for durability, heat resistance, and outdoor use. PLA prints at 190–220°C without an enclosure; PETG prints at 220–250°C with better mechanical strength. Both work on most FDM printers.",
       topPick: { name: 'PLA Basic', brand: 'Bambu Lab', reason: 'best overall PLA for beginners and detailed prints' },
@@ -555,7 +555,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Does filament expire?', answer: 'Filament doesn\'t technically expire, but it absorbs moisture from the air over time. Moist filament causes printing issues. Store it in a sealed container with desiccant for best results.' },
       { question: 'What diameter filament do I need?', answer: 'Most modern printers use 1.75mm filament. Some older or industrial printers use 2.85mm. Check your printer\'s specifications.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'hueforge-filaments'],
+    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'best-petg-filaments', 'best-budget-filaments', 'best-filaments-for-miniatures', 'best-filaments-for-cosplay'],
     aiSnippet: {
       summaryText: "To choose the right 3D printer filament, follow this framework: first identify your material type by use case (PLA for detail, PETG for strength, ABS for heat resistance), then match to your printer's capabilities, set your budget, and compare specific products. FilaScope's database covers 8,277+ filaments to help you decide.",
       topPick: { name: 'PLA Basic', brand: 'Bambu Lab', reason: 'best starting point for new 3D printer owners' },
@@ -690,7 +690,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Why do my HueForge prints look washed out?', answer: 'Washed-out HueForge prints usually mean your dark filament isn\'t opaque enough (TD too high) or your layer heights are too thin. Use a filament with TD under 1.0 for your darkest color. Also ensure 100% infill, correct layer height as specified by HueForge, and that your filament is dry (moisture causes micro-bubbles that increase translucency).' },
       { question: 'Do I need a multi-material printer for HueForge?', answer: 'A multi-material system (Bambu Lab AMS, Prusa MMU) makes HueForge printing much easier by automating filament changes. However, you can achieve excellent results with manual filament swaps at the layer change points specified by HueForge. Manual swaps work well for 3-4 color prints but become tedious beyond 5 colors.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'beginners-guide', 'pla-vs-petg', 'best-filaments-for-hueforge-lithophanes'],
+    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament', 'best-filaments-for-hueforge-lithophanes', 'best-white-filaments-for-hueforge'],
     rankAnnotations: {
       1: { bestFor: 'Complete HueForge stacks from a single brand', tempRange: '190–220°C nozzle / 50–60°C bed', hueforgeSuitability: 'Excellent — most extensive TD data coverage in our database with 50+ measured colors', justification: 'The widest range of community-verified TD values, consistent batch-to-batch opacity, and excellent layer adhesion make this the top HueForge choice.' },
       2: { bestFor: 'Users who need precise, documented TD values', tempRange: '190–230°C nozzle / 50–60°C bed', hueforgeSuitability: 'Excellent — comprehensive TD data with tight tolerance specifications', justification: 'Published dimensional tolerances and growing TD database make this a premium HueForge option with predictable results.' },
@@ -756,7 +756,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can I use PETG for HueForge?', answer: 'PETG works for lithophanes but is less ideal than PLA. PETG tends to be more translucent (higher TD), making it harder to achieve deep shadows. PLA offers more predictable opacity and better TD variety across brands.' },
       { question: 'What layer height should I use for lithophanes?', answer: '0.08mm to 0.12mm layer height is recommended. Thinner layers produce smoother tonal gradients. At 0.2mm, you lose significant detail and the transitions between light and dark become visibly stepped.' },
     ],
-    relatedSlugs: ['hueforge-filaments', 'best-pla-filaments', 'beginners-guide'],
+    relatedSlugs: ['hueforge-filaments', 'best-pla-filaments', 'how-to-choose-3d-printer-filament', 'best-white-filaments-for-hueforge'],
   },
 
   'pla-plus-vs-pla-pro': {
@@ -805,7 +805,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is PLA+ stronger than regular PLA?', answer: 'Generally yes. Most PLA+ formulations have 2–5× higher impact resistance than standard PLA, better layer adhesion, and reduced brittleness. However, the strength improvement varies significantly between brands.' },
       { question: 'Do I need different settings for PLA+ or PLA Pro?', answer: 'Slightly. Most enhanced PLAs print at 205–230°C (5–10°C higher than standard PLA) and benefit from slightly higher bed temps (60–65°C). Retraction settings are usually the same as standard PLA.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'beginners-guide', 'pla-vs-petg'],
+    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament', 'best-filaments-for-beginners'],
   },
 
   'best-filament-for-bambu-lab-p1s': {
@@ -861,7 +861,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can the P1S print TPU?', answer: 'Yes, the P1S prints TPU well with its direct-drive extruder. However, do NOT use TPU in the AMS — it\'s too flexible for the feeder mechanism. Feed TPU directly from an external spool holder.' },
       { question: 'Do I need to dry filament for the P1S?', answer: 'PLA and PETG are relatively moisture-tolerant, but ABS, PA, and TPU should always be dried before printing. The enclosed chamber helps, but wet filament still causes stringing, bubbling, and poor surface quality.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-abs-filaments'],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-abs-filaments', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
   },
 
   'silk-pla-comparison': {
@@ -909,7 +909,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'What temperature should I print silk PLA at?', answer: '210–230°C nozzle temperature works for most silk PLA brands. Start at 215°C and adjust in 5°C increments. The optimal temperature produces maximum sheen without stringing.' },
       { question: 'Can I mix silk PLA with regular PLA in multi-color prints?', answer: 'Yes, silk and standard PLA are compatible in multi-color prints. They share similar temperature ranges. Mixing creates an interesting contrast between matte and glossy sections.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'pla-plus-vs-pla-pro'],
+    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament', 'pla-plus-vs-pla-pro'],
   },
 
   'asa-vs-abs-outdoor-printing': {
@@ -962,7 +962,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can I use ABS outdoors if I paint it?', answer: 'Painting ABS with UV-resistant paint can extend its outdoor life, but the paint will eventually chip or peel, exposing the ABS underneath. For long-term outdoor use, ASA is the better material choice even if you plan to paint.' },
       { question: 'Is ASA harder to print than ABS?', answer: 'Slightly. ASA requires 5–10°C higher nozzle temperatures and is a bit more sensitive to draft-induced warping. Both need an enclosure and ventilation. If you can print ABS successfully, ASA should not be a major challenge.' },
     ],
-    relatedSlugs: ['best-abs-filaments', 'best-petg-filaments', 'best-filament-for-bambu-lab-p1s'],
+    relatedSlugs: ['best-abs-filaments', 'best-asa-filaments', 'best-petg-filaments', 'how-to-choose-3d-printer-filament', 'best-filaments-for-outdoor-use'],
   },
 
   'best-filament-for-ender-3': {
@@ -1008,7 +1008,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can the Ender 3 print TPU?', answer: 'Yes, but slowly. The Bowden extruder setup makes TPU tricky — reduce speed to 25–35mm/s and minimize retraction. A direct drive extruder upgrade (like the Sprite or Micro Swiss) dramatically improves TPU results.' },
       { question: 'Does the Ender 3 need an enclosure for PETG?', answer: 'No, PETG does not require an enclosure. The Ender 3 prints PETG well open-air. An enclosure can help in drafty rooms but is not mandatory like it is for ABS.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'beginners-guide', 'best-filament-for-bambu-lab-a1'],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'how-to-choose-3d-printer-filament', 'pla-vs-petg', 'best-filament-for-bambu-lab-a1'],
   },
 
   'best-filament-for-bambu-lab-a1': {
@@ -1055,7 +1055,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can the Bambu A1 print TPU?', answer: 'Yes. The A1\'s direct drive extruder handles TPU well. However, do NOT feed TPU through the AMS Lite — the flexible filament cannot reliably travel through the buffer system. Use TPU from an external spool directly.' },
       { question: 'Is third-party filament safe for the Bambu A1?', answer: 'Yes. The A1 works excellently with any quality third-party PLA or PETG. Use Bambu Studio\'s "Generic" profiles as a starting point. For AMS Lite printing, prioritize brands with consistent diameter and smooth winding.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-filament-for-bambu-lab-p1s', 'best-filament-for-ender-3'],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'how-to-choose-3d-printer-filament', 'best-filament-for-bambu-lab-p1s', 'pla-vs-petg'],
   },
 
   // ─── NEW GUIDES (2026-02-20) ──────────────────────────────────────────────
@@ -1104,7 +1104,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can I print ASA without an enclosure?', answer: 'Not reliably. ASA has high thermal expansion and warps significantly without a heated enclosure, especially on larger parts.' },
       { question: 'What\'s the best ASA filament for Bambu Lab printers?', answer: 'Bambu Lab\'s own ASA filament is optimized for P1S and X1C. Polymaker PolyLite ASA and eSUN eASA are excellent third-party alternatives with good UV stability.' },
     ],
-    relatedSlugs: ['asa-vs-abs-outdoor-printing', 'best-abs-filaments', 'best-filaments-for-outdoor-use', 'best-filament-for-bambu-lab-p1s'],
+    relatedSlugs: ['asa-vs-abs-outdoor-printing', 'best-abs-filaments', 'best-filaments-for-outdoor-use', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
   },
 
   'best-nylon-filaments': {
@@ -1150,7 +1150,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Do I need a special nozzle for nylon?', answer: 'Standard nylon (PA6/PA12) can use a brass nozzle. Carbon-fiber nylon (PA-CF) requires hardened steel, Ruby, or Tungsten Carbide.' },
       { question: 'How do I store nylon filament?', answer: 'In an airtight container with fresh desiccant. Even a few hours of open-air exposure can degrade print quality. For long-term storage, vacuum-seal with silica gel.' },
     ],
-    relatedSlugs: ['best-filaments-for-functional-parts', 'best-abs-filaments', 'best-asa-filaments', 'best-pc-filaments'],
+    relatedSlugs: ['best-filaments-for-functional-parts', 'best-abs-filaments', 'best-asa-filaments', 'best-pc-filaments', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
   },
 
   'best-pc-filaments': {
@@ -1195,7 +1195,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can I print polycarbonate on an Ender 3?', answer: 'Not reliably on stock hardware. The hotend cannot safely reach 280°C+ and there\'s no enclosure. A different printer is more practical for PC.' },
       { question: 'Is polycarbonate stronger than nylon?', answer: 'PC is harder with higher heat resistance. Nylon is tougher with better impact resistance and fatigue life. For maximum stiffness under heat, PC wins. For parts needing toughness, nylon wins.' },
     ],
-    relatedSlugs: ['best-nylon-filaments', 'best-filaments-for-functional-parts', 'best-abs-filaments', 'best-filament-for-bambu-lab-p1s'],
+    relatedSlugs: ['best-nylon-filaments', 'best-filaments-for-functional-parts', 'best-abs-filaments', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
   },
 
   'best-budget-filaments': {
@@ -1268,7 +1268,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is budget PETG as good as premium PETG?', answer: 'Budget PETG from eSUN and Overture performs well for most applications. Premium PETG (Polymaker, Prusament) offers tighter tolerances, more consistent stringing behavior, and better color accuracy. For functional parts where appearance matters less, budget PETG is a smart choice.' },
       { question: 'How much filament do I need for a project?', answer: 'A typical 3D print uses 50–200g of filament. A 1kg spool handles 5–20 average prints. For large projects like cosplay armor (5–15kg), furniture parts, or high-volume prototyping, buying 3kg or 5kg bulk spools saves 20–40% per kilogram.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-filaments-for-beginners', 'how-to-choose-3d-printer-filament'],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-filaments-for-beginners', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
     aiSnippet: {
       summaryText: 'The best budget filaments in 2026 are eSUN PLA+ for overall value at $12–15/kg, Sunlu PLA for the absolute cheapest reliable option at $10–13/kg, and eSUN PETG for budget functional printing at $14–17/kg. All deliver consistent print quality without the failures common in no-name brands.',
       topPick: { name: 'PLA+', brand: 'eSUN', reason: 'best balance of price, quality, and color selection under $15/kg' },
@@ -1317,7 +1317,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'What is the maximum speed I can print PLA?', answer: 'With a high-flow hotend and high-speed PLA, 300–600mm/s travel speeds are possible. Practically, 150–250mm/s produces excellent quality on well-tuned Bambu Lab and Voron printers.' },
       { question: 'Is high-speed PLA more expensive?', answer: 'Generally 10–30% more than standard PLA. For users printing at 150–200mm/s consistently, the small premium is worth it for consistent results.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-filament-for-bambu-lab-p1s', 'best-filament-for-bambu-lab-a1', 'best-petg-filaments'],
+    relatedSlugs: ['best-pla-filaments', 'best-filament-for-bambu-lab-p1s', 'best-filament-for-bambu-lab-a1', 'best-petg-filaments', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
   },
 
   'petg-vs-abs': {
@@ -1357,7 +1357,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Which is easier to print: PETG or ABS?', answer: 'PETG is significantly easier. It doesn\'t require an enclosure, doesn\'t emit significant fumes, and has minimal warping. ABS requires a heated enclosure and good ventilation.' },
       { question: 'Does PETG need an enclosure?', answer: 'No. PETG prints well on open-frame printers with minimal warping. An enclosure can slightly improve large part quality but is not required.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'pla-vs-petg', 'asa-vs-abs-outdoor-printing', 'best-filaments-for-functional-parts'],
+    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'pla-vs-petg', 'asa-vs-abs-outdoor-printing', 'best-filaments-for-functional-parts', 'how-to-choose-3d-printer-filament'],
   },
 
   'tpu-vs-petg': {
@@ -1396,7 +1396,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is TPU food safe?', answer: 'Some TPU formulations are food-safe, but printed parts have micro-gaps where bacteria can harbor. For food-contact use, choose certified food-safe TPU and apply a sealant.' },
       { question: 'Why is TPU harder to print than PETG?', answer: 'TPU\'s flexibility causes it to buckle in the extruder or Bowden tube instead of being pushed forward. You must print slowly and with minimal retraction compared to rigid filaments.' },
     ],
-    relatedSlugs: ['best-tpu-filaments', 'best-petg-filaments', 'pla-vs-petg', 'best-filaments-for-functional-parts'],
+    relatedSlugs: ['best-tpu-filaments', 'best-petg-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament', 'best-filaments-for-functional-parts'],
   },
 
   // ─── Miniatures guide moved to end of file with expanded content ───
@@ -1500,7 +1500,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         answer: 'PLA is not recommended for outdoor use. Its glass transition temperature of ~60°C means it can warp in direct sunlight, even in mild climates. PLA also absorbs moisture and is vulnerable to UV degradation. For any outdoor application, use ASA or PETG instead.',
       },
     ],
-    relatedSlugs: ['asa-vs-abs-outdoor-printing', 'best-abs-filaments', 'best-petg-filaments', 'best-pla-filaments'],
+    relatedSlugs: ['asa-vs-abs-outdoor-printing', 'best-abs-filaments', 'best-petg-filaments', 'best-asa-filaments', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
   },
 
   'hueforge-beginners-guide': {
@@ -1834,7 +1834,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         answer: 'Print lithophanes vertically (standing upright, perpendicular to the print bed). This orientation aligns layer lines horizontally, which produces sharper detail in the vertical dimension and avoids the "stepping" artifacts that appear when printing flat. Vertical printing takes longer but produces significantly better quality.',
       },
     ],
-    relatedSlugs: ['what-is-hueforge-td', 'best-white-filaments-for-hueforge', 'best-pla-filaments', 'silk-pla-comparison'],
+    relatedSlugs: ['what-is-hueforge-td', 'best-white-filaments-for-hueforge', 'best-pla-filaments', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
   },
 
   'best-filaments-for-miniatures': {
@@ -1908,7 +1908,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is PLA or PETG better for miniatures?', answer: 'PLA is significantly better for miniatures. It holds finer detail, strings less at slow speeds, and accepts primer and paint without pre-treatment. PETG is tougher but produces glossier, stringier prints that are harder to paint.' },
       { question: 'How do you paint FDM miniatures?', answer: 'Prime with a thin coat of spray filler primer (like Rustoleum or Vallejo Surface Primer), then paint with standard acrylic hobby paints (Citadel, Vallejo, Army Painter). Matte PLA grips primer better than glossy PLA, reducing the need for sanding.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'silk-pla-comparison', 'best-filaments-for-beginners'],
+    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament', 'silk-pla-comparison', 'best-filaments-for-beginners'],
     aiSnippet: {
       summaryText: 'The best filaments for miniatures in 2026 are Polymaker PolyTerra PLA for its matte paintable finish, Bambu Lab PLA Matte for batch consistency, and eSUN PLA+ for budget detail. Print at 0.1–0.16mm layer height, 190–210°C, and 30–50mm/s for best results on 28mm+ scale models.',
       topPick: { name: 'PolyTerra PLA', brand: 'Polymaker', reason: 'best matte surface finish for painting and detail retention' },
@@ -1986,7 +1986,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is PETG or ABS better for cosplay?', answer: 'PETG is easier to print (no enclosure needed, less warping) and offers better impact resistance. ABS produces smoother finishes via acetone vapor smoothing and has higher heat resistance (~100°C vs ~80°C). Choose PETG for durability and ease; choose ABS if post-processing finish is your priority.' },
       { question: 'How do you smooth 3D printed cosplay props?', answer: 'For ABS: acetone vapor smoothing in a sealed container produces a near-injection-molded surface. For PETG and PLA: sand progressively (120→220→400 grit), apply spray filler primer (2–3 coats), wet-sand with 600 grit, then paint. XTC-3D epoxy coating is another option that fills layer lines on any material.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-tpu-filaments', 'best-pla-filaments', 'asa-vs-abs-outdoor-printing'],
+    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-tpu-filaments', 'best-pla-filaments', 'asa-vs-abs-outdoor-printing', 'how-to-choose-3d-printer-filament'],
     aiSnippet: {
       summaryText: 'The best filaments for cosplay in 2026 are PETG for impact-resistant armor, TPU for flexible joints and wearable parts, PLA for fine detail pieces and accessories, and ABS for acetone-smoothed helmets. Most cosplay builds use 2–3 materials strategically. Rankings are based on FilaScore data across strength, heat tolerance, and paintability.',
       topPick: { name: 'PolyLite PETG', brand: 'Polymaker', reason: 'best balance of impact resistance, heat tolerance, and paintability for armor' },
@@ -2072,7 +2072,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can you put 3D printed items in the dishwasher?', answer: 'PLA will deform in a dishwasher (water temperature exceeds PLA\'s ~60°C glass transition). PETG can handle standard dishwasher cycles (~65–70°C) but may warp in the "sanitize" cycle (~80°C). ABS survives all dishwasher cycles. Always seal prints with food-safe epoxy before dishwashing.' },
       { question: 'Are colored filaments food safe?', answer: 'Most colored filaments use pigments and dyes that have NOT been tested for food contact safety. For maximum safety, use natural/translucent or white filament from manufacturers that specifically document food-grade colorants. FormFutura and Extrudr are among the few brands that certify their colorants for food contact.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'best-pla-filaments', 'best-filaments-for-functional-parts'],
+    relatedSlugs: ['best-petg-filaments', 'best-pla-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament', 'best-filaments-for-functional-parts'],
     aiSnippet: {
       summaryText: 'PETG is the best base material for food-safe 3D printing in 2026 — it\'s FDA-compliant, dishwasher-tolerant, and impact-resistant. Always use a stainless steel nozzle and seal finished prints with food-safe epoxy for repeated food contact.',
       topPick: { name: 'PolyLite PETG', brand: 'Polymaker', reason: 'FDA-compliant PETG with documented material safety and tight tolerances' },
@@ -2158,7 +2158,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'What filament should I use for gears?', answer: 'Nylon (PA6 or PA12) is the best filament for gears due to its excellent wear resistance, self-lubricating properties, and impact toughness. For higher-precision gears, Nylon-CF adds stiffness and dimensional stability. POM (Delrin) filament is another option for low-friction gear applications but is harder to print.' },
       { question: 'Can 3D printed parts replace metal parts?', answer: 'In many applications, yes. Carbon-fiber reinforced Nylon and PC can replace aluminum brackets, jigs, and fixtures at a fraction of the cost. However, 3D printed parts have anisotropic strength (weaker across layer lines) and lower absolute strength than metals. Design for the material — use more material where loads concentrate and orient prints to align layers with primary forces.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-filaments-for-cosplay', 'best-tpu-filaments', 'best-filaments-for-outdoor-use'],
+    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-nylon-filaments', 'best-tpu-filaments', 'how-to-choose-3d-printer-filament', 'pla-vs-petg'],
     aiSnippet: {
       summaryText: 'PETG-CF and Nylon are the best filaments for functional parts in 2026. PETG-CF offers the best strength-to-printability ratio without an enclosure, while Nylon provides superior impact resistance and wear properties for demanding engineering applications.',
       topPick: { name: 'PolyMide PA6-CF', brand: 'Polymaker', reason: 'highest stiffness and heat resistance in a printable Nylon-CF package' },
@@ -2250,7 +2250,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Why does my TPU keep jamming?', answer: 'TPU jams are usually caused by: 1) Too-fast retraction compressing the filament, 2) Print speed too high for the shore hardness, 3) Bowden tube allowing the filament to buckle. Fix: disable retraction, slow to 20–30mm/s, and ensure a tight filament path with no gaps between the drive gear and hot end.' },
       { question: 'Is TPU waterproof?', answer: 'TPU is water-resistant but FDM-printed TPU is not fully waterproof due to micro-gaps between layers. For waterproof applications, print with 100% infill, thick walls (3+ perimeters), and consider coating with flexible sealant. TPU is excellent for applications that need splash resistance rather than full submersion.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'best-filaments-for-functional-parts', 'best-filaments-for-cosplay', 'best-pla-filaments'],
+    relatedSlugs: ['best-petg-filaments', 'best-filaments-for-functional-parts', 'best-filaments-for-cosplay', 'best-pla-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament'],
     aiSnippet: {
       summaryText: 'The best TPU filaments in 2026 are Polymaker PolyFlex TPU95 for print reliability, NinjaTek NinjaFlex for maximum flexibility at 85A, and eSUN TPU 95A for budget value. Rankings are based on shore hardness, printability, durability, and pricing from FilaScope\'s database. Direct drive extruders are recommended for all TPU printing.',
       topPick: { name: 'PolyFlex TPU95', brand: 'Polymaker', reason: 'best combination of print reliability and flexibility with comprehensive specs' },

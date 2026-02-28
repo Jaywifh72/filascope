@@ -303,12 +303,13 @@ export default function FilamentTemperatureGuide() {
             <h2 className="text-lg font-semibold mb-4">Related Guides & Tools</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { to: '/filaments', label: 'Full Filament Database' },
+                { to: '/filaments', label: 'Browse all filaments on FilaScope' },
                 { to: '/matrix', label: 'Printer–Filament Compatibility Matrix' },
-                { to: '/compare', label: 'Side-by-Side Filament Comparison' },
+                { to: '/compare', label: 'Compare filaments side by side' },
                 { to: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose 3D Printer Filament' },
-                { to: '/filament-storage-guide', label: 'Filament Storage & Drying Guide' },
+                { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
                 { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
+                { to: '/guides/3d-printer-filament-types-explained', label: 'Filament Types Explained' },
               ].map((link) => (
                 <Link key={link.to} to={link.to} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
                   <ArrowRight className="w-3.5 h-3.5 text-primary shrink-0" />
