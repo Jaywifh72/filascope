@@ -1,42 +1,52 @@
 
-# Deploy SEO Edge Functions
+
+# Dynamic Sitemap System via _redirects Routing
 
 ## Summary
-Three edge functions (`serve-robots`, `sitemap-xml`, `prerender`) exist in the codebase but are not deployed. The `sitemap-generator` function also exists and should be deployed. All four need to be deployed, and one is missing its `config.toml` entry.
+The dynamic sitemap system already exists and is fully implemented inside the `prerender` Edge Function (already deployed). It includes paginated DB queries for filaments (1,000+ rows), brands, printers, colors, and static/guide pages. The only missing piece is routing -- the `_redirects` file needs to send sitemap XML requests to the `prerender` function instead of serving the static fallback or the SPA.
 
-## What Needs to Happen
+## What Already Works (No Changes Needed)
+The `prerender` function (lines 375-436) already handles:
+- `/sitemap.xml` -- sitemap index referencing 6 sub-sitemaps
+- `/sitemap-pages.xml` -- ~40 static/core pages
+- `/sitemap-filaments.xml` -- all filaments with paginated queries (bypasses 1,000 row limit)
+- `/sitemap-brands.xml` -- all visible brands with pagination
+- `/sitemap-printers.xml` -- all printers with pagination
+- `/sitemap-guides.xml` -- all guide pages with dates
+- `/sitemap-colors.xml` -- all color family pages
 
-### Step 1: Add missing config.toml entry for `serve-robots`
-The `serve-robots` function is missing from `supabase/config.toml`. It must be added with `verify_jwt = false` since crawlers (Googlebot, etc.) cannot authenticate. The other three functions (`sitemap-xml`, `prerender`, `sitemap-generator`) already have config entries.
+All use proper `Content-Type: application/xml` and `Cache-Control` headers.
 
-### Step 2: Deploy all four functions
-Deploy these functions using the deployment tool:
-- `serve-robots` -- serves robots.txt, llms.txt, and IndexNow key
-- `sitemap-xml` -- generates sitemap index XML
-- `sitemap-generator` -- generates full dynamic sitemap with DB queries
-- `prerender` -- prerender service for SEO (serves sub-sitemaps and crawler-friendly HTML)
+## Changes Required
 
-### What Will NOT Change
-- Static fallback files (`public/robots.txt`, `public/sitemap.xml`, `public/llms.txt`) remain untouched
-- `public/_redirects` remains as-is (SPA catch-all only) -- no redirect rules will be added in this step
-- No other pages or components will be modified
+### 1. Update `public/_redirects`
+Add rewrite rules for all 7 sitemap paths, pointing them to the `prerender` Edge Function. These must appear BEFORE the SPA catch-all.
 
-## Technical Details
+```text
+# Sitemaps — served by prerender edge function
+/sitemap.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml 200
+/sitemap-pages.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml 200
+/sitemap-filaments.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-filaments.xml 200
+/sitemap-brands.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-brands.xml 200
+/sitemap-printers.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-printers.xml 200
+/sitemap-guides.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-guides.xml 200
+/sitemap-colors.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-colors.xml 200
 
-**Environment variables**: All functions use only `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, which are automatically available in the edge function runtime. No additional secrets are needed.
-
-**Config change** (only addition):
-```toml
-[functions.serve-robots]
-verify_jwt = false
+# SPA catch-all — MUST be last
+/* /index.html 200
 ```
 
-**Functions to deploy**: `serve-robots`, `sitemap-xml`, `sitemap-generator`, `prerender`
+Using `200` (rewrite) instead of `302` (redirect) ensures Google sees `filascope.com/sitemap.xml` as the canonical URL, not the Edge Function URL.
 
-After deployment, the functions will be accessible at:
-- `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots`
-- `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-xml`
-- `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-generator`
-- `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender`
+### 2. Keep static `public/sitemap.xml` as fallback
+The static file remains in the repo. The `_redirects` rewrite rule takes priority over static files, so crawlers get the dynamic version. If the Edge Function ever goes down, removing the redirect rule restores the static fallback.
 
-Redirect rules to route `/robots.txt` and `/sitemap.xml` to these functions can be added later as a separate step once deployment is confirmed working.
+### What Will NOT Change
+- The `prerender` Edge Function code (already deployed and working)
+- The `sitemap-xml` and `sitemap-generator` functions (kept as-is, not used by redirects)
+- Static fallback files (`public/robots.txt`, `public/sitemap.xml`, `public/llms.txt`)
+- No other pages or components
+
+## Expected Result
+After this change, visiting `https://filascope.com/sitemap.xml` will return a dynamic sitemap index, and each sub-sitemap will contain all URLs from the database -- approximately 1,300+ total URLs across all sub-sitemaps.
+
