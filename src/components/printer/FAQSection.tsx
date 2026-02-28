@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useJsonLd } from '@/components/seo/useJsonLd';
+import DOMPurify from 'dompurify';
 
 interface FAQ {
   id: string;
@@ -295,7 +296,10 @@ export function FAQSection(props: FAQSectionProps) {
                 <div className="px-4 md:px-5 py-3 md:py-4 bg-primary/5 border border-t-0 border-primary/30 rounded-b-[10px]">
                   <div 
                     className="text-[15px] font-medium text-muted-foreground leading-relaxed [&_strong]:text-foreground [&_strong]:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-3 [&_li]:my-1.5 [&_a]:text-primary [&_a:hover]:underline"
-                    dangerouslySetInnerHTML={{ __html: faq.answer }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(faq.answer, {
+                      ALLOWED_TAGS: ['strong', 'ul', 'ol', 'li', 'br', 'a'],
+                      ALLOWED_ATTR: ['href', 'target', 'rel']
+                    }) }}
                   />
                 </div>
               </div>
