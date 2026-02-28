@@ -24,8 +24,10 @@ import { DealsEmptyState } from "@/components/deals/DealsEmptyState";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
-import { ItemListSchema, BreadcrumbSchema, Breadcrumbs } from "@/components/seo";
+import { ItemListSchema, BreadcrumbSchema, Breadcrumbs, FAQSection } from "@/components/seo";
 import { OfferCatalogSchema } from "@/components/seo/OfferCatalogSchema";
+import { Card, CardContent } from "@/components/ui/card";
+import { TrendingDown, Globe, ShoppingBag, BarChart3 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 type DealTypeFilter = "all" | "50plus" | "new-this-week" | "ongoing";
@@ -150,6 +152,14 @@ const Deals = () => {
   };
   const regionDisplay = regionDisplayNames[userRegion] || userRegion;
 
+  // Average savings across all deals
+  const avgSavings = useMemo(() => {
+    if (groupedDeals.length === 0) return 0;
+    return Math.round(
+      groupedDeals.reduce((sum, g) => sum + (g.bestDiscount || 0), 0) / groupedDeals.length
+    );
+  }, [groupedDeals]);
+
   // Dynamic meta description
   const metaDescription = totalDeals > 0
     ? `${totalDeals} active filament deals with discounts up to ${maxDiscount}% off. Compare prices from ${uniqueBrandCount} brands in ${regionDisplay}.`
@@ -244,6 +254,56 @@ const Deals = () => {
                   Deal Alerts
                 </Link>
               </Button>
+            </div>
+
+            {/* Intro paragraph */}
+            <p className="text-sm text-muted-foreground text-center max-w-3xl mx-auto mt-4 leading-relaxed">
+              Find the best <strong className="text-foreground">3D printer filament deals</strong> and <strong className="text-foreground">filament discounts</strong> across
+              {' '}{totalDeals > 0 ? <>{totalDeals} active offers</> : 'hundreds of products'} from {uniqueBrandCount > 0 ? uniqueBrandCount : 'dozens of'} brands.
+              Prices are compared across multiple retailers in {' '}
+              <Link to="/filaments" className="text-primary hover:underline">5 regions</Link> and updated multiple times per week.
+              Browse our <Link to="/filaments" className="text-primary hover:underline">full filament catalog</Link> or
+              read our <Link to="/guides/best-pla-filaments" className="text-primary hover:underline">best PLA filaments guide</Link> for buying recommendations.
+            </p>
+
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5 max-w-3xl mx-auto">
+              <Card className="bg-muted/30 border-border/50">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <ShoppingBag className="h-5 w-5 text-emerald-400 shrink-0" />
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{totalDeals || '—'}</p>
+                    <p className="text-[10px] text-muted-foreground">Active Deals</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/30 border-border/50">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <Tag className="h-5 w-5 text-teal-400 shrink-0" />
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{uniqueBrandCount || '—'}</p>
+                    <p className="text-[10px] text-muted-foreground">Brands on Sale</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/30 border-border/50">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <TrendingDown className="h-5 w-5 text-amber-400 shrink-0" />
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{avgSavings > 0 ? `${avgSavings}%` : '—'}</p>
+                    <p className="text-[10px] text-muted-foreground">Avg. Savings</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/30 border-border/50">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <Globe className="h-5 w-5 text-primary shrink-0" />
+                  <div>
+                    <p className="text-lg font-bold text-foreground">5</p>
+                    <p className="text-[10px] text-muted-foreground">Regions Covered</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
@@ -536,6 +596,19 @@ const Deals = () => {
                 </div>
               </>
             )}
+
+            {/* Filament Pricing FAQ */}
+            <FAQSection
+              title="Filament Pricing FAQ"
+              faqs={[
+                { question: 'How often are filament prices updated?', answer: 'FilaScope checks prices from major filament retailers multiple times per week. Sale prices and limited-time discounts are captured as soon as they appear in our data feeds, so deals on this page are typically current within 24–48 hours.' },
+                { question: 'Which regions does FilaScope track prices for?', answer: 'We currently track filament prices across five regions: the United States, Canada, the United Kingdom, Europe (EU), and Australia. Each region shows prices in the local currency with links to the appropriate regional storefront.' },
+                { question: 'How do I find the cheapest PLA filament?', answer: 'Use the material filter chips above the deal grid and select "PLA," then sort by "Price: Low to High." You can also browse our full PLA catalog at /filaments/pla or read our Best PLA Filaments guide for curated recommendations.' },
+                { question: 'Are FilaScope prices affiliate links?', answer: 'Some outbound links on FilaScope are affiliate links, meaning we may earn a small commission if you make a purchase — at no extra cost to you. This helps support the site. All prices shown are the actual retail prices from the store; we never inflate them.' },
+                { question: "What's the average price of PLA filament per kilogram?", answer: 'PLA filament typically ranges from $15–$30 USD per kilogram depending on the brand, color, and retailer. Budget brands can go as low as $12/kg, while specialty or composite PLAs may exceed $40/kg. Check our deals page for current discounts.' },
+              ]}
+              className="mt-12 max-w-3xl mx-auto"
+            />
           </div>
         </section>
       </section>
