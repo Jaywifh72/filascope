@@ -40,7 +40,7 @@ export function ItemListSchema({
             name: item.name,
             url: item.url,
             item: {
-              '@type': 'Product',
+              '@type': (item.price != null && item.priceCurrency) ? 'Product' : 'Thing',
               name: item.name,
               url: item.url,
               ...(item.image && { image: item.image }),
