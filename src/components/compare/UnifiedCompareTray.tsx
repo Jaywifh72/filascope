@@ -179,7 +179,7 @@ export function UnifiedCompareTray() {
                 {item.featured_image ? (
                   <img
                     src={getOptimizedImageUrl(item.featured_image, 48)}
-                    alt=""
+                    alt={`${item.product_title || 'Filament'} thumbnail`}
                     className="w-8 h-8 object-contain rounded"
                   />
                 ) : (
