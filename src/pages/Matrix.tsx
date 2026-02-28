@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import type { Database } from "@/integrations/supabase/types";
 import { MatrixPrinterSelector } from "@/components/matrix/MatrixPrinterSelector";
@@ -116,6 +117,36 @@ const Matrix = () => {
         title="Compatibility Matrix — FilaScope"
         description="Check which filaments are compatible with your 3D printer. Get recommended print settings for every material type."
       />
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://filascope.com" },
+            { "@type": "ListItem", "position": 2, "name": "Compatibility Matrix", "item": "https://filascope.com/matrix" }
+          ]
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "FilaScope Compatibility Matrix",
+          "description": "Interactive tool to check which 3D printer filaments are compatible with your printer. Get recommended print settings for every material and printer combination.",
+          "url": "https://filascope.com/matrix",
+          "applicationCategory": "UtilityApplication",
+          "operatingSystem": "Web",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "creator": { "@type": "Organization", "name": "FilaScope", "url": "https://filascope.com" }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "How do I know if a filament is compatible with my 3D printer?", "acceptedAnswer": { "@type": "Answer", "text": "Check the filament's required nozzle temperature and bed temperature against your printer's maximum specs. FilaScope's compatibility matrix cross-references these automatically for 119+ printers and 8,000+ filaments." } },
+            { "@type": "Question", "name": "Can I print PETG on a PLA-only printer?", "acceptedAnswer": { "@type": "Answer", "text": "It depends on your printer's maximum nozzle temperature. PETG typically requires 220-250°C. If your printer supports that range, you can print PETG. Use FilaScope's compatibility matrix to check your specific printer." } },
+            { "@type": "Question", "name": "What filament materials require an enclosed printer?", "acceptedAnswer": { "@type": "Answer", "text": "ABS, ASA, Nylon, and Polycarbonate benefit significantly from an enclosed build chamber to prevent warping and improve layer adhesion. PLA and PETG generally do not require enclosures." } }
+          ]
+        })}</script>
+      </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
