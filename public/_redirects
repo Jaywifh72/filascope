@@ -4,7 +4,9 @@
 
 # Serve static files directly — bypass SPA catch-all
 /robots.txt    /robots.txt    200
-/sitemap.xml   /sitemap.xml   200
+
+# Dynamic sitemap — generated from database
+/sitemap.xml   https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-generator   302
 
 # SPA catch-all — MUST be last
 /* /index.html 200
