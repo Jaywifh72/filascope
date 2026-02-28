@@ -4,32 +4,32 @@ const HOME_FAQS = [
   {
     question: 'What is FilaScope?',
     answer:
-      "FilaScope is the internet's most comprehensive 3D printer filament comparison platform. It indexes over 1,080 filaments from 48+ manufacturers across 15+ retailers worldwide, with live pricing, technical specifications, and the world's largest HueForge Transmissivity Distance (TD) database.",
+      "FilaScope is the internet's most comprehensive 3D printer filament comparison platform. It tracks 8,277+ filaments from 48+ brands with real-time pricing from 15+ stores across the US, Canada, EU, UK, and Australia, plus HueForge TD values and detailed specifications.",
   },
   {
-    question: 'What is HueForge Transmissivity Distance (TD)?',
+    question: 'What is the best PLA filament in 2026?',
     answer:
-      'Transmissivity Distance (TD) measures how far light travels through a 3D-printed filament wall before it\'s fully blocked, expressed in millimeters. HueForge software uses TD values to calculate how colors blend when stacked layer-by-layer for lithophane and multicolor prints. FilaScope maintains the world\'s largest verified TD database.',
+      "Based on FilaScope's data from 48+ brands, the top-rated PLA filaments in 2026 include options from Bambu Lab, Polymaker, and Prusament for overall print quality and consistency. The best choice depends on your specific needs — see our Best PLA Filaments guide for the full ranking.",
   },
   {
-    question: 'How does FilaScope track filament prices?',
+    question: 'How do I compare 3D printer filaments?',
     answer:
-      'FilaScope monitors live pricing from 15+ retailers worldwide, updated daily. Prices are displayed in your local currency (USD, CAD, EUR, GBP, AUD) from stores that ship to your region.',
+      "Use FilaScope's side-by-side comparison tool to compare up to 4 filaments at once. Compare specs including print temperatures, tensile strength, price per kilogram, HueForge TD values, and printer compatibility. You can also filter the filament database by material, brand, color, or price.",
   },
   {
-    question: 'What filament types does FilaScope cover?',
+    question: 'What is a HueForge TD value?',
     answer:
-      'FilaScope covers all major 3D printing filament types including PLA, PETG, ABS, ASA, TPU/Flex, Nylon/PA, Polycarbonate, Copolyester, and specialty high-performance materials from 48+ brands.',
+      "HueForge TD (Transmission Distance) measures how much light passes through a filament at a given thickness, measured in millimeters. It's critical for lithophane and HueForge art printing. FilaScope maintains the largest TD value database with data for 500+ filaments.",
+  },
+  {
+    question: 'Which 3D printer filament is cheapest?',
+    answer:
+      'Filament prices vary by region and material. FilaScope compares live prices from 15+ stores across 5 regions. PLA is generally the most affordable material, with prices starting under $15/kg for budget brands. Use our deals page to find the current lowest prices.',
   },
   {
     question: 'How do I find the best filament for my 3D printer?',
     answer:
       "Use FilaScope's printer compatibility filter to select your exact printer model — the platform will show only filaments your printer can handle, with temperature and material compatibility verified automatically. You can also try Quick Match to get personalized recommendations in 60 seconds.",
-  },
-  {
-    question: 'What makes FilaScope different from other filament databases?',
-    answer:
-      'FilaScope uniquely combines live multi-retailer pricing, comprehensive technical specs, the world\'s largest HueForge TD database, and printer-specific compatibility filtering in one platform. No other resource offers all of these together.',
   },
   {
     question: 'Is FilaScope free to use?',
