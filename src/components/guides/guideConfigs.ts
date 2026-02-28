@@ -1043,50 +1043,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
 
   // ─── NEW GUIDES (2026-02-20) ──────────────────────────────────────────────
 
-  'best-tpu-filaments': {
-    slug: 'best-tpu-filaments',
-    title: 'Best TPU Filaments in 2026',
-    seoTitle: 'Best TPU Filaments 2026 — Flexible Filament Picks | FilaScope',
-    seoDescription: 'Top TPU filaments ranked by flexibility, layer adhesion & print quality. Compare Shore hardness, stretchability, and printer compatibility for the best flexible 3D printing filament.',
-    description: 'The best TPU filaments for flexible 3D printing, ranked by FilaScore. Covers Shore hardness, printability, and compatibility with Ender 3, Bambu Lab, and Prusa printers.',
-    category: 'buying-guide',
-    readTime: 11,
-    publishedAt: '2026-02-20',
-    updatedAt: '2026-02-20',
-    keywords: ['best TPU filament', 'flexible filament', 'TPU filament 2026', 'Shore 95A filament', 'rubber filament 3D printing'],
-    filters: { material: 'TPU', sortBy: 'score', limit: 10 },
-    layout: 'ranked-list',
-    editorialSections: [
-      {
-        heading: 'Why TPU Is the Go-To Flexible Filament',
-        content: `<p><strong>TPU (Thermoplastic Polyurethane)</strong> is the most popular flexible filament for FDM 3D printing. It bridges the gap between rigid plastics and rubber, offering excellent elasticity, abrasion resistance, and chemical resistance — ideal for phone cases, gaskets, wearables, drone bumpers, and flexible hinges.</p>
-<p>TPU is measured on the <strong>Shore A hardness scale</strong>. Lower numbers mean softer/more flexible:</p>
-<ul>
-<li><strong>Shore 85A:</strong> Very soft, rubber-like. High elongation-at-break. Best for grips and bumpers.</li>
-<li><strong>Shore 95A:</strong> The most common TPU for 3D printing. Flexible but holds shape well. Versatile for most use cases.</li>
-<li><strong>Shore 98A:</strong> Relatively stiff. Closer to hard plastic but still slightly flexible. Good for functional parts needing some give.</li>
-</ul>`,
-        position: 'before',
-      },
-      {
-        heading: 'TPU Printing Tips: Avoid Common Pitfalls',
-        content: `<ul>
-<li><strong>Extruder type matters:</strong> Direct drive extruders handle TPU far better than Bowden. On stock Ender 3, slow to 20–30mm/s and minimize retraction.</li>
-<li><strong>Temperature:</strong> 220–240°C nozzle, 25–50°C bed. Most TPU prints well at 230°C.</li>
-<li><strong>Speed:</strong> 25–40mm/s max. TPU stretches instead of being pushed forward at high speeds.</li>
-<li><strong>Retraction:</strong> Minimize retraction — 1–2mm on direct drive, disable on Bowden if buckling occurs.</li>
-<li><strong>Don't use TPU in AMS/AMS Lite:</strong> The flexible filament cannot reliably travel through automated material systems.</li>
-</ul>`,
-        position: 'after',
-      },
-    ],
-    faqs: [
-      { question: 'What is the best TPU filament for Bambu Lab printers?', answer: 'Bambu Lab\'s own TPU 95A is optimized for their machines. Polymaker PolyFlex TPU95 and eSUN eTPU-95A are excellent third-party alternatives with consistent Shore hardness and diameter tolerance.' },
-      { question: 'Can I print TPU on an Ender 3?', answer: 'Yes, but the stock Bowden extruder makes it challenging. Reduce speed to 20–30mm/s, minimize retraction, and use Shore 95A TPU. A direct drive upgrade dramatically improves TPU results.' },
-      { question: 'What Shore hardness TPU should I buy?', answer: 'Shore 95A is the most versatile and easiest to print. It\'s flexible enough for most applications but stiff enough to print reliably on Bowden printers.' },
-    ],
-    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'tpu-vs-petg', 'best-filament-for-bambu-lab-p1s', 'best-filament-for-ender-3'],
-  },
+  // ─── TPU guide moved to end of file with expanded content ───
 
   'best-asa-filaments': {
     slug: 'best-asa-filaments',
@@ -1391,96 +1348,9 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     relatedSlugs: ['best-tpu-filaments', 'best-petg-filaments', 'pla-vs-petg', 'best-filaments-for-functional-parts'],
   },
 
-  'best-filaments-for-miniatures': {
-    slug: 'best-filaments-for-miniatures',
-    title: 'Best Filaments for Miniatures & Detailed Prints in 2026',
-    seoTitle: 'Best Filament for Miniatures 2026 — Fine Detail Picks | FilaScope',
-    seoDescription: 'Top filaments for 3D printing miniatures and detailed models. Compare PLA brands for fine detail resolution, surface finish, and compatibility with 0.2mm nozzles.',
-    description: 'The best filaments for printing tabletop miniatures and highly detailed models — ranked by surface finish, detail resolution, and small nozzle compatibility.',
-    category: 'buying-guide',
-    readTime: 11,
-    publishedAt: '2026-02-20',
-    updatedAt: '2026-02-20',
-    keywords: ['best filament for miniatures', 'miniature 3D printing filament', 'detailed 3D print filament', 'fine detail PLA', 'tabletop miniature filament'],
-    filters: { material: 'PLA', sortBy: 'score', limit: 10 },
-    layout: 'ranked-list',
-    editorialSections: [
-      {
-        heading: 'What Makes a Filament Good for Miniatures?',
-        content: `<p>Printing detailed miniatures successfully is 50% printer setup and 50% filament quality. Key properties:</p>
-<ul>
-<li><strong>Tight diameter tolerance (±0.02mm):</strong> Diameter variation causes inconsistent extrusion that ruins fine details — the most critical spec.</li>
-<li><strong>Low stringing:</strong> Fine details like sword blades and antennae require clean retraction behavior.</li>
-<li><strong>Good surface finish:</strong> High-quality PLAs produce smoother surfaces that paint better.</li>
-<li><strong>Small nozzle compatibility:</strong> Miniatures typically use 0.2–0.25mm nozzles. Avoid glitter, silk, or wood-fill filaments that clog easily.</li>
-</ul>`,
-        position: 'before',
-      },
-      {
-        heading: 'Miniature Print Settings',
-        content: `<ul>
-<li><strong>Layer height:</strong> 0.06–0.12mm. Thinner layers reveal more surface detail.</li>
-<li><strong>Nozzle size:</strong> 0.2–0.25mm for maximum detail.</li>
-<li><strong>Print speed:</strong> 20–40mm/s. Slower is always better for fine detail.</li>
-<li><strong>Temperature:</strong> Lower end of the filament's range helps reduce stringing — try 190–200°C for standard PLA.</li>
-<li><strong>Supports:</strong> Use tree supports. Flat supports touching fine details leave marks that require sanding.</li>
-</ul>`,
-        position: 'after',
-      },
-    ],
-    faqs: [
-      { question: 'Is FDM or resin better for miniatures?', answer: 'Resin generally produces sharper detail than FDM for small miniatures. However, FDM is sufficient for larger miniatures (28–54mm scale) and is much more practical for painting and handling.' },
-      { question: 'What nozzle size should I use for miniatures?', answer: '0.2–0.25mm nozzles produce the best miniature detail. Ensure your printer is in excellent mechanical condition — at 0.2mm, any wobble or z-banding is visible.' },
-      { question: 'Can I prime and paint FDM miniatures?', answer: 'Yes. Use spray primer (brush-on is too thick). Grey primer is best for seeing detail. FDM miniatures paint similarly to metal or resin minis after priming.' },
-    ],
-    relatedSlugs: ['best-pla-filaments', 'silk-pla-comparison', 'pla-plus-vs-pla-pro', 'hueforge-filaments'],
-  },
+  // ─── Miniatures guide moved to end of file with expanded content ───
 
-  'best-filaments-for-functional-parts': {
-    slug: 'best-filaments-for-functional-parts',
-    title: 'Best Filaments for Functional Parts in 2026',
-    seoTitle: 'Best Filament for Functional Parts 2026 — Strongest Picks | FilaScope',
-    seoDescription: 'Top filaments for strong, durable functional parts. Compare PETG, ABS, Nylon, and ASA by strength, heat resistance & printability for mechanical 3D printing.',
-    description: 'The best filaments for mechanical and structural parts — PETG, ABS, ASA, and Nylon ranked by strength, heat resistance, and real-world printability.',
-    category: 'buying-guide',
-    readTime: 13,
-    publishedAt: '2026-02-20',
-    updatedAt: '2026-02-20',
-    keywords: ['best filament for functional parts', 'strongest 3D printing filament', 'mechanical part filament', 'PETG vs ABS functional', 'engineering filament'],
-    filters: { materials: ['PETG', 'ABS', 'Nylon', 'ASA'], sortBy: 'score', limit: 10 },
-    layout: 'ranked-list',
-    editorialSections: [
-      {
-        heading: 'Choosing the Right Filament for Functional Applications',
-        content: `<p>Functional parts demand more than PLA can deliver. Here's the hierarchy of functional filament choices:</p>
-<ol>
-<li><strong>PETG:</strong> Excellent strength, 80°C heat resistance, no enclosure required. Default choice for most functional parts.</li>
-<li><strong>ABS:</strong> 100°C heat deflection, acetone-smoothable. Requires enclosure and ventilation.</li>
-<li><strong>ASA:</strong> ABS-level heat resistance with UV stability. Best for outdoor parts.</li>
-<li><strong>Nylon/PA:</strong> Highest impact resistance and fatigue strength. Requires drying and enclosure.</li>
-<li><strong>PC:</strong> Highest heat resistance (130°C+) and impact strength. Most demanding requirements.</li>
-</ol>`,
-        position: 'before',
-      },
-      {
-        heading: 'Material Selection by Application',
-        content: `<ul>
-<li><strong>Phone mounts, tool holders, brackets:</strong> PETG — good enough for most loads, easy to print.</li>
-<li><strong>Car interior parts:</strong> ABS or ASA — withstand summer interior temperatures (70–80°C) that deform PETG.</li>
-<li><strong>Outdoor fixtures:</strong> ASA — UV and weather resistant.</li>
-<li><strong>Gears, pulleys, moving parts:</strong> Nylon — low friction, excellent wear resistance.</li>
-<li><strong>Load-bearing structural:</strong> Nylon-CF or PC for maximum rigidity under load.</li>
-</ul>`,
-        position: 'after',
-      },
-    ],
-    faqs: [
-      { question: 'Is PETG strong enough for functional parts?', answer: 'Yes, for most applications. PETG fails when parts are exposed to continuous high heat (car interiors above 80°C) or require acetone vapor smoothing. For those cases, use ABS.' },
-      { question: 'What is the strongest 3D printing filament?', answer: 'PC and PA-CF offer the highest combination of strength, stiffness, and heat resistance. For practical applications, Nylon is the strongest well-rounded choice that\'s still printable without extreme hardware.' },
-      { question: 'Can functional parts be printed in PLA?', answer: 'For non-critical applications: yes. PLA deforms above 60°C and is brittle under impact. For anything experiencing heat or significant impact stress, upgrade to PETG or above.' },
-    ],
-    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-nylon-filaments', 'petg-vs-abs', 'best-asa-filaments'],
-  },
+  // ─── Functional parts guide moved to end of file with expanded content ───
 
   'best-filaments-for-outdoor-use': {
     slug: 'best-filaments-for-outdoor-use',
@@ -1914,6 +1784,440 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       },
     ],
     relatedSlugs: ['what-is-hueforge-td', 'best-white-filaments-for-hueforge', 'best-pla-filaments', 'silk-pla-comparison'],
+  },
+
+  'best-filaments-for-miniatures': {
+    slug: 'best-filaments-for-miniatures',
+    title: 'Best Filaments for Miniatures in 2026',
+    seoTitle: 'Best Filaments for Miniatures & Tabletop Models 2026 | FilaScope',
+    seoDescription: 'Best filaments for printing miniatures ranked by detail resolution, surface finish, and paintability. Compare PLA, resin-compatible, and specialty filaments.',
+    description: 'Top filaments for miniatures and tabletop models ranked by detail quality, surface smoothness, and paintability using FilaScore data.',
+    category: 'buying-guide',
+    readTime: 16,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['best filament for miniatures', '3D printing miniatures filament', 'best PLA for miniatures', 'tabletop miniatures filament', 'miniature detail filament', 'D&D miniatures 3D print'],
+    filters: { material: 'PLA', sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Why Filament Choice Matters for Miniatures',
+        content: `<p>Printing miniatures pushes FDM printers to their limits. Layer lines, stringing, and poor bridging are magnified on 28mm–32mm scale models. The right filament minimizes these artifacts, holds fine detail at 0.08–0.12mm layer heights, and takes primer and paint without extra sanding.</p>
+<p>Our ranking uses the <strong>FilaScore algorithm</strong> to compare dimensional accuracy, surface finish quality, color consistency, and community feedback specifically relevant to miniature printing.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How We Rank Miniature Filaments',
+        content: `<p>FilaScope's miniature rankings prioritize the factors that matter most for small-scale detail work. Our <a href="/methodology">FilaScore algorithm</a> evaluates:</p>
+<ul>
+<li><strong>Dimensional tolerance:</strong> Tighter tolerance (±0.02mm) means cleaner small features like swords, fingers, and armor trim.</li>
+<li><strong>Stringing behavior:</strong> We weight community reports on stringing and oozing — critical for miniatures with overhangs and fine features.</li>
+<li><strong>Surface finish:</strong> Matte finishes sand and prime better than glossy ones. Filaments that produce smooth surfaces at slow speeds score higher.</li>
+<li><strong>Paintability:</strong> PLA and matte PLA formulations accept acrylic primer and paint without pre-treatment. We factor this into the ranking.</li>
+<li><strong>Brand reliability:</strong> Spool-to-spool consistency matters when you're printing an army of 50+ models.</li>
+</ul>
+<p>Rankings update automatically as new data enters our database — including pricing, community reviews, and product availability.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Miniature Printing Tips',
+        content: `<p>Getting great miniatures from an FDM printer requires dialing in both your filament and your slicer settings:</p>
+<h3>Layer Height &amp; Speed</h3>
+<p>Print at 0.08–0.12mm layer height for the best detail. Slow your speed to 30–40mm/s for outer walls. Enable "small perimeter speed" in your slicer if available — this reduces ringing artifacts on tiny features.</p>
+<h3>Temperature Tuning</h3>
+<p>Lower temperatures reduce stringing but can cause under-extrusion on thin walls. Start 5°C below the filament's midpoint and increase only if you see gaps. A temperature tower is worth printing before committing to a full army.</p>
+<h3>Supports &amp; Orientation</h3>
+<p>Orient miniatures so the face is pointing away from the build plate — this keeps the highest-detail area free of support scarring. Tree supports in Cura or PrusaSlicer's organic supports work well for complex poses.</p>
+<h3>Post-Processing</h3>
+<p>A thin coat of spray-on filler primer (like Rustoleum Filler Primer) hides most layer lines on FDM miniatures. Follow with acrylic hobby paints. Matte PLA formulations grip primer better than standard glossy PLA.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'When to Choose FDM vs Resin for Miniatures',
+        content: `<p>FDM with the right filament can produce surprisingly good miniatures, but it's important to understand the trade-offs:</p>
+<h3>FDM Strengths</h3>
+<p>Lower material cost, easier cleanup (no toxic resin), faster iteration on larger models (terrain, vehicles), and the ability to print in color without painting. Modern PLA at 0.08mm layer height closes the gap significantly with resin for 32mm+ scale models.</p>
+<h3>Resin Strengths</h3>
+<p>Superior detail at sub-28mm scales, smoother surfaces, and sharper edges on tiny features like facial expressions and weapon details. Resin is still the gold standard for competition-quality miniatures.</p>
+<h3>Best Compromise</h3>
+<p>Use FDM with a high-quality <a href="/filaments/pla">PLA</a> for terrain, bases, and larger models. Use resin for hero characters and display pieces. Many tabletop gamers use both — FDM for bulk, resin for showcase models.</p>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What is the best filament for printing miniatures?', answer: 'Matte PLA is the best overall filament for FDM miniatures. It offers excellent detail at 0.08–0.12mm layer heights, minimal stringing, and superior paintability compared to glossy PLA. Polymaker PolyTerra PLA and Bambu Lab PLA Matte are top choices.' },
+      { question: 'Can you 3D print miniatures with PLA?', answer: 'Yes. Modern PLA printed at 0.08–0.12mm layer height produces excellent miniatures at 28mm+ scale. Use a 0.4mm nozzle with slow outer wall speeds (30–40mm/s) and proper retraction settings. The results rival resin for tabletop gaming quality.' },
+      { question: 'What layer height is best for miniatures?', answer: '0.08mm is the sweet spot for 28mm–32mm miniatures on most FDM printers. Some users go to 0.04mm for competition pieces, but the quality improvement is marginal and print time doubles. For terrain and bases, 0.12–0.16mm is fine.' },
+      { question: 'Is PLA or PETG better for miniatures?', answer: 'PLA is significantly better for miniatures. It holds finer detail, strings less at slow speeds, and accepts primer and paint without pre-treatment. PETG is tougher but produces glossier, stringier prints that are harder to paint.' },
+      { question: 'How do you paint FDM miniatures?', answer: 'Prime with a thin coat of spray filler primer (like Rustoleum or Vallejo Surface Primer), then paint with standard acrylic hobby paints (Citadel, Vallejo, Army Painter). Matte PLA grips primer better than glossy PLA, reducing the need for sanding.' },
+    ],
+    relatedSlugs: ['best-pla-filaments', 'silk-pla-comparison', 'best-filaments-for-beginners'],
+    aiSnippet: {
+      summaryText: 'Matte PLA is the best FDM filament for miniatures in 2026. It holds fine detail, minimizes stringing, and accepts primer and paint without sanding. Our rankings are based on FilaScore data across dimensional accuracy, surface quality, and community feedback.',
+      topPick: { name: 'PolyTerra PLA', brand: 'Polymaker', reason: 'best matte surface finish for painting and detail retention' },
+      runnerUp: { name: 'PLA Matte', brand: 'Bambu Lab', reason: 'excellent consistency and low stringing at slow speeds' },
+      budgetPick: { name: 'PLA+', brand: 'eSUN', reason: 'proven detail quality at budget pricing' },
+    },
+    rankAnnotations: {
+      1: { bestFor: 'Painters who want the best surface for priming', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Matte finish grips primer without sanding. Tight tolerance produces clean fine features at 0.08mm layer height.' },
+      2: { bestFor: 'Batch printing armies with consistent quality', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Spool-to-spool consistency means your 50th miniature looks like your 1st. Low stringing at recommended speeds.' },
+      3: { bestFor: 'Beginners printing their first miniatures', tempRange: '205–225°C nozzle / 50–60°C bed', justification: 'Wide temperature window is forgiving for new users. Good detail at 0.12mm for learning.' },
+      4: { bestFor: 'Competition-quality FDM miniatures', tempRange: '195–220°C nozzle / 50–60°C bed', justification: 'Industry-leading dimensional accuracy for the sharpest possible FDM detail.' },
+      5: { bestFor: 'Budget miniature printing', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Solid detail quality at entry-level pricing. Good choice for terrain and bases.' },
+      6: { bestFor: 'High-volume terrain and scatter pieces', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Cost-effective for large terrain projects. PLA+ formula adds durability for gaming pieces that get handled.' },
+      7: { bestFor: 'Colorful miniatures without painting', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Wide color range lets you print pre-colored miniatures for casual tabletop gaming.' },
+      8: { bestFor: 'Detailed miniatures on Creality printers', tempRange: '195–220°C nozzle / 50–60°C bed', justification: 'Tuned for Creality ecosystem with good fine-detail performance.' },
+    },
+  },
+
+  'best-filaments-for-cosplay': {
+    slug: 'best-filaments-for-cosplay',
+    title: 'Best Filaments for Cosplay in 2026',
+    seoTitle: 'Best Filaments for Cosplay Props & Armor 2026 | FilaScope',
+    seoDescription: 'Best filaments for cosplay props ranked by strength, flexibility, paintability, and post-processing. PETG, PLA+, ABS & specialty materials compared.',
+    description: 'Top filaments for cosplay props and armor ranked by strength, wearability, and post-processing ease using FilaScore data.',
+    category: 'buying-guide',
+    readTime: 17,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['best filament for cosplay', '3D printing cosplay filament', 'strongest filament for cosplay', 'cosplay armor filament', 'cosplay props 3D print', 'PETG for cosplay'],
+    filters: { sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Why Material Choice Matters for Cosplay',
+        content: `<p>Cosplay props and armor face unique demands: they need to survive convention floors, endure body heat, accept paint and finishing, and ideally flex rather than shatter on impact. The wrong filament means cracked armor pieces, warped helmets left in a hot car, or hours of extra sanding.</p>
+<p>Our ranking evaluates filaments specifically for cosplay using the <strong>FilaScore algorithm</strong> combined with factors critical to wearable props: impact resistance, heat deflection temperature, post-processing compatibility, and weight.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How We Rank Cosplay Filaments',
+        content: `<p>FilaScope's cosplay rankings go beyond generic "best filament" lists by prioritizing wearability and finishing. Our <a href="/methodology">ranking methodology</a> evaluates:</p>
+<ul>
+<li><strong>Impact resistance:</strong> Props get bumped, dropped, and jostled in crowds. Materials that flex rather than shatter score higher.</li>
+<li><strong>Heat resistance:</strong> A helmet sitting in a car at a summer convention needs to survive 50°C+. PLA fails here; PETG and ABS don't.</li>
+<li><strong>Paintability &amp; finishing:</strong> Smooth sanding, acetone smoothing (ABS), or primer adhesion. Easy post-processing saves hours.</li>
+<li><strong>Weight:</strong> Lighter materials mean more comfortable all-day wear. Density matters for large armor sets.</li>
+<li><strong>Regional pricing:</strong> We track prices across 6 regions — cosplay builds use many kilograms of filament, so cost adds up fast.</li>
+</ul>
+<p>Rankings update automatically as pricing and product data change in our database.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Cosplay Filament Buying Tips',
+        content: `<p>Building cosplay props from 3D prints requires thinking about the entire workflow, not just the printing step:</p>
+<h3>Plan for Post-Processing</h3>
+<p>Most cosplay props need sanding, filling, priming, and painting. <a href="/filaments/abs">ABS</a> can be acetone-smoothed for a near-injection-molded finish. <a href="/filaments/petg">PETG</a> sands well but can't be chemically smoothed. PLA+ is the easiest to sand but offers less heat resistance. Choose your filament based on your finishing workflow.</p>
+<h3>Heat Resistance Is Non-Negotiable</h3>
+<p>PLA deforms at ~60°C — well within the temperature of a car parked in summer sun. If your prop will ever be left in a vehicle or worn outdoors in heat, use PETG (80°C HDT), ABS (100°C), or ASA (100°C+ with UV resistance).</p>
+<h3>Buy in Bulk</h3>
+<p>A full suit of armor can use 5–15kg of filament. Buy 3kg or 5kg bulk spools once you've test-printed with your chosen material. The per-kg savings are significant at cosplay scale.</p>
+<h3>Consider Multi-Material Builds</h3>
+<p>Use rigid PETG or ABS for structural armor plates, and <a href="/filaments/tpu">TPU</a> for flexible joints, straps, and undersuit details. This hybrid approach gives you the best of both worlds.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'When to Choose Each Material for Cosplay',
+        content: `<p>Different cosplay applications call for different materials:</p>
+<h3><a href="/filaments/petg">PETG</a> — Best All-Rounder</h3>
+<p>PETG is the most popular cosplay filament for good reason. It's impact-resistant, heat-tolerant to ~80°C, and prints without an enclosure. Use it for armor plates, helmets, and structural props.</p>
+<h3><a href="/filaments/abs">ABS</a> — Best for Smooth Finishing</h3>
+<p>ABS can be acetone vapor-smoothed to eliminate layer lines entirely. Ideal for helmets and props where a factory-smooth finish is essential. Requires an enclosure and good ventilation.</p>
+<h3><a href="/filaments/pla">PLA+</a> — Easiest to Print &amp; Sand</h3>
+<p>PLA+ is fine for indoor-only props and decorative pieces. Lightweight, easy to sand, and the cheapest option. Avoid for anything that will see heat or heavy handling.</p>
+<h3><a href="/filaments/tpu">TPU</a> — Flexible Parts</h3>
+<p>Use TPU for gauntlet fingers, boot covers, flexible joints, and any part that needs to bend with body movement.</p>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What is the best filament for cosplay armor?', answer: 'PETG is the best all-around filament for cosplay armor. It offers good impact resistance (won\'t shatter when bumped), heat resistance to ~80°C (survives convention environments), and takes paint well after light sanding and priming. For the smoothest finish, ABS with acetone smoothing is superior but harder to print.' },
+      { question: 'Can you use PLA for cosplay?', answer: 'PLA works for indoor-only, decorative cosplay pieces. However, PLA deforms at ~60°C — a car interior in summer can easily exceed this. PLA is also more brittle than PETG or ABS, so armor pieces may crack on impact. Use PLA+ at minimum, and upgrade to PETG for any props that will see heat or physical stress.' },
+      { question: 'How much filament do you need for a full cosplay suit?', answer: 'A full suit of cosplay armor (helmet, chest, shoulders, bracers, gauntlets, leg armor) typically uses 5–15kg of filament depending on the design, wall thickness, and infill percentage. A helmet alone is usually 500g–1.5kg. Budget for at least 8–10kg if you\'re building a full set.' },
+      { question: 'Is PETG or ABS better for cosplay?', answer: 'PETG is easier to print (no enclosure needed, less warping) and offers better impact resistance. ABS produces smoother finishes via acetone vapor smoothing and has higher heat resistance (~100°C vs ~80°C). Choose PETG for durability and ease; choose ABS if post-processing finish is your priority.' },
+      { question: 'How do you smooth 3D printed cosplay props?', answer: 'For ABS: acetone vapor smoothing in a sealed container produces a near-injection-molded surface. For PETG and PLA: sand progressively (120→220→400 grit), apply spray filler primer (2–3 coats), wet-sand with 600 grit, then paint. XTC-3D epoxy coating is another option that fills layer lines on any material.' },
+    ],
+    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-tpu-filaments', 'best-filaments-for-functional-parts'],
+    aiSnippet: {
+      summaryText: 'PETG is the best overall filament for cosplay props in 2026 — it combines impact resistance, heat tolerance, and easy printability. ABS is better for smooth finishing via acetone smoothing. Our rankings use FilaScore data to compare strength, heat resistance, and finishing characteristics.',
+      topPick: { name: 'PolyLite PETG', brand: 'Polymaker', reason: 'best balance of impact resistance and surface quality for armor' },
+      runnerUp: { name: 'ABS Filament', brand: 'Bambu Lab', reason: 'excellent for acetone-smoothed helmets and display pieces' },
+      budgetPick: { name: 'PLA+', brand: 'eSUN', reason: 'affordable and easy to sand for indoor-only props' },
+    },
+    rankAnnotations: {
+      1: { bestFor: 'All-around cosplay armor and props', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Best balance of impact resistance, heat tolerance, and printability. No enclosure needed.' },
+      2: { bestFor: 'Helmets and smooth-finish display pieces', tempRange: '230–250°C nozzle / 90–110°C bed', justification: 'Acetone vapor smoothing eliminates layer lines for a professional finish. Requires enclosure.' },
+      3: { bestFor: 'Budget cosplay builds with easy sanding', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Cheapest option that still sands well. Best for indoor-only decorative pieces.' },
+      4: { bestFor: 'Outdoor cosplay and UV-exposed props', tempRange: '240–260°C nozzle / 90–110°C bed', justification: 'UV-resistant and heat-tolerant. Ideal for outdoor photoshoots and summer conventions.' },
+      5: { bestFor: 'Flexible joints and gauntlet fingers', tempRange: '220–240°C nozzle / 50–60°C bed', justification: 'Flexible TPU for parts that need to bend with body movement.' },
+      6: { bestFor: 'High-volume armor sets on a budget', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Competitive PETG pricing for large builds that use 10+ kg of filament.' },
+      7: { bestFor: 'Lightweight wearable props', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Low density PLA+ keeps large armor pieces comfortable for all-day wear.' },
+      8: { bestFor: 'Structural internal frames', tempRange: '250–270°C nozzle / 80–100°C bed', justification: 'High stiffness and heat resistance for internal structural reinforcement.' },
+    },
+  },
+
+  'best-food-safe-filaments': {
+    slug: 'best-food-safe-filaments',
+    title: 'Best Food-Safe Filaments in 2026',
+    seoTitle: 'Best Food-Safe 3D Printer Filaments 2026 | FilaScope',
+    seoDescription: 'Food-safe 3D printer filaments ranked by FDA compliance, material safety, and printability. PETG, PLA, and specialty food-grade filaments compared.',
+    description: 'Food-safe 3D printer filaments ranked by regulatory compliance, material safety, and real-world printability using FilaScore data.',
+    category: 'buying-guide',
+    readTime: 15,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['food safe filament', 'food safe 3D printing', 'FDA approved 3D printer filament', 'food grade PETG', 'food safe PLA', 'food contact 3D print'],
+    filters: { sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'The Truth About Food-Safe 3D Printing',
+        content: `<p>Food-safe 3D printing is more complex than just buying "FDA-approved" filament. The raw material may be food-safe, but the printing process introduces risks: micro-gaps between layers harbor bacteria, brass nozzles can leach lead, and colorants may not meet food-contact standards.</p>
+<p>Our ranking evaluates filaments on material certification, printability at food-safe conditions, and practical sealability. We clearly distinguish between <strong>raw-material safety</strong> and <strong>finished-print safety</strong> so you can make informed decisions.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How We Rank Food-Safe Filaments',
+        content: `<p>FilaScope's food-safety rankings consider factors most guides overlook. Our <a href="/methodology">ranking methodology</a> evaluates:</p>
+<ul>
+<li><strong>Material certification:</strong> FDA 21 CFR compliance, EU 10/2011 food contact approval, and manufacturer-provided safety documentation.</li>
+<li><strong>Colorant safety:</strong> Natural/uncolored filaments score highest. Filaments with documented food-grade colorants rank above those with undisclosed additives.</li>
+<li><strong>Printability for sealed surfaces:</strong> Filaments that produce denser, smoother layers (reducing bacterial micro-gaps) rank higher for food contact.</li>
+<li><strong>Post-processing compatibility:</strong> Can the filament be coated with food-safe epoxy? Does it handle dishwasher temperatures? These factors matter.</li>
+<li><strong>Regional pricing:</strong> We track real-time prices across 6 regions for cost-effective food-safe builds.</li>
+</ul>
+<p>Rankings update automatically as new certification data and pricing enter our database.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Food-Safe Printing Guidelines',
+        content: `<p>Even with the right filament, you need to follow specific practices to make your prints food-safe:</p>
+<h3>Use a Stainless Steel Nozzle</h3>
+<p>Standard brass nozzles can contain trace amounts of lead. For any food-contact print, switch to a <a href="/accessories">stainless steel or food-grade nozzle</a>. This is the single most important step most guides skip.</p>
+<h3>Print Thicker Walls</h3>
+<p>Use 3+ perimeters and 100% infill for food-contact surfaces. This minimizes the micro-gaps between layers where bacteria can grow. Alternatively, print at 0.12mm layer height for denser layer bonding.</p>
+<h3>Seal Your Prints</h3>
+<p>The safest approach is to coat your print with a food-safe epoxy (like Alumilite Amazing Clear Cast or food-grade polyurethane). This creates a smooth, non-porous surface that's easy to clean and prevents bacterial growth in layer lines.</p>
+<h3>Use Natural/Uncolored Filament</h3>
+<p>Colored filaments use pigments and dyes that may not be food-safe even if the base polymer is. Natural (translucent) PETG or white PLA from brands with documented food-grade colorants are the safest choices.</p>
+<h3>Single-Use vs Repeated Use</h3>
+<p>Unsealed 3D prints are generally acceptable for single-use food contact (cookie cutters, chocolate molds). For repeated-use items (cups, utensils, containers), always seal with food-safe coating.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'When to Choose Each Material for Food Contact',
+        content: `<p>Different food-contact applications call for different materials:</p>
+<h3><a href="/filaments/petg">PETG</a> — Best Overall for Food Contact</h3>
+<p>PETG is FDA-approved in its raw form, handles dishwasher temperatures (~70°C), and is more impact-resistant than PLA. It's the recommended base material for food-contact prints that will be sealed with epoxy.</p>
+<h3><a href="/filaments/pla">PLA</a> — Good for Single-Use Items</h3>
+<p>PLA is generally recognized as safe (GRAS) for food contact. It works well for cookie cutters and molds that touch food briefly. However, PLA softens at ~60°C, so it can't handle hot foods or dishwashers.</p>
+<h3>Specialty Food-Grade Filaments</h3>
+<p>Some manufacturers (like FormFutura and Extrudr) offer specifically certified food-grade filaments with documented colorant safety. These cost more but provide the highest confidence for repeated food contact.</p>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'Is PLA food safe?', answer: 'PLA is "generally recognized as safe" (GRAS) by the FDA in its raw form. However, 3D printed PLA has micro-gaps between layers where bacteria can grow. For safe food contact, seal PLA prints with food-safe epoxy, use a stainless steel nozzle, and choose uncolored/natural filament. PLA is acceptable for single-use items like cookie cutters without sealing.' },
+      { question: 'Is PETG food safe?', answer: 'PETG is FDA-compliant for food contact in its raw form and is commonly used in commercial food packaging. For 3D printed PETG, the same micro-gap concerns apply as PLA. Seal with food-safe epoxy for repeated use. PETG\'s advantage over PLA is higher heat resistance (~80°C), making it dishwasher-compatible after sealing.' },
+      { question: 'What nozzle should I use for food-safe printing?', answer: 'Use a stainless steel nozzle for all food-contact prints. Standard brass nozzles can contain trace amounts of lead that leach into the filament during printing. Stainless steel is more expensive and slightly less thermally conductive, but it\'s the only safe option for food contact.' },
+      { question: 'Can you put 3D printed items in the dishwasher?', answer: 'PLA will deform in a dishwasher (water temperature exceeds PLA\'s ~60°C glass transition). PETG can handle standard dishwasher cycles (~65–70°C) but may warp in the "sanitize" cycle (~80°C). ABS survives all dishwasher cycles. Always seal prints with food-safe epoxy before dishwashing.' },
+      { question: 'Are colored filaments food safe?', answer: 'Most colored filaments use pigments and dyes that have NOT been tested for food contact safety. For maximum safety, use natural/translucent or white filament from manufacturers that specifically document food-grade colorants. FormFutura and Extrudr are among the few brands that certify their colorants for food contact.' },
+    ],
+    relatedSlugs: ['best-petg-filaments', 'best-pla-filaments', 'best-filaments-for-functional-parts'],
+    aiSnippet: {
+      summaryText: 'PETG is the best base material for food-safe 3D printing in 2026 — it\'s FDA-compliant, dishwasher-tolerant, and impact-resistant. Always use a stainless steel nozzle and seal finished prints with food-safe epoxy for repeated food contact.',
+      topPick: { name: 'PolyLite PETG', brand: 'Polymaker', reason: 'FDA-compliant PETG with documented material safety and tight tolerances' },
+      runnerUp: { name: 'PLA Basic', brand: 'Bambu Lab', reason: 'GRAS-rated PLA ideal for single-use cookie cutters and molds' },
+      budgetPick: { name: 'PETG Filament', brand: 'Overture', reason: 'affordable food-contact-compatible PETG for sealed prints' },
+    },
+    rankAnnotations: {
+      1: { bestFor: 'Repeated-use food containers (sealed)', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'FDA-compliant PETG with documented safety data. Best base for food-safe epoxy coating.' },
+      2: { bestFor: 'Single-use cookie cutters and molds', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'GRAS-rated PLA, safe for brief food contact. Easy to print with stainless steel nozzle.' },
+      3: { bestFor: 'Certified food-grade applications', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Specialty food-grade certification with documented colorant safety.' },
+      4: { bestFor: 'Budget food-safe prints', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Affordable PETG with good layer bonding for dense, sealable surfaces.' },
+      5: { bestFor: 'High-temperature food applications', tempRange: '240–260°C nozzle / 90–110°C bed', justification: 'Higher HDT survives dishwasher sanitize cycles. Requires enclosure.' },
+      6: { bestFor: 'Translucent food-safe prints', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Natural/clear PETG avoids colorant safety concerns entirely.' },
+      7: { bestFor: 'Large batch food-contact items', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Cost-effective for producing many cookie cutters or molds.' },
+      8: { bestFor: 'Food-adjacent storage (non-contact)', tempRange: '190–220°C nozzle / 50–60°C bed', justification: 'Standard PLA is fine for items that don\'t directly contact food (organizers, holders).' },
+    },
+  },
+
+  'best-filaments-for-functional-parts': {
+    slug: 'best-filaments-for-functional-parts',
+    title: 'Best Filaments for Functional Parts in 2026',
+    seoTitle: 'Best Filaments for Functional & Engineering Parts 2026 | FilaScope',
+    seoDescription: 'Strongest filaments for functional parts ranked by tensile strength, heat resistance, and durability. Nylon, PC, PETG-CF, and engineering materials compared.',
+    description: 'The strongest filaments for functional and engineering parts ranked by mechanical properties, heat resistance, and real-world durability using FilaScore data.',
+    category: 'buying-guide',
+    readTime: 19,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['best filament for functional parts', 'strongest 3D printer filament', 'engineering filament', 'nylon filament comparison', 'carbon fiber filament', 'high strength 3D print'],
+    filters: { sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'When You Need More Than PLA',
+        content: `<p>Functional parts — brackets, jigs, gears, enclosures, load-bearing components — demand materials that go beyond PLA's capabilities. You need higher tensile strength, better heat deflection, chemical resistance, or impact toughness. The right engineering filament can replace CNC-machined parts at a fraction of the cost.</p>
+<p>Our ranking evaluates filaments specifically for functional applications using the <strong>FilaScore algorithm</strong> combined with published mechanical property data (tensile strength, flexural modulus, elongation at break) and real-world thermal performance.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How We Rank Engineering Filaments',
+        content: `<p>FilaScope's functional filament rankings prioritize measurable mechanical performance. Our <a href="/methodology">ranking methodology</a> evaluates:</p>
+<ul>
+<li><strong>Tensile strength:</strong> How much pulling force the material can withstand before breaking. Critical for brackets, clips, and load-bearing parts.</li>
+<li><strong>Heat deflection temperature (HDT):</strong> The temperature at which the part begins to deform under load. Determines suitability for under-hood, near-motor, and outdoor applications.</li>
+<li><strong>Impact resistance:</strong> Whether the material shatters (brittle) or flexes (ductile) under sudden force. Important for protective enclosures and jigs.</li>
+<li><strong>Technical documentation:</strong> Filaments with published TDS data (tensile, flexural, elongation values) score higher because they enable engineering calculations.</li>
+<li><strong>Printability vs performance trade-off:</strong> A material that's theoretically strong but impossible to print reliably isn't useful. We weight practical print success.</li>
+</ul>
+<p>Rankings update automatically as new mechanical test data, pricing, and availability enter our database.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Engineering Filament Buying Tips',
+        content: `<p>Printing functional parts requires different considerations than decorative printing:</p>
+<h3>Enclosure Requirements</h3>
+<p>Most engineering filaments (Nylon, PC, ABS, ASA) require an enclosed printer to prevent warping and layer delamination. If you don't have an enclosure, <a href="/filaments/petg">PETG</a> and PETG-CF are your best options — they offer good mechanical properties without enclosure requirements.</p>
+<h3>Nozzle Selection</h3>
+<p>Carbon fiber and glass fiber composites will destroy brass nozzles within 100g of printing. Use a hardened steel or ruby-tipped nozzle for any composite filament. Standard filaments (PETG, Nylon, PC) are fine with brass.</p>
+<h3>Print Orientation Matters More</h3>
+<p>FDM parts are significantly weaker across layer lines (Z-axis) than along them (X/Y). Orient functional parts so the primary load direction aligns with the print layers, not across them. This single design decision can improve part strength by 2–5x.</p>
+<h3>Drying Is Non-Optional</h3>
+<p>Nylon and PC are extremely hygroscopic. Print from a dry box or dry filament immediately before use (80°C for 6–8 hours for Nylon, 70°C for PC). Wet engineering filament produces parts with drastically reduced mechanical properties.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'Material Selection by Application',
+        content: `<p>Different functional applications demand different material properties:</p>
+<h3><a href="/filaments/petg">PETG / PETG-CF</a> — Best Entry Point</h3>
+<p>PETG offers good all-around mechanical properties without an enclosure. PETG-CF (carbon fiber reinforced) adds stiffness and dimensional stability. Ideal for brackets, enclosures, and moderate-load parts.</p>
+<h3><a href="/filaments/nylon">Nylon (PA6/PA12)</a> — Best Impact Resistance</h3>
+<p>Nylon is the toughest common filament — it flexes rather than shatters. Ideal for gears, living hinges, snap-fit enclosures, and any part subject to repeated impact or fatigue loading. Requires dry storage and an enclosure.</p>
+<h3>Polycarbonate (PC) — Best Heat Resistance</h3>
+<p>PC handles temperatures up to 140°C and offers excellent transparency. Used for under-hood automotive parts, electrical enclosures, and clear structural panels. Requires high print temperatures (260–300°C) and an enclosure.</p>
+<h3><a href="/filaments/asa">ASA</a> — Best for Outdoor Use</h3>
+<p>ASA matches ABS in mechanical properties but adds UV resistance. The go-to material for outdoor enclosures, garden tools, and automotive exterior parts.</p>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What is the strongest 3D printer filament?', answer: 'Polycarbonate (PC) and Nylon-CF (carbon fiber reinforced Nylon) are the strongest commonly available FDM filaments. PC offers the highest tensile strength (~65 MPa) and heat resistance (~140°C HDT). Nylon-CF adds exceptional stiffness from carbon fiber reinforcement. Both require enclosed printers and careful drying.' },
+      { question: 'Is PETG strong enough for functional parts?', answer: 'Yes, PETG is strong enough for many functional applications. It has ~50 MPa tensile strength, good impact resistance, and ~80°C heat deflection. It\'s the best choice for functional parts when you don\'t have an enclosed printer. For higher-demand applications, upgrade to Nylon or PC.' },
+      { question: 'Do I need an enclosure for engineering filaments?', answer: 'Most engineering filaments (Nylon, PC, ABS, ASA) require an enclosed printer to prevent warping and improve layer adhesion. PETG and PETG-CF are the notable exceptions — they print well open-air and still offer good mechanical properties. If your printer isn\'t enclosed, start with PETG for functional parts.' },
+      { question: 'What filament should I use for gears?', answer: 'Nylon (PA6 or PA12) is the best filament for gears due to its excellent wear resistance, self-lubricating properties, and impact toughness. For higher-precision gears, Nylon-CF adds stiffness and dimensional stability. POM (Delrin) filament is another option for low-friction gear applications but is harder to print.' },
+      { question: 'Can 3D printed parts replace metal parts?', answer: 'In many applications, yes. Carbon-fiber reinforced Nylon and PC can replace aluminum brackets, jigs, and fixtures at a fraction of the cost. However, 3D printed parts have anisotropic strength (weaker across layer lines) and lower absolute strength than metals. Design for the material — use more material where loads concentrate and orient prints to align layers with primary forces.' },
+    ],
+    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-filaments-for-cosplay', 'best-tpu-filaments', 'best-filaments-for-outdoor-use'],
+    aiSnippet: {
+      summaryText: 'PETG-CF and Nylon are the best filaments for functional parts in 2026. PETG-CF offers the best strength-to-printability ratio without an enclosure, while Nylon provides superior impact resistance and wear properties for demanding engineering applications.',
+      topPick: { name: 'PolyMide PA6-CF', brand: 'Polymaker', reason: 'highest stiffness and heat resistance in a printable Nylon-CF package' },
+      runnerUp: { name: 'PETG-CF', brand: 'Bambu Lab', reason: 'excellent mechanical properties without enclosure requirement' },
+      budgetPick: { name: 'PETG Filament', brand: 'Overture', reason: 'solid functional performance at the lowest cost per kg' },
+    },
+    rankAnnotations: {
+      1: { bestFor: 'Maximum stiffness and heat resistance', tempRange: '260–280°C nozzle / 80–100°C bed', justification: 'Carbon fiber Nylon provides the highest stiffness-to-weight ratio. Published TDS with full mechanical data.' },
+      2: { bestFor: 'Functional parts without an enclosure', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'PETG-CF adds carbon fiber stiffness while remaining printable open-air. Hardened nozzle required.' },
+      3: { bestFor: 'High-temperature applications (140°C+)', tempRange: '260–300°C nozzle / 100–120°C bed', justification: 'Polycarbonate offers the highest HDT of common filaments. Excellent for electrical and automotive parts.' },
+      4: { bestFor: 'Gears, hinges, and wear-resistant parts', tempRange: '240–260°C nozzle / 70–90°C bed', justification: 'Nylon\'s self-lubricating surface and fatigue resistance make it ideal for moving mechanical parts.' },
+      5: { bestFor: 'Outdoor functional parts with UV resistance', tempRange: '240–260°C nozzle / 90–110°C bed', justification: 'ASA matches ABS mechanically but adds UV stability for outdoor enclosures and tools.' },
+      6: { bestFor: 'Budget functional parts and prototypes', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Standard PETG provides surprisingly good mechanical properties at low cost. Best starting point.' },
+      7: { bestFor: 'Impact-resistant enclosures and housings', tempRange: '230–250°C nozzle / 90–110°C bed', justification: 'ABS offers excellent impact resistance and can be acetone-smoothed for sealed enclosures.' },
+      8: { bestFor: 'Lightweight structural components', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Carbon fiber PETG adds rigidity while keeping weight low. Good for drone frames and brackets.' },
+      9: { bestFor: 'Flexible functional components', tempRange: '220–240°C nozzle / 50–60°C bed', justification: 'TPU for gaskets, vibration dampeners, and flexible mechanical couplings.' },
+      10: { bestFor: 'High-volume production jigs and fixtures', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Cost-effective PETG at bulk pricing for production tooling that gets replaced regularly.' },
+    },
+  },
+
+  'best-tpu-filaments': {
+    slug: 'best-tpu-filaments',
+    title: 'Best TPU Filaments in 2026',
+    seoTitle: 'Best TPU & Flexible Filaments 2026 — Top Picks Compared | FilaScope',
+    seoDescription: 'Best TPU and flexible filaments ranked by flexibility, print ease, and durability. Compare NinjaFlex, Polymaker TPU, eSUN TPU & more.',
+    description: 'The best TPU and flexible filaments ranked by shore hardness, printability, and durability using FilaScore data.',
+    category: 'buying-guide',
+    readTime: 16,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['best TPU filament', 'best flexible filament', 'TPU filament comparison', 'NinjaFlex alternative', 'TPU shore hardness', 'flexible 3D printing'],
+    filters: { material: 'TPU', sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Why TPU Is Unique Among 3D Printing Materials',
+        content: `<p>TPU (Thermoplastic Polyurethane) is the only widely available FDM filament that produces genuinely flexible prints. Phone cases, gaskets, shoe insoles, vibration dampeners, protective covers — these applications are impossible with rigid materials like PLA or PETG.</p>
+<p>But TPU is also one of the trickiest filaments to print well. Shore hardness, print speed limitations, and extruder compatibility all matter. Our ranking uses the <strong>FilaScore algorithm</strong> to compare TPU filaments on printability, flexibility, and durability so you can choose with confidence.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How We Rank TPU Filaments',
+        content: `<p>FilaScope's TPU rankings balance flexibility performance with real-world printability. Our <a href="/methodology">ranking methodology</a> evaluates:</p>
+<ul>
+<li><strong>Shore hardness range:</strong> TPU ranges from 85A (very flexible, like a rubber band) to 95A (semi-flexible, like a shoe sole). We rank filaments within their hardness class.</li>
+<li><strong>Printability:</strong> Softer TPUs are harder to print — they buckle in Bowden extruders and require very slow speeds. We weight real-world print success highly.</li>
+<li><strong>Dimensional accuracy:</strong> Flexible filaments tend to have wider diameter tolerances. Tighter tolerance (±0.03mm) means more consistent extrusion.</li>
+<li><strong>Durability:</strong> TPU's advantage is fatigue resistance — how many flex cycles before failure. We factor in community reports on long-term durability.</li>
+<li><strong>Extruder compatibility:</strong> We note which TPUs work with Bowden setups vs requiring direct drive, which affects a large portion of printer owners.</li>
+</ul>
+<p>Rankings update automatically as new data enters our database.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'TPU Printing Tips',
+        content: `<p>TPU requires different printing techniques than rigid filaments:</p>
+<h3>Extruder Type Matters Most</h3>
+<p>Direct drive extruders handle TPU significantly better than Bowden setups. The long PTFE tube in Bowden systems causes soft TPU to buckle and jam. If using a Bowden printer, stick to harder TPU (95A) and print at 15–25mm/s maximum.</p>
+<h3>Slow Down — Seriously</h3>
+<p>Print TPU at 20–40mm/s for 95A hardness, and 15–25mm/s for 85A. Going faster causes buckling, under-extrusion, and poor layer adhesion. Retraction should be minimal (0.5–2mm) or disabled entirely to prevent jams.</p>
+<h3>Disable Retraction or Minimize It</h3>
+<p>TPU is compressible, so aggressive retraction causes jams. Start with retraction disabled and only add 0.5–1mm if stringing is unacceptable. Linear advance / pressure advance should also be disabled or set very low.</p>
+<h3>Bed Adhesion</h3>
+<p>TPU sticks to most bed surfaces — sometimes too well. Use a PEI sheet with a thin layer of glue stick as a release agent. Print with a brim rather than a raft for easier removal.</p>
+<h3>Shore Hardness Guide</h3>
+<ul>
+<li><strong>85A:</strong> Very flexible (rubber band feel). Phone cases, watch bands. Bowden-incompatible.</li>
+<li><strong>90A:</strong> Medium flexibility. Gaskets, protective cases. Bowden-difficult.</li>
+<li><strong>95A:</strong> Semi-rigid (shoe sole feel). Wheels, bumpers, tool grips. Bowden-compatible at slow speeds.</li>
+</ul>`,
+        position: 'after',
+      },
+      {
+        heading: 'When to Choose TPU vs Other Flexible Materials',
+        content: `<p>TPU isn't the only flexible 3D printing material, but it's the most accessible:</p>
+<h3>TPU vs TPE</h3>
+<p>TPE (Thermoplastic Elastomer) is a broader category that includes TPU. Some TPE filaments are softer than TPU (Shore 70A–80A) but are extremely difficult to print on most FDM printers. For most users, TPU in the 85A–95A range is the practical sweet spot.</p>
+<h3>TPU vs Soft PLA</h3>
+<p>Some brands sell "flexible PLA" that's slightly bendable. These are NOT truly flexible — they're just less brittle PLA. For genuine flexibility, use TPU. Soft PLA is useful only for prints that need slight give, like snap-fit cases.</p>
+<h3>When to Use <a href="/filaments/petg">PETG</a> Instead</h3>
+<p>If your part only needs slight impact resistance (not flexibility), PETG is easier to print and stronger in tension. Use TPU only when the application requires genuine elastic deformation — bending, compressing, or stretching.</p>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What is the best TPU filament for beginners?', answer: 'For beginners, start with a 95A shore hardness TPU like Polymaker PolyFlex TPU95 or eSUN TPU 95A. These are semi-flexible, print at reasonable speeds (25–40mm/s), and work with most direct drive extruders. Avoid 85A TPU until you\'re comfortable with flexible printing basics.' },
+      { question: 'Can I print TPU on a Bowden printer?', answer: 'Yes, but only with 95A (hardest) TPU and at very slow speeds (15–25mm/s). Softer TPUs (85A–90A) will buckle in the Bowden tube and jam. Some users have success modifying their Bowden path with a shorter tube or adding a filament guide, but direct drive is strongly recommended for regular TPU use.' },
+      { question: 'What shore hardness TPU should I use?', answer: '95A for functional parts (wheels, bumpers, tool grips), 90A for protective cases and gaskets, 85A for highly flexible items (phone cases, watch bands, wearables). Most users should start at 95A and work toward softer hardnesses as they gain experience.' },
+      { question: 'Why does my TPU keep jamming?', answer: 'TPU jams are usually caused by: 1) Too-fast retraction compressing the filament, 2) Print speed too high for the shore hardness, 3) Bowden tube allowing the filament to buckle. Fix: disable retraction, slow to 20–30mm/s, and ensure a tight filament path with no gaps between the drive gear and hot end.' },
+      { question: 'Is TPU waterproof?', answer: 'TPU is water-resistant but FDM-printed TPU is not fully waterproof due to micro-gaps between layers. For waterproof applications, print with 100% infill, thick walls (3+ perimeters), and consider coating with flexible sealant. TPU is excellent for applications that need splash resistance rather than full submersion.' },
+    ],
+    relatedSlugs: ['best-petg-filaments', 'best-filaments-for-functional-parts', 'best-filaments-for-cosplay', 'best-pla-filaments'],
+    aiSnippet: {
+      summaryText: 'Polymaker PolyFlex TPU95 is the best TPU filament for most users in 2026 — it balances flexibility, print reliability, and documentation. Start with 95A shore hardness if you\'re new to flexible printing, and use a direct drive extruder for best results.',
+      topPick: { name: 'PolyFlex TPU95', brand: 'Polymaker', reason: 'best combination of print reliability and flexibility with comprehensive specs' },
+      runnerUp: { name: 'NinjaFlex', brand: 'NinjaTek', reason: 'the original flexible filament with proven 85A performance for experienced users' },
+      budgetPick: { name: 'TPU 95A', brand: 'eSUN', reason: 'solid TPU performance at entry-level pricing' },
+    },
+    rankAnnotations: {
+      1: { bestFor: 'Reliable semi-flexible prints on most printers', tempRange: '210–230°C nozzle / 50–60°C bed', justification: 'Best-documented TPU with tight tolerances. Works well on both direct drive and careful Bowden setups at 95A.' },
+      2: { bestFor: 'Maximum flexibility (85A shore)', tempRange: '225–245°C nozzle / 50–60°C bed', justification: 'The gold standard for highly flexible prints. Direct drive only. Excellent fatigue resistance for wearables.' },
+      3: { bestFor: 'Budget flexible printing', tempRange: '210–230°C nozzle / 50–60°C bed', justification: 'Competitive 95A TPU at entry-level pricing. Good starting point for first-time flexible printing.' },
+      4: { bestFor: 'Bambu Lab printer owners', tempRange: '220–240°C nozzle / 50–60°C bed', justification: 'Tuned for Bambu Lab\'s direct drive system with AMS compatibility notes.' },
+      5: { bestFor: 'Colorful flexible prints', tempRange: '210–230°C nozzle / 50–60°C bed', justification: 'Wide color selection in 95A hardness. Good for phone cases and accessories where color matters.' },
+      6: { bestFor: 'Industrial gaskets and seals', tempRange: '220–240°C nozzle / 50–60°C bed', justification: 'Higher durometer options available for industrial sealing applications. Good chemical resistance.' },
+      7: { bestFor: 'Flexible hinges and snap-fits', tempRange: '210–230°C nozzle / 50–60°C bed', justification: 'Good fatigue resistance for living hinges and parts that flex repeatedly.' },
+      8: { bestFor: 'Vibration dampening components', tempRange: '210–230°C nozzle / 50–60°C bed', justification: 'TPU\'s natural vibration absorption makes it ideal for motor mounts and equipment feet.' },
+    },
   },
 };
 
