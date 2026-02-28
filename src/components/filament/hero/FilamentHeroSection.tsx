@@ -214,10 +214,16 @@ export function FilamentHeroSection({
               <Tooltip>
                 <TooltipTrigger asChild>
                   {displayFilament.transmission_distance != null ? (
-                    <Badge variant="outline" className="text-xs px-2.5 py-1 bg-purple-500/15 border-purple-500/30 text-purple-300 cursor-help gap-1">
-                      <Sun className="w-3.5 h-3.5" />
-                      TD {displayFilament.transmission_distance}
-                    </Badge>
+                    <a
+                      href="/hueforge-td-database"
+                      title="View all HueForge TD values on FilaScope"
+                      className="inline-flex"
+                    >
+                      <Badge variant="outline" className="text-xs px-2.5 py-1 bg-purple-500/15 border-purple-500/30 text-purple-300 cursor-pointer gap-1 hover:bg-purple-500/25 hover:border-purple-500/40 transition-colors">
+                        <Sun className="w-3.5 h-3.5" />
+                        HueForge TD: {displayFilament.transmission_distance}mm
+                      </Badge>
+                    </a>
                   ) : (
                     <Badge variant="outline" className="text-xs px-2.5 py-1 bg-muted/50 border-border text-muted-foreground cursor-help gap-1">
                       <Sun className="w-3.5 h-3.5" />

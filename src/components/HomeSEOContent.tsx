@@ -30,8 +30,11 @@ export function HomeSEOContent() {
     {
       title: 'HueForge',
       links: [
-        { label: 'HueForge TD Database', href: '/hueforge-td-database' },
+        { label: 'HueForge TD Value Database — Search 500+ Filaments', href: '/hueforge-td-database' },
+        { label: 'HueForge Filament Finder', href: '/hueforge-filaments' },
         { label: 'Best Filaments for HueForge', href: '/guides/best-filaments-hueforge' },
+        { label: 'What is HueForge TD?', href: '/guides/what-is-hueforge-td' },
+        { label: 'Best White Filaments for HueForge', href: '/guides/best-white-filaments-for-hueforge' },
         { label: 'Find Filaments by Color', href: '/color-finder' },
       ],
     },
