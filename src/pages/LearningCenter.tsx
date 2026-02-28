@@ -361,20 +361,20 @@ export default function LearningCenter() {
   return (
     <>
     <DocumentHead
-      title="3D Printing Guides & Tutorials — Learn | FilaScope"
-      description="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever."
-      ogTitle="3D Printing Guides & Tutorials — Learn | FilaScope"
-      ogDescription="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever."
+      title="3D Printing Guides, Tutorials & Buying Advice | FilaScope"
+      description="Free 3D printing guides covering filament buying advice, material comparisons, HueForge tutorials, and troubleshooting tips — backed by data from 8,277+ filaments."
+      ogTitle="3D Printing Guides, Tutorials & Buying Advice | FilaScope"
+      ogDescription="Free 3D printing guides covering filament buying advice, material comparisons, HueForge tutorials, and troubleshooting tips — backed by data from 8,277+ filaments."
     />
     <CollectionPageSchema
-      name="3D Printing Guides & Learning Center"
+      name="3D Printing Guides, Tutorials & Buying Advice"
       description={lcMetaDesc}
       url="https://filascope.com/learn"
       numberOfItems={GUIDES.length}
     />
     <ItemListSchema
       name="3D Printing Guides"
-      items={[...GUIDES].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 20).map((g, i) => ({
+      items={[...GUIDES].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 30).map((g, i) => ({
         position: i + 1,
         name: g.title,
         url: `https://filascope.com${g.isBuyingGuide ? '/guides' : '/learn'}/${g.slug}`,
@@ -401,12 +401,11 @@ export default function LearningCenter() {
             </Badge>
             
             <h1 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-              Learn 3D Printing
+              3D Printing Guides, Tutorials & Buying Advice
             </h1>
             
-            <p className="text-lg text-muted-foreground mb-8">
-              Expert guides, tutorials, and resources to help you master 3D printing.
-              From beginner basics to advanced techniques.
+            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+              FilaScope's library of <strong className="text-foreground">3D printing guides</strong> covers everything from material comparisons and <strong className="text-foreground">filament buying guide</strong> content to <strong className="text-foreground">HueForge tutorial</strong> walkthroughs and troubleshooting tips. Every recommendation is backed by real data from our database of 8,277+ filaments across 48+ brands. Whether you need a quick <strong className="text-foreground">filament comparison</strong> between PLA and PETG, a deep-dive into TD values for lithophane printing, or curated picks for a specific printer, you'll find actionable, data-driven advice here — always free, always up to date.
             </p>
             
             {/* Search Bar */}
@@ -459,45 +458,96 @@ export default function LearningCenter() {
           ))}
         </div>
         
-        {/* Featured Guides (only show on 'all' category with no search) */}
-        {activeCategory === 'all' && searchTerm === '' && (
-          <section className="mb-12">
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              Featured Guides
+        {/* Categorized H2 sections (only show on 'all' category with no search) */}
+        {activeCategory === 'all' && searchTerm === '' ? (
+          <>
+            {/* Featured Guides */}
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                Featured Guides
+              </h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                {featuredGuides.map((guide) => (
+                  <FeaturedGuideCard key={guide.slug} guide={guide} />
+                ))}
+              </div>
+            </section>
+
+            {/* Buying Guides */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold mb-6">Buying Guides</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {GUIDES.filter(g => g.category === 'buying-guide' && !g.category.includes('hueforge')).filter(g => 
+                  ['best-pla-filaments', 'best-petg-filaments', 'best-abs-filaments', 'beginners-guide', 'best-budget-filaments', 'best-tpu-filaments', 'best-asa-filaments', 'best-nylon-filaments', 'best-pc-filaments', 'best-high-speed-pla-filaments', 'best-filaments-for-functional-parts', 'best-filaments-for-miniatures'].includes(g.slug)
+                ).map(guide => (
+                  <GuideCard key={guide.slug} guide={guide} />
+                ))}
+              </div>
+            </section>
+
+            {/* Material Comparisons */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold mb-6">Material Comparisons</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {GUIDES.filter(g => 
+                  ['pla-vs-petg', 'petg-vs-abs', 'asa-vs-abs-outdoor-printing', 'silk-pla-comparison', 'pla-plus-vs-pla-pro', 'tpu-vs-petg', 'pla-vs-petg-vs-abs'].includes(g.slug)
+                ).map(guide => (
+                  <GuideCard key={guide.slug} guide={guide} />
+                ))}
+              </div>
+            </section>
+
+            {/* HueForge & Lithophane Guides */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold mb-6">HueForge & Lithophane Guides</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {GUIDES.filter(g => 
+                  ['hueforge-beginners-guide', 'understanding-td-values', 'hueforge-color-selection', 'hueforge-filaments', 'best-filaments-for-hueforge-lithophanes'].includes(g.slug)
+                ).map(guide => (
+                  <GuideCard key={guide.slug} guide={guide} />
+                ))}
+              </div>
+            </section>
+
+            {/* Specialty & Use-Case Guides */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold mb-6">Specialty & Use-Case Guides</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {GUIDES.filter(g => 
+                  ['best-filaments-for-outdoor-use', 'best-filament-for-bambu-lab-p1s', 'best-filament-for-prusa-mk4', 'best-filament-for-creality-k1', 'best-filament-for-beginners-2025', 'how-to-choose-3d-printer-budget', 'understanding-filament-temperature-settings', 'top-10-filaments-functional-parts'].includes(g.slug)
+                ).map(guide => (
+                  <GuideCard key={guide.slug} guide={guide} />
+                ))}
+              </div>
+            </section>
+          </>
+        ) : (
+          /* Filtered/searched view */
+          <section>
+            <h2 className="text-xl font-semibold mb-6">
+              {`${filteredGuides.length} Guide${filteredGuides.length !== 1 ? 's' : ''} Found`}
             </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {featuredGuides.map((guide) => (
-                <FeaturedGuideCard key={guide.slug} guide={guide} />
-              ))}
-            </div>
+            
+            {filteredGuides.length > 0 ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredGuides.map((guide) => (
+                  <GuideCard key={guide.slug} guide={guide} />
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-card/50 border-dashed">
+                <CardContent className="p-12 text-center">
+                  <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className="text-muted-foreground">No guides found matching your search.</p>
+                  <Button variant="ghost" onClick={() => { setSearchTerm(''); setActiveCategory('all'); }} className="mt-4">
+                    Clear Filters
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </section>
         )}
-        
-        {/* All Guides Grid */}
-        <section>
-          <h2 className="text-xl font-semibold mb-6">
-            {activeCategory === 'all' && searchTerm === '' ? 'All Guides' : `${filteredGuides.length} Guide${filteredGuides.length !== 1 ? 's' : ''} Found`}
-          </h2>
-          
-          {filteredGuides.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(activeCategory === 'all' && searchTerm === '' ? regularGuides : filteredGuides).map((guide) => (
-                <GuideCard key={guide.slug} guide={guide} />
-              ))}
-            </div>
-          ) : (
-            <Card className="bg-card/50 border-dashed">
-              <CardContent className="p-12 text-center">
-                <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                <p className="text-muted-foreground">No guides found matching your search.</p>
-                <Button variant="ghost" onClick={() => { setSearchTerm(''); setActiveCategory('all'); }} className="mt-4">
-                  Clear Filters
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </section>
         
         {/* CTA Section */}
         <section className="mt-16">
