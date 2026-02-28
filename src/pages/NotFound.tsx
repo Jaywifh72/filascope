@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { Search, Home, Printer, Tag, Layers, ArrowRight, HelpCircle } from "lucide-react";
+import { Search, Home, Printer, Tag, Layers, ArrowRight, HelpCircle, BookOpen, Palette, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -55,27 +55,26 @@ const NotFound = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/filaments?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
   const quickLinks = [
-    { to: "/", label: "Browse Filaments", icon: Layers, description: "Explore our complete filament database" },
-    { to: "/printers", label: "Browse Printers", icon: Printer, description: "Find your perfect 3D printer" },
-    { to: "/deals", label: "Today's Deals", icon: Tag, description: "Check out the latest discounts" },
-    { to: "/wizard", label: "Quick Match", icon: HelpCircle, description: "Get personalized recommendations" },
+    { to: "/filaments", label: "Browse All Filaments", icon: Layers, description: "Explore our complete filament database" },
+    { to: "/printers", label: "Browse All Printers", icon: Printer, description: "Find your perfect 3D printer" },
+    { to: "/brands", label: "View Filament Brands", icon: Tag, description: "Browse 50+ filament brands" },
+    { to: "/deals", label: "Today's Deals", icon: Sparkles, description: "Check out the latest discounts" },
+    { to: "/hueforge-td-database", label: "HueForge TD Database", icon: Palette, description: "Transmissivity data for lithophanes" },
+    { to: "/learn", label: "Learning Center", icon: BookOpen, description: "Guides, comparisons, and tips" },
   ];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      {/* noindex prevents soft-404 crawl budget waste.
-          Canonical → homepage so no duplicate authority is split to the 404 URL.
-          og:url → homepage so social unfurls don't canonicalize the broken path. */}
       <DocumentHead
         title="Page Not Found | FilaScope"
-        robots="noindex, nofollow"
-        canonical="https://filascope.com/"
-        ogUrl="https://filascope.com/"
+        robots="noindex, follow"
+        ogTitle="Page Not Found | FilaScope"
+        ogDescription="The page you're looking for doesn't exist or has been moved. Browse FilaScope's filament database to find what you need."
       />
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -143,7 +142,7 @@ const NotFound = () => {
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
             Quick Links
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {quickLinks.map((link) => (
               <Link
                 key={link.to}
