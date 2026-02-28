@@ -32,6 +32,7 @@ function getCategoryBadgeStyle(category: string) {
     case 'material-guide': return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
     case 'comparison': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
     case 'beginner': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    case 'how-to': return 'bg-teal-500/10 text-teal-400 border-teal-500/20';
     default: return 'bg-primary/10 text-primary border-primary/20';
   }
 }
@@ -42,6 +43,7 @@ function getCategoryLabel(category: string) {
     case 'material-guide': return 'Material Guide';
     case 'comparison': return 'Comparison';
     case 'beginner': return 'Beginner';
+    case 'how-to': return 'How-To Guide';
     default: return category;
   }
 }

@@ -31,7 +31,7 @@ export interface GuideConfig {
   seoTitle: string;
   seoDescription: string;
   description: string;
-  category: 'buying-guide' | 'comparison' | 'beginner' | 'hueforge' | 'printer-specific' | 'material-guide';
+  category: 'buying-guide' | 'comparison' | 'beginner' | 'hueforge' | 'printer-specific' | 'material-guide' | 'how-to';
   readTime: number;
   publishedAt: string;
   updatedAt: string;
@@ -2757,6 +2757,145 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Does infill percentage affect strength?', answer: 'Yes, significantly. Increasing infill from 20% to 50% can double part strength. However, wall count often matters more — going from 2 to 4 walls typically improves strength more than increasing infill beyond 30–40%.' },
       { question: 'Is 3D printed Nylon as strong as injection-molded Nylon?', answer: 'No. 3D printed Nylon typically achieves 60–80% of injection-molded strength due to layer adhesion limitations. Print orientation significantly affects strength — parts loaded along layer lines are weakest.' },
       { question: 'What filament is best for automotive parts?', answer: 'ABS and ASA are the most common choices for automotive applications due to their heat resistance (95–105°C HDT) and chemical resistance. For under-hood parts exposed to higher temperatures, Nylon or PA-CF may be necessary.' },
+    ],
+  },
+
+  'how-to-store-filament': {
+    slug: 'how-to-store-filament',
+    title: 'How to Store 3D Printer Filament Properly',
+    seoTitle: 'How to Store 3D Printer Filament — Prevent Moisture Damage | FilaScope',
+    seoDescription: 'Learn how to properly store 3D printer filament to prevent moisture absorption, brittleness, and print quality issues. Covers dry boxes, vacuum bags, desiccant, and humidity thresholds by material.',
+    description: 'A practical guide to filament storage, drying, and moisture prevention — with material-specific humidity thresholds and drying temperatures.',
+    category: 'how-to',
+    readTime: 10,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['filament storage', 'dry filament', 'filament moisture', 'filament dry box', 'desiccant filament', 'how to store filament', 'wet filament symptoms', 'filament dryer'],
+    filters: { sortBy: 'score', limit: 5 },
+    layout: 'editorial',
+    quickAnswer: 'Store 3D printer filament in airtight containers with silica gel desiccant at below 15% relative humidity. PLA absorbs moisture slowly but Nylon, TPU, and PETG are highly hygroscopic and degrade quickly in humid environments. Vacuum-sealed bags with desiccant packs are the most effective storage method. Filament exposed to moisture causes stringing, bubbling, poor layer adhesion, and reduced strength.',
+    howTo: {
+      name: 'How to Dry Wet 3D Printer Filament',
+      description: 'Step-by-step process to identify moisture-damaged filament, dry it properly, and store it to prevent future absorption.',
+      steps: [
+        { name: 'Identify moisture symptoms', text: 'Listen for popping or hissing sounds during extrusion. Look for excessive stringing, surface bubbles, rough layer surfaces, or unusually poor layer adhesion. These are signs your filament has absorbed moisture.' },
+        { name: 'Set dryer to correct temperature', text: 'Set your food dehydrator or filament dryer to the correct temperature for your material: PLA at 45°C, PETG at 65°C, ABS at 65°C, Nylon at 70°C, TPU at 55°C, PVA at 45°C.' },
+        { name: 'Dry for recommended time', text: 'Dry the filament for the recommended duration: PLA for 4–6 hours, PETG for 4–6 hours, ABS for 4 hours, Nylon for 6–8 hours, TPU for 4–6 hours, PVA for 4–6 hours. Severely wet filament may need longer.' },
+        { name: 'Print a test piece', text: 'After drying, print a small test piece to verify quality. Check for smooth extrusion, clean surfaces, and absence of popping sounds. If issues persist, dry for an additional 2–4 hours.' },
+        { name: 'Store immediately in airtight container', text: 'Immediately transfer dried filament to an airtight container with fresh silica gel desiccant. Vacuum-sealed bags are ideal for long-term storage. Do not leave dried filament exposed to ambient air.' },
+      ],
+    },
+    editorialSections: [
+      {
+        heading: 'Why Does Filament Moisture Matter?',
+        content: `<p>All 3D printer filaments are <strong>hygroscopic</strong> to some degree — they absorb moisture from the surrounding air. When wet filament is heated in the printer's hotend, the absorbed water turns to steam, creating bubbles and voids inside the extruded plastic.</p>
+<p>The effects of moisture on print quality are dramatic and often misdiagnosed as hardware problems:</p>
+<ul>
+<li><strong>Stringing and oozing:</strong> Steam pressure forces molten plastic through the nozzle during travel moves</li>
+<li><strong>Surface bubbles and zits:</strong> Water vapor creates small explosions in the melt zone, leaving rough surfaces</li>
+<li><strong>Poor layer adhesion:</strong> Voids between layers reduce the mechanical bond, weakening the part by up to 30–50%</li>
+<li><strong>Popping and hissing sounds:</strong> Audible steam escaping during extrusion — the most obvious symptom</li>
+<li><strong>Dimensional inaccuracy:</strong> Inconsistent extrusion flow causes uneven layer widths and heights</li>
+<li><strong>Brittleness:</strong> Some materials (especially Nylon and PVA) become brittle and snap when severely moisture-damaged</li>
+</ul>
+<p>Proper storage isn't optional for serious 3D printing — it's a fundamental requirement that directly impacts every print you make.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Which Filaments Are Most Sensitive to Moisture?',
+        content: `<p>Different materials absorb moisture at vastly different rates. The table below ranks common filaments by moisture sensitivity, from most to least affected:</p>
+<table>
+<thead>
+<tr><th>Material</th><th>Sensitivity Level</th><th>Max Recommended Humidity</th><th>Symptoms When Wet</th><th>Drying Temp (°C)</th><th>Drying Time (hours)</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="/filaments/nylon">Nylon (PA)</a></td><td>🔴 Extreme</td><td>&lt;10% RH</td><td>Bubbling, stringing, brittleness, snapping</td><td>70</td><td>6–8</td></tr>
+<tr><td>PVA</td><td>🔴 Extreme</td><td>&lt;10% RH</td><td>Dissolves partially, jams nozzle, won't adhere</td><td>45</td><td>4–6</td></tr>
+<tr><td><a href="/filaments/tpu">TPU</a></td><td>🟠 High</td><td>&lt;15% RH</td><td>Bubbling, surface roughness, poor elasticity</td><td>55</td><td>4–6</td></tr>
+<tr><td><a href="/filaments/petg">PETG</a></td><td>🟠 High</td><td>&lt;15% RH</td><td>Stringing, bubbles, cloudy appearance</td><td>65</td><td>4–6</td></tr>
+<tr><td><a href="/filaments/abs">ABS</a></td><td>🟡 Moderate</td><td>&lt;20% RH</td><td>Surface roughness, reduced layer adhesion</td><td>65</td><td>4</td></tr>
+<tr><td><a href="/filaments/asa">ASA</a></td><td>🟡 Moderate</td><td>&lt;20% RH</td><td>Similar to ABS — surface quality degrades</td><td>65</td><td>4</td></tr>
+<tr><td><a href="/filaments/pla">PLA</a></td><td>🟢 Low</td><td>&lt;25% RH</td><td>Mild stringing, slight surface roughness</td><td>45</td><td>4–6</td></tr>
+</tbody>
+</table>
+<p><strong>Key takeaway:</strong> If you print with Nylon, PVA, or TPU, a filament dryer or dry box is not a luxury — it's essential equipment. PLA users can get away with less rigorous storage but will still benefit from keeping spools sealed between sessions.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Best Filament Storage Methods',
+        content: `<p>There are several proven approaches to filament storage, ranging from budget-friendly to professional-grade solutions:</p>
+<h3>1. Airtight Containers with Desiccant</h3>
+<p>The most popular method: store spools in large, clear, airtight storage bins (like IRIS weathertight containers or Cereal containers) with <strong>silica gel desiccant packs</strong>. Use 50–100g of silica gel per spool. Rechargeable color-indicating silica gel is ideal — when the beads turn from orange to green (or blue to pink), dry them in an oven at 120°C for 2 hours to recharge.</p>
+<h3>2. Vacuum-Sealed Bags</h3>
+<p>Vacuum bags remove air and moisture from around the spool, providing the best long-term protection. Use a standard food vacuum sealer with bags large enough for a 1kg spool. Always include a desiccant pack inside the bag. This method is ideal for filament you won't use for weeks or months.</p>
+<h3>3. Purpose-Built Filament Dry Boxes</h3>
+<p>Dedicated dry boxes like the <strong>Sunlu S2</strong>, <strong>EIBOS Cyclopes</strong>, or <strong>PolyBox</strong> combine heated drying with sealed storage. Some models feed filament directly to your printer through a PTFE tube, keeping the spool dry even during long prints. These are the premium option but provide the best active moisture control.</p>
+<h3>4. DIY Dry Box</h3>
+<p>Build your own using a large airtight container, a hygrometer to monitor humidity, PTFE tube fittings for feeding filament out, and rechargeable desiccant. Total cost is typically under $20 and works nearly as well as commercial solutions.</p>
+<p><strong>Important:</strong> Regardless of method, always reseal filament immediately after use. Even 30 minutes of exposure in humid environments can affect sensitive materials like Nylon.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How to Tell If Your Filament Has Absorbed Moisture',
+        content: `<p>Diagnosing wet filament is straightforward once you know what to look for. Here are the key indicators:</p>
+<h3>Audible Signs</h3>
+<ul>
+<li><strong>Popping or crackling:</strong> The most unmistakable sign — sounds like tiny bubbles popping as steam escapes through the nozzle</li>
+<li><strong>Hissing during extrusion:</strong> A quieter variant of popping, especially with materials like PETG and Nylon</li>
+</ul>
+<h3>Visual Signs on Prints</h3>
+<ul>
+<li><strong>Surface bubbles and zits:</strong> Small raised bumps or craters on otherwise smooth surfaces</li>
+<li><strong>Excessive stringing:</strong> Much worse than normal — thin wisps of plastic between all travel moves</li>
+<li><strong>Rough or matte texture:</strong> Where you'd normally see a smooth finish, the surface looks dull and uneven</li>
+<li><strong>Inconsistent extrusion width:</strong> Layer lines vary noticeably in width along the same perimeter</li>
+</ul>
+<h3>Visual Signs on the Spool</h3>
+<ul>
+<li><strong>Brittleness:</strong> Filament snaps when bent at a normal radius (especially Nylon and PVA)</li>
+<li><strong>Color changes:</strong> Some filaments become slightly cloudy or change shade when moisture-damaged</li>
+<li><strong>Rough surface feel:</strong> Filament that was originally smooth feels slightly rough or textured</li>
+</ul>
+<p>If you notice any of these symptoms, dry your filament before continuing to print. Using wet filament wastes material, time, and can even contribute to nozzle clogs over extended use.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How to Dry Wet Filament',
+        content: `<p>Once filament has absorbed moisture, you need to actively dry it before printing. Here are the most effective drying methods:</p>
+<h3>Filament Dryer (Recommended)</h3>
+<p>Purpose-built filament dryers like the <strong>Sunlu S2</strong>, <strong>eSun eBOX Lite</strong>, or <strong>PrintDry Pro</strong> are the easiest option. They maintain precise temperatures and some include humidity displays so you can see when drying is complete. Simply set the temperature for your material and let it run for the recommended time.</p>
+<h3>Food Dehydrator</h3>
+<p>A standard food dehydrator with adjustable temperature works well for most materials. Remove any fruit roll-up trays to make room for the spool. Ensure your dehydrator can reach at least 65°C if you need to dry PETG, ABS, or Nylon. Budget models that max out at 50°C are only suitable for PLA and PVA.</p>
+<h3>Oven (Use with Caution)</h3>
+<p>A conventional oven can dry filament, but <strong>temperature accuracy is critical</strong>. Most ovens fluctuate ±10–15°C, which can soften or deform spools — especially PLA (glass transition ~60°C). If using an oven, verify the actual temperature with an oven thermometer and set it 10°C below your target. Never use this method for PLA unless you can confirm accuracy below 50°C.</p>
+<h3>Drying Temperature Reference</h3>
+<ul>
+<li><strong>PLA:</strong> 45°C for 4–6 hours</li>
+<li><strong>PETG:</strong> 65°C for 4–6 hours</li>
+<li><strong>ABS:</strong> 65°C for 4 hours</li>
+<li><strong>ASA:</strong> 65°C for 4 hours</li>
+<li><strong>Nylon (PA):</strong> 70°C for 6–8 hours</li>
+<li><strong>TPU:</strong> 55°C for 4–6 hours</li>
+<li><strong>PVA:</strong> 45°C for 4–6 hours</li>
+</ul>
+<p><strong>Pro tip:</strong> For severely wet filament (left in humid conditions for weeks), double the recommended drying time. Some Nylon spools may need up to 12–16 hours of drying to fully restore print quality.</p>`,
+        position: 'before',
+      },
+    ],
+    faqs: [
+      { question: 'How long can filament sit out before going bad?', answer: 'PLA can last months in moderate humidity (below 50% RH) without significant degradation. Nylon and TPU can absorb problematic levels of moisture within 24 hours in humid environments (above 60% RH). PETG falls in between — it tolerates a few days of exposure but degrades noticeably within a week in high humidity.' },
+      { question: 'Can I use a food dehydrator to dry filament?', answer: 'Yes, food dehydrators work well for drying filament. Set PLA to 45°C, PETG to 65°C, Nylon to 70°C, and run for 4–8 hours depending on severity. Make sure the dehydrator can reach the required temperature — budget models often max out at 50°C, which is only sufficient for PLA.' },
+      { question: 'What is the best filament dry box?', answer: 'Purpose-built filament dryers like the Sunlu S2 or EIBOS Cyclopes are popular choices that combine drying and storage. For a budget option, large airtight containers (like IRIS weathertight boxes) with 50–100g of rechargeable silica gel desiccant work nearly as well for storage, though they don\'t actively dry.' },
+      { question: 'Does vacuum sealing filament work?', answer: 'Yes, vacuum bags with desiccant are one of the most effective long-term storage methods. The vacuum removes ambient moisture, and the desiccant absorbs any residual humidity. This method is especially recommended for expensive specialty filaments or spools you won\'t use for weeks.' },
+      { question: 'How do I know if my filament is too wet to print?', answer: 'Listen for popping or hissing during extrusion — this is the most obvious sign. Also look for excessive stringing, surface bubbles, rough layer surfaces, or unusually poor layer adhesion. If any of these symptoms appear, dry your filament before continuing.' },
+      { question: 'Do all filaments need to be stored dry?', answer: 'All filaments benefit from dry storage, but the urgency varies by material. Nylon, TPU, PVA, and PETG are the most sensitive and should always be stored in sealed containers with desiccant. PLA and ABS are more forgiving and can tolerate moderate ambient humidity for extended periods, though they still perform better when kept dry.' },
+    ],
+    relatedSlugs: ['how-to-choose-filament', 'strongest-3d-printer-filament', 'best-pla-filaments', 'filament-temperature-guide'],
+    relatedQuestions: [
+      { question: 'Does PLA go bad over time?', answer: 'PLA does degrade over time, especially when exposed to moisture and UV light. Properly stored PLA (sealed with desiccant) can last 2+ years without noticeable quality loss. Improperly stored PLA becomes brittle and prints with surface defects, but this is due to moisture absorption rather than chemical degradation of the polymer itself.' },
+      { question: 'Can wet filament damage my printer?', answer: 'Wet filament won\'t permanently damage most printers, but it can cause temporary issues. Steam pressure can contribute to nozzle clogs, especially with smaller nozzle diameters (0.2–0.3mm). Severely wet Nylon or PVA can jam the hotend if the moisture content is extreme. The biggest cost is wasted filament and failed prints.' },
+      { question: 'How much silica gel do I need per spool?', answer: 'Use approximately 50–100g of silica gel desiccant per spool for effective moisture control. For a larger container holding 3–4 spools, 150–200g is sufficient. Rechargeable color-indicating silica gel is the best choice — you can recharge it in an oven at 120°C for 2 hours when the indicator changes color.' },
+      { question: 'Can I print directly from a dry box?', answer: 'Yes, many dry boxes and filament dryers include PTFE tube outputs that allow you to feed filament directly to your printer while keeping the spool sealed. This is the ideal setup for moisture-sensitive materials like Nylon and TPU, as it prevents re-absorption during long prints.' },
     ],
   },
 };
