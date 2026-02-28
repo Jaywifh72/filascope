@@ -171,11 +171,11 @@ export function ProductJsonLd({
   if (transmissionDistance) {
     additionalProperties.push({
       '@type': 'PropertyValue',
-      name: 'HueForge Transmissivity Distance (TD)',
+      name: 'HueForge Transmission Distance',
       value: transmissionDistance,
       unitCode: 'MMT',
       unitText: 'mm',
-      description: 'Light transmission value for HueForge lithophane and multicolor printing',
+      description: 'Transmission distance value used in HueForge for lithophane printing',
     });
     
     additionalProperties.push({
@@ -192,6 +192,7 @@ export function ProductJsonLd({
       name: 'Nozzle Temperature Range',
       value: `${nozzleTempMin}-${nozzleTempMax}`,
       unitCode: 'CEL',
+      unitText: '°C',
     });
   } else if (nozzleTempMax) {
     additionalProperties.push({
@@ -199,6 +200,7 @@ export function ProductJsonLd({
       name: 'Max Nozzle Temperature',
       value: nozzleTempMax,
       unitCode: 'CEL',
+      unitText: '°C',
     });
   }
 
@@ -208,6 +210,7 @@ export function ProductJsonLd({
       name: 'Bed Temperature Range',
       value: `${bedTempMin}-${bedTempMax}`,
       unitCode: 'CEL',
+      unitText: '°C',
     });
   } else if (bedTempMax) {
     additionalProperties.push({
@@ -215,6 +218,7 @@ export function ProductJsonLd({
       name: 'Max Bed Temperature',
       value: bedTempMax,
       unitCode: 'CEL',
+      unitText: '°C',
     });
   }
 
@@ -252,6 +256,7 @@ export function ProductJsonLd({
       name: 'Filament Diameter',
       value: diameter,
       unitCode: 'MMT',
+      unitText: 'mm',
     });
   }
 
