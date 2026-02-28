@@ -4,13 +4,51 @@
  * Uses <a> tags (not React Router <Link>) so crawlers always see real anchors.
  */
 export function HomeSEOContent() {
-  const popularSearches = [
-    { label: "Best PLA for beginners", href: "/best-filaments-for-beginners" },
-    { label: "PLA vs PETG", href: "/pla-vs-petg" },
-    { label: "Cheapest filament", href: "/filaments?sort=price_asc" },
-    { label: "HueForge compatible filaments", href: "/best-filaments-for-hueforge" },
-    { label: "High speed PLA", href: "/filaments/high-speed-pla" },
-    { label: "Best filament for Bambu Lab", href: "/guides/best-filament-for-bambu-lab-p1s" },
+  const searchGroups = [
+    {
+      title: 'Material Comparisons',
+      links: [
+        { label: 'Best PLA Filaments 2026', href: '/guides/best-pla-filaments' },
+        { label: 'Best PETG Filaments', href: '/guides/best-petg-filaments' },
+        { label: 'PLA vs PETG', href: '/guides/pla-vs-petg' },
+        { label: 'Best ABS Filaments', href: '/guides/best-abs-filaments' },
+      ],
+    },
+    {
+      title: 'Material Categories',
+      links: [
+        { label: 'PLA Filament Database', href: '/filaments/pla' },
+        { label: 'PETG Filaments', href: '/filaments/petg' },
+        { label: 'TPU Flexible Filaments', href: '/filaments/tpu' },
+        { label: 'ASA Outdoor Filaments', href: '/filaments/asa' },
+      ],
+    },
+    {
+      title: 'HueForge',
+      links: [
+        { label: 'HueForge TD Values', href: '/hueforge-td-database' },
+        { label: 'Best Filaments for HueForge', href: '/guides/best-filaments-hueforge' },
+        { label: 'Find Filaments by Color', href: '/color-finder' },
+      ],
+    },
+    {
+      title: 'Tools',
+      links: [
+        { label: 'Compare Filaments Side-by-Side', href: '/compare' },
+        { label: 'Filament Deals & Discounts', href: '/deals' },
+        { label: '3D Printer Database', href: '/printers' },
+      ],
+    },
+    {
+      title: 'Top Brands',
+      links: [
+        { label: 'Bambu Lab Filaments', href: '/brands/bambu-lab' },
+        { label: 'Polymaker Filaments', href: '/brands/polymaker' },
+        { label: 'Prusament Filaments', href: '/brands/prusament' },
+        { label: 'eSUN Filaments', href: '/brands/esun' },
+        { label: 'Hatchbox Filaments', href: '/brands/hatchbox' },
+      ],
+    },
   ];
 
   return (
@@ -32,16 +70,23 @@ export function HomeSEOContent() {
 
         {/* Popular Searches */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-3">Popular Searches</h2>
-          <div className="flex flex-wrap gap-2">
-            {popularSearches.map(({ label, href }) => (
-              <a
-                key={href}
-                href={href}
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-colors text-muted-foreground"
-              >
-                {label}
-              </a>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Popular Searches</h2>
+          <div className="space-y-4">
+            {searchGroups.map((group) => (
+              <div key={group.title}>
+                <h3 className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider mb-2">{group.title}</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {group.links.map(({ label, href }) => (
+                    <a
+                      key={href}
+                      href={href}
+                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-colors text-muted-foreground"
+                    >
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
