@@ -970,13 +970,12 @@ const { id } = useParams();
         <BackToResults />
         <DetailBreadcrumb
           segments={[
-            { label: "Filaments", href: "/" },
-            ...(displayFilament.material ? [{ label: displayFilament.material, href: `/?material=${encodeURIComponent(displayFilament.material)}` }] : []),
+            { label: "Filaments", href: "/filaments" },
+            ...(displayFilament.material ? [{ label: displayFilament.material, href: `/filaments/${displayFilament.material.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` }] : []),
             ...(displayFilament.vendor ? [{ label: displayFilament.vendor, href: `/brands/${brandSlug}` }] : []),
-            { label: productLineName, href: `/filament/${id}` },
+            { label: productLineName, href: `/filament/${canonicalSlug}` },
           ]}
           mobileBackLabel={displayFilament.vendor || "Filaments"}
-          hideHome
         />
 
         {/* Main Layout: Content + Sidebar */}
