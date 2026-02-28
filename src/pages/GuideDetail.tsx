@@ -294,7 +294,7 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
         />
         <div className="flex gap-8">
           {/* Main Content */}
-          <article className="flex-1 min-w-0 max-w-3xl">
+          <article role="article" className="flex-1 min-w-0 max-w-3xl">
             {/* Meta */}
             <div className="flex items-center gap-3 mb-4 flex-wrap">
               <Badge variant="outline" className={categoryConfig.color}>

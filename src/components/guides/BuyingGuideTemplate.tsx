@@ -165,7 +165,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-8 lg:py-12">
+      <article role="article" className="max-w-5xl mx-auto px-4 py-8 lg:py-12">
         {/* Hero */}
         <div className="mb-8">
           <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -393,7 +393,10 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           </section>
         )}
 
-        {/* CTA */}
+      </article>
+
+      {/* CTA — outside article */}
+      <div className="max-w-5xl mx-auto px-4 pb-8">
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardContent className="p-8 text-center">
             <h3 className="text-xl font-bold mb-2">Need Personalized Recommendations?</h3>
