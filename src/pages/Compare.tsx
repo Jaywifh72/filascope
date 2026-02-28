@@ -1168,6 +1168,49 @@ const Compare = () => {
         </Card>
               </>
            )}
+
+          {/* SEO Content Section */}
+          <section className="mt-12 space-y-8">
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">How to Compare 3D Printer Filaments</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                FilaScope's <strong>filament comparison chart</strong> lets you <strong>compare filaments side by side</strong> across every specification that matters — print temperatures, tensile strength, flexibility, price per kilogram, HueForge TD values, and printer compatibility. Add up to four filaments simultaneously to see how they stack up in a detailed <strong>filament specs comparison</strong>. Each column highlights the winner per category so you can spot strengths and trade-offs at a glance. Use the radar chart for a visual overview, toggle diff mode to surface only the differences, and export your results to share with your community. Start by browsing the{' '}
+                <Link to="/" className="text-primary hover:underline font-medium">filament catalog</Link> and adding products to compare.
+              </p>
+            </article>
+
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">What Specs Matter Most When Comparing Filaments?</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                The most important specifications depend on your application. <strong>Print temperature range</strong> determines compatibility with your printer's hotend. <strong>Tensile strength</strong> and <strong>flexural strength</strong> indicate how well a part resists breaking under load, while <strong>elongation at break</strong> measures flexibility before failure. <strong>Price per kilogram</strong> normalizes cost across different spool sizes for fair comparison. For HueForge lithophane projects, the <strong>TD (transmissivity distance) value</strong> is critical. Bed adhesion requirements — heated bed temperature, enclosure needs, and surface compatibility — affect whether a filament works on your setup. For a deeper dive, read our{' '}
+                <Link to="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</Link>.
+              </p>
+            </article>
+
+            <article>
+              <h2 className="text-xl font-bold text-foreground mb-4">Popular Filament Comparisons</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: "PLA vs PETG", href: "/guides/pla-vs-petg" },
+                  { label: "PLA vs PLA+", href: "/guides/pla-plus-vs-pla-pro" },
+                  { label: "ASA vs ABS", href: "/guides/asa-vs-abs-outdoor-printing" },
+                  { label: "Silk PLA Comparison", href: "/guides/silk-pla-comparison" },
+                  { label: "Best PLA Filaments", href: "/guides/best-pla-filaments" },
+                  { label: "Best PETG Filaments", href: "/guides/best-petg-filaments" },
+                  { label: "Best for Beginners", href: "/guides/best-filaments-for-beginners" },
+                  { label: "Best for HueForge", href: "/guides/best-filaments-for-hueforge" },
+                ].map(link => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="px-4 py-3 rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors text-sm font-medium text-foreground text-center"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </article>
+          </section>
         </div>
       </div>
     </div>
