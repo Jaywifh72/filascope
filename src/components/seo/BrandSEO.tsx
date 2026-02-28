@@ -28,17 +28,13 @@ export function BrandSEO({
     ? `${brandName} — Prices, Reviews & Specs | FilaScope`
     : `${brandName} Filaments — Prices, Reviews & Specs | FilaScope`;
 
-  // Build meta description with price range when available
-  const priceStr = priceRange ? ` Prices from $${priceRange.low}–$${priceRange.high}.` : '';
-  const defaultDesc = productCount && materials.length > 0
-    ? `Explore ${productCount} ${brandName} filaments across ${materials.length} materials.${priceStr} Compare specs, check printer compatibility & find deals.`
-    : productCount 
-      ? `Explore ${productCount} ${brandName} filaments.${priceStr} Compare specs, check printer compatibility & find deals on FilaScope.`
-      : `Browse ${brandName} 3D printing filaments. Compare prices, specifications, and availability on FilaScope.`;
-  
-  const seoDescription = (description || defaultDesc).length > 160 
-    ? (description || defaultDesc).substring(0, 157) + '...'
-    : (description || defaultDesc);
+  // Always use structured template to avoid truncated "about" text
+  const materialList = materials.length > 0
+    ? materials.slice(0, 3).join(', ') + ' & more'
+    : 'PLA, PETG, ABS & more';
+  const seoDescription = productCount
+    ? `Compare ${productCount} ${brandName} 3D printer filaments. Specs, live pricing, HueForge TD values & reviews. ${materialList} on FilaScope.`
+    : `Compare ${brandName} 3D printer filaments. Specs, live pricing, HueForge TD values & reviews. ${materialList} on FilaScope.`;
 
   const fullUrl = canonicalUrl.startsWith('http') 
     ? canonicalUrl 
