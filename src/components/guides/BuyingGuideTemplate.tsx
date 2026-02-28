@@ -128,7 +128,10 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         url={`/guides/${config.slug}`}
       />
       <BreadcrumbSchema items={breadcrumbs} />
-      {config.faqs.length > 0 && <FAQSchema faqs={config.faqs} />}
+      {/* Single merged FAQPage schema for both FAQ + People Also Ask */}
+      {(config.faqs.length > 0 || (config.relatedQuestions && config.relatedQuestions.length > 0)) && (
+        <FAQSchema faqs={[...config.faqs, ...(config.relatedQuestions ?? [])]} />
+      )}
       {config.layout === 'ranked-list' && filaments && filaments.length > 0 && (
         <ItemListSchema
           name={config.title}
@@ -307,6 +310,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
             <RelatedQuestionsSection
               questions={config.relatedQuestions}
               title="People Also Ask"
+              suppressSchema
             />
           </section>
         )}

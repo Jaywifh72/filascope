@@ -11,18 +11,19 @@ interface RelatedQuestionsSectionProps {
   questions: RelatedQuestion[];
   title?: string;
   className?: string;
+  /** When true, skip injecting a FAQPage JSON-LD (caller handles the merged schema). */
+  suppressSchema?: boolean;
 }
 
 export function RelatedQuestionsSection({
   questions,
   title = 'People Also Ask',
   className,
+  suppressSchema = false,
 }: RelatedQuestionsSectionProps) {
-  // Second FAQPage schema block — distinct from the main FAQ schema,
-  // injected directly into <head> by useJsonLd (bypasses Helmet deduplication).
-  // Google explicitly supports multiple FAQPage blocks on a single URL.
+  // Inject FAQPage schema only when not suppressed (i.e. standalone usage).
   useJsonLd(
-    questions?.length > 0
+    !suppressSchema && questions?.length > 0
       ? {
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
