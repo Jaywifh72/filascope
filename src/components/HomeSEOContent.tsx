@@ -9,24 +9,28 @@ export function HomeSEOContent() {
       title: 'Material Comparisons',
       links: [
         { label: 'Best PLA Filaments 2026', href: '/guides/best-pla-filaments' },
-        { label: 'Best PETG Filaments', href: '/guides/best-petg-filaments' },
+        { label: 'Best PETG Filaments 2026', href: '/guides/best-petg-filaments' },
         { label: 'PLA vs PETG', href: '/guides/pla-vs-petg' },
         { label: 'Best ABS Filaments', href: '/guides/best-abs-filaments' },
+        { label: 'ABS vs ASA for Outdoor Printing', href: '/guides/asa-vs-abs-outdoor-printing' },
+        { label: 'Best Filaments for Miniatures', href: '/guides/best-filaments-for-miniatures' },
+        { label: 'Filament Temperature Guide', href: '/filament-temperature-guide' },
       ],
     },
     {
       title: 'Material Categories',
       links: [
         { label: 'PLA Filament Database', href: '/filaments/pla' },
-        { label: 'PETG Filaments', href: '/filaments/petg' },
+        { label: 'PETG Filament Comparison', href: '/filaments/petg' },
         { label: 'TPU Flexible Filaments', href: '/filaments/tpu' },
         { label: 'ASA Outdoor Filaments', href: '/filaments/asa' },
+        { label: 'Silk PLA Filaments', href: '/filaments/silk-pla' },
       ],
     },
     {
       title: 'HueForge',
       links: [
-        { label: 'HueForge TD Values', href: '/hueforge-td-database' },
+        { label: 'HueForge TD Database', href: '/hueforge-td-database' },
         { label: 'Best Filaments for HueForge', href: '/guides/best-filaments-hueforge' },
         { label: 'Find Filaments by Color', href: '/color-finder' },
       ],
@@ -34,8 +38,8 @@ export function HomeSEOContent() {
     {
       title: 'Tools',
       links: [
-        { label: 'Compare Filaments Side-by-Side', href: '/compare' },
-        { label: 'Filament Deals & Discounts', href: '/deals' },
+        { label: 'Compare Filaments Side by Side', href: '/compare' },
+        { label: 'Filament Deals Today', href: '/deals' },
         { label: '3D Printer Database', href: '/printers' },
       ],
     },
