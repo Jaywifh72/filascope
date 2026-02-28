@@ -16,87 +16,55 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const ROBOTS_TXT = `# FilaScope robots.txt — AI-optimized — Updated 2026-02-20
-
-User-agent: *
+const ROBOTS_TXT = `User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /auth/
 Disallow: /admin/
-Disallow: /_/
 
-Sitemap: https://filascope.com/sitemap.xml
-
-# Search Engines
 User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
 Allow: /
 
-User-agent: Applebot
-Allow: /
-
-# AI Answer Engines
 User-agent: GPTBot
-Allow: /
-
-User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: ChatGPT-User
 Allow: /
 
-User-agent: ClaudeBot
+User-agent: Claude-Web
 Allow: /
 
-User-agent: anthropic-ai
+User-agent: ClaudeBot
 Allow: /
 
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: YouBot
-Allow: /
-
-User-agent: Google-Extended
+User-agent: Applebot
 Allow: /
 
 User-agent: Applebot-Extended
 Allow: /
 
-# AI Training Crawlers
-User-agent: CCBot
+User-agent: Google-Extended
 Allow: /
 
 User-agent: Bytespider
 Allow: /
 
-User-agent: Amazonbot
-Allow: /
-
 User-agent: cohere-ai
 Allow: /
 
-User-agent: Diffbot
+User-agent: meta-externalagent
 Allow: /
 
-# Social Media Crawlers
-User-agent: FacebookExternalHit
+User-agent: FacebookBot
 Allow: /
 
-User-agent: Meta-ExternalAgent
-Allow: /
-
-# Crawl-delay for high-volume AI bots
-User-agent: GPTBot
-Crawl-delay: 2
-
-User-agent: ClaudeBot
-Crawl-delay: 2
-
-User-agent: PerplexityBot
-Crawl-delay: 2`;
+Sitemap: https://filascope.com/sitemap.xml`;
 
 const INDEXNOW_KEY = "a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c";
 
