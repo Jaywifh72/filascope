@@ -1805,22 +1805,22 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
 
   'best-filaments-for-miniatures': {
     slug: 'best-filaments-for-miniatures',
-    title: 'Best Filaments for Miniatures in 2026',
-    seoTitle: 'Best Filaments for Miniatures & Tabletop Models 2026 | FilaScope',
-    seoDescription: 'Best filaments for printing miniatures ranked by detail resolution, surface finish, and paintability. Compare PLA, resin-compatible, and specialty filaments.',
+    title: 'Best 3D Printer Filament for Miniatures in 2026',
+    seoTitle: 'Best Filament for Miniatures 2026 — Top Picks for Detail & Precision | FilaScope',
+    seoDescription: 'The best filaments for printing miniatures and tabletop models. Compare PLA, resin-like, and specialty filaments for detail, layer resolution, and paintability.',
     description: 'Top filaments for miniatures and tabletop models ranked by detail quality, surface smoothness, and paintability using FilaScore data.',
     category: 'buying-guide',
     readTime: 16,
     publishedAt: '2026-02-28',
     updatedAt: '2026-02-28',
-    keywords: ['best filament for miniatures', '3D printing miniatures filament', 'best PLA for miniatures', 'tabletop miniatures filament', 'miniature detail filament', 'D&D miniatures 3D print'],
+    keywords: ['best filament for miniatures', '3D printing miniatures filament', 'best PLA for miniatures', 'tabletop miniatures filament', 'miniature detail filament', 'D&D miniatures 3D print', 'miniature print settings'],
     filters: { material: 'PLA', sortBy: 'score', limit: 10 },
     layout: 'ranked-list',
     editorialSections: [
       {
-        heading: 'Why Filament Choice Matters for Miniatures',
-        content: `<p>Printing miniatures pushes FDM printers to their limits. Layer lines, stringing, and poor bridging are magnified on 28mm–32mm scale models. The right filament minimizes these artifacts, holds fine detail at 0.08–0.12mm layer heights, and takes primer and paint without extra sanding.</p>
-<p>Our ranking uses the <strong>FilaScore algorithm</strong> to compare dimensional accuracy, surface finish quality, color consistency, and community feedback specifically relevant to miniature printing.</p>`,
+        heading: 'What Makes a Good Miniature Filament?',
+        content: `<p>Printing miniatures pushes FDM printers to their limits. Layer lines, stringing, and poor bridging are magnified on 28mm–32mm scale models. The ideal miniature filament has tight diameter tolerance (±0.02mm) for consistent extrusion on tiny features, low stringing behavior to keep details clean, a matte finish for superior primer and paint adhesion, and excellent bridging performance for overhangs like outstretched arms and weapon tips.</p>
+<p>Matte PLA formulations excel because their surface texture grips acrylic primer without sanding, and they produce less stringing than glossy PLA at slow speeds. Browse our <a href="/filaments/pla">PLA catalog</a> to compare options, or use <a href="/wizard">Quick Match</a> to find a miniature-optimized filament in 60 seconds.</p>`,
         position: 'before',
       },
       {
@@ -1837,16 +1837,22 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         position: 'before',
       },
       {
-        heading: 'Miniature Printing Tips',
-        content: `<p>Getting great miniatures from an FDM printer requires dialing in both your filament and your slicer settings:</p>
+        heading: 'Print Settings for Miniatures',
+        content: `<p>Getting great miniatures from an FDM printer requires precise slicer settings:</p>
 <h3>Layer Height &amp; Speed</h3>
-<p>Print at 0.08–0.12mm layer height for the best detail. Slow your speed to 30–40mm/s for outer walls. Enable "small perimeter speed" in your slicer if available — this reduces ringing artifacts on tiny features.</p>
-<h3>Temperature Tuning</h3>
-<p>Lower temperatures reduce stringing but can cause under-extrusion on thin walls. Start 5°C below the filament's midpoint and increase only if you see gaps. A temperature tower is worth printing before committing to a full army.</p>
+<p>Print at 0.1–0.16mm layer height for the best balance of detail and speed. Use 0.08mm for competition-quality pieces. Slow outer wall speeds to 30–50mm/s and enable "small perimeter speed" in your slicer to reduce ringing on tiny features.</p>
+<h3>Temperature &amp; Retraction</h3>
+<p>Print at 190–210°C — lower than typical PLA settings. This reduces stringing and oozing between miniature features. Set retraction to 5–6mm for Bowden (1–2mm for direct drive) at 40–50mm/s retraction speed. Run a stringing test before printing a full model.</p>
 <h3>Supports &amp; Orientation</h3>
-<p>Orient miniatures so the face is pointing away from the build plate — this keeps the highest-detail area free of support scarring. Tree supports in Cura or PrusaSlicer's organic supports work well for complex poses.</p>
+<p>Orient miniatures so the face points away from the build plate — keeping the highest-detail area free of support scarring. Tree supports in Cura or PrusaSlicer's organic supports work well for complex poses.</p>
 <h3>Post-Processing</h3>
-<p>A thin coat of spray-on filler primer (like Rustoleum Filler Primer) hides most layer lines on FDM miniatures. Follow with acrylic hobby paints. Matte PLA formulations grip primer better than standard glossy PLA.</p>`,
+<p>A thin coat of spray filler primer (like Rustoleum Filler Primer) hides most layer lines. Matte PLA grips primer better than glossy PLA, reducing sanding. Use the <a href="/compare">comparison tool</a> to evaluate surface finish differences between brands.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'PLA vs PETG for Miniatures',
+        content: `<p><a href="/filaments/pla">PLA</a> is significantly better than PETG for miniatures. It holds finer detail at low layer heights, strings far less at the slow speeds miniatures require, and accepts primer and acrylic paint without pre-treatment. PETG produces glossier, stringier prints that are harder to paint and show more surface artifacts at small scale.</p>
+<p>The only advantage PETG offers is impact resistance — useful if your miniatures get handled roughly during tabletop gaming. But for display and paint quality, PLA wins decisively. For a full material breakdown, see our <a href="/guides/pla-vs-petg">PLA vs PETG comparison</a>.</p>`,
         position: 'after',
       },
       {
@@ -1868,9 +1874,9 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is PLA or PETG better for miniatures?', answer: 'PLA is significantly better for miniatures. It holds finer detail, strings less at slow speeds, and accepts primer and paint without pre-treatment. PETG is tougher but produces glossier, stringier prints that are harder to paint.' },
       { question: 'How do you paint FDM miniatures?', answer: 'Prime with a thin coat of spray filler primer (like Rustoleum or Vallejo Surface Primer), then paint with standard acrylic hobby paints (Citadel, Vallejo, Army Painter). Matte PLA grips primer better than glossy PLA, reducing the need for sanding.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'silk-pla-comparison', 'best-filaments-for-beginners'],
+    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'silk-pla-comparison', 'best-filaments-for-beginners'],
     aiSnippet: {
-      summaryText: 'Matte PLA is the best FDM filament for miniatures in 2026. It holds fine detail, minimizes stringing, and accepts primer and paint without sanding. Our rankings are based on FilaScore data across dimensional accuracy, surface quality, and community feedback.',
+      summaryText: 'The best filaments for miniatures in 2026 are Polymaker PolyTerra PLA for its matte paintable finish, Bambu Lab PLA Matte for batch consistency, and eSUN PLA+ for budget detail. Print at 0.1–0.16mm layer height, 190–210°C, and 30–50mm/s for best results on 28mm+ scale models.',
       topPick: { name: 'PolyTerra PLA', brand: 'Polymaker', reason: 'best matte surface finish for painting and detail retention' },
       runnerUp: { name: 'PLA Matte', brand: 'Bambu Lab', reason: 'excellent consistency and low stringing at slow speeds' },
       budgetPick: { name: 'PLA+', brand: 'eSUN', reason: 'proven detail quality at budget pricing' },
