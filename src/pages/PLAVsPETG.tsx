@@ -26,6 +26,34 @@ const FAQS = [
     question: 'Can I mix PLA and PETG in the same print?',
     answer: 'Generally not recommended. PLA and PETG have incompatible print temperatures — PETG requires temperatures that can degrade PLA. They also have poor interlayer adhesion to each other. Multi-material systems can physically handle both but adhesion between layers of different materials remains poor.',
   },
+  {
+    question: 'Can I print PETG without an enclosure?',
+    answer: 'Yes. Unlike ABS, PETG does not require an enclosure. It has much lower warping tendency than ABS. However, PETG is more sensitive to cooling than PLA, so reduce part cooling fan speed to 30-50% for best layer adhesion.',
+  },
+  {
+    question: 'Does PETG warp more than PLA?',
+    answer: 'Slightly. PETG warps more than PLA due to higher printing temperatures, but much less than ABS. A heated bed at 70-80°C with clean PEI or glass virtually eliminates PETG warping on most printers.',
+  },
+  {
+    question: 'Is PLA or PETG better for outdoor use?',
+    answer: 'PETG is much better outdoors. PLA softens at just 60°C and degrades under UV light within weeks. PETG handles 80°C and resists UV degradation significantly better. For maximum outdoor durability, consider ASA instead.',
+  },
+  {
+    question: 'Which is easier to paint — PLA or PETG?',
+    answer: "PLA accepts paint much better. PLA's slightly porous surface bonds well with primers and acrylic paints. PETG's smoother surface requires light sanding or a specialty primer before painting for proper adhesion.",
+  },
+  {
+    question: 'Is PETG food safe?',
+    answer: 'Raw PETG is generally more food-safe than PLA, and PETG is the material used for water bottles. However, 3D printed parts have microscopic layer gaps where bacteria can grow. For food contact, coat prints with food-safe epoxy regardless of material choice.',
+  },
+  {
+    question: 'How much more expensive is PETG than PLA?',
+    answer: 'PETG typically costs 10-30% more than PLA. On FilaScope, average PLA prices range from $15-25/kg while PETG ranges from $18-35/kg depending on brand and region. Both are considered budget-friendly compared to engineering filaments like Nylon or PC.',
+  },
+  {
+    question: 'Can I use PLA settings for PETG?',
+    answer: "No. PETG requires different settings: higher nozzle temperature (230-245°C vs PLA's 200-215°C), higher bed temperature (70-80°C vs 50-60°C), slower speed, and reduced part cooling fan. Using PLA settings for PETG will cause poor layer adhesion and under-extrusion.",
+  },
 ];
 
 const COMPARISON_TABLE = [
