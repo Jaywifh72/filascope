@@ -107,7 +107,7 @@ export default function PLAVsPETG() {
     },
   });
 
-  const breadcrumbs = [{ name: 'Home', url: '/' }, { name: 'PLA vs PETG', url: '/pla-vs-petg' }];
+  const breadcrumbs = [{ name: 'Home', url: '/' }, { name: 'PLA vs PETG', url: '/guides/pla-vs-petg' }];
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,7 +122,7 @@ export default function PLAVsPETG() {
         description="PLA vs PETG compared: strength, flexibility, print settings, price & HueForge TD values."
         datePublished="2026-01-01"
         dateModified="2026-02-20"
-        url="/pla-vs-petg"
+        url="/guides/pla-vs-petg"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'PLA vs PETG 3D Printing Filament Comparison' }}
         proficiencyLevel="Beginner"
@@ -202,7 +202,7 @@ export default function PLAVsPETG() {
           <p className="text-muted-foreground text-sm leading-relaxed mb-4">
             When it comes to HueForge lithophanes, <strong className="text-foreground">PLA is the clear winner</strong>. HueForge relies on precise TD values to control light opacity. PLA has a wider measurable TD range (0.5–6.0mm) and far more community-verified data than PETG.
           </p>
-          <Link to="/best-filaments-for-hueforge" className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:text-purple-300 transition-colors">
+          <Link to="/guides/best-filaments-for-hueforge" className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:text-purple-300 transition-colors">
             See our top-ranked HueForge filament picks <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </section>

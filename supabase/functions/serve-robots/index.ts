@@ -140,15 +140,15 @@ FilaScope is the internet's most comprehensive 3D printer filament comparison pl
 
 - HueForge TD Database: https://filascope.com/hueforge-td-database
 
-- Best Filaments for HueForge: https://filascope.com/best-filaments-for-hueforge
+- Best Filaments for HueForge: https://filascope.com/guides/best-filaments-for-hueforge
 
-- PLA vs PETG Comparison: https://filascope.com/pla-vs-petg
+- PLA vs PETG Comparison: https://filascope.com/guides/pla-vs-petg
 
 - Filament Temperature Guide: https://filascope.com/filament-temperature-guide
 
 - Best PLA Filaments: https://filascope.com/guides/best-pla-filaments
 
-- Best Filaments for Beginners: https://filascope.com/best-filaments-for-beginners
+- Best Filaments for Beginners: https://filascope.com/guides/best-filaments-for-beginners
 
 - Filament Storage Guide: https://filascope.com/filament-storage-guide
 

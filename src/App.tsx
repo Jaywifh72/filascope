@@ -353,6 +353,9 @@ const App = () => (
                   <Route path="/guides/what-is-hueforge-td" element={<HueForgeWhatIsTD />} />
                   <Route path="/guides/best-white-filaments-for-hueforge" element={<BestWhiteFilamentsForHueForge />} />
                   <Route path="/guides/how-to-measure-filament-td" element={<HowToMeasureFilamentTD />} />
+                  <Route path="/guides/pla-vs-petg" element={<PLAVsPETG />} />
+                  <Route path="/guides/best-filaments-for-beginners" element={<BestFilamentsForBeginners />} />
+                  <Route path="/guides/best-filaments-for-hueforge" element={<BestFilamentsForHueForge />} />
                   <Route path="/guides/:slug" element={<BuyingGuide />} />
                   <Route path="/resources/profiles" element={<ResourcesProfiles />} />
                   <Route path="/install" element={<Install />} />
@@ -374,19 +377,19 @@ const App = () => (
                   <Route path="/user/:userId" element={<UserProfile />} />
                   {/* Redirects for legacy/broken links */}
                   <Route path="/knowledge-base" element={<Navigate to="/reference/materials" replace />} />
-                  <Route path="/best-filaments-for-hueforge" element={<BestFilamentsForHueForge />} />
-                  <Route path="/pla-vs-petg" element={<PLAVsPETG />} />
+                  <Route path="/best-filaments-for-hueforge" element={<Navigate to="/guides/best-filaments-for-hueforge" replace />} />
+                  <Route path="/pla-vs-petg" element={<Navigate to="/guides/pla-vs-petg" replace />} />
                   <Route path="/best-white-filaments" element={<BestWhiteFilaments />} />
                   <Route path="/filament-database" element={<FilamentDatabase />} />
-                  <Route path="/best-filaments-for-beginners" element={<BestFilamentsForBeginners />} />
+                  <Route path="/best-filaments-for-beginners" element={<Navigate to="/guides/best-filaments-for-beginners" replace />} />
                   <Route path="/filament-temperature-guide" element={<FilamentTemperatureGuide />} />
                   <Route path="/filament-storage-guide" element={<FilamentStorageGuide />} />
                   <Route path="/best-filament-for-ender-3" element={<Navigate to="/guides/best-filament-for-ender-3" replace />} />
                   <Route path="/best-filament-for-bambu-lab-a1" element={<Navigate to="/guides/best-filament-for-bambu-lab-a1" replace />} />
-                  {/* Redirects: old guide slugs → canonical top-level pages */}
-                  <Route path="/guides/best-filament-for-beginners-2025" element={<Navigate to="/best-filaments-for-beginners" replace />} />
-                  <Route path="/guides/beginners-guide" element={<Navigate to="/best-filaments-for-beginners" replace />} />
-                  <Route path="/guides/hueforge-filaments" element={<Navigate to="/best-filaments-for-hueforge" replace />} />
+                  {/* Redirects: old guide slugs → canonical /guides/ pages */}
+                  <Route path="/guides/best-filament-for-beginners-2025" element={<Navigate to="/guides/best-filaments-for-beginners" replace />} />
+                  <Route path="/guides/beginners-guide" element={<Navigate to="/guides/best-filaments-for-beginners" replace />} />
+                  <Route path="/guides/hueforge-filaments" element={<Navigate to="/guides/best-filaments-for-hueforge" replace />} />
                   {/* Clean comparison URL redirects */}
                   <Route path="/petg-vs-abs" element={<Navigate to="/materials/compare?a=petg&b=abs" replace />} />
                   <Route path="/pla-vs-abs" element={<Navigate to="/materials/compare?a=pla&b=abs" replace />} />

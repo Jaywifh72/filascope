@@ -56,10 +56,10 @@ const GUIDE_ROUTES = [
   "/guides/best-white-filaments-for-hueforge",
   "/guides/what-is-hueforge-td",
   "/guides/how-to-measure-filament-td",
-  "/best-filaments-for-hueforge",
-  "/best-filaments-for-beginners",
+  "/guides/best-filaments-for-hueforge",
+  "/guides/best-filaments-for-beginners",
   "/best-white-filaments",
-  "/pla-vs-petg",
+  "/guides/pla-vs-petg",
   "/filament-temperature-guide",
   "/filament-storage-guide",
 ].map((path) => ({ path, priority: "0.8", changefreq: "weekly" as const }));

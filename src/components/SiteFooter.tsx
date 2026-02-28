@@ -150,11 +150,11 @@ export function SiteFooter() {
   ];
 
   const guideLinks = [
-    { name: "Best Filaments for Beginners", href: "/best-filaments-for-beginners" },
+    { name: "Best Filaments for Beginners", href: "/guides/best-filaments-for-beginners" },
     { name: "Filament Temperature Guide", href: "/filament-temperature-guide" },
     { name: "Filament Storage Guide", href: "/filament-storage-guide" },
-    { name: "Best Filaments for HueForge", href: "/best-filaments-for-hueforge" },
-    { name: "PLA vs PETG", href: "/pla-vs-petg" },
+    { name: "Best Filaments for HueForge", href: "/guides/best-filaments-for-hueforge" },
+    { name: "PLA vs PETG", href: "/guides/pla-vs-petg" },
     { name: "Best PLA Filaments", href: "/guides/best-pla-filaments" },
     { name: "All Guides →", href: "/learn" },
   ];

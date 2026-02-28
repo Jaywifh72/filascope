@@ -16,56 +16,56 @@ const BRAND_GUIDES: Record<string, GuideLink[]> = {
   "Polymaker": [
     { href: "/guides/best-petg-filaments", label: "Best PETG Filaments" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
-    { href: "/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
+    { href: "/guides/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
   ],
   "Prusament": [
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
     { href: "/guides/best-petg-filaments", label: "Best PETG Filaments" },
-    { href: "/best-filaments-for-beginners", label: "Best Filament for Beginners" },
+    { href: "/guides/best-filaments-for-beginners", label: "Best Filament for Beginners" },
   ],
   "ColorFabb": [
-    { href: "/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
+    { href: "/guides/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
     { href: "/guides/best-petg-filaments", label: "Best PETG Filaments" },
   ],
   "Fillamentum": [
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
-    { href: "/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
+    { href: "/guides/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
   ],
   "eSUN": [
-    { href: "/best-filaments-for-beginners", label: "Best Filament for Beginners" },
+    { href: "/guides/best-filaments-for-beginners", label: "Best Filament for Beginners" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
     { href: "/guides/best-petg-filaments", label: "Best PETG Filaments" },
     { href: "/guides/best-abs-filaments", label: "Best ABS Filaments" },
   ],
   "Hatchbox": [
-    { href: "/best-filaments-for-beginners", label: "Best Filament for Beginners" },
+    { href: "/guides/best-filaments-for-beginners", label: "Best Filament for Beginners" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
   ],
   "Overture": [
-    { href: "/best-filaments-for-beginners", label: "Best Filament for Beginners" },
+    { href: "/guides/best-filaments-for-beginners", label: "Best Filament for Beginners" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
   ],
   "MatterHackers": [
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
     { href: "/guides/best-petg-filaments", label: "Best PETG Filaments" },
-    { href: "/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
+    { href: "/guides/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
   ],
   "Amolen": [
-    { href: "/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
+    { href: "/guides/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
   ],
   "Anycubic": [
-    { href: "/best-filaments-for-beginners", label: "Best Filament for Beginners" },
+    { href: "/guides/best-filaments-for-beginners", label: "Best Filament for Beginners" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
   ],
   "Creality": [
-    { href: "/best-filaments-for-beginners", label: "Best Filament for Beginners" },
+    { href: "/guides/best-filaments-for-beginners", label: "Best Filament for Beginners" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
   ],
   "Sunlu": [
-    { href: "/best-filaments-for-beginners", label: "Best Filament for Beginners" },
+    { href: "/guides/best-filaments-for-beginners", label: "Best Filament for Beginners" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
-    { href: "/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
+    { href: "/guides/best-filaments-for-hueforge", label: "Best Filaments for HueForge" },
   ],
 };
 

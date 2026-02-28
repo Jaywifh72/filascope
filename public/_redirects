@@ -11,5 +11,10 @@
 /sitemap-guides.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-guides.xml 200
 /sitemap-colors.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-colors.xml 200
 
+# Guide URL migrations — old root-level → /guides/
+/pla-vs-petg /guides/pla-vs-petg 301
+/best-filaments-for-beginners /guides/best-filaments-for-beginners 301
+/best-filaments-for-hueforge /guides/best-filaments-for-hueforge 301
+
 # SPA catch-all — MUST be last
 /* /index.html 200

@@ -225,7 +225,7 @@ export default function BestWhiteFilaments() {
           <h2 className="text-xl font-semibold mb-4">Related Resources</h2>
           <div className="grid sm:grid-cols-3 gap-3">
             {[
-              { to: '/best-filaments-for-hueforge', label: 'Best HueForge Filaments', desc: 'All materials, TD-ranked' },
+              { to: '/guides/best-filaments-for-hueforge', label: 'Best HueForge Filaments', desc: 'All materials, TD-ranked' },
               { to: '/hueforge-td-database', label: 'TD Value Database', desc: '500+ verified TD values' },
               { to: '/compare', label: 'Compare Filaments', desc: 'Side-by-side spec comparison' },
             ].map(({ to, label, desc }) => (
@@ -243,10 +243,10 @@ export default function BestWhiteFilaments() {
           title="Related Guides"
           className="mt-8"
           links={[
-            { label: 'Best Filaments for HueForge', href: '/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane printing' },
+            { label: 'Best Filaments for HueForge', href: '/guides/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane printing' },
             { label: 'HueForge TD Database', href: '/hueforge-td-database', description: 'Full transmissivity database' },
-            { label: 'PLA vs PETG', href: '/pla-vs-petg', description: 'Which material is best for your project?' },
-            { label: 'Best Filaments for Beginners', href: '/best-filaments-for-beginners', description: 'Easy-to-print filament recommendations' },
+            { label: 'PLA vs PETG', href: '/guides/pla-vs-petg', description: 'Which material is best for your project?' },
+            { label: 'Best Filaments for Beginners', href: '/guides/best-filaments-for-beginners', description: 'Easy-to-print filament recommendations' },
           ]}
         />
       </div>

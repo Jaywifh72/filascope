@@ -108,7 +108,7 @@ export default function BestFilamentsForBeginners() {
         description="The best 3D printer filaments for beginners in 2026. Start with easy-to-print PLA picks from 48+ brands, with tips, temperature guides, and storage advice."
         datePublished="2026-01-10"
         dateModified="2026-02-20"
-        url="/best-filaments-for-beginners"
+        url="/guides/best-filaments-for-beginners"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: '3D Printer Filament for Beginners' }}
         proficiencyLevel="Beginner"
@@ -118,7 +118,7 @@ export default function BestFilamentsForBeginners() {
         <div className="max-w-4xl mx-auto px-4 py-6">
           <Breadcrumbs items={[
             { name: 'Guides', url: '/learn' },
-            { name: 'Best Filaments for Beginners', url: '/best-filaments-for-beginners' },
+            { name: 'Best Filaments for Beginners', url: '/guides/best-filaments-for-beginners' },
           ]} />
         </div>
 
@@ -157,7 +157,7 @@ export default function BestFilamentsForBeginners() {
               <p>
                 While PETG offers better mechanical properties and ABS more heat resistance, both require more dialing in.
                 PLA is your best first filament — once you've printed confidently in PLA for a few weeks, you'll be ready to
-                experiment with <Link to="/pla-vs-petg" className="text-primary hover:underline">PETG</Link> or explore our{' '}
+                experiment with <Link to="/guides/pla-vs-petg" className="text-primary hover:underline">PETG</Link> or explore our{' '}
                 <Link to="/guides/beginners-guide" className="text-primary hover:underline">complete beginner's guide</Link>.
               </p>
               <p>
