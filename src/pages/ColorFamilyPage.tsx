@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
+import { CollectionPageSchema } from "@/components/seo/CollectionPageSchema";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { FAQSection } from "@/components/seo/FAQSection";
 import { ItemListSchema } from "@/components/seo/ItemListSchema";
@@ -132,11 +133,11 @@ export default function ColorFamilyPage() {
   // Build title/description
   let description: string;
   if (slug === "white" || slug === "natural" || slug === "clear") {
-    description = `Compare ${count.toLocaleString()} ${label.toLowerCase()} 3D printer filaments ranked by TD value, brand, and price. Essential for HueForge lithophanes — find your perfect ${label.toLowerCase()} filament on FilaScope.`;
+    description = `Browse ${count.toLocaleString()}+ ${label.toLowerCase()} 3D printer filaments. Compare prices, specs, HueForge TD values & printer compatibility across brands on FilaScope. Essential for lithophanes.`;
   } else {
-    description = `Browse ${count.toLocaleString()} ${label.toLowerCase()} 3D printer filaments from top brands. Compare prices, materials, and HueForge TD values. Find the best ${label.toLowerCase()} filament for your next print.`;
+    description = `Browse ${count.toLocaleString()}+ ${label.toLowerCase()} 3D printer filaments. Compare prices, specs, HueForge TD values & printer compatibility across brands on FilaScope.`;
   }
-  const title = `${label} 3D Printer Filaments — Compare ${count.toLocaleString()} Options | FilaScope`;
+  const title = `${label} 3D Printer Filaments — Compare ${count.toLocaleString()}+ Options | FilaScope`;
 
   const breadcrumbItems = [
     { name: "Home", url: "/" },
@@ -174,6 +175,12 @@ export default function ColorFamilyPage() {
         canonical={`https://filascope.com/colors/${slug}`}
       />
       <BreadcrumbSchema items={breadcrumbItems} />
+      <CollectionPageSchema
+        name={`${label} 3D Printer Filaments`}
+        description={`Browse all ${label.toLowerCase()} 3D printer filaments. Compare specs, prices, and HueForge TD values across brands on FilaScope.`}
+        url={`https://filascope.com/colors/${slug}`}
+        numberOfItems={count}
+      />
       {itemListItems.length > 0 && (
         <ItemListSchema
           name={`${label} 3D Printer Filaments`}
