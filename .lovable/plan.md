@@ -1,34 +1,34 @@
 
 
-## Material Page Question-Format H2s
+## Add Brand Page Answer Block
 
-### Current State
-`src/pages/FilamentCategoryPage.tsx` has material-specific SEO content sections for **PLA** (line 923), **PETG** (line 957), and **ABS** (line 991). Each has an H2, a descriptive paragraph, a Quick Reference grid, and a Buying Guide section. **TPU, ASA, and Nylon have no material-specific sections yet.**
+### What Changes
 
-### Changes
+Add a single `<p>` element (40-60 words) in `src/pages/BrandDetail.tsx` immediately after the `<BrandHeroSection>` component and before the `<BrandBadgesDisplay>` section. This paragraph dynamically assembles all 7 requested data points from existing page data.
 
-**File:** `src/pages/FilamentCategoryPage.tsx`
+### Data Mapping
 
-#### 1. Update existing H2 headings and add answer blocks
+All data is already available in `BrandDetail.tsx`:
 
-For PLA, PETG, and ABS, replace the current H2 text with question-format headings and insert a new answer block paragraph immediately after each H2 (before the existing longer paragraph):
+| Data Point | Source |
+|---|---|
+| Brand name | `displayName` |
+| Products + variants | `groupedProducts.length` / `filaments.length` |
+| Materials list | `availableMaterials` |
+| Price range | `brandPriceRange` (already computed, line 556) + `formatPrice` from region context |
+| Location | `brandInfo?.location` |
+| Year founded | `brandInfo?.founded` |
+| Live pricing | Always true (static statement) |
 
-| Material | Current H2 | New H2 |
-|----------|-----------|--------|
-| PLA | "PLA Filament -- The Most Popular 3D Printing Material" | "What Is PLA Filament and Why Is It the Most Popular?" |
-| PETG | "PETG Filament -- The Versatile All-Rounder" | "What Is PETG Filament and When Should You Use It?" |
-| ABS | "ABS Filament -- The Engineering-Grade Standard" | "What Is ABS Filament and What Is It Best For?" |
+### Implementation
 
-Each gets a hardcoded 40-60 word answer block paragraph inserted right after the H2, before the existing detailed paragraph. For PLA, this is the exact text from the prompt. PETG and ABS will follow the same pattern with their specific temperatures and characteristics.
+**File:** `src/pages/BrandDetail.tsx` (single change, ~20 lines inserted around line 705)
 
-#### 2. Add new material-specific sections for TPU, ASA, and Nylon
+Insert a `<p>` element between `BrandHeroSection` and `BrandBadgesDisplay` that renders a flowing paragraph like:
 
-Create three new conditional blocks (matching the existing pattern with H2 + answer block + Quick Reference grid + Buying Guide) for:
+> "Bambu Lab is a 3D printer filament manufacturer founded in 2021 and headquartered in Shenzhen, China. FilaScope indexes 40 Bambu Lab filament products (227 color variants) across 12 material types including PLA, PETG, ABS, ASA, TPU, and Nylon. Prices range from $14 to $149 with real-time pricing tracked from multiple retailers."
 
-- **TPU** (`slug === "tpu"`): H2 "What Is TPU Filament and What Can You Print With It?", temps 210-230C / 30-60C, 20-40 mm/s speed, no enclosure required
-- **ASA** (`slug === "asa"`): H2 "What Is ASA Filament and Why Use It for Outdoor Prints?", temps 235-260C / 90-110C, 40-80 mm/s, enclosure recommended
-- **Nylon** (`slug === "nylon"`): H2 "What Is Nylon Filament and What Are Its Advantages?", temps 240-270C / 70-100C, 30-60 mm/s, enclosure required
-
-Each answer block will be a self-contained 40-60 word paragraph defining the material, its key properties, print settings, and FilaScope database context -- all hardcoded in JSX.
+The paragraph conditionally includes founded/location clauses only when the data exists, and formats the price range using the existing `formatPrice` helper from the region context. Materials list shows up to 6 names with the total count.
 
 ### No other files modified
+
