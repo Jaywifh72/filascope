@@ -1,28 +1,34 @@
 
 
-## Update llms-full.txt Content
+## Material Page Question-Format H2s
 
 ### Current State
-The `llms-full.txt` is served dynamically via the `serve-robots` Edge Function (`supabase/functions/serve-robots/index.ts`), not as a static file. The `_worker.js` proxies `/llms-full.txt` requests to this edge function. Creating a static `public/llms-full.txt` would shadow the edge function due to CDN priority rules, which could cause inconsistent behavior across environments.
-
-### Approach
-Update the `LLMS_FULL_TXT` constant inside the edge function with the new comprehensive content. This keeps the existing architecture intact and ensures consistent serving across all environments.
+`src/pages/FilamentCategoryPage.tsx` has material-specific SEO content sections for **PLA** (line 923), **PETG** (line 957), and **ABS** (line 991). Each has an H2, a descriptive paragraph, a Quick Reference grid, and a Buying Guide section. **TPU, ASA, and Nylon have no material-specific sections yet.**
 
 ### Changes
 
-**File:** `supabase/functions/serve-robots/index.ts`
+**File:** `src/pages/FilamentCategoryPage.tsx`
 
-Replace the existing `LLMS_FULL_TXT` template literal (currently a shorter version with ~1,076 filaments) with the full user-provided content covering:
-- Extended platform description and key data points
-- Material type breakdowns (PLA, PETG, ABS, TPU, ASA, Nylon) with variant counts
-- HueForge TD reference ranges
-- Core pages, buying guides, and material comparison guide URLs
-- Top brands with links
-- 8 detailed FAQ entries
-- Updated metadata (February 28, 2026)
+#### 1. Update existing H2 headings and add answer blocks
 
-No other files are modified. The edge function auto-deploys after the change.
+For PLA, PETG, and ABS, replace the current H2 text with question-format headings and insert a new answer block paragraph immediately after each H2 (before the existing longer paragraph):
 
-### Verification
-Visit `https://filascope.com/llms-full.txt` after deploy to confirm the updated markdown content is returned.
+| Material | Current H2 | New H2 |
+|----------|-----------|--------|
+| PLA | "PLA Filament -- The Most Popular 3D Printing Material" | "What Is PLA Filament and Why Is It the Most Popular?" |
+| PETG | "PETG Filament -- The Versatile All-Rounder" | "What Is PETG Filament and When Should You Use It?" |
+| ABS | "ABS Filament -- The Engineering-Grade Standard" | "What Is ABS Filament and What Is It Best For?" |
 
+Each gets a hardcoded 40-60 word answer block paragraph inserted right after the H2, before the existing detailed paragraph. For PLA, this is the exact text from the prompt. PETG and ABS will follow the same pattern with their specific temperatures and characteristics.
+
+#### 2. Add new material-specific sections for TPU, ASA, and Nylon
+
+Create three new conditional blocks (matching the existing pattern with H2 + answer block + Quick Reference grid + Buying Guide) for:
+
+- **TPU** (`slug === "tpu"`): H2 "What Is TPU Filament and What Can You Print With It?", temps 210-230C / 30-60C, 20-40 mm/s speed, no enclosure required
+- **ASA** (`slug === "asa"`): H2 "What Is ASA Filament and Why Use It for Outdoor Prints?", temps 235-260C / 90-110C, 40-80 mm/s, enclosure recommended
+- **Nylon** (`slug === "nylon"`): H2 "What Is Nylon Filament and What Are Its Advantages?", temps 240-270C / 70-100C, 30-60 mm/s, enclosure required
+
+Each answer block will be a self-contained 40-60 word paragraph defining the material, its key properties, print settings, and FilaScope database context -- all hardcoded in JSX.
+
+### No other files modified
