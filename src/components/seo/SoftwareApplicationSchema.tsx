@@ -19,6 +19,7 @@ interface SoftwareApplicationSchemaProps {
   offers?: SoftwareApplicationOffer;
   aggregateRating?: SoftwareApplicationRating;
   url?: string;
+  creator?: { name: string; url?: string };
 }
 
 export function SoftwareApplicationSchema({
@@ -29,6 +30,7 @@ export function SoftwareApplicationSchema({
   offers,
   aggregateRating,
   url,
+  creator,
 }: SoftwareApplicationSchemaProps) {
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -51,6 +53,9 @@ export function SoftwareApplicationSchema({
       worstRating: aggregateRating.worstRating || 0,
       ratingCount: 1,
     };
+  }
+  if (creator) {
+    jsonLd.creator = { '@type': 'Organization', name: creator.name, ...(creator.url && { url: creator.url }) };
   }
 
   useJsonLd(jsonLd);
