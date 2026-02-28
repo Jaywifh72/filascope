@@ -1081,6 +1081,17 @@ const Finder = () => {
         isLoading={isLoading || filamentCount === undefined}
       />
 
+      {/* What is FilaScope — AEO answer block */}
+      <section className="max-w-4xl mx-auto px-4 py-10 text-center space-y-4">
+        <h2 className="text-2xl font-bold text-foreground">What is FilaScope?</h2>
+        <p className="text-muted-foreground text-base leading-relaxed">
+          FilaScope is a free 3D printer filament comparison platform that indexes 1,076+ filaments from 49+ brands with real-time pricing from 15+ retailers worldwide. It features the largest public HueForge Transmission Distance (TD) database, detailed material specifications, printer compatibility data, and FilaScore quality ratings — helping makers find the perfect filament for any project.
+        </p>
+        <p className="text-muted-foreground text-base leading-relaxed">
+          Whether you need the best PLA for beginners, the strongest PETG for functional parts, or a specific TD value for HueForge lithophane printing, FilaScope's data-driven approach compares filaments across 6 regional markets so you can make informed decisions with transparent, up-to-date pricing.
+        </p>
+      </section>
+
       {/* Quick Match banner moved to sidebar and mobile bottom sheet */}
 
       {/* Why FilaScope value proposition */}
