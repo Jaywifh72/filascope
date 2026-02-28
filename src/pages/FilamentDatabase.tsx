@@ -27,6 +27,26 @@ const FAQS = [
     answer:
       "FilaScope's database is updated automatically through web scraping and manual verification. Pricing is updated frequently (often weekly) for active products. Specs like nozzle temperature and TD values are verified manually and updated when manufacturers change their formulations. New products are typically added within days of brand announcements.",
   },
+  {
+    question: 'What is the most popular 3D printer filament material?',
+    answer:
+      "PLA (Polylactic Acid) is the most popular material by far, accounting for over 56% of all filaments in FilaScope's database. It is the easiest to print, requires the lowest temperatures (190-220°C), and produces excellent surface quality. PETG is the second most popular for users who need more strength and heat resistance.",
+  },
+  {
+    question: 'How do I choose between different filament brands?',
+    answer:
+      "Compare specs (temperature range, tolerance), pricing across your region, color availability, and community reviews. FilaScope's FilaScore rating weighs all these factors from 1-10. Brands like Bambu Lab, Polymaker, and Prusament consistently score high for documentation and consistency, while eSUN and Hatchbox offer excellent value.",
+  },
+  {
+    question: 'What does HueForge TD value mean on a filament listing?',
+    answer:
+      "TD (Transmissivity Distance) measures how translucent a filament is when printed — specifically, how many millimeters of light pass through before being blocked. It matters for HueForge lithophane printing and multicolor prints. Lower TD (0.5-2.0) means opaque, higher TD (4.0+) means translucent. FilaScope tracks TD values to help HueForge users find the right filaments.",
+  },
+  {
+    question: 'Why do filament prices vary so much between regions?',
+    answer:
+      'Filament prices differ due to shipping costs, import duties, local distribution, and currency exchange rates. A filament that costs $20/kg in the US might cost $30/kg equivalent in Canada or Europe after duties. FilaScope tracks real-time pricing from 15+ retailers across 6 regions so you can find the best price for your location.',
+  },
 ];
 
 const MATERIALS = [
