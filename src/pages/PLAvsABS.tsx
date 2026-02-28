@@ -201,15 +201,16 @@ export default function PLAvsABS() {
 
         {/* Related Guides */}
         <section className="mb-10">
-          <h2 className="text-lg font-semibold mb-3">Related Comparisons</h2>
+          <h2 className="text-lg font-semibold mb-3">Related Guides</h2>
           <div className="flex flex-wrap gap-2">
             {[
-              { to: '/guides/pla-vs-petg', label: 'PLA vs PETG' },
-              { to: '/guides/petg-vs-abs', label: 'PETG vs ABS' },
-              { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments' },
-              { to: '/guides/best-abs-filaments', label: 'Best ABS Filaments' },
-              { to: '/materials/pla', label: 'PLA Material Guide' },
-              { to: '/materials/abs', label: 'ABS Material Guide' },
+              { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
+              { to: '/guides/petg-vs-abs', label: 'PETG vs ABS Comparison' },
+              { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
+              { to: '/guides/best-abs-filaments', label: 'Best ABS Filaments 2026' },
+              { to: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose 3D Printer Filament' },
+              { to: '/filaments', label: 'Browse all filaments on FilaScope' },
+              { to: '/compare', label: 'Compare filaments side by side' },
             ].map(link => (
               <Link key={link.to} to={link.to} className="text-xs px-3 py-1.5 rounded-full border border-border hover:border-primary hover:text-primary transition-colors">
                 {link.label}

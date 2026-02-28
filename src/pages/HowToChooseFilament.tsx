@@ -315,10 +315,10 @@ export default function HowToChooseFilament() {
               { href: '/guides/best-abs-filaments', label: 'Best ABS Filaments 2026' },
               { href: '/guides/best-tpu-filaments', label: 'Best TPU Filaments 2026' },
               { href: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
-              { href: '/guides/pla-vs-abs', label: 'PLA vs ABS Comparison' },
-              { href: '/guides/best-filaments-for-hueforge', label: 'Best Filaments for HueForge' },
-              { href: '/guides/filament-storage-guide', label: 'Filament Storage Guide' },
-              { href: '/filament-types', label: 'All Filament Types' },
+              { href: '/guides/3d-printer-filament-types-explained', label: 'Filament Types Explained' },
+              { href: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide' },
+              { href: '/filaments', label: 'Browse all filaments on FilaScope' },
+              { href: '/compare', label: 'Compare filaments side by side' },
             ].map(g => (
               <Link
                 key={g.href}
