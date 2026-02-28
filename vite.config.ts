@@ -63,8 +63,8 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        // Ensure OAuth callback is never cached by the service worker
-        navigateFallbackDenylist: [/^\/~oauth/],
+        // Ensure OAuth and machine-readable text endpoints are never handled by the app-shell fallback
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/robots\.txt\/?$/, /^\/llms\.txt\/?$/],
         // Cache strategies for different resource types
         runtimeCaching: [
           {

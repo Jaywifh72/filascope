@@ -34,6 +34,9 @@
 /manifest.json
   Cache-Control: public, max-age=3600
 
-# Robots.txt — never cache (must always serve fresh)
+# Robots.txt and llms.txt — never cache (must always serve fresh)
 /robots.txt
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/llms.txt
   Cache-Control: no-cache, no-store, must-revalidate
