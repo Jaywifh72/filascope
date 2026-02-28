@@ -7,6 +7,10 @@ interface TrendingFilament {
   id: string;
   product_title: string;
   product_handle?: string | null;
+  current_price: number | null;
+  brand_name: string | null;
+  image_url: string | null;
+  currency_code: string | null;
 }
 
 function useTrendingFilamentsForSchema(regionCode: string) {
@@ -19,8 +23,9 @@ function useTrendingFilamentsForSchema(regionCode: string) {
         .select(`
           filament_id,
           current_price,
+          currency,
           filaments!inner (
-            id, product_title, product_handle
+            id, product_title, product_handle, brand_name, image_url
           )
         `)
         .eq('region', regionCode)
@@ -36,7 +41,7 @@ function useTrendingFilamentsForSchema(regionCode: string) {
           const f = row.filaments as any;
           if (!f || seen.has(f.id)) continue;
           seen.add(f.id);
-          results.push({ id: f.id, product_title: f.product_title, product_handle: f.product_handle });
+          results.push({ id: f.id, product_title: f.product_title, product_handle: f.product_handle, current_price: row.current_price, brand_name: f.brand_name, image_url: f.image_url, currency_code: row.currency ?? null });
           if (results.length >= 10) break;
         }
         if (results.length >= 4) return results;
@@ -45,13 +50,21 @@ function useTrendingFilamentsForSchema(regionCode: string) {
       // Fallback: global value_score
       const { data, error } = await supabase
         .from('filaments')
-        .select('id, product_title, product_handle')
+        .select('id, product_title, product_handle, brand_name, image_url, variant_price')
         .not('variant_price', 'is', null)
         .not('color_hex', 'is', null)
         .order('value_score', { ascending: false })
         .limit(10);
       if (error) throw error;
-      return (data || []) as TrendingFilament[];
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        product_title: d.product_title,
+        product_handle: d.product_handle,
+        current_price: d.variant_price,
+        brand_name: d.brand_name,
+        image_url: d.image_url,
+        currency_code: 'USD',
+      })) as TrendingFilament[];
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
@@ -68,6 +81,10 @@ export function TrendingItemListSchema() {
     name: f.product_title,
     url: `https://filascope.com/filament/${f.product_handle || f.id}`,
     position: i + 1,
+    price: f.current_price ?? undefined,
+    priceCurrency: f.currency_code || 'USD',
+    brand: f.brand_name ?? undefined,
+    image: f.image_url ?? undefined,
   }));
 
   return (
