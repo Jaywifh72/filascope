@@ -142,8 +142,12 @@ const STATIC_PG: Record<string,SP> = {
   "/td-database":{t:"HueForge TD Value Database | FilaScope",d:"Search TD values for 500+ filaments.",c:"/hueforge-td-database",h:"HueForge TD Value Database",b:"Browse TD values for 500+ filaments."},
   "/hueforge-filaments":{t:"HueForge Filament Finder — TD-Ranked | FilaScope",d:"Find the best filaments for HueForge projects.",c:"/hueforge-filaments",h:"HueForge Filament Finder",b:"Find filaments for HueForge lithophane projects, ranked by TD value."},
   "/filament-database":{t:"3D Filament Database — Compare 1,080+ Products | FilaScope",d:"The most comprehensive 3D printer filament database.",c:"/filament-database",h:"3D Printer Filament Database",b:"Compare PLA, PETG, ABS & more across 48+ brands."},
-  "/best-filaments-for-hueforge":{t:"Best Filaments for HueForge 2026 — TD-Ranked | FilaScope",d:"Find the best filaments for HueForge lithophanes. TD-ranked picks.",c:"/best-filaments-for-hueforge",h:"Best Filaments for HueForge 2026",b:"HueForge lithophanes rely on TD values. We rank the top filaments by verified TD data.",ot:"article"},
-  "/pla-vs-petg":{t:"PLA vs PETG — 3D Filament Comparison | FilaScope",d:"PLA vs PETG compared: strength, flexibility, print settings, price & TD values.",c:"/pla-vs-petg",h:"PLA vs PETG — Which Is Right for You?",b:"PLA vs PETG comparison using data from 1,080+ filaments.",ot:"article"},
+  "/best-filaments-for-hueforge":{t:"Best Filaments for HueForge 2026 — TD-Ranked | FilaScope",d:"Find the best filaments for HueForge lithophanes. TD-ranked picks.",c:"/guides/best-filaments-for-hueforge",h:"Best Filaments for HueForge 2026",b:"HueForge lithophanes rely on TD values. We rank the top filaments by verified TD data.",ot:"article"},
+  "/guides/best-filaments-for-hueforge":{t:"Best Filaments for HueForge 2026 — TD-Ranked | FilaScope",d:"Find the best filaments for HueForge lithophanes. TD-ranked picks.",c:"/guides/best-filaments-for-hueforge",h:"Best Filaments for HueForge 2026",b:"HueForge lithophanes rely on TD values. We rank the top filaments by verified TD data.",ot:"article"},
+  "/pla-vs-petg":{t:"PLA vs PETG — 3D Filament Comparison | FilaScope",d:"PLA vs PETG compared: strength, flexibility, print settings, price & TD values.",c:"/guides/pla-vs-petg",h:"PLA vs PETG — Which Is Right for You?",b:"PLA vs PETG comparison using data from 1,080+ filaments.",ot:"article"},
+  "/guides/pla-vs-petg":{t:"PLA vs PETG — 3D Filament Comparison | FilaScope",d:"PLA vs PETG compared: strength, flexibility, print settings, price & TD values.",c:"/guides/pla-vs-petg",h:"PLA vs PETG — Which Is Right for You?",b:"PLA vs PETG comparison using data from 1,080+ filaments.",ot:"article"},
+  "/best-filaments-for-beginners":{t:"Best Filaments for Beginners 2026 | FilaScope",d:"The best 3D printer filaments for beginners.",c:"/guides/best-filaments-for-beginners",h:"Best Filaments for Beginners 2026",b:"Easy-to-print filament recommendations for new 3D printer owners.",ot:"article"},
+  "/guides/best-filaments-for-beginners":{t:"Best Filaments for Beginners 2026 | FilaScope",d:"The best 3D printer filaments for beginners.",c:"/guides/best-filaments-for-beginners",h:"Best Filaments for Beginners 2026",b:"Easy-to-print filament recommendations for new 3D printer owners.",ot:"article"},
   "/best-white-filaments":{t:"Best White Filaments for 3D Printing & HueForge | FilaScope",d:"Compare white 3D printer filaments ranked by TD value, print quality & price.",c:"/best-white-filaments",h:"Best White Filaments for 3D Printing & HueForge",b:"White filaments ranked by TD value from 48+ brands.",ot:"article"},
 };
 
@@ -365,8 +369,8 @@ const GUIDE_DATES: Record<string,{date:string;tl?:boolean;learn?:boolean}> = {
   "best-pla-filaments":{date:"2026-01-10"},"best-petg-filaments":{date:"2026-01-10"},"best-abs-filaments":{date:"2026-01-10"},
   "best-filament-for-bambu-lab-p1s":{date:"2026-01-14"},"silk-pla-comparison":{date:"2026-01-18"},
   "asa-vs-abs-outdoor-printing":{date:"2026-01-16"},"pla-plus-vs-pla-pro":{date:"2026-01-12"},
-  "pla-vs-petg":{date:"2026-01-15",tl:true},"best-filaments-for-beginners":{date:"2026-01-08",tl:true},
-  "best-filaments-for-hueforge":{date:"2026-01-20",tl:true},"hueforge":{date:"2026-02-20",learn:true},
+  "pla-vs-petg":{date:"2026-01-15"},"best-filaments-for-beginners":{date:"2026-01-08"},
+  "best-filaments-for-hueforge":{date:"2026-01-20"},"hueforge":{date:"2026-02-20",learn:true},
   "what-is-hueforge-td":{date:"2026-02-20"},"best-white-filaments-for-hueforge":{date:"2026-02-20"},
   "how-to-measure-filament-td":{date:"2026-02-20"},"best-filaments-for-outdoor-use":{date:"2026-02-20"},
   "best-filaments-for-lithophanes":{date:"2026-02-20"},
@@ -383,10 +387,13 @@ function smIndex(){const subs=["sitemap-pages.xml","sitemap-filaments.xml","site
 function isCrawler(ua:string|null){if(!ua)return false;const l=ua.toLowerCase();return CRAWLER_AGENTS.some(b=>l.includes(b));}
 
 const GUIDE_REDIRECTS: Record<string,string> = {
-  "/guides/beginners-guide":`${BASE_URL}/best-filaments-for-beginners`,
-  "/guides/best-filament-for-beginners-2025":`${BASE_URL}/best-filaments-for-beginners`,
-  "/guides/hueforge-filaments":`${BASE_URL}/best-filaments-for-hueforge`,
-  "/guides/best-filaments-for-hueforge-lithophanes":`${BASE_URL}/best-filaments-for-hueforge`,
+  "/guides/beginners-guide":`${BASE_URL}/guides/best-filaments-for-beginners`,
+  "/guides/best-filament-for-beginners-2025":`${BASE_URL}/guides/best-filaments-for-beginners`,
+  "/guides/hueforge-filaments":`${BASE_URL}/guides/best-filaments-for-hueforge`,
+  "/guides/best-filaments-for-hueforge-lithophanes":`${BASE_URL}/guides/best-filaments-for-hueforge`,
+  "/best-filaments-for-hueforge":`${BASE_URL}/guides/best-filaments-for-hueforge`,
+  "/best-filaments-for-beginners":`${BASE_URL}/guides/best-filaments-for-beginners`,
+  "/pla-vs-petg":`${BASE_URL}/guides/pla-vs-petg`,
 };
 
 // ── Main handler ──

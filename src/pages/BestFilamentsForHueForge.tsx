@@ -146,7 +146,7 @@ export default function BestFilamentsForHueForge() {
 
   const breadcrumbs = [
     { name: 'Home', url: '/' },
-    { name: 'Best Filaments for HueForge', url: '/best-filaments-for-hueforge' },
+    { name: 'Best Filaments for HueForge', url: '/guides/best-filaments-for-hueforge' },
   ];
 
   const itemListItems = top10.map((f, i) => ({
@@ -169,7 +169,7 @@ export default function BestFilamentsForHueForge() {
         description="Find the best HueForge filament for lithophanes and color mixing. TD-ranked picks for PLA, silk, and translucent filaments. Compare TD values, prices & buy links."
         datePublished="2025-01-15"
         dateModified="2026-02-20"
-        url="/best-filaments-for-hueforge"
+        url="/guides/best-filaments-for-hueforge"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'HueForge 3D Printing' }}
         proficiencyLevel="Beginner"
@@ -267,7 +267,7 @@ export default function BestFilamentsForHueForge() {
               Use{' '}
               <Link to="/hueforge-td-database" className="text-purple-400 hover:text-purple-300">FilaScope's TD Database</Link>{' '}
               to find exact values, or check the{' '}
-              <Link to="/best-filaments-for-hueforge" className="text-purple-400 hover:text-purple-300">HueForge Filaments Guide</Link>{' '}
+              <Link to="/guides/best-filaments-for-hueforge" className="text-purple-400 hover:text-purple-300">HueForge Filaments Guide</Link>{' '}
               for a complete setup walkthrough.
             </p>
           </div>

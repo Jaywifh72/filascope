@@ -274,7 +274,7 @@ export default function CheapestFilament() {
                 { to: '/deals', label: 'Live Filament Deals & Sales' },
                 { to: '/guides/best-budget-filaments', label: 'Best Budget Filaments Guide' },
                 { to: '/filaments/pla', label: 'All PLA Filaments' },
-                { to: '/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
+                { to: '/guides/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
                 { to: '/best-3d-printer-filament', label: 'Best 3D Printer Filament Overall' },
                 { to: '/filament-types', label: 'Filament Types Guide' },
               ].map((link) => (

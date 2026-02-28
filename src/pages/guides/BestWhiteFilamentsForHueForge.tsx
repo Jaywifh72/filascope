@@ -295,7 +295,7 @@ export default function BestWhiteFilamentsForHueForge() {
             title="Related Resources"
             links={[
               { label: 'HueForge TD Database', href: '/hueforge-td-database', description: 'Full transmissivity database for all filaments' },
-              { label: 'Best Filaments for HueForge', href: '/best-filaments-for-hueforge', description: 'TD-ranked picks across all colors and materials' },
+              { label: 'Best Filaments for HueForge', href: '/guides/best-filaments-for-hueforge', description: 'TD-ranked picks across all colors and materials' },
               { label: 'What Is HueForge TD?', href: '/guides/what-is-hueforge-td', description: 'Complete beginner guide to TD values' },
               { label: 'How to Measure Filament TD', href: '/guides/how-to-measure-filament-td', description: 'Measure your own filament TD values' },
               { label: 'PLA Materials Guide', href: '/materials/pla', description: 'Everything about PLA filament' },

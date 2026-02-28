@@ -38,7 +38,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     colorSlugs: ["white", "black", "grey", "blue", "red", "transparent"],
     guides: [
       { label: "Best PLA Filaments", href: "/guides/best-pla-filaments" },
-      { label: "PLA vs PETG", href: "/pla-vs-petg" },
+      { label: "PLA vs PETG", href: "/guides/pla-vs-petg" },
       { label: "PLA+ vs PLA Pro", href: "/guides/pla-plus-vs-pla-pro" },
     ],
   },
@@ -50,7 +50,7 @@ export const MATERIAL_SLUG_CONFIG: Record<string, SlugConfig> = {
     colorSlugs: ["white", "black", "clear", "blue", "red"],
     guides: [
       { label: "Best PETG Filaments", href: "/guides/best-petg-filaments" },
-      { label: "PLA vs PETG", href: "/pla-vs-petg" },
+      { label: "PLA vs PETG", href: "/guides/pla-vs-petg" },
     ],
   },
   abs: {
