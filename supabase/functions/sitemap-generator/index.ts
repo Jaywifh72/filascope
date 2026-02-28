@@ -62,6 +62,17 @@ const GUIDE_ROUTES = [
   "/guides/pla-vs-petg",
   "/filament-temperature-guide",
   "/filament-storage-guide",
+  "/guides/hueforge-beginners-guide",
+  "/guides/understanding-td-values",
+  "/guides/hueforge-color-selection",
+  "/guides/best-filament-for-prusa-mk4",
+  "/guides/best-filament-for-creality-k1",
+  "/guides/best-filaments-for-hueforge-lithophanes",
+  "/guides/how-to-choose-filament",
+  "/guides/strongest-3d-printer-filament",
+  "/guides/how-to-store-filament",
+  "/guides/how-to-dry-filament",
+  "/guides/food-safe-filament",
 ].map((path) => ({ path, priority: "0.8", changefreq: "weekly" as const }));
 
 function urlEntry(
