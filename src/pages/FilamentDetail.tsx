@@ -1019,6 +1019,7 @@ const { id } = useParams();
               nozzleTempMax={displayFilament.nozzle_temp_max_c}
               bedTempMin={displayFilament.bed_temp_min_c}
               bedTempMax={displayFilament.bed_temp_max_c}
+              diameter={displayFilament.diameter_nominal_mm}
               transmissionDistance={displayFilament.transmission_distance}
               formattedPrice={
                 sidebarPricePerKg

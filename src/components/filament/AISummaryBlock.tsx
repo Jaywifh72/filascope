@@ -9,6 +9,7 @@ interface AISummaryBlockProps {
   nozzleTempMax: number | null | undefined;
   bedTempMin: number | null | undefined;
   bedTempMax: number | null | undefined;
+  diameter: number | null | undefined;
   transmissionDistance: number | null | undefined;
   formattedPrice: string | null;
   regionName: string;
@@ -37,6 +38,7 @@ export function AISummaryBlock({
   nozzleTempMax,
   bedTempMin,
   bedTempMax,
+  diameter,
   transmissionDistance,
   formattedPrice,
   regionName,
@@ -64,12 +66,19 @@ export function AISummaryBlock({
     parts.push(`It prints at a nozzle temperature of ${nozzle.value}.`);
   }
 
+  // Diameter
+  if (diameter != null) {
+    parts.push(`Diameter: ${diameter}mm.`);
+  }
+
   // TD block
   if (transmissionDistance != null) {
     const descriptor = getTdDescriptor(transmissionDistance);
     parts.push(
-      `Its HueForge Transmissivity Distance (TD) value is ${transmissionDistance}, making it suitable for ${descriptor}.`
+      `HueForge TD: ${transmissionDistance}.`
     );
+  } else {
+    parts.push(`HueForge TD: not yet measured.`);
   }
 
   // Price
