@@ -181,6 +181,7 @@ const PLAvsABS = lazy(() => import("./pages/PLAvsABS"));
 const PETGvsABS = lazy(() => import("./pages/PETGvsABS"));
 const TPUvsPETG = lazy(() => import("./pages/TPUvsPETG"));
 const NylonvsPETG = lazy(() => import("./pages/NylonvsPETG"));
+const HowToChooseFilament = lazy(() => import("./pages/HowToChooseFilament"));
 const BestWhiteFilaments = lazy(() => import("./pages/BestWhiteFilaments"));
 const FilamentDatabase = lazy(() => import("./pages/FilamentDatabase"));
 const MaterialHub = lazy(() => import("./pages/MaterialHub"));
@@ -362,6 +363,7 @@ const App = () => (
                   <Route path="/guides/petg-vs-abs" element={<PETGvsABS />} />
                   <Route path="/guides/tpu-vs-petg" element={<TPUvsPETG />} />
                   <Route path="/guides/nylon-vs-petg" element={<NylonvsPETG />} />
+                  <Route path="/guides/how-to-choose-3d-printer-filament" element={<HowToChooseFilament />} />
                   <Route path="/guides/best-filaments-for-beginners" element={<BestFilamentsForBeginners />} />
                   <Route path="/guides/best-filaments-for-hueforge" element={<BestFilamentsForHueForge />} />
                   <Route path="/guides/:slug" element={<BuyingGuide />} />
