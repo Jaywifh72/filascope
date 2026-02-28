@@ -364,6 +364,8 @@ export function ProductJsonLd({
   // Build offers array for regional pricing (Schema.org AggregateOffer)
   const buildOffers = () => {
     const shippingDetails = buildShippingDetails();
+    // priceValidUntil: 30 days from today in ISO format
+    const priceValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // If we have regional offers, create AggregateOffer + individual Offers
     if (regionalOffers && regionalOffers.length > 0) {
@@ -385,6 +387,7 @@ export function ProductJsonLd({
           '@type': 'Offer',
           priceCurrency: offer.currency || activeCurrency,
           price: offer.price.toFixed(2),
+          priceValidUntil,
           availability: offer.availability !== false
             ? 'https://schema.org/InStock'
             : 'https://schema.org/OutOfStock',
@@ -414,6 +417,7 @@ export function ProductJsonLd({
       '@type': 'Offer',
       priceCurrency: activeCurrency,
       ...(price != null && { price: price.toFixed(2) }),
+      priceValidUntil,
       availability: availability
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
