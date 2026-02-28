@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
@@ -1049,6 +1050,23 @@ const Finder = () => {
       <WebSiteSchema />
       <OrganizationSchema />
       <TrendingItemListSchema />
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Dataset",
+          "name": "FilaScope 3D Printer Filament Database",
+          "description": "Structured database of 1,076+ 3D printer filaments from 49+ brands including material specifications, HueForge Transmission Distance (TD) values, real-time pricing from 15+ retailers across 6 regions, printer compatibility data, and FilaScore quality ratings.",
+          "url": "https://filascope.com/filaments",
+          "keywords": ["3D printer filament","filament specifications","HueForge TD values","filament pricing","PLA filament","PETG filament","filament comparison"],
+          "creator": {"@type": "Organization","name": "FilaScope","url": "https://filascope.com"},
+          "dateModified": "2026-02-28",
+          "variableMeasured": ["Nozzle Temperature","Bed Temperature","Filament Diameter","Spool Weight","HueForge Transmission Distance","Tensile Strength","Price","FilaScore Rating"],
+          "spatialCoverage": "Global",
+          "temporalCoverage": "2024/2026",
+          "isAccessibleForFree": true,
+          "license": "https://filascope.com/terms"
+        })}</script>
+      </Helmet>
       {/* Onboarding Tour */}
       <OnboardingTour />
       
