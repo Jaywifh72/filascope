@@ -32,6 +32,26 @@ const FAQS = [
     question: 'When should I switch from PLA to PETG?',
     answer: 'Move to PETG when your prints need better heat resistance (PLA softens at ~60°C), more impact resistance, or outdoor durability. PETG is only slightly harder to print than PLA and is an excellent second material for beginners who have mastered PLA.',
   },
+  {
+    question: 'What filament should I buy first for my 3D printer?',
+    answer: 'Start with PLA in a light color (white or light gray) so you can clearly see print quality issues. A 1kg spool from Bambu Lab, Hatchbox, or eSUN costs under $20 and will last through dozens of test prints while you learn your printer\'s settings.',
+  },
+  {
+    question: 'Is expensive filament worth it for beginners?',
+    answer: 'Not initially. Budget PLA from reliable brands like Hatchbox, eSUN, or Overture ($15-18/kg) prints just as well for learning. Premium filaments ($22-30/kg) from Prusament or Polymaker offer tighter tolerances and more color consistency, but the difference only matters once you have experience dialing in your printer.',
+  },
+  {
+    question: 'How should I store 3D printer filament?',
+    answer: 'Store filament in airtight containers or sealed bags with silica desiccant packets. PLA absorbs moisture from air which causes popping, stringing, and rough surface finish during printing. A dry box or vacuum-sealed bag extends filament life significantly.',
+  },
+  {
+    question: 'Do I need different filament for different 3D printers?',
+    answer: 'Most FDM printers use standard 1.75mm filament regardless of brand. Check your printer\'s max nozzle temperature — if it reaches 260°C+, you can use PETG, ABS, and TPU in addition to PLA. Budget printers limited to 240°C should stick with PLA and PLA+.',
+  },
+  {
+    question: 'How much filament do I need to get started?',
+    answer: 'One 1kg spool is enough for 20-50 small prints (phone stands, keychains, small figurines). For a complete beginner kit, get one spool of white PLA and one of black PLA — this covers most starter projects and lets you learn with good visual feedback.',
+  },
 ];
 
 const BEGINNER_TIPS = [
