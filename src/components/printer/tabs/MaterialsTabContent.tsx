@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Palette, Layers, Package, Cpu, ExternalLink, TrendingUp, TrendingDown, 
-  CheckCircle2, XCircle, ChevronDown, ChevronRight, Thermometer, AlertCircle, ArrowRight
+  CheckCircle2, XCircle, ChevronDown, ChevronRight, Thermometer, AlertCircle, ArrowRight,
+  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -504,7 +505,51 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
         )}
       </section>
 
-      {/* Compatible Accessories */}
+      {/* Buying Guides for This Printer */}
+      <section className="section-card">
+        <SectionHeader icon={BookOpen} title="Buying Guides for This Printer" />
+        <div className="grid sm:grid-cols-2 gap-3">
+          {(() => {
+            const brandName = (printer.brand?.brand || printer.brand_name || '').toLowerCase();
+            const modelName = (printer.model_name || '').toLowerCase();
+            const guides: { href: string; label: string }[] = [];
+
+            // Brand-specific guides
+            if (brandName.includes('bambu')) {
+              if (modelName.includes('p1s')) guides.push({ href: '/guides/best-filament-for-bambu-lab-p1s', label: 'Best Filaments for Bambu Lab P1S' });
+              if (modelName.includes('a1') && modelName.includes('mini')) guides.push({ href: '/guides/best-filament-for-bambu-lab-a1-mini', label: 'Best Filaments for Bambu Lab A1 Mini' });
+              if (modelName.includes('x1')) guides.push({ href: '/guides/best-filament-for-bambu-lab-x1-carbon', label: 'Best Filaments for Bambu Lab X1 Carbon' });
+              // Fallback to P1S guide as a general Bambu guide
+              if (guides.length === 0) guides.push({ href: '/guides/best-filament-for-bambu-lab-p1s', label: 'Best Filaments for Bambu Lab Printers' });
+            }
+            if (brandName.includes('prusa')) guides.push({ href: '/guides/best-filament-for-prusa-mk4', label: 'Best Filaments for Prusa MK4' });
+            if (brandName.includes('creality')) {
+              if (modelName.includes('k1')) guides.push({ href: '/guides/best-filament-for-creality-k1', label: 'Best Filaments for Creality K1 & K1 Max' });
+              if (modelName.includes('ender')) guides.push({ href: '/guides/best-filament-for-creality-ender-3-v3', label: 'Best Filaments for Creality Ender 3 V3' });
+              if (guides.length === 0) guides.push({ href: '/guides/best-filament-for-creality-k1', label: 'Best Filaments for Creality Printers' });
+            }
+
+            // Universal guides
+            guides.push(
+              { href: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose the Right 3D Printer Filament' },
+              { href: '/guides/3d-printer-filament-types-explained', label: '3D Printer Filament Types Explained' },
+              { href: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide — Print Settings for Every Material' },
+            );
+
+            return guides.map(g => (
+              <Link
+                key={g.href}
+                to={g.href}
+                className="flex items-center gap-2.5 p-3 rounded-lg border border-border/40 bg-muted/30 hover:border-primary/40 hover:bg-primary/5 transition-colors group"
+              >
+                <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-sm text-foreground group-hover:text-primary transition-colors">{g.label}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 ml-auto shrink-0 group-hover:text-primary transition-colors" />
+              </Link>
+            ));
+          })()}
+        </div>
+      </section>
       <section className="section-card">
         <SectionHeader icon={Cpu} title="Compatible Accessories" />
         

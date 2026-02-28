@@ -1120,6 +1120,43 @@ export default function Printers() {
 
       </div>
 
+      {/* SEO Content Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-border/50 mt-8">
+        <div className="grid md:grid-cols-2 gap-10">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground mb-3">Find the Right Filament for Your Printer</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Once you've chosen your printer, find the best filaments for it in our{' '}
+              <Link to="/filaments" className="text-primary hover:underline font-medium">filament database</Link>.
+              Browse 8,000+ filaments filtered by material, brand, price, and printer compatibility. Not sure which
+              materials your printer supports? Use our{' '}
+              <Link to="/matrix" className="text-primary hover:underline font-medium">compatibility matrix</Link>{' '}
+              to see recommended print settings for every printer and material combination.
+            </p>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground mb-3">Printer Filament Guides</h2>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: 'How to Choose Filament', href: '/guides/how-to-choose-3d-printer-filament' },
+                { label: 'Filament Types Explained', href: '/guides/3d-printer-filament-types-explained' },
+                { label: 'Temperature Guide', href: '/guides/filament-temperature-guide' },
+                { label: 'Best Filaments for Bambu Lab P1S', href: '/guides/best-filament-for-bambu-lab-p1s' },
+                { label: 'Best Filaments for Prusa MK4', href: '/guides/best-filament-for-prusa-mk4' },
+                { label: 'Best Filaments for Creality K1', href: '/guides/best-filament-for-creality-k1' },
+              ].map(link => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-colors text-muted-foreground"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
     </div>
     </>
