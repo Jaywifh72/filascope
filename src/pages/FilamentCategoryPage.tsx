@@ -815,6 +815,109 @@ export default function FilamentCategoryPage() {
           </section>
         )}
 
+        {/* Material-specific SEO content sections */}
+        {slug === "pla" && (
+          <section className="mt-12 space-y-8">
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">PLA Filament — The Most Popular 3D Printing Material</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                <strong>PLA filament</strong> is the most widely used FDM 3D printing material worldwide, and for good reason. Made from renewable resources like corn starch, PLA is biodegradable, low-odor, and incredibly easy to print. It extrudes at just 190–220°C, doesn't require a heated bed or enclosure, and produces sharp, detailed prints on virtually any FDM printer. Whether you're a beginner looking for the <strong>best PLA filament</strong> or an experienced maker comparing options, FilaScope's <strong>PLA filament comparison</strong> tools let you evaluate specs, colors, and <strong>PLA filament prices</strong> across 48+ brands. PLA is ideal for prototypes, cosplay props, decorative models, miniatures, and HueForge lithophanes thanks to its excellent layer adhesion and vibrant color range.
+              </p>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">PLA Print Settings Quick Reference</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Nozzle Temperature", value: "190–220°C" },
+                  { label: "Bed Temperature", value: "0–60°C" },
+                  { label: "Print Speed", value: "40–100 mm/s" },
+                  { label: "Cooling", value: "100% fan after first layer" },
+                  { label: "Enclosure", value: "Not required" },
+                ].map(s => (
+                  <div key={s.label} className="rounded-lg border border-border bg-card p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">PLA Filament Buying Guide</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Not sure which PLA to buy? Our <a href="/guides/best-pla-filaments" className="text-primary hover:underline font-medium">best PLA filaments guide</a> ranks top picks by print quality, consistency, and value. If you're weighing PLA against other materials, check the <a href="/guides/pla-vs-petg" className="text-primary hover:underline font-medium">PLA vs PETG comparison</a> for a detailed breakdown of strength, heat resistance, and ease of printing. Use the <a href="/compare" className="text-primary hover:underline font-medium">side-by-side comparison tool</a> to evaluate specific products, or read our <a href="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</a> for a broader overview of every material type.
+              </p>
+            </article>
+          </section>
+        )}
+
+        {slug === "petg" && (
+          <section className="mt-12 space-y-8">
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">PETG Filament — The Versatile All-Rounder</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                <strong>PETG filament</strong> bridges the gap between PLA's ease of use and ABS's durability, making it the go-to material for functional parts and everyday prints. It offers excellent layer adhesion, chemical resistance, and impact strength while remaining relatively easy to print. If you're searching for the <strong>best PETG filament</strong>, FilaScope's <strong>PETG filament comparison</strong> lets you evaluate tensile strength, flexibility, and <strong>PETG filament prices</strong> across dozens of brands. PETG prints at 220–250°C with a heated bed at 70–90°C, doesn't require an enclosure, and resists UV degradation better than PLA — making it suitable for parts that see moderate outdoor exposure or mechanical stress.
+              </p>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">PETG Print Settings Quick Reference</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Nozzle Temperature", value: "220–250°C" },
+                  { label: "Bed Temperature", value: "70–90°C" },
+                  { label: "Print Speed", value: "40–80 mm/s" },
+                  { label: "Cooling", value: "50–70% fan" },
+                  { label: "Enclosure", value: "Not required" },
+                ].map(s => (
+                  <div key={s.label} className="rounded-lg border border-border bg-card p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">PETG Filament Buying Guide</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Our <a href="/guides/best-petg-filaments" className="text-primary hover:underline font-medium">best PETG filaments guide</a> ranks top picks by strength, clarity, and print reliability. Comparing PETG to other materials? See <a href="/guides/pla-vs-petg" className="text-primary hover:underline font-medium">PLA vs PETG</a> for an in-depth analysis of trade-offs. Use the <a href="/compare" className="text-primary hover:underline font-medium">comparison tool</a> to evaluate specific PETG products head-to-head, or explore the <a href="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</a> to understand which material fits your use case best.
+              </p>
+            </article>
+          </section>
+        )}
+
+        {slug === "abs" && (
+          <section className="mt-12 space-y-8">
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">ABS Filament — The Engineering-Grade Standard</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                <strong>ABS filament</strong> has been an industrial staple since the early days of 3D printing, prized for its heat resistance, toughness, and ability to be post-processed with acetone vapor smoothing. It prints at 230–260°C and requires a heated bed (90–110°C) plus an enclosed build chamber to prevent warping and layer splitting. Finding the <strong>best ABS filament</strong> means balancing print reliability with mechanical performance — FilaScope's <strong>ABS filament comparison</strong> helps you evaluate tensile strength, glass transition temperature, and <strong>ABS filament prices</strong> across all major brands. ABS is ideal for functional enclosures, automotive parts, jigs, and any application where heat resistance above 100°C is needed.
+              </p>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">ABS Print Settings Quick Reference</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Nozzle Temperature", value: "230–260°C" },
+                  { label: "Bed Temperature", value: "90–110°C" },
+                  { label: "Print Speed", value: "40–80 mm/s" },
+                  { label: "Cooling", value: "0–30% fan (minimal)" },
+                  { label: "Enclosure", value: "Required" },
+                ].map(s => (
+                  <div key={s.label} className="rounded-lg border border-border bg-card p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">ABS Filament Buying Guide</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Our <a href="/guides/best-abs-filaments" className="text-primary hover:underline font-medium">best ABS filaments guide</a> ranks top picks by warp resistance, layer adhesion, and value. Wondering whether ABS is the right choice? Read <a href="/guides/asa-vs-abs-outdoor-printing" className="text-primary hover:underline font-medium">ASA vs ABS for outdoor printing</a> or <a href="/guides/petg-vs-abs" className="text-primary hover:underline font-medium">PETG vs ABS</a> for detailed comparisons. Use the <a href="/compare" className="text-primary hover:underline font-medium">side-by-side comparison tool</a> for specific products, or start with the <a href="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</a>.
+              </p>
+            </article>
+          </section>
+        )}
+
         {slug && materialFaqs.length > 0 && (
           <FAQSection
             faqs={materialFaqs}
