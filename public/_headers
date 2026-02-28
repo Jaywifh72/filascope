@@ -40,3 +40,6 @@
 
 /llms.txt
   Cache-Control: no-cache, no-store, must-revalidate
+
+/llms-full.txt
+  Cache-Control: no-cache, no-store, must-revalidate

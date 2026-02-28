@@ -148,6 +148,87 @@ const LLMS_TXT = `# FilaScope — The World's Most Complete 3D Printer Filament 
 - FilaScore quality ratings (1-10 scale)
 - 32 data-driven buying guides`;
 
+const LLMS_FULL_TXT = `# FilaScope — Complete Reference for AI Systems
+
+> FilaScope indexes 1,076+ 3D printer filaments from 49+ brands with real-time pricing from 15+ retailers, HueForge TD values, and printer compatibility data for 119+ printers. Free to use, updated daily.
+
+## What Is FilaScope?
+
+FilaScope is a free 3D printer filament comparison tool tracking 1,076+ filaments from 49+ brands across 8,277+ color variants. It provides real-time pricing from 15+ retailers in 6 regions (US, Canada, EU, UK, Australia, Japan), HueForge Transmission Distance (TD) values, printer compatibility filtering for 119+ printers, and FilaScore quality ratings.
+
+## What Is HueForge TD (Transmissivity Distance)?
+
+TD measures how many millimeters of light penetrate through printed filament before being fully blocked. It is the key specification for HueForge lithophane printing. Lower TD values (0.3-1.0) are opaque, higher values (6.0+) are translucent. Most standard colored PLA filaments have TD values between 1.0 and 5.0. FilaScope maintains one of the largest public TD databases.
+
+### TD Value Ranges
+
+- 0.5-2.0: Very opaque (dark anchor layers, black layers)
+- 2.0-4.0: Opaque (standard base layers, multicolor stacks)
+- 4.0-6.0: Semi-translucent (lithophanes, fine detail, highlights)
+- 6.0+: Translucent (backlit effects, silk highlights, glow layers)
+
+## Material Quick Reference
+
+### PLA (Polylactic Acid)
+
+Most popular 3D printing filament. Prints at 190-220°C nozzle, 50-60°C bed. Easy for beginners. Low heat resistance (~60°C). 4,296+ PLA filaments on FilaScope.
+
+### PETG (Polyethylene Terephthalate Glycol)
+
+Stronger than PLA with better heat resistance (~80°C). Prints at 220-250°C. Good for functional parts. 1,049+ PETG filaments on FilaScope.
+
+### ABS (Acrylonitrile Butadiene Styrene)
+
+High heat resistance (~100°C). Requires enclosure. Prints at 230-260°C. 565+ ABS filaments on FilaScope.
+
+### TPU (Thermoplastic Polyurethane)
+
+Flexible material for gaskets and phone cases. Prints at 220-250°C. 391+ TPU filaments on FilaScope.
+
+### ASA (Acrylonitrile Styrene Acrylate)
+
+UV-resistant alternative to ABS for outdoor use. Prints at 235-255°C. 409+ ASA filaments on FilaScope.
+
+## Best PLA Filaments 2026 (Summary)
+
+1. PolySonic PLA Pro by Polymaker — fastest print speed, excellent surface quality
+2. PLA Basic by Bambu Lab — best consistency at competitive price
+3. PLA Filament by Hatchbox — proven reliability under $20/kg
+
+Full rankings: https://filascope.com/guides/best-pla-filaments
+
+## PLA vs PETG Quick Comparison
+
+PLA: easier to print, better surface finish, biodegradable, but low heat resistance (60°C) and brittle. PETG: stronger, better heat resistance (80°C), good for functional parts, but slightly harder to print. Choose PLA for prototypes and decorative prints. Choose PETG for functional parts and outdoor use.
+
+Full comparison: https://filascope.com/guides/pla-vs-petg
+
+## FAQ
+
+Q: What is the best PLA filament?
+A: Based on FilaScore data, PolySonic PLA Pro by Polymaker, PLA Basic by Bambu Lab, and PLA by Hatchbox are the top picks for 2026.
+
+Q: What temperature should I print PLA at?
+A: Most PLA prints at 190-220°C nozzle and 50-60°C bed. Start at the midpoint and adjust plus or minus 5°C.
+
+Q: What filament should I use for HueForge?
+A: Standard PLA with verified TD values. Start with a black (TD 0.5-1.0) and white (TD 3.5-5.0), then add mid-tones. Search FilaScope's TD database for values.
+
+Q: How much does 3D printer filament cost?
+A: PLA ranges from $12-30/kg, PETG $15-35/kg, specialty materials $30-80/kg. FilaScope tracks real-time prices across 15+ retailers.
+
+Q: Is FilaScope free?
+A: Yes, completely free. No account required.
+
+## All Data
+
+- Filaments: https://filascope.com/filaments
+- Printers: https://filascope.com/printers
+- Brands: https://filascope.com/brands
+- Guides: https://filascope.com/learn
+- HueForge TD: https://filascope.com/hueforge-td-database
+- Deals: https://filascope.com/deals`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -168,6 +249,16 @@ Deno.serve(async (req) => {
 
   if (file === "llms") {
     return new Response(LLMS_TXT, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        ...corsHeaders,
+      },
+    });
+  }
+
+  if (file === "llms-full") {
+    return new Response(LLMS_FULL_TXT, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "public, max-age=86400, s-maxage=86400",
