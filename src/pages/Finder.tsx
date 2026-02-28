@@ -1055,16 +1055,15 @@ const Finder = () => {
           "@context": "https://schema.org",
           "@type": "Dataset",
           "name": "FilaScope 3D Printer Filament Database",
-          "description": "Structured database of 1,076+ 3D printer filaments from 49+ brands including material specifications, HueForge Transmission Distance (TD) values, real-time pricing from 15+ retailers across 6 regions, printer compatibility data, and FilaScore quality ratings.",
+          "description": "Structured database of 1,076+ 3D printer filaments from 49+ brands with material specifications, nozzle and bed temperatures, HueForge Transmission Distance values, real-time pricing from 15+ retailers, printer compatibility data, and FilaScore quality ratings.",
           "url": "https://filascope.com/filaments",
-          "keywords": ["3D printer filament","filament specifications","HueForge TD values","filament pricing","PLA filament","PETG filament","filament comparison"],
+          "keywords": ["3D printer filament database","filament specifications","HueForge TD values","filament price comparison","PLA filament data","PETG filament data","3D printing materials"],
           "creator": {"@type": "Organization","name": "FilaScope","url": "https://filascope.com"},
           "dateModified": "2026-02-28",
-          "variableMeasured": ["Nozzle Temperature","Bed Temperature","Filament Diameter","Spool Weight","HueForge Transmission Distance","Tensile Strength","Price","FilaScore Rating"],
+          "variableMeasured": ["Nozzle Temperature","Bed Temperature","Filament Diameter","Spool Weight","HueForge Transmission Distance","Tensile Strength","Price per Kilogram","FilaScore Rating"],
           "spatialCoverage": "Global",
           "temporalCoverage": "2024/2026",
-          "isAccessibleForFree": true,
-          "license": "https://filascope.com/terms"
+          "isAccessibleForFree": true
         })}</script>
       </Helmet>
       {/* Onboarding Tour */}
