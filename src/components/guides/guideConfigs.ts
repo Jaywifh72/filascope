@@ -2219,6 +2219,265 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       8: { bestFor: 'Vibration dampening components', tempRange: '210–230°C nozzle / 50–60°C bed', justification: 'TPU\'s natural vibration absorption makes it ideal for motor mounts and equipment feet.' },
     },
   },
+
+  'best-filament-for-bambu-lab-a1-mini': {
+    slug: 'best-filament-for-bambu-lab-a1-mini',
+    title: 'Best Filaments for Bambu Lab A1 Mini in 2026',
+    seoTitle: 'Best Filaments for Bambu Lab A1 Mini 2026 | FilaScope',
+    seoDescription: 'Top filaments for Bambu Lab A1 Mini ranked by quality and compatibility. PLA, PETG, and TPU recommendations with AMS Lite notes and print settings.',
+    description: 'Curated filament picks for Bambu Lab A1 Mini — PLA, PETG, and TPU with AMS Lite compatibility, print settings, and buying tips for this compact printer.',
+    category: 'printer-specific',
+    readTime: 10,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['best filament for bambu lab a1 mini', 'bambu a1 mini filament', 'a1 mini compatible filament', 'a1 mini AMS Lite filament'],
+    filters: { materials: ['PLA', 'PETG', 'TPU'], sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Bambu Lab A1 Mini — Printer Specs for Filament Selection',
+        content: `<p>The <strong>Bambu Lab A1 Mini</strong> is a compact, open-frame printer designed for speed and simplicity. Key specs that affect filament choice:</p>
+<ul>
+<li><strong>Max nozzle temperature:</strong> 300°C — technically supports a wide range, but the open frame limits high-temp materials.</li>
+<li><strong>Max bed temperature:</strong> 80°C — adequate for PLA and PETG, but insufficient for ABS (needs 90–110°C).</li>
+<li><strong>Build volume:</strong> 180×180×180mm — compact, so warping is less of an issue on small parts.</li>
+<li><strong>No enclosure:</strong> ABS and ASA are not recommended without a DIY enclosure. Warping and fumes are significant risks.</li>
+<li><strong>AMS Lite compatible:</strong> 4-spool multi-color system. Requires filaments with ±0.03mm diameter tolerance and smooth winding.</li>
+<li><strong>Direct drive:</strong> Handles TPU at reduced speeds (20–40mm/s), but NOT through the AMS Lite.</li>
+</ul>
+<p><strong>Bottom line:</strong> The A1 Mini excels with PLA and PETG. It can handle TPU manually. Skip ABS/ASA unless you add an enclosure.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'AMS Lite Tips for the A1 Mini',
+        content: `<p>The AMS Lite is a lighter version of Bambu's AMS system. Filament tips:</p>
+<ul>
+<li><strong>Best AMS Lite materials:</strong> Standard PLA, PLA+, matte PLA, and PETG. Avoid filaments with rough surfaces or cardboard spools.</li>
+<li><strong>Avoid in AMS Lite:</strong> TPU (too flexible), wood-fill (abrasive), and filaments on oversized spools.</li>
+<li><strong>Spool compatibility:</strong> Standard 1kg spools work. Bambu refill spools save space and reduce waste.</li>
+<li><strong>Drying matters:</strong> PETG and specialty PLAs should be dried. Moisture causes AMS feed issues.</li>
+</ul>`,
+        position: 'after',
+      },
+      {
+        heading: 'Recommended Settings by Material on A1 Mini',
+        content: `<ul>
+<li><strong>PLA:</strong> 220°C nozzle, 55°C bed, 80–100% fan. Use Bambu Studio's "Generic PLA" profile.</li>
+<li><strong>PETG:</strong> 240°C nozzle, 70°C bed, 30% fan. Use the textured PEI plate for easy release.</li>
+<li><strong>TPU 95A:</strong> 220–230°C nozzle, 50°C bed, 50% fan, 20–40mm/s speed. Feed directly — NOT through AMS Lite.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'Can the Bambu Lab A1 Mini print ABS?', answer: 'Not recommended. The A1 Mini is open-frame with a max bed temp of 80°C — ABS needs 90–110°C and an enclosure to prevent warping and fumes. Use PLA or PETG instead, or add a DIY enclosure for ABS.' },
+      { question: 'What filament brands work best with the A1 Mini AMS Lite?', answer: 'Bambu Lab\'s own PLA and PETG are optimized for AMS Lite. Polymaker PolyLite, eSUN PLA+, and Overture PLA also feed reliably. Look for ±0.03mm diameter tolerance or better.' },
+      { question: 'Can the A1 Mini print TPU?', answer: 'Yes, but only by feeding filament directly to the print head — NOT through the AMS Lite. Use TPU 95A at 20–40mm/s with retraction disabled or minimized.' },
+      { question: 'Is the A1 Mini good for beginners?', answer: 'Excellent. It\'s one of the best beginner printers available. Start with PLA, which requires almost no tuning. The compact size and Bambu Studio integration make it very forgiving.' },
+      { question: 'What is the best PLA for the A1 Mini?', answer: 'Bambu Lab Basic PLA, Polymaker PolyLite PLA, and eSUN PLA+ all deliver excellent results. For multi-color AMS Lite printing, Bambu Lab\'s refill spools offer the best reliability and value.' },
+    ],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-filament-for-bambu-lab-p1s', 'best-filament-for-bambu-lab-a1', 'best-filaments-for-beginners'],
+    rankAnnotations: {
+      1: { bestFor: 'Best overall PLA for A1 Mini', tempRange: '190–220°C nozzle / 55–60°C bed', justification: 'Optimized for Bambu printers with AMS Lite compatibility, tight tolerances, and excellent surface quality at high speed.' },
+      2: { bestFor: 'Best PETG for A1 Mini', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Reliable PETG that prints well on the A1 Mini\'s textured PEI plate without adhesion issues.' },
+      3: { bestFor: 'Budget PLA for beginners', tempRange: '195–220°C nozzle / 55–60°C bed', justification: 'Affordable entry point with consistent quality and smooth AMS Lite feeding.' },
+    },
+  },
+
+  'best-filament-for-creality-ender-3-v3': {
+    slug: 'best-filament-for-creality-ender-3-v3',
+    title: 'Best Filaments for Creality Ender 3 V3 in 2026',
+    seoTitle: 'Best Filaments for Creality Ender 3 V3 2026 | FilaScope',
+    seoDescription: 'Top filaments for Creality Ender 3 V3. PLA, PETG, and TPU recommendations with Klipper-tuned print settings, high-speed compatibility, and budget picks.',
+    description: 'Data-backed filament picks for the Creality Ender 3 V3 — PLA, PETG, and TPU recommendations with high-speed Klipper settings and budget-friendly options.',
+    category: 'printer-specific',
+    readTime: 11,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['best filament for ender 3', 'ender 3 v3 filament', 'creality ender 3 v3 compatible filament', 'ender 3 v3 PLA'],
+    filters: { materials: ['PLA', 'PETG', 'TPU'], sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Creality Ender 3 V3 — Printer Specs for Filament Selection',
+        content: `<p>The <strong>Creality Ender 3 V3</strong> is a major upgrade from the classic Ender 3 line — a CoreXZ design with Klipper firmware and significantly faster printing. Key specs:</p>
+<ul>
+<li><strong>Max nozzle temperature:</strong> 300°C — supports PLA, PETG, and TPU easily. ABS is possible but challenging without enclosure.</li>
+<li><strong>Max bed temperature:</strong> 100°C — handles PLA, PETG, and even ABS bed temperatures.</li>
+<li><strong>No enclosure:</strong> Open frame. ABS/ASA warping is a risk on larger prints. PLA and PETG are ideal.</li>
+<li><strong>Direct drive extruder:</strong> Handles flexible TPU well at reduced speeds.</li>
+<li><strong>Klipper firmware:</strong> Input shaping and pressure advance — can push 250mm/s+ with high-flow filaments.</li>
+<li><strong>Auto bed leveling:</strong> CR-Touch probe. Consistent first layers with any filament.</li>
+</ul>
+<p>The V3 is a speed-focused upgrade. High-flow PLA formulations will get the most out of its capabilities.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Ender 3 V3 vs Classic Ender 3 — Filament Differences',
+        content: `<p>If you're upgrading from an older Ender 3:</p>
+<ul>
+<li><strong>Speed:</strong> The V3 can print 3–5× faster. Standard PLA works, but high-flow PLA delivers better results above 150mm/s.</li>
+<li><strong>Direct drive:</strong> Unlike the classic Ender 3's Bowden setup, the V3's direct drive handles TPU without modifications.</li>
+<li><strong>Temperature range:</strong> 300°C max vs 260°C on stock Ender 3. More material options out of the box.</li>
+<li><strong>Bed adhesion:</strong> PEI spring steel bed provides better adhesion than the classic glass bed. PETG releases easily from textured PEI.</li>
+</ul>`,
+        position: 'after',
+      },
+      {
+        heading: 'Print Settings by Material on Ender 3 V3',
+        content: `<ul>
+<li><strong>PLA:</strong> 210–220°C nozzle, 55–60°C bed, 100% fan. Start at 150mm/s and increase for high-flow PLA.</li>
+<li><strong>PETG:</strong> 235–245°C nozzle, 75–80°C bed, 30% fan. 80–120mm/s for best surface quality.</li>
+<li><strong>TPU 95A:</strong> 220–230°C nozzle, 50°C bed, 50% fan. 25–40mm/s. Disable retraction or use minimal (0.5mm).</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'Can the Ender 3 V3 print ABS?', answer: 'Technically yes — the hotend reaches 300°C and the bed reaches 100°C. However, without an enclosure, ABS warping is severe on larger prints. For functional parts, PETG is a better choice on the open-frame V3.' },
+      { question: 'What is the best budget filament for Ender 3 V3?', answer: 'Overture PLA and Jayo PLA offer excellent quality at $15–18/kg. For PETG, eSUN PETG is reliable and affordable. These budget brands work perfectly at standard speeds (80–120mm/s).' },
+      { question: 'Does the Ender 3 V3 work with any brand of filament?', answer: 'Yes. The V3 uses standard 1.75mm filament and has no brand restrictions. Any quality PLA, PETG, or TPU will work. For best results at high speeds, choose high-flow formulations.' },
+      { question: 'What speed can the Ender 3 V3 actually print at?', answer: 'Real-world speeds of 150–250mm/s are achievable with high-flow PLA. Standard PLA works up to about 120mm/s. PETG and TPU should be printed slower (80–120mm/s and 25–40mm/s respectively) for quality.' },
+      { question: 'Is the Ender 3 V3 good for a first printer?', answer: 'Yes. The V3 is an excellent entry point with auto bed leveling, Klipper firmware, and direct drive. Start with PLA and the included Creality Print slicer profiles, then explore PETG once comfortable.' },
+    ],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-filament-for-ender-3', 'best-filaments-for-beginners', 'best-filament-for-creality-k1'],
+    rankAnnotations: {
+      1: { bestFor: 'Best overall for Ender 3 V3', tempRange: '200–220°C nozzle / 55–60°C bed', justification: 'Reliable at both standard and high speeds with excellent surface quality. Direct drive compatible.' },
+      2: { bestFor: 'Best PETG for functional prints', tempRange: '235–245°C nozzle / 75–80°C bed', justification: 'Clean PETG results on the PEI bed with minimal stringing. Good for parts needing heat resistance.' },
+      3: { bestFor: 'Best budget pick', tempRange: '195–220°C nozzle / 55–60°C bed', justification: 'Great value PLA that performs well at standard Ender 3 V3 speeds.' },
+    },
+  },
+
+  'best-filament-for-bambu-lab-x1-carbon': {
+    slug: 'best-filament-for-bambu-lab-x1-carbon',
+    title: 'Best Filaments for Bambu Lab X1 Carbon in 2026',
+    seoTitle: 'Best Filaments for Bambu Lab X1 Carbon 2026 | FilaScope',
+    seoDescription: 'Top filaments for Bambu Lab X1 Carbon. Engineering-grade PLA, PETG, ABS, ASA, Nylon, PC, and carbon-fiber recommendations with AMS settings and print profiles.',
+    description: 'The ultimate filament guide for Bambu Lab X1 Carbon owners — PLA, PETG, ABS, ASA, Nylon, PC, and carbon-fiber picks ranked by quality, AMS compatibility, and performance.',
+    category: 'printer-specific',
+    readTime: 14,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['best filament for x1 carbon', 'bambu lab x1 carbon filament', 'x1c filament guide', 'x1 carbon ABS', 'x1 carbon nylon', 'x1 carbon engineering filament'],
+    filters: { materials: ['PLA', 'PETG', 'ABS', 'ASA', 'Nylon', 'TPU'], sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Bambu Lab X1 Carbon — The Engineering Filament Powerhouse',
+        content: `<p>The <strong>Bambu Lab X1 Carbon</strong> is Bambu's flagship enclosed CoreXY printer, capable of handling virtually any FDM filament. Key specs:</p>
+<ul>
+<li><strong>Max nozzle temperature:</strong> 300°C — supports PLA, PETG, ABS, ASA, PA (Nylon), PC, and carbon-fiber composites.</li>
+<li><strong>Max bed temperature:</strong> 110°C — adequate for all standard and most engineering materials.</li>
+<li><strong>Fully enclosed with active chamber heating:</strong> Essential for ABS, ASA, PA, and PC. The X1C maintains consistent chamber temps up to 60°C.</li>
+<li><strong>Hardened steel nozzle included:</strong> Print abrasive carbon-fiber, glass-fiber, and metal-fill filaments without destroying your nozzle.</li>
+<li><strong>AMS compatible:</strong> Full 4-spool AMS for multi-color and multi-material printing.</li>
+<li><strong>LiDAR and AI monitoring:</strong> Detects filament tangles, spaghetti failures, and first-layer issues.</li>
+</ul>
+<p>The X1C is the most versatile consumer FDM printer for filament variety. If you want to print engineering materials, this is the machine to do it.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Engineering Materials on the X1 Carbon',
+        content: `<p>The X1C's enclosure and hardened nozzle unlock materials most printers can't handle:</p>
+<ul>
+<li><strong>ABS/ASA:</strong> Print with enclosure sealed and chamber heating on. 245–260°C nozzle, 100–110°C bed. ASA for outdoor parts, ABS for post-processing with acetone vapor.</li>
+<li><strong>Nylon (PA6/PA12):</strong> Dry thoroughly before printing. 260–280°C nozzle, 90–100°C bed. Use PVA or BVOH supports for complex geometry.</li>
+<li><strong>Polycarbonate (PC):</strong> 270–300°C nozzle, 100–110°C bed. Maximum enclosure heating. Requires all-metal hotend — the X1C has this by default.</li>
+<li><strong>Carbon-fiber composites (CF-PLA, CF-PETG, CF-PA):</strong> Use the included hardened nozzle. CF filaments offer excellent stiffness-to-weight ratio. Reduce speed for CF-Nylon.</li>
+</ul>`,
+        position: 'after',
+      },
+      {
+        heading: 'AMS Tips for the X1 Carbon',
+        content: `<ul>
+<li><strong>Multi-material combinations:</strong> PLA+PLA and PETG+PETG work great. Avoid mixing material types (e.g., PLA+PETG) — poor interlayer adhesion.</li>
+<li><strong>AMS with ABS/ASA:</strong> Works but requires dry filament. Moisture in the PTFE tubes causes jams.</li>
+<li><strong>AMS with Nylon:</strong> Possible but challenging. Nylon absorbs moisture rapidly — consider an inline dryer.</li>
+<li><strong>Avoid in AMS:</strong> TPU, wood-fill, and metal-fill. Feed these directly to the print head.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What makes the X1 Carbon better than the P1S for filament compatibility?', answer: 'The X1C includes a hardened steel nozzle for abrasive filaments (carbon-fiber, glass-fiber), LiDAR monitoring for failure detection, and slightly better chamber heating. The P1S handles the same temperature range but needs a nozzle swap for abrasive materials.' },
+      { question: 'Can the X1 Carbon print Polycarbonate?', answer: 'Yes. The X1C is one of the few consumer printers that handles PC well. Use 280–300°C nozzle, 100–110°C bed, enclosure sealed with chamber heating at max. Dry the PC filament thoroughly before printing.' },
+      { question: 'Do I need a special nozzle for carbon fiber filament on X1C?', answer: 'The X1C comes with a hardened steel nozzle by default — you\'re ready to print CF filaments out of the box. Standard brass nozzles wear out in hours with abrasive composites.' },
+      { question: 'What is the best ABS for the X1 Carbon?', answer: 'Bambu Lab ABS and Polymaker PolyLite ABS perform excellently. Both are formulated for enclosed printers with low-warp characteristics. Print at 245–260°C with the enclosure sealed and 100°C bed.' },
+      { question: 'Can I print TPU in the X1 Carbon AMS?', answer: 'No — TPU is too flexible for the AMS feeder mechanism. Feed TPU directly from an external spool holder to the print head. The X1C prints TPU well at 220–235°C and 25–40mm/s.' },
+    ],
+    relatedSlugs: ['best-filament-for-bambu-lab-p1s', 'best-abs-filaments', 'best-petg-filaments', 'best-filament-for-bambu-lab-a1', 'best-filaments-for-functional-parts'],
+    rankAnnotations: {
+      1: { bestFor: 'Best all-round PLA for X1C', tempRange: '200–220°C nozzle / 55–65°C bed', justification: 'Top-scoring PLA with excellent AMS compatibility and Bambu Studio profile support. Perfect for high-speed multi-color printing.' },
+      2: { bestFor: 'Best ABS for enclosed printing', tempRange: '245–260°C nozzle / 100–110°C bed', justification: 'Low-warp ABS optimized for enclosed CoreXY printers. Takes advantage of the X1C\'s chamber heating.' },
+      3: { bestFor: 'Best engineering filament', tempRange: '260–280°C nozzle / 90–100°C bed', justification: 'High-performance Nylon or PETG-CF that leverages the X1C\'s hardened nozzle and enclosure for functional parts.' },
+    },
+  },
+
+  'best-filament-for-creality-k1-max': {
+    slug: 'best-filament-for-creality-k1-max',
+    title: 'Best Filaments for Creality K1 Max in 2026',
+    seoTitle: 'Best Filaments for Creality K1 Max 2026 | FilaScope',
+    seoDescription: 'Top filaments for Creality K1 Max. PLA, PETG, ABS, and high-speed recommendations for the large-format enclosed CoreXY printer with AI camera monitoring.',
+    description: 'Data-ranked filament picks for Creality K1 Max — PLA, PETG, and ABS recommendations for large-format high-speed enclosed printing with Klipper firmware.',
+    category: 'printer-specific',
+    readTime: 11,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['best filament for k1 max', 'creality k1 max filament', 'k1 max PLA', 'k1 max PETG', 'k1 max ABS'],
+    filters: { materials: ['PLA', 'PETG', 'ABS', 'TPU'], sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Creality K1 Max — Printer Specs for Filament Selection',
+        content: `<p>The <strong>Creality K1 Max</strong> is Creality's large-format enclosed CoreXY printer with impressive speed. Key specs:</p>
+<ul>
+<li><strong>Build volume:</strong> 300×300×300mm — one of the largest enclosed printers in its price range.</li>
+<li><strong>Max nozzle temperature:</strong> 300°C — supports PLA, PETG, ABS, ASA, and TPU.</li>
+<li><strong>Max bed temperature:</strong> 100°C — handles ABS at the lower end but not ideal for PC or high-temp Nylon.</li>
+<li><strong>Fully enclosed:</strong> Active filtration. Good for ABS/ASA without fume concerns.</li>
+<li><strong>Direct drive:</strong> Handles TPU at reduced speeds.</li>
+<li><strong>Max speed:</strong> 600mm/s — benefits significantly from high-flow PLA formulations.</li>
+<li><strong>AI camera:</strong> Spaghetti detection and time-lapse recording.</li>
+</ul>
+<p>The K1 Max's large volume means warping management is critical — especially for ABS on 300mm prints. High-quality, low-warp filaments are essential.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Large-Format Printing Tips for K1 Max',
+        content: `<p>The 300mm build volume introduces challenges smaller printers don't face:</p>
+<ul>
+<li><strong>Warping on large PLA prints:</strong> Even PLA can warp on 250mm+ prints. Use a brim and 60°C bed. Higher-quality PLA with consistent shrinkage helps.</li>
+<li><strong>ABS at scale:</strong> Fully seal the enclosure, use 100°C bed, and print large ABS parts with a 10mm brim. Consider ABS+ or low-warp ABS formulations.</li>
+<li><strong>PETG bed adhesion:</strong> Use textured PEI for easy release. PETG can bond permanently to smooth PEI on large surfaces.</li>
+<li><strong>Filament consumption:</strong> Large prints use significantly more filament. Consider 2kg or 3kg spools for economy.</li>
+</ul>`,
+        position: 'after',
+      },
+      {
+        heading: 'Recommended Settings by Material on K1 Max',
+        content: `<ul>
+<li><strong>PLA:</strong> 215–225°C nozzle, 55–60°C bed, 100% fan. 200–300mm/s with high-flow PLA; 100–150mm/s with standard PLA.</li>
+<li><strong>PETG:</strong> 240–250°C nozzle, 80°C bed, 30% fan. 100–150mm/s for best surface quality.</li>
+<li><strong>ABS:</strong> 250–260°C nozzle, 100°C bed, 0% fan. Enclosure sealed. 100–200mm/s. Use brim on large parts.</li>
+<li><strong>TPU 95A:</strong> 220–230°C nozzle, 50°C bed, 50% fan. 25–40mm/s. Direct feed only.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What is the best PLA for the Creality K1 Max?', answer: 'High-flow PLA from Polymaker (PolyLite High Speed), Bambu Lab Basic PLA, and Creality Hyper PLA perform best at the K1 Max\'s high speeds. For standard-speed printing, any quality PLA (eSUN, Overture, Hatchbox) works well.' },
+      { question: 'Can the K1 Max print ABS without warping?', answer: 'Yes, but large ABS prints (200mm+) require care. Seal the enclosure fully, use 100°C bed, apply a generous brim, and choose low-warp ABS formulations. Smaller ABS parts print with minimal issues.' },
+      { question: 'Does the K1 Max work with third-party filament?', answer: 'Absolutely. The K1 Max uses standard 1.75mm filament with no restrictions. Any quality PLA, PETG, ABS, or TPU will work. Import custom profiles in OrcaSlicer or Creality Print for optimal results.' },
+      { question: 'Is the K1 Max good for printing large PETG parts?', answer: 'Excellent. PETG prints well at scale on the K1 Max. Use textured PEI bed for easy release, 80°C bed, and 30% cooling. Large PETG parts benefit from the enclosure reducing drafts.' },
+      { question: 'How much filament do large K1 Max prints use?', answer: 'A 300×300×300mm print at 15% infill can use 500g+ of filament. Budget for 2–3kg spools for large projects. Some brands offer 2kg and 3kg spools that provide better per-kg value.' },
+    ],
+    relatedSlugs: ['best-filament-for-creality-k1', 'best-pla-filaments', 'best-abs-filaments', 'best-filament-for-bambu-lab-p1s', 'best-high-speed-pla-filaments'],
+    rankAnnotations: {
+      1: { bestFor: 'Best high-speed PLA for K1 Max', tempRange: '210–225°C nozzle / 55–60°C bed', justification: 'High-flow formulation that delivers clean results at 200–300mm/s. Ideal for the K1 Max\'s speed capabilities.' },
+      2: { bestFor: 'Best for large functional parts', tempRange: '235–250°C nozzle / 75–80°C bed', justification: 'Reliable PETG for structural parts that need impact and heat resistance on the large build volume.' },
+      3: { bestFor: 'Best ABS for enclosed printing', tempRange: '245–260°C nozzle / 100°C bed', justification: 'Low-warp ABS formulation that handles the K1 Max\'s large bed without lifting.' },
+    },
+  },
 };
 
 export const BUYING_GUIDE_SLUGS = Object.keys(BUYING_GUIDE_CONFIGS);
