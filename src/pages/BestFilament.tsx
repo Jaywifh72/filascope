@@ -142,7 +142,7 @@ export default function BestFilament() {
                 Once you've mastered PLA, move to PETG for functional parts or ASA for outdoor applications.
                 Advanced users printing engineering-grade parts should consider Nylon, carbon-fiber composites, or Polycarbonate.
                 The ranked list below covers the top-scoring filaments across all materials — with{' '}
-                <Link to="/pla-vs-petg" className="text-primary hover:underline">PLA vs PETG</Link> being the most common first upgrade decision.
+                <Link to="/guides/pla-vs-petg" className="text-primary hover:underline">PLA vs PETG</Link> being the most common first upgrade decision.
               </p>
               <p>
                 Our <strong className="text-foreground">FilaScore algorithm</strong> weights each filament on quality consistency,
