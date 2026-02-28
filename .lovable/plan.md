@@ -1,59 +1,48 @@
 
 
-## Create "How to Choose 3D Printer Filament" Guide
+## Add "Strongest 3D Printer Filament" Guide
 
 ### Overview
-Add a new guide page at `/guides/how-to-choose-filament` using the existing `BuyingGuideTemplate` system with the `editorial` layout. This requires extending the config interface slightly to support a simple Quick Answer block (without product picks) and a HowTo schema.
+Add a new guide entry at `/guides/strongest-3d-printer-filament` to the existing `BUYING_GUIDE_CONFIGS` in `guideConfigs.ts`. No new files or template changes needed -- this follows the exact same pattern as the recently added `how-to-choose-filament` guide.
 
 ### Changes
 
-#### 1. Extend `GuideConfig` interface (`src/components/guides/guideConfigs.ts`)
-- Add optional `quickAnswer?: string` field -- a plain-text quick answer paragraph rendered without product picks
-- Add optional `howTo?: { name: string; description: string; steps: { name: string; text: string }[] }` field for HowTo JSON-LD schema data
+#### Single file: `src/components/guides/guideConfigs.ts`
 
-#### 2. Update `BuyingGuideTemplate.tsx`
-- Import `HowToSchema` from `@/components/seo`
-- When `config.quickAnswer` is set (and `config.aiSnippet` is not), render a Quick Answer block using the same visual styling as `AiSnippetZone` (border-l-primary card, Zap icon, "QUICK ANSWER" label) but with only the summary paragraph -- no product picks
-- When `config.howTo` is set, render `<HowToSchema>` alongside the existing Article/FAQ schemas
-- Add `quickAnswer` to the ToC if present (it won't need a ToC entry since it sits before the ToC)
+Add a new `'strongest-3d-printer-filament'` key to `BUYING_GUIDE_CONFIGS` with:
 
-#### 3. Add guide config entry (`src/components/guides/guideConfigs.ts`)
-Add a `'how-to-choose-filament'` key to `BUYING_GUIDE_CONFIGS` with:
-- **slug**: `how-to-choose-filament`
-- **title**: `How to Choose 3D Printer Filament — A Complete Decision Guide`
-- **seoTitle**: `How to Choose 3D Printer Filament — Complete Guide | FilaScope`
+- **slug**: `strongest-3d-printer-filament`
+- **title**: `What Is the Strongest 3D Printer Filament?`
+- **seoTitle**: `What Is the Strongest 3D Printer Filament? — Ranked by Strength | FilaScope`
 - **seoDescription**: The provided meta description
-- **category**: `buying-guide`
-- **readTime**: 15
+- **category**: `buying-guide` (renders as "Material Guide" badge via `getCategoryLabel` override or use existing category -- will use `buying-guide` and the badge text comes from config)
+- **readTime**: 12
 - **publishedAt / updatedAt**: `2026-02-28`
 - **layout**: `editorial`
-- **filters**: `{ sortBy: 'score', limit: 5 }` (general top filaments for the "picks" section)
-- **quickAnswer**: The provided 40-60 word answer block text
-- **howTo**: 5 steps (Identify requirements, Choose material, Check compatibility, Compare prices, Read reviews)
+- **filters**: `{ sortBy: 'score', limit: 5 }`
+- **quickAnswer**: The provided quick answer text about Nylon, PA-CF, PC, PETG, and PLA strength values
 
-**Editorial sections** (all `position: 'before'` except the flowchart and last sections which are `position: 'after'`):
-1. "What Filament Material Should I Use?" -- includes an HTML comparison table (Material, Best For, Nozzle Temp, Bed Temp, Enclosure Required, Difficulty, Summary) with rows for PLA, PETG, ABS, TPU, ASA, Nylon
-2. "How Do Temperature Requirements Affect My Choice?" -- guidance on matching printer capabilities to filament temp requirements
-3. "Does My Printer Support This Filament?" -- mentions FilaScope's printer compatibility filtering with link to `/printers`
-4. "How Much Does 3D Printer Filament Cost?" -- price ranges per material, mentions real-time pricing from 15+ retailers
-5. "What About Specialty Filaments?" -- brief coverage of composites, silk, glow-in-dark, etc.
-6. "Filament Selection Decision Flowchart" -- text-based decision tree (since we can't embed images)
+**Editorial sections** (4 content sections, all `position: 'before'`):
+1. **"How Do We Measure Filament Strength?"** -- Explains tensile strength (MPa), impact resistance (Izod/Charpy), heat deflection temperature, and layer adhesion strength
+2. **"Filament Strength Rankings -- Tensile Strength Comparison"** -- HTML table with columns: Material, Tensile Strength (MPa), Impact Resistance, Heat Deflection (C), Ease of Printing, Best For. Rows for PA-CF, Nylon, Polycarbonate, ABS, PETG, PLA, TPU
+3. **"Best Filaments for Strength by Use Case"** -- Practical recommendations for mechanical parts, outdoor, snap-fits, lightweight structural, etc.
+4. **"Strength vs Printability -- Finding the Balance"** -- Trade-off guidance; strongest materials are hardest to print
 
-**FAQs**: All 8 questions/answers as specified
+**FAQs**: All 6 questions/answers as specified
 
-**Related Questions (People Also Ask)**: Will include a few additional PAA entries for broader coverage
+**Related Questions (People Also Ask)**: 3-4 additional strength-related questions for broader coverage
 
-**relatedSlugs**: Links to `best-pla-filaments`, `pla-vs-petg`, `best-filaments-for-beginners`, `filament-temperature-guide`
+**relatedSlugs**: Links to `how-to-choose-filament`, `best-filaments-for-functional-parts`, `filament-temperature-guide`, `petg-vs-abs`
 
-#### 4. JSON-LD Schemas (automatic + new)
-- **ArticleSchema**: Handled automatically by `BuyingGuideTemplate`
-- **FAQPage**: Handled automatically (8 FAQs + PAA merged)
-- **HowToSchema**: New -- rendered from `config.howTo` data
-- **BreadcrumbList**: Handled automatically (Home > Guides > How to Choose 3D Printer Filament)
+#### Automatic behavior (no changes needed)
+- **Route**: Handled by existing `/guides/:slug` catch-all
+- **Sitemap**: Dynamic from `BUYING_GUIDE_CONFIGS` keys
+- **JSON-LD**: ArticleSchema, FAQSchema, BreadcrumbList all rendered automatically by `BuyingGuideTemplate`
+- **Badge**: The `getCategoryLabel` function currently maps `buying-guide` to "Buying Guide". To show "Material Guide" as the badge, we need to either add a new category or override the label. The simplest approach: add `'material-guide'` case to `getCategoryBadgeStyle` and `getCategoryLabel` in `BuyingGuideTemplate.tsx` (2-line addition each)
 
 ### Technical Details
-- No new files created -- everything is added to existing `guideConfigs.ts` and `BuyingGuideTemplate.tsx`
-- Route already handled by the catch-all `/guides/:slug` route in `App.tsx`
-- Sitemap generation is dynamic from `BUYING_GUIDE_CONFIGS` keys, so no manual sitemap update needed
-- No other pages or components are modified
+- **Files modified**: `guideConfigs.ts` (new config entry) and `BuyingGuideTemplate.tsx` (add `material-guide` category label/style)
+- No new components or hooks
+- No database changes
+- No other pages modified
 
