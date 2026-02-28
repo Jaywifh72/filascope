@@ -3,7 +3,7 @@ import { Box, Gauge, Thermometer, Wifi, WifiOff, Share2, Check } from "lucide-re
 import { toast } from "sonner";
 import { SocialProofBadges } from "./SocialProofBadges";
 import { DataQualityIndicator } from "./DataQualityIndicator";
-import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
+
 import { ProductGallery } from "@/components/ui/product-gallery";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import {
@@ -137,12 +137,69 @@ export function PrinterHeroSection({
             </TooltipProvider>
           </div>
 
-          {/* Description */}
-          <p className="text-muted-foreground leading-relaxed">
-            {generatePrinterDescription({
-              ...printer,
-              brand: brand || undefined
-            })}
+          {/* AEO Answer Block */}
+          <p className="text-muted-foreground leading-relaxed text-sm">
+            {(() => {
+              const name = `${brand ? brand + ' ' : ''}${printer.model_name}`;
+              const type = (printer.printer_type || printer.printer_technology || 'FDM').toUpperCase();
+              const parts: string[] = [];
+
+              // Opening: name + enclosure + type
+              const enclosedStr = printer.has_enclosure ? 'enclosed ' : '';
+              parts.push(`The ${name} is a${printer.max_print_speed_mms && printer.max_print_speed_mms >= 300 ? ' high-speed,' : 'n'} ${enclosedStr}${type} 3D printer`);
+
+              // Build volume
+              if (printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm) {
+                parts.push(`with a build volume of ${printer.build_volume_x_mm} × ${printer.build_volume_y_mm} × ${printer.build_volume_z_mm} mm`);
+              }
+
+              // Speed
+              if (printer.max_print_speed_mms) {
+                parts.push(`maximum print speed of ${printer.max_print_speed_mms} mm/s`);
+              }
+
+              // Nozzle temp
+              if (printer.max_nozzle_temp_c) {
+                parts.push(`and nozzle temperature up to ${printer.max_nozzle_temp_c}°C`);
+              }
+
+              let sentence1 = parts[0];
+              if (parts.length > 1) sentence1 += ' ' + parts.slice(1).join(', ');
+              sentence1 += '.';
+
+              // Features sentence
+              const features: string[] = [];
+              const connectivity: string[] = [];
+              if (printer.has_wifi) connectivity.push('Wi-Fi');
+              if (printer.has_ethernet) connectivity.push('Ethernet');
+              if (printer.has_usb) connectivity.push('USB');
+              if (connectivity.length > 0) features.push(`${connectivity.join(' and ')} connectivity`);
+              if (printer.auto_bed_leveling) features.push('auto bed leveling');
+              if (printer.multi_material_supported) {
+                const spools = printer.multi_material_max_spools;
+                features.push(spools ? `${spools}-color multi-material printing` : 'multi-material printing');
+              }
+
+              let sentence2 = '';
+              if (features.length > 0) {
+                sentence2 = ` It features ${features.join(', ')}.`;
+              }
+
+              // Price
+              let sentence3 = '';
+              const price = printer.current_price_usd_store ?? printer.msrp_usd;
+              if (price) {
+                sentence3 = ` Priced at $${Number(price).toLocaleString('en-US')}.`;
+              }
+
+              // Discontinued
+              let sentence4 = '';
+              if (printer.discontinued) {
+                sentence4 = ` Note: This printer has been discontinued${brand ? ` by ${brand}` : ''}.`;
+              }
+
+              return sentence1 + sentence2 + sentence3 + sentence4;
+            })()}
           </p>
 
           {/* Feature Pills */}
