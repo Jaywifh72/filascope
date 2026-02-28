@@ -177,6 +177,10 @@ const RequestFeature = lazy(() => import("./pages/RequestFeature"));
 const BestFilamentsForHueForge = lazy(() => import("./pages/BestFilamentsForHueForge"));
 const HueForgeHub = lazy(() => import("./pages/learn/HueForgeHub"));
 const PLAVsPETG = lazy(() => import("./pages/PLAVsPETG"));
+const PLAvsABS = lazy(() => import("./pages/PLAvsABS"));
+const PETGvsABS = lazy(() => import("./pages/PETGvsABS"));
+const TPUvsPETG = lazy(() => import("./pages/TPUvsPETG"));
+const NylonvsPETG = lazy(() => import("./pages/NylonvsPETG"));
 const BestWhiteFilaments = lazy(() => import("./pages/BestWhiteFilaments"));
 const FilamentDatabase = lazy(() => import("./pages/FilamentDatabase"));
 const MaterialHub = lazy(() => import("./pages/MaterialHub"));
@@ -354,6 +358,10 @@ const App = () => (
                   <Route path="/guides/best-white-filaments-for-hueforge" element={<BestWhiteFilamentsForHueForge />} />
                   <Route path="/guides/how-to-measure-filament-td" element={<HowToMeasureFilamentTD />} />
                   <Route path="/guides/pla-vs-petg" element={<PLAVsPETG />} />
+                  <Route path="/guides/pla-vs-abs" element={<PLAvsABS />} />
+                  <Route path="/guides/petg-vs-abs" element={<PETGvsABS />} />
+                  <Route path="/guides/tpu-vs-petg" element={<TPUvsPETG />} />
+                  <Route path="/guides/nylon-vs-petg" element={<NylonvsPETG />} />
                   <Route path="/guides/best-filaments-for-beginners" element={<BestFilamentsForBeginners />} />
                   <Route path="/guides/best-filaments-for-hueforge" element={<BestFilamentsForHueForge />} />
                   <Route path="/guides/:slug" element={<BuyingGuide />} />
