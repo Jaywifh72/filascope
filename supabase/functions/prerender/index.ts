@@ -374,6 +374,9 @@ const GUIDE_DATES: Record<string,{date:string;tl?:boolean;learn?:boolean}> = {
   "what-is-hueforge-td":{date:"2026-02-20"},"best-white-filaments-for-hueforge":{date:"2026-02-20"},
   "how-to-measure-filament-td":{date:"2026-02-20"},"best-filaments-for-outdoor-use":{date:"2026-02-20"},
   "best-filaments-for-lithophanes":{date:"2026-02-20"},
+  "best-filaments-for-miniatures":{date:"2026-02-28"},"best-filaments-for-cosplay":{date:"2026-02-28"},
+  "best-food-safe-filaments":{date:"2026-02-28"},"best-filaments-for-functional-parts":{date:"2026-02-28"},
+  "best-tpu-filaments":{date:"2026-02-28"},
 };
 
 async function smFilaments(sb:SupabaseClient){const e:string[]=[];let o=0;const B=1000;let m=true;while(m){const{data,error}=await sb.from("filaments").select("product_handle,id,updated_at,last_scraped_at").not("product_handle","is",null).order("id").range(o,o+B-1);if(error||!data||!data.length){m=false;break;}for(const f of data){const bd=[f.last_scraped_at,f.updated_at].filter(Boolean).sort().pop();e.push(ue(`${BASE_URL}/filament/${f.product_handle||f.id}`,w3c(bd),"daily",0.8));}m=data.length>=B;o+=B;}return wrap(e);}
