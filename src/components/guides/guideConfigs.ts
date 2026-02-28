@@ -1895,22 +1895,22 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
 
   'best-filaments-for-cosplay': {
     slug: 'best-filaments-for-cosplay',
-    title: 'Best Filaments for Cosplay in 2026',
-    seoTitle: 'Best Filaments for Cosplay Props & Armor 2026 | FilaScope',
-    seoDescription: 'Best filaments for cosplay props ranked by strength, flexibility, paintability, and post-processing. PETG, PLA+, ABS & specialty materials compared.',
+    title: 'Best 3D Printer Filament for Cosplay in 2026',
+    seoTitle: 'Best Filament for Cosplay 2026 — Armor, Props & Wearables | FilaScope',
+    seoDescription: 'The best filaments for cosplay props, armor, and wearables. Compare PLA, PETG, ABS & TPU for strength, flexibility, paintability & heat resistance.',
     description: 'Top filaments for cosplay props and armor ranked by strength, wearability, and post-processing ease using FilaScore data.',
     category: 'buying-guide',
     readTime: 17,
     publishedAt: '2026-02-28',
     updatedAt: '2026-02-28',
-    keywords: ['best filament for cosplay', '3D printing cosplay filament', 'strongest filament for cosplay', 'cosplay armor filament', 'cosplay props 3D print', 'PETG for cosplay'],
+    keywords: ['best filament for cosplay', '3D printing cosplay filament', 'strongest filament for cosplay', 'cosplay armor filament', 'cosplay props 3D print', 'PETG for cosplay', 'cosplay 3D printing tips'],
     filters: { sortBy: 'score', limit: 10 },
     layout: 'ranked-list',
     editorialSections: [
       {
-        heading: 'Why Material Choice Matters for Cosplay',
-        content: `<p>Cosplay props and armor face unique demands: they need to survive convention floors, endure body heat, accept paint and finishing, and ideally flex rather than shatter on impact. The wrong filament means cracked armor pieces, warped helmets left in a hot car, or hours of extra sanding.</p>
-<p>Our ranking evaluates filaments specifically for cosplay using the <strong>FilaScore algorithm</strong> combined with factors critical to wearable props: impact resistance, heat deflection temperature, post-processing compatibility, and weight.</p>`,
+        heading: 'What Makes a Good Cosplay Filament?',
+        content: `<p>Cosplay props and armor face demands no other 3D printing application shares: they need to survive crowded convention floors, endure hours of body heat, accept paint and finishing compounds, and ideally flex rather than shatter on impact. A helmet left in a car at a summer convention can reach 60–70°C internally — enough to warp PLA beyond recognition.</p>
+<p>The ideal cosplay filament balances five factors: <strong>impact resistance</strong> (bumps and drops), <strong>sandability</strong> (hiding layer lines), <strong>paintability</strong> (primer adhesion), <strong>heat tolerance</strong> (car trunks and outdoor events), and <strong>weight</strong> (comfort during all-day wear). No single material is perfect for every part — the best cosplay builds use 2–3 materials strategically. Browse our <a href="/filaments">filament catalog</a> or use the <a href="/compare">comparison tool</a> to evaluate specific products.</p>`,
         position: 'before',
       },
       {
@@ -1927,29 +1927,21 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         position: 'before',
       },
       {
-        heading: 'Cosplay Filament Buying Tips',
-        content: `<p>Building cosplay props from 3D prints requires thinking about the entire workflow, not just the printing step:</p>
-<h3>Plan for Post-Processing</h3>
-<p>Most cosplay props need sanding, filling, priming, and painting. <a href="/filaments/abs">ABS</a> can be acetone-smoothed for a near-injection-molded finish. <a href="/filaments/petg">PETG</a> sands well but can't be chemically smoothed. PLA+ is the easiest to sand but offers less heat resistance. Choose your filament based on your finishing workflow.</p>
-<h3>Heat Resistance Is Non-Negotiable</h3>
-<p>PLA deforms at ~60°C — well within the temperature of a car parked in summer sun. If your prop will ever be left in a vehicle or worn outdoors in heat, use PETG (80°C HDT), ABS (100°C), or ASA (100°C+ with UV resistance).</p>
-<h3>Buy in Bulk</h3>
-<p>A full suit of armor can use 5–15kg of filament. Buy 3kg or 5kg bulk spools once you've test-printed with your chosen material. The per-kg savings are significant at cosplay scale.</p>
-<h3>Consider Multi-Material Builds</h3>
-<p>Use rigid PETG or ABS for structural armor plates, and <a href="/filaments/tpu">TPU</a> for flexible joints, straps, and undersuit details. This hybrid approach gives you the best of both worlds.</p>`,
+        heading: 'Best Filaments by Cosplay Part Type',
+        content: `<h3>Armor &amp; Structural Pieces</h3>
+<p><a href="/filaments/petg">PETG</a> is the top choice for cosplay armor — impact-resistant, heat-tolerant to ~80°C, and printable without an enclosure. For even higher heat resistance and the smoothest post-processed finish, <a href="/filaments/abs">ABS</a> with acetone vapor smoothing produces near-injection-molded surfaces. Both are significantly tougher than PLA under impact. See our <a href="/guides/asa-vs-abs-outdoor-printing">ASA vs ABS comparison</a> for outdoor event considerations.</p>
+<h3>Flexible Parts &amp; Joints</h3>
+<p><a href="/filaments/tpu">TPU</a> is essential for cosplay parts that need to move with your body — gauntlet fingers, boot covers, flexible joints, belt details, and undersuit accents. Shore 95A hardness works for most applications. Print at 20–40mm/s with a direct-drive extruder for best results.</p>
+<h3>Detail Pieces &amp; Accessories</h3>
+<p><a href="/filaments/pla">PLA and Silk PLA</a> excel at fine-detail accessories — buckles, medallions, weapon hilts, and decorative trim. PLA holds sharper detail than PETG and is the easiest material to sand and prime. Silk PLA produces a metallic sheen perfect for gold and silver accents without painting. See our <a href="/guides/best-pla-filaments">best PLA rankings</a> for top picks.</p>
+<h3>Parts That Need Post-Processing</h3>
+<p><a href="/filaments/abs">ABS</a> is uniquely suited for parts requiring a flawless surface. Acetone vapor smoothing completely eliminates layer lines, creating a factory-smooth finish ideal for helmets, face shields, and display weapons. No other common filament offers chemical smoothing — PETG and PLA require manual sanding and filler primer instead.</p>`,
         position: 'after',
       },
       {
-        heading: 'When to Choose Each Material for Cosplay',
-        content: `<p>Different cosplay applications call for different materials:</p>
-<h3><a href="/filaments/petg">PETG</a> — Best All-Rounder</h3>
-<p>PETG is the most popular cosplay filament for good reason. It's impact-resistant, heat-tolerant to ~80°C, and prints without an enclosure. Use it for armor plates, helmets, and structural props.</p>
-<h3><a href="/filaments/abs">ABS</a> — Best for Smooth Finishing</h3>
-<p>ABS can be acetone vapor-smoothed to eliminate layer lines entirely. Ideal for helmets and props where a factory-smooth finish is essential. Requires an enclosure and good ventilation.</p>
-<h3><a href="/filaments/pla">PLA+</a> — Easiest to Print &amp; Sand</h3>
-<p>PLA+ is fine for indoor-only props and decorative pieces. Lightweight, easy to sand, and the cheapest option. Avoid for anything that will see heat or heavy handling.</p>
-<h3><a href="/filaments/tpu">TPU</a> — Flexible Parts</h3>
-<p>Use TPU for gauntlet fingers, boot covers, flexible joints, and any part that needs to bend with body movement.</p>`,
+        heading: 'Cosplay Print Settings Tips',
+        content: `<p>Optimize your slicer settings for cosplay-grade results:</p>
+<p><strong>Layer height:</strong> Use 0.2mm for armor (balances speed and surface quality) and 0.12mm for detail pieces. <strong>Infill:</strong> 15–20% gyroid or grid infill keeps armor lightweight yet impact-resistant. Increase to 40%+ for thin, load-bearing parts like sword hilts. <strong>Wall count:</strong> 4+ perimeters for armor — this determines impact strength more than infill. <strong>Orientation:</strong> Print armor panels flat to maximize layer-line strength against impacts. Orient weapons vertically for longest structural integrity. Split large pieces along natural seam lines (belt lines, panel edges) for easier assembly and stronger joints. Use the <a href="/compare">comparison tool</a> to evaluate filament options before committing to a large build.</p>`,
         position: 'after',
       },
     ],
@@ -1960,12 +1952,12 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is PETG or ABS better for cosplay?', answer: 'PETG is easier to print (no enclosure needed, less warping) and offers better impact resistance. ABS produces smoother finishes via acetone vapor smoothing and has higher heat resistance (~100°C vs ~80°C). Choose PETG for durability and ease; choose ABS if post-processing finish is your priority.' },
       { question: 'How do you smooth 3D printed cosplay props?', answer: 'For ABS: acetone vapor smoothing in a sealed container produces a near-injection-molded surface. For PETG and PLA: sand progressively (120→220→400 grit), apply spray filler primer (2–3 coats), wet-sand with 600 grit, then paint. XTC-3D epoxy coating is another option that fills layer lines on any material.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-tpu-filaments', 'best-filaments-for-functional-parts'],
+    relatedSlugs: ['best-petg-filaments', 'best-abs-filaments', 'best-tpu-filaments', 'best-pla-filaments', 'asa-vs-abs-outdoor-printing'],
     aiSnippet: {
-      summaryText: 'PETG is the best overall filament for cosplay props in 2026 — it combines impact resistance, heat tolerance, and easy printability. ABS is better for smooth finishing via acetone smoothing. Our rankings use FilaScore data to compare strength, heat resistance, and finishing characteristics.',
-      topPick: { name: 'PolyLite PETG', brand: 'Polymaker', reason: 'best balance of impact resistance and surface quality for armor' },
-      runnerUp: { name: 'ABS Filament', brand: 'Bambu Lab', reason: 'excellent for acetone-smoothed helmets and display pieces' },
-      budgetPick: { name: 'PLA+', brand: 'eSUN', reason: 'affordable and easy to sand for indoor-only props' },
+      summaryText: 'The best filaments for cosplay in 2026 are PETG for impact-resistant armor, TPU for flexible joints and wearable parts, PLA for fine detail pieces and accessories, and ABS for acetone-smoothed helmets. Most cosplay builds use 2–3 materials strategically. Rankings are based on FilaScore data across strength, heat tolerance, and paintability.',
+      topPick: { name: 'PolyLite PETG', brand: 'Polymaker', reason: 'best balance of impact resistance, heat tolerance, and paintability for armor' },
+      runnerUp: { name: 'ABS Filament', brand: 'Bambu Lab', reason: 'acetone vapor smoothing produces flawless helmet and prop surfaces' },
+      budgetPick: { name: 'PLA+', brand: 'eSUN', reason: 'lightweight, easy to sand, and affordable for large indoor-only builds' },
     },
     rankAnnotations: {
       1: { bestFor: 'All-around cosplay armor and props', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Best balance of impact resistance, heat tolerance, and printability. No enclosure needed.' },
