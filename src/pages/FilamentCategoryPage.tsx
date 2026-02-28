@@ -923,7 +923,10 @@ export default function FilamentCategoryPage() {
         {slug === "pla" && (
           <section className="mt-12 space-y-8">
             <article>
-              <h2 className="text-2xl font-bold text-foreground mb-4">PLA Filament — The Most Popular 3D Printing Material</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-4">What Is PLA Filament and Why Is It the Most Popular?</h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                PLA (Polylactic Acid) is the most popular 3D printing filament material, known for its ease of use, low warping, and wide color selection. PLA prints at 190–220°C nozzle temperature with 25–60°C bed temperature and does not require an enclosure. It is biodegradable, ideal for beginners and decorative prints. FilaScope indexes 4,296+ PLA filament variants from 48+ brands with real-time pricing.
+              </p>
               <p className="text-muted-foreground leading-relaxed">
                 <strong>PLA filament</strong> is the most widely used FDM 3D printing material worldwide, and for good reason. Made from renewable resources like corn starch, PLA is biodegradable, low-odor, and incredibly easy to print. It extrudes at just 190–220°C, doesn't require a heated bed or enclosure, and produces sharp, detailed prints on virtually any FDM printer. Whether you're a beginner looking for the <strong>best PLA filament</strong> or an experienced maker comparing options, FilaScope's <strong>PLA filament comparison</strong> tools let you evaluate specs, colors, and <strong>PLA filament prices</strong> across 48+ brands. PLA is ideal for prototypes, cosplay props, decorative models, miniatures, and HueForge lithophanes thanks to its excellent layer adhesion and vibrant color range.
               </p>
@@ -957,7 +960,10 @@ export default function FilamentCategoryPage() {
         {slug === "petg" && (
           <section className="mt-12 space-y-8">
             <article>
-              <h2 className="text-2xl font-bold text-foreground mb-4">PETG Filament — The Versatile All-Rounder</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-4">What Is PETG Filament and When Should You Use It?</h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                PETG (Polyethylene Terephthalate Glycol) is a durable, chemical-resistant 3D printing filament that balances ease of printing with functional strength. PETG prints at 220–250°C nozzle temperature with 70–90°C bed temperature and does not require an enclosure. It resists UV and moisture better than PLA, making it ideal for functional parts. FilaScope indexes 1,200+ PETG variants with cross-regional pricing.
+              </p>
               <p className="text-muted-foreground leading-relaxed">
                 <strong>PETG filament</strong> bridges the gap between PLA's ease of use and ABS's durability, making it the go-to material for functional parts and everyday prints. It offers excellent layer adhesion, chemical resistance, and impact strength while remaining relatively easy to print. If you're searching for the <strong>best PETG filament</strong>, FilaScope's <strong>PETG filament comparison</strong> lets you evaluate tensile strength, flexibility, and <strong>PETG filament prices</strong> across dozens of brands. PETG prints at 220–250°C with a heated bed at 70–90°C, doesn't require an enclosure, and resists UV degradation better than PLA — making it suitable for parts that see moderate outdoor exposure or mechanical stress.
               </p>
@@ -991,7 +997,10 @@ export default function FilamentCategoryPage() {
         {slug === "abs" && (
           <section className="mt-12 space-y-8">
             <article>
-              <h2 className="text-2xl font-bold text-foreground mb-4">ABS Filament — The Engineering-Grade Standard</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-4">What Is ABS Filament and What Is It Best For?</h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                ABS (Acrylonitrile Butadiene Styrene) is a heat-resistant, tough 3D printing filament used for engineering and functional parts. ABS prints at 230–260°C nozzle temperature with 90–110°C bed temperature and requires an enclosed build chamber to prevent warping. It can be smoothed with acetone vapor for a glossy finish. FilaScope indexes 800+ ABS filament variants with real-time pricing across regions.
+              </p>
               <p className="text-muted-foreground leading-relaxed">
                 <strong>ABS filament</strong> has been an industrial staple since the early days of 3D printing, prized for its heat resistance, toughness, and ability to be post-processed with acetone vapor smoothing. It prints at 230–260°C and requires a heated bed (90–110°C) plus an enclosed build chamber to prevent warping and layer splitting. Finding the <strong>best ABS filament</strong> means balancing print reliability with mechanical performance — FilaScope's <strong>ABS filament comparison</strong> helps you evaluate tensile strength, glass transition temperature, and <strong>ABS filament prices</strong> across all major brands. ABS is ideal for functional enclosures, automotive parts, jigs, and any application where heat resistance above 100°C is needed.
               </p>
@@ -1017,6 +1026,117 @@ export default function FilamentCategoryPage() {
               <h3 className="text-xl font-semibold text-foreground mb-3">ABS Filament Buying Guide</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Our <a href="/guides/best-abs-filaments" className="text-primary hover:underline font-medium">best ABS filaments guide</a> ranks top picks by warp resistance, layer adhesion, and value. Wondering whether ABS is the right choice? Read <a href="/guides/asa-vs-abs-outdoor-printing" className="text-primary hover:underline font-medium">ASA vs ABS for outdoor printing</a> or <a href="/guides/petg-vs-abs" className="text-primary hover:underline font-medium">PETG vs ABS</a> for detailed comparisons. Use the <a href="/compare" className="text-primary hover:underline font-medium">side-by-side comparison tool</a> for specific products, or start with the <a href="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</a>.
+              </p>
+            </article>
+          </section>
+        )}
+
+        {slug === "tpu" && (
+          <section className="mt-12 space-y-8">
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">What Is TPU Filament and What Can You Print With It?</h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                TPU (Thermoplastic Polyurethane) is a flexible, rubber-like 3D printing filament prized for its elasticity and impact resistance. TPU prints at 210–230°C nozzle temperature with 30–60°C bed temperature at slower speeds of 20–40 mm/s. No enclosure is required. It is ideal for phone cases, gaskets, wearables, and vibration-dampening parts. FilaScope indexes 400+ TPU filament variants with real-time pricing.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                <strong>TPU filament</strong> is the leading flexible 3D printing material, offering Shore hardness ranging from 85A to 95A depending on the brand and formulation. Its rubber-like properties make it perfect for functional parts that need to bend, stretch, or absorb shock. Printing TPU requires a direct-drive extruder for best results, as Bowden setups can struggle with the material's flexibility. If you're looking for the <strong>best TPU filament</strong>, FilaScope's <strong>TPU filament comparison</strong> helps you evaluate flexibility, print reliability, and <strong>TPU filament prices</strong> across multiple brands.
+              </p>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">TPU Print Settings Quick Reference</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Nozzle Temperature", value: "210–230°C" },
+                  { label: "Bed Temperature", value: "30–60°C" },
+                  { label: "Print Speed", value: "20–40 mm/s" },
+                  { label: "Cooling", value: "50–100% fan" },
+                  { label: "Enclosure", value: "Not required" },
+                ].map(s => (
+                  <div key={s.label} className="rounded-lg border border-border bg-card p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">TPU Filament Buying Guide</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Our <a href="/guides/best-tpu-filaments" className="text-primary hover:underline font-medium">best TPU filaments guide</a> ranks top picks by flexibility, print ease, and value. Use the <a href="/compare" className="text-primary hover:underline font-medium">side-by-side comparison tool</a> to evaluate specific TPU products, or read the <a href="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</a> for a broader overview of every material type.
+              </p>
+            </article>
+          </section>
+        )}
+
+        {slug === "asa" && (
+          <section className="mt-12 space-y-8">
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">What Is ASA Filament and Why Use It for Outdoor Prints?</h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                ASA (Acrylonitrile Styrene Acrylate) is a UV-resistant, weatherproof 3D printing filament designed for outdoor and long-term functional use. ASA prints at 235–260°C nozzle temperature with 90–110°C bed temperature at 40–80 mm/s. An enclosure is recommended to prevent warping. It offers ABS-like strength without yellowing in sunlight. FilaScope indexes 300+ ASA filament variants with cross-regional pricing.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                <strong>ASA filament</strong> is the material of choice for outdoor 3D printed parts. Unlike ABS, ASA resists UV degradation and maintains color stability even after prolonged sun exposure. It shares ABS's mechanical properties — high impact resistance, heat tolerance, and the ability to be acetone-smoothed — but adds superior weatherability. If you're searching for the <strong>best ASA filament</strong>, FilaScope's <strong>ASA filament comparison</strong> helps you compare UV resistance, print reliability, and <strong>ASA filament prices</strong> across top brands.
+              </p>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">ASA Print Settings Quick Reference</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Nozzle Temperature", value: "235–260°C" },
+                  { label: "Bed Temperature", value: "90–110°C" },
+                  { label: "Print Speed", value: "40–80 mm/s" },
+                  { label: "Cooling", value: "0–30% fan (minimal)" },
+                  { label: "Enclosure", value: "Recommended" },
+                ].map(s => (
+                  <div key={s.label} className="rounded-lg border border-border bg-card p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">ASA Filament Buying Guide</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Our <a href="/guides/best-asa-filaments" className="text-primary hover:underline font-medium">best ASA filaments guide</a> ranks top picks by UV resistance, warp control, and value. Wondering how ASA compares to ABS? Read <a href="/guides/asa-vs-abs-outdoor-printing" className="text-primary hover:underline font-medium">ASA vs ABS for outdoor printing</a>. Use the <a href="/compare" className="text-primary hover:underline font-medium">comparison tool</a> to evaluate specific products, or explore the <a href="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</a>.
+              </p>
+            </article>
+          </section>
+        )}
+
+        {slug === "nylon" && (
+          <section className="mt-12 space-y-8">
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">What Is Nylon Filament and What Are Its Advantages?</h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                Nylon (Polyamide) is a strong, wear-resistant 3D printing filament valued for its toughness, flexibility, and self-lubricating surface. Nylon prints at 240–270°C nozzle temperature with 70–100°C bed temperature at 30–60 mm/s. An enclosure is required and the filament must be dried before printing due to its hygroscopic nature. It excels in gears, hinges, and load-bearing parts. FilaScope indexes 250+ Nylon variants with real-time pricing.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                <strong>Nylon filament</strong> is the go-to engineering material for parts that demand abrasion resistance, fatigue strength, and a degree of flexibility that rigid materials can't provide. Its self-lubricating surface makes it ideal for gears, bearings, and sliding mechanisms. Nylon is hygroscopic — it absorbs moisture from the air — so proper drying and dry-box storage are essential for consistent results. If you need the <strong>best Nylon filament</strong>, FilaScope's <strong>Nylon filament comparison</strong> helps you evaluate strength, moisture sensitivity, and <strong>Nylon filament prices</strong> across leading brands.
+              </p>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Nylon Print Settings Quick Reference</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Nozzle Temperature", value: "240–270°C" },
+                  { label: "Bed Temperature", value: "70–100°C" },
+                  { label: "Print Speed", value: "30–60 mm/s" },
+                  { label: "Cooling", value: "0–30% fan (minimal)" },
+                  { label: "Enclosure", value: "Required" },
+                ].map(s => (
+                  <div key={s.label} className="rounded-lg border border-border bg-card p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Nylon Filament Buying Guide</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Our <a href="/guides/best-nylon-filaments" className="text-primary hover:underline font-medium">best Nylon filaments guide</a> ranks top picks by strength, moisture resistance, and value. Use the <a href="/compare" className="text-primary hover:underline font-medium">side-by-side comparison tool</a> to evaluate specific Nylon products, or read the <a href="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</a> for a broader overview of every material type.
               </p>
             </article>
           </section>
