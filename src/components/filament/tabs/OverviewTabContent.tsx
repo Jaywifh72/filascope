@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { RecommendedStartingSettings } from '../RecommendedStartingSettings';
 import { Database } from '@/integrations/supabase/types';
 import { TechnicalDetailsAccordion } from '../TechnicalDetailsAccordion';
@@ -9,6 +10,8 @@ import type { PriceCandidate } from '@/hooks/useFilamentDetailPricing';
 import { useCommunityPhotoCount } from '@/hooks/useCommunityPhotos';
 import { MaterialQuickGuide } from '../MaterialQuickGuide';
 import { useBrowseHistory } from '@/hooks/useBrowseHistory';
+import { materialNameToSlug } from '@/lib/materialSlugUtils';
+import { toBrandSlug } from '@/utils/brandSlug';
 import { 
   Zap, 
   Package, 
@@ -396,6 +399,32 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
       </Card>
 
       <MaterialQuickGuide material={filament.material} sessionViewCount={sessionViewCount} />
+
+      {/* ── Contextual internal links for SEO ── */}
+      <div className="flex flex-wrap gap-x-4 gap-y-2">
+        {filament.material && (
+          <Link
+            to={`/filaments/${materialNameToSlug(filament.material)}`}
+            className="inline-flex items-center text-sm text-primary hover:underline"
+          >
+            Browse all {filament.material} filaments →
+          </Link>
+        )}
+        {filament.vendor && (
+          <Link
+            to={`/brands/${toBrandSlug(filament.vendor)}`}
+            className="inline-flex items-center text-sm text-primary hover:underline"
+          >
+            See all {filament.vendor} filaments →
+          </Link>
+        )}
+        <Link
+          to="/compare"
+          className="inline-flex items-center text-sm text-primary hover:underline"
+        >
+          Compare with similar filaments →
+        </Link>
+      </div>
 
       {/* Divider: narrative → use cases */}
       <div className="border-t border-gray-800/50" />
