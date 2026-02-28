@@ -176,10 +176,10 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     seoDescription: 'Top PETG filaments ranked by strength, layer adhesion & print quality. Compare brands, check printer compatibility, and find the best PETG for your project.',
     description: 'The best PETG filaments ranked by FilaScore — perfect for functional parts that need more strength and heat resistance than PLA.',
     category: 'buying-guide',
-    readTime: 11,
+    readTime: 18,
     publishedAt: '2026-01-20',
-    updatedAt: '2026-02-01',
-    keywords: ['best PETG filament', 'PETG filament 2026', 'top PETG', 'functional parts filament'],
+    updatedAt: '2026-02-28',
+    keywords: ['best PETG filament', 'PETG filament 2026', 'top PETG', 'functional parts filament', 'strongest PETG', 'PETG for outdoor use', 'PETG print settings'],
     filters: { material: 'PETG', sortBy: 'score', limit: 10 },
     layout: 'ranked-list',
     editorialSections: [
@@ -187,6 +187,20 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         heading: 'When to Choose PETG Over PLA',
         content: `<p>PETG combines the ease of PLA with much better mechanical properties. It offers superior heat resistance (~80°C), chemical resistance, and impact strength — making it ideal for functional parts, outdoor enclosures, and food-adjacent applications.</p>
 <p>The trade-off? PETG is slightly more difficult to print: it strings more, requires a heated bed (70–80°C), and benefits from slower speeds. But for parts that need to last, PETG is the sweet spot between PLA and engineering-grade materials.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How We Rank PETG Filaments',
+        content: `<p>Our PETG rankings are <strong>data-driven</strong>, not opinion-based. Every filament is scored using the <a href="/methodology">FilaScore algorithm</a>, which evaluates six weighted factors:</p>
+<ul>
+<li><strong>Mechanical performance:</strong> PETG's primary advantage is strength. We weight layer adhesion quality, impact resistance reports, and dimensional stability under stress higher than in PLA rankings.</li>
+<li><strong>Print reliability:</strong> PETG is more demanding than PLA — brands with wider temperature tolerances, lower stringing tendencies, and better first-layer adhesion score higher.</li>
+<li><strong>Pricing across regions:</strong> We track real-time prices in the US, EU, UK, Canada, Australia, and Japan. Transparent, competitive multi-region pricing earns higher scores.</li>
+<li><strong>Chemical & heat resistance data:</strong> Filaments with published heat deflection temperatures and chemical compatibility charts score higher for transparency.</li>
+<li><strong>Community trust & documentation:</strong> Verified brand status, technical data sheets (TDS), and community safety reports all factor in.</li>
+<li><strong>Color variety & availability:</strong> More color options and consistent regional stock earn higher scores.</li>
+</ul>
+<p>Rankings <strong>update automatically</strong> as new data flows in — the list reflects current market conditions, not a static opinion.</p>`,
         position: 'before',
       },
       {
@@ -199,11 +213,43 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
 </ul>`,
         position: 'after',
       },
+      {
+        heading: 'PETG Filament Buying Tips',
+        content: `<p>PETG is more demanding than PLA, so choosing the right brand matters even more. Here's what separates a great PETG spool from a frustrating one:</p>
+<h3>Stringing Is the #1 PETG Challenge</h3>
+<p>Almost every PETG filament strings to some degree. The difference between brands is how much tuning is required to minimize it. Premium brands like Polymaker and Bambu Lab formulate their PETG with anti-stringing additives that significantly reduce this problem out of the box. Budget PETGs often require extensive retraction tuning — 5–7mm retraction on Bowden setups, 2–4mm on direct drive — and slower travel speeds.</p>
+<h3>Moisture Sensitivity Is Real</h3>
+<p>PETG absorbs moisture faster than PLA. Wet PETG produces bubbling, popping sounds, and rough, cloudy surfaces. Store opened spools in sealed containers with silica desiccant. If you notice degraded print quality, dry your PETG at 65°C for 4–6 hours in a filament dryer or food dehydrator.</p>
+<h3>Bed Surface Choice Matters</h3>
+<p>PETG bonds incredibly well to smooth PEI — sometimes so well it damages the sheet when removing parts. Always use a <strong>textured PEI sheet</strong> or apply a thin layer of glue stick as a release agent. Glass beds with hairspray also work well. Never print PETG directly on bare smooth PEI.</p>
+<h3>High-Flow (HF) Variants</h3>
+<p>Several brands now offer PETG HF (High Flow) formulations designed for high-speed printers. These use modified viscosity to maintain quality at 150mm/s+. If you have a Bambu Lab, Creality K1, or other high-speed printer, look for HF variants — they make a noticeable difference in both speed and surface quality.</p>
+<h3>Color Transparency</h3>
+<p>Unlike PLA, many PETG colors have a slight natural translucency. This is a feature, not a bug — it gives PETG parts a distinctive look. However, if you need fully opaque parts, check product descriptions for "opaque" formulations or choose dark colors. White and light colors are most affected by translucency.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'When to Choose PETG — And When Not To',
+        content: `<p>PETG is the most versatile engineering-accessible filament, but it's not always the best choice. Here's how it compares:</p>
+<h3><a href="/guides/pla-vs-petg">PETG vs PLA</a></h3>
+<p>PLA is easier to print, cheaper, and produces better surface detail. Choose <a href="/filaments/pla">PLA</a> for prototypes, decorative prints, and anything that won't face mechanical stress or heat. Choose PETG when you need parts to survive real-world use — drops, sunlight, or moderate heat.</p>
+<h3>PETG vs ABS</h3>
+<p><a href="/filaments/abs">ABS</a> handles higher temperatures (~100°C vs PETG's ~80°C) and can be acetone-smoothed. But ABS requires an enclosure, emits fumes, and warps easily. PETG is the better choice for most functional parts unless you specifically need ABS's heat ceiling or vapor smoothing capability. See our <a href="/guides/best-abs-filaments">Best ABS Filaments</a> guide.</p>
+<h3>PETG vs ASA</h3>
+<p><a href="/filaments/asa">ASA</a> is the better outdoor material thanks to superior UV resistance. PETG will yellow over months of direct sun exposure, while ASA holds its color. For permanent outdoor installations, choose ASA. For indoor functional parts or short-term outdoor use, PETG is easier to work with.</p>
+<p><strong>Bottom line:</strong> PETG is the best "step up" from PLA for functional parts. It handles most real-world demands without requiring an enclosure or special ventilation.</p>`,
+        position: 'after',
+      },
     ],
     faqs: [
       { question: 'Is PETG stronger than PLA?', answer: 'Yes. PETG has higher impact resistance and better flexibility than PLA. It\'s also more heat-resistant, making it suitable for parts that experience mechanical stress.' },
       { question: 'Can you print PETG without an enclosure?', answer: 'Yes. Unlike ABS, PETG doesn\'t warp significantly and doesn\'t emit harmful fumes, so an enclosure is optional.' },
-      { question: 'Is PETG food safe?', answer: 'PETG itself is FDA-approved for food contact. However, printed parts have micro-gaps. For food-safe applications, use a food-safe sealant.' },
+      { question: 'Is PETG food safe?', answer: 'PETG itself is FDA-approved for food contact. However, printed parts have micro-gaps where bacteria can grow. For food-safe applications, use a food-safe sealant or epoxy coating.' },
+      { question: 'What is the best nozzle temperature for PETG?', answer: 'Most PETG prints best at 230–245°C nozzle temperature. Start at 235°C and adjust ±5°C based on results. Too low causes poor layer adhesion and under-extrusion; too high causes excessive stringing and glossy, overheated surfaces. High-flow PETG variants may need 240–250°C.' },
+      { question: 'Why does my PETG string so much?', answer: 'PETG is inherently more prone to stringing than PLA due to its higher viscosity and temperature. To reduce stringing: increase retraction distance by 1–2mm over your PLA settings, reduce nozzle temperature by 5°C, increase travel speed to 150mm/s+, and enable z-hop. Some brands formulate anti-stringing additives — check our rankings for the lowest-stringing options.' },
+      { question: 'Can PETG be used outdoors?', answer: 'PETG has moderate UV resistance and handles outdoor temperatures well. However, prolonged UV exposure (months of direct sunlight) can cause yellowing in light colors. For permanent outdoor installations, ASA is the better choice. For seasonal or sheltered outdoor use, PETG performs well. A UV-protective clear coat extends outdoor lifespan significantly.' },
+      { question: 'Does PETG need a heated bed?', answer: 'Yes, a heated bed set to 70–80°C is strongly recommended for PETG. Without it, you\'ll experience poor first-layer adhesion and edge lifting. A textured PEI spring-steel sheet at 75°C is the ideal setup for PETG — it provides excellent adhesion during printing and easy release when the bed cools.' },
+      { question: 'Is PETG or ABS better for functional parts?', answer: 'For most functional parts, PETG is the better choice. It\'s easier to print (no enclosure needed), doesn\'t emit harmful fumes, and has comparable impact strength. ABS is only better when you need heat resistance above 80°C, acetone vapor smoothing, or compatibility with specific industrial processes.' },
     ],
     relatedSlugs: ['best-pla-filaments', 'best-abs-filaments', 'pla-vs-petg', 'best-filament-for-bambu-lab-p1s', 'asa-vs-abs-outdoor-printing'],
     aiSnippet: {
@@ -212,6 +258,32 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       runnerUp: { name: 'PolyLite PETG', brand: 'Polymaker', reason: 'excellent dimensional accuracy with broad printer compatibility' },
       budgetPick: { name: 'PETG Filament', brand: 'Hatchbox', reason: 'reliable workhorse PETG at an entry-level price point' },
     },
+    rankAnnotations: {
+      1: { bestFor: 'High-speed functional printing with excellent layer adhesion', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Bambu Lab\'s PETG HF is formulated for high-flow printers, delivering outstanding interlayer bonding and minimal stringing at speeds up to 200mm/s.' },
+      2: { bestFor: 'Precision-focused users who need tight tolerances', tempRange: '230–245°C nozzle / 70–80°C bed', justification: 'Polymaker\'s PolyLite PETG offers industry-leading dimensional accuracy with comprehensive TDS documentation and wide printer compatibility.' },
+      3: { bestFor: 'Budget-conscious makers who print functional parts frequently', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Hatchbox delivers consistent PETG quality at one of the lowest price points in the category. A reliable workhorse with a proven track record.' },
+      4: { bestFor: 'Engineering applications requiring documented mechanical properties', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Published tolerance data and mechanical test results make Prusament PETG the go-to for engineers who need traceable specifications.' },
+      5: { bestFor: 'Value seekers who need large color selections', tempRange: '230–245°C nozzle / 70–80°C bed', justification: 'eSUN PETG offers competitive pricing across all regions with one of the widest color selections in the PETG category.' },
+      6: { bestFor: 'Users who prioritize low-stringing formulations', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Formulated to minimize PETG\'s notorious stringing behavior, making it more approachable for users transitioning from PLA.' },
+      7: { bestFor: 'High-volume production and batch printing', tempRange: '230–245°C nozzle / 70–80°C bed', justification: 'Competitive bulk pricing and reliable spool-to-spool consistency make this a strong choice for print farms and production runs.' },
+      8: { bestFor: 'Creality ecosystem users', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Optimized for Creality printers with matched print profiles and growing color selection.' },
+      9: { bestFor: 'Food-adjacent containers and kitchen tools', tempRange: '230–245°C nozzle / 70–80°C bed', justification: 'FDA-compliant formulation with transparent and opaque color options suitable for food-contact applications when sealed.' },
+      10: { bestFor: 'Users who want specialty PETG effects', tempRange: '230–250°C nozzle / 70–80°C bed', justification: 'Rounds out the top 10 with unique color options and solid all-around PETG performance.' },
+    },
+    relatedQuestions: [
+      {
+        question: 'What is PETG HF (High Flow)?',
+        answer: 'PETG HF is a modified formulation with lower viscosity, designed for high-speed printers (150–300mm/s). It maintains layer adhesion at speeds where standard PETG would delaminate. Bambu Lab and Polymaker both offer HF variants. If you have a high-speed printer, HF PETG is worth the small price premium.',
+      },
+      {
+        question: 'Can I paint PETG prints?',
+        answer: 'PETG is harder to paint than PLA because of its slight flexibility and chemical resistance. For best results: sand with 200-grit, apply a plastic primer (Rust-Oleum Plastic Primer works well), then use acrylic paints. Spray paints generally adhere better than brush-on paints to PETG surfaces.',
+      },
+      {
+        question: 'Is PETG better than ABS for outdoor use?',
+        answer: 'PETG handles outdoor temperatures and moisture better than ABS without an enclosure. However, both materials degrade under prolonged UV exposure. ASA is the best choice for permanent outdoor installations. For seasonal or sheltered outdoor use, PETG outperforms ABS due to easier printing and comparable weathering performance.',
+      },
+    ],
   },
 
   'best-abs-filaments': {
@@ -221,10 +293,10 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     seoDescription: 'Top ABS filaments compared by heat resistance, warping behavior & print quality. Specs, prices, and compatibility data across 48+ brands.',
     description: 'The best ABS filaments for engineers and makers who need heat resistance, post-processing versatility, and proven mechanical properties.',
     category: 'buying-guide',
-    readTime: 13,
+    readTime: 18,
     publishedAt: '2026-01-25',
-    updatedAt: '2026-02-01',
-    keywords: ['best ABS filament', 'ABS filament 2026', 'ABS for 3D printing', 'heat resistant filament'],
+    updatedAt: '2026-02-28',
+    keywords: ['best ABS filament', 'ABS filament 2026', 'ABS for 3D printing', 'heat resistant filament', 'ABS vapor smoothing', 'ABS vs ASA', 'ABS enclosure printing'],
     filters: { material: 'ABS', sortBy: 'score', limit: 10 },
     layout: 'ranked-list',
     editorialSections: [
@@ -232,6 +304,20 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         heading: 'Why ABS Still Matters in 2026',
         content: `<p>Despite competition from ASA and PETG, ABS remains the go-to material for engineering applications. Its key advantages: excellent heat resistance (~100°C), easy vapor smoothing with acetone for professional finishes, and proven track record in automotive and industrial prototyping.</p>
 <p><strong>Important:</strong> ABS requires an enclosure for consistent results and emits fumes during printing. Ensure adequate ventilation or use a HEPA/activated carbon filter.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'How We Rank ABS Filaments',
+        content: `<p>ABS is an engineering material — our ranking criteria reflect that. Every filament is scored using the <a href="/methodology">FilaScore algorithm</a>, with adjustments that emphasize ABS-specific performance:</p>
+<ul>
+<li><strong>Warp resistance:</strong> The biggest challenge with ABS. Filaments with low-warp formulations or proven track records of minimal warping in enclosed printers score significantly higher.</li>
+<li><strong>Heat deflection performance:</strong> ABS's key advantage is heat resistance. We prioritize brands that publish HDT (Heat Deflection Temperature) data, with higher HDT values scoring better.</li>
+<li><strong>Vapor smoothing quality:</strong> ABS's unique post-processing advantage. Filaments that produce consistent, glossy surfaces after acetone vapor smoothing earn bonus points.</li>
+<li><strong>Fume profile & safety data:</strong> Brands that publish VOC emission data and provide safety guidance score higher for transparency and user trust.</li>
+<li><strong>Pricing across regions:</strong> Real-time pricing tracked across US, EU, UK, CA, AU, and JP.</li>
+<li><strong>Dimensional accuracy:</strong> Critical for engineering applications — ±0.02mm or better is the target.</li>
+</ul>
+<p>Rankings <strong>update automatically</strong> as new data enters our system. This reflects current market conditions, not static reviews from months ago.</p>`,
         position: 'before',
       },
       {
@@ -245,13 +331,71 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
 </ul>`,
         position: 'after',
       },
+      {
+        heading: 'ABS Filament Buying Tips',
+        content: `<p>ABS is less forgiving than PLA or PETG, making brand choice and preparation more important. Here's what to look for:</p>
+<h3>Enclosure Is Non-Negotiable</h3>
+<p>Unlike PLA or PETG, ABS absolutely requires a heated enclosure for consistent results. An ambient temperature of 40–50°C inside the enclosure prevents the uneven cooling that causes warping, cracking, and layer splitting. Budget option: a simple enclosure made from a cardboard box or IKEA LACK table works for small printers. Premium option: enclosed printers like the Bambu Lab P1S, Creality K1C, or Prusa Enclosure.</p>
+<h3>Low-Warp Formulations Are Worth the Premium</h3>
+<p>Several brands now offer "low-warp" or "easy" ABS formulations that add ASA-like additives to reduce shrinkage. These cost 10–15% more but dramatically reduce failed prints, especially on larger models. If you're printing parts bigger than 100mm in any dimension, invest in a low-warp ABS.</p>
+<h3>Ventilation & Safety</h3>
+<p>ABS emits styrene fumes during printing — not immediately dangerous in small amounts, but irritating over time and potentially harmful with prolonged exposure. Always print in a ventilated space. HEPA + activated carbon filtration systems designed for 3D printers are the best solution for home workshops. Never print ABS in a bedroom, especially while sleeping.</p>
+<h3>Acetone Vapor Smoothing</h3>
+<p>ABS's unique advantage over every other filament: it can be chemically smoothed with acetone vapor to produce glossy, injection-molded-looking surfaces. Cold acetone baths work for small parts; heated vapor chambers give the best results for larger prints. This post-processing capability alone keeps ABS relevant in 2026.</p>
+<h3>Color Considerations</h3>
+<p>ABS colors tend to be more muted than PLA equivalents. Black, white, and grey ABS are the most reliable. Bright or neon colors may shift slightly during acetone smoothing. If color accuracy is critical, test-smooth a small piece first.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'When to Choose ABS — And When to Choose Alternatives',
+        content: `<p>ABS is a specialist material. It excels in specific scenarios but is overkill (or the wrong choice) for many projects:</p>
+<h3>ABS vs PETG</h3>
+<p><a href="/filaments/petg">PETG</a> is easier to print, doesn't require an enclosure, and doesn't emit harmful fumes. For most functional parts, PETG is the better choice. Choose ABS only when you need heat resistance above 80°C or plan to acetone-smooth your parts. See our <a href="/guides/best-petg-filaments">Best PETG Filaments</a> ranking.</p>
+<h3><a href="/guides/asa-vs-abs-outdoor-printing">ABS vs ASA</a></h3>
+<p><a href="/filaments/asa">ASA</a> is essentially UV-stable ABS. It matches ABS's mechanical properties while adding excellent UV and weather resistance. For outdoor parts, ASA is strictly superior. The only advantages ABS retains are lower cost, wider color availability, and better-documented acetone smoothing behavior.</p>
+<h3>ABS vs PLA</h3>
+<p><a href="/filaments/pla">PLA</a> is easier to print, cheaper, and produces better surface detail. Choose PLA for prototypes, visual models, and non-functional parts. ABS is only justified when heat resistance, impact toughness, or post-processing capabilities are required.</p>
+<p><strong>Bottom line:</strong> Choose ABS when you need the heat resistance + vapor smoothing combination. For everything else, PETG or ASA will serve you better with fewer headaches.</p>`,
+        position: 'after',
+      },
     ],
     faqs: [
       { question: 'Is ABS safe to print indoors?', answer: 'ABS emits styrene fumes which can be irritating. Use an enclosure with a carbon filter, or print in a well-ventilated area. Do not print ABS in a bedroom or poorly ventilated space.' },
       { question: 'Why does ABS warp?', answer: 'ABS has a high shrinkage rate as it cools. Without an enclosure, uneven cooling causes corners to lift. An enclosure maintaining ~45°C ambient temperature prevents this.' },
-      { question: 'Can you smooth ABS prints?', answer: 'Yes! Acetone vapor smoothing eliminates layer lines and gives ABS parts a glossy, injection-molded appearance.' },
+      { question: 'Can you smooth ABS prints?', answer: 'Yes! Acetone vapor smoothing eliminates layer lines and gives ABS parts a glossy, injection-molded appearance. Cold acetone dips work for small parts; heated vapor chambers give the best results for larger prints.' },
+      { question: 'What bed temperature does ABS need?', answer: 'ABS requires a heated bed at 90–110°C. Most users find 100°C to be the sweet spot. Use ABS juice (ABS dissolved in acetone), Kapton tape, or a PEI sheet for first-layer adhesion. A heated enclosure at 40–50°C ambient is equally important.' },
+      { question: 'Is ABS stronger than PETG?', answer: 'ABS and PETG have comparable tensile strength, but they excel differently. ABS has better heat resistance (~100°C vs ~80°C) and rigidity, while PETG has better impact resistance and flexibility. ABS is stiffer; PETG bends before breaking. For parts under mechanical stress, PETG is often the better choice. For heat exposure, ABS wins.' },
+      { question: 'Can ABS be painted?', answer: 'ABS takes paint very well, especially after acetone vapor smoothing. Sand with 200-grit, prime with a plastic-compatible primer, then use acrylic or spray paints. Acetone-smoothed ABS provides an excellent bonding surface for paint. This makes ABS one of the best filaments for cosplay props and display models that will be painted.' },
+      { question: 'What is low-warp ABS?', answer: 'Low-warp ABS is a modified formulation that blends ABS with additives (often ASA-derived) to reduce the thermal shrinkage that causes warping. It costs 10–15% more than standard ABS but dramatically reduces failed prints, especially on parts larger than 100mm. Brands like Bambu Lab and Polymaker offer low-warp ABS variants.' },
+      { question: 'Does ABS need to be dried?', answer: 'ABS is moderately hygroscopic — less than nylon but more than PLA. Wet ABS causes surface roughness, bubbling, and weakened layer adhesion. Dry ABS at 80°C for 2–4 hours if you notice these symptoms. For best results, store ABS in sealed containers with desiccant, especially in humid climates.' },
     ],
     relatedSlugs: ['best-petg-filaments', 'best-pla-filaments', 'pla-vs-petg', 'asa-vs-abs-outdoor-printing', 'best-filament-for-bambu-lab-p1s'],
+    rankAnnotations: {
+      1: { bestFor: 'High-speed enclosed printing with minimal warping', tempRange: '240–260°C nozzle / 90–100°C bed', justification: 'Low-warp formulation optimized for enclosed printers delivers the most consistent ABS printing experience at high speeds.' },
+      2: { bestFor: 'Engineers who need published mechanical specifications', tempRange: '240–255°C nozzle / 100–110°C bed', justification: 'Comprehensive technical documentation with traceable tolerance data makes this the go-to for engineering applications.' },
+      3: { bestFor: 'Acetone vapor smoothing and post-processing', tempRange: '230–250°C nozzle / 90–110°C bed', justification: 'Produces exceptionally clean, glossy surfaces after acetone smoothing — ideal for cosplay props and display pieces.' },
+      4: { bestFor: 'Budget-conscious users who need reliable ABS', tempRange: '230–250°C nozzle / 90–110°C bed', justification: 'Proven reliability at an entry-level price point with adequate warping control for small-to-medium parts.' },
+      5: { bestFor: 'High-heat applications above 90°C', tempRange: '240–260°C nozzle / 100–110°C bed', justification: 'High HDT rating makes this ideal for under-hood automotive parts, electronics enclosures, and heat-exposed assemblies.' },
+      6: { bestFor: 'Automotive and industrial prototyping', tempRange: '235–255°C nozzle / 90–110°C bed', justification: 'Balanced mechanical properties with good warp resistance and acetone smoothing compatibility.' },
+      7: { bestFor: 'Users transitioning from PLA to engineering materials', tempRange: '230–250°C nozzle / 90–105°C bed', justification: 'Lower warp tendency and wider temperature window make this more forgiving for ABS beginners.' },
+      8: { bestFor: 'Creality enclosed printer owners', tempRange: '235–255°C nozzle / 95–110°C bed', justification: 'Optimized profiles for Creality\'s enclosed printer ecosystem with competitive pricing.' },
+      9: { bestFor: 'Bulk production and print farm use', tempRange: '230–250°C nozzle / 90–110°C bed', justification: 'Competitive bulk pricing with consistent quality across large batches.' },
+      10: { bestFor: 'Users who want specialty ABS colors', tempRange: '230–250°C nozzle / 90–110°C bed', justification: 'Wide color selection including specialty options not commonly available in ABS from other brands.' },
+    },
+    relatedQuestions: [
+      {
+        question: 'How do I set up an ABS printing enclosure?',
+        answer: 'The simplest enclosure is a cardboard box placed over your printer during printing — this can raise ambient temperature by 10–15°C. The popular IKEA LACK enclosure (two LACK tables stacked with acrylic panels) costs about $30 and maintains 35–45°C. For the best results, use a printer with a built-in enclosure like the Bambu Lab P1S or Creality K1C. Target 40–50°C ambient temperature inside the enclosure.',
+      },
+      {
+        question: 'How do I acetone-smooth ABS prints?',
+        answer: 'For cold smoothing: dip a paper towel in acetone, wipe the part lightly, and let it dry for 15 minutes. For vapor smoothing: place the part on a raised platform inside a sealed container with acetone-soaked paper towels at the bottom. Seal and wait 30–60 minutes at room temperature. Check every 15 minutes to avoid over-smoothing. Always work in a well-ventilated area — acetone fumes are flammable.',
+      },
+      {
+        question: 'Is ABS being replaced by ASA?',
+        answer: 'For outdoor applications, yes — ASA is superior due to UV stability. But ABS retains advantages: it\'s cheaper, more widely available, has better-documented acetone smoothing behavior, and more color options. For indoor engineering parts and vapor-smoothed display pieces, ABS remains the standard. The materials are complementary, not competing.',
+      },
+    ],
   },
 
   'pla-vs-petg': {
@@ -261,10 +405,10 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     seoDescription: 'PLA vs PETG compared: strength, ease of printing, heat resistance, cost, and HueForge TD values. Choose the right filament with data from 1,080+ products.',
     description: 'A side-by-side comparison of the two most popular filament materials with real product recommendations and data-backed verdicts.',
     category: 'comparison',
-    readTime: 10,
+    readTime: 16,
     publishedAt: '2026-01-18',
-    updatedAt: '2026-02-01',
-    keywords: ['PLA vs PETG', 'PLA or PETG', 'filament comparison', 'which filament to use'],
+    updatedAt: '2026-02-28',
+    keywords: ['PLA vs PETG', 'PLA or PETG', 'filament comparison', 'which filament to use', 'PLA PETG difference', 'PLA PETG strength', 'PLA PETG heat resistance'],
     filters: { materials: ['PLA', 'PETG'], sortBy: 'score', limit: 6 },
     layout: 'vs-comparison',
     vsMaterials: ['PLA', 'PETG'],
@@ -276,10 +420,51 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         position: 'before',
       },
       {
+        heading: 'How We Compare Materials',
+        content: `<p>This comparison uses real data from FilaScope's database of 1,080+ filaments, not subjective opinions. Our <a href="/methodology">methodology</a> evaluates both materials across six objective criteria:</p>
+<ul>
+<li><strong>Print difficulty:</strong> Scored from temperature sensitivity, retraction requirements, warping tendency, and enclosure necessity. PLA scores 9/10 (easiest); PETG scores 7/10.</li>
+<li><strong>Mechanical strength:</strong> Based on published tensile strength, impact resistance, and flexibility data across multiple brands.</li>
+<li><strong>Heat resistance:</strong> Glass transition temperature (Tg) and Heat Deflection Temperature (HDT) from manufacturer data sheets.</li>
+<li><strong>Surface quality:</strong> Community-rated surface finish at standard settings (0.2mm layer height, 60mm/s).</li>
+<li><strong>Cost per kilogram:</strong> Real-time average pricing across 6 regions, weighted by availability.</li>
+<li><strong>Application versatility:</strong> Range of use cases each material handles well.</li>
+</ul>
+<p>Data updates <strong>automatically</strong> as new products and pricing enter our system.</p>`,
+        position: 'before',
+      },
+      {
         heading: 'The Verdict',
-        content: `<p><strong>Choose PLA if:</strong> You need great surface quality, easy printing, lots of color options, or you're a beginner. Ideal for prototypes, decorative models, cosplay props, and PLA-specific applications like HueForge.</p>
-<p><strong>Choose PETG if:</strong> You need mechanical strength, heat resistance, outdoor durability, or chemical resistance. Ideal for functional parts, enclosures, brackets, and food-adjacent containers.</p>
+        content: `<p><strong>Choose <a href="/filaments/pla">PLA</a> if:</strong> You need great surface quality, easy printing, lots of color options, or you're a beginner. Ideal for prototypes, decorative models, cosplay props, and PLA-specific applications like HueForge.</p>
+<p><strong>Choose <a href="/filaments/petg">PETG</a> if:</strong> You need mechanical strength, heat resistance, outdoor durability, or chemical resistance. Ideal for functional parts, enclosures, brackets, and food-adjacent containers.</p>
 <p><strong>When in doubt:</strong> Start with PLA. Move to PETG when your application demands it.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'Buying Tips for PLA and PETG',
+        content: `<p>Whether you choose PLA or PETG, these tips will help you get the best results:</p>
+<h3>Start with a Trusted Brand</h3>
+<p>For PLA, Bambu Lab, Polymaker, and Hatchbox are safe bets — see our <a href="/guides/best-pla-filaments">Best PLA Filaments</a> ranking. For PETG, Bambu Lab PETG HF, Polymaker PolyLite PETG, and Hatchbox PETG consistently perform well — see our <a href="/guides/best-petg-filaments">Best PETG Filaments</a> guide.</p>
+<h3>Don't Over-Buy Before Testing</h3>
+<p>Buy a single 1kg spool to test with your specific printer before committing to bulk purchases. Every printer has quirks, and what works perfectly on a Bambu Lab X1C may need tuning on a Creality Ender 3. Once you've confirmed reliable results, bulk 3kg or 5kg spools save 15–30%.</p>
+<h3>Storage Strategy</h3>
+<p>PETG absorbs moisture faster than PLA but both degrade over time in humid environments. Invest in sealed storage containers with silica desiccant. A vacuum-sealed bag with desiccant packs is the cheapest effective solution. If you print infrequently, a filament dryer pays for itself in saved material.</p>
+<h3>Switching Between Materials</h3>
+<p>If you alternate between PLA and PETG, purge your nozzle thoroughly when switching. PETG requires 30–40°C higher temperatures than PLA — residual PLA can carbonize and clog the nozzle. Run 50–100mm of the new material through at its target temperature before starting a print.</p>
+<h3>Consider Your Printer's Capabilities</h3>
+<p>PLA works on virtually any FDM printer. PETG requires a heated bed (70–80°C minimum) and benefits from a direct-drive extruder for better retraction control. If your printer is Bowden-style, expect more stringing with PETG — increase retraction to 5–7mm and slow travel speed.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'When to Choose Neither — Alternative Materials',
+        content: `<p>Sometimes neither PLA nor PETG is the right answer. Here's when to look beyond the two most popular options:</p>
+<h3>Need extreme heat resistance?</h3>
+<p>Choose <a href="/filaments/abs">ABS</a> (~100°C) or <a href="/filaments/asa">ASA</a> (~100°C with UV stability). Both require an enclosure. See our <a href="/guides/best-abs-filaments">Best ABS Filaments</a> and <a href="/guides/asa-vs-abs-outdoor-printing">ASA vs ABS</a> guides.</p>
+<h3>Need flexibility?</h3>
+<p>Choose <a href="/filaments/tpu">TPU</a>. Neither PLA nor PETG bends well — PLA snaps, PETG deforms permanently. TPU is purpose-built for flexible parts like phone cases, gaskets, and vibration dampeners.</p>
+<h3>Need maximum strength?</h3>
+<p>Consider Nylon (PA) or carbon-fiber-reinforced composites. These engineering materials offer 2–3× the mechanical performance of PETG, but require specific printer capabilities (all-metal hotend, enclosure, dry storage).</p>
+<p><strong>Still unsure?</strong> Try our <a href="/wizard">Material Wizard</a> — it recommends the best material based on your specific project requirements.</p>`,
         position: 'after',
       },
     ],
@@ -287,6 +472,11 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is PLA or PETG cheaper?', answer: 'PLA is generally 10-20% cheaper per kilogram. However, PETG prices have been declining and many budget brands offer competitive PETG pricing.' },
       { question: 'Which is stronger, PLA or PETG?', answer: 'PETG has higher impact resistance and flexibility. PLA has higher rigidity but is more brittle. For parts under mechanical stress, PETG is the better choice.' },
       { question: 'Can beginners print PETG?', answer: 'Yes, but PLA is easier. PETG requires slightly higher temperatures, more retraction tuning, and can stick too aggressively to smooth PEI sheets.' },
+      { question: 'Can I use PLA and PETG on the same printer?', answer: 'Yes, most FDM printers can handle both PLA and PETG. You\'ll need to change your temperature settings (PLA: ~210°C/60°C vs PETG: ~235°C/75°C) and adjust retraction. Purge thoroughly when switching materials to avoid clogs from temperature mismatches.' },
+      { question: 'Which material is better for outdoor use?', answer: 'PETG is significantly better for outdoor applications. PLA has a glass transition temperature of only ~60°C and will deform in direct sunlight on a hot day. PETG handles ~80°C and has moderate UV resistance. For permanent outdoor installations, consider ASA which adds full UV stability.' },
+      { question: 'Is PLA or PETG better for functional parts?', answer: 'PETG is the better choice for functional parts that experience mechanical stress, heat, or chemical exposure. PLA works for low-stress functional parts like cable clips, desk organizers, and jigs that stay indoors. For brackets, enclosures, and anything load-bearing, use PETG.' },
+      { question: 'Does PLA or PETG have better surface quality?', answer: 'PLA produces superior surface quality with sharper details, smoother layers, and less stringing. PETG has a slight natural translucency and tendency to string, which can affect cosmetic finish. For display pieces, miniatures, and detailed models, PLA wins. For parts where function matters more than appearance, PETG is fine.' },
+      { question: 'Can I mix PLA and PETG in multi-material prints?', answer: 'Not recommended. PLA and PETG have very different printing temperatures (30–40°C gap) and do not bond well at layer interfaces. Multi-material printers can technically switch between them, but the joint between materials will be weak. Use the same material family for multi-color prints instead.' },
     ],
     relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'beginners-guide', 'pla-plus-vs-pla-pro', 'silk-pla-comparison'],
     relatedQuestions: [
@@ -382,10 +572,10 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     seoDescription: 'Find the best filaments for HueForge lithophanes. TD values, color recommendations & tested filaments for stunning multicolor prints. 500+ TD values indexed.',
     description: 'TD-ranked filament recommendations for HueForge lithophane printing, with explanations of transmissivity and picks for every TD range.',
     category: 'buying-guide',
-    readTime: 14,
+    readTime: 22,
     publishedAt: '2026-01-22',
-    updatedAt: '2026-02-01',
-    keywords: ['HueForge filament', 'best filament for HueForge', 'transmission distance', 'TD filament', 'lithophane filament'],
+    updatedAt: '2026-02-28',
+    keywords: ['HueForge filament', 'best filament for HueForge', 'transmission distance', 'TD filament', 'lithophane filament', 'HueForge TD values', 'HueForge color stack', 'HueForge lithophane guide'],
     filters: { requireTD: true, sortBy: 'td', limit: 15 },
     layout: 'ranked-list',
     editorialSections: [
@@ -402,6 +592,38 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         position: 'before',
       },
       {
+        heading: 'How We Rank HueForge Filaments',
+        content: `<p>Ranking HueForge filaments requires a different approach than ranking general-purpose PLA. Our <a href="/methodology">FilaScore algorithm</a> is adapted for HueForge-specific criteria:</p>
+<ul>
+<li><strong>TD value availability &amp; accuracy:</strong> Filaments with verified, community-measured TD values score highest. Brands that publish TD data or have extensive community measurements earn bonus points.</li>
+<li><strong>Opacity consistency:</strong> HueForge relies on predictable light transmission. Filaments with consistent opacity across the spool — no thin spots, no pigment clumping — produce dramatically better lithophanes.</li>
+<li><strong>Color range with TD coverage:</strong> Brands that offer colors spanning the full TD spectrum (0.5–8.0+mm) enable complete HueForge stacks from a single manufacturer, ensuring temperature and adhesion compatibility between layers.</li>
+<li><strong>Dimensional accuracy:</strong> Tighter diameter tolerance (±0.02mm) means more predictable wall thickness, which directly affects light transmission and image quality.</li>
+<li><strong>Layer adhesion strength:</strong> HueForge lithophanes have thin walls (0.4–1.6mm). Poor layer adhesion causes delamination that ruins the image. We prioritize filaments with proven interlayer bonding.</li>
+<li><strong>Community HueForge success rate:</strong> Filaments frequently used and recommended in HueForge communities score higher for real-world validation.</li>
+</ul>
+<p>Our <a href="/hueforge-td-database">HueForge TD database</a> indexes 500+ TD values across dozens of brands — <strong>browse our full HueForge TD database</strong> to find the exact values for any filament.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'TD Value Reference Table',
+        content: `<p>Use this reference table to understand what TD ranges mean in practice and select the right filaments for each slot in your HueForge stack:</p>
+<table>
+<thead>
+<tr><th>Category</th><th>TD Range</th><th>Appearance</th><th>HueForge Role</th><th>Example Colors</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Black/Opaque</strong></td><td>0.1 – 1.0mm</td><td>Almost completely blocks light</td><td>Deep shadows, outlines, darkest areas</td><td>Black, very dark brown, dark navy</td></tr>
+<tr><td><strong>Dark</strong></td><td>1.0 – 1.5mm</td><td>Mostly opaque with slight glow at thin walls</td><td>Shadow details, dark mid-tones</td><td>Dark red, dark green, dark grey</td></tr>
+<tr><td><strong>Standard</strong></td><td>1.5 – 5.0mm</td><td>Moderate light transmission</td><td>Mid-tones, gradients, most of the image detail</td><td>Medium blue, red, green, orange, skin tones</td></tr>
+<tr><td><strong>White/Light</strong></td><td>3.5 – 5.0+mm</td><td>Significant light passes through</td><td>Highlights, bright areas, light backgrounds</td><td>White, cream, light yellow, light pink</td></tr>
+<tr><td><strong>Translucent</strong></td><td>5.0 – 10.0+mm</td><td>Very transparent, almost clear</td><td>Brightest highlights, backlighting effects</td><td>Natural/clear, translucent white, translucent colors</td></tr>
+</tbody>
+</table>
+<p><strong>Pro tip:</strong> For a classic 4-color HueForge portrait, select one filament from each of: Black (TD 0.3–0.8), Dark (TD 1.0–1.5), Standard (TD 2.5–4.0), and White (TD 4.0–5.0+). <a href="/hueforge-td-database">Browse our full HueForge TD database</a> to find exact values for specific filaments and colors.</p>`,
+        position: 'before',
+      },
+      {
         heading: 'Building Your HueForge Stack',
         content: `<p>For best results, select filaments that cover the full TD spectrum. A typical 4-color stack includes:</p>
 <ol>
@@ -410,16 +632,55 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
 <li><strong>Light mid-tone (TD 2.5–4.0):</strong> Provides smooth gradients.</li>
 <li><strong>Light/White top (TD 4.0+):</strong> Creates highlights and bright areas.</li>
 </ol>
-<p>Use our <a href="/colors?mode=hueforge">HueForge Stack Builder</a> to find filaments that match your needs, or browse the <a href="/td-database">full TD Database</a> for all measured filaments.</p>`,
+<p>Use our <a href="/colors?mode=hueforge">HueForge Stack Builder</a> to find filaments that match your needs, or <a href="/hueforge-td-database">browse our full HueForge TD database</a> for all measured filaments.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'HueForge Filament Buying Tips',
+        content: `<p>Buying filament for HueForge is different from buying filament for general printing. The margin for error is smaller, and the wrong filament choice can ruin hours of print time. Here's what to prioritize:</p>
+<h3>Always Check TD Values Before Buying</h3>
+<p>Never buy filament for HueForge without knowing its TD value. Our <a href="/hueforge-td-database">HueForge TD database</a> has 500+ measured values. If a filament isn't in the database, it's a gamble. Stick with brands that have extensive TD coverage — Bambu Lab, Polymaker, and eSUN have the most measured colors.</p>
+<h3>Buy from One Brand Per Stack</h3>
+<p>Mixing brands in a single HueForge print can cause adhesion issues between layers. Different brands use different PLA blends with different thermal properties, leading to weak interlayer bonds. For your best results, build each stack from a single brand. This ensures consistent temperature requirements and reliable layer-to-layer adhesion.</p>
+<h3>Test-Print a Calibration Wedge First</h3>
+<p>Even with published TD values, batch-to-batch variation exists. Before committing to a multi-hour lithophane, print a TD calibration wedge for each filament in your stack. Compare the results against the database values. If they're off by more than 0.3mm, adjust your HueForge settings accordingly.</p>
+<h3>Avoid Specialty Filaments for HueForge</h3>
+<p>Silk, metallic, glitter, and matte PLA formulations contain additives that scatter light unpredictably. This creates uneven light transmission and ruins the smooth tonal gradients HueForge relies on. Stick with standard solid-color PLA for the most predictable results. Silk PLA is especially problematic — its metallic particles create hotspots and dark artifacts.</p>
+<h3>Storage Is Critical for TD Consistency</h3>
+<p>Moisture affects PLA's optical properties. Wet PLA produces micro-bubbles during printing that scatter light and change the effective TD value. For HueForge printing, filament freshness matters more than for regular printing. Keep your HueForge filaments sealed with desiccant, and dry them at 45°C for 4 hours before critical prints.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'When to Choose HueForge — And When to Use Traditional Lithophanes',
+        content: `<p>HueForge has revolutionized lithophane printing, but it's not always the right approach:</p>
+<h3>Choose HueForge When:</h3>
+<p>You want <strong>full-color lithophane images</strong> with multiple tonal layers. HueForge excels at portraits, landscapes, and detailed artwork where color gradation matters. The multi-filament approach creates results that single-color lithophanes simply can't match. You'll need a multi-material printer (AMS, MMU) or be willing to do manual filament swaps.</p>
+<h3>Choose Traditional Single-Color Lithophanes When:</h3>
+<p>You want a simpler process with a single white <a href="/filaments/pla">PLA</a> filament. Traditional lithophanes are faster to prepare, don't require TD matching, and look stunning as backlit decorations. They're ideal for beginners and for quick gifts.</p>
+<h3>Material Choice for HueForge</h3>
+<p><a href="/filaments/pla">PLA</a> is the overwhelmingly dominant material for HueForge. Its predictable opacity, wide color range, and extensive TD data make it ideal. <a href="/filaments/petg">PETG</a> can work but has higher natural translucency (higher TD), making dark shadows harder to achieve. <a href="/filaments/abs">ABS</a> is rarely used for HueForge due to warping risk on the thin walls of lithophanes.</p>
+<p><strong>Bottom line:</strong> For HueForge, use PLA from a brand with verified TD data. Browse our <a href="/guides/best-pla-filaments">Best PLA Filaments</a> ranking for top picks, or go directly to the <a href="/hueforge-td-database">TD database</a> to find filaments with the exact TD values you need.</p>`,
         position: 'after',
       },
     ],
     faqs: [
-      { question: 'What is the best filament for HueForge?', answer: 'There\'s no single "best" filament — HueForge requires a stack of 3-5 filaments with different TD values. The best approach is to select filaments covering low, medium, and high TD ranges from verified brands with measured values.' },
-      { question: 'How is TD measured?', answer: 'TD is measured by printing a calibration wedge and observing at which thickness light begins to pass through. The higher the TD value, the more translucent the filament.' },
+      { question: 'What is the best filament for HueForge?', answer: 'There\'s no single "best" filament — HueForge requires a stack of 3-5 filaments with different TD values. The best approach is to select filaments covering low, medium, and high TD ranges from verified brands with measured values. Bambu Lab, Polymaker, and eSUN have the most extensive TD data in our database.' },
+      { question: 'How is TD measured?', answer: 'TD is measured by printing a calibration wedge and observing at which thickness light begins to pass through. The higher the TD value, the more translucent the filament. You can measure TD yourself using the HueForge calibration model, or use the community-verified values in our TD database.' },
       { question: 'Can I use any PLA for HueForge?', answer: 'Technically yes, but results vary dramatically. Filaments without measured TD values are unpredictable. We recommend using filaments from our database that have verified TD measurements.' },
+      { question: 'What TD value should I use for dark shadows?', answer: 'For deep shadows and outlines, use filaments with TD values between 0.3–1.0mm. Black PLA typically falls in this range. Very dark colors (dark brown, navy) at TD 1.0–1.5mm work well for shadow detail. Check exact values in our HueForge TD database before purchasing.' },
+      { question: 'How many colors do I need for HueForge?', answer: 'A minimum of 3 colors can produce good results, but 4-5 colors is the sweet spot for most projects. More colors allow smoother tonal transitions. Portraits typically use 4 colors; complex landscapes may benefit from 5-6. Beyond 6, the improvement is marginal and calibration complexity increases significantly.' },
+      { question: 'Can I use PETG or ABS for HueForge?', answer: 'PETG can work but is less ideal — it tends to be more translucent than PLA, making deep shadows harder to achieve. ABS is rarely used due to warping risk on lithophane thin walls. PLA is the standard material for HueForge with the best TD data coverage and most predictable results.' },
+      { question: 'Why do my HueForge prints look washed out?', answer: 'Washed-out HueForge prints usually mean your dark filament isn\'t opaque enough (TD too high) or your layer heights are too thin. Use a filament with TD under 1.0 for your darkest color. Also ensure 100% infill, correct layer height as specified by HueForge, and that your filament is dry (moisture causes micro-bubbles that increase translucency).' },
+      { question: 'Do I need a multi-material printer for HueForge?', answer: 'A multi-material system (Bambu Lab AMS, Prusa MMU) makes HueForge printing much easier by automating filament changes. However, you can achieve excellent results with manual filament swaps at the layer change points specified by HueForge. Manual swaps work well for 3-4 color prints but become tedious beyond 5 colors.' },
     ],
     relatedSlugs: ['best-pla-filaments', 'beginners-guide', 'pla-vs-petg', 'best-filaments-for-hueforge-lithophanes'],
+    rankAnnotations: {
+      1: { bestFor: 'Complete HueForge stacks from a single brand', tempRange: '190–220°C nozzle / 50–60°C bed', hueforgeSuitability: 'Excellent — most extensive TD data coverage in our database with 50+ measured colors', justification: 'The widest range of community-verified TD values, consistent batch-to-batch opacity, and excellent layer adhesion make this the top HueForge choice.' },
+      2: { bestFor: 'Users who need precise, documented TD values', tempRange: '190–230°C nozzle / 50–60°C bed', hueforgeSuitability: 'Excellent — comprehensive TD data with tight tolerance specifications', justification: 'Published dimensional tolerances and growing TD database make this a premium HueForge option with predictable results.' },
+      3: { bestFor: 'Budget HueForge printing without sacrificing quality', tempRange: '190–220°C nozzle / 50–60°C bed', hueforgeSuitability: 'Very good — strong community TD dataset for popular colors', justification: 'Competitive pricing with reliable opacity consistency. The large community user base means TD values are well-verified.' },
+      4: { bestFor: 'Engineering-quality lithophanes with traceable specifications', tempRange: '195–220°C nozzle / 50–60°C bed', hueforgeSuitability: 'Good — TD values available for select colors with high accuracy', justification: 'Prusament\'s tight manufacturing tolerances produce exceptionally consistent light transmission across the spool.' },
+      5: { bestFor: 'Value-oriented HueForge with wide color selection', tempRange: '190–220°C nozzle / 50–60°C bed', hueforgeSuitability: 'Good — growing TD database with affordable color options', justification: 'Excellent price-to-quality ratio for HueForge users who need many colors without breaking the budget.' },
+    },
   },
 
   'best-filaments-for-hueforge-lithophanes': {
