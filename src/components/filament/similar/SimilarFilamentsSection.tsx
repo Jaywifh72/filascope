@@ -16,7 +16,7 @@ const MATERIAL_GUIDES: Record<string, { slug: string; title: string }[]> = {
   PLA: [
     { slug: 'best-pla-filaments', title: 'Best PLA Filaments in 2026' },
     { slug: 'pla-vs-petg', title: 'PLA vs PETG: Which Should You Choose?' },
-    { slug: 'pla-vs-abs', title: 'PLA vs ABS: Strength & Ease Compared' },
+    { slug: 'filament-temperature-guide', title: 'Filament Temperature Guide' },
   ],
   PETG: [
     { slug: 'best-petg-filaments', title: 'Best PETG Filaments in 2026' },
@@ -25,21 +25,28 @@ const MATERIAL_GUIDES: Record<string, { slug: string; title: string }[]> = {
   ],
   ABS: [
     { slug: 'best-abs-filaments', title: 'Best ABS Filaments in 2026' },
-    { slug: 'pla-vs-abs', title: 'PLA vs ABS: Strength & Ease Compared' },
+    { slug: 'asa-vs-abs-outdoor-printing', title: 'ASA vs ABS for Outdoor Printing' },
     { slug: 'petg-vs-abs', title: 'PETG vs ABS: Strength & Heat Resistance' },
   ],
   TPU: [
     { slug: 'best-tpu-filaments', title: 'Best TPU & Flexible Filaments 2026' },
-    { slug: 'tpu-vs-petg', title: 'TPU vs PETG: Flexible vs Rigid Compared' },
+    { slug: 'best-filament-for-cosplay', title: 'Best Filaments for Cosplay & Props' },
   ],
   ASA: [
     { slug: 'asa-vs-abs-outdoor-printing', title: 'ASA vs ABS for Outdoor Printing' },
+    { slug: 'best-filaments-for-outdoor-use', title: 'Best Filaments for Outdoor Use' },
   ],
   NYLON: [
+    { slug: 'best-nylon-filaments', title: 'Best Nylon Filaments 2026' },
     { slug: 'nylon-vs-petg', title: 'Nylon vs PETG: Engineering Filament Guide' },
-    { slug: 'best-filaments-for-functional-parts', title: 'Best Filaments for Functional Parts' },
   ],
 };
+
+// Universal guides always shown
+const UNIVERSAL_GUIDES = [
+  { slug: 'how-to-choose-3d-printer-filament', title: 'How to Choose 3D Printer Filament' },
+  { slug: '3d-printer-filament-types-explained', title: 'Filament Types Explained' },
+];
 
 interface CurrentFilament {
   id: string;
@@ -114,6 +121,9 @@ function RelatedCategoriesNav({
 }) {
   const materialBase = material?.split(/[\s\-+]/)[0]?.toUpperCase() || null;
   const guides = materialBase ? (MATERIAL_GUIDES[materialBase] || []) : [];
+  // Merge universal guides, deduplicating
+  const seenSlugs = new Set(guides.map(g => g.slug));
+  const allGuides = [...guides, ...UNIVERSAL_GUIDES.filter(g => !seenSlugs.has(g.slug))];
 
   return (
     <nav aria-label="Related categories" className="mt-10 pt-8 border-t border-border/30">
@@ -148,7 +158,7 @@ function RelatedCategoriesNav({
             All {colorFamily} Filaments
           </Link>
         )}
-        {guides.map((guide) => (
+        {allGuides.map((guide) => (
           <Link
             key={guide.slug}
             to={`/guides/${guide.slug}`}
