@@ -58,10 +58,28 @@ Allow: /
 User-agent: cohere-ai
 Allow: /
 
-User-agent: meta-externalagent
+User-agent: Meta-ExternalAgent
 Allow: /
 
 User-agent: FacebookBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: DeepSeekBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: AI2Bot
 Allow: /
 
 Sitemap: https://filascope.com/sitemap.xml`;
