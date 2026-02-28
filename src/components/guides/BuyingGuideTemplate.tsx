@@ -29,6 +29,7 @@ import { useRelatedFilaments } from '@/hooks/useRelatedFilaments';
 function getCategoryBadgeStyle(category: string) {
   switch (category) {
     case 'buying-guide': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+    case 'material-guide': return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
     case 'comparison': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
     case 'beginner': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
     default: return 'bg-primary/10 text-primary border-primary/20';
@@ -38,6 +39,7 @@ function getCategoryBadgeStyle(category: string) {
 function getCategoryLabel(category: string) {
   switch (category) {
     case 'buying-guide': return 'Buying Guide';
+    case 'material-guide': return 'Material Guide';
     case 'comparison': return 'Comparison';
     case 'beginner': return 'Beginner';
     default: return category;

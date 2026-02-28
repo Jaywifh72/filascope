@@ -31,7 +31,7 @@ export interface GuideConfig {
   seoTitle: string;
   seoDescription: string;
   description: string;
-  category: 'buying-guide' | 'comparison' | 'beginner' | 'hueforge' | 'printer-specific';
+  category: 'buying-guide' | 'comparison' | 'beginner' | 'hueforge' | 'printer-specific' | 'material-guide';
   readTime: number;
   publishedAt: string;
   updatedAt: string;
@@ -2665,6 +2665,98 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'How long does 3D printer filament last in storage?', answer: 'Unopened filament stored in a cool, dry place lasts 1–2 years. Once opened, filament absorbs moisture over weeks to months depending on the material. PLA is moderately hygroscopic; Nylon absorbs moisture very quickly. Store opened spools in sealed containers with desiccant.' },
       { question: 'Does filament brand really matter?', answer: 'Yes. Premium brands offer tighter diameter tolerances (±0.02mm vs ±0.05mm), better color consistency between batches, and more reliable spool winding. For critical prints, the extra $5–10 per spool is worth the reduced failure rate.' },
       { question: 'Can I mix different filament brands in the same print?', answer: 'Yes, as long as both filaments are the same material type (e.g., two PLAs) and similar diameter (1.75mm). Different brands of the same material are generally compatible, though slight color and texture differences may be visible at the transition.' },
+    ],
+  },
+
+  'strongest-3d-printer-filament': {
+    slug: 'strongest-3d-printer-filament',
+    title: 'What Is the Strongest 3D Printer Filament?',
+    seoTitle: 'What Is the Strongest 3D Printer Filament? — Ranked by Strength | FilaScope',
+    seoDescription: 'Compare the strongest 3D printer filaments by tensile strength, impact resistance, and heat deflection. Nylon, Polycarbonate, PETG, ABS, and carbon fiber composites ranked with real data.',
+    description: 'A data-driven comparison of the strongest 3D printer filaments, ranked by tensile strength, impact resistance, and heat deflection temperature.',
+    category: 'material-guide',
+    readTime: 12,
+    publishedAt: '2026-02-28',
+    updatedAt: '2026-02-28',
+    keywords: ['strongest 3D printer filament', 'strongest filament', 'filament tensile strength', 'PA-CF filament', 'nylon filament strength', 'polycarbonate filament', 'PETG vs PLA strength', 'filament strength comparison'],
+    filters: { sortBy: 'score', limit: 5 },
+    layout: 'editorial',
+    quickAnswer: 'The strongest commonly available 3D printer filament is Nylon (PA), with tensile strength of 70–85 MPa. For maximum strength, carbon fiber reinforced Nylon (PA-CF) reaches 100+ MPa. Polycarbonate (PC) offers the best impact resistance. Among consumer-grade filaments, PETG (50 MPa) is stronger than PLA (37–60 MPa) and easier to print than Nylon. FilaScope tracks detailed strength specifications for 1,080+ filaments.',
+    editorialSections: [
+      {
+        heading: 'How Do We Measure Filament Strength?',
+        content: `<p>When comparing filament strength, four key metrics matter:</p>
+<ul>
+<li><strong>Tensile strength (MPa):</strong> The maximum stress a material can withstand while being stretched before breaking. This is the most commonly cited strength metric and measures resistance to pulling forces. Higher MPa = stronger under tension.</li>
+<li><strong>Impact resistance (Izod/Charpy):</strong> Measures how well a material absorbs sudden impacts without fracturing. Materials like Polycarbonate excel here, making them ideal for parts that may be dropped or struck.</li>
+<li><strong>Heat deflection temperature (HDT):</strong> The temperature at which a material begins to deform under a specified load. Critical for parts used in warm environments — PLA deforms above 55°C, while ABS holds up to 95°C+.</li>
+<li><strong>Layer adhesion strength:</strong> Unique to 3D printing — how well printed layers bond together. Poor layer adhesion means a part can delaminate along layer lines even if the base material is strong. Nylon and PETG typically have excellent layer adhesion.</li>
+</ul>
+<p>It's important to note that <strong>3D-printed parts are inherently weaker</strong> than injection-molded equivalents due to layer lines creating potential failure points. Print settings (infill, wall count, layer height, orientation) significantly affect real-world strength. The values below represent material properties under optimal conditions.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Filament Strength Rankings — Tensile Strength Comparison',
+        content: `<p>The table below ranks common 3D printer filaments by tensile strength, with additional metrics for a complete picture:</p>
+<table>
+<thead><tr><th>Material</th><th>Tensile Strength (MPa)</th><th>Impact Resistance</th><th>Heat Deflection (°C)</th><th>Ease of Printing</th><th>Best For</th></tr></thead>
+<tbody>
+<tr><td><strong>PA-CF (Nylon + Carbon Fiber)</strong></td><td>100–140</td><td>Medium</td><td>150+</td><td>★★☆☆☆</td><td>Maximum stiffness, jigs &amp; fixtures</td></tr>
+<tr><td><strong>Nylon (PA)</strong></td><td>70–85</td><td>Very High</td><td>80–180</td><td>★★☆☆☆</td><td>Gears, hinges, load-bearing parts</td></tr>
+<tr><td><strong>Polycarbonate (PC)</strong></td><td>55–75</td><td>Excellent</td><td>130–140</td><td>★★☆☆☆</td><td>Impact resistance, heat resistance</td></tr>
+<tr><td><strong>ABS</strong></td><td>40–50</td><td>High</td><td>95–105</td><td>★★★☆☆</td><td>Heat-resistant enclosures, automotive</td></tr>
+<tr><td><strong>PETG</strong></td><td>45–55</td><td>High</td><td>70–80</td><td>★★★★☆</td><td>Functional parts without enclosure</td></tr>
+<tr><td><strong>PLA</strong></td><td>37–60</td><td>Low</td><td>55–60</td><td>★★★★★</td><td>Prototypes, decorative, low-stress parts</td></tr>
+<tr><td><strong>TPU</strong></td><td>25–55</td><td>Very High (flexible)</td><td>60–80</td><td>★★★☆☆</td><td>Flexible parts, vibration dampening</td></tr>
+</tbody>
+</table>
+<p><strong>Key takeaway:</strong> PA-CF leads in raw tensile strength and stiffness, but Polycarbonate offers the best combination of strength and impact resistance. For most users, PETG provides the best strength-to-printability ratio.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Best Filaments for Strength by Use Case',
+        content: `<p>Raw tensile strength numbers don't tell the whole story. The right "strong" filament depends on your specific application:</p>
+<h3>Mechanical Parts &amp; Gears</h3>
+<p><strong>Best choice: Nylon (PA)</strong> — Its combination of tensile strength, flexibility, and excellent layer adhesion makes it ideal for gears, bushings, and parts that need to flex without snapping. Nylon's natural lubricity also reduces friction in moving assemblies.</p>
+<h3>Outdoor &amp; UV-Exposed Parts</h3>
+<p><strong>Best choice: ASA</strong> — While not the strongest by tensile numbers, ASA's UV resistance means it maintains its strength outdoors where ABS and PLA would degrade. For maximum outdoor strength, consider PC-ASA blends.</p>
+<h3>Snap-Fits &amp; Living Hinges</h3>
+<p><strong>Best choice: PETG or Nylon</strong> — Parts that need to flex repeatedly without breaking require high elongation at break. PLA is too brittle for snap-fits; PETG and Nylon handle repeated flexing well.</p>
+<h3>Maximum Stiffness (Jigs &amp; Fixtures)</h3>
+<p><strong>Best choice: PA-CF</strong> — Carbon fiber reinforced Nylon is extremely stiff with minimal flex. Perfect for tool holders, alignment jigs, and CNC fixtures where dimensional stability under load matters more than impact resistance.</p>
+<h3>Impact-Critical Parts</h3>
+<p><strong>Best choice: Polycarbonate (PC)</strong> — If your part might be dropped, struck, or subjected to sudden forces, PC's outstanding impact resistance makes it the clear winner. It's used in bulletproof glass for a reason.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Strength vs Printability — Finding the Balance',
+        content: `<p>There's an inverse relationship between filament strength and ease of printing. The strongest materials demand the most from your printer and your skills:</p>
+<ul>
+<li><strong>PA-CF &amp; PC:</strong> Require all-metal hotend, enclosed chamber (60°C+), hardened steel nozzle (for CF), and dry filament. Expect significant troubleshooting for first-time users.</li>
+<li><strong>Nylon:</strong> Extremely hygroscopic — must be dried before printing and ideally printed from a dry box. Warps aggressively without proper bed adhesion and enclosure.</li>
+<li><strong>ABS:</strong> Needs an enclosure to prevent warping and cracking. Produces fumes that require ventilation. Well-understood material with decades of documentation.</li>
+<li><strong>PETG:</strong> The sweet spot for most users. Prints without an enclosure at 220–250°C, doesn't warp much, and offers 50+ MPa tensile strength. The main challenge is stringing, which is manageable with tuned retraction settings.</li>
+<li><strong>PLA:</strong> Easiest to print but weakest in functional applications. Annealing can improve heat resistance, and PLA+ variants offer modest strength improvements.</li>
+</ul>
+<p><strong>Our recommendation:</strong> If you need strong parts and have a basic printer (no enclosure, PTFE-lined hotend), start with PETG. If you have an enclosed printer with all-metal hotend, Nylon opens up significantly stronger options. Reserve PA-CF and PC for projects where maximum strength justifies the extra effort and equipment requirements.</p>
+<p>Compare detailed specifications, pricing, and availability for all these materials on <a href="/filaments">FilaScope's filament database</a>.</p>`,
+        position: 'before',
+      },
+    ],
+    faqs: [
+      { question: 'Is PETG stronger than PLA?', answer: 'Yes. PETG has higher tensile and impact strength and better heat resistance, making it a significantly better choice for functional parts that need to withstand mechanical stress.' },
+      { question: 'What is the strongest filament I can print without an enclosure?', answer: 'PETG is the strongest material that prints well without an enclosure, at 220–250°C nozzle temperature. It offers 45–55 MPa tensile strength and good impact resistance.' },
+      { question: 'Are carbon fiber filaments stronger?', answer: 'Carbon fiber composites like PA-CF are significantly stiffer and stronger than their base materials, reaching 100–140 MPa tensile strength. However, they require hardened steel nozzles as carbon fiber is highly abrasive.' },
+      { question: 'What filament should I use for load-bearing parts?', answer: 'Nylon for flexibility under load, Polycarbonate for impact resistance, or PA-CF for maximum stiffness. The best choice depends on whether your part needs to flex, absorb impacts, or remain rigid.' },
+      { question: 'Is ABS stronger than PLA?', answer: 'ABS has better impact resistance and heat tolerance but similar or slightly lower tensile strength compared to PLA. ABS excels in applications where heat resistance and toughness matter more than raw tensile strength.' },
+      { question: 'Can I strengthen PLA prints?', answer: 'Annealing PLA (heating to 60–70°C in an oven) can increase crystallinity and heat resistance. For structural strength improvements, consider PLA+ or PLA Pro variants, or switch to PETG or Nylon for significantly stronger parts.' },
+    ],
+    relatedSlugs: ['how-to-choose-filament', 'best-filaments-for-functional-parts', 'filament-temperature-guide', 'petg-vs-abs'],
+    relatedQuestions: [
+      { question: 'What is the most durable 3D printer filament?', answer: 'Durability depends on the type of stress. For impact durability, Polycarbonate is the best. For wear resistance, Nylon excels. For UV and weather durability, ASA is the top choice. PETG offers a good all-around balance of durability factors.' },
+      { question: 'Does infill percentage affect strength?', answer: 'Yes, significantly. Increasing infill from 20% to 50% can double part strength. However, wall count often matters more — going from 2 to 4 walls typically improves strength more than increasing infill beyond 30–40%.' },
+      { question: 'Is 3D printed Nylon as strong as injection-molded Nylon?', answer: 'No. 3D printed Nylon typically achieves 60–80% of injection-molded strength due to layer adhesion limitations. Print orientation significantly affects strength — parts loaded along layer lines are weakest.' },
+      { question: 'What filament is best for automotive parts?', answer: 'ABS and ASA are the most common choices for automotive applications due to their heat resistance (95–105°C HDT) and chemical resistance. For under-hood parts exposed to higher temperatures, Nylon or PA-CF may be necessary.' },
     ],
   },
 };
