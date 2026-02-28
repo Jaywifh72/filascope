@@ -13,15 +13,23 @@ function getMaterialSlug(material: string): string {
   return material.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+// Universal guides shown for ALL filaments
+const UNIVERSAL_GUIDES = [
+  { href: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose the Right 3D Printer Filament' },
+  { href: '/guides/3d-printer-filament-types-explained', label: '3D Printer Filament Types Explained' },
+];
+
 // Material-specific comparison guides (using /guides/ prefix)
 const MATERIAL_COMPARISONS: Record<string, { href: string; label: string }[]> = {
   PLA: [
     { href: '/guides/pla-vs-petg', label: 'PLA vs PETG: Which Should You Choose?' },
     { href: '/guides/pla-vs-abs', label: 'PLA vs ABS: Strength & Ease Compared' },
+    { href: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide — Print Settings for Every Material' },
   ],
   'PLA+': [
     { href: '/guides/pla-vs-petg', label: 'PLA+ vs PETG: Which Should You Choose?' },
     { href: '/guides/pla-plus-vs-pla-pro', label: 'PLA+ vs PLA Pro: What\'s the Difference?' },
+    { href: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide' },
   ],
   PETG: [
     { href: '/guides/pla-vs-petg', label: 'PETG vs PLA: Complete Material Comparison' },
@@ -35,10 +43,11 @@ const MATERIAL_COMPARISONS: Record<string, { href: string; label: string }[]> = 
   ],
   ASA: [
     { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ASA vs ABS for Outdoor Printing' },
+    { href: '/guides/best-filaments-for-outdoor-use', label: 'Best Filaments for Outdoor Use' },
   ],
   TPU: [
     { href: '/guides/tpu-vs-petg', label: 'TPU vs PETG: Flexible vs Rigid Compared' },
-    { href: '/guides/best-tpu-filaments', label: 'Best TPU & Flexible Filaments 2026' },
+    { href: '/guides/best-filament-for-cosplay', label: 'Best Filaments for Cosplay & Props' },
   ],
   NYLON: [
     { href: '/guides/nylon-vs-petg', label: 'Nylon vs PETG: Engineering Filament Guide' },
@@ -53,6 +62,7 @@ const BEST_OF_GUIDES: Record<string, string> = {
   PETG: '/guides/best-petg-filaments',
   ABS: '/guides/best-abs-filaments',
   TPU: '/guides/best-tpu-filaments',
+  NYLON: '/guides/best-nylon-filaments',
 };
 
 export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissionDistance }: RelatedGuidesLinksProps) {
@@ -112,13 +122,26 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
     });
   }
 
-  // Cap at 6 links
-  const visibleLinks = links.slice(0, 6);
+  // 6. Universal guides (always shown)
+  const seenHrefs = new Set(links.map(l => l.href));
+  for (const ug of UNIVERSAL_GUIDES) {
+    if (!seenHrefs.has(ug.href)) {
+      links.push({
+        href: ug.href,
+        label: ug.label,
+        icon: <BookOpen className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
+      });
+      seenHrefs.add(ug.href);
+    }
+  }
+
+  // Cap at 8 links
+  const visibleLinks = links.slice(0, 8);
 
   return (
-    <section aria-label="Related guides and comparisons" className="mt-4 mb-6">
-      <h2 className="sr-only">Related Guides &amp; Comparisons</h2>
-      <nav className="flex flex-wrap gap-2">
+    <section aria-label="Related guides and comparisons" className="mt-6 mb-6">
+      <h2 className="text-base font-semibold mb-3">Related Guides &amp; Comparisons</h2>
+      <nav className="grid sm:grid-cols-2 gap-2">
         {visibleLinks.map(({ href, label, icon }) => (
           <a
             key={href}
