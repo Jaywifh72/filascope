@@ -783,7 +783,38 @@ export default function FilamentCategoryPage() {
           </nav>
         )}
 
-        {/* FAQ Section — emits FAQPage JSON-LD + visible accordion for Google */}
+        {/* SEO content section — root /filaments page only */}
+        {!slug && (
+          <section className="mt-12 space-y-8">
+            <article>
+              <h2 className="text-2xl font-bold text-foreground mb-4">The Complete 3D Printer Filament Comparison Database</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                FilaScope is the most comprehensive <strong>3D printer filament comparison</strong> tool available, tracking 8,277+ filaments from 48+ brands with real-time pricing across 15+ retailers worldwide. Whether you need to <strong>compare filaments</strong> by tensile strength, print temperature, HueForge TD value, or price per kilogram, our <strong>filament database</strong> puts every datapoint at your fingertips. Each product page includes detailed <strong>filament specifications</strong> — nozzle and bed temperatures, mechanical properties, spool weight, color options, and community ratings. Prices update automatically so you always see the latest deals. Use the filters above to narrow by material, brand, price, color, or printer compatibility, or try the{' '}
+                <a href="/wizard" className="text-primary hover:underline font-medium">guided filament finder</a> for personalized recommendations.
+              </p>
+            </article>
+
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">How to Use the Filament Database</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Start by selecting a material type — PLA, PETG, ABS, TPU, or any of 20+ supported materials. Refine your search with brand, price range, color family, spool weight, and reinforcement filters. If you own a specific printer, enable printer compatibility mode to see only filaments your machine can handle. Sort results by price, rating, or TD value to find exactly what you need. Ready to decide between two options? Use the{' '}
+                <a href="/compare" className="text-primary hover:underline font-medium">side-by-side comparison tool</a> to evaluate up to four filaments at once. For a broader overview, read our{' '}
+                <a href="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline font-medium">complete filament buying guide</a>.
+              </p>
+            </article>
+
+            <article>
+              <h3 className="text-xl font-semibold text-foreground mb-3">What Makes FilaScope Different</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Unlike simple product listings, FilaScope aggregates cross-regional pricing from 15+ stores in five regions (US, UK, EU, CA, AU) so you can spot the best deal wherever you are. We maintain the largest public{' '}
+                <a href="/hueforge-td-database" className="text-primary hover:underline font-medium">HueForge transmissivity database</a> with verified TD values for 500+ filaments, essential for lithophane and multicolor projects. Every filament is matched against 119+ printers for instant compatibility checks. Explore all indexed manufacturers on the{' '}
+                <a href="/brands" className="text-primary hover:underline font-medium">brands directory</a>, or jump straight to the latest savings on our{' '}
+                <a href="/deals" className="text-primary hover:underline font-medium">deals page</a>.
+              </p>
+            </article>
+          </section>
+        )}
+
         {slug && materialFaqs.length > 0 && (
           <FAQSection
             faqs={materialFaqs}
