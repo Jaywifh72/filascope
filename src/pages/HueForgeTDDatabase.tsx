@@ -86,6 +86,26 @@ const faqData = [
     answer:
       'Technically yes, but results vary dramatically. Standard PLA typically has TD values between 2.0–5.0, which works well. However, matte PLA tends to have lower TD (more opaque), silk PLA has very high TD (more translucent), and PLA+ can vary by brand. For best results, use filaments with known, verified TD values from this database rather than guessing.',
   },
+  {
+    question: 'What filament should I use for HueForge?',
+    answer:
+      'For HueForge projects, choose filaments with known TD (Transmission Distance) values. White PLA with TD values between 1.0–4.0mm is ideal for most lithophane-style projects. FilaScope\'s HueForge TD database tracks transmissivity data for 500+ filaments from 40+ brands to help you find the perfect match.',
+  },
+  {
+    question: 'What is the best white filament for HueForge?',
+    answer:
+      'The best white filaments for HueForge have consistent, well-documented TD values. Popular choices include Polymaker PolyTerra PLA White and Bambu Lab PLA Basic White. The ideal TD value depends on your project — lower TD values (1–2mm) create higher contrast, while higher values (3–5mm) create softer, more translucent effects.',
+  },
+  {
+    question: 'How do I measure filament TD value?',
+    answer:
+      'TD (Transmission Distance) is measured by printing a calibration block at known thickness and measuring light transmission. The HueForge software includes a calibration tool for this purpose. Alternatively, use FilaScope\'s pre-measured TD database with values for 500+ filaments so you don\'t need to measure yourself.',
+  },
+  {
+    question: 'What is the difference between TD value and transmissivity?',
+    answer:
+      'In HueForge, TD (Transmission Distance) represents the thickness in millimeters at which a filament transitions from opaque to translucent. It is a practical measurement specific to HueForge. General transmissivity is a broader physics term. For HueForge projects, TD value is the measurement that matters.',
+  },
 ];
 
 // People Also Ask data (merged into FAQPage schema)
