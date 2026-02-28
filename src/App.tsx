@@ -392,7 +392,8 @@ const App = () => (
                   <Route path="/best-white-filaments" element={<BestWhiteFilaments />} />
                   <Route path="/filament-database" element={<FilamentDatabase />} />
                   <Route path="/best-filaments-for-beginners" element={<Navigate to="/guides/best-filaments-for-beginners" replace />} />
-                  <Route path="/filament-temperature-guide" element={<FilamentTemperatureGuide />} />
+                  <Route path="/guides/filament-temperature-guide" element={<FilamentTemperatureGuide />} />
+                  <Route path="/filament-temperature-guide" element={<Navigate to="/guides/filament-temperature-guide" replace />} />
                   <Route path="/filament-storage-guide" element={<FilamentStorageGuide />} />
                   <Route path="/best-filament-for-ender-3" element={<Navigate to="/guides/best-filament-for-ender-3" replace />} />
                   <Route path="/best-filament-for-bambu-lab-a1" element={<Navigate to="/guides/best-filament-for-bambu-lab-a1" replace />} />
