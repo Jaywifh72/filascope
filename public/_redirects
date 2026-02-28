@@ -1,3 +1,7 @@
+# robots.txt and llms.txt — proxied to serve-robots edge function
+/robots.txt https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots 200
+/llms.txt https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms 200
+
 # Sitemaps — served by prerender edge function
 /sitemap.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap.xml 200
 /sitemap-pages.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml 200
