@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useParams, useSearchParams, Navigate, Link } from "react-router-dom";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { useJsonLd } from "@/components/seo/useJsonLd";
-import { FAQSection } from "@/components/seo";
+import { FAQSection, FAQSchema } from "@/components/seo";
 import { MATERIAL_SLUG_CONFIG } from "@/pages/MaterialHub";
 import { materialNameToSlug } from "@/lib/materialSlugUtils";
 import { useFinderQuery, DEFAULT_PAGE_SIZE } from "@/hooks/useFinderQuery";
@@ -13,6 +14,7 @@ import { FilamentCard } from "@/components/FilamentCard";
 import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 import { CrawlablePaginationBar } from "@/components/CrawlablePaginationBar";
 import { RelatedSearchesSection } from "@/components/seo/RelatedSearchesSection";
+import { RelatedQuestionsSection } from "@/components/seo/RelatedQuestionsSection";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
 import { ExploreMoreSection } from "@/components/ExploreMoreSection";
 import { useRegion } from "@/contexts/RegionContext";
@@ -453,6 +455,66 @@ function generateMaterialCategoryFAQs(
   return faqs;
 }
 
+// ─────────────────────────────────────────────
+// People Also Ask — per-material AEO content
+// ─────────────────────────────────────────────
+const MATERIAL_PAA: Record<string, { question: string; answer: string }[]> = {
+  pla: [
+    {
+      question: 'What temperature should I print PLA at?',
+      answer: 'Most PLA filaments print best at 200–215°C nozzle temperature with a 50–60°C bed. However, some high-speed PLA variants need 220°C+. Check FilaScope\'s database for the exact recommended temperature for your specific PLA filament.',
+    },
+    {
+      question: 'Is PLA food safe?',
+      answer: 'PLA itself is derived from plant-based materials and is generally considered food-safe before printing. However, FDM-printed PLA has layer lines that harbor bacteria, and most colored PLA contains non-food-safe additives. For food contact, use food-safe certified filaments and consider a food-safe coating.',
+    },
+    {
+      question: 'How long does PLA last outdoors?',
+      answer: 'PLA degrades in direct sunlight and temperatures above 55–60°C. For outdoor use, PLA may warp or become brittle within weeks to months depending on conditions. For outdoor projects, use ASA or PETG instead — see our guide on best filaments for outdoor use.',
+    },
+    {
+      question: 'What is the strongest PLA filament?',
+      answer: 'PLA+ (PLA Plus) and PLA-CF (carbon fiber reinforced PLA) are the strongest PLA variants. PLA+ offers improved impact resistance over standard PLA, while PLA-CF provides higher stiffness and heat resistance. Compare strength ratings across brands on FilaScope.',
+    },
+  ],
+  petg: [
+    {
+      question: 'What temperature should I print PETG at?',
+      answer: 'PETG prints best at 230–250°C nozzle temperature with a 70–85°C heated bed. Unlike PLA, PETG benefits from reduced part cooling (30–50% fan speed) for better layer adhesion. Check FilaScope for brand-specific temperature recommendations.',
+    },
+    {
+      question: 'Is PETG stronger than PLA?',
+      answer: 'Yes. PETG has higher tensile strength (~50 MPa vs ~37 MPa for PLA), better impact resistance, and a higher glass transition temperature (~80°C vs ~60°C). PETG is the recommended upgrade from PLA for functional parts that need to withstand mechanical stress.',
+    },
+    {
+      question: 'Can PETG be used outdoors?',
+      answer: 'PETG has moderate UV resistance and handles outdoor temperatures better than PLA, but it will degrade over time in direct sunlight. For long-term outdoor use, ASA is a better choice. PETG works well for short-term outdoor items or parts with indirect sun exposure.',
+    },
+    {
+      question: 'Why does my PETG string so much?',
+      answer: 'PETG is naturally more prone to stringing than PLA due to its higher viscosity. Reduce stringing by increasing retraction distance (4–6mm for Bowden, 1–3mm for direct drive), lowering nozzle temperature by 5–10°C, and enabling coasting in your slicer settings.',
+    },
+  ],
+  abs: [
+    {
+      question: 'Do I need an enclosure to print ABS?',
+      answer: 'Yes, an enclosure is strongly recommended for ABS. Without one, temperature differentials cause warping, layer splitting, and poor adhesion. Even a simple cardboard or plastic enclosure that maintains ambient temperature above 35°C dramatically improves ABS print quality.',
+    },
+    {
+      question: 'What temperature should I print ABS at?',
+      answer: 'ABS prints at 230–260°C nozzle temperature with a 90–110°C heated bed. Minimal part cooling (0–30% fan) is recommended. An enclosed build chamber at 35–50°C ambient temperature prevents warping and improves layer adhesion.',
+    },
+    {
+      question: 'Is ABS safe to print indoors?',
+      answer: 'ABS emits styrene fumes when heated, which can cause headaches and respiratory irritation. Always print ABS in a well-ventilated area or use an enclosure with a HEPA/activated carbon filter. For a safer alternative with similar properties, consider ASA.',
+    },
+    {
+      question: 'What is the difference between ABS and ASA?',
+      answer: 'ASA is essentially a UV-stabilized version of ABS. Both have similar mechanical properties and print settings, but ASA resists yellowing and degradation from sunlight far better. Choose ABS for indoor functional parts and ASA for anything that will be exposed to outdoor conditions.',
+    },
+  ],
+};
+
 export default function FilamentCategoryPage() {
   const { slug } = useParams<{ slug?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -603,10 +665,12 @@ export default function FilamentCategoryPage() {
 
   useCategorySchemas(slug, metaConfig.h1, canonical, groups, displayCount);
 
-  // Generate FAQs for material category pages (plain function call, not hook)
-  const materialFaqs = slug && config
+  const paaQuestions = slug ? (MATERIAL_PAA[slug] ?? []) : [];
+  const baseFaqs = slug && config
     ? generateMaterialCategoryFAQs(slug, config.label, intro, materialStats)
     : [];
+  // Merge all Q&As into one array for the single FAQPage JSON-LD schema
+  const materialFaqs = [...baseFaqs, ...paaQuestions];
 
   return (
     <>
@@ -918,11 +982,37 @@ export default function FilamentCategoryPage() {
           </section>
         )}
 
-        {slug && materialFaqs.length > 0 && (
-          <FAQSection
-            faqs={materialFaqs}
-            title={`${config?.label ?? label} Filament — Frequently Asked Questions`}
+        {/* Single consolidated FAQPage schema for all Q&As (FAQ + PAA) */}
+        {slug && materialFaqs.length > 0 && <FAQSchema faqs={materialFaqs} />}
+
+        {slug && baseFaqs.length > 0 && (
+          <section className="mt-10 border-t border-border pt-8">
+            <h2 className="text-xl font-semibold mb-6">{`${config?.label ?? label} Filament — Frequently Asked Questions`}</h2>
+            <Accordion type="single" collapsible className="space-y-2">
+              {baseFaqs.map((faq, i) => (
+                <AccordionItem
+                  key={i}
+                  value={`faq-${i}`}
+                  className="border border-border rounded-lg px-4 bg-card"
+                >
+                  <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
+        )}
+
+        {slug && paaQuestions.length > 0 && (
+          <RelatedQuestionsSection
+            questions={paaQuestions}
+            title="People Also Ask"
             className="mt-10"
+            suppressSchema
           />
         )}
 
