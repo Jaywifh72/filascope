@@ -128,7 +128,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         dateModified={config.updatedAt}
         url={`/guides/${config.slug}`}
       />
-      <BreadcrumbSchema items={breadcrumbs} />
+      {/* BreadcrumbList JSON-LD is injected by <Breadcrumbs> below */}
       {/* Single merged FAQPage schema for both FAQ + People Also Ask */}
       {(config.faqs.length > 0 || (config.relatedQuestions && config.relatedQuestions.length > 0)) && (
         <FAQSchema faqs={[...config.faqs, ...(config.relatedQuestions ?? [])]} />

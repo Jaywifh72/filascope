@@ -159,10 +159,6 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
         answer: "A 1kg spool is the standard starting point and will last most beginners several weeks of casual printing. A typical small decorative model uses 30–80g, while a medium functional part might use 150–300g. You'll use roughly 10–15kg per year if you print daily, but 1kg is plenty to learn with.",
       },
       {
-        question: 'What is the difference between PLA and PLA+?',
-        answer: 'PLA+ (also sold as PLA Pro or ePLA-LW) is standard PLA blended with modifiers — typically impact tougheners or plasticizers — to improve flexibility and reduce brittleness. It prints 5–10°C hotter than standard PLA, has slightly better layer adhesion, and is less prone to snapping under stress. The trade-off is marginally higher cost, typically $2–5 more per kilogram.',
-      },
-      {
         question: 'Do I need a heated bed for PLA?',
         answer: "A heated bed is not strictly required for PLA, but it significantly improves first-layer adhesion and reduces warping. If your printer has a heated bed, set it to 50–60°C. On printers without a heated bed, use a PEI sheet or blue painter's tape to help adhesion. Most budget printers include a heated bed, so this is rarely a limitation in practice.",
       },
