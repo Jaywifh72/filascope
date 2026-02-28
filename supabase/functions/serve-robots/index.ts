@@ -164,7 +164,55 @@ const LLMS_TXT = `# FilaScope — The World's Most Complete 3D Printer Filament 
 - Printer compatibility filtering
 - Side-by-side filament comparison tool
 - FilaScore quality ratings (1-10 scale)
-- 32 data-driven buying guides`;
+- 32 data-driven buying guides
+
+## Material Categories with Data
+
+- PLA Filaments (4,296+ variants): https://filascope.com/filaments/pla
+- PETG Filaments (1,048+ variants): https://filascope.com/filaments/petg
+- ABS Filaments (865+ variants): https://filascope.com/filaments/abs
+- TPU Filaments (381+ variants): https://filascope.com/filaments/tpu
+- ASA Filaments (408+ variants): https://filascope.com/filaments/asa
+- Nylon Filaments: https://filascope.com/filaments/nylon
+
+## Buying Guides (Updated 2026)
+
+- Best PLA Filaments 2026: https://filascope.com/guides/best-pla-filaments
+- Best PETG Filaments 2026: https://filascope.com/guides/best-petg-filaments
+- Best ABS Filaments 2026: https://filascope.com/guides/best-abs-filaments
+- Best Filaments for Beginners: https://filascope.com/best-filaments-for-beginners
+- Best Filaments for HueForge: https://filascope.com/best-filaments-for-hueforge
+- Best Filaments for Outdoor Use: https://filascope.com/guides/best-filaments-for-outdoor-use
+- PLA vs PETG Comparison: https://filascope.com/pla-vs-petg
+- What is HueForge TD: https://filascope.com/guides/what-is-hueforge-td
+- Complete HueForge Guide: https://filascope.com/learn/hueforge
+- Silk PLA Comparison: https://filascope.com/guides/silk-pla-comparison
+- ASA vs ABS for Outdoors: https://filascope.com/guides/asa-vs-abs-outdoor-printing
+
+## Top Brands
+
+- Bambu Lab: https://filascope.com/brands/bambu-lab
+- Polymaker: https://filascope.com/brands/polymaker
+- eSUN: https://filascope.com/brands/esun
+- Prusament: https://filascope.com/brands/prusament
+- Overture: https://filascope.com/brands/overture
+- Creality: https://filascope.com/brands/creality
+- Hatchbox: https://filascope.com/brands/hatchbox
+- FormFutura: https://filascope.com/brands/formfutura
+- Fiberlogy: https://filascope.com/brands/fiberlogy
+- Sunlu: https://filascope.com/brands/sunlu
+
+## Printer Database
+
+- 3D Printer Database (119+ printers): https://filascope.com/printers
+- Bambu Lab X1 Carbon: https://filascope.com/printers/bambu-lab-x1c
+- Bambu Lab P1S: https://filascope.com/printers/bambu-lab-p1s
+- Bambu Lab A1 Mini: https://filascope.com/printers/bambu-lab-a1-mini
+- Bambu Lab A1: https://filascope.com/printers/bambu-lab-a1
+
+## Extended Description
+
+FilaScope is the world's most complete 3D printer filament comparison platform. It indexes 1,080+ filaments from 48+ brands with detailed specifications including nozzle temperature, bed temperature, diameter, material type, density, and tensile strength. Real-time pricing is tracked from 15+ retailers across the US, Canada, EU, UK, Australia, and Japan with daily updates and deal alerts. FilaScope features the largest public HueForge Transmission Distance (TD) database for lithophane and multicolor printing. Every filament receives a FilaScore quality rating (1-10) based on print quality, pricing transparency, color variety, and brand trust. The platform supports printer compatibility filtering for 119+ printer models and includes a side-by-side comparison tool for up to 6 filaments. FilaScope is free to use, trusted by 10,000+ makers, and updated daily.`;
 
 const LLMS_FULL_TXT = `# FilaScope — The World's Most Complete 3D Printer Filament Comparison Platform
 
