@@ -46,14 +46,14 @@ interface PrinterRow {
 }
 
 const PRINTERS: PrinterRow[] = [
-  { name: 'Bambu Lab X1C', maxTemp: '300°C', enclosure: 'Yes', pla: 'yes', petg: 'yes', abs: 'yes', asa: 'yes', tpu: 'yes', cf: 'note', nylon: 'yes', pc: 'yes', guide: '/guides/best-filament-for-bambu-lab-x1c' },
+  { name: 'Bambu Lab X1C', maxTemp: '300°C', enclosure: 'Yes', pla: 'yes', petg: 'yes', abs: 'yes', asa: 'yes', tpu: 'yes', cf: 'note', nylon: 'yes', pc: 'yes', guide: '/guides/best-filament-for-bambu-lab-x1-carbon' },
   { name: 'Bambu Lab P1S', maxTemp: '300°C', enclosure: 'Yes', pla: 'yes', petg: 'yes', abs: 'yes', asa: 'yes', tpu: 'yes', cf: 'note', nylon: 'yes', pc: 'yes', guide: '/guides/best-filament-for-bambu-lab-p1s' },
-  { name: 'Bambu Lab A1 (non-Mini)', maxTemp: '300°C', enclosure: 'No', pla: 'yes', petg: 'yes', abs: 'limited', asa: 'limited', tpu: 'yes', cf: 'note', nylon: 'limited', pc: 'no' },
-  { name: 'Bambu Lab A1 Mini', maxTemp: '300°C', enclosure: 'No', pla: 'yes', petg: 'yes', abs: 'limited', asa: 'limited', tpu: 'yes', cf: 'note', nylon: 'no', pc: 'no' },
-  { name: 'Prusa MK4', maxTemp: '290°C', enclosure: 'Optional', pla: 'yes', petg: 'yes', abs: 'yes', asa: 'yes', tpu: 'yes', cf: 'note', nylon: 'yes', pc: 'limited' },
+  { name: 'Bambu Lab A1 (non-Mini)', maxTemp: '300°C', enclosure: 'No', pla: 'yes', petg: 'yes', abs: 'limited', asa: 'limited', tpu: 'yes', cf: 'note', nylon: 'limited', pc: 'no', guide: '/guides/best-filament-for-bambu-lab-a1' },
+  { name: 'Bambu Lab A1 Mini', maxTemp: '300°C', enclosure: 'No', pla: 'yes', petg: 'yes', abs: 'limited', asa: 'limited', tpu: 'yes', cf: 'note', nylon: 'no', pc: 'no', guide: '/guides/best-filament-for-bambu-lab-a1-mini' },
+  { name: 'Prusa MK4', maxTemp: '290°C', enclosure: 'Optional', pla: 'yes', petg: 'yes', abs: 'yes', asa: 'yes', tpu: 'yes', cf: 'note', nylon: 'yes', pc: 'limited', guide: '/guides/best-filament-for-prusa-mk4' },
   { name: 'Prusa XL', maxTemp: '290°C', enclosure: 'No', pla: 'yes', petg: 'yes', abs: 'yes', asa: 'yes', tpu: 'yes', cf: 'note', nylon: 'yes', pc: 'limited' },
-  { name: 'Creality Ender 3 V3', maxTemp: '260°C', enclosure: 'No', pla: 'yes', petg: 'yes', abs: 'limited', asa: 'limited', tpu: 'yes', cf: 'no', nylon: 'no', pc: 'no', guide: '/guides/best-filament-for-ender-3' },
-  { name: 'Creality K1 / K1 Max', maxTemp: '300°C', enclosure: 'Yes', pla: 'yes', petg: 'yes', abs: 'yes', asa: 'yes', tpu: 'yes', cf: 'note', nylon: 'yes', pc: 'limited' },
+  { name: 'Creality Ender 3 V3', maxTemp: '300°C', enclosure: 'No', pla: 'yes', petg: 'yes', abs: 'limited', asa: 'limited', tpu: 'yes', cf: 'no', nylon: 'no', pc: 'no', guide: '/guides/best-filament-for-creality-ender-3-v3' },
+  { name: 'Creality K1 Max', maxTemp: '300°C', enclosure: 'Yes', pla: 'yes', petg: 'yes', abs: 'yes', asa: 'yes', tpu: 'yes', cf: 'note', nylon: 'yes', pc: 'limited', guide: '/guides/best-filament-for-creality-k1-max' },
   { name: 'AnkerMake M5C', maxTemp: '260°C', enclosure: 'No', pla: 'yes', petg: 'yes', abs: 'limited', asa: 'limited', tpu: 'yes', cf: 'no', nylon: 'no', pc: 'no' },
 ];
 

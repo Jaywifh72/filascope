@@ -9,9 +9,10 @@ interface GuideLink {
 const BRAND_GUIDES: Record<string, GuideLink[]> = {
   "Bambu Lab": [
     { href: "/guides/best-filament-for-bambu-lab-p1s", label: "Best Filament for Bambu Lab P1S" },
+    { href: "/guides/best-filament-for-bambu-lab-x1-carbon", label: "Best Filament for Bambu Lab X1 Carbon" },
+    { href: "/guides/best-filament-for-bambu-lab-a1-mini", label: "Best Filament for Bambu Lab A1 Mini" },
     { href: "/guides/best-filament-for-bambu-lab-a1", label: "Best Filament for Bambu Lab A1" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
-    { href: "/guides/best-petg-filaments", label: "Best PETG Filaments" },
   ],
   "Polymaker": [
     { href: "/guides/best-petg-filaments", label: "Best PETG Filaments" },
@@ -59,6 +60,8 @@ const BRAND_GUIDES: Record<string, GuideLink[]> = {
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
   ],
   "Creality": [
+    { href: "/guides/best-filament-for-creality-k1-max", label: "Best Filament for Creality K1 Max" },
+    { href: "/guides/best-filament-for-creality-ender-3-v3", label: "Best Filament for Ender 3 V3" },
     { href: "/guides/best-filaments-for-beginners", label: "Best Filament for Beginners" },
     { href: "/guides/best-pla-filaments", label: "Best PLA Filaments 2026" },
   ],
