@@ -88,6 +88,30 @@ const faqData = [
   },
 ];
 
+// People Also Ask data (merged into FAQPage schema)
+const paaData = [
+  {
+    question: 'What is a good TD value for HueForge?',
+    answer:
+      'The ideal TD value depends on the filament\'s role in your print. Black/dark filaments work best at TD 0.1–1.0 (very opaque). Dark mid-tones perform well at TD 1.0–1.5. Standard colors should be TD 1.5–5.0 for balanced light control. White filaments are best at TD 3.5–5.0+ for highlights. Translucent and silk filaments at TD 5.0–10.0+ create dramatic glow effects but are harder to control.',
+  },
+  {
+    question: 'What filament brand has the best HueForge colors?',
+    answer:
+      'Polymaker and Bambu Lab have the most comprehensive TD data coverage in the FilaScope database, with verified values across dozens of colors. eSUN, Hatchbox, and Prusament also have strong coverage. The best brand depends on color availability in your region — use this database to filter by brand and see which has verified TD values for the colors you need.',
+  },
+  {
+    question: 'Can I use PETG for HueForge?',
+    answer:
+      'Yes, PETG works for HueForge and lithophanes. PETG typically has higher TD values than PLA of the same color, making it naturally more translucent. This is advantageous for lithophanes (brighter results with fewer layers) but means you may need more layers for opaque regions in multicolor HueForge prints. White PETG is a popular choice for bright, high-contrast lithophanes.',
+  },
+  {
+    question: 'How do I measure filament TD?',
+    answer:
+      'Print a flat calibration swatch at 100% infill using 0.2mm layer height. Shine a bright light behind the swatch and count layers where light passes through. Multiply layer count by layer height (e.g., 15 layers × 0.2mm = TD 3.0). For a detailed step-by-step guide with calibration tips, see How to Measure Filament TD.',
+  },
+];
+
 // ── Types ─────────────────────────────────────────────────────────────
 interface TDFilament {
   id: string;
@@ -293,7 +317,7 @@ export default function HueForgeTDDatabase() {
         isAccessibleForFree={true}
         license="https://filascope.com/terms"
       />
-      <FAQSchema faqs={faqData} />
+      <FAQSchema faqs={[...faqData, ...paaData]} />
       <HowToSchema
         name="How to Use TD Values for Better Lithophanes"
         description="Learn how to select the right filament transmissivity distance (TD) value for HueForge lithophane and multicolor 3D printing projects."
@@ -747,6 +771,23 @@ export default function HueForgeTDDatabase() {
               Full TD Database
             </Link>
           </Button>
+        </section>
+
+        {/* ── People Also Ask ──────────────────────────────────────── */}
+        <section className="mt-16 max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">
+            People Also Ask
+          </h2>
+          <Accordion type="single" collapsible className="w-full">
+            {paaData.map((faq, i) => (
+              <AccordionItem key={i} value={`paa-${i}`}>
+                <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </section>
 
         <RelatedContentBlock

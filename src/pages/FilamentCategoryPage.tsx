@@ -792,6 +792,32 @@ export default function FilamentCategoryPage() {
           />
         )}
 
+        {/* People Also Ask — shown on root /filaments page only */}
+        {!slug && (
+          <FAQSection
+            faqs={[
+              {
+                question: 'What is the best 3D printer filament for beginners?',
+                answer: 'PLA is the best filament for beginners. It prints at low temperatures (190–220°C), requires no heated bed or enclosure, and produces consistent results on virtually every FDM printer. Browse PLA filaments or read the best filaments for beginners guide for detailed recommendations.',
+              },
+              {
+                question: 'How do I compare 3D printer filaments?',
+                answer: 'FilaScope lets you compare filaments side-by-side on specs, pricing, and compatibility. Use the comparison tool to evaluate up to 4 filaments at once — including temperature ranges, mechanical properties, regional pricing, and HueForge TD values.',
+              },
+              {
+                question: 'What filament should I use for HueForge?',
+                answer: 'For HueForge lithophanes and multicolor prints, you need filaments with known TD (Transmissivity Distance) values. White PLA with TD 4–6 is the most popular starting point. Search the HueForge TD Database for verified TD values across 500+ filaments from 40+ brands.',
+              },
+              {
+                question: 'Is PETG stronger than PLA?',
+                answer: 'Yes. PETG has higher tensile strength (~50 MPa vs ~37 MPa for PLA), better impact resistance, and a higher glass transition temperature (~80°C vs ~60°C). PETG is the recommended upgrade from PLA for functional parts. See the full PLA vs PETG comparison for detailed data.',
+              },
+            ]}
+            title="People Also Ask"
+            className="mt-10"
+          />
+        )}
+
         {/* Related Searches for SEO discoverability */}
         {slug && <RelatedSearchesSection materialSlug={slug} materialLabel={config?.label} />}
       </div>
