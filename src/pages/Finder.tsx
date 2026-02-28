@@ -1091,6 +1091,15 @@ const Finder = () => {
         newRegionName={regionConfig.name}
       />
 
+      {/* HueForge callout banner */}
+      <Link
+        to="/hueforge-td-database"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-sm text-purple-300 hover:bg-purple-500/15 hover:border-purple-500/30 transition-colors group"
+      >
+        <Layers className="w-4 h-4 shrink-0" />
+        <span>Looking for HueForge filaments? <strong className="font-semibold">Browse our TD Value Database →</strong></span>
+      </Link>
+
       {/* Results Header with Context */}
       <ResultsHeader
         count={totalCount}

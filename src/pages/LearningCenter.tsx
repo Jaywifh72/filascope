@@ -500,13 +500,66 @@ export default function LearningCenter() {
 
             {/* HueForge & Lithophane Guides */}
             <section className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">HueForge & Lithophane Guides</h2>
+              <h2 className="text-2xl font-bold mb-4">HueForge & Lithophane Guides</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Master HueForge filament painting and lithophane printing with TD value data from our database.
+                Start with the{' '}
+                <Link to="/hueforge-td-database" className="text-primary hover:underline font-medium">HueForge TD Value Database</Link>
+                {' '}or find compatible filaments with the{' '}
+                <Link to="/hueforge-filaments" className="text-primary hover:underline font-medium">HueForge Filament Finder</Link>.
+              </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {GUIDES.filter(g => 
                   ['hueforge-beginners-guide', 'understanding-td-values', 'hueforge-color-selection', 'hueforge-filaments', 'best-filaments-for-hueforge-lithophanes'].includes(g.slug)
                 ).map(guide => (
                   <GuideCard key={guide.slug} guide={guide} />
                 ))}
+                {/* Extra link cards for tools not in GUIDES */}
+                <Link to="/guides/what-is-hueforge-td">
+                  <Card className="bg-card/50 border-border hover:border-primary/50 hover:bg-card/80 transition-all group h-full">
+                    <CardContent className="p-6 flex flex-col h-full">
+                      <Badge variant="outline" className="bg-accent text-accent-foreground border-border w-fit mb-3">HueForge</Badge>
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">What is HueForge TD?</h3>
+                      <p className="text-sm text-muted-foreground flex-1">Understand Transmission Distance values and how they affect your HueForge prints.</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+                <Link to="/guides/best-white-filaments-for-hueforge">
+                  <Card className="bg-card/50 border-border hover:border-primary/50 hover:bg-card/80 transition-all group h-full">
+                    <CardContent className="p-6 flex flex-col h-full">
+                      <Badge variant="outline" className="bg-accent text-accent-foreground border-border w-fit mb-3">HueForge</Badge>
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Best White Filaments for HueForge</h3>
+                      <p className="text-sm text-muted-foreground flex-1">Top-rated white filaments ranked by TD value for HueForge base layers.</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+                <Link to="/guides/how-to-measure-filament-td">
+                  <Card className="bg-card/50 border-border hover:border-primary/50 hover:bg-card/80 transition-all group h-full">
+                    <CardContent className="p-6 flex flex-col h-full">
+                      <Badge variant="outline" className="bg-accent text-accent-foreground border-border w-fit mb-3">HueForge</Badge>
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">How to Measure Filament TD</h3>
+                      <p className="text-sm text-muted-foreground flex-1">Step-by-step guide to measuring your own filament TD values accurately.</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+                <Link to="/guides/best-filaments-for-hueforge">
+                  <Card className="bg-card/50 border-border hover:border-primary/50 hover:bg-card/80 transition-all group h-full">
+                    <CardContent className="p-6 flex flex-col h-full">
+                      <Badge variant="outline" className="bg-accent text-accent-foreground border-border w-fit mb-3">HueForge</Badge>
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Best Filaments for HueForge</h3>
+                      <p className="text-sm text-muted-foreground flex-1">TD-ranked filament recommendations for HueForge projects and lithophanes.</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+                <Link to="/guides/best-filaments-for-lithophanes">
+                  <Card className="bg-card/50 border-border hover:border-primary/50 hover:bg-card/80 transition-all group h-full">
+                    <CardContent className="p-6 flex flex-col h-full">
+                      <Badge variant="outline" className="bg-accent text-accent-foreground border-border w-fit mb-3">HueForge</Badge>
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Best Filaments for Lithophanes</h3>
+                      <p className="text-sm text-muted-foreground flex-1">Top filament picks optimized for lithophane printing with light transmission data.</p>
+                    </CardContent>
+                  </Card>
+                </Link>
               </div>
             </section>
 
