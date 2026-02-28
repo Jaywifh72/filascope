@@ -22,7 +22,7 @@ export function WebSiteSchema({
   name = 'FilaScope',
   url = BASE_URL,
   description = 'Compare 3D printer filaments by material, price, and specifications. Find the perfect filament for your printer with real-time pricing and HueForge TD values.',
-  searchTargetUrl = `${BASE_URL}/?search={search_term_string}`,
+  searchTargetUrl = `${BASE_URL}/filaments?search={search_term_string}`,
 }: WebSiteSchemaProps) {
   const websiteSchema = {
     '@context': 'https://schema.org',
