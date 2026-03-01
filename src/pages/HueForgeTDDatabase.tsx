@@ -54,7 +54,7 @@ import { TdRangeSlider } from '@/components/hueforge/TdRangeSlider';
 import { TdDistributionChart } from '@/components/hueforge/TdDistributionChart';
 import { TdValueCell } from '@/components/hueforge/TdValueCell';
 import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
-import { getSwatchColor, needsContrastRing, isApproximateColor } from '@/lib/swatchColor';
+import { getSwatchColor, needsContrastRing, needsLightContrastRing, isApproximateColor } from '@/lib/swatchColor';
 
 // ── FAQ data ──────────────────────────────────────────────────────────
 const faqData = [
@@ -883,6 +883,7 @@ export default function HueForgeTDDatabase() {
                           const filamentUrl = `/filament/${f.product_handle || f.id}`;
                           const displayHex = getSwatchColor(f.color_hex, f.color_family);
                           const darkSwatch = needsContrastRing(displayHex);
+                          const lightSwatch = needsLightContrastRing(displayHex);
                           rows.push(
                             <TableRow
                               key={f.id}
@@ -892,7 +893,7 @@ export default function HueForgeTDDatabase() {
                               <TableCell>
                                 {displayHex ? (
                                    <div
-                                    className={`w-8 h-8 rounded-full ring-1 transition-transform duration-150 group-hover:scale-110 ${darkSwatch ? 'ring-muted-foreground/50 shadow-[inset_0_0_6px_rgba(255,255,255,0.08)]' : 'ring-border'}`}
+                                    className={`w-8 h-8 rounded-full ring-1 transition-transform duration-150 group-hover:scale-110 ${darkSwatch ? 'ring-muted-foreground/50 shadow-[inset_0_0_6px_rgba(255,255,255,0.08)]' : lightSwatch ? 'ring-gray-600' : 'ring-border'}`}
                                     style={{ backgroundColor: displayHex }}
                                   />
                                 ) : (
@@ -984,6 +985,7 @@ export default function HueForgeTDDatabase() {
                         const filamentUrl = `/filament/${f.product_handle || f.id}`;
                         const displayHex = getSwatchColor(f.color_hex, f.color_family);
                         const darkSwatch = needsContrastRing(displayHex);
+                        const lightSwatch = needsLightContrastRing(displayHex);
                         return (
                           <Link
                             key={f.id}
@@ -995,7 +997,7 @@ export default function HueForgeTDDatabase() {
                             <div className="flex items-center gap-3 mb-3">
                               {displayHex ? (
                                 <div
-                                  className={`w-10 h-10 rounded-lg ring-1 shrink-0 ${darkSwatch ? 'ring-muted-foreground/50 shadow-[inset_0_0_6px_rgba(255,255,255,0.08)]' : 'ring-border'}`}
+                                  className={`w-10 h-10 rounded-lg ring-1 shrink-0 ${darkSwatch ? 'ring-muted-foreground/50 shadow-[inset_0_0_6px_rgba(255,255,255,0.08)]' : lightSwatch ? 'ring-gray-600' : 'ring-border'}`}
                                   style={{ backgroundColor: displayHex }}
                                 />
                               ) : (
@@ -1082,6 +1084,7 @@ export default function HueForgeTDDatabase() {
                     {group.items.map((f, i) => {
                       const displayHex = getSwatchColor(f.color_hex, f.color_family);
                       const darkSwatch = needsContrastRing(displayHex);
+                      const lightSwatch = needsLightContrastRing(displayHex);
                       return (
                       <Link
                         key={f.id}
@@ -1092,13 +1095,13 @@ export default function HueForgeTDDatabase() {
                           #{i + 1}
                         </span>
                         <div
-                          className="relative h-12 w-full rounded-lg mb-3 border border-white/10 overflow-hidden transition-all group-hover:border-white/20"
+                          className={`relative h-12 w-full rounded-lg mb-3 overflow-hidden transition-all ${lightSwatch ? 'border border-gray-600 group-hover:border-gray-500' : 'border border-white/10 group-hover:border-white/20'}`}
                           style={{ backgroundColor: displayHex || 'hsl(var(--muted))' }}
                         >
                           {/* Subtle diagonal gradient for depth on dark swatches */}
                           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/[0.05] pointer-events-none" />
-                          {/* Spool watermark */}
-                          <Package className="absolute inset-0 m-auto w-6 h-6 text-white opacity-[0.15] pointer-events-none" />
+                          {/* Spool watermark — dark icon for light swatches, white for dark */}
+                          <Package className={`absolute inset-0 m-auto w-6 h-6 opacity-[0.15] pointer-events-none ${lightSwatch ? 'text-black' : 'text-white'}`} />
                         </div>
                         <p className="text-sm font-semibold text-foreground truncate">{f.product_title}</p>
                         <p className="text-xs text-muted-foreground mb-2">{f.vendor}</p>
