@@ -35,6 +35,7 @@ interface MergedBrand {
   avgTransmissionDistance: number | null;
   colors: string[];
   topMaterials: string[];
+  allMaterials: string[];
   averageRating: number | null;
   priceIndicator: "$" | "$$" | "$$$" | null;
   automated: PublicBrand | null;
@@ -61,6 +62,7 @@ interface BrandStats {
   avgTransmissionDistance: number | null;
   colors: string[];
   topMaterials: string[];
+  allMaterials: string[];
 }
 
 // Public brand type - matches v_brand_directory view (live counts from filaments)
@@ -162,10 +164,10 @@ const Brands = () => {
           } else if (stats.hasPlastic) {
             spoolMaterial = "Plastic";
           }
-          const topMaterials = [...stats.materialCounts.entries()]
+          const allMaterials = [...stats.materialCounts.entries()]
             .sort((a, b) => b[1] - a[1])
-            .slice(0, 4)
             .map(([material]) => material);
+          const topMaterials = allMaterials.slice(0, 4);
           return {
             name,
             count: stats.count,
@@ -176,6 +178,7 @@ const Brands = () => {
               : null,
             colors: Array.from(stats.colorSet),
             topMaterials,
+            allMaterials,
           };
         })
         .sort((a, b) => b.count - a.count);
@@ -230,6 +233,7 @@ const Brands = () => {
         avgTransmissionDistance: filamentStats?.avgTransmissionDistance || null,
         colors: filamentStats?.colors || [],
         topMaterials: filamentStats?.topMaterials || [],
+        allMaterials: filamentStats?.allMaterials || [],
         averageRating: VERIFIED_BRANDS.includes(ab.display_name) ? 4.5 + Math.random() * 0.4 : null,
         priceIndicator: getPriceIndicator(variantCount),
         automated: ab,
@@ -251,6 +255,7 @@ const Brands = () => {
         hasEcoSpools: b.spoolMaterial === "Cardboard" || b.spoolMaterial === "Mixed",
         hasRfid: (b.avgTransmissionDistance ?? 0) > 0,
         topMaterials: b.topMaterials,
+        allMaterials: b.allMaterials,
         averageRating: VERIFIED_BRANDS.includes(b.name) ? 4.5 + Math.random() * 0.4 : null,
         priceIndicator: getPriceIndicator(b.count),
         automated: null,
@@ -264,17 +269,33 @@ const Brands = () => {
     return mergedBrands.filter(b => b.automated?.featured);
   }, [mergedBrands]);
 
-  // Calculate material counts for sidebar — count how many brands carry each material
+  // Normalize raw material name to sidebar category ID
+  const normalizeToCategoryId = (material: string): string => {
+    const upper = material.toUpperCase();
+    if (upper.includes('PLA') && !upper.includes('PETG')) return 'PLA';
+    if (upper.includes('PETG')) return 'PETG';
+    if (upper.includes('ABS') && !upper.includes('ASA')) return 'ABS';
+    if (upper.includes('ASA')) return 'ASA';
+    if (upper.includes('TPU') || upper.includes('TPE') || upper.includes('FLEX')) return 'TPU';
+    if (upper.includes('NYLON') || upper.includes('PA6') || upper.includes('PA12') || (upper.includes('PA') && /\bPA\b/.test(upper))) return 'Nylon';
+    if (upper.includes('PC') || upper.includes('POLYCARB')) return 'PC';
+    return 'Other';
+  };
+
+  // Calculate material counts for sidebar — count how many brands carry each material category
   const materialCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const brand of mergedBrands) {
-      for (const mat of brand.topMaterials) {
-        counts[mat] = (counts[mat] || 0) + 1;
+      // Track which categories this brand covers (deduplicate per brand)
+      const brandCategories = new Set<string>();
+      for (const mat of brand.allMaterials) {
+        brandCategories.add(normalizeToCategoryId(mat));
+      }
+      for (const cat of brandCategories) {
+        counts[cat] = (counts[cat] || 0) + 1;
       }
     }
-    // Sort by count descending, take top entries
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    return Object.fromEntries(sorted.slice(0, 10));
+    return counts;
   }, [mergedBrands]);
 
   // Filter brands with all criteria
@@ -310,8 +331,12 @@ const Brands = () => {
       // Price tier filter
       const matchesPriceTier = !filters.priceTier || brand.priceIndicator === filters.priceTier;
       
+      // Material filter — check if brand carries any of the selected material categories
+      const matchesMaterials = filters.materials.length === 0 || 
+        brand.allMaterials.some(mat => filters.materials.includes(normalizeToCategoryId(mat)));
+
       return matchesSearch && matchesVerified && matchesLivePricing && 
-             matchesHighSpeed && matchesRfid && matchesCardboard && matchesCount && matchesPriceTier;
+             matchesHighSpeed && matchesRfid && matchesCardboard && matchesCount && matchesPriceTier && matchesMaterials;
     });
 
     // Sort
