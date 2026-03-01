@@ -48,6 +48,7 @@ import HeroSection from "@/components/HeroSection";
 import { WebSiteSchema, OrganizationSchema, TrendingItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
+import { DiscoveryZone } from "@/components/DiscoveryZone";
 import { SearchIntelligenceBar } from "@/components/search/SearchIntelligenceBar";
 import { FilamentFilters } from "@/components/FilamentFilters";
 import { TechnicalConsoleSidebar } from "@/components/TechnicalConsoleSidebar";
@@ -1099,12 +1100,18 @@ const Finder = () => {
       {/* Trending Section — between hero and registry */}
       <TrendingSection />
 
+      {/* Discovery Zone — curated entry points */}
+      <DiscoveryZone
+        resetFilters={resetFilters}
+        updateFilter={updateFilter}
+        unfilteredProductCount={unfilteredProductCount}
+      />
 
       {/* Spacer between value props and catalog */}
       <div className="py-2" />
 
       {/* Bridge: Discovery → Catalog transition */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div id="catalog-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
           <h2 className="text-xl font-semibold text-foreground">Explore the Filament Catalog</h2>
           <p className="text-sm text-muted-foreground mt-1.5">
