@@ -22,7 +22,9 @@ import {
   ShoppingBag,
   Layers,
   Printer,
+  X,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 
 // Guide metadata type
 export interface GuideMetadata {
@@ -595,15 +597,12 @@ export default function LearningCenter() {
                 ))}
               </div>
             ) : (
-              <Card className="bg-card/50 border-dashed">
-                <CardContent className="p-12 text-center">
-                  <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                  <p className="text-muted-foreground">No guides found matching your search.</p>
-                  <Button variant="ghost" onClick={() => { setSearchTerm(''); setActiveCategory('all'); }} className="mt-4">
-                    Clear Filters
-                  </Button>
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={BookOpen}
+                title="No guides found"
+                message="Try a different search term or browse all categories."
+                action={{ label: 'Clear Filters', icon: X, onClick: () => { setSearchTerm(''); setActiveCategory('all'); } }}
+              />
             )}
           </section>
         )}

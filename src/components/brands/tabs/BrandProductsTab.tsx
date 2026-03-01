@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Package, ArrowUpDown, X, ExternalLink } from "lucide-react";
+import { Package, ArrowUpDown, X, ExternalLink, SearchX } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -521,11 +522,13 @@ export function BrandProductsTab({
             })}
           </div>
         ) : (
-          <Card>
-            <CardContent className="p-12 text-center text-muted-foreground">
-              No products found matching your filters
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={SearchX}
+            title="No products match your filters"
+            message="Try adjusting your material or category filters."
+            action={{ label: 'Clear Filters', icon: X, onClick: handleClearAll }}
+            compact
+          />
         )}
       </div>
     </div>

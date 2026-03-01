@@ -6,7 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PRINTING_GLOSSARY, GLOSSARY_CATEGORIES, searchGlossary, getTermsByCategory } from '@/lib/printingGlossary';
-import { BookOpen, Search } from 'lucide-react';
+import { BookOpen, Search, SearchX } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SKILL_LEVELS } from '@/lib/skillLevels';
 
 interface GlossarySearchModalProps {
@@ -89,9 +90,12 @@ export function GlossarySearchModal({ trigger }: GlossarySearchModalProps) {
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
               {filteredTerms.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No terms found matching "{searchQuery}"
-                </p>
+                <EmptyState
+                  icon={SearchX}
+                  title={`No terms found for "${searchQuery}"`}
+                  message="Try a different spelling or browse the full glossary."
+                  compact
+                />
               ) : (
                 filteredTerms.map((term) => {
                   const category = GLOSSARY_CATEGORIES[term.category];
