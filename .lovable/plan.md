@@ -1,79 +1,116 @@
 
 
-# Enhanced Reference Values Tab
+# Enhanced Filaments Tab for TD Management
 
-## Problem
-The Reference Values tab is a basic flat table with no match status indicators, no search/filter, no inline editing, no bulk actions, and no gap analysis. Admins can't tell which references are actually matching filaments.
+## Root Cause of "All Dashes" Issue
 
-## Solution: Server-Side Match Stats + Rich UI
+The query and data are correct -- 111 filaments have `transmission_distance` values. The display code at line 125 properly checks `f.transmission_distance != null`. The issue is that the default sort is `vendor ASC`, and with 8,277 filaments across many vendors, the first pages happen to show filaments without TD. The fix: default sort should prioritize filaments with TD, and the TD Status filter should be more prominent.
 
-### Step 1: Database RPC Function
+## Database Changes
 
-Create `get_td_reference_match_stats()` that returns match counts for each reference value by joining `td_reference_values` with `filaments`:
+### Add `td_confidence` and `td_source` columns to `filaments`
 
-```text
-For each reference:
-  - matched_count: filaments WHERE vendor ILIKE brand_name 
-                    AND transmission_distance = td_value 
-                    AND (color_family ILIKE color_name OR product_title ILIKE '%' || color_name || '%')
-  - brand_total: total filaments for that vendor + material
-  - brand_with_td: filaments with any TD for that vendor + material
-```
+The filaments table currently only has `transmission_distance`. Confidence and source metadata lives only in `td_population_log`. Add two columns directly to filaments so the table can display them without a join:
 
-Returns JSON array with ref ID, matched_count, brand_total, brand_with_td. Single query, no N+1 problem.
+- `td_confidence` (text, nullable) -- "high", "medium", "low"
+- `td_source` (text, nullable) -- "reference_match", "manual", "csv_import", etc.
+- `td_matched_at` (timestamptz, nullable) -- when the TD was applied
 
-Also create a gap analysis query that identifies:
-- Brands in references with zero matches
-- Duplicate (brand, color, material) entries with different TD values
+Also create a trigger that auto-populates these when `transmission_distance` is updated, or backfill from the population log for existing data.
 
-### Step 2: New Hooks in `useTdManagement.ts`
+### Backfill existing data
 
-- `useReferenceMatchStats()` -- calls the RPC, returns a Map keyed by ref ID
-- `useUpdateReferenceValue()` -- mutation for inline edits (`.update()` on `td_reference_values`)
-- `useBulkDeleteReferences()` -- deletes multiple IDs
-- `useBulkUpdateConfidence()` -- updates confidence for multiple IDs
+Run a one-time UPDATE that sets `td_confidence` and `td_source` from the most recent `td_population_log` entry for each filament that has a TD value.
 
-### Step 3: Rewrite `TdReferenceTable.tsx`
+## Hook Changes (`useTdManagement.ts`)
 
-Major UI rebuild with these sections:
+### Expand `TdFilamentFilters`
 
-**Header bar**: Count label + Search input + Filter dropdowns (Source, Confidence, Match Status) + Add Reference button
+Add new filter options:
+- `tdStatus` expanded from `'all' | 'has-td' | 'missing-td'` to also include `'high-conf' | 'medium-conf' | 'low-conf' | 'recent-24h'`
 
-**Table columns**: Checkbox | Brand | Color | Material | TD | Source | Confidence | Match Status | Coverage | Actions (edit/delete)
+### Update `useTdFilaments` query
 
-**Features**:
-- **Search**: Real-time filter by brand, color, or material
-- **Sortable columns**: Click header to toggle ASC/DESC sort
-- **Inline editing**: Click TD value/confidence/source cells to edit in-place, save on blur/Enter
-- **Bulk actions**: Floating bar when checkboxes selected -- "Delete Selected", "Set Confidence", "Re-run Matching"
-- **Match Status badge**: Green "Matched (N)" / Amber "Partial (N)" / Red "No Match" computed from RPC stats
-- **Coverage column**: "12/47" format showing brand+material TD coverage
-- **Pagination**: 50 rows per page default, with page size selector
+- Add `td_confidence, td_source, td_matched_at` to the SELECT
+- Add filter logic for confidence-based and recently-matched filters
+- Accept a `pageSize` parameter instead of fixed 50
+- Support multi-column sorting (vendor, then material, then color as secondary)
 
-**Gap Analysis panel** (collapsible, below table):
-- Brands with references but no matches (naming mismatches)
-- Duplicate references (same brand+color+material, different TD)
-- Stale references (not updated in 30+ days)
+### Update `useUpdateTdValue`
 
-**Improved Add Reference dialog**:
-- Brand field with autocomplete from filament vendors
-- Hex code input with color preview swatch
-- Expanded source options including `3dfilamentprofiles_community`, `manufacturer_official`
-- TD range expanded to 0.1-100
+- Accept `source` and `confidence` parameters for the quick-assign feature
+- Update `td_confidence`, `td_source`, `td_matched_at` on the filaments table alongside `transmission_distance`
 
-## Files
+### Add `useTdSuggestions` hook
+
+A lightweight hook that fetches from `td_reference_values` for a given brand+material combo to provide suggested TD values for unmatched filaments. Called lazily when a user expands a row or hovers.
+
+### Add `useBulkUpdateTd` and `useBulkClearTd` mutations
+
+For bulk selection actions -- set or clear TD for multiple filaments at once.
+
+## Component Rewrite (`TdFilamentsTable.tsx`)
+
+### Filter bar improvements
+- TD Status dropdown expanded with confidence-level and "Recently Matched" options
+- Page size selector (25/50/100/200)
+- Display "Showing 1-50 of 8,277" text
+
+### Table columns
+| Checkbox | Vendor | Product Title | Material | Color | Swatch | TD Value | Suggested | Updated |
+
+### TD Value cell
+- When populated: cyan text with confidence dot (green/amber/gray circle)
+- Tooltip on hover showing TD value, source, confidence, and match reason
+- Click to open edit popover (not just an input field)
+- When empty: gray dash with a small "+" button
+
+### Quick-assign popover
+When clicking "+" or an existing TD value:
+- TD Value number input (0.1-100, step 0.01)
+- Source dropdown: manual_entry, self_measured, community_report
+- Confidence dropdown: high, medium, low
+- "Find Similar" section showing matching reference values for this brand+color+material
+- Save button that updates filament + logs to population log
+
+### Suggested TD column
+- Looks up `td_reference_values` for matching brand + material
+- Shows suggested value in gray italic (e.g., "~2.36") with an "Apply" button
+- Computed client-side by fetching reference values for the current page's brands
+
+### Row styling
+- Left border color coding: green for has-TD, amber for low-confidence TD, none for missing
+- Zebra striping for readability
+
+### Checkbox column and bulk actions
+- Checkbox per row + "Select All" in header
+- Floating action bar when selections exist:
+  - "Set TD for Selected (N)" -- opens dialog with TD value + source + confidence
+  - "Clear TD for Selected (N)" -- with confirmation dialog
+
+### Column sorting
+- Clickable headers with sort indicators
+- Sort by TD Value puts nulls last
+- Default multi-sort: vendor ASC, material ASC, color ASC
+
+### Pagination
+- Page size selector (25/50/100/200)
+- "Showing X-Y of Z" display
+- Previous/Next buttons
+
+## Files Summary
 
 | Action | File | Description |
 |--------|------|-------------|
-| CREATE | Database migration | `get_td_reference_match_stats()` RPC |
-| MODIFY | `src/hooks/useTdManagement.ts` | Add match stats hook, update mutation, bulk operations |
-| REWRITE | `src/components/admin/td-management/TdReferenceTable.tsx` | Full rebuild with all enhancements |
+| CREATE | Database migration | Add td_confidence, td_source, td_matched_at columns; backfill from logs |
+| MODIFY | `src/hooks/useTdManagement.ts` | Expand filters, update query SELECT, add bulk mutations, add suggestions hook |
+| REWRITE | `src/components/admin/td-management/TdFilamentsTable.tsx` | Full rebuild with all enhancements |
 
 ## Technical Notes
 
-- The RPC uses a single aggregate query joining `td_reference_values` with `filaments`, avoiding per-row queries
-- Match status is cached via React Query key `['td-reference-match-stats']`, invalidated alongside `['td-reference-values']`
-- Inline edit saves use optimistic updates for responsiveness
-- Gap analysis (duplicates, stale) is computed client-side from the reference data since it's only ~234 rows
-- Brand autocomplete fetches distinct vendors from filaments table (separate small query)
+- The backfill migration uses a correlated subquery: `UPDATE filaments SET td_confidence = (SELECT confidence FROM td_population_log WHERE filament_id = filaments.id AND status = 'applied' ORDER BY created_at DESC LIMIT 1)` and similarly for td_source
+- Suggested TD values are fetched once per page load by collecting the unique vendors on the current page and querying `td_reference_values` for those brands
+- The quick-assign popover uses the existing Popover component from Radix
+- Bulk operations log each affected filament to `td_population_log` individually for audit trail completeness
+- The TD value range is expanded from 0.1-15 to 0.1-100 to accommodate specialty filaments
 
