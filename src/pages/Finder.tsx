@@ -72,6 +72,8 @@ import { TrendingSection } from "@/components/TrendingSection";
 import { MobileQuickMatchPrompt } from "@/components/MobileQuickMatchPrompt";
 import WhyFilaScope from "@/components/WhyFilaScope";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
+import { GridBreakCard, getBreakType, isDismissed } from "@/components/GridBreakCard";
+import { useTopDeals } from "@/hooks/useTopDeals";
 
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
@@ -379,6 +381,10 @@ const Finder = () => {
   
   // Printer selection hook
   const { selectedPrinter } = usePrinterSelection();
+
+  // Top deals for break cards
+  const { data: topDeals } = useTopDeals();
+  const [dismissedBreaks, setDismissedBreaks] = useState<Record<string, boolean>>({});
   
   // Compatible count context - update navbar badge
   const { setCount: setCompatibleCount } = useCompatibleCount();
@@ -1161,6 +1167,7 @@ const Finder = () => {
       {/* Quick Filter Pills */}
       <QuickFilterPills
         activeFilter={activeQuickFilter}
+        filteredCount={totalCount}
         onFilterChange={(filterId) => {
           setActiveQuickFilter(filterId);
           // Apply filter presets
@@ -1673,6 +1680,25 @@ const Finder = () => {
 
                 return (
                   <React.Fragment key={filament.id}>
+                    {/* Break moment card every 8th item */}
+                    {index > 0 && index % 8 === 0 && (() => {
+                      const breakType = getBreakType(index, !!selectedPrinter);
+                      if (isDismissed(breakType) || dismissedBreaks[breakType]) return null;
+                      const topDeal = topDeals?.[0];
+                      return (
+                        <GridBreakCard
+                          type={breakType}
+                          tipIndex={Math.floor(index / 8)}
+                          dealData={topDeal ? {
+                            name: topDeal.product_title,
+                            discount: topDeal.savings_percent,
+                            pricePerKg: `$${topDeal.price_per_kg}`,
+                            slug: topDeal.id,
+                          } : undefined}
+                          onDismiss={(t) => setDismissedBreaks(prev => ({ ...prev, [t]: true }))}
+                        />
+                      );
+                    })()}
                     {/* OOS section divider */}
                     {oosStartIndex > 0 && index === oosStartIndex && (
                       <div className="col-span-full flex items-center gap-3 py-3" role="separator">
