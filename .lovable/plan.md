@@ -1,138 +1,132 @@
 
 
-# HueForge Layer Stacking Preview
+# HueForge Project Planner
 
 ## Overview
-An interactive visualization tool that lets users select filaments, assign layer counts, and see a simulated stacking preview with light transmission calculations. Available as a full page at `/hueforge-layer-preview` and as a compact widget embedded on the TD database and filament detail pages.
+A guided 4-step wizard at `/hueforge-project-planner` that walks users through configuring a HueForge project and outputs a complete filament shopping list with TD-verified recommendations.
 
 ## Architecture
 
 ```text
 src/
   pages/
-    HueForgeLayerPreview.tsx              -- Full page with SEO
+    HueForgeProjectPlanner.tsx              -- Main page, renders wizard
   components/
     hueforge/
-      layer-preview/
-        LayerSlotSelector.tsx             -- Vertical stack of filament slots with combobox + layer count
-        LayerStackVisualization.tsx        -- Main visual: stacked bands (backlit + ambient side-by-side)
-        LayerMetricsTable.tsx             -- Table with per-layer opacity & cumulative transmission
-        LayerPreviewPresets.tsx           -- Preset dropdown (Classic Portrait, High Contrast, Landscape)
-        LayerPreviewTips.tsx              -- Collapsible tips sidebar
-        LayerPreviewCompact.tsx           -- Compact 2-slot widget for embedding
-      useLayerPreviewState.ts            -- State hook (reducer + localStorage + URL sync)
+      project-planner/
+        useProjectPlannerState.ts           -- Reducer + localStorage persistence
+        PlannerStepProjectType.tsx           -- Step 1: Pick project type
+        PlannerStepColorCount.tsx            -- Step 2: Color count + palette structure
+        PlannerStepPickFilaments.tsx         -- Step 3: Select filaments per slot
+        PlannerStepReview.tsx               -- Step 4: Review + shopping list
+        PlannerFilamentSlotPicker.tsx        -- Per-slot filtered filament selector
+        PlannerPalettePreview.tsx            -- Running swatch strip
 ```
 
+## State Management (`useProjectPlannerState.ts`)
+
+Uses `useReducer` with localStorage persistence (key: `hfp-project-planner`).
+
+**State shape:**
+```text
+{
+  step: 1-4,
+  projectType: string | null,
+  colorCount: number,
+  slots: Array<{
+    role: string,
+    targetTdMin: number,
+    targetTdMax: number,
+    targetColorFamily: string,
+    selectedFilamentId: string | null
+  }>,
+  customRoles: boolean
+}
+```
+
+**Actions:** SET_PROJECT_TYPE, SET_COLOR_COUNT, SET_SLOT_FILAMENT, SET_STEP, UPDATE_SLOT_ROLE, TOGGLE_CUSTOM_ROLES, RESET
+
+Navigating back preserves all state. Step validation: Step 3 requires Step 1+2 data; Step 4 requires all slots filled.
+
+## Step Details
+
+### Step 1 -- Project Type
+- 6 large clickable cards with emoji icons, title, description, and recommended color count
+- Selecting a card auto-advances to Step 2 and sets recommended `colorCount`
+- Reuses existing Card component with cyan border on selection
+
+### Step 2 -- Color Count and Palette Direction
+- Number stepper (1-8) pre-set from Step 1
+- Dynamic palette structure preview based on count (auto-generates slot roles with target TD ranges)
+- Slot role mapping:
+  - Slot 1 (base): "Base Layer -- Opaque", TD 0.3-1.0, Black/Very Dark
+  - Middle slots: distributed across TD 1.0-3.5 range
+  - Last slot: "Highlights", TD 3.0+, White/Light
+- "Customize Roles" toggle reveals editable TD range inputs and color family selectors per slot
+
+### Step 3 -- Pick Filaments
+- For each slot: header with role + target TD range, pre-filtered filament list using the existing `color-finder-filaments` TanStack Query (filtered to `transmission_distance IS NOT NULL` and within target TD range)
+- Reuses `SubstituteFilamentPicker` combobox pattern for each slot
+- Running `PlannerPalettePreview` strip at top showing selected swatches
+- TD coverage score: simple calculation checking if selected filaments span the needed TD range without gaps
+- "Next" enabled only when all slots have selections
+
+### Step 4 -- Review and Shopping List
+- Summary card: project type, color count, TD range coverage, estimated total cost
+- Clean table with Layer, Role, Filament, Brand, TD, Color swatch, Suggested Layers, Price, Buy link
+- Suggested layer counts derived from TD value:
+  - TD < 1: 3-4 layers
+  - TD 1-2: 2-3 layers  
+  - TD 2-3: 1-2 layers
+  - TD 3+: 1 layer
+- Action buttons: Copy Shopping List, Share (URL with encoded selections), Open in Layer Preview (link with params)
+- Print settings recommendations section
+
+## Step Navigation
+- Reuses existing `WizardStepIndicator` component from `src/components/admin/inventory/wizard/`
+- Labels: "Project Type", "Colors", "Filaments", "Plan"
+- Click-back to any completed step without losing data
+
+## Database
+
+New table `user_hueforge_plans` for authenticated users to save plans:
+- Columns: id, user_id, name, project_type, filament_ids (uuid[]), layer_counts (integer[]), notes, created_at, updated_at
+- RLS: users can only manage their own plans
+- "Save Plan" button only shown to authenticated users
+
 ## Data Flow
-- Reuses the existing `hueforge-td-database` TanStack Query for filaments with `transmission_distance IS NOT NULL`
-- Reuses `SubstituteFilamentPicker` component (or a variant) for filament combobox selection
-- All visualization is client-side using layered CSS divs with opacity
-- No new database tables or migrations needed
-
-## State Management (`useLayerPreviewState.ts`)
-- `useReducer` with actions: ADD_LAYER, REMOVE_LAYER, SET_FILAMENT, SET_LAYER_COUNT, CLEAR, LOAD_PRESET
-- Each layer: `{ filamentId: string | null, layerCount: number }`
-- Persist to `localStorage` key `hfp-layer-preview`
-- URL sync via params: `?l1=uuid,3&l2=uuid,2&l3=uuid,1` (filament_id,layer_count pairs)
-- Default state: 2 empty slots with layer counts 3 and 1
-
-## Components
-
-### LayerSlotSelector
-- Renders 2-6 vertical slots (bottom to top order)
-- Each slot: `SubstituteFilamentPicker` combobox + number input (1-20) for layer count + clear button
-- Labels: "Base Layer", "Layer 2", ..., "Top Layer" (dynamic based on position)
-- "Add Layer" button (max 6), "x" remove on each slot (min 2)
-- Slots display selected filament's color swatch, name, and TD value
-
-### LayerStackVisualization
-- Two side-by-side preview rectangles (each ~200px wide x 300px tall on desktop):
-  - Left: White background ("Backlit View") -- simulates lithophane with light behind
-  - Right: Black background ("Ambient View") -- simulates no backlight
-- Each layer rendered as a horizontal div band:
-  - Height proportional to layer count (e.g., 3 layers = 3x taller than 1 layer)
-  - Background color = filament's `color_hex`
-  - Opacity derived from TD and layer count: `opacity = 1 - Math.exp(-layerCount * 0.2 / tdValue)`, clamped to [0.1, 1.0]
-- Layers stack bottom-to-top using flexbox column-reverse or absolute positioning
-- 1px border between layers: `border-top: 1px solid rgba(255,255,255,0.1)`
-- Below both previews: a "Composite" swatch showing the approximate blended result via iterative alpha compositing of all layers
-- Disclaimer text below composite
-
-### LayerMetricsTable
-- Standard Shadcn Table with columns: Layer, Filament, TD, Layers, Effective Opacity, Cumulative Light Transmission
-- Effective Opacity = `1 - Math.exp(-layerCount * 0.2 / tdValue)` (percentage)
-- Cumulative Transmission calculated iteratively: start at 100%, multiply by `(1 - effectiveOpacity)` for each layer bottom-to-top
-- Footer row: Total layers count + final transmission percentage
-
-### LayerPreviewPresets
-- A Select dropdown with 3 presets
-- Each preset defines filament specs (color family + approximate TD); on load, find closest matching filaments from the dataset
-- Presets: "Classic Portrait" (4 layers), "High Contrast Duo" (2 layers), "Landscape" (3 layers)
-
-### LayerPreviewTips
-- Collapsible section using Shadcn Accordion
-- 5 bullet tips about HueForge layer strategy
-- Link to HueForge guide page
-
-### LayerPreviewCompact (embeddable widget)
-- Simplified version: 2 filament slots + small 200x150px stacking preview
-- No metrics table, no presets, no tips
-- "Open full preview" link to `/hueforge-layer-preview`
-- Accepts optional `initialFilamentId` prop to pre-populate slot 1
-
-## Full Page (`HueForgeLayerPreview.tsx`)
-- SEO: DocumentHead with title "HueForge Layer Stacking Preview" and meta description
-- Breadcrumbs: Home > HueForge TD Database > Layer Preview
-- BreadcrumbSchema structured data
-- Layout: responsive grid -- on desktop, slots + tips on left (40%), visualization + metrics on right (60%); on mobile, stacked vertically
-- Loads filaments via shared TanStack Query
+- Reuses the existing `useColorFinderFilaments` hook (already cached via TanStack Query)
+- Filters to filaments with `transmission_distance IS NOT NULL` client-side
+- All wizard logic is client-side; DB only used for saving plans
 
 ## Integration Points
 
-### TD Database Page (`HueForgeTDDatabase.tsx`)
-- Add "Layer Preview" button in hero section buttons row (alongside "Find Filaments", "Find Substitutes", "Export CSV")
-- Embed `LayerPreviewCompact` widget between the educational content section and the "Browse Filaments by TD Value" table
+### Routing (App.tsx)
+- Add lazy import + route: `/hueforge-project-planner` -> `HueForgeProjectPlanner`
 
-### Filament Detail Pages
-- Add `LayerPreviewCompact` with `initialFilamentId={filament.id}` in the TD/specs section (only when filament has TD data)
+### TD Database Page (HueForgeTDDatabase.tsx)
+- Add "Plan a Project" button in hero section buttons row
 
-### Routing (`App.tsx`)
-- Add lazy import + route: `/hueforge-layer-preview` -> `HueForgeLayerPreview`
+### Footer (SiteFooter.tsx)
+- Add "HueForge Project Planner" to toolLinks array
 
-### Footer (`SiteFooter.tsx`)
-- Add "Layer Stacking Preview" to `toolLinks` array
-
-## Opacity & Transmission Model
-
-The simplified physics model for visualization:
-
-```text
-For each layer i (bottom to top):
-  effectiveOpacity_i = 1 - exp(-layerCount_i * 0.2 / td_i)
-  clamped to [0.1, 1.0]
-
-Cumulative transmission starts at 1.0 (100%):
-  transmission *= (1 - effectiveOpacity_i)
-
-Composite color (iterative alpha blending):
-  Start with background (white for backlit, black for ambient)
-  For each layer bottom to top:
-    result = layer_color * opacity + result * (1 - opacity)
-```
+## Sharing
+- "Share Plan" generates a URL with query params encoding selections: `?type=portrait&f1=uuid&f2=uuid&...`
+- On page load, if URL params present, hydrate state from them
 
 ## Responsive Design
-- Desktop: two-column layout (slots + tips | visualization + metrics)
-- Mobile (< 768px): single column, everything stacked
-- Compact widget: always single-column, minimal height
+- Desktop: cards in 3x2 grid (Step 1), 2-column layout (Step 3)
+- Mobile: single column, scrollable filament cards, stacked action buttons
+- Step transitions use CSS `transition` for smooth left-to-right feel
 
 ## Implementation Sequence
-1. Create `useLayerPreviewState.ts` hook (reducer + localStorage + URL sync)
-2. Build `LayerSlotSelector` (reusing `SubstituteFilamentPicker`)
-3. Build `LayerStackVisualization` (CSS divs with opacity + composite calculation)
-4. Build `LayerMetricsTable`
-5. Build `LayerPreviewPresets` and `LayerPreviewTips`
-6. Compose into `HueForgeLayerPreview.tsx` full page with SEO
-7. Build `LayerPreviewCompact` widget
-8. Integrate: add route to `App.tsx`, hero button + widget to `HueForgeTDDatabase.tsx`, footer link
-9. Add compact widget to filament detail pages (where TD exists)
+1. Create `useProjectPlannerState.ts` (reducer + localStorage + palette generation logic)
+2. Build Step 1 (PlannerStepProjectType) -- project type cards
+3. Build Step 2 (PlannerStepColorCount) -- color count + slot role preview
+4. Build Step 3 (PlannerStepPickFilaments + PlannerFilamentSlotPicker) -- filament selection per slot
+5. Build Step 4 (PlannerStepReview) -- shopping list + actions
+6. Build PlannerPalettePreview strip component
+7. Create database migration for `user_hueforge_plans` table with RLS
+8. Compose into HueForgeProjectPlanner.tsx page with SEO
+9. Integrate: route in App.tsx, hero button on TD database page, footer link
 
