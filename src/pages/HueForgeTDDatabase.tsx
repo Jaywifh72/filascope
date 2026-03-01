@@ -38,6 +38,7 @@ import {
 import { FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
 import { FilamentsNeedingTdSection } from '@/components/filament/td-community/FilamentsNeedingTdSection';
 import { TdSubstituteFinder } from '@/components/hueforge/TdSubstituteFinder';
+import { LayerPreviewCompact } from '@/components/hueforge/layer-preview/LayerPreviewCompact';
 import { HowToSchema } from '@/components/seo/HowToSchema';
 import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -449,6 +450,12 @@ export default function HueForgeTDDatabase() {
                 Find Substitutes
               </Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link to="/hueforge-layer-preview">
+                <Sun className="w-4 h-4 mr-2" />
+                Layer Preview
+              </Link>
+            </Button>
             <Button variant="outline" onClick={exportCSV} disabled={!filteredData.length}>
               <Download className="w-4 h-4 mr-2" />
               Export CSV
@@ -828,6 +835,13 @@ export default function HueForgeTDDatabase() {
         {filaments && filaments.length > 0 && (
           <section className="mt-16">
             <TdSubstituteFinder filaments={filaments} compact />
+          </section>
+        )}
+
+        {/* ── Layer Preview Compact Widget ──────────────────────────── */}
+        {filaments && filaments.length > 0 && (
+          <section className="mt-16 max-w-2xl mx-auto">
+            <LayerPreviewCompact filaments={filaments} />
           </section>
         )}
 
