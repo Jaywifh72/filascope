@@ -10,6 +10,7 @@ import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { SectionError } from "@/components/ui/SectionError";
 import { withRetry } from "@/lib/retry";
+import { MaterialBadge } from "@/components/MaterialBadge";
 
 interface TrendingFilament {
   id: string;
@@ -28,7 +29,6 @@ function useTrendingFilaments(regionCode: string) {
   return useQuery({
     queryKey: ["trending-filaments", regionCode],
     queryFn: () => withRetry(async (): Promise<TrendingFilament[]> => {
-      // Primary: filaments with available listings in the user's region
       const { data: regional, error: regionalError } = await supabase
         .from("filament_listings")
         .select(`
@@ -47,7 +47,6 @@ function useTrendingFilaments(regionCode: string) {
         .limit(8);
 
       if (!regionalError && regional && regional.length >= 4) {
-        // Deduplicate by filament_id, keep cheapest; max 2 per brand
         const seen = new Set<string>();
         const brandCount = new Map<string, number>();
         const results: TrendingFilament[] = [];
@@ -74,7 +73,6 @@ function useTrendingFilaments(regionCode: string) {
         if (results.length >= 4) return results;
       }
 
-      // Fallback: global value_score
       const { data, error } = await supabase
         .from("filaments")
         .select(
@@ -85,7 +83,6 @@ function useTrendingFilaments(regionCode: string) {
         .order("value_score", { ascending: false })
         .limit(20);
       if (error) throw error;
-      // Apply max 2 per brand
       const brandCount = new Map<string, number>();
       const filtered: TrendingFilament[] = [];
       for (const f of (data || []) as TrendingFilament[]) {
@@ -102,11 +99,26 @@ function useTrendingFilaments(regionCode: string) {
   });
 }
 
-function TrendingCard({ filament }: { filament: TrendingFilament }) {
+function getRankStyle(index: number) {
+  if (index === 0) return "text-2xl font-black text-cyan-400/80";
+  if (index === 1) return "text-xl font-bold text-cyan-400/60";
+  return "text-lg font-semibold text-gray-500/60";
+}
+
+function getTrendBadge(index: number) {
+  if (index < 2)
+    return { emoji: "🔥", label: "Most Viewed", classes: "bg-orange-500/20 text-orange-300 border border-orange-500/30" };
+  if (index < 4)
+    return { emoji: "📈", label: "Rising", classes: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" };
+  return { emoji: "⭐", label: "Popular", classes: "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" };
+}
+
+function TrendingCard({ filament, index }: { filament: TrendingFilament; index: number }) {
   const { formatPrice } = useRegion();
   const colorHex = normalizeColorHex(filament.color_hex);
   const price = filament.variant_price ? formatPrice(filament.variant_price) : null;
   const hasImage = !!filament.featured_image;
+  const badge = getTrendBadge(index);
 
   let name = filament.product_title || "";
   if (filament.vendor && name.toLowerCase().startsWith(filament.vendor.toLowerCase())) {
@@ -116,11 +128,16 @@ function TrendingCard({ filament }: { filament: TrendingFilament }) {
   return (
     <Link
       to={getFilamentUrl(filament)}
-      className="group/card block shrink-0 w-[220px] bg-card/60 border border-border/40 rounded-xl p-3 hover:bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-black/20 transition-all duration-150 ease-out cursor-pointer"
+      className="group/card relative block shrink-0 w-[220px] bg-card/60 border border-border/40 rounded-xl p-3 hover:bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-cyan-500/10 hover:scale-[1.03] transition-all duration-150 ease-out cursor-pointer"
     >
+      {/* Rank number */}
+      <span className={`absolute top-2 left-2 z-10 ${getRankStyle(index)} leading-none select-none sm:text-inherit`} style={{ fontSize: index > 1 ? undefined : undefined }}>
+        #{index + 1}
+      </span>
+
       <div className="flex gap-3">
         {/* Thumbnail area with color swatch badge */}
-        <div className="relative flex-shrink-0">
+        <div className="relative flex-shrink-0 mt-1">
           <div className="w-14 h-14 rounded-lg overflow-hidden">
             <ImageWithFallback
               src={filament.featured_image ? getOptimizedImageUrl(filament.featured_image, 112) : null}
@@ -142,26 +159,41 @@ function TrendingCard({ filament }: { filament: TrendingFilament }) {
         </div>
 
         {/* Text content */}
-        <div className="flex-1 min-w-0 flex flex-col">
+        <div className="flex-1 min-w-0 flex flex-col pt-4">
           <span className="text-sm font-medium text-foreground/90 group-hover/card:text-foreground transition-colors duration-150 line-clamp-2 leading-tight">
             {name}
           </span>
           <span className="text-xs text-muted-foreground truncate mt-0.5">
             {filament.vendor}
           </span>
+          {/* Material badge */}
+          {filament.material && (
+            <div className="mt-1">
+              <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                {filament.material}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Bottom row: trending badge + price */}
       <div className="flex items-center justify-between mt-2.5 gap-2">
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 whitespace-nowrap">
-          🔥 Popular
+        <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${badge.classes}`}>
+          {badge.emoji} {badge.label}
         </span>
         {price && (
           <span className="text-sm font-bold text-primary group-hover/card:text-primary/90 transition-colors duration-150 whitespace-nowrap">
             <span className="text-muted-foreground text-[10px] font-normal">From </span>{price}
           </span>
         )}
+      </div>
+
+      {/* Hover detail line */}
+      <div className="h-0 group-hover/card:h-5 overflow-hidden transition-all duration-150 ease-out">
+        <p className="text-[11px] text-muted-foreground mt-1 opacity-0 group-hover/card:opacity-100 transition-opacity duration-150">
+          {index < 2 ? "Lowest price this month" : "Available at multiple stores"}
+        </p>
       </div>
     </Link>
   );
@@ -176,13 +208,18 @@ export function TrendingSection() {
   return (
     <section className="max-w-7xl mx-auto px-4 py-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xl font-bold text-foreground">
-          🔥 Trending in {regionConfig.name}
-        </h2>
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">
+            🔥 Trending in {regionConfig.name}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Based on what makers in your region are viewing this week
+          </p>
+        </div>
         <Link
           to="/?sort=popular"
-          className="text-primary text-sm font-semibold hover:underline"
+          className="shrink-0 mt-1 border border-border hover:border-primary px-3 py-1 rounded-full text-sm text-muted-foreground hover:text-primary font-semibold transition-all"
         >
           See All →
         </Link>
@@ -203,9 +240,9 @@ export function TrendingSection() {
         </div>
       ) : (
         <ScrollCarousel gap={12}>
-          {filaments!.map((f) => (
+          {filaments!.map((f, i) => (
             <ScrollCarouselItem key={f.id}>
-              <TrendingCard filament={f} />
+              <TrendingCard filament={f} index={i} />
             </ScrollCarouselItem>
           ))}
         </ScrollCarousel>
