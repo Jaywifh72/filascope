@@ -110,7 +110,9 @@ export function useUpdateTdValue() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['td-filaments'] });
       qc.invalidateQueries({ queryKey: ['td-stats'] });
-      toast({ title: 'TD value updated' });
+      qc.invalidateQueries({ queryKey: ['td-population-log'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
+      toast({ title: '✅ TD value updated' });
     },
     onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -143,7 +145,9 @@ export function useBulkUpdateTd() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['td-filaments'] });
       qc.invalidateQueries({ queryKey: ['td-stats'] });
-      toast({ title: 'Bulk TD update complete' });
+      qc.invalidateQueries({ queryKey: ['td-population-log'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
+      toast({ title: '✅ Bulk TD update complete' });
     },
     onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -164,7 +168,9 @@ export function useBulkClearTd() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['td-filaments'] });
       qc.invalidateQueries({ queryKey: ['td-stats'] });
-      toast({ title: 'TD values cleared' });
+      qc.invalidateQueries({ queryKey: ['td-population-log'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
+      toast({ title: '✅ TD values cleared' });
     },
     onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });

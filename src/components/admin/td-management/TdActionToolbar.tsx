@@ -110,10 +110,11 @@ export function TdActionToolbar() {
       });
       if (error) throw error;
       const count = (data as RpcMatchResult[])?.length ?? 0;
-      toast({ title: `Applied ${count} TD values from reference data` });
+      toast({ title: `✅ Applied ${count} TD values from reference data` });
       qc.invalidateQueries({ queryKey: ['td-stats'] });
       qc.invalidateQueries({ queryKey: ['td-filaments'] });
       qc.invalidateQueries({ queryKey: ['td-population-log'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
       setQuickMatchOpen(false);
       setQuickMatchResults([]);
     } catch (err: any) {
@@ -149,7 +150,8 @@ export function TdActionToolbar() {
       });
 
       qc.invalidateQueries({ queryKey: ['td-stats'] });
-      qc.invalidateQueries({ queryKey: ['td-reference'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-values'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
       qc.invalidateQueries({ queryKey: ['td-population-log'] });
     } catch (err: any) {
       toast({ title: 'Fetch External TD failed', description: err.message, variant: 'destructive' });
@@ -203,7 +205,7 @@ export function TdActionToolbar() {
 
       const dateStr = new Date().toISOString().slice(0, 10);
       downloadCSV(csvData, `filascope_missing_td_values_${dateStr}`);
-      toast({ title: `Exported ${allRows.length} filaments missing TD values` });
+      toast({ title: `📥 Exported ${allRows.length} filaments to CSV` });
     } catch (err: any) {
       toast({ title: 'Export failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -357,10 +359,11 @@ export function TdActionToolbar() {
 
       setImportResult({ inserted, updated, skipped });
       qc.invalidateQueries({ queryKey: ['td-stats'] });
-      qc.invalidateQueries({ queryKey: ['td-reference'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-values'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
       toast({
-        title: 'Import complete',
-        description: `${inserted} new, ${updated} updated, ${skipped} skipped`,
+        title: `✅ Imported ${inserted} new reference values, ${updated} updated`,
+        description: `${skipped} skipped`,
       });
     } catch (err: any) {
       toast({ title: 'Import failed', description: err.message, variant: 'destructive' });
