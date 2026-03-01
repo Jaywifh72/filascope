@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { useTdFilterOptions } from '@/hooks/useTdManagement';
+import { useTdFilterOptions, useTdStats } from '@/hooks/useTdManagement';
 import { useAddReferenceValue } from '@/hooks/useTdManagement';
 import { useTdMatching } from '@/hooks/useTdMatching';
 import { TdMatchResultsPanel } from './TdMatchResultsPanel';
@@ -15,7 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { downloadCSV } from '@/lib/csvExport';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { Play, Upload, Download, Loader2, Zap, Check, CloudDownload, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { Play, Upload, Download, Loader2, Zap, Check, CloudDownload, CheckCircle2, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
 
 interface RpcMatchResult {
   filament_id: string;
@@ -70,6 +71,7 @@ export function TdActionToolbar() {
   const [exporting, setExporting] = useState(false);
 
   const { data: options } = useTdFilterOptions();
+  const { dataUpdatedAt } = useTdStats();
   const addRefMut = useAddReferenceValue();
   const { matches, unmatchedRefs, isRunning, isApplying, progress, stats, runMatching, applyMatches } = useTdMatching();
 
@@ -376,6 +378,22 @@ export function TdActionToolbar() {
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
+        {/* Refresh + Last Updated */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => qc.invalidateQueries({ queryKey: ['td-stats'] })}
+          title="Refresh stats"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </Button>
+        {dataUpdatedAt ? (
+          <span className="text-xs text-muted-foreground">
+            Updated {formatDistanceToNow(dataUpdatedAt, { addSuffix: true })}
+          </span>
+        ) : null}
+        <div className="h-6 w-px bg-border" />
         {/* Brand filter */}
         <Select value={brand} onValueChange={setBrand}>
           <SelectTrigger className="w-40"><SelectValue placeholder="Brand" /></SelectTrigger>
