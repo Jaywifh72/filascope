@@ -1,64 +1,66 @@
 
 
-# Reorder TD Database Page: Tools First, Education Second
+# Add Persistent HueForge Tools Sub-Navigation Bar
 
-## What Changes
+## Overview
+Create a shared sticky tab bar that appears at the top of all 6 HueForge tool pages, providing instant navigation between tools without losing context. This replaces the ad-hoc button row in the TD Database hero and complements the existing bottom cross-links.
 
-The page currently renders ~3,500px of educational text and the Top 10 grid **above** the interactive database table. We will reorder sections so users reach the tool immediately, while keeping every word of educational content in the DOM for SEO crawlers.
+## New Component: `HueForgeToolsNav`
 
-## New Section Order
+**File:** `src/components/hueforge/HueForgeToolsNav.tsx`
 
-```text
-1. Hero (unchanged) + NEW "Search the Database" jump CTA + bouncing arrow
-2. Browse Filaments table (moved up from current position 4)
-3. Top 10 Most Popular grid (moved up from position 3)
-4. --- visual separator: "Understanding TD Values" ---
-5. Educational content (4 sections, moved down -- all text intact)
-6. Filaments Needing TD (unchanged)
-7. TD Substitute Finder (unchanged)
-8. Layer Preview Compact (unchanged)
-9. FAQ accordion (unchanged)
-10. Cross-links (unchanged)
-11. People Also Ask (unchanged)
-12. Related Content (unchanged)
-```
+A horizontal tab bar driven by the existing `HUEFORGE_TOOLS` data in `HueForgeToolsData.ts`, plus an "Export CSV" action tab.
 
-## Specific Changes
+- Uses `useLocation()` to highlight the active tab with a cyan bottom border
+- Each tab renders the tool's Lucide icon + short name, linking via React Router `<Link>`
+- The "Export CSV" tab receives an optional `onExportCsv` callback prop -- when provided and clicked, it triggers the export and shows a toast; when not provided (non-TD-Database pages), it's hidden
+- Sticky positioning: `sticky top-16 z-30` (below the 64px main navbar)
+- Adds a bottom shadow when scrolled via the existing `useStickyElement` hook pattern
 
-### 1. Add "Search the Database" CTA after stats counters (line ~438)
-- A large cyan button: "Search the Database" that smooth-scrolls to `#td-browser`
-- Styled: `bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-8 rounded-lg text-lg`
-- Below it: a bouncing `ChevronDown` arrow icon with `animate-bounce opacity-60`
-- Secondary text link: "Or learn about TD values below" scrolling to `#td-education`
-- The existing row of tool buttons remains unchanged below this new CTA
+**Styling:**
+- Container: `bg-background/80 backdrop-blur-sm border-b border-border`
+- Active tab: `border-b-2 border-cyan-500 text-cyan-400 font-medium`
+- Inactive tab: `text-muted-foreground hover:text-foreground transition-colors`
+- Each tab: `px-4 py-3 text-sm whitespace-nowrap flex items-center gap-2`
 
-### 2. Reorder JSX sections in the return statement
-- Move the "Browse Filaments by TD Value" section (currently lines 668-841, `id="td-table"`) to render immediately after the hero section, changing its `id` to `td-browser`
-- Move the "Top 10 Most Popular" section (lines 613-665) to render right after the browse table
-- Move all 4 educational content blocks (lines 478-611) to render after the Top 10, wrapped in a new container with `id="td-education"`
+**Mobile:**
+- `overflow-x-auto` with `snap-x snap-mandatory`, each tab `snap-start`
+- Right-edge fade gradient via a `::after` pseudo-element (CSS class or inline div) to hint at scrollability
+- On screens under 480px, hide tab labels and show icons only using a responsive utility class
 
-### 3. Add visual separator above educational content
-- A `div` with `border-t border-gray-800 pt-12 mt-12`
-- Brief intro text: "New to HueForge TD values? Read our complete guide below."
-- The existing H2 headings within the educational sections remain untouched
+## Pages to Update (5 files)
 
-### 4. Update scroll target in hero button
-- The existing "Find Filaments by TD Value" button (line 442) currently scrolls to `#td-table` -- update to `#td-browser` to match the new section id
+Each page gets `<HueForgeToolsNav />` inserted right after the `<Breadcrumbs>` component and before the main content wrapper. On the TD Database page, the `onExportCsv` prop is passed so the Export CSV tab works.
 
-## What Does NOT Change
-- No content is hidden, collapsed, or removed from the DOM
-- All 4 structured data schemas (BreadcrumbList, Dataset, FAQPage, HowTo) remain identical
-- All H2/H3 headings keep their text and hierarchy
-- All internal links within educational text remain functional
-- Canonical URL unchanged
-- FAQ and PAA accordion sections stay in their current position (after educational content)
-- No sticky navigation bar in this change (kept simple)
+### 1. `src/pages/HueForgeTDDatabase.tsx`
+- Add `<HueForgeToolsNav onExportCsv={exportCSV} />` after breadcrumbs
+- Remove the 6-button row in the hero section (lines ~480-516) since the sticky nav replaces it -- keep the "Search the Database" CTA and "learn about TD values" link
 
-## Technical Details
+### 2. `src/pages/HueForgeSubstituteFinder.tsx`
+- Add `<HueForgeToolsNav />` after `<Breadcrumbs>`
 
-**File modified:** `src/pages/HueForgeTDDatabase.tsx` only
+### 3. `src/pages/HueForgeLayerPreview.tsx`
+- Add `<HueForgeToolsNav />` after `<Breadcrumbs>`
 
-The implementation is purely a JSX reorder within the existing return statement plus inserting a new CTA button element after the stats counters. No new components, no new files, no new dependencies.
+### 4. `src/pages/HueForgeColorMatcher.tsx`
+- Add `<HueForgeToolsNav />` after breadcrumbs (need to check if breadcrumbs exist; add if missing)
 
-**New imports needed:** `ChevronDown` from `lucide-react` (for the bouncing arrow)
+### 5. `src/pages/HueForgeProjectPlanner.tsx`
+- Add `<HueForgeToolsNav />` after `<Breadcrumbs>`
 
+## Breadcrumb Consistency
+Ensure all 5 sub-tool pages use the same breadcrumb pattern:
+- Visible: `HueForge TD Database > [Tool Name]`
+- Schema: `Home > HueForge TD Database > [Tool Name]`
+
+The TD Database page itself keeps: `Home > HueForge TD Database`
+
+## No Changes To
+- `HueForgeToolsData.ts` -- reused as-is
+- `HueForgeToolsCrossLinks.tsx` -- kept as bottom-of-page cross-links (complementary, not replaced)
+- Routing, footer, or navbar
+
+## Implementation Order
+1. Create `HueForgeToolsNav.tsx` component
+2. Update `HueForgeTDDatabase.tsx` -- add nav, remove redundant hero button row
+3. Update the other 4 tool pages -- add nav + fix breadcrumbs if needed
