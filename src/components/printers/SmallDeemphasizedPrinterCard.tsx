@@ -9,6 +9,7 @@ import { getPrinterImage, getPrinterBadges, type CardSizeResult } from "@/lib/pr
 import PrinterBadge from "./PrinterBadge";
 import ComparisonCheckbox from "./ComparisonCheckbox";
 import PrinterSpecGrid from "./PrinterSpecGrid";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -105,26 +106,14 @@ export default function SmallDeemphasizedPrinterCard({
           </div>
 
           {/* Printer Image - Smaller, grayscale */}
-          <div className="relative aspect-[4/3] mb-3 flex items-center justify-center mt-6 bg-[#0d1117] rounded-lg overflow-hidden">
-            {productImage ? (
-              <img 
-                src={productImage} 
-                alt={`${printer.brand?.brand} ${printer.model_name}`}
-                width={240}
-                height={180}
-                className="w-full h-full object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)] grayscale-[50%] group-hover:grayscale-[20%] transition-all"
-                loading="lazy"
-                decoding="async"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-            ) : null}
-            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-b from-muted/10 to-muted/5 relative ${productImage ? 'hidden' : ''}`}>
-              <PrinterIcon className="h-16 w-16 text-muted-foreground/20" />
-              <span className="absolute bottom-2 right-2 text-xs text-muted-foreground/40 italic">Photo coming soon</span>
-            </div>
+          <div className="relative mb-3 mt-6 rounded-lg overflow-hidden">
+            <ImageWithFallback
+              src={productImage}
+              alt={`${printer.brand?.brand} ${printer.model_name}`}
+              type="printer"
+              aspectRatio="4/3"
+              className="object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)] grayscale-[50%] group-hover:grayscale-[20%] transition-all"
+            />
           </div>
 
           {/* Printer Name */}

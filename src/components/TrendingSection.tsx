@@ -7,6 +7,9 @@ import { ScrollCarousel, ScrollCarouselItem } from "@/components/ui/scroll-carou
 import { Skeleton } from "@/components/ui/skeleton";
 import { normalizeColorHex } from "@/lib/utils";
 import { getOptimizedImageUrl } from "@/utils/imageOptimization";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { SectionError } from "@/components/ui/SectionError";
+import { withRetry } from "@/lib/retry";
 
 interface TrendingFilament {
   id: string;
@@ -24,7 +27,7 @@ interface TrendingFilament {
 function useTrendingFilaments(regionCode: string) {
   return useQuery({
     queryKey: ["trending-filaments", regionCode],
-    queryFn: async (): Promise<TrendingFilament[]> => {
+    queryFn: () => withRetry(async (): Promise<TrendingFilament[]> => {
       // Primary: filaments with available listings in the user's region
       const { data: regional, error: regionalError } = await supabase
         .from("filament_listings")
@@ -93,7 +96,7 @@ function useTrendingFilaments(regionCode: string) {
         if (filtered.length >= 8) break;
       }
       return filtered;
-    },
+    }, { maxRetries: 2 }),
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
@@ -118,24 +121,17 @@ function TrendingCard({ filament }: { filament: TrendingFilament }) {
       <div className="flex gap-3">
         {/* Thumbnail area with color swatch badge */}
         <div className="relative flex-shrink-0">
-          {hasImage ? (
-            <div className="w-14 h-14 rounded-lg bg-muted/30 overflow-hidden flex items-center justify-center">
-              <img
-                src={getOptimizedImageUrl(filament.featured_image!, 112)}
-                alt={`${filament.vendor || ''} ${name} ${filament.material || ''} filament spool`.trim()}
-                width={56}
-                height={56}
-                className="w-full h-full object-contain"
-                loading="lazy"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
-            </div>
-          ) : (
-            <div
-              className="w-14 h-14 rounded-lg border border-border/50"
-              style={{ backgroundColor: colorHex }}
+          <div className="w-14 h-14 rounded-lg overflow-hidden">
+            <ImageWithFallback
+              src={filament.featured_image ? getOptimizedImageUrl(filament.featured_image, 112) : null}
+              alt={`${filament.vendor || ''} ${name} ${filament.material || ''} filament spool`.trim()}
+              type="filament"
+              colorHex={colorHex}
+              material={filament.material}
+              aspectRatio="1/1"
+              className="object-contain"
             />
-          )}
+          </div>
           {/* Color swatch badge overlapping top-left */}
           {hasImage && (
             <div
@@ -173,9 +169,9 @@ function TrendingCard({ filament }: { filament: TrendingFilament }) {
 
 export function TrendingSection() {
   const { regionConfig, region } = useRegion();
-  const { data: filaments, isLoading } = useTrendingFilaments(region);
+  const { data: filaments, isLoading, isError, refetch } = useTrendingFilaments(region);
 
-  if (!isLoading && (!filaments || filaments.length === 0)) return null;
+  if (!isLoading && !isError && (!filaments || filaments.length === 0)) return null;
 
   return (
     <section className="max-w-7xl mx-auto px-4 py-4">
@@ -192,8 +188,14 @@ export function TrendingSection() {
         </Link>
       </div>
 
-      {/* Carousel */}
-      {isLoading ? (
+      {/* Error state */}
+      {isError ? (
+        <SectionError
+          title="Couldn't load trending filaments"
+          onRetry={() => refetch()}
+          compact
+        />
+      ) : isLoading ? (
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="shrink-0 w-[220px] h-[100px] rounded-xl" />

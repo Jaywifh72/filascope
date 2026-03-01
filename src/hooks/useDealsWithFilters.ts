@@ -4,6 +4,7 @@ export type DealSortOption = "discount-desc" | "price-asc" | "price-desc" | "new
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDealsCount } from "@/hooks/useDealsCount";
+import { withRetry } from "@/lib/retry";
 import { useRegion } from "@/contexts/RegionContext";
 import { getDealStoreInfo } from "@/lib/dealStoreRegion";
 import { RegionCode } from "@/types/regional";
@@ -66,7 +67,7 @@ export function useDealsWithFilters() {
   const totalDealsCount = dealsCountData?.uniqueProducts || 0; // Use grouped product count for consistency
   const { data: rawDeals = [], isLoading } = useQuery({
     queryKey: ["deals-page-enhanced"],
-    queryFn: async () => {
+    queryFn: () => withRetry(async () => {
       // Paginate through ALL deals to match useDealsCount totals
       let allData: DealFilament[] = [];
       let offset = 0;
@@ -138,7 +139,7 @@ export function useDealsWithFilters() {
           isLocal: false,
         } as DealWithMeta;
       });
-    },
+    }, { maxRetries: 2 }),
     staleTime: 1000 * 60 * 5,
   });
 

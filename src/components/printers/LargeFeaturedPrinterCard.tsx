@@ -10,6 +10,7 @@ import { generateRecommendation } from "@/lib/printerRecommendations";
 import PrinterBadge from "./PrinterBadge";
 import ComparisonCheckbox from "./ComparisonCheckbox";
 import PrinterSpecGrid from "./PrinterSpecGrid";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -151,27 +152,14 @@ export default function LargeFeaturedPrinterCard({
             {/* Left Column: Image and core info */}
             <div className="flex-1 flex flex-col">
               {/* Printer Image */}
-              <div className="relative aspect-square max-h-[280px] mb-4 flex items-center justify-center">
-                {productImage ? (
-                  <img 
-                    src={productImage} 
-                    alt={`${printer.brand?.brand} ${printer.model_name}`}
-                    className="w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
-                    width={280}
-                    height={280}
-                    loading="lazy"
-                    decoding="async"
-                    srcSet={`${productImage} 280w, ${productImage} 560w`}
-                    sizes="(max-width: 640px) 100vw, 280px"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                ) : null}
-                <div className={`w-full h-full flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
-                  <PrinterIcon className="h-20 w-20 text-white/15" />
-                </div>
+              <div className="relative max-h-[280px] mb-4 rounded-lg overflow-hidden">
+                <ImageWithFallback
+                  src={productImage}
+                  alt={`${printer.brand?.brand} ${printer.model_name}`}
+                  type="printer"
+                  aspectRatio="1/1"
+                  className="object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
+                />
               </div>
 
               {/* Brand - Monospace */}
