@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Box, Zap, Thermometer, Loader2, CircleDot, Cog, Star, XCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -9,7 +9,7 @@ import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
 import ComparisonCheckbox from "./ComparisonCheckbox";
-import { OptimizedImage } from "@/components/ui/optimized-image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { REGIONS } from "@/config/regions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMultiplePrinters } from "@/hooks/useMultiplePrinters";
@@ -76,18 +76,6 @@ export default function MediumStandardPrinterCard({
       );
     }
   }, [isMyPrinter, userPrinters, printer, addPrinter, setPrimaryPrinter]);
-
-  const [imageTimedOut, setImageTimedOut] = useState(false);
-  const imageLoadedRef = useRef(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!imageLoadedRef.current) {
-        setImageTimedOut(true);
-      }
-    }, 8000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Resolve regional price based on user's selected region
   const regionalData = getPrinterRegionalPrice(printer as any, region);
@@ -257,7 +245,7 @@ export default function MediumStandardPrinterCard({
             )}
 
             {/* Printer Image */}
-            <div className="relative aspect-auto w-full h-auto sm:h-[200px] flex items-center justify-center rounded-lg overflow-hidden">
+            <div className="relative aspect-auto w-full h-auto sm:h-[200px] rounded-lg overflow-hidden">
               {/* Discontinued overlay badge */}
               {printer.discontinued && (
                 <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-[5] flex items-center gap-1 bg-destructive/90 text-destructive-foreground text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-1 rounded">
@@ -268,45 +256,13 @@ export default function MediumStandardPrinterCard({
               {printer.discontinued && (
                 <div className="absolute inset-0 bg-background/40 z-[2] pointer-events-none" />
               )}
-              {imageTimedOut ? (
-                <div className="flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-gray-800/50 to-gray-900 border border-dashed border-gray-700 w-full h-full rounded-lg relative">
-                  {getBrandLogo(printer.brand?.brand || null) && (
-                    <BrandLogo
-                      src={getBrandLogo(printer.brand?.brand || null)}
-                      brandName={printer.brand?.brand || "Brand"}
-                      size="lg"
-                      className="absolute inset-0 m-auto h-20 w-20 opacity-[0.07] pointer-events-none"
-                    />
-                  )}
-                  <PrinterIcon className="h-16 w-16 text-gray-600 relative z-[1]" />
-                  <span className="text-xs text-gray-500 relative z-[1]">Image coming soon</span>
-                </div>
-              ) : (
-                <OptimizedImage
-                  src={productImage}
-                  alt={`${printer.brand?.brand} ${printer.model_name}`}
-                  className={`w-auto h-full max-w-full max-h-[200px] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)] ${printer.discontinued ? 'grayscale opacity-60' : ''}`}
-                  aspectRatio="auto"
-                  objectFit="contain"
-                  width={400}
-                  onLoad={() => { imageLoadedRef.current = true; }}
-                  onError={() => { setImageTimedOut(true); }}
-                  fallback={
-                    <div className="flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-gray-800/50 to-gray-900 border border-dashed border-gray-700 w-full h-full rounded-lg relative">
-                      {getBrandLogo(printer.brand?.brand || null) && (
-                        <BrandLogo
-                          src={getBrandLogo(printer.brand?.brand || null)}
-                          brandName={printer.brand?.brand || "Brand"}
-                          size="lg"
-                          className="absolute inset-0 m-auto h-20 w-20 opacity-[0.07] pointer-events-none"
-                        />
-                      )}
-                      <PrinterIcon className="h-16 w-16 text-gray-600 relative z-[1]" />
-                      <span className="text-xs text-gray-500 relative z-[1]">Image coming soon</span>
-                    </div>
-                  }
-                />
-              )}
+              <ImageWithFallback
+                src={productImage}
+                alt={`${printer.brand?.brand} ${printer.model_name}`}
+                type="printer"
+                aspectRatio="4/3"
+                className={`object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)] ${printer.discontinued ? 'grayscale opacity-60' : ''}`}
+              />
             </div>
           </div>
 

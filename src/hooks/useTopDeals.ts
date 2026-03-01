@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { withRetry } from "@/lib/retry";
 
 export interface TopDeal {
   id: string;
@@ -20,7 +21,7 @@ export interface TopDeal {
 export function useTopDeals() {
   return useQuery({
     queryKey: ["top-deals"],
-    queryFn: async () => {
+    queryFn: () => withRetry(async () => {
       // Get filaments with prices (excluding small/sample spools)
       const { data: filaments, error: filamentsError } = await supabase
         .from("filaments")
@@ -89,7 +90,7 @@ export function useTopDeals() {
 
       // Sort by savings percent and return top 3
       return deals.sort((a, b) => b.savings_percent - a.savings_percent).slice(0, 3);
-    },
+    }, { maxRetries: 2 }),
     staleTime: 1000 * 60 * 30, // 30 minute cache
   });
 }

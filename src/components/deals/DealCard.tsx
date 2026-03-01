@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DealShareModal } from "./DealShareModal";
 import { cn } from "@/lib/utils";
-import { OptimizedImage } from "@/components/ui/optimized-image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { InlineError } from "@/components/ui/InlineError";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
 import { StorePriceBadge } from "@/components/price/StorePriceDisplay";
 import { useRegion } from "@/contexts/RegionContext";
@@ -117,16 +118,16 @@ export function DealCard({
             <Share2 className="h-4 w-4" aria-hidden="true" />
           </Button>
 
-          {/* Image - Using OptimizedImage with lazy loading */}
-          <div className="relative h-40 bg-gray-800/50 flex items-center justify-center overflow-hidden">
-            <OptimizedImage
+          {/* Image - Using ImageWithFallback */}
+          <div className="relative h-40 overflow-hidden">
+            <ImageWithFallback
               src={deal.featured_image}
               alt={deal.product_title}
-              className="h-full w-full p-4 group-hover:scale-105 transition-transform duration-300"
-              aspectRatio="auto"
-              objectFit="contain"
-              width={320}
+              type="filament"
               material={deal.material}
+              aspectRatio="auto"
+              className="p-4 group-hover:scale-105 transition-transform duration-300 object-contain"
+              containerClassName="h-full"
             />
           </div>
 
@@ -138,7 +139,7 @@ export function DealCard({
             </h3>
 
             {/* Price - with regional conversion */}
-            {deal.variant_price && deal.variant_compare_at_price && (
+            {deal.variant_price && deal.variant_compare_at_price ? (
               <>
                 <RegionalPricePair
                   saleAmount={deal.variant_price}
@@ -164,6 +165,8 @@ export function DealCard({
                   </Badge>
                 )}
               </>
+            ) : (
+              <InlineError message="Discount info unavailable" />
             )}
             {/* Urgency Indicators */}
             {showUrgency && (
