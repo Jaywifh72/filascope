@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,15 +58,18 @@ function AnimatedTag({ filter, onRemove }: AnimatedTagProps) {
 
 export function ActiveFilterTags({ filters, onRemove, onClearAll }: ActiveFilterTagsProps) {
   const [isClearing, setIsClearing] = useState(false);
+  const [showCleared, setShowCleared] = useState(false);
 
-  if (filters.length === 0) return null;
+  if (filters.length === 0 && !showCleared) return null;
 
   const handleClearAll = () => {
     setIsClearing(true);
-    // Animate out then clear
+    // Stagger out then clear
     setTimeout(() => {
       onClearAll();
       setIsClearing(false);
+      setShowCleared(true);
+      setTimeout(() => setShowCleared(false), 1000);
     }, 150);
   };
 
@@ -80,7 +83,7 @@ export function ActiveFilterTags({ filters, onRemove, onClearAll }: ActiveFilter
             isClearing && "opacity-0"
           )}
         >
-          {filters.map((filter) => (
+          {filters.map((filter, index) => (
             <AnimatedTag
               key={`${filter.type}-${filter.id}`}
               filter={filter}
@@ -88,14 +91,21 @@ export function ActiveFilterTags({ filters, onRemove, onClearAll }: ActiveFilter
             />
           ))}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleClearAll}
-          className="text-muted-foreground hover:text-foreground shrink-0 h-7"
-        >
-          Clear All
-        </Button>
+        {filters.length > 0 ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearAll}
+            className="text-muted-foreground hover:text-foreground shrink-0 h-7"
+          >
+            Clear All
+          </Button>
+        ) : showCleared ? (
+          <span className="text-xs text-success font-medium flex items-center gap-1 shrink-0 animate-in fade-in duration-200">
+            <Check className="w-3.5 h-3.5" />
+            Cleared
+          </span>
+        ) : null}
       </div>
     </div>
   );
