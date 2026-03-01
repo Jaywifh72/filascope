@@ -1,34 +1,52 @@
 
 
-## Enhance Layer Stacking Preview Widget
+## Comparison Tray Enhancement Plan
 
-### Overview
-Make the compact Layer Stacking Preview widget on /hueforge-td-database more visually inviting with a gradient border, improved empty state, shimmer animation, pro tip, and a more prominent CTA button.
+### Current State
 
-### Changes
+The project **already has a comprehensive CompareTray system** with:
+- Desktop fixed-bottom tray (`CompareTray.tsx`) with thumbnails, remove buttons, expand/collapse/minimize, CTA, share, save, presets, keyboard shortcuts, swap modal, restoration toast, history
+- Mobile bottom bar + Sheet (`MobileCompareTray.tsx`) with expandable drawer
+- Pill mode for non-filament pages (`CompareTrayPill.tsx`)
+- Route-aware visibility via `useCompareTrayMode` hook
+- Full state management in `useCompare.tsx` (localStorage persistence, 6-item max, glow animations, drag reorder, multi-select)
+- All rendered globally in `App.tsx`
 
-#### 1. LayerPreviewCompact.tsx - Visual overhaul of the card wrapper
-- Replace the plain `Card` border with a gradient top-border (cyan-to-purple) using a wrapper div with `bg-gradient-to-r from-cyan-500 to-purple-500` and a 2px top strip
-- Update the subtitle to: "See how your HueForge layers will look when printed and backlit"
-- Restyle the "Open Full Preview" button with: `bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg py-2.5`
-- Add a small "PRO TIP" badge below the dropdowns: "Choose a dark base (TD < 1) and a light top (TD > 3) for maximum contrast"
+### What's Missing vs. the Request
 
-#### 2. LayerStackVisualization.tsx - Empty state and transitions
-- Enhance the empty state placeholder: replace `animate-pulse` with a custom shimmer sweep using a CSS gradient overlay (`background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%)` with a 3-second animation)
-- Make the placeholder layer rectangles slightly more colorful (muted teal, slate, indigo tones instead of pure gray)
-- Update empty state text to: "Select filaments below to preview how layers blend"
-- Add `animate-fade-in` transition class to the rendered preview (non-empty state) for smooth appearance
+Only a few enhancements are needed on top of what exists:
 
-#### 3. tailwind.config.ts - Add shimmer keyframe
-- Add a `shimmer` keyframe animation that sweeps a subtle highlight diagonally across the element over 3 seconds, looping infinitely
+1. **Segmented progress bar** -- Currently shows plain text "N/6 filaments selected". Add a visual 6-segment bar with filled/empty indicators using the cyan accent.
 
-### Files to modify
-- `src/components/hueforge/layer-preview/LayerPreviewCompact.tsx`
-- `src/components/hueforge/layer-preview/LayerStackVisualization.tsx`
-- `tailwind.config.ts` (add shimmer animation)
+2. **Contextual micro-copy** -- Add count-based messaging below the progress bar:
+   - 1 item: "Add 1 more to start comparing"
+   - 2 items: "Ready to compare! Add more for deeper insights"
+   - 3-5 items: "Great selection -- compare now or add more"
+   - 6 items: "Maximum reached -- let's compare!"
 
-### Technical details
-- The gradient top-border is achieved with a parent `div` that has `rounded-lg overflow-hidden` with a gradient background, and the card inside with `rounded-t-none border-t-0`
-- The shimmer animation uses `@keyframes shimmer { 0% { transform: translateX(-100%) } 100% { transform: translateX(100%) } }` on an absolute-positioned pseudo-element
-- The pro tip uses a `Badge` with `variant="outline"` styled with amber/yellow tones for visibility
-- No functional changes to filament selection, preview rendering, or navigation
+3. **CTA glow pulse** -- When 2+ items selected, add a subtle repeating box-shadow glow on the "Compare Now" button (not `animate-pulse` on the button itself, just the shadow).
+
+4. **`aria-live="polite"`** -- The tray currently has `role="region"`. Add `aria-live="polite"` so screen readers announce item additions/removals.
+
+5. **Mobile progress** -- Add a compact "2/6" badge and the same contextual micro-copy to the mobile bottom bar.
+
+### Technical Details
+
+**File: `src/components/CompareTray.tsx`**
+
+- In the CENTER section (line ~384), replace the plain text counter with a row of 6 small indicator dots/segments (`w-2.5 h-2.5 rounded-full`) -- filled ones use `bg-cyan-500`, empty use `bg-gray-700`.
+- Below the segments, add the contextual micro-copy as `text-xs text-muted-foreground`.
+- On the Compare Now button, add a conditional class when `canCompare`: `shadow-[0_0_12px_rgba(0,210,211,0.25)]` with a CSS animation that pulses the shadow opacity.
+- Add `aria-live="polite"` to the tray container div.
+
+**File: `src/components/compare/MobileCompareTray.tsx`**
+
+- Add the same contextual micro-copy to the mobile bottom bar (replacing the static "Add N more to compare" text with the count-based messages).
+- Add a small segmented indicator (dots) next to the count badge.
+
+**File: `src/index.css`**
+
+- Add a `@keyframes compare-glow-pulse` animation that cycles box-shadow opacity from 0.15 to 0.35 over 2s, and a corresponding `.compare-cta-glow` utility class.
+
+No new files, no new dependencies, no database changes.
+
