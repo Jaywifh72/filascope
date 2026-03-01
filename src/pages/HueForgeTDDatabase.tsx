@@ -679,6 +679,49 @@ export default function HueForgeTDDatabase() {
             </CardContent>
           </Card>
 
+          {/* Active Filter Chips */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-2 py-2 mb-2 animate-fade-in">
+              {(tdRange[0] > 0 || tdRange[1] < 10) && (
+                <span className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 animate-fade-in">
+                  TD: {tdRange[0]}–{tdRange[1]}
+                  <button onClick={() => handleTdRangeChange([0, 10])} className="w-3.5 h-3.5 text-primary/60 hover:text-primary transition-colors">✕</button>
+                </span>
+              )}
+              {brandFilter !== 'all' && (
+                <span className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 animate-fade-in">
+                  Brand: {brandFilter}
+                  <button onClick={() => { setBrandFilter('all'); flashBorder(); }} className="w-3.5 h-3.5 text-primary/60 hover:text-primary transition-colors">✕</button>
+                </span>
+              )}
+              {materialFilter !== 'all' && (
+                <span className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 animate-fade-in">
+                  Material: {materialFilter}
+                  <button onClick={() => { setMaterialFilter('all'); flashBorder(); }} className="w-3.5 h-3.5 text-primary/60 hover:text-primary transition-colors">✕</button>
+                </span>
+              )}
+              {colorFilter !== 'all' && (
+                <span className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 animate-fade-in">
+                  Color: {colorFilter}
+                  <button onClick={() => { setColorFilter('all'); flashBorder(); }} className="w-3.5 h-3.5 text-primary/60 hover:text-primary transition-colors">✕</button>
+                </span>
+              )}
+              {searchTerm && (
+                <span className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 animate-fade-in">
+                  Search: '{searchTerm}'
+                  <button onClick={() => { setSearchInput(''); setSearchTerm(''); }} className="w-3.5 h-3.5 text-primary/60 hover:text-primary transition-colors">✕</button>
+                </span>
+              )}
+              {[tdRange[0] > 0 || tdRange[1] < 10, brandFilter !== 'all', materialFilter !== 'all', colorFilter !== 'all', !!searchTerm].filter(Boolean).length >= 2 && (
+                <button
+                  onClick={resetAllFilters}
+                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline cursor-pointer ml-1"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+          )}
           {/* TD Distribution Chart */}
           <div className="mb-4">
             <TdDistributionChart
