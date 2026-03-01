@@ -13,6 +13,7 @@ import { LayerMetricsTable } from '@/components/hueforge/layer-preview/LayerMetr
 import { LayerPreviewPresets } from '@/components/hueforge/layer-preview/LayerPreviewPresets';
 import { LayerPreviewTips } from '@/components/hueforge/layer-preview/LayerPreviewTips';
 import type { TDFilament } from '@/components/hueforge/SubstituteFilamentPicker';
+import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
 
 export default function HueForgeLayerPreview() {
   const { data: filaments, isLoading } = useQuery({
@@ -52,6 +53,7 @@ export default function HueForgeLayerPreview() {
         ]}
         className="max-w-7xl mx-auto px-4 pt-6 pb-1"
       />
+      <HueForgeToolsNav />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Hero */}

@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Breadcrumbs, BreadcrumbSchema } from '@/components/seo';
+import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
 import { useColorFinderFilaments, type ColorFinderFilament } from '@/hooks/useColorFinderFilaments';
 import { hexToLab, deltaE76, deltaEToMatchPercent } from '@/lib/colorLabUtils';
 import { ImageEyedropper } from '@/components/hueforge/color-matcher/ImageEyedropper';
@@ -164,6 +165,7 @@ export default function HueForgeColorMatcher() {
         ]}
         className="max-w-6xl mx-auto px-4 pt-6 pb-1"
       />
+      <HueForgeToolsNav />
 
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Hero */}
