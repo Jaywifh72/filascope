@@ -58,6 +58,7 @@ import { TdValueCell } from '@/components/hueforge/TdValueCell';
 import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
 import { getSwatchColor, needsContrastRing, needsLightContrastRing, isApproximateColor } from '@/lib/swatchColor';
 import { SwatchCircle } from '@/components/hueforge/SwatchCircle';
+import { TruncatedProductName } from '@/components/hueforge/TruncatedProductName';
 
 // ── FAQ data ──────────────────────────────────────────────────────────
 const faqData = [
@@ -929,26 +930,7 @@ export default function HueForgeTDDatabase() {
                               </TableCell>
                               <TableCell className="font-medium">{f.vendor}</TableCell>
                               <TableCell className="max-w-[200px]">
-                                {(f.product_title?.length ?? 0) > 40 ? (
-                                  <TooltipProvider>
-                                    <Tooltip delayDuration={300}>
-                                      <TooltipTrigger asChild>
-                                        <span className="truncate block text-primary group-hover:text-primary/80 group-hover:underline cursor-pointer">
-                                          {f.product_title}
-                                          <span className="inline-block ml-0.5 text-muted-foreground/40 text-[10px] align-middle">ⓘ</span>
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top" className="max-w-[400px] text-sm whitespace-pre-line">
-                                        <p className="font-semibold text-muted-foreground text-xs mb-1">Brand: {f.vendor}</p>
-                                        <p>{f.product_title}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                ) : (
-                                  <span className="truncate block text-primary group-hover:text-primary/80 group-hover:underline">
-                                    {f.product_title}
-                                  </span>
-                                )}
+                                <TruncatedProductName title={f.product_title ?? ''} vendor={f.vendor ?? ''} />
                               </TableCell>
                               <TableCell>
                                 <Badge variant="outline">{f.material}</Badge>
