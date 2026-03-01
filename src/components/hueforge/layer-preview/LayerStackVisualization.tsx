@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Lightbulb, LightbulbOff } from 'lucide-react';
 import type { TDFilament } from '../SubstituteFilamentPicker';
 import type { LayerSlot } from '../useLayerPreviewState';
 import { calcEffectiveOpacity, compositeColor } from '../useLayerPreviewState';
@@ -14,6 +16,7 @@ interface ResolvedLayer {
   opacity: number;
   layerCount: number;
   name: string;
+  td: number;
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
@@ -21,6 +24,8 @@ function rgbToHex(r: number, g: number, b: number): string {
 }
 
 export function LayerStackVisualization({ layers, filaments, compact }: Props) {
+  const [backlit, setBacklit] = useState(true);
+
   const resolved = useMemo<ResolvedLayer[]>(() => {
     return layers
       .map((l) => {
@@ -32,6 +37,7 @@ export function LayerStackVisualization({ layers, filaments, compact }: Props) {
           opacity: calcEffectiveOpacity(l.layerCount, f.transmission_distance),
           layerCount: l.layerCount,
           name: `${f.vendor} ${f.product_title}`,
+          td: f.transmission_distance,
         };
       })
       .filter(Boolean) as ResolvedLayer[];
@@ -57,50 +63,103 @@ export function LayerStackVisualization({ layers, filaments, compact }: Props) {
     return rgbToHex(r, g, b);
   }, [resolved]);
 
-  const w = compact ? 'w-[150px]' : 'w-[200px]';
+  const w = compact ? 'w-[150px]' : 'w-[220px]';
   const h = compact ? 'h-[150px]' : 'h-[300px]';
 
+  // Empty state
   if (!resolved.length) {
     return (
-      <div className={`${compact ? '' : 'flex gap-6 justify-center'}`}>
-        <div className={`${w} ${h} rounded-lg border border-border/50 bg-muted/10 flex items-center justify-center`}>
-          <span className="text-xs text-muted-foreground text-center px-4">
-            Select filaments to see preview
-          </span>
+      <div className="rounded-xl border border-border/50 bg-card/30 p-6 min-h-[300px] flex flex-col items-center justify-center gap-4">
+        {/* Placeholder stack illustration */}
+        <div className="flex flex-col items-center gap-1 animate-pulse opacity-60">
+          {[0.15, 0.25, 0.35].map((op, i) => (
+            <div
+              key={i}
+              className="rounded-md border border-border/30"
+              style={{
+                width: `${140 - i * 10}px`,
+                height: '28px',
+                background: `linear-gradient(135deg, hsl(var(--muted)) ${op * 100}%, transparent)`,
+                opacity: 0.4 + op,
+              }}
+            />
+          ))}
         </div>
+        <p className="text-sm text-muted-foreground text-center">
+          Your layer preview will appear here
+        </p>
+        <p className="text-xs text-muted-foreground/60 text-center max-w-[240px]">
+          Select filaments in the layer stack to visualize how they blend
+        </p>
       </div>
     );
   }
 
-  const renderStack = (bg: string, label: string) => (
-    <div className="flex flex-col items-center gap-2">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <div
-        className={`${w} ${h} rounded-lg border border-border/30 overflow-hidden flex flex-col-reverse shadow-inner`}
-        style={{ backgroundColor: bg }}
-      >
-        {resolved.map((layer, i) => (
-          <div
-            key={i}
-            className="w-full"
-            style={{
-              flex: layer.layerCount,
-              backgroundColor: layer.hex,
-              opacity: layer.opacity,
-              borderTop: i > 0 ? '1px solid rgba(255,255,255,0.1)' : undefined,
-            }}
-            title={`${layer.name} — ${layer.layerCount} layers, opacity ${(layer.opacity * 100).toFixed(0)}%`}
-          />
-        ))}
-      </div>
-    </div>
-  );
+  const bgColor = backlit ? '#ffffff' : '#000000';
+  const label = backlit ? 'Backlit' : 'Ambient';
 
   return (
     <div className="space-y-4">
-      <div className={`flex gap-4 ${compact ? 'justify-center' : 'justify-center gap-6'}`}>
-        {renderStack('#ffffff', 'Backlit')}
-        {!compact && renderStack('#000000', 'Ambient')}
+      {/* Backlight toggle */}
+      <div className="flex justify-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setBacklit(!backlit)}
+          className="text-xs gap-1.5"
+        >
+          {backlit ? <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> : <LightbulbOff className="w-3.5 h-3.5" />}
+          {backlit ? 'Backlight On' : 'Backlight Off'}
+        </Button>
+      </div>
+
+      {/* Preview stack */}
+      <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">{label}</span>
+          <div className="relative">
+            {/* Backlight glow */}
+            {backlit && (
+              <div
+                className="absolute inset-0 rounded-lg blur-xl opacity-30 pointer-events-none -z-10"
+                style={{ backgroundColor: '#fffbe6', transform: 'scale(1.15)' }}
+              />
+            )}
+            <div
+              className={`${w} ${h} rounded-lg border border-border/30 overflow-hidden flex flex-col-reverse shadow-inner`}
+              style={{ backgroundColor: bgColor }}
+            >
+              {resolved.map((layer, i) => (
+                <div
+                  key={i}
+                  className="w-full relative group"
+                  style={{
+                    flex: layer.layerCount,
+                    backgroundColor: layer.hex,
+                    opacity: layer.opacity,
+                    borderTop: i > 0 ? '1px solid rgba(255,255,255,0.1)' : undefined,
+                  }}
+                >
+                  {/* Layer label on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                    <span className="text-[10px] text-white font-medium px-1 truncate">
+                      L{i + 1}: TD {layer.td.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Layer labels */}
+      <div className="flex flex-col items-center gap-0.5">
+        {[...resolved].reverse().map((layer, i) => (
+          <p key={i} className="text-xs text-muted-foreground truncate max-w-[280px]">
+            Layer {resolved.length - i}: {layer.name} (TD {layer.td.toFixed(2)})
+          </p>
+        ))}
       </div>
 
       {/* Composite swatches */}
