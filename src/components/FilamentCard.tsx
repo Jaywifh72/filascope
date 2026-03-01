@@ -41,6 +41,7 @@ import { calculateUnifiedScore, type FilamentForScoring } from "@/lib/unifiedFil
 import { REGIONS } from "@/config/regions";
 import { usePriceFreshness } from "@/hooks/usePriceFreshness";
 import { useUserPrinterPreference } from "@/hooks/useUserPrinterPreference";
+import { useFilamentCompatibility } from "@/hooks/useFilamentCompatibility";
 import { getFilamentHref } from "@/lib/filamentUrl";
 
 // Material badge colors - using purple as specified
@@ -274,29 +275,9 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
 
   const isBudgetFriendly = pricePerKg && pricePerKg < 20;
 
-  const { printerName: savedPrinterName, nozzleTempMax, bedTempMax, hasEnclosure, hasSavedPrinter } = useUserPrinterPreference();
+  const { printerName: savedPrinterName } = useUserPrinterPreference();
   
-  const printerCompatibility = useMemo(() => {
-    if (!hasSavedPrinter) return null;
-    const nozzleMin = filament.nozzle_temp_min_c;
-    const needsEnclosure = ["ABS", "ASA", "NYLON", "PC", "PEEK"].some(
-      (m) => filament.material?.toUpperCase()?.includes(m)
-    );
-    const isAbrasive = filament.is_nozzle_abrasive;
-    let level: "compatible" | "warning" | "incompatible" = "compatible";
-    let message = "Compatible with your printer";
-    if (nozzleMin && nozzleTempMax && nozzleMin > nozzleTempMax) {
-      level = "incompatible";
-      message = "Not recommended for your printer";
-    } else if (needsEnclosure && !hasEnclosure) {
-      level = "warning";
-      message = "May need enclosure";
-    } else if (isAbrasive) {
-      level = "warning";
-      message = "Hardened nozzle needed";
-    }
-    return { level, message };
-  }, [hasSavedPrinter, filament.nozzle_temp_min_c, filament.material, filament.is_nozzle_abrasive, nozzleTempMax, hasEnclosure]);
+  const printerCompatibility = useFilamentCompatibility(filament);
 
   const getDisplayTitle = () => {
     if (displayTitle) return cleanFilamentDisplayName(displayTitle);
@@ -674,37 +655,34 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           </div>
         )}
 
-        {/* Printer Compatibility Badge */}
+        {/* Printer Compatibility Badge — with model abbreviation */}
         {printerCompatibility && (
           <Tooltip>
             <TooltipTrigger asChild>
               <div className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 border",
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 border text-[10px] font-medium",
                 printerCompatibility.level === "compatible"
-                  ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                  ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400/80"
                   : printerCompatibility.level === "warning"
-                  ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
-                  : "bg-red-500/15 border-red-500/30 text-red-400"
+                  ? "bg-amber-500/10 border-amber-500/25 text-amber-400/80"
+                  : "bg-red-500/10 border-red-500/25 text-red-400/80"
               )}>
                 {printerCompatibility.level === "compatible" ? (
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3 h-3" />
                 ) : printerCompatibility.level === "warning" ? (
-                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <AlertTriangle className="w-3 h-3" />
                 ) : (
-                  <XCircle className="w-3.5 h-3.5" />
+                  <XCircle className="w-3 h-3" />
                 )}
-                <span className="text-[13px] font-medium">
-                  {printerCompatibility.level === "compatible" ? "Compatible" : 
-                   printerCompatibility.level === "warning" ? "Caution" : "Incompatible"}
-                </span>
+                <span>{printerCompatibility.shortLabel}</span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs max-w-[220px]">
-              <div className="flex items-center gap-1.5">
+            <TooltipContent side="top" className="text-xs max-w-[260px]">
+              <div className="flex items-center gap-1.5 mb-1">
                 <Printer className="w-3 h-3 text-muted-foreground" />
                 <span className="font-medium">{savedPrinterName || "Your Printer"}</span>
               </div>
-              <p className="mt-1 text-muted-foreground">{printerCompatibility.message}</p>
+              <p className="text-muted-foreground leading-relaxed">{printerCompatibility.message}</p>
             </TooltipContent>
           </Tooltip>
         )}
