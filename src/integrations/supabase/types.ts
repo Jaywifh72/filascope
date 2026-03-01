@@ -12695,6 +12695,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      match_td_reference_values: {
+        Args: { p_brand_filter?: string; p_dry_run?: boolean }
+        Returns: {
+          color_family: string
+          confidence: string
+          filament_id: string
+          material: string
+          product_title: string
+          ref_brand: string
+          ref_color: string
+          ref_material: string
+          td_value: number
+          vendor: string
+        }[]
+      }
       record_scrape_result: {
         Args: {
           p_brand_slug: string
