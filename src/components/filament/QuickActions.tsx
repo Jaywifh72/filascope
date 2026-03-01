@@ -3,8 +3,10 @@ import { FileText, Share2 } from "lucide-react";
 import { LikeButton } from "@/components/LikeButton";
 import { SharePopover } from "@/components/sharing/SharePopover";
 import { PrivateNotePopover } from "@/components/notes/PrivateNotePopover";
+import { SaveNudge } from "@/components/filament/SaveNudge";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useWishlist } from "@/hooks/useWishlist";
 
 interface QuickActionsProps {
   filamentId: string;
@@ -18,6 +20,8 @@ interface QuickActionsProps {
 
 export function QuickActions({ filamentId, tdsUrl, productTitle, priceDisplay, storeName }: QuickActionsProps) {
   const hasTds = tdsUrl && tdsUrl.trim() !== '' && !tdsUrl.includes('N/A');
+  const { isInWishlist } = useWishlist();
+  const isAlreadySaved = isInWishlist(filamentId);
 
   // Build rich share text
   let shareText = `Check out ${productTitle} on FilaScope`;
@@ -29,11 +33,14 @@ export function QuickActions({ filamentId, tdsUrl, productTitle, priceDisplay, s
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Wishlist - using existing LikeButton */}
-      <LikeButton 
-        filamentId={filamentId} 
-        size="sm" 
-      />
+      {/* Wishlist - using existing LikeButton with nudge */}
+      <div className="relative">
+        <LikeButton 
+          filamentId={filamentId} 
+          size="sm" 
+        />
+        <SaveNudge filamentId={filamentId} isAlreadySaved={isAlreadySaved} />
+      </div>
       
       {/* Data Sheet */}
       <TooltipProvider>

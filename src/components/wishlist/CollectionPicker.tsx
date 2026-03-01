@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Heart, Plus, Check, Folder, Star, Printer, DollarSign, Wrench, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   folder: <Folder className="h-4 w-4" />,
@@ -39,6 +40,7 @@ export function CollectionPicker({ filamentId, currentPrice, size = "default" }:
   const [memberCollections, setMemberCollections] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [animState, setAnimState] = useState<"idle" | "adding" | "removing">("idle");
 
   const isLiked = isInWishlist(filamentId);
 
@@ -78,15 +80,38 @@ export function CollectionPicker({ filamentId, currentPrice, size = "default" }:
     );
   }
 
+  const triggerHaptic = () => {
+    try { navigator?.vibrate?.(10); } catch {}
+  };
+
   const handleQuickToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsLoading(true);
 
     if (isLiked) {
+      setAnimState("removing");
       await removeFromWishlist(filamentId);
+      setTimeout(() => setAnimState("idle"), 250);
     } else {
+      setAnimState("adding");
+      triggerHaptic();
       await addToWishlist(filamentId, { priceWhenAdded: currentPrice || undefined });
+      
+      // First-save celebration
+      const hasFirstSave = localStorage.getItem("firstWishlistSave");
+      if (!hasFirstSave) {
+        localStorage.setItem("firstWishlistSave", "true");
+        toast("🎉 First save! Your filament collection starts here.", {
+          description: "Access your saves anytime from the ♡ in the nav.",
+          duration: 4000,
+        });
+      }
+      
+      // Mark session as having favorited (for nudge suppression)
+      sessionStorage.setItem("hasWishlistSave", "true");
+      
+      setTimeout(() => setAnimState("idle"), 500);
     }
 
     setIsLoading(false);
@@ -104,9 +129,22 @@ export function CollectionPicker({ filamentId, currentPrice, size = "default" }:
     } else {
       await addToCollection(filamentId, collectionId, currentPrice || undefined);
       setMemberCollections((prev) => new Set(prev).add(collectionId));
-      // Also ensure it's in the main wishlist (null collection)
       if (!isLiked) {
+        setAnimState("adding");
+        triggerHaptic();
         await addToWishlist(filamentId, { priceWhenAdded: currentPrice || undefined });
+        
+        const hasFirstSave = localStorage.getItem("firstWishlistSave");
+        if (!hasFirstSave) {
+          localStorage.setItem("firstWishlistSave", "true");
+          toast("🎉 First save! Your filament collection starts here.", {
+            description: "Access your saves anytime from the ♡ in the nav.",
+            duration: 4000,
+          });
+        }
+        sessionStorage.setItem("hasWishlistSave", "true");
+        
+        setTimeout(() => setAnimState("idle"), 500);
       }
     }
     refetchWishlist();
@@ -122,7 +160,11 @@ export function CollectionPicker({ filamentId, currentPrice, size = "default" }:
     if (collection) {
       await addToCollection(filamentId, collection.id, currentPrice || undefined);
       if (!isLiked) {
+        setAnimState("adding");
+        triggerHaptic();
         await addToWishlist(filamentId, { priceWhenAdded: currentPrice || undefined });
+        sessionStorage.setItem("hasWishlistSave", "true");
+        setTimeout(() => setAnimState("idle"), 500);
       }
       refetchCollections();
       refetchWishlist();
@@ -142,9 +184,9 @@ export function CollectionPicker({ filamentId, currentPrice, size = "default" }:
             e.stopPropagation();
           }}
           className={cn(
-            "transition-colors",
+            "relative transition-colors",
             isLiked
-              ? "text-red-500 hover:text-red-600"
+              ? "text-rose-500 hover:text-rose-600"
               : "text-muted-foreground hover:text-foreground"
           )}
           aria-label={isLiked ? "Manage collections" : "Add to collection"}
@@ -152,7 +194,17 @@ export function CollectionPicker({ filamentId, currentPrice, size = "default" }:
           {isLoading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
+            <span className={cn(
+              "relative inline-flex",
+              animState === "adding" && "wishlist-heart-add",
+              animState === "removing" && "wishlist-heart-remove"
+            )}>
+              <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
+              {/* Particle burst on add */}
+              {animState === "adding" && (
+                <span className="wishlist-particles" aria-hidden="true" />
+              )}
+            </span>
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -163,7 +215,7 @@ export function CollectionPicker({ filamentId, currentPrice, size = "default" }:
       >
         {/* Quick toggle all */}
         <DropdownMenuItem onClick={handleQuickToggle}>
-          <Heart className={cn("h-4 w-4 mr-2", isLiked && "fill-red-500 text-red-500")} />
+          <Heart className={cn("h-4 w-4 mr-2", isLiked && "fill-rose-500 text-rose-500")} />
           {isLiked ? "Remove from Wishlist" : "Add to Wishlist"}
         </DropdownMenuItem>
         <DropdownMenuSeparator />

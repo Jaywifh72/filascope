@@ -12,6 +12,7 @@ import { resolveFilamentPrice, type FilamentForPricing } from "@/lib/resolveFila
 import { calculateUnifiedScore, getScoreNumberColor, SCORE_EXPLANATION, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PriceFreshnessCell } from "@/components/price/PriceFreshnessDot";
+import { useWishlist } from "@/hooks/useWishlist";
 
 interface Filament {
   id: string;
@@ -166,6 +167,7 @@ export function FilamentTableView({
 }: FilamentTableViewProps) {
   const navigate = useNavigate();
   const { formatPrice, convertPrice, currency, hasRates } = useRegion();
+  const { isInWishlist } = useWishlist();
 
   // Count selected items for the header badge
   const selectedCount = useMemo(
@@ -251,6 +253,7 @@ export function FilamentTableView({
 
             const isOutOfStock = filament.variant_available === false;
             const isSelected = isInCompare(filament.id);
+            const isSaved = isInWishlist(filament.id);
 
             // True cost relative value arrow
             const trueCostArrow = (() => {
@@ -276,6 +279,8 @@ export function FilamentTableView({
                   "hover:bg-muted/50",
                   // Selected state
                   isSelected && "bg-primary/5 hover:bg-primary/10 border-l-2 border-l-primary",
+                  // Saved/wishlisted state (subtle rose tint)
+                  !isSelected && isSaved && "bg-rose-500/[0.03]",
                   // Out of stock
                   isOutOfStock && "opacity-60",
                   // Brand separator

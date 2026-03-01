@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -10,12 +10,36 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export function WishlistButton() {
   const { user } = useAuth();
   const { items, stats, isLoading } = useWishlist();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const prevCount = useRef(stats.totalItems);
+  const [countBounce, setCountBounce] = useState(false);
+  const [firstItemPulse, setFirstItemPulse] = useState(false);
+
+  // Detect count changes for bounce animation
+  useEffect(() => {
+    if (stats.totalItems > prevCount.current) {
+      setCountBounce(true);
+      const timer = setTimeout(() => setCountBounce(false), 400);
+
+      // First item pulse (0 -> 1)
+      if (prevCount.current === 0 && stats.totalItems === 1) {
+        setFirstItemPulse(true);
+        const pulseTimer = setTimeout(() => setFirstItemPulse(false), 600);
+        prevCount.current = stats.totalItems;
+        return () => { clearTimeout(timer); clearTimeout(pulseTimer); };
+      }
+
+      prevCount.current = stats.totalItems;
+      return () => clearTimeout(timer);
+    }
+    prevCount.current = stats.totalItems;
+  }, [stats.totalItems]);
 
   const handleClick = () => {
     setOpen(false);
@@ -27,7 +51,7 @@ export function WishlistButton() {
       <Button
         variant="ghost"
         size="icon"
-        className="relative text-gray-400 hover:text-teal-400 transition-colors duration-200"
+        className="relative text-muted-foreground hover:text-primary transition-colors duration-200"
         onClick={() => navigate("/auth")}
         aria-label="Sign in to access wishlist"
       >
@@ -42,14 +66,25 @@ export function WishlistButton() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative opacity-60 hover:opacity-100 text-gray-400 hover:text-teal-400 transition-all duration-200"
+          className={cn(
+            "relative opacity-60 hover:opacity-100 text-muted-foreground hover:text-primary transition-all duration-200",
+            firstItemPulse && "wishlist-nav-pulse"
+          )}
           aria-label={`Saved Items${stats.totalItems > 0 ? `, ${stats.totalItems} items` : ''}`}
         >
           <Heart
-            className={`h-5 w-5 ${stats.totalItems > 0 ? "fill-teal-500 text-teal-500" : ""}`}
+            className={cn(
+              "h-5 w-5 transition-colors",
+              stats.totalItems > 0 && "fill-rose-500 text-rose-500"
+            )}
           />
           {stats.totalItems > 0 && (
-            <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-teal-500" />
+            <span className={cn(
+              "absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1 transition-transform",
+              countBounce && "wishlist-count-bounce"
+            )}>
+              {stats.totalItems}
+            </span>
           )}
         </Button>
       </PopoverTrigger>

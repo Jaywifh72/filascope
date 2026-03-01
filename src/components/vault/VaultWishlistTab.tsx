@@ -173,8 +173,21 @@ export function VaultWishlistTab() {
     }
   };
 
+  // Collection stats for header
+  const uniqueBrands = useMemo(() => {
+    const brands = new Set(items.map((i) => i.filament?.vendor).filter(Boolean));
+    return brands.size;
+  }, [items]);
+
   return (
     <div className="space-y-6">
+      {/* Collection feeling header stat */}
+      {items.length > 0 && !selectedCollectionId && (
+        <div className="text-sm text-muted-foreground">
+          Your Collection: <span className="font-medium text-foreground">{items.length} filament{items.length !== 1 ? "s" : ""}</span> saved across <span className="font-medium text-foreground">{uniqueBrands} brand{uniqueBrands !== 1 ? "s" : ""}</span>
+        </div>
+      )}
+
       <CollectionTabs
         collections={collections}
         selectedCollectionId={selectedCollectionId}
