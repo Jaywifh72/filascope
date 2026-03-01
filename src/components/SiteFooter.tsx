@@ -138,15 +138,20 @@ export function SiteFooter() {
 
   const toolLinks = [
     { name: "Compare Filaments", href: "/compare" },
-    { name: "HueForge TD Database", href: "/hueforge-td-database" },
-    { name: "TD Substitute Finder", href: "/hueforge-filament-substitute-finder" },
-    { name: "Layer Stacking Preview", href: "/hueforge-layer-preview" },
     { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Filament Quiz", href: "/wizard" },
     { name: "Color Finder", href: "/colors" },
-    { name: "HueForge Color Matcher", href: "/hueforge-color-matcher" },
-    { name: "HueForge Project Planner", href: "/hueforge-project-planner" },
     { name: "3D Printers", href: "/printers" },
+  ];
+
+  const hueforgeLinks = [
+    { name: "HueForge Tools Hub", href: "/hueforge-tools" },
+    { name: "TD Value Database", href: "/hueforge-td-database" },
+    { name: "Palette Builder", href: "/hueforge-palette-builder" },
+    { name: "Project Planner", href: "/hueforge-project-planner" },
+    { name: "Layer Stacking Preview", href: "/hueforge-layer-preview" },
+    { name: "Color Matcher", href: "/hueforge-color-matcher" },
+    { name: "Substitution Finder", href: "/hueforge-filament-substitute-finder" },
   ];
 
   const guideLinks = [
@@ -242,7 +247,7 @@ export function SiteFooter() {
       <div className="bg-card border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
           {/* Explore FilaScope — SEO Link Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-6">
             {/* Column 1 — Filaments */}
             <nav aria-label="Filaments">
               <FooterColumnHeader>Filaments</FooterColumnHeader>
@@ -277,7 +282,24 @@ export function SiteFooter() {
               </ul>
             </nav>
 
-            {/* Column 3 — Guides */}
+            {/* Column 3 — HueForge */}
+            <nav aria-label="HueForge">
+              <FooterColumnHeader>HueForge</FooterColumnHeader>
+              <ul className="space-y-3">
+                {hueforgeLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link 
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Column 4 — Guides */}
             <nav aria-label="Guides">
               <FooterColumnHeader>Guides</FooterColumnHeader>
               <ul className="space-y-3">
