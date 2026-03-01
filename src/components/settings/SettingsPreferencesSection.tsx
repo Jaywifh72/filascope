@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { SlidersHorizontal, Loader2 } from "lucide-react";
+import { PreferredBrandsPicker } from "./PreferredBrandsPicker";
 import { useTheme } from "next-themes";
 import { useRegion } from "@/contexts/RegionContext";
 import { useFeatureSwitch } from "@/hooks/useFeatureSwitch";
@@ -162,6 +163,17 @@ export function SettingsPreferencesSection({ profile, setProfile, saving, onSave
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <Separator className="bg-border/50" />
+
+        {/* Preferred Brands */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Preferred Brands</Label>
+          <PreferredBrandsPicker
+            selectedBrands={profile.preferences.preferred_brands || []}
+            onChange={(brands) => updatePreference("preferred_brands", brands)}
+          />
         </div>
 
         <Button onClick={onSave} disabled={saving} className="mt-2">
