@@ -3,15 +3,35 @@
  *
  * When a filament's `color_hex` is null / empty, we derive a reasonable
  * fallback from `color_family` so swatches are never invisible.
+ *
+ * White/near-white families are given PRIORITY over the hex field because
+ * some database records carry incorrect dark hex values for white filaments.
  */
 
-const COLOR_FAMILY_FALLBACKS: Record<string, string> = {
-  white: '#F5F5F0',
-  'bone white': '#FFFDD0',
-  'cold white': '#F0F8FF',
-  'jade white': '#E8F5E0',
+/** White-family overrides — checked BEFORE hex to fix bad data. Longest-first order. */
+const WHITE_FAMILY_OVERRIDES: Record<string, string> = {
+  'bone white': '#F5F0E6',
+  'cold white': '#F0F4FF',
+  'jade white': '#F0F5E8',
   'milky white': '#FAFAF5',
-  natural: '#F5F5F0',
+  'warm white': '#FFF8F0',
+  ivory: '#FFFFF0',
+  cream: '#FFFDD0',
+  natural: '#F5F0E0',
+  white: '#FFFFFF',
+};
+
+const WHITE_OVERRIDE_KEYS = Object.keys(WHITE_FAMILY_OVERRIDES).sort(
+  (a, b) => b.length - a.length,
+);
+
+const COLOR_FAMILY_FALLBACKS: Record<string, string> = {
+  white: '#FFFFFF',
+  'bone white': '#F5F0E6',
+  'cold white': '#F0F4FF',
+  'jade white': '#F0F5E8',
+  'milky white': '#FAFAF5',
+  natural: '#F5F0E0',
   ivory: '#FFFFF0',
   cream: '#FFFDD0',
   black: '#1A1A1A',
@@ -33,17 +53,40 @@ const COLOR_FAMILY_FALLBACKS: Record<string, string> = {
 };
 
 /**
+ * Check if a color family string matches a white/near-white override.
+ * Returns the override hex or null.
+ */
+function resolveWhiteOverride(text: string | null | undefined): string | null {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  for (const key of WHITE_OVERRIDE_KEYS) {
+    if (lower.includes(key)) return WHITE_FAMILY_OVERRIDES[key];
+  }
+  return null;
+}
+
+/**
  * Returns the best hex colour for a swatch.
- * Priority: explicit hex → color-family fallback → neutral grey.
+ * Priority:
+ *  1. White-family override from colorFamily (fixes bad hex data for whites)
+ *  2. Explicit hex from database
+ *  3. Color-family fallback
+ *  4. Neutral grey
  */
 export function getSwatchColor(
   hexColor: string | null | undefined,
   colorFamily: string | null | undefined,
 ): string {
+  // 1. White-family override — takes priority over hex
+  const whiteOverride = resolveWhiteOverride(colorFamily);
+  if (whiteOverride) return whiteOverride;
+
+  // 2. Explicit hex
   if (hexColor) return hexColor;
+
+  // 3. General color-family fallback
   if (colorFamily) {
     const lower = colorFamily.toLowerCase();
-    // Sort keys longest-first so "bone white" matches before "white"
     const sortedKeys = Object.keys(COLOR_FAMILY_FALLBACKS).sort((a, b) => b.length - a.length);
     for (const key of sortedKeys) {
       if (lower.includes(key)) return COLOR_FAMILY_FALLBACKS[key];
