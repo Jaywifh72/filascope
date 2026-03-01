@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from "react";
 import { trackComparisonAdd, trackEcommerceAddToCart } from "@/lib/analytics";
 import { toast } from "sonner";
+import { checkFirstCompareMilestone } from "@/hooks/useCelebrationMilestones";
 
 export interface CompareItem {
   id: string;
@@ -280,6 +281,9 @@ export function CompareProvider({ children }: { children: ReactNode }) {
       toast.success(`Added to comparison`, {
         description: item.product_title,
       });
+      
+      // Celebration milestone: first comparison (2 items)
+      checkFirstCompareMilestone(newCount);
       
       // Expand tray when item is added
       setIsExpanded(true);

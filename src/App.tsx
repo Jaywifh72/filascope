@@ -23,6 +23,13 @@ function AdminRedirect() {
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
 import { ScrollProgressBar } from "./components/ScrollProgressBar";
+import { useCelebrationMilestones } from "./hooks/useCelebrationMilestones";
+
+/** Mounts celebration milestone tracking inside BrowserRouter */
+function CelebrationMilestoneTracker() {
+  useCelebrationMilestones();
+  return null;
+}
 import { ThemeProvider } from "./components/ThemeProvider";
 import { SiteFooter } from "./components/SiteFooter";
 import { RegionProvider } from "./contexts/RegionContext";
@@ -240,6 +247,7 @@ const App = () => (
                 <GA4RouteTracker />
                 <AIReferralTracker />
                 <SchemaValidatorRunner />
+                <CelebrationMilestoneTracker />
                 <GlobalKeyboardHandler>
                 {/* WCAG 2.1 AA: Skip to main content link */}
                 <SkipLink />
