@@ -12670,6 +12670,7 @@ export type Database = {
           store_url: string
         }[]
       }
+      get_td_coverage_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

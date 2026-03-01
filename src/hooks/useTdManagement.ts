@@ -2,51 +2,28 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-// ── Stats ──
+// ── Stats (server-side RPC) ──
+
+export interface TdCoverageStats {
+  total_filaments: number;
+  with_td: number;
+  missing_td: number;
+  coverage_pct: number;
+  reference_count: number;
+  by_material: { material: string; total: number; with_td: number; pct: number }[];
+  by_brand: { brand: string; total: number; with_td: number; pct: number }[];
+  top_gaps_brand: { brand: string; total: number; missing: number }[];
+  top_gaps_material: { material: string; total: number; missing: number; pct: number }[];
+  recent_logs: { created_at: string; source: string; confidence: string; status: string; td_value: number; notes: string }[];
+}
 
 export function useTdStats() {
   return useQuery({
     queryKey: ['td-stats'],
     queryFn: async () => {
-      const [totalRes, withTdRes, materialRes, brandRes] = await Promise.all([
-        supabase.from('filaments').select('id', { count: 'exact', head: true }),
-        supabase.from('filaments').select('id', { count: 'exact', head: true }).not('transmission_distance', 'is', null),
-        supabase.from('filaments').select('material, transmission_distance'),
-        supabase.from('filaments').select('vendor, transmission_distance'),
-      ]);
-
-      const total = totalRes.count ?? 0;
-      const withTd = withTdRes.count ?? 0;
-
-      // Material breakdown
-      const matMap = new Map<string, { total: number; withTd: number }>();
-      (materialRes.data ?? []).forEach((f: any) => {
-        const m = f.material || 'Unknown';
-        const entry = matMap.get(m) || { total: 0, withTd: 0 };
-        entry.total++;
-        if (f.transmission_distance != null) entry.withTd++;
-        matMap.set(m, entry);
-      });
-      const byMaterial = Array.from(matMap.entries())
-        .map(([material, { total: t, withTd: w }]) => ({ material, total: t, withTd: w, pct: t > 0 ? Math.round((w / t) * 100) : 0 }))
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 10);
-
-      // Brand breakdown
-      const brandMap = new Map<string, { total: number; withTd: number }>();
-      (brandRes.data ?? []).forEach((f: any) => {
-        const v = f.vendor || 'Unknown';
-        const entry = brandMap.get(v) || { total: 0, withTd: 0 };
-        entry.total++;
-        if (f.transmission_distance != null) entry.withTd++;
-        brandMap.set(v, entry);
-      });
-      const byBrand = Array.from(brandMap.entries())
-        .map(([brand, { total: t, withTd: w }]) => ({ brand, total: t, withTd: w, pct: t > 0 ? Math.round((w / t) * 100) : 0 }))
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 10);
-
-      return { total, withTd, withoutTd: total - withTd, coverage: total > 0 ? Math.round((withTd / total) * 100) : 0, byMaterial, byBrand };
+      const { data, error } = await supabase.rpc('get_td_coverage_stats' as any);
+      if (error) throw error;
+      return data as unknown as TdCoverageStats;
     },
   });
 }
