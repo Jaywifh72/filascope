@@ -367,7 +367,12 @@ export function useTdMatching() {
           try {
             const { error: updErr } = await supabase
               .from('filaments')
-              .update({ transmission_distance: match.tdValue })
+              .update({
+                transmission_distance: match.tdValue,
+                td_confidence: match.confidence,
+                td_source: 'reference_match',
+                td_matched_at: new Date().toISOString(),
+              } as any)
               .eq('id', match.filamentId);
             if (updErr) throw updErr;
 
@@ -404,8 +409,9 @@ export function useTdMatching() {
       qc.invalidateQueries({ queryKey: ['td-stats'] });
       qc.invalidateQueries({ queryKey: ['td-filaments'] });
       qc.invalidateQueries({ queryKey: ['td-population-log'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
 
-      toast({ title: `Applied ${applied} TD values`, description: errors ? `${errors} errors` : undefined });
+      toast({ title: `✅ Matching complete: ${applied} filaments updated`, description: errors ? `${errors} errors` : undefined });
     } catch (err: any) {
       toast({ title: 'Apply failed', description: err.message, variant: 'destructive' });
     } finally {
