@@ -40,6 +40,7 @@ export interface Preferences {
   default_spool_size?: string;
   units?: string;
   theme?: string;
+  preferred_brands?: string[];
 }
 
 export interface NotificationSettings {
