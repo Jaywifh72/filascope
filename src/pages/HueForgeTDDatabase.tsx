@@ -1137,13 +1137,35 @@ export default function HueForgeTDDatabase() {
                           #{i + 1}
                         </span>
                         <div
-                          className={`relative h-12 w-full rounded-lg mb-3 overflow-hidden transition-all ${lightSwatch ? 'border border-gray-600 group-hover:border-gray-500' : 'border border-white/10 group-hover:border-white/20'}`}
-                          style={{ backgroundColor: displayHex || 'hsl(var(--muted))' }}
+                          className={`relative h-12 w-full rounded-lg mb-3 overflow-hidden transition-all ${
+                            darkSwatch
+                              ? 'border border-gray-600 group-hover:border-gray-500'
+                              : lightSwatch
+                                ? 'border border-gray-600 group-hover:border-gray-500'
+                                : 'border border-white/10 group-hover:border-white/20'
+                          }`}
+                          style={{
+                            backgroundColor: displayHex || 'hsl(var(--muted))',
+                            boxShadow: darkSwatch ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : undefined,
+                          }}
                         >
-                          {/* Subtle diagonal gradient for depth on dark swatches */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/[0.05] pointer-events-none" />
-                          {/* Spool watermark — dark icon for light swatches, white for dark */}
-                          <Package className={`absolute inset-0 m-auto w-6 h-6 opacity-[0.15] pointer-events-none ${lightSwatch ? 'text-black' : 'text-white'}`} />
+                          {/* Gradient overlay: dark swatches get a lighter corner for depth */}
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: darkSwatch
+                                ? 'linear-gradient(to bottom right, rgba(156,163,175,0.4) 0%, transparent 40%, transparent 100%)'
+                                : 'linear-gradient(to bottom right, transparent, transparent, rgba(255,255,255,0.05))',
+                            }}
+                          />
+                          {/* Spool watermark */}
+                          <Package className={`absolute inset-0 m-auto w-6 h-6 pointer-events-none ${
+                            darkSwatch
+                              ? 'text-gray-400 opacity-40'
+                              : lightSwatch
+                                ? 'text-black opacity-[0.15]'
+                                : 'text-white opacity-[0.15]'
+                          }`} />
                         </div>
                         <p className="text-sm font-semibold text-foreground truncate">{f.product_title}</p>
                         <p className="text-xs text-muted-foreground mb-2">{f.vendor}</p>
