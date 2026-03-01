@@ -20,6 +20,7 @@ import {
   List,
   Package,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -920,9 +921,26 @@ export default function HueForgeTDDatabase() {
                               </TableCell>
                               <TableCell className="font-medium">{f.vendor}</TableCell>
                               <TableCell className="max-w-[200px]">
-                                <span className="truncate block text-primary group-hover:text-primary/80 group-hover:underline" title={f.product_title || ''}>
-                                  {f.product_title}
-                                </span>
+                                {(f.product_title?.length ?? 0) > 40 ? (
+                                  <TooltipProvider>
+                                    <Tooltip delayDuration={300}>
+                                      <TooltipTrigger asChild>
+                                        <span className="truncate block text-primary group-hover:text-primary/80 group-hover:underline cursor-pointer">
+                                          {f.product_title}
+                                          <span className="inline-block ml-0.5 text-muted-foreground/40 text-[10px] align-middle">ⓘ</span>
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-[400px] text-sm whitespace-pre-line">
+                                        <p className="font-semibold text-muted-foreground text-xs mb-1">Brand: {f.vendor}</p>
+                                        <p>{f.product_title}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ) : (
+                                  <span className="truncate block text-primary group-hover:text-primary/80 group-hover:underline">
+                                    {f.product_title}
+                                  </span>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <Badge variant="outline">{f.material}</Badge>
