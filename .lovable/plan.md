@@ -1,111 +1,109 @@
 
 
-# Community TD Submissions & Verification System
+# HueForge TD Substitute Finder
 
 ## Overview
-Build a crowdsourced TD measurement pipeline where authenticated users can submit TD values for filaments missing them (or verify existing ones), with admin review before data goes live. This addresses the gap between 111 filaments with TD data and 8,277+ total filaments.
+Build a "Find TD-Matched Substitute" tool as both an inline section on `/hueforge-td-database` and a standalone page at `/hueforge-filament-substitute-finder`. Users select a source filament and instantly see alternatives with matching TD values and colors from other brands.
 
-## 1. Database Changes (Migration)
+## Architecture
 
-### New Tables
-- **td_submissions** -- User-submitted TD measurements with fields for value, method, layer height, nozzle temp, printer model, photo URL, notes, and review status. Unique constraint on (filament_id, user_id). RLS policies for public read of approved, user CRUD of own, and admin management.
-- **td_verifications** -- Community votes (accurate/too_high/too_low) on existing TD values. Unique constraint on (filament_id, user_id). Public read, authenticated insert.
-- **td_community_stats** -- SQL VIEW joining filaments with aggregated submission counts, averages, stddev, and verification vote tallies.
+```text
+src/
+  pages/
+    HueForgeSubstituteFinder.tsx        -- Standalone full page
+  components/
+    hueforge/
+      TdSubstituteFinder.tsx            -- Core substitute finder (shared between inline + page)
+      SubstituteFilamentPicker.tsx      -- Combobox to select source filament
+      SubstituteResultCard.tsx          -- Individual result card with match badge
+      SubstituteComparisonStrip.tsx     -- Color swatch strip (source vs top 3)
+      SubstitutePriceTable.tsx          -- Price comparison table (full page only)
+```
 
-### Storage
-- Create a public bucket `td-calibration-photos` for user-uploaded calibration print photos.
-- RLS on storage.objects: authenticated users can upload to their own path (`{filament_id}/{user_id}/*`), public read.
+## Data Flow
+- Reuse the existing `hueforge-td-database` query (filaments with `transmission_distance IS NOT NULL`) already cached by TanStack Query
+- All filtering is client-side: given a source filament, filter by TD range and color family from the already-loaded dataset
+- No new database tables or migrations needed
+- Use `useRegion()`/`useCurrency()` for price formatting
 
-### RLS Policies
-- td_submissions: public SELECT on approved rows, user SELECT/INSERT/UPDATE on own rows (UPDATE only when pending), admin full access via `has_role()`.
-- td_verifications: public SELECT, authenticated INSERT on own rows.
+## Core Logic: Substitute Matching
 
-## 2. New Components
+Given a source filament with `td_value` and `color_family`:
 
-### User-Facing Components (`src/components/filament/td-community/`)
+1. **Exact TD Matches**: same color family, `|td - source_td| <= 0.1`, different vendor preferred. Sort by TD diff then price.
+2. **Close Matches**: same color family, `0.1 < |td - source_td| <= 0.5`. Excludes exact matches.
+3. **Same Color, Different TD**: same color family, `|td - source_td| > 0.5`. Collapsed by default.
 
-**TdSubmissionButton.tsx**
-- Renders "Submit TD Measurement" or "Verify This TD Value" button depending on whether the filament has a TD value.
-- Opens the submission modal on click.
-- Shows "Sign in to submit" prompt for unauthenticated users.
+### Match Quality Badges
+- "Perfect Match" (green): same color family, TD within +/-0.05
+- "Close Match" (amber): same color family, TD within +/-0.2
+- "TD Match Only" (blue): different color family, TD within +/-0.1
+- "Budget Alternative" (purple): 20%+ cheaper, within +/-0.3 TD, same color family
 
-**TdSubmissionModal.tsx**
-- Dialog form with fields: TD value (0-20, step 0.01), measurement method (select), layer height (select), nozzle temp (number), printer model (text), photo upload (file input), notes (textarea).
-- Shows current TD value for reference if one exists.
-- Validates with zod schema before insert into `td_submissions`.
-- Photo upload to `td-calibration-photos/{filament_id}/{user_id}/{filename}`.
-- Success toast with "Under review" message.
+## Components
 
-**TdVerificationWidget.tsx**
-- Displayed below TD value on filament detail pages (only when TD exists).
-- Three vote buttons: Accurate (green), Seems High (amber), Seems Low (red).
-- Shows vote counts from `td_community_stats` view.
-- After voting, highlights user's choice and shows "You voted: X".
-- Optional TD input when voting too_high/too_low.
-- Requires authentication.
+### SubstituteFilamentPicker
+- Uses Shadcn `Command` (cmdk) as a popover combobox
+- Searches across name, brand, color in the filaments array
+- Each option: `[color swatch] [Brand] [Name] -- TD [value]`
+- Also accepts a `filamentId` URL param to pre-select
 
-**TdCommunityBadge.tsx**
-- Small inline badge/icon for the TD database table rows.
-- Green checkmark if 3+ accurate votes; blue people icon if community-submitted.
-- Tooltip with details on hover.
+### TdSubstituteFinder (core component)
+- Props: `filaments: TDFilament[]`, `compact?: boolean` (inline vs full page mode)
+- Contains the picker, reference card, results sections, and comparison strip
+- In compact mode: simpler layout, no price table
+- In full page mode: adds "Compare by Brand" toggle grouping and price comparison table
 
-**FilamentsNeedingTdSection.tsx**
-- Section for the bottom of `/hueforge-td-database` page.
-- Queries popular filaments (by name recognition or major brands) where `transmission_distance IS NULL`.
-- Shows grid of 8-12 cards with color swatch, brand, name, material, and "Submit TD" button.
+### SubstituteResultCard
+- Color swatch, brand, name, TD with delta indicator (e.g., "TD 0.58 (delta +0.03)")
+- Delta text color: green for +/-0.05, amber for +/-0.2, default otherwise
+- Match quality badge
+- Material, color family, price
+- "View Details" and "Buy" links
 
-### Admin Components (`src/components/admin/td-management/`)
+### SubstituteComparisonStrip
+- Horizontal row showing source swatch labeled "Source" alongside top 3 substitute swatches
+- Helps visual color comparison at a glance
 
-**TdSubmissionsReviewPanel.tsx**
-- Table of all td_submissions with filter tabs: Pending, Approved, Rejected, All.
-- Columns: Filament name, Submitted By, TD Value, Method, Status, Date.
-- Row click opens detail view.
+### SubstitutePriceTable (full page only)
+- Compact table: Brand, Product, TD, TD Diff, Price, Price Diff, Buy link
+- Sortable columns
 
-**TdSubmissionDetailModal.tsx**
-- Shows all submission fields, calibration photo, current filament TD for comparison.
-- Lists other approved submissions for the same filament.
-- Shows community verification stats.
-- Action buttons: Approve (optionally set filament TD), Reject (requires notes), Flag.
+## Standalone Page (`/hueforge-filament-substitute-finder`)
+- SEO: title "HueForge Filament Substitute Finder", meta description targeting substitute/alternative keywords
+- Breadcrumb: Home > HueForge TD Database > Substitute Finder
+- Full-width layout with the `TdSubstituteFinder` in non-compact mode
+- Additional features: "Compare by Brand" toggle, price comparison table
+- Accepts `?filament=<id>` URL param for deep linking from filament detail pages
 
-**TdBulkActions.tsx**
-- Checkbox selection on submission rows.
-- Bulk approve/reject with confirmation dialog.
+## Integration Points
 
-## 3. Integration Points
+### TD Database Page (`HueForgeTDDatabase.tsx`)
+- Insert `TdSubstituteFinder` (compact mode) between `FilamentsNeedingTdSection` and the FAQ section (around line 819)
+- Add "Find Substitutes" button in the hero section cross-links area
 
-### Filament Detail Page (`FilamentDetail.tsx`)
-- Add `TdSubmissionButton` in the specs/TD section area (near where transmission_distance is displayed in `SpecificationsContent.tsx` and `FilamentHeroSection.tsx`).
-- Add `TdVerificationWidget` below the TD badge in the hero section when TD exists.
+### Filament Detail Pages
+- Add "Find similar filaments by TD" link in the TD/specs area, linking to `/hueforge-filament-substitute-finder?filament={id}`
 
-### HueForge TD Database Page (`HueForgeTDDatabase.tsx`)
-- Add `TdCommunityBadge` next to TD values in the table rows.
-- Add `FilamentsNeedingTdSection` after the main table.
+### Routing (`App.tsx`)
+- Add route: `/hueforge-filament-substitute-finder` -> `HueForgeSubstituteFinder`
 
-### Admin Panel (`TdManagement.tsx`)
-- Add a new tab "Submissions" with `TdSubmissionsReviewPanel`.
+### Navigation
+- Add to footer TOOLS section
 
-## 4. Hooks
+## Styling
+- Dark theme consistent with existing pages
+- Source/reference card: cyan border (`border-primary`)
+- Match badges use the defined color scheme (green/amber/blue/purple)
+- Responsive: cards stack on mobile, price table scrolls horizontally
 
-**useTdSubmission.ts** -- Handles insert/update of td_submissions, photo upload, and submission state.
-
-**useTdVerification.ts** -- Handles insert of td_verifications, fetches user's existing vote, and community stats.
-
-**useTdCommunityStats.ts** -- Queries the td_community_stats view for a given filament_id.
-
-## 5. Implementation Sequence
-
-1. Run database migration: create tables, view, storage bucket, and RLS policies.
-2. Create hooks: `useTdSubmission`, `useTdVerification`, `useTdCommunityStats`.
-3. Build user-facing components: `TdSubmissionModal`, `TdSubmissionButton`, `TdVerificationWidget`, `TdCommunityBadge`, `FilamentsNeedingTdSection`.
-4. Integrate into `FilamentDetail.tsx` (button + verification widget) and `HueForgeTDDatabase.tsx` (badges + needing-TD section).
-5. Build admin components: `TdSubmissionsReviewPanel`, `TdSubmissionDetailModal`, `TdBulkActions`.
-6. Add "Submissions" tab to `TdManagement.tsx`.
-
-## 6. Constraints and Notes
-
-- No automatic TD value updates -- all submissions go through admin review.
-- Client-side rate limit of 10 submissions/day (tracked via localStorage + query count check).
-- CHECK constraints in the SQL use simple value range checks (immutable), which are safe. The `status` and `measurement_method` constraints use IN-lists, also immutable and safe.
-- The unique constraint `(filament_id, user_id)` means one submission per user per filament -- users can update their pending submission but not create duplicates.
-- Photo uploads are optional and capped at 5MB client-side.
+## Implementation Sequence
+1. Build `SubstituteFilamentPicker` (combobox with filament search)
+2. Build `SubstituteResultCard` with match badges and TD delta
+3. Build `SubstituteComparisonStrip`
+4. Build `TdSubstituteFinder` composing all above
+5. Build `SubstitutePriceTable` for full page mode
+6. Create `HueForgeSubstituteFinder.tsx` standalone page with SEO
+7. Integrate inline section into `HueForgeTDDatabase.tsx`
+8. Add route to `App.tsx`, add links from hero section and filament detail pages
 
