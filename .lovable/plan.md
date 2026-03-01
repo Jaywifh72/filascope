@@ -1,74 +1,106 @@
 
 
-# Discovery Zone Section
+# Enhanced Filter Pills + Grid Break Moment Cards
 
 ## Overview
 
-A new `DiscoveryZone` component inserted between the Trending Section and the "Explore the Filament Catalog" heading on the Finder page. It provides 3 curated subsections that give users clear entry points into the catalog.
+Three additions to the Finder page: (A) enhanced QuickFilterPills with counts and better active states, (B) contextual "break moment" cards inserted every 8th position in the filament grid, and (C) a circular scroll-progress indicator replacing the existing ScrollToTopButton.
 
 ---
 
-## New File: `src/components/DiscoveryZone.tsx`
+## Part A -- Enhanced QuickFilterPills
 
-### Subsection A -- Quick Picks (horizontal scroll)
+**File: `src/components/QuickFilterPills.tsx`**
 
-6 clickable cards in a horizontally scrollable row using the existing `ScrollCarousel` component.
+### Changes
 
-Each card: `min-w-[220px] h-[120px] rounded-xl` with a unique gradient background, icon (20x20, opacity-60), title, subtitle, and a count pill badge.
+1. **Add counts prop**: Accept an optional `counts` record (`Record<string, number>`) from the parent. Display count inside each pill as `(N)` in `text-cyan-400 font-medium text-xs`. If no count available, omit.
 
-| Card | Gradient | Action on Click |
-|------|----------|-----------------|
-| Best for Beginners | warm (amber to orange) | `resetFilters()`, set materials to PLA+PETG, sort by FilaScore desc |
-| HueForge Ready | purple gradient | `resetFilters()`, set `hasTdData: true` |
-| Engineering Grade | cool blue-slate | `resetFilters()`, set materials to PC+Nylon+ASA |
-| Under $20/kg | green gradient | `resetFilters()`, set `priceRange: [0, 20]` |
-| High Speed | red-orange gradient | `resetFilters()`, set `highSpeed: true` |
-| Just Added | cyan gradient | `resetFilters()`, set `sortBy: "newest"` |
+2. **Active state upgrade**:
+   - Active pill: `bg-cyan-500/20 border-cyan-500/50 text-cyan-300 ring-2 ring-cyan-500/20 scale-100`
+   - Inactive pills when one is active: add `opacity-70` class
+   - On click: brief CSS `transition-transform duration-150` (the scale is handled by the browser transition, no JS animation needed)
 
-After applying filters, smooth-scroll to the catalog grid (using a ref or `document.getElementById`).
+3. **Mobile scroll fade**: Add two gradient overlays (`absolute left-0 / right-0 w-12 h-full pointer-events-none`) using `from-background to-transparent` and vice versa. Add `scroll-snap-type: x mandatory` on container, `scroll-snap-align: center` on each pill.
 
-Count badges will use the existing `unfilteredProductCount` as a rough "N+ filaments" indicator rather than making separate count queries per card.
+4. **Results count animation**: Accept an optional `filteredCount` prop. When `activeFilter` changes to non-null, show a brief `"Showing N filaments"` line below the pills that fades in and auto-hides after 2 seconds. The number animates from 0 using a `requestAnimationFrame` countUp over 600ms.
 
-### Subsection B -- Did You Know? Rotating Fact Strip
+### Parent integration (`src/pages/Finder.tsx`)
 
-A single-line bar (`py-3 bg-gray-800/50 rounded-lg`) with:
-- Left: lightbulb emoji in amber
-- Center: rotating fact text, crossfade every 8 seconds using `useState` index + `useEffect` interval with `opacity` transition (300ms)
-- Right: "Learn more" link pointing to `/guides/how-to-choose-3d-printer-filament`
+Pass `filteredCount={totalCount}` to `QuickFilterPills`. For per-pill counts, compute approximate counts from `filterCounts` or pass `unfilteredProductCount` as a rough indicator. No new API calls.
 
-8 hardcoded facts as specified in the request.
+---
 
-### Subsection C -- Popular Comparisons Quick Links
+## Part B -- Grid Break Moment Cards
 
-3-4 pill-shaped links in a centered flex-wrap row. Each links to an existing page:
-- "PLA vs PETG" -> `/guides/pla-vs-petg`
-- "Bambu Lab vs Polymaker" -> `/brands` (with search pre-filled)
-- "Best PETG under $25" -> applies PETG + price filter
-- "Silk PLA comparison" -> applies PLA + silk filter
+### New file: `src/components/GridBreakCard.tsx`
 
-### Container
+A single component that renders one of 5 card types based on a `type` prop.
 
-Full-width section: `bg-gray-900/50 border-y border-gray-800 py-10 px-4`
-
-### Props
-
+**Props**:
 ```text
-interface DiscoveryZoneProps {
-  resetFilters: () => void;
-  updateFilter: <K>(key: K, value: any) => void;
-  catalogRef?: React.RefObject<HTMLElement>;
+interface GridBreakCardProps {
+  type: 'tip' | 'compare' | 'printer' | 'deal' | 'hueforge';
+  onAction?: () => void;       // CTA click handler
+  dealData?: { name: string; discount: number; pricePerKg: string; slug: string };
+  onDismiss?: (type: string) => void;
 }
 ```
 
+**Shared styling**: Same height as product cards (auto via grid), `rounded-xl border p-5 flex flex-col justify-between`. Each type gets a unique gradient + border color as specified. Small X button in top-right calls `onDismiss` which saves to `localStorage` key `dismissed-break-{type}`.
+
+**Entrance animation**: Use IntersectionObserver to add `animate-fade-in` class when the card scrolls into view. The card starts with `opacity-0 translate-y-2` and transitions in.
+
+**Mobile**: `col-span-2` (full width of 2-col grid) with a horizontal layout (flex-row instead of flex-col), reduced padding.
+
+### Card types
+
+| Type | Gradient | Title | Body | CTA |
+|------|----------|-------|------|-----|
+| tip | cyan-950 to gray-900, border-cyan-800/30 | "Quick Tip" | Rotating tips array (picks based on index) | "Browse [Material] Filaments" |
+| compare | amber-950 to gray-900, border-amber-800/30 | "Compare Challenge" | "Which is stronger -- PETG or ABS?" | "Start Comparing" |
+| printer | emerald-950 to gray-900, border-emerald-800/30 | "Set Your Printer" | "See only compatible filaments" | "Set My Printer" |
+| deal | red-950 to gray-900, border-red-800/30 | "Deal Spotlight" | Dynamic: biggest discount from props | "View Deal" |
+| hueforge | purple-950 to gray-900, border-purple-800/30 | "HueForge Artists" | "500+ verified TD values" | "Search TD Values" |
+
+### Integration in `src/pages/Finder.tsx`
+
+In the grid rendering loop (line 1670-1710), insert break cards after every 8th product card:
+
+```text
+{displayedGroups.map((group, index) => (
+  <React.Fragment key={filament.id}>
+    {/* Insert break card after every 8th item */}
+    {index > 0 && index % 8 === 0 && !isDismissed(breakType) && (
+      <GridBreakCard type={getBreakType(index)} ... />
+    )}
+    <LabReadoutCard ... />
+  </React.Fragment>
+))}
+```
+
+**Rotation logic** (helper function):
+- Position 8: `printer` type if no printer selected, else `tip`
+- Position 16: `compare`
+- Position 24: `deal`
+- Position 32: `hueforge`
+- Position 40+: cycle through `tip` variants
+
+**Deal data**: Use existing `useTopDeals` hook or pass the top deal from existing data if available. If no deal data, skip the deal card and show a tip instead.
+
 ---
 
-## Modified File: `src/pages/Finder.tsx`
+## Part C -- Scroll Progress Ring
 
-Insert `<DiscoveryZone>` between line 1100 (`<TrendingSection />`) and line 1103 (spacer). Pass `resetFilters`, `updateFilter`, and a ref to the catalog section for smooth scrolling.
+**File: `src/components/ScrollToTopButton.tsx`**
 
-Add an `id="catalog-section"` to the catalog heading div (line 1107) so the Discovery Zone can scroll to it.
+Enhance the existing button with a circular SVG progress ring:
 
-No SEO elements, Helmet tags, JSON-LD, FAQ sections, or content blocks are touched.
+- Add scroll progress tracking: calculate `scrollProgress` as percentage of `#filament-grid` scrolled through (grid top to grid bottom relative to viewport)
+- Render an SVG circle (r=16, cx=20, cy=20) behind the arrow icon with `stroke-dasharray` and `stroke-dashoffset` based on progress
+- Stroke color: `stroke-cyan-500/60`
+- Background circle: `stroke-gray-700/40`
+- Keep all existing show/hide logic and compare tray offset
 
 ---
 
@@ -76,6 +108,10 @@ No SEO elements, Helmet tags, JSON-LD, FAQ sections, or content blocks are touch
 
 | Action | File |
 |--------|------|
-| CREATE | `src/components/DiscoveryZone.tsx` |
-| MODIFY | `src/pages/Finder.tsx` (insert component + add catalog id) |
+| MODIFY | `src/components/QuickFilterPills.tsx` -- counts, active states, scroll fade, results animation |
+| CREATE | `src/components/GridBreakCard.tsx` -- break moment card component |
+| MODIFY | `src/pages/Finder.tsx` -- pass counts to pills, insert break cards in grid loop |
+| MODIFY | `src/components/ScrollToTopButton.tsx` -- add SVG progress ring |
+
+No SEO elements, JSON-LD, meta tags, FAQ sections, or content blocks are modified.
 
