@@ -261,28 +261,27 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
         <div className="space-y-4">
           {/* Reference card */}
           <div>
-            <p className="text-xs uppercase tracking-wider text-primary mb-1.5 font-medium">Your Filament</p>
-            <Card className="border-primary">
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full border-2 border-primary shrink-0"
-                    style={{ backgroundColor: source.color_hex || '#666' }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold truncate">{source.vendor} — {source.product_title}</p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold">TD {srcTd.toFixed(2)}</span>
-                      {source.color_family && <Badge variant="outline" className="text-xs">{source.color_family}</Badge>}
-                      {source.material && <Badge variant="outline" className="text-xs">{source.material}</Badge>}
-                      {source.variant_price != null && (
-                        <span className="text-sm text-muted-foreground">{formatPrice(source.variant_price)}</span>
-                      )}
-                    </div>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-primary font-semibold mb-1.5">Your Filament</p>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-12 h-12 rounded-lg border-2 border-primary/40 shrink-0"
+                  style={{ backgroundColor: source.color_hex || '#666' }}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-muted-foreground">{source.vendor}</p>
+                  <p className="text-lg font-semibold truncate">{source.product_title}</p>
+                  <div className="flex items-center gap-2 flex-wrap mt-1">
+                    <Badge variant="outline" className="text-xs font-bold">TD {srcTd.toFixed(2)}</Badge>
+                    {source.color_family && <Badge variant="outline" className="text-xs">{source.color_family}</Badge>}
+                    {source.material && <Badge variant="outline" className="text-xs">{source.material}</Badge>}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                {source.variant_price != null && (
+                  <span className="text-sm font-semibold text-muted-foreground shrink-0">{formatPrice(source.variant_price)}</span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Comparison strip */}
@@ -300,15 +299,28 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
 
           {/* No results */}
           {totalResults === 0 && (
-            <div className="text-center py-8 space-y-3">
-              <p className="text-muted-foreground">No substitutes found within your tolerance range.</p>
-              <p className="text-sm text-muted-foreground">
-                Try widening the TD tolerance or removing the color/material filters.
-              </p>
-              <Button variant="outline" size="sm" asChild>
-                <Link to={`/hueforge-td-database`}>
-                  Browse all filaments in this TD range →
-                </Link>
+            <div className="text-center py-12 space-y-4">
+              <Search className="w-10 h-10 text-muted-foreground/40 mx-auto" />
+              <p className="text-muted-foreground font-medium">No substitutes found within your tolerance range.</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {tdTolerance < 2.0 && (
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => setTdTolerance(Math.min(tdTolerance + 0.5, 2.0))}>
+                    Widen TD tolerance to ±{Math.min(tdTolerance + 0.5, 2.0).toFixed(1)}
+                  </Button>
+                )}
+                {sameColor && (
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => setSameColor(false)}>
+                    Remove color filter
+                  </Button>
+                )}
+                {sameMaterial && (
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => setSameMaterial(false)}>
+                    Remove material filter
+                  </Button>
+                )}
+              </div>
+              <Button variant="ghost" size="sm" className="text-xs" asChild>
+                <Link to="/hueforge-td-database">Browse all filaments in this TD range →</Link>
               </Button>
             </div>
           )}
@@ -316,9 +328,9 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
           {/* 🎯 Exact Matches */}
           {exactMatches.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold mb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wider mb-3 border-l-2 border-green-500 pl-3 text-green-400">
                 🎯 Exact TD Match
-                <span className="text-sm font-normal text-muted-foreground ml-2">within ±{(tdTolerance * 0.2).toFixed(2)} TD</span>
+                <span className="text-xs font-normal text-muted-foreground ml-2">within ±{(tdTolerance * 0.2).toFixed(2)} TD</span>
               </h3>
               {groupByBrand && brandGroups ? (
                 brandGroups
@@ -326,7 +338,7 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
                   .map(([brand, items]) => (
                     <div key={brand} className="mb-3">
                       <p className="text-sm font-medium text-muted-foreground mb-1">{brand}</p>
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {items
                           .filter((f) => exactMatches.includes(f))
                           .map((f) => (
@@ -337,13 +349,14 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
                               sourcePrice={srcPrice}
                               badge={getMatchBadge(f, srcTd, srcColor, srcPrice)}
                               formatPrice={formatPrice}
+                              sourceHandle={source.product_handle || source.id}
                             />
                           ))}
                       </div>
                     </div>
                   ))
               ) : (
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {exactMatches.slice(0, compact ? 5 : 20).map((f) => (
                     <SubstituteResultCard
                       key={f.id}
@@ -352,6 +365,7 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
                       sourcePrice={srcPrice}
                       badge={getMatchBadge(f, srcTd, srcColor, srcPrice)}
                       formatPrice={formatPrice}
+                      sourceHandle={source.product_handle || source.id}
                     />
                   ))}
                 </div>
@@ -362,11 +376,11 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
           {/* ✅ Close Matches */}
           {closeMatches.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold mb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wider mb-3 border-l-2 border-amber-500 pl-3 text-amber-400">
                 ✅ Close Match
-                <span className="text-sm font-normal text-muted-foreground ml-2">within ±{tdTolerance.toFixed(1)} TD</span>
+                <span className="text-xs font-normal text-muted-foreground ml-2">within ±{tdTolerance.toFixed(1)} TD</span>
               </h3>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {closeMatches.slice(0, compact ? 5 : 20).map((f) => (
                   <SubstituteResultCard
                     key={f.id}
@@ -375,6 +389,7 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
                     sourcePrice={srcPrice}
                     badge={getMatchBadge(f, srcTd, srcColor, srcPrice)}
                     formatPrice={formatPrice}
+                    sourceHandle={source.product_handle || source.id}
                   />
                 ))}
               </div>
@@ -384,14 +399,15 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
           {/* 🔄 Similar Range */}
           {similarRange.length > 0 && (
             <Collapsible open={showSameColorExpanded} onOpenChange={setShowSameColorExpanded}>
+              <h3 className="text-sm font-semibold uppercase tracking-wider mb-2 border-l-2 border-muted-foreground pl-3 text-muted-foreground">🔄 Similar Range</h3>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between">
-                  <span>🔄 Similar Range — {similarRange.length} more within ±{(tdTolerance * 2).toFixed(1)} TD</span>
+                  <span>{similarRange.length} more within ±{(tdTolerance * 2).toFixed(1)} TD</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${showSameColorExpanded ? 'rotate-180' : ''}`} />
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="space-y-2 mt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                   {similarRange.slice(0, 20).map((f) => (
                     <SubstituteResultCard
                       key={f.id}
@@ -400,6 +416,7 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
                       sourcePrice={srcPrice}
                       badge={getMatchBadge(f, srcTd, srcColor, srcPrice)}
                       formatPrice={formatPrice}
+                      sourceHandle={source.product_handle || source.id}
                     />
                   ))}
                 </div>

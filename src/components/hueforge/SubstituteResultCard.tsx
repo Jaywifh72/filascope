@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Eye } from 'lucide-react';
+import { Eye, GitCompareArrows } from 'lucide-react';
+import { getFilamentSlug } from '@/lib/filamentUrl';
 import type { TDFilament } from './SubstituteFilamentPicker';
 
 type MatchBadge = 'perfect' | 'close' | 'td_only' | 'budget' | null;
@@ -12,6 +13,7 @@ interface Props {
   sourcePrice?: number | null;
   badge: MatchBadge;
   formatPrice?: (price: number) => string;
+  sourceHandle?: string;
 }
 
 const badgeConfig: Record<NonNullable<MatchBadge>, { label: string; className: string }> = {
@@ -28,16 +30,16 @@ function getDeltaColor(delta: number): string {
   return 'text-muted-foreground';
 }
 
-export function SubstituteResultCard({ filament, sourceTd, sourcePrice, badge, formatPrice }: Props) {
+export function SubstituteResultCard({ filament, sourceTd, sourcePrice, badge, formatPrice, sourceHandle }: Props) {
   const td = filament.transmission_distance ?? 0;
   const delta = td - sourceTd;
   const deltaStr = delta >= 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors">
+    <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-card/60 hover:border-primary/30 transition-colors">
       {/* Color swatch */}
       <div
-        className="w-8 h-8 rounded-full border shrink-0 mt-0.5"
+        className="w-10 h-10 rounded-lg border shrink-0 mt-0.5"
         style={{ backgroundColor: filament.color_hex || '#666' }}
       />
 
@@ -81,6 +83,13 @@ export function SubstituteResultCard({ filament, sourceTd, sourcePrice, badge, f
               <Eye className="w-3 h-3 mr-1" /> View Details
             </Link>
           </Button>
+          {sourceHandle && (
+            <Button variant="ghost" size="sm" className="h-7 text-xs px-2" asChild>
+              <Link to={`/filament-comparison?a=${sourceHandle}&b=${getFilamentSlug(filament)}`}>
+                <GitCompareArrows className="w-3 h-3 mr-1" /> Compare
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </div>
