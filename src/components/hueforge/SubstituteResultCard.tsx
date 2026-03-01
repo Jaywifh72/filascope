@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, GitCompareArrows } from 'lucide-react';
 import { getFilamentSlug } from '@/lib/filamentUrl';
-import { getSwatchColor, isApproximateColor } from '@/lib/swatchColor';
+import { SwatchCircle } from './SwatchCircle';
 import type { TDFilament } from './SubstituteFilamentPicker';
 
 type MatchBadge = 'perfect' | 'close' | 'td_only' | 'budget' | null;
@@ -39,10 +39,11 @@ export function SubstituteResultCard({ filament, sourceTd, sourcePrice, badge, f
   return (
     <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-card/60 hover:border-primary/30 transition-colors">
       {/* Color swatch */}
-      <div
-        className="w-10 h-10 rounded-lg border shrink-0 mt-0.5"
-        style={{ backgroundColor: getSwatchColor(filament.color_hex, filament.color_family) }}
-        title={isApproximateColor(filament.color_hex) ? 'Approximate color — exact hex not available' : undefined}
+      <SwatchCircle
+        hexColor={filament.color_hex}
+        colorFamily={filament.color_family}
+        size="w-10 h-10"
+        className="mt-0.5"
       />
 
       <div className="flex-1 min-w-0">

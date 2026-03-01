@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, RefreshCw, ArrowRight, ShoppingCart, DollarSign, Palette, Search } from 'lucide-react';
-import { getSwatchColor, isApproximateColor } from '@/lib/swatchColor';
+import { SwatchCircle } from './SwatchCircle';
 import { SubstituteFilamentPicker, type TDFilament } from './SubstituteFilamentPicker';
 import { SubstituteResultCard, getMatchBadge } from './SubstituteResultCard';
 import { SubstituteComparisonStrip } from './SubstituteComparisonStrip';
@@ -265,10 +265,11 @@ export function TdSubstituteFinder({ filaments, compact = false }: Props) {
             <p className="text-[10px] uppercase tracking-[0.15em] text-primary font-semibold mb-1.5">Your Filament</p>
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <div
-                  className="w-12 h-12 rounded-lg border-2 border-primary/40 shrink-0"
-                  style={{ backgroundColor: getSwatchColor(source.color_hex, source.color_family) }}
-                  title={isApproximateColor(source.color_hex) ? 'Approximate color — exact hex not available' : undefined}
+                <SwatchCircle
+                  hexColor={source.color_hex}
+                  colorFamily={source.color_family}
+                  size="w-12 h-12"
+                  className="ring-2 ring-primary/40"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-muted-foreground">{source.vendor}</p>

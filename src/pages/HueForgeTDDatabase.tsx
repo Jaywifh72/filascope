@@ -55,6 +55,7 @@ import { TdDistributionChart } from '@/components/hueforge/TdDistributionChart';
 import { TdValueCell } from '@/components/hueforge/TdValueCell';
 import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
 import { getSwatchColor, needsContrastRing, needsLightContrastRing, isApproximateColor } from '@/lib/swatchColor';
+import { SwatchCircle } from '@/components/hueforge/SwatchCircle';
 
 // ── FAQ data ──────────────────────────────────────────────────────────
 const faqData = [
@@ -891,16 +892,11 @@ export default function HueForgeTDDatabase() {
                               onClick={() => navigate(filamentUrl)}
                             >
                               <TableCell>
-                                {displayHex ? (
-                                   <div
-                                    className={`w-8 h-8 rounded-full ring-1 transition-transform duration-150 group-hover:scale-110 ${darkSwatch ? 'ring-muted-foreground/50 shadow-[inset_0_0_6px_rgba(255,255,255,0.08)]' : lightSwatch ? 'ring-gray-600' : 'ring-border'}`}
-                                    style={{ backgroundColor: displayHex }}
-                                  />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full ring-1 ring-muted-foreground/40 ring-dashed bg-muted flex items-center justify-center transition-transform duration-150 group-hover:scale-110">
-                                    <span className="text-[10px] text-muted-foreground">?</span>
-                                  </div>
-                                )}
+                                <SwatchCircle
+                                  hexColor={f.color_hex}
+                                  colorFamily={f.color_family}
+                                  className="transition-transform duration-150 group-hover:scale-110"
+                                />
                               </TableCell>
                               <TableCell className="font-medium">{f.vendor}</TableCell>
                               <TableCell className="max-w-[200px]">
@@ -995,16 +991,11 @@ export default function HueForgeTDDatabase() {
                           >
                             {/* Top: swatch + name + brand */}
                             <div className="flex items-center gap-3 mb-3">
-                              {displayHex ? (
-                                <div
-                                  className={`w-10 h-10 rounded-lg ring-1 shrink-0 ${darkSwatch ? 'ring-muted-foreground/50 shadow-[inset_0_0_6px_rgba(255,255,255,0.08)]' : lightSwatch ? 'ring-gray-600' : 'ring-border'}`}
-                                  style={{ backgroundColor: displayHex }}
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-lg ring-1 ring-muted-foreground/40 ring-dashed bg-muted flex items-center justify-center shrink-0">
-                                  <span className="text-[10px] text-muted-foreground">?</span>
-                                </div>
-                              )}
+                              <SwatchCircle
+                                hexColor={f.color_hex}
+                                colorFamily={f.color_family}
+                                size="w-10 h-10"
+                              />
                               <div className="min-w-0">
                                 <p className="font-semibold text-foreground truncate text-sm group-hover:text-cyan-400 transition-colors">{f.product_title}</p>
                                 <p className="text-xs text-muted-foreground">{f.vendor}</p>

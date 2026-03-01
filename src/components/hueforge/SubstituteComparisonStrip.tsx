@@ -1,4 +1,4 @@
-import { getSwatchColor } from '@/lib/swatchColor';
+import { SwatchCircle } from './SwatchCircle';
 import type { TDFilament } from './SubstituteFilamentPicker';
 
 interface Props {
@@ -15,19 +15,13 @@ export function SubstituteComparisonStrip({ source, substitutes }: Props) {
       <span className="text-xs text-muted-foreground shrink-0">Color Compare:</span>
       <div className="flex items-center gap-2">
         <div className="text-center">
-          <div
-            className="w-8 h-8 rounded-full border-2 border-primary"
-            style={{ backgroundColor: getSwatchColor(source.color_hex, source.color_family) }}
-          />
+          <SwatchCircle hexColor={source.color_hex} colorFamily={source.color_family} className="ring-2 ring-primary" />
           <span className="text-[10px] text-muted-foreground">Source</span>
         </div>
         <span className="text-muted-foreground text-xs">→</span>
         {top3.map((f, i) => (
           <div key={f.id} className="text-center">
-            <div
-              className="w-8 h-8 rounded-full border border-border"
-              style={{ backgroundColor: getSwatchColor(f.color_hex, f.color_family) }}
-            />
+            <SwatchCircle hexColor={f.color_hex} colorFamily={f.color_family} />
             <span className="text-[10px] text-muted-foreground">#{i + 1}</span>
           </div>
         ))}
