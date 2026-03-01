@@ -1,130 +1,137 @@
 
 
-# Skeleton Loading Component System
+# Empty States With Illustrations and Recovery Actions
 
-## Overview
+## Current State
 
-Create a composable skeleton primitive system and add missing skeleton components for Brand Cards, Guide Cards, and Table views. The project already has working skeletons for Filament, Printer, and Deal cards -- those will NOT be modified. New primitives provide a consistent building-block API for future skeletons.
+The project already has **rich, custom empty states** for major pages:
+- `FilamentsEmptyState` -- full with typo detection, smart suggestions, quick categories
+- `PrintersEmptyState` -- full with typo detection, similar suggestions, popular brands
+- `DealsEmptyState` -- full with restrictive filter detection, quick material chips
+- `FilamentComparisonEmptyState` -- full with popular comparisons, how-it-works section
+- `VaultEmptyState` -- reusable with icon/title/description/actions
+- `CADEmptyState`, `NoResultsState`, `NoResultsEmpty` -- reference page empty states
 
----
+There is also a base `EmptyState` component at `src/components/ui/empty-state.tsx` that is close to (but not exactly matching) the requested design.
 
-## What Already Exists (No Changes)
-
-- `src/components/ui/skeleton.tsx` -- base `Skeleton` with `animate-pulse` + `skeleton-shimmer`
-- `src/components/FilamentCardSkeleton.tsx` -- used on `/filaments`, Finder
-- `src/components/printers/PrinterCardSkeleton.tsx` -- used on `/printers`
-- `src/components/deals/DealCardSkeleton.tsx` -- used on `/deals`
-- `src/components/skeletons/` -- barrel file with BentoGrid, Filter, ProductDetail, Compare, Search, Page, Price, Vault skeletons
-- `src/index.css` -- `.skeleton-shimmer` and `.skeleton-animated` CSS classes
-- `tailwind.config.ts` -- existing keyframes (no shimmer yet)
+**What is missing**: Several secondary areas use bare `<div>` with plain text instead of a proper empty state component. These are the targets for improvement.
 
 ---
 
-## Step 1: Add `shimmer` keyframe to Tailwind config
+## Step 1: Enhance the existing base EmptyState component
 
-Add to `tailwind.config.ts` keyframes:
+**File:** `src/components/ui/empty-state.tsx`
 
-```text
-shimmer: {
-  '0%': { transform: 'translateX(-100%)' },
-  '100%': { transform: 'translateX(100%)' }
-}
-```
+Update the existing `EmptyState` component to match the requested design spec while keeping backward compatibility:
 
-And animation: `shimmer: 'shimmer 1.8s ease-in-out infinite'`
+- Add a `compact` prop (boolean, default false). When true: icon 36x36 in 56x56 container, `text-base` title, `py-8` padding
+- Upgrade icon container styling: 80x80 `rounded-2xl` with `bg-white/[0.04] border border-white/[0.08]`, icon at 48x48, `text-muted-foreground`
+- Ensure primary action supports both `onClick` and `href` (already does)
+- Ensure secondary action supports both `onClick` and `href` (already does)
+- Keep backward compatibility for existing `AccessoriesEmptyState` and `PriceEmptyState`
 
-This enables `animate-shimmer` utility class for pseudo-element overlays.
-
----
-
-## Step 2: Create skeleton primitives
-
-**New file:** `src/components/ui/skeleton-primitives.tsx`
-
-Four atomic components:
-
-- **SkeletonBox** -- Rounded rectangle with shimmer pseudo-element overlay. Props: `width?`, `height?`, `className?`. Uses `bg-white/[0.06]` base with `::after` gradient sweep using `animate-shimmer`.
-
-- **SkeletonText** -- Renders N lines of SkeletonBox at text heights (`h-3`/`h-4`/`h-6` for sm/md/lg). Last line at 60% width. Props: `lines?` (default 3), `size?` ('sm' | 'md' | 'lg').
-
-- **SkeletonCircle** -- Circular skeleton element. Props: `size?` (number, default 40).
-
-- **SkeletonImage** -- Aspect-ratio container with centered Lucide `ImageIcon` at `opacity-[0.15]`. Props: `aspectRatio?` (default '1/1'), `className?`.
-
-All use CSS-only animation (no framer-motion). The shimmer is a `::after` pseudo-element so base color remains visible.
+The existing `size` prop will map: `sm` = compact, `md` = default, `lg` = large. No breaking changes.
 
 ---
 
-## Step 3: Create BrandCardSkeleton
+## Step 2: Create contextual empty state wrappers
 
-**New file:** `src/components/skeletons/BrandCardSkeleton.tsx`
+**New file:** `src/components/empty-states/index.ts` (barrel export)
 
-Matches `BrandCard.tsx` layout exactly:
-- Outer: `min-h-[260px] rounded-xl border border-border overflow-hidden`
-- Color accent bar: `h-1 w-full` skeleton
-- Logo area: `h-[88px] bg-gray-800/60` with centered skeleton
-- Price tier badge: top-left small skeleton
-- Brand name: `h-6 w-2/3`
-- Stats row: product count + rating skeletons
-- Material badges: 3 small rounded-full skeletons
-- Color dots: 8 small circles
-- CTA: full-width `h-10 rounded-lg` with border-t
+Create pre-configured wrappers for areas that currently use bare text. These wrap the enhanced `EmptyState`:
 
-**BrandCardSkeletonGrid**: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6` (matches `/brands` grid), default 12 cards.
+### A) BrandsEmptyState
+
+For `/brands` page (currently inline `<div>` at line 535 of `Brands.tsx`).
+
+- Icon: `Building2`
+- Title: "No brands found" (with search query if present)
+- Description: "Try searching for a different name or browse all brands by clearing your filters."
+- Primary: "Clear Search and Filters" (accepts `onClearFilters` prop)
+- Props: `searchQuery?: string`, `onClearFilters: () => void`
+
+### B) ColorFinderEmptyState
+
+For `ColorFinderResults.tsx` (currently bare `<p>` at line 179).
+
+- Icon: `Palette` (Lucide)
+- Title: "No color matches found"
+- Description: "Try picking a different target color or broadening your tolerance range."
+- Primary: "Reset Color" (accepts `onReset` prop)
+
+### C) BuildPlateEmptyState
+
+For `BuildPlateList.tsx` (bare text at line 208).
+
+- Icon: `LayoutGrid`
+- Title: "No build plates match your criteria"
+- Description: "Try adjusting your filters to see more options."
+- Primary: "Clear Filters" (accepts `onClearFilters` prop)
+- Compact variant
+
+### D) HotendEmptyState
+
+For `HotendList.tsx` (bare text at line 512).
+
+- Icon: `Cylinder`
+- Title: "No hotends match your criteria"
+- Description: "Try adjusting your filters to see more options."
+- Primary: "Clear Filters" (accepts `onClearFilters` prop)
+- Compact variant
+
+### E) SharedWishlistEmptyState
+
+For `SharedWishlist.tsx` (bare text at line 103).
+
+- Icon: `Heart`
+- Title: "This wishlist is empty"
+- Description: "Items added to this wishlist will appear here."
+- Compact variant
+
+### F) PrinterQuizEmptyState
+
+For `PrinterQuizResults.tsx` (bare text at line 122).
+
+- Icon: `SearchX`
+- Title: "No printers matched your criteria"
+- Description: "Try adjusting your preferences to see more recommendations."
+- Primary: "Retake Quiz" (accepts `onRetake` prop)
 
 ---
 
-## Step 4: Create GuideCardSkeleton
+## Step 3: Integrate empty states into pages
 
-**New file:** `src/components/skeletons/GuideCardSkeleton.tsx`
+Replace bare-text empty states with the new contextual components:
 
-Matches `GuideCard` in LearningCenter.tsx:
-- Outer: `bg-card/50 border-border rounded-xl` card
-- Category badge: skeleton `h-5 w-20 rounded-full`
-- Title: 2-line skeleton at `h-5`
-- Description: 2-line skeleton at `h-4`
-- Footer: read time (`h-4 w-20`) + date (`h-4 w-24`)
-
-**GuideCardSkeletonGrid**: `grid sm:grid-cols-2 lg:grid-cols-3 gap-6`, default 6 cards.
-
----
-
-## Step 5: Create TableSkeleton
-
-**New file:** `src/components/skeletons/TableSkeleton.tsx`
-
-For table view on `/filaments` and comparison pages:
-- Header row: flex of 6-8 SkeletonBox at varying widths, `bg-white/[0.04]`
-- Body rows (default 10): flex of matching-width skeletons, alternating `bg-white/[0.02]` for zebra striping
-- Props: `rows?` (default 10), `columns?` (default 6)
+| File | Line(s) | Current | Replacement |
+|------|---------|---------|-------------|
+| `src/pages/Brands.tsx` | 535-561 | Inline div with Building2 icon | `BrandsEmptyState` |
+| `src/components/color-finder/ColorFinderResults.tsx` | 178-181 | Bare `<p>` text | `ColorFinderEmptyState` |
+| `src/components/BuildPlateList.tsx` | 206-209 | Bare text div | `BuildPlateEmptyState` |
+| `src/components/HotendList.tsx` | 510-513 | Bare text div | `HotendEmptyState` |
+| `src/pages/SharedWishlist.tsx` | 101-104 | Bare text div | `SharedWishlistEmptyState` |
+| `src/components/printers/PrinterQuizResults.tsx` | 121-125 | Bare text div | `PrinterQuizEmptyState` |
 
 ---
 
-## Step 6: Update barrel file
+## Step 4: Ensure FilamentCategoryPage uses FilamentsEmptyState
 
-Update `src/components/skeletons/index.ts` to export all new components:
-- `BrandCardSkeleton`, `BrandCardSkeletonGrid`
-- `GuideCardSkeleton`, `GuideCardSkeletonGrid`
-- `TableSkeleton`
+**File:** `src/pages/FilamentCategoryPage.tsx` (line 821-824)
+
+Currently shows bare `"No filaments found for this category."` text. Replace with the existing `FilamentsEmptyState` component (which already has all the smart features).
 
 ---
 
-## Step 7: Integration Points (identified, not implemented)
+## What will NOT change
 
-Pages currently using spinners/`Loading...` that should eventually use skeletons:
-
-| File | Current Loading | Recommended Skeleton |
-|------|----------------|---------------------|
-| `src/pages/Brands.tsx` | Likely spinner | BrandCardSkeletonGrid |
-| `src/pages/LearningCenter.tsx` | Likely spinner | GuideCardSkeletonGrid |
-| `src/pages/AdminAffiliates.tsx` | `Loading...` text | (admin, low priority) |
-| `src/pages/AdminScheduler.tsx` | `Loading...` text | (admin, low priority) |
-| `src/pages/AdminSiteSettings.tsx` | `Loading...` text | (admin, low priority) |
-| `src/pages/UserProfile.tsx` | Loader2 spinner | PageLoadingSkeleton |
-| `src/pages/AdminDataHealth.tsx` | Loader2 spinner | (admin, low priority) |
-| `src/pages/SharedWishlist.tsx` | Skeleton (partial) | Already has some |
-
-These replacements are **out of scope** for this task per the constraints -- just documented for a follow-up step.
+- `FilamentsEmptyState` -- already fully featured, no changes
+- `PrintersEmptyState` -- already fully featured, no changes
+- `DealsEmptyState` -- already fully featured, no changes
+- `FilamentComparisonEmptyState` -- already fully featured, no changes
+- `VaultEmptyState` -- already working, no changes
+- `CADEmptyState`, `NoResultsState`, `NoResultsEmpty` -- reference pages, no changes
+- No data fetching, routing, Supabase queries, or SEO elements will be modified
+- Admin pages will not be touched (low priority per previous plan)
 
 ---
 
@@ -132,12 +139,13 @@ These replacements are **out of scope** for this task per the constraints -- jus
 
 | Action | File |
 |--------|------|
-| MODIFY | `tailwind.config.ts` (add shimmer keyframe + animation) |
-| CREATE | `src/components/ui/skeleton-primitives.tsx` |
-| CREATE | `src/components/skeletons/BrandCardSkeleton.tsx` |
-| CREATE | `src/components/skeletons/GuideCardSkeleton.tsx` |
-| CREATE | `src/components/skeletons/TableSkeleton.tsx` |
-| MODIFY | `src/components/skeletons/index.ts` (add new exports) |
-
-No existing components, pages, data fetching, or routing will be touched.
+| MODIFY | `src/components/ui/empty-state.tsx` (enhance icon container styling, add compact prop) |
+| CREATE | `src/components/empty-states/index.ts` (barrel with 6 contextual wrappers) |
+| MODIFY | `src/pages/Brands.tsx` (swap inline div for BrandsEmptyState) |
+| MODIFY | `src/components/color-finder/ColorFinderResults.tsx` (swap bare text) |
+| MODIFY | `src/components/BuildPlateList.tsx` (swap bare text) |
+| MODIFY | `src/components/HotendList.tsx` (swap bare text) |
+| MODIFY | `src/pages/SharedWishlist.tsx` (swap bare text) |
+| MODIFY | `src/components/printers/PrinterQuizResults.tsx` (swap bare text) |
+| MODIFY | `src/pages/FilamentCategoryPage.tsx` (use FilamentsEmptyState) |
 
