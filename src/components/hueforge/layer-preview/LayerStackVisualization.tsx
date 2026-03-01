@@ -68,28 +68,37 @@ export function LayerStackVisualization({ layers, filaments, compact }: Props) {
 
   // Empty state
   if (!resolved.length) {
+    const placeholderColors = [
+      'hsl(180 20% 30%)',  // muted teal
+      'hsl(220 15% 35%)',  // muted slate
+      'hsl(250 20% 40%)',  // muted indigo
+    ];
     return (
-      <div className="rounded-xl border border-border/50 bg-card/30 p-6 min-h-[300px] flex flex-col items-center justify-center gap-4">
-        {/* Placeholder stack illustration */}
-        <div className="flex flex-col items-center gap-1 animate-pulse opacity-60">
-          {[0.15, 0.25, 0.35].map((op, i) => (
+      <div className="rounded-xl border border-border/50 bg-card/30 p-6 min-h-[200px] flex flex-col items-center justify-center gap-4">
+        {/* Placeholder stack illustration with shimmer */}
+        <div className="relative flex flex-col items-center gap-1.5 overflow-hidden">
+          {placeholderColors.map((color, i) => (
             <div
               key={i}
-              className="rounded-md border border-border/30"
+              className="rounded-md border border-border/20"
               style={{
-                width: `${140 - i * 10}px`,
-                height: '28px',
-                background: `linear-gradient(135deg, hsl(var(--muted)) ${op * 100}%, transparent)`,
-                opacity: 0.4 + op,
+                width: `${130 - i * 10}px`,
+                height: '24px',
+                backgroundColor: color,
+                opacity: 0.5 + i * 0.15,
               }}
             />
           ))}
+          {/* Shimmer sweep overlay */}
+          <div
+            className="absolute inset-0 animate-shimmer pointer-events-none"
+            style={{
+              background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%)',
+            }}
+          />
         </div>
         <p className="text-sm text-muted-foreground text-center">
-          Your layer preview will appear here
-        </p>
-        <p className="text-xs text-muted-foreground/60 text-center max-w-[240px]">
-          Select filaments in the layer stack to visualize how they blend
+          Select filaments below to preview how layers blend
         </p>
       </div>
     );
@@ -99,7 +108,7 @@ export function LayerStackVisualization({ layers, filaments, compact }: Props) {
   const label = backlit ? 'Backlit' : 'Ambient';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       {/* Backlight toggle */}
       <div className="flex justify-center">
         <Button
