@@ -1,151 +1,70 @@
 
-
-# Empty States With Illustrations and Recovery Actions
+# Empty States: Remaining Gaps to Unify
 
 ## Current State
 
-The project already has **rich, custom empty states** for major pages:
-- `FilamentsEmptyState` -- full with typo detection, smart suggestions, quick categories
-- `PrintersEmptyState` -- full with typo detection, similar suggestions, popular brands
-- `DealsEmptyState` -- full with restrictive filter detection, quick material chips
-- `FilamentComparisonEmptyState` -- full with popular comparisons, how-it-works section
-- `VaultEmptyState` -- reusable with icon/title/description/actions
-- `CADEmptyState`, `NoResultsState`, `NoResultsEmpty` -- reference page empty states
+The project **already has a comprehensive empty state system** including:
+- A base `EmptyState` component (`src/components/ui/empty-state.tsx`) with icon container, title, description, actions, and compact variant
+- Pre-configured wrappers in `src/components/empty-states/index.tsx` (Brands, ColorFinder, BuildPlate, Hotend, SharedWishlist, PrinterQuiz)
+- Rich custom empty states for major pages: `FilamentsEmptyState` (with typo detection), `PrintersEmptyState` (with fuzzy search), `DealsEmptyState` (with restrictive filter detection), `FilamentComparisonEmptyState`
 
-There is also a base `EmptyState` component at `src/components/ui/empty-state.tsx` that is close to (but not exactly matching) the requested design.
-
-**What is missing**: Several secondary areas use bare `<div>` with plain text instead of a proper empty state component. These are the targets for improvement.
+**What remains**: 5 locations still use bare text or custom one-off designs instead of the unified `EmptyState` component.
 
 ---
 
-## Step 1: Enhance the existing base EmptyState component
+## Changes
 
-**File:** `src/components/ui/empty-state.tsx`
+### 1. LearningCenter guides empty state
+**File:** `src/pages/LearningCenter.tsx` (lines 597-606)
 
-Update the existing `EmptyState` component to match the requested design spec while keeping backward compatibility:
+Currently: Inline `<Card>` with bare `BookOpen` icon and "No guides found matching your search." text.
 
-- Add a `compact` prop (boolean, default false). When true: icon 36x36 in 56x56 container, `text-base` title, `py-8` padding
-- Upgrade icon container styling: 80x80 `rounded-2xl` with `bg-white/[0.04] border border-white/[0.08]`, icon at 48x48, `text-muted-foreground`
-- Ensure primary action supports both `onClick` and `href` (already does)
-- Ensure secondary action supports both `onClick` and `href` (already does)
-- Keep backward compatibility for existing `AccessoriesEmptyState` and `PriceEmptyState`
+Replace with `EmptyState` component using `BookOpen` icon, title "No guides found", description "Try a different search term or browse all categories.", primary action "Clear Filters" calling the existing clear logic.
 
-The existing `size` prop will map: `sm` = compact, `md` = default, `lg` = large. No breaking changes.
+### 2. Brand products tab empty state
+**File:** `src/components/brands/tabs/BrandProductsTab.tsx` (lines 523-528)
 
----
+Currently: Bare `<Card>` with "No products found matching your filters" text.
 
-## Step 2: Create contextual empty state wrappers
+Replace with `EmptyState` (compact) using `SearchX` icon, title "No products match your filters", description "Try adjusting your material or category filters.", primary action "Clear Filters" (pass the existing filter-clear handler).
 
-**New file:** `src/components/empty-states/index.ts` (barrel export)
+### 3. Glossary search empty state
+**File:** `src/components/filament/education/GlossarySearchModal.tsx` (lines 91-94)
 
-Create pre-configured wrappers for areas that currently use bare text. These wrap the enhanced `EmptyState`:
+Currently: Bare `<p>` with "No terms found matching..." text.
 
-### A) BrandsEmptyState
+Replace with `EmptyState` (compact) using `SearchX` icon, title with the search query interpolated, description "Try a different spelling or browse the full glossary."
 
-For `/brands` page (currently inline `<div>` at line 535 of `Brands.tsx`).
+### 4. CADEmptyState migration
+**File:** `src/components/reference/CADEmptyState.tsx`
 
-- Icon: `Building2`
-- Title: "No brands found" (with search query if present)
-- Description: "Try searching for a different name or browse all brands by clearing your filters."
-- Primary: "Clear Search and Filters" (accepts `onClearFilters` prop)
-- Props: `searchQuery?: string`, `onClearFilters: () => void`
+Currently: Fully custom one-off design with hand-styled button.
 
-### B) ColorFinderEmptyState
+Refactor to use the base `EmptyState` component with `SearchX` icon, keeping the same title/description/action. This eliminates duplicate styling code.
 
-For `ColorFinderResults.tsx` (currently bare `<p>` at line 179).
+### 5. Specialty NoResultsState migration
+**File:** `src/components/reference/specialty/NoResultsState.tsx`
 
-- Icon: `Palette` (Lucide)
-- Title: "No color matches found"
-- Description: "Try picking a different target color or broadening your tolerance range."
-- Primary: "Reset Color" (accepts `onReset` prop)
+Currently: Custom design with emoji icon and hand-styled button.
 
-### C) BuildPlateEmptyState
-
-For `BuildPlateList.tsx` (bare text at line 208).
-
-- Icon: `LayoutGrid`
-- Title: "No build plates match your criteria"
-- Description: "Try adjusting your filters to see more options."
-- Primary: "Clear Filters" (accepts `onClearFilters` prop)
-- Compact variant
-
-### D) HotendEmptyState
-
-For `HotendList.tsx` (bare text at line 512).
-
-- Icon: `Cylinder`
-- Title: "No hotends match your criteria"
-- Description: "Try adjusting your filters to see more options."
-- Primary: "Clear Filters" (accepts `onClearFilters` prop)
-- Compact variant
-
-### E) SharedWishlistEmptyState
-
-For `SharedWishlist.tsx` (bare text at line 103).
-
-- Icon: `Heart`
-- Title: "This wishlist is empty"
-- Description: "Items added to this wishlist will appear here."
-- Compact variant
-
-### F) PrinterQuizEmptyState
-
-For `PrinterQuizResults.tsx` (bare text at line 122).
-
-- Icon: `SearchX`
-- Title: "No printers matched your criteria"
-- Description: "Try adjusting your preferences to see more recommendations."
-- Primary: "Retake Quiz" (accepts `onRetake` prop)
-
----
-
-## Step 3: Integrate empty states into pages
-
-Replace bare-text empty states with the new contextual components:
-
-| File | Line(s) | Current | Replacement |
-|------|---------|---------|-------------|
-| `src/pages/Brands.tsx` | 535-561 | Inline div with Building2 icon | `BrandsEmptyState` |
-| `src/components/color-finder/ColorFinderResults.tsx` | 178-181 | Bare `<p>` text | `ColorFinderEmptyState` |
-| `src/components/BuildPlateList.tsx` | 206-209 | Bare text div | `BuildPlateEmptyState` |
-| `src/components/HotendList.tsx` | 510-513 | Bare text div | `HotendEmptyState` |
-| `src/pages/SharedWishlist.tsx` | 101-104 | Bare text div | `SharedWishlistEmptyState` |
-| `src/components/printers/PrinterQuizResults.tsx` | 121-125 | Bare text div | `PrinterQuizEmptyState` |
-
----
-
-## Step 4: Ensure FilamentCategoryPage uses FilamentsEmptyState
-
-**File:** `src/pages/FilamentCategoryPage.tsx` (line 821-824)
-
-Currently shows bare `"No filaments found for this category."` text. Replace with the existing `FilamentsEmptyState` component (which already has all the smart features).
+Refactor to use the base `EmptyState` component with `SearchX` icon, same title/description, primary action calling `clearFilters` from context.
 
 ---
 
 ## What will NOT change
 
-- `FilamentsEmptyState` -- already fully featured, no changes
-- `PrintersEmptyState` -- already fully featured, no changes
-- `DealsEmptyState` -- already fully featured, no changes
-- `FilamentComparisonEmptyState` -- already fully featured, no changes
-- `VaultEmptyState` -- already working, no changes
-- `CADEmptyState`, `NoResultsState`, `NoResultsEmpty` -- reference pages, no changes
-- No data fetching, routing, Supabase queries, or SEO elements will be modified
-- Admin pages will not be touched (low priority per previous plan)
+- `FilamentsEmptyState`, `PrintersEmptyState`, `DealsEmptyState`, `FilamentComparisonEmptyState` -- these are already rich and feature-complete with typo detection and smart suggestions that go beyond what the base component offers
+- The base `EmptyState` component itself -- already matches the requested design spec
+- The barrel file `src/components/empty-states/index.tsx` -- already has the needed wrappers
+- No data fetching, routing, SEO elements, or component APIs will be modified
+- Admin pages will not be touched
 
----
+## Files Modified
 
-## Files Created/Modified
-
-| Action | File |
-|--------|------|
-| MODIFY | `src/components/ui/empty-state.tsx` (enhance icon container styling, add compact prop) |
-| CREATE | `src/components/empty-states/index.ts` (barrel with 6 contextual wrappers) |
-| MODIFY | `src/pages/Brands.tsx` (swap inline div for BrandsEmptyState) |
-| MODIFY | `src/components/color-finder/ColorFinderResults.tsx` (swap bare text) |
-| MODIFY | `src/components/BuildPlateList.tsx` (swap bare text) |
-| MODIFY | `src/components/HotendList.tsx` (swap bare text) |
-| MODIFY | `src/pages/SharedWishlist.tsx` (swap bare text) |
-| MODIFY | `src/components/printers/PrinterQuizResults.tsx` (swap bare text) |
-| MODIFY | `src/pages/FilamentCategoryPage.tsx` (use FilamentsEmptyState) |
-
+| File | Change |
+|------|--------|
+| `src/pages/LearningCenter.tsx` | Replace inline empty state with `EmptyState` component |
+| `src/components/brands/tabs/BrandProductsTab.tsx` | Replace bare text with compact `EmptyState` |
+| `src/components/filament/education/GlossarySearchModal.tsx` | Replace bare `<p>` with compact `EmptyState` |
+| `src/components/reference/CADEmptyState.tsx` | Refactor to use base `EmptyState` |
+| `src/components/reference/specialty/NoResultsState.tsx` | Refactor to use base `EmptyState` |
