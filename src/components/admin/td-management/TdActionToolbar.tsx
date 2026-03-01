@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { useTdFilterOptions } from '@/hooks/useTdManagement';
 import { useAddReferenceValue } from '@/hooks/useTdManagement';
 import { useTdMatching } from '@/hooks/useTdMatching';
@@ -13,14 +14,36 @@ import { TdMatchResultsPanel } from './TdMatchResultsPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { downloadCSV } from '@/lib/csvExport';
 import { toast } from '@/hooks/use-toast';
-import { Play, Upload, Download, Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Play, Upload, Download, Loader2, Zap, Check } from 'lucide-react';
+
+interface RpcMatchResult {
+  filament_id: string;
+  vendor: string;
+  product_title: string;
+  color_family: string;
+  material: string;
+  ref_brand: string;
+  ref_color: string;
+  ref_material: string;
+  td_value: number;
+  confidence: string;
+}
 
 export function TdActionToolbar() {
+  const qc = useQueryClient();
   const [brand, setBrand] = useState('all');
   const [dryRun, setDryRun] = useState(true);
   const [csvOpen, setCsvOpen] = useState(false);
   const [csvRows, setCsvRows] = useState<any[]>([]);
   const [resultsOpen, setResultsOpen] = useState(false);
+
+  // Quick Match RPC state
+  const [quickMatchOpen, setQuickMatchOpen] = useState(false);
+  const [quickMatchResults, setQuickMatchResults] = useState<RpcMatchResult[]>([]);
+  const [quickMatchLoading, setQuickMatchLoading] = useState(false);
+  const [quickMatchApplying, setQuickMatchApplying] = useState(false);
+
   const { data: options } = useTdFilterOptions();
   const addRefMut = useAddReferenceValue();
   const { matches, unmatchedRefs, isRunning, isApplying, progress, stats, runMatching, applyMatches } = useTdMatching();
@@ -28,6 +51,49 @@ export function TdActionToolbar() {
   const handleRun = async () => {
     await runMatching({ dryRun, brandFilter: brand });
     setResultsOpen(true);
+  };
+
+  // Quick Match via RPC
+  const handleQuickMatch = async () => {
+    setQuickMatchLoading(true);
+    setQuickMatchResults([]);
+    try {
+      const brandFilter = brand === 'all' ? null : brand;
+      const { data, error } = await supabase.rpc('match_td_reference_values', {
+        p_dry_run: true,
+        p_brand_filter: brandFilter,
+      });
+      if (error) throw error;
+      setQuickMatchResults((data as RpcMatchResult[]) ?? []);
+      setQuickMatchOpen(true);
+    } catch (err: any) {
+      toast({ title: 'Quick Match failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setQuickMatchLoading(false);
+    }
+  };
+
+  const handleQuickMatchApply = async () => {
+    setQuickMatchApplying(true);
+    try {
+      const brandFilter = brand === 'all' ? null : brand;
+      const { data, error } = await supabase.rpc('match_td_reference_values', {
+        p_dry_run: false,
+        p_brand_filter: brandFilter,
+      });
+      if (error) throw error;
+      const count = (data as RpcMatchResult[])?.length ?? 0;
+      toast({ title: `Applied ${count} TD values from reference data` });
+      qc.invalidateQueries({ queryKey: ['td-stats'] });
+      qc.invalidateQueries({ queryKey: ['td-filaments'] });
+      qc.invalidateQueries({ queryKey: ['td-population-log'] });
+      setQuickMatchOpen(false);
+      setQuickMatchResults([]);
+    } catch (err: any) {
+      toast({ title: 'Apply failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setQuickMatchApplying(false);
+    }
   };
 
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,6 +145,12 @@ export function TdActionToolbar() {
     else toast({ title: 'No missing filaments found' });
   };
 
+  const CONFIDENCE_COLORS: Record<string, string> = {
+    high: 'bg-green-100 text-green-800 border-green-200',
+    medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    low: 'bg-red-100 text-red-800 border-red-200',
+  };
+
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
@@ -94,9 +166,17 @@ export function TdActionToolbar() {
           <Switch id="dry-run" checked={dryRun} onCheckedChange={setDryRun} />
           <Label htmlFor="dry-run" className="text-xs">Dry Run</Label>
         </div>
+
+        {/* Client-side matching */}
         <Button size="sm" onClick={handleRun} disabled={isRunning}>
           {isRunning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1" />}
           {isRunning ? progress.phase : 'Run Matching'}
+        </Button>
+
+        {/* Quick Match RPC */}
+        <Button size="sm" variant="secondary" onClick={handleQuickMatch} disabled={quickMatchLoading}>
+          {quickMatchLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Zap className="w-4 h-4 mr-1" />}
+          Quick Match
         </Button>
 
         {isRunning && (
@@ -147,7 +227,7 @@ export function TdActionToolbar() {
         </Button>
       </div>
 
-      {/* Results Dialog */}
+      {/* Client-side Results Dialog */}
       <Dialog open={resultsOpen} onOpenChange={setResultsOpen}>
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>TD Matching Results</DialogTitle></DialogHeader>
@@ -159,6 +239,65 @@ export function TdActionToolbar() {
             stats={stats}
             onApply={applyMatches}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Match RPC Results Dialog */}
+      <Dialog open={quickMatchOpen} onOpenChange={setQuickMatchOpen}>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Quick Match Results (Server-Side)</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Found <span className="font-semibold text-foreground">{quickMatchResults.length}</span> matches from reference data
+              </p>
+              <Button
+                size="sm"
+                onClick={handleQuickMatchApply}
+                disabled={quickMatchApplying || quickMatchResults.length === 0}
+              >
+                {quickMatchApplying ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
+                Apply All ({quickMatchResults.length})
+              </Button>
+            </div>
+
+            {quickMatchResults.length > 0 && (
+              <div className="max-h-96 overflow-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Vendor</TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Color</TableHead>
+                      <TableHead>Ref Material</TableHead>
+                      <TableHead>TD</TableHead>
+                      <TableHead>Confidence</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {quickMatchResults.map((r) => (
+                      <TableRow key={r.filament_id}>
+                        <TableCell className="text-xs font-medium">{r.vendor}</TableCell>
+                        <TableCell className="text-xs max-w-[200px] truncate">{r.product_title}</TableCell>
+                        <TableCell className="text-xs">{r.color_family}</TableCell>
+                        <TableCell className="text-xs">{r.ref_material}</TableCell>
+                        <TableCell className="text-xs font-mono font-semibold">{r.td_value}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={CONFIDENCE_COLORS[r.confidence] ?? ''}>
+                            {r.confidence}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {quickMatchResults.length === 0 && !quickMatchLoading && (
+              <p className="text-sm text-muted-foreground text-center py-8">No matches found. All filaments may already have TD values assigned.</p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>
