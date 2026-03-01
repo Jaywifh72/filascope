@@ -7,7 +7,13 @@
 
 const COLOR_FAMILY_FALLBACKS: Record<string, string> = {
   white: '#F5F5F0',
+  'bone white': '#FFFDD0',
+  'cold white': '#F0F8FF',
+  'jade white': '#E8F5E0',
+  'milky white': '#FAFAF5',
   natural: '#F5F5F0',
+  ivory: '#FFFFF0',
+  cream: '#FFFDD0',
   black: '#1A1A1A',
   red: '#CC3333',
   blue: '#3366CC',
@@ -37,8 +43,10 @@ export function getSwatchColor(
   if (hexColor) return hexColor;
   if (colorFamily) {
     const lower = colorFamily.toLowerCase();
-    for (const [key, value] of Object.entries(COLOR_FAMILY_FALLBACKS)) {
-      if (lower.includes(key)) return value;
+    // Sort keys longest-first so "bone white" matches before "white"
+    const sortedKeys = Object.keys(COLOR_FAMILY_FALLBACKS).sort((a, b) => b.length - a.length);
+    for (const key of sortedKeys) {
+      if (lower.includes(key)) return COLOR_FAMILY_FALLBACKS[key];
     }
   }
   return '#808080';
@@ -66,4 +74,18 @@ export function needsContrastRing(hex: string | null | undefined): boolean {
   const g = parseInt(c.substring(2, 4), 16);
   const b = parseInt(c.substring(4, 6), 16);
   return (r * 299 + g * 587 + b * 114) / 1000 < 38;
+}
+
+/**
+ * Returns true when a hex colour is light enough to need a contrast border
+ * on dark backgrounds (luminance > 85%).
+ */
+export function needsLightContrastRing(hex: string | null | undefined): boolean {
+  if (!hex) return false;
+  const c = hex.replace('#', '');
+  if (c.length < 6) return false;
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 200;
 }
