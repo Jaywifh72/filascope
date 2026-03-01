@@ -139,6 +139,7 @@ export function SiteFooter() {
   const toolLinks = [
     { name: "Compare Filaments", href: "/compare" },
     { name: "HueForge TD Database", href: "/hueforge-td-database" },
+    { name: "TD Substitute Finder", href: "/hueforge-filament-substitute-finder" },
     { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Filament Quiz", href: "/wizard" },
     { name: "Color Finder", href: "/colors" },
