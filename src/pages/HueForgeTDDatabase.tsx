@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef, useTransition } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
@@ -33,6 +33,8 @@ import {
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { SkeletonBox, SkeletonCircle } from '@/components/ui/skeleton-primitives';
 import {
   Accordion,
   AccordionContent,
@@ -176,7 +178,24 @@ function isColorDark(hex: string): boolean {
 export default function HueForgeTDDatabase() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const [filterFlash, setFilterFlash] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Debounced search
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => setSearchTerm(value), 300);
+  }, []);
+
+  // Flash table border on filter change
+  const flashBorder = useCallback(() => {
+    setFilterFlash(true);
+    setTimeout(() => setFilterFlash(false), 300);
+  }, []);
   const [materialFilter, setMaterialFilter] = useState<string>('all');
   const [brandFilter, setBrandFilter] = useState<string>('all');
   const [colorFilter, setColorFilter] = useState<string>('all');
@@ -217,6 +236,7 @@ export default function HueForgeTDDatabase() {
 
   const handleTdRangeChange = useCallback((range: [number, number]) => {
     setTdRange(range);
+    flashBorder();
     const params = new URLSearchParams(searchParams);
     if (range[0] === 0 && range[1] === 10) {
       params.delete('td_min');
@@ -226,6 +246,21 @@ export default function HueForgeTDDatabase() {
       params.set('td_max', range[1].toString());
     }
     setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams, flashBorder]);
+
+  // Reset all filters
+  const resetAllFilters = useCallback(() => {
+    setSearchInput('');
+    setSearchTerm('');
+    setMaterialFilter('all');
+    setBrandFilter('all');
+    setColorFilter('all');
+    setTdRange([0, 10]);
+    const params = new URLSearchParams(searchParams);
+    params.delete('td_min');
+    params.delete('td_max');
+    setSearchParams(params, { replace: true });
+    toast.success('Filters reset');
   }, [searchParams, setSearchParams]);
 
   // ── Data query ──────────────────────────────────────────────────────
@@ -367,7 +402,10 @@ export default function HueForgeTDDatabase() {
     a.download = `hueforge-td-database-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.success(`Exported ${filteredData.length} filaments to CSV`);
   };
+
+  const hasActiveFilters = searchTerm || materialFilter !== 'all' || brandFilter !== 'all' || colorFilter !== 'all' || tdRange[0] > 0 || tdRange[1] < 10;
 
   const SortIndicator = ({ field }: { field: SortField }) => (
     <ArrowUpDown
@@ -526,13 +564,31 @@ export default function HueForgeTDDatabase() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Search filaments by name, brand, color…"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    value={searchInput}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="pl-10 pr-20"
                   />
+                  {searchInput && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      {searchInput !== searchTerm && (
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      )}
+                      {searchInput === searchTerm && filteredData.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                          {filteredData.length} match{filteredData.length !== 1 ? 'es' : ''}
+                        </Badge>
+                      )}
+                      <button
+                        onClick={() => { setSearchInput(''); setSearchTerm(''); }}
+                        className="text-muted-foreground hover:text-foreground transition-colors animate-fade-in"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <Select value={brandFilter} onValueChange={setBrandFilter}>
+                  <Select value={brandFilter} onValueChange={(v) => { setBrandFilter(v); flashBorder(); }}>
                     <SelectTrigger className="w-40">
                       <Filter className="w-4 h-4 mr-2" />
                       <SelectValue placeholder="Brand" />
@@ -547,7 +603,7 @@ export default function HueForgeTDDatabase() {
                     </SelectContent>
                   </Select>
 
-                  <Select value={materialFilter} onValueChange={setMaterialFilter}>
+                  <Select value={materialFilter} onValueChange={(v) => { setMaterialFilter(v); flashBorder(); }}>
                     <SelectTrigger className="w-40">
                       <Filter className="w-4 h-4 mr-2" />
                       <SelectValue placeholder="Material" />
@@ -562,7 +618,7 @@ export default function HueForgeTDDatabase() {
                     </SelectContent>
                   </Select>
 
-                  <Select value={colorFilter} onValueChange={setColorFilter}>
+                  <Select value={colorFilter} onValueChange={(v) => { setColorFilter(v); flashBorder(); }}>
                     <SelectTrigger className="w-40">
                       <Filter className="w-4 h-4 mr-2" />
                       <SelectValue placeholder="Color" />
@@ -631,13 +687,51 @@ export default function HueForgeTDDatabase() {
           </div>
 
           {isLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
+            /* Shimmer skeleton table rows */
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">Color</TableHead>
+                    <TableHead>Brand</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Material</TableHead>
+                    <TableHead>Color Family</TableHead>
+                    <TableHead className="text-right">TD Value</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="w-20" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><SkeletonCircle size={32} /></TableCell>
+                      <TableCell><SkeletonBox className="h-4 w-24" /></TableCell>
+                      <TableCell><SkeletonBox className="h-4 w-32" /></TableCell>
+                      <TableCell><SkeletonBox className="h-4 w-16" /></TableCell>
+                      <TableCell><SkeletonBox className="h-4 w-20" /></TableCell>
+                      <TableCell><SkeletonBox className="h-4 w-12 ml-auto" /></TableCell>
+                      <TableCell><SkeletonBox className="h-4 w-14 ml-auto" /></TableCell>
+                      <TableCell><SkeletonBox className="h-4 w-8" /></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : filteredData.length === 0 && hasActiveFilters ? (
+            /* Empty state with filter reset */
+            <div className="text-center py-16 space-y-4 border rounded-lg bg-card/30">
+              <p className="text-lg text-muted-foreground">No filaments match your filters.</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your TD range or removing some filters.</p>
+              <Button variant="outline" size="sm" onClick={resetAllFilters} className="text-primary hover:text-primary/80">
+                Reset all filters
+              </Button>
             </div>
           ) : (
-            <div className={`transition-opacity duration-150 ${viewTransition ? 'opacity-0' : 'opacity-100'}`}>
+            <div
+              ref={tableContainerRef}
+              className={`transition-all duration-150 ${viewTransition ? 'opacity-0' : 'opacity-100'} ${filterFlash ? 'ring-2 ring-primary/50 rounded-lg' : ''}`}
+            >
               {viewMode === 'table' ? (
                 /* ── Table View ── */
                 <div className="border rounded-lg overflow-hidden max-h-[700px] overflow-y-auto">

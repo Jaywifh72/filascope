@@ -91,7 +91,7 @@ export function TdRangeSlider({ value, onChange }: Props) {
           <Badge
             key={p.label}
             variant="outline"
-            className={`cursor-pointer text-xs transition-colors hover:bg-accent ${isPresetActive(p) ? 'bg-primary/15 border-primary/40 text-primary' : ''}`}
+            className={`cursor-pointer text-xs transition-all duration-75 active:scale-95 hover:bg-accent ${isPresetActive(p) ? 'bg-primary/15 border-primary/40 text-primary' : ''}`}
             onClick={() => {
               setLocal([p.min, p.max]);
               onChange([p.min, p.max]);
