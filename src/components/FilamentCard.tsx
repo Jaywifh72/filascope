@@ -384,13 +384,14 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
       role="article"
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-2xl transition-all duration-200 ease-out min-h-[420px] flex flex-col",
+        "group relative rounded-2xl transition-all duration-300 ease-out min-h-[420px] flex flex-col motion-reduce:transition-none",
         "bg-slate-800/80 border border-slate-700/50",
         "filament-card-hover",
         isOutOfStock && "is-oos",
         "active:scale-[0.99] active:duration-[50ms]",
         "focus-within:ring-2 focus-within:ring-cyan-500/50 focus-within:ring-offset-2 focus-within:ring-offset-slate-900",
-        "hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/30",
+        "hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,210,211,0.08)] hover:border-slate-600 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none",
+        "focus-visible:-translate-y-0.5 focus-visible:shadow-[0_4px_20px_rgba(0,210,211,0.08)] focus-visible:border-slate-600",
         isSelected && "border-2 border-primary bg-primary/5 border-l-[3px] border-l-amber-500",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5 border-l-[3px] border-l-amber-500/60",
       )}
@@ -885,15 +886,15 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                 to={`${filamentHref}?tab=community`}
                 className="inline-flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
               >
-                <Star className="w-3 h-3 fill-primary text-primary" aria-hidden="true" />
-                <span className="font-semibold text-primary">{communityRating.avgRating.toFixed(1)}</span>
+                <Star className={cn("w-3 h-3", communityRating.avgRating >= 8 ? "fill-amber-400 text-amber-400" : communityRating.avgRating < 6 ? "fill-muted-foreground/60 text-muted-foreground/60" : "fill-primary text-primary")} aria-hidden="true" />
+                <span className={cn("font-semibold", communityRating.avgRating >= 8 ? "text-amber-400" : communityRating.avgRating < 6 ? "text-muted-foreground" : "text-primary")}>{communityRating.avgRating.toFixed(1)}</span>
                 <span className="text-muted-foreground text-[10px]">
                   ({communityRating.reviewCount})
                 </span>
               </Link>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs max-w-[220px]">
-              <p className="font-medium mb-1">Community rating: {communityRating.avgRating.toFixed(1)} from {communityRating.reviewCount} reviews</p>
+              <p className="font-medium mb-1">{communityRating.avgRating.toFixed(1)} — {communityRating.avgRating >= 8 ? "Highly rated by makers" : communityRating.avgRating >= 6 ? "Based on community ratings" : "Mixed community ratings"}</p>
               <div className="space-y-0.5 text-muted-foreground">
                 {communityRating.avgQuality != null && <p>Print Quality: {communityRating.avgQuality.toFixed(1)}</p>}
                 {communityRating.avgEase != null && <p>Ease: {communityRating.avgEase.toFixed(1)}</p>}
@@ -983,7 +984,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         >
           <Link to={`${filamentHref}${ctaTab}`} aria-label={`${ctaText} for ${filament.product_title}`}>
             {ctaText}
-            <ArrowRight className="w-[18px] h-[18px] ml-2" />
+            <ArrowRight className="w-[18px] h-[18px] ml-2 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
         </Button>
         {/* Watch Price link for out-of-stock */}
