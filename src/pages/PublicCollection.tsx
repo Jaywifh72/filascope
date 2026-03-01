@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -117,8 +118,8 @@ export default function PublicCollection() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-16 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="container mx-auto py-8 px-4 max-w-5xl">
+        <FilamentCardSkeletonGrid count={6} />
       </div>
     );
   }
