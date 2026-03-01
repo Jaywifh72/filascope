@@ -1431,13 +1431,11 @@ const Finder = () => {
             selectedMaterials={selectedMaterials}
             onMaterialChange={(material, checked) => {
               if (checked) {
-                // Expand category ID to actual material names
                 const category = MATERIAL_CATEGORIES.find(cat => cat.id === material);
                 const materialsToAdd = category ? category.materials : [material];
                 const base = selectedMaterials.includes("All") ? [] : selectedMaterials;
                 setSelectedMaterials([...base, ...materialsToAdd]);
               } else {
-                // Remove all materials belonging to this category
                 const category = MATERIAL_CATEGORIES.find(cat => cat.id === material);
                 const materialsToRemove = category ? category.materials : [material];
                 const remaining = selectedMaterials.filter(m => !materialsToRemove.includes(m));
@@ -1468,20 +1466,10 @@ const Finder = () => {
               setWoodFilled(false);
               setLargeSpools(false);
             }}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            resultCount={totalCount}
           />
-          
-          {/* Sort dropdown for mobile */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="flex-1 h-11 bg-gray-800/50 border-gray-700">
-              <SelectValue placeholder="Sort by..." />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700 z-50">
-              <SelectItem value="scoring-desc" className="min-h-[44px]">Scoring: High to Low</SelectItem>
-              <SelectItem value="price-asc" className="min-h-[44px]">Price: Low to High</SelectItem>
-              <SelectItem value="price-desc" className="min-h-[44px]">Price: High to Low</SelectItem>
-              <SelectItem value="alpha-asc" className="min-h-[44px]">Name: A-Z</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
@@ -1521,6 +1509,11 @@ const Finder = () => {
         }}
         selectedPrinterName={selectedPrinter?.model_name}
         onChangePrinter={() => setPrinterSelectorOpen(true)}
+        onEdit={() => {
+          // Trigger the mobile filter sheet to open by dispatching a custom event
+          const btn = document.querySelector<HTMLButtonElement>('[data-mobile-filter-trigger]');
+          btn?.click();
+        }}
         className="border-b border-gray-800/50"
       />
 
