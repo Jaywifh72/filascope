@@ -136,25 +136,143 @@ export function useDeleteReferenceValue() {
   });
 }
 
-// ── Population Log ──
+// ── Population Log (Batched) ──
 
 export interface TdLogFilters {
   status: string;
   source: string;
+  confidence: string;
+  dateRange: string;
 }
 
-export function useTdPopulationLog(filters: TdLogFilters) {
+export interface LogEntry {
+  id: string;
+  created_at: string;
+  filament_id: string | null;
+  td_value: number;
+  previous_value: number | null;
+  source: string;
+  confidence: string | null;
+  status: string | null;
+  notes: string | null;
+  filament?: {
+    product_title: string | null;
+    vendor: string | null;
+    material: string | null;
+    color_family: string | null;
+  } | null;
+}
+
+export interface LogBatch {
+  id: string;
+  timestamp: string;
+  source: string;
+  entries: LogEntry[];
+  summary: {
+    applied: number;
+    skipped: number;
+    errors: number;
+    dryRun: number;
+    highConf: number;
+    medConf: number;
+    lowConf: number;
+    brands: string[];
+  };
+}
+
+function groupIntoBatches(entries: LogEntry[]): LogBatch[] {
+  if (!entries.length) return [];
+  const batches: LogBatch[] = [];
+  let current: LogEntry[] = [entries[0]];
+
+  for (let i = 1; i < entries.length; i++) {
+    const prev = new Date(entries[i - 1].created_at).getTime();
+    const curr = new Date(entries[i].created_at).getTime();
+    if (Math.abs(prev - curr) <= 10000 && entries[i].source === entries[i - 1].source) {
+      current.push(entries[i]);
+    } else {
+      batches.push(buildBatch(current));
+      current = [entries[i]];
+    }
+  }
+  batches.push(buildBatch(current));
+  return batches;
+}
+
+function buildBatch(entries: LogEntry[]): LogBatch {
+  const brands = [...new Set(entries.map(e => e.filament?.vendor).filter(Boolean) as string[])];
+  return {
+    id: entries[0].id,
+    timestamp: entries[entries.length - 1].created_at,
+    source: entries[0].source,
+    entries,
+    summary: {
+      applied: entries.filter(e => e.status === 'applied').length,
+      skipped: entries.filter(e => e.status === 'skipped').length,
+      errors: entries.filter(e => e.status === 'error').length,
+      dryRun: entries.filter(e => e.status === 'dry-run').length,
+      highConf: entries.filter(e => e.confidence === 'high').length,
+      medConf: entries.filter(e => e.confidence === 'medium').length,
+      lowConf: entries.filter(e => e.confidence === 'low').length,
+      brands,
+    },
+  };
+}
+
+export function useTdPopulationLogBatched(filters: TdLogFilters) {
   return useQuery({
     queryKey: ['td-population-log', filters],
     queryFn: async () => {
-      let q = (supabase.from('td_population_log' as any) as any).select('*').order('created_at', { ascending: false }).limit(200);
+      let q = (supabase.from('td_population_log') as any)
+        .select('*, filaments!td_population_log_filament_id_fkey(product_title, vendor, material, color_family)')
+        .order('created_at', { ascending: false })
+        .limit(2000);
+
       if (filters.status && filters.status !== 'all') q = q.eq('status', filters.status);
       if (filters.source && filters.source !== 'all') q = q.eq('source', filters.source);
+      if (filters.confidence && filters.confidence !== 'all') q = q.eq('confidence', filters.confidence);
+
+      if (filters.dateRange && filters.dateRange !== 'all') {
+        const now = new Date();
+        const hours = filters.dateRange === '24h' ? 24 : filters.dateRange === '7d' ? 168 : 720;
+        const since = new Date(now.getTime() - hours * 3600000).toISOString();
+        q = q.gte('created_at', since);
+      }
+
       const { data, error } = await q;
       if (error) throw error;
-      return data ?? [];
+
+      const entries: LogEntry[] = (data ?? []).map((d: any) => ({
+        ...d,
+        filament: d.filaments ?? null,
+      }));
+
+      const batches = groupIntoBatches(entries);
+
+      const allApplied = entries.filter(e => e.status === 'applied');
+      const brandCounts: Record<string, number> = {};
+      allApplied.forEach(e => {
+        const b = e.filament?.vendor;
+        if (b) brandCounts[b] = (brandCounts[b] || 0) + 1;
+      });
+      const topBrand = Object.entries(brandCounts).sort((a, b) => b[1] - a[1])[0];
+
+      return {
+        batches,
+        stats: {
+          totalRuns: batches.length,
+          totalApplied: allApplied.length,
+          lastRun: batches[0]?.timestamp ?? null,
+          topBrand: topBrand ? { name: topBrand[0], count: topBrand[1] } : null,
+        },
+      };
     },
   });
+}
+
+// Keep old export name for backward compatibility
+export function useTdPopulationLog(filters: { status: string; source: string }) {
+  return useTdPopulationLogBatched({ ...filters, confidence: 'all', dateRange: 'all' });
 }
 
 // ── Run Discovery ──
