@@ -585,6 +585,8 @@ export default function HueForgeTDDatabase() {
           <div className="mb-4">
             <TdDistributionChart
               filaments={filteredData}
+              totalCount={filaments?.length}
+              activeTdRange={tdRange}
               onZoneClick={(min, max) => handleTdRangeChange([min, max])}
             />
           </div>
