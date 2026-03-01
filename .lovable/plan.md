@@ -1,56 +1,143 @@
 
 
-## Add "Food Safe Filament" Guide
+# Skeleton Loading Component System
 
-### Overview
-Add a new guide at `/guides/food-safe-filament` using the existing config-driven pattern. The `material-guide` category is already supported. Only `guideConfigs.ts` needs a new entry.
+## Overview
 
-### Changes
+Create a composable skeleton primitive system and add missing skeleton components for Brand Cards, Guide Cards, and Table views. The project already has working skeletons for Filament, Printer, and Deal cards -- those will NOT be modified. New primitives provide a consistent building-block API for future skeletons.
 
-#### 1. `src/components/guides/guideConfigs.ts`
+---
 
-Add `'food-safe-filament'` entry to `BUYING_GUIDE_CONFIGS` with:
-- **slug**: `food-safe-filament`
-- **title**: `What 3D Printer Filament Is Food Safe?`
-- **seoTitle**: `What 3D Printer Filament Is Food Safe? — Complete Guide | FilaScope`
-- **seoDescription**: As specified
-- **category**: `'material-guide'` (already supported, renders "Material Guide" badge with violet styling)
-- **readTime**: 10
-- **publishedAt/updatedAt**: `'2026-02-28'`
-- **layout**: `'editorial'`
-- **filters**: `{ sortBy: 'score', limit: 5 }`
-- **quickAnswer**: The provided paragraph about PETG, PLA, nozzle material, and layer-line bacteria concerns
+## What Already Exists (No Changes)
 
-**Editorial sections** (4 sections, all `position: 'before'`):
+- `src/components/ui/skeleton.tsx` -- base `Skeleton` with `animate-pulse` + `skeleton-shimmer`
+- `src/components/FilamentCardSkeleton.tsx` -- used on `/filaments`, Finder
+- `src/components/printers/PrinterCardSkeleton.tsx` -- used on `/printers`
+- `src/components/deals/DealCardSkeleton.tsx` -- used on `/deals`
+- `src/components/skeletons/` -- barrel file with BentoGrid, Filter, ProductDetail, Compare, Search, Page, Price, Vault skeletons
+- `src/index.css` -- `.skeleton-shimmer` and `.skeleton-animated` CSS classes
+- `tailwind.config.ts` -- existing keyframes (no shimmer yet)
 
-1. **"Which Filaments Have Food Safety Certification?"** -- Comparison of PLA, PETG, PP, and specialty filaments. HTML table with columns: Material, FDA Certified Brands Available, Safe For, Notes. Rows for PETG, PLA (natural), PP, Nylon, ABS, TPU.
+---
 
-2. **"Why Most 3D Prints Are Not Food Safe"** -- Covers three key issues: layer lines harboring bacteria, brass nozzle lead contamination, and non-certified colorants/additives.
+## Step 1: Add `shimmer` keyframe to Tailwind config
 
-3. **"How to Make 3D Prints Safer for Food Contact"** -- Practical steps: use stainless steel nozzle, choose certified filament, apply food-grade epoxy coating, limit to single-use items, and hand-wash only.
+Add to `tailwind.config.ts` keyframes:
 
-4. **"Best Food-Safe Filament Brands"** -- Recommendations for certified PETG and natural PLA brands with brief notes on certifications.
+```text
+shimmer: {
+  '0%': { transform: 'translateX(-100%)' },
+  '100%': { transform: 'translateX(100%)' }
+}
+```
 
-**FAQs**: All 6 specified questions/answers
+And animation: `shimmer: 'shimmer 1.8s ease-in-out infinite'`
 
-**Related Questions (People Also Ask)**: 3 entries:
-- "Can 3D printed cookie cutters be food safe?" -- Cookie cutters have brief contact with dough, making PLA acceptable for single use, but coat with food-grade epoxy for repeated use.
-- "Is resin printing safer for food contact than FDM?" -- Some food-safe resins exist, but most standard resins are toxic. FDM with certified PETG is generally the easier path.
-- "Does dishwasher heat warp food-safe filament?" -- PLA warps above 60C. PETG handles up to ~80C but hand-washing is always recommended for 3D prints.
+This enables `animate-shimmer` utility class for pseudo-element overlays.
 
-**relatedSlugs**: `['strongest-3d-printer-filament', 'best-petg-filaments', 'best-pla-filaments', 'how-to-choose-filament']`
+---
 
-#### 2. `public/sitemap.xml`
+## Step 2: Create skeleton primitives
 
-Add entry for `https://filascope.com/guides/food-safe-filament` with weekly changefreq and 0.8 priority.
+**New file:** `src/components/ui/skeleton-primitives.tsx`
 
-### Automatic behavior (no changes needed)
-- Route: Handled by existing `/guides/:slug` catch-all
-- JSON-LD: Article, FAQPage, and BreadcrumbList rendered automatically by BuyingGuideTemplate
-- Badge: `material-guide` category already configured with violet styling and "Material Guide" label
-- Quick Answer block: Already rendered from `quickAnswer` field
+Four atomic components:
 
-### Files modified
-- `src/components/guides/guideConfigs.ts` (new config entry)
-- `public/sitemap.xml` (new URL entry)
+- **SkeletonBox** -- Rounded rectangle with shimmer pseudo-element overlay. Props: `width?`, `height?`, `className?`. Uses `bg-white/[0.06]` base with `::after` gradient sweep using `animate-shimmer`.
+
+- **SkeletonText** -- Renders N lines of SkeletonBox at text heights (`h-3`/`h-4`/`h-6` for sm/md/lg). Last line at 60% width. Props: `lines?` (default 3), `size?` ('sm' | 'md' | 'lg').
+
+- **SkeletonCircle** -- Circular skeleton element. Props: `size?` (number, default 40).
+
+- **SkeletonImage** -- Aspect-ratio container with centered Lucide `ImageIcon` at `opacity-[0.15]`. Props: `aspectRatio?` (default '1/1'), `className?`.
+
+All use CSS-only animation (no framer-motion). The shimmer is a `::after` pseudo-element so base color remains visible.
+
+---
+
+## Step 3: Create BrandCardSkeleton
+
+**New file:** `src/components/skeletons/BrandCardSkeleton.tsx`
+
+Matches `BrandCard.tsx` layout exactly:
+- Outer: `min-h-[260px] rounded-xl border border-border overflow-hidden`
+- Color accent bar: `h-1 w-full` skeleton
+- Logo area: `h-[88px] bg-gray-800/60` with centered skeleton
+- Price tier badge: top-left small skeleton
+- Brand name: `h-6 w-2/3`
+- Stats row: product count + rating skeletons
+- Material badges: 3 small rounded-full skeletons
+- Color dots: 8 small circles
+- CTA: full-width `h-10 rounded-lg` with border-t
+
+**BrandCardSkeletonGrid**: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6` (matches `/brands` grid), default 12 cards.
+
+---
+
+## Step 4: Create GuideCardSkeleton
+
+**New file:** `src/components/skeletons/GuideCardSkeleton.tsx`
+
+Matches `GuideCard` in LearningCenter.tsx:
+- Outer: `bg-card/50 border-border rounded-xl` card
+- Category badge: skeleton `h-5 w-20 rounded-full`
+- Title: 2-line skeleton at `h-5`
+- Description: 2-line skeleton at `h-4`
+- Footer: read time (`h-4 w-20`) + date (`h-4 w-24`)
+
+**GuideCardSkeletonGrid**: `grid sm:grid-cols-2 lg:grid-cols-3 gap-6`, default 6 cards.
+
+---
+
+## Step 5: Create TableSkeleton
+
+**New file:** `src/components/skeletons/TableSkeleton.tsx`
+
+For table view on `/filaments` and comparison pages:
+- Header row: flex of 6-8 SkeletonBox at varying widths, `bg-white/[0.04]`
+- Body rows (default 10): flex of matching-width skeletons, alternating `bg-white/[0.02]` for zebra striping
+- Props: `rows?` (default 10), `columns?` (default 6)
+
+---
+
+## Step 6: Update barrel file
+
+Update `src/components/skeletons/index.ts` to export all new components:
+- `BrandCardSkeleton`, `BrandCardSkeletonGrid`
+- `GuideCardSkeleton`, `GuideCardSkeletonGrid`
+- `TableSkeleton`
+
+---
+
+## Step 7: Integration Points (identified, not implemented)
+
+Pages currently using spinners/`Loading...` that should eventually use skeletons:
+
+| File | Current Loading | Recommended Skeleton |
+|------|----------------|---------------------|
+| `src/pages/Brands.tsx` | Likely spinner | BrandCardSkeletonGrid |
+| `src/pages/LearningCenter.tsx` | Likely spinner | GuideCardSkeletonGrid |
+| `src/pages/AdminAffiliates.tsx` | `Loading...` text | (admin, low priority) |
+| `src/pages/AdminScheduler.tsx` | `Loading...` text | (admin, low priority) |
+| `src/pages/AdminSiteSettings.tsx` | `Loading...` text | (admin, low priority) |
+| `src/pages/UserProfile.tsx` | Loader2 spinner | PageLoadingSkeleton |
+| `src/pages/AdminDataHealth.tsx` | Loader2 spinner | (admin, low priority) |
+| `src/pages/SharedWishlist.tsx` | Skeleton (partial) | Already has some |
+
+These replacements are **out of scope** for this task per the constraints -- just documented for a follow-up step.
+
+---
+
+## Files Created/Modified
+
+| Action | File |
+|--------|------|
+| MODIFY | `tailwind.config.ts` (add shimmer keyframe + animation) |
+| CREATE | `src/components/ui/skeleton-primitives.tsx` |
+| CREATE | `src/components/skeletons/BrandCardSkeleton.tsx` |
+| CREATE | `src/components/skeletons/GuideCardSkeleton.tsx` |
+| CREATE | `src/components/skeletons/TableSkeleton.tsx` |
+| MODIFY | `src/components/skeletons/index.ts` (add new exports) |
+
+No existing components, pages, data fetching, or routing will be touched.
 
