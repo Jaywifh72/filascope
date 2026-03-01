@@ -1,91 +1,81 @@
 
 
-# Filament Card Visual Enhancements
+# Discovery Zone Section
 
-## Current State Assessment
+## Overview
 
-The FilamentCard component (994 lines) already has many of the requested features implemented. This plan focuses only on the **delta changes** -- enhancing what exists and adding what's missing.
-
-| Feature | Current State | Action |
-|---------|--------------|--------|
-| Color swatches | w-4 h-4 dots with HoverCard | Already good -- no change needed |
-| Compare button | Hidden icon, hover-only | Enhance to pill-shaped text button |
-| FilaScore bar | Horizontal bar with colored fill | Already matches spec -- no change needed |
-| Price freshness | Colored dot with tooltip | Add visible text labels by confidence level |
-| Deal badge | Inline crossed-out price + pill | Make absolute-positioned, add pulse animation |
-| Hover state | translate-y + shadow | Add cyan border glow + image brightness |
-| "Ships to you" | Shows "Local: price/kg" text | Add truck icon + "Ships to you" label |
+A new `DiscoveryZone` component inserted between the Trending Section and the "Explore the Filament Catalog" heading on the Finder page. It provides 3 curated subsections that give users clear entry points into the catalog.
 
 ---
 
-## Changes (all in `src/components/FilamentCard.tsx`)
+## New File: `src/components/DiscoveryZone.tsx`
 
-### 1. Compare Button -- Pill-shaped with text labels
+### Subsection A -- Quick Picks (horizontal scroll)
 
-Replace the current 8x8 icon-only button (lines 416-439) with a pill-shaped button:
-- Default: `px-2.5 py-1 text-[11px] rounded-full` showing "Compare" text
-- Selected: cyan background with checkmark + "Added" text
-- Still hidden on mobile until hover, always visible when selected
-- Add `transition-transform duration-150` with `scale-105` when toggling
+6 clickable cards in a horizontally scrollable row using the existing `ScrollCarousel` component.
 
-### 2. Price Freshness -- Visible text labels
+Each card: `min-w-[220px] h-[120px] rounded-xl` with a unique gradient background, icon (20x20, opacity-60), title, subtitle, and a count pill badge.
 
-Enhance the freshness indicator section (lines 758-777):
-- **High confidence**: green dot (existing) + always-visible "Updated today" text in `text-emerald-400 text-[11px]` with subtle `animate-pulse` on the dot
-- **Medium confidence**: amber dot + "1-3d ago" in `text-amber-400 text-[11px]`
-- **Low/stale**: gray dot + time text in `text-muted-foreground text-[11px]`
-- Remove the hover-only behavior (`isHovered && compactTimeAgo`) -- always show the text
+| Card | Gradient | Action on Click |
+|------|----------|-----------------|
+| Best for Beginners | warm (amber to orange) | `resetFilters()`, set materials to PLA+PETG, sort by FilaScore desc |
+| HueForge Ready | purple gradient | `resetFilters()`, set `hasTdData: true` |
+| Engineering Grade | cool blue-slate | `resetFilters()`, set materials to PC+Nylon+ASA |
+| Under $20/kg | green gradient | `resetFilters()`, set `priceRange: [0, 20]` |
+| High Speed | red-orange gradient | `resetFilters()`, set `highSpeed: true` |
+| Just Added | cyan gradient | `resetFilters()`, set `sortBy: "newest"` |
 
-### 3. Deal Badge -- Prominent absolute-positioned overlay
+After applying filters, smooth-scroll to the catalog grid (using a ref or `document.getElementById`).
 
-When `isDeal && priceTrend < 0`:
-- Add an absolute-positioned badge at `top-3 left-3 z-10` (replacing/alongside the existing TD badge position logic)
-- Style: `bg-red-500 text-white font-bold px-2.5 py-1 rounded-lg text-sm shadow-lg`
-- Content: `{Math.abs(Math.round(priceTrend))}% OFF`
-- Animation: CSS class with `animate-pulse` for first 3 seconds using a state timer, then static
-- The inline crossed-out price (lines 711-719) remains as-is for context
+Count badges will use the existing `unfilteredProductCount` as a rough "N+ filaments" indicator rather than making separate count queries per card.
 
-### 4. Hover State -- Cyan glow enhancement
+### Subsection B -- Did You Know? Rotating Fact Strip
 
-Update the card's hover classes (lines 377-387):
-- Change `hover:shadow-black/30` to `hover:shadow-cyan-500/10`
-- Add `hover:border-cyan-500/30` transition
-- The CTA button (lines 931-947): add `group-hover:shadow-md` for subtle lift on card hover
+A single-line bar (`py-3 bg-gray-800/50 rounded-lg`) with:
+- Left: lightbulb emoji in amber
+- Center: rotating fact text, crossfade every 8 seconds using `useState` index + `useEffect` interval with `opacity` transition (300ms)
+- Right: "Learn more" link pointing to `/guides/how-to-choose-3d-printer-filament`
 
-### 5. "Ships to You" Badge
+8 hardcoded facts as specified in the request.
 
-Enhance the local price indicator area (lines 780-787):
-- When `isLocalStore` is true, add a small badge row above or replacing the "Local: price/kg" text
-- Icon: `MapPin` (already imported) or `Truck` icon, 12px
-- Text: "Ships to you" in `text-emerald-400 text-[11px] font-medium`
-- Keep the local price display underneath
+### Subsection C -- Popular Comparisons Quick Links
 
-### 6. Deal Pulse Animation Timer
+3-4 pill-shaped links in a centered flex-wrap row. Each links to an existing page:
+- "PLA vs PETG" -> `/guides/pla-vs-petg`
+- "Bambu Lab vs Polymaker" -> `/brands` (with search pre-filled)
+- "Best PETG under $25" -> applies PETG + price filter
+- "Silk PLA comparison" -> applies PLA + silk filter
 
-Add a `useState` + `useEffect` to track whether the deal badge pulse should be active:
-- `const [dealPulseActive, setDealPulseActive] = useState(true)`
-- `useEffect` with 3-second timeout sets it to false
-- Only used when `isDeal` is true
-- Badge class conditionally includes `animate-pulse` based on this state
+### Container
+
+Full-width section: `bg-gray-900/50 border-y border-gray-800 py-10 px-4`
+
+### Props
+
+```text
+interface DiscoveryZoneProps {
+  resetFilters: () => void;
+  updateFilter: <K>(key: K, value: any) => void;
+  catalogRef?: React.RefObject<HTMLElement>;
+}
+```
 
 ---
 
-## What will NOT change
+## Modified File: `src/pages/Finder.tsx`
 
-- Card layout structure (flex column, 4-column grid)
-- Brand logo positioning and BrandLogo component
-- Material type badge styling
-- Product title rendering
-- "View Prices" CTA text and destination
-- Color swatch HoverCard (already well-implemented)
-- FilaScore bar visualization (already matches the spec)
-- No SEO elements touched (component is purely visual)
-- No data fetching or API changes
-- Existing `VariantIndicators` interface and data flow
+Insert `<DiscoveryZone>` between line 1100 (`<TrendingSection />`) and line 1103 (spacer). Pass `resetFilters`, `updateFilter`, and a ref to the catalog section for smooth scrolling.
 
-## Files Modified
+Add an `id="catalog-section"` to the catalog heading div (line 1107) so the Discovery Zone can scroll to it.
 
-| File | Change |
-|------|--------|
-| `src/components/FilamentCard.tsx` | All 5 visual enhancements above |
+No SEO elements, Helmet tags, JSON-LD, FAQ sections, or content blocks are touched.
+
+---
+
+## Files Summary
+
+| Action | File |
+|--------|------|
+| CREATE | `src/components/DiscoveryZone.tsx` |
+| MODIFY | `src/pages/Finder.tsx` (insert component + add catalog id) |
 
