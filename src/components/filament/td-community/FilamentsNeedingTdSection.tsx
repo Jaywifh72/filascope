@@ -3,8 +3,16 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ChevronRight } from 'lucide-react';
 import { TdSubmissionButton } from './TdSubmissionButton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const MAJOR_BRANDS = ['Bambu Lab', 'Polymaker', 'eSUN', 'Overture', 'Hatchbox', 'SUNLU', 'Prusament', 'Inland'];
+
+// Milestone targets — bump when reached
+const MILESTONES = [150, 200, 250, 300, 400, 500];
+
+function getNextMilestone(current: number): number {
+  return MILESTONES.find(m => m > current) ?? Math.ceil((current + 50) / 50) * 50;
+}
 
 export function FilamentsNeedingTdSection() {
   const { data: filaments } = useQuery({
@@ -40,7 +48,12 @@ export function FilamentsNeedingTdSection() {
 
   if (!filaments?.length) return null;
 
-  const pct = counts ? Math.round((counts.withTd / Math.max(counts.total, 1)) * 100) : 0;
+  const withTd = counts?.withTd ?? 0;
+  const total = counts?.total ?? 0;
+  const milestone = getNextMilestone(withTd);
+  const remaining = milestone - withTd;
+  const milestonePct = Math.min(Math.round((withTd / milestone) * 100), 100);
+  const overallPct = total > 0 ? Math.round((withTd / total) * 100) : 0;
 
   return (
     <section className="my-12">
@@ -51,21 +64,28 @@ export function FilamentsNeedingTdSection() {
           These popular filaments are missing TD measurements. If you own any, contribute your measurement and help the community!
         </p>
 
-        {/* Progress bar */}
+        {/* Milestone progress bar */}
         {counts && (
           <div className="mb-6 max-w-md">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-              <span>Community Progress</span>
-              <span className="font-mono">{counts.withTd} / {counts.total} filaments</span>
+              <span>🎯 Next Goal: {milestone} Filaments with TD Data</span>
+              <span className="font-mono">{withTd} / {milestone}</span>
             </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="h-2.5 bg-muted rounded-full overflow-hidden cursor-help">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-purple-500 rounded-full transition-all duration-500"
+                    style={{ width: `${milestonePct}%` }}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                {withTd} of {total.toLocaleString()} total filaments have TD data ({overallPct}%)
+              </TooltipContent>
+            </Tooltip>
             <p className="text-xs text-muted-foreground mt-1">
-              {pct}% complete — your measurement could help!
+              {milestonePct}% to our next milestone — just <span className="font-semibold text-primary">{remaining}</span> more measurements needed!
             </p>
           </div>
         )}
