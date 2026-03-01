@@ -1,4 +1,5 @@
 import { X, Check, Info, RotateCcw, ArrowRight, ExternalLink, GitCompare } from 'lucide-react';
+import { PrinterQuizEmptyState } from '@/components/empty-states';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { QuizResults, ScoredPrinter } from '@/lib/printerQuizService';
@@ -118,11 +119,7 @@ const PrinterQuizResults = ({ results, onClose, onRetake, onAddToCompare }: Prin
           ))}
 
           {topPrinters.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">
-                No printers matched your criteria. Try adjusting your preferences.
-              </p>
-            </div>
+            <PrinterQuizEmptyState onRetake={handleRetake} />
           )}
         </div>
 

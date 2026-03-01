@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap, Package, Layers } from "lucide-react";
 import { BrandCardSkeletonGrid } from "@/components/skeletons/BrandCardSkeleton";
+import { BrandsEmptyState } from "@/components/empty-states";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
 import BrandsSidebar, { type BrandFilters, DEFAULT_BRAND_FILTERS } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
@@ -532,33 +533,21 @@ const Brands = () => {
             {isLoading ? (
               <BrandCardSkeletonGrid count={12} />
             ) : filteredBrands.length === 0 ? (
-              <div className="text-center py-16 px-4">
-                <Building2 className="w-12 h-12 mx-auto text-gray-600 mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  No brands found{searchQuery ? ` for "${searchQuery}"` : ""}
-                </h3>
-                <p className="text-gray-400 mb-6 max-w-md mx-auto">
-                  Try searching for a different name or browse all brands by clearing your filters.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setFilters({
-                      materials: [],
-                      features: [],
-                      verifiedOnly: false,
-                      hasLivePricing: false,
-                      filamentCountRange: null,
-                      priceTier: null,
-                      sortBy: "count-desc",
-                    });
-                  }}
-                  className="border-primary/50 text-primary hover:bg-primary/10"
-                >
-                  Clear Search & Filters
-                </Button>
-              </div>
+              <BrandsEmptyState
+                searchQuery={searchQuery}
+                onClearFilters={() => {
+                  setSearchQuery("");
+                  setFilters({
+                    materials: [],
+                    features: [],
+                    verifiedOnly: false,
+                    hasLivePricing: false,
+                    filamentCountRange: null,
+                    priceTier: null,
+                    sortBy: "count-desc",
+                  });
+                }}
+              />
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

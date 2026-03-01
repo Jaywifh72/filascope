@@ -19,6 +19,7 @@ interface EmptyStateProps {
     onClick?: () => void;
     href?: string;
   };
+  compact?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -29,19 +30,29 @@ export function EmptyState({
   message,
   action,
   secondaryAction,
+  compact,
   size = 'md',
   className,
 }: EmptyStateProps) {
+  // compact prop overrides size to sm behavior
+  const effectiveSize = compact ? 'sm' : size;
+
   const sizeClasses = {
-    sm: 'py-4 px-3',
-    md: 'py-6 px-4',
-    lg: 'py-10 px-6',
+    sm: 'py-8 px-3',
+    md: 'py-12 px-4',
+    lg: 'py-16 px-6',
+  };
+
+  const iconContainerSizes = {
+    sm: 'w-14 h-14 rounded-xl',
+    md: 'w-20 h-20 rounded-2xl',
+    lg: 'w-20 h-20 rounded-2xl',
   };
 
   const iconSizes = {
-    sm: 'w-8 h-8',
+    sm: 'w-9 h-9',
     md: 'w-12 h-12',
-    lg: 'w-16 h-16',
+    lg: 'w-12 h-12',
   };
 
   const textSizes = {
@@ -50,44 +61,42 @@ export function EmptyState({
     lg: 'text-base',
   };
 
-  const ActionButton = action?.href ? 'a' : 'button';
-  const actionProps = action?.href 
-    ? { href: action.href, target: '_blank', rel: 'noopener noreferrer' }
-    : { onClick: action?.onClick };
-
   return (
     <div
       className={cn(
         'flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-border/50 bg-muted/10',
-        sizeClasses[size],
+        sizeClasses[effectiveSize],
         className
       )}
     >
       {Icon && (
-        <div className="mb-3 text-muted-foreground/40">
-          <Icon className={iconSizes[size]} strokeWidth={1.5} />
+        <div className={cn(
+          'mb-4 flex items-center justify-center bg-white/[0.04] border border-white/[0.08]',
+          iconContainerSizes[effectiveSize]
+        )}>
+          <Icon className={cn(iconSizes[effectiveSize], 'text-muted-foreground')} strokeWidth={1.5} />
         </div>
       )}
       
       {title && (
         <h4 className={cn(
-          'font-medium text-foreground mb-1',
-          size === 'sm' ? 'text-sm' : size === 'md' ? 'text-base' : 'text-lg'
+          'font-semibold text-foreground mb-1',
+          effectiveSize === 'sm' ? 'text-base' : effectiveSize === 'md' ? 'text-lg' : 'text-lg'
         )}>
           {title}
         </h4>
       )}
       
-      <p className={cn('text-muted-foreground max-w-sm', textSizes[size])}>
+      <p className={cn('text-muted-foreground max-w-sm mt-1', textSizes[effectiveSize])}>
         {message}
       </p>
 
       {(action || secondaryAction) && (
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
           {action && (
             <Button
               variant={action.variant || 'outline'}
-              size={size === 'lg' ? 'default' : 'sm'}
+              size={effectiveSize === 'lg' ? 'default' : 'sm'}
               asChild={!!action.href}
             >
               {action.href ? (
@@ -112,7 +121,7 @@ export function EmptyState({
                 rel="noopener noreferrer"
                 className={cn(
                   'text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline',
-                  textSizes[size]
+                  textSizes[effectiveSize]
                 )}
               >
                 {secondaryAction.label}
@@ -122,7 +131,7 @@ export function EmptyState({
                 onClick={secondaryAction.onClick}
                 className={cn(
                   'text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline',
-                  textSizes[size]
+                  textSizes[effectiveSize]
                 )}
               >
                 {secondaryAction.label}
