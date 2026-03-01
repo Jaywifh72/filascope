@@ -189,6 +189,8 @@ export default function HueForgeTDDatabase() {
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const [filterFlash, setFilterFlash] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
 
   // Debounced search
   const handleSearchChange = useCallback((value: string) => {
@@ -728,6 +730,17 @@ export default function HueForgeTDDatabase() {
               return (
                 <div className="text-sm text-muted-foreground">
                   Showing {shown} of {filteredData.length}{isFiltered ? ` matching records (${totalDb} total)` : ' records'}
+                  {shown < filteredData.length && (
+                    <>
+                      {' · '}
+                      <button
+                        onClick={() => handleRowsPerPageChange('all')}
+                        className="text-cyan-400 hover:underline underline-offset-2 cursor-pointer"
+                      >
+                        Show all →
+                      </button>
+                    </>
+                  )}
                 </div>
               );
             })()}
@@ -813,7 +826,14 @@ export default function HueForgeTDDatabase() {
             >
               {viewMode === 'table' ? (
                 /* ── Table View ── */
-                <div className="border rounded-lg overflow-hidden max-h-[700px] overflow-y-auto">
+                <div
+                  ref={tableScrollRef}
+                  className="border rounded-lg overflow-hidden max-h-[700px] overflow-y-auto relative"
+                  onScroll={(e) => {
+                    const el = e.currentTarget;
+                    setIsScrolledToBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 10);
+                  }}
+                >
                   <Table>
                     <TableHeader className="sticky top-0 bg-background z-10 border-b border-border shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
                       <TableRow>
@@ -930,6 +950,10 @@ export default function HueForgeTDDatabase() {
                       })()}
                     </TableBody>
                   </Table>
+                  {/* Fade-out gradient hint */}
+                  {!isScrolledToBottom && (
+                    <div className="sticky bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none z-[5]" />
+                  )}
                   {(() => {
                     const limit = rowsPerPage === Infinity ? filteredData.length : rowsPerPage;
                     const shown = Math.min(filteredData.length, limit);
