@@ -156,6 +156,10 @@ export default {
             transform: "scale(1)",
           },
         },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -166,6 +170,7 @@ export default {
         "pulse-live": "pulse-live 2s ease-in-out infinite",
         "ping-slow": "ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite",
         "filter-activate": "filter-activate 0.3s ease-out",
+        shimmer: "shimmer 1.8s ease-in-out infinite",
       },
     },
   },
