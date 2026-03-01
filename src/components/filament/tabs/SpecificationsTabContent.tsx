@@ -506,6 +506,16 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
                 <div className="text-right">
                   <span className="text-purple-400 font-bold text-lg">{filament.transmission_distance} mm</span>
                   <p className="text-xs text-muted-foreground">Used in HueForge for filament painting</p>
+                  {(() => {
+                    const td = filament.transmission_distance!;
+                    let label: string, cls: string;
+                    if (td <= 1.0) { label = 'Very Opaque — ideal for dark/anchor layers'; cls = 'bg-amber-500/15 text-amber-400 border-amber-500/25'; }
+                    else if (td <= 2.5) { label = 'Opaque — good for mid-tone layers'; cls = 'bg-amber-500/10 text-amber-300 border-amber-500/20'; }
+                    else if (td <= 4.0) { label = 'Semi-Translucent — standard range for most HueForge work'; cls = 'bg-purple-500/15 text-purple-400 border-purple-500/25'; }
+                    else if (td <= 6.0) { label = 'Translucent — great for highlight/bright layers'; cls = 'bg-blue-500/15 text-blue-400 border-blue-500/25'; }
+                    else { label = 'Very Translucent — excellent for light/white layers'; cls = 'bg-blue-500/10 text-blue-300 border-blue-500/20'; }
+                    return <span className={`mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full border ${cls}`}>{label}</span>;
+                  })()}
                 </div>
               </div>
             ) : (
