@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -39,6 +40,9 @@ import { HowToSchema } from '@/components/seo/HowToSchema';
 import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { useCurrency } from '@/hooks/useCurrency';
 import { trackTDSearch as trackGA4TDSearch } from '@/lib/analytics';
+import { TdRangeSlider } from '@/components/hueforge/TdRangeSlider';
+import { TdDistributionChart } from '@/components/hueforge/TdDistributionChart';
+import { TdValueCell } from '@/components/hueforge/TdValueCell';
 
 // ── FAQ data ──────────────────────────────────────────────────────────
 const faqData = [
@@ -153,6 +157,7 @@ type SortDirection = 'asc' | 'desc';
 
 // ── Component ─────────────────────────────────────────────────────────
 export default function HueForgeTDDatabase() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [materialFilter, setMaterialFilter] = useState<string>('all');
   const [brandFilter, setBrandFilter] = useState<string>('all');
@@ -160,6 +165,26 @@ export default function HueForgeTDDatabase() {
   const [sortField, setSortField] = useState<SortField>('transmission_distance');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { formatPrice } = useCurrency();
+
+  // TD range from URL params or default
+  const [tdRange, setTdRange] = useState<[number, number]>(() => {
+    const min = parseFloat(searchParams.get('td_min') || '0');
+    const max = parseFloat(searchParams.get('td_max') || '10');
+    return [isNaN(min) ? 0 : min, isNaN(max) ? 10 : max];
+  });
+
+  const handleTdRangeChange = useCallback((range: [number, number]) => {
+    setTdRange(range);
+    const params = new URLSearchParams(searchParams);
+    if (range[0] === 0 && range[1] === 10) {
+      params.delete('td_min');
+      params.delete('td_max');
+    } else {
+      params.set('td_min', range[0].toString());
+      params.set('td_max', range[1].toString());
+    }
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // ── Data query ──────────────────────────────────────────────────────
   const { data: filaments, isLoading } = useQuery({
@@ -228,6 +253,15 @@ export default function HueForgeTDDatabase() {
     if (brandFilter !== 'all') result = result.filter((f) => f.vendor === brandFilter);
     if (colorFilter !== 'all') result = result.filter((f) => f.color_family === colorFilter);
 
+    // TD range filter
+    if (tdRange[0] > 0 || tdRange[1] < 10) {
+      result = result.filter((f) => {
+        const td = f.transmission_distance;
+        if (td == null) return false;
+        return td >= tdRange[0] && td <= tdRange[1];
+      });
+    }
+
     result.sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
@@ -242,7 +276,7 @@ export default function HueForgeTDDatabase() {
       return 0;
     });
     return result;
-  }, [filaments, searchTerm, materialFilter, brandFilter, colorFilter, sortField, sortDirection]);
+  }, [filaments, searchTerm, materialFilter, brandFilter, colorFilter, tdRange, sortField, sortDirection]);
 
   // GA4: track TD search when filters change
   useEffect(() => {
@@ -608,7 +642,15 @@ export default function HueForgeTDDatabase() {
           <h2 className="text-2xl md:text-3xl font-bold mb-6">Browse Filaments by TD Value</h2>
 
           {/* Filters */}
-          <Card className="mb-6">
+          {/* TD Range Slider */}
+          <Card className="mb-4">
+            <CardContent className="pt-5 pb-4">
+              <TdRangeSlider value={tdRange} onChange={handleTdRangeChange} />
+            </CardContent>
+          </Card>
+
+          {/* Existing Filters */}
+          <Card className="mb-4">
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
@@ -669,6 +711,14 @@ export default function HueForgeTDDatabase() {
               </div>
             </CardContent>
           </Card>
+
+          {/* TD Distribution Chart */}
+          <div className="mb-4">
+            <TdDistributionChart
+              filaments={filteredData}
+              onZoneClick={(min, max) => handleTdRangeChange([min, max])}
+            />
+          </div>
 
           <div className="text-sm text-muted-foreground mb-4">
             Showing {Math.min(filteredData.length, 100)} of {filteredData.length} records
@@ -734,8 +784,10 @@ export default function HueForgeTDDatabase() {
                         <Badge variant="outline">{f.material}</Badge>
                       </TableCell>
                       <TableCell>{f.color_family}</TableCell>
-                      <TableCell className="text-right font-mono font-bold text-purple-400">
-                        {f.transmission_distance}
+                      <TableCell className="text-right">
+                        {f.transmission_distance != null && (
+                          <TdValueCell value={f.transmission_distance} />
+                        )}
                       </TableCell>
                       <TableCell className="text-right text-sm">
                         {f.variant_price != null ? formatPrice(f.variant_price) : '—'}
