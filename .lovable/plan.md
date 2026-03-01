@@ -1,83 +1,105 @@
 
 
-# Bulk Insert Community TD Reference Values
+# Scrape TD Values from 3DFilamentProfiles.com
 
 ## Overview
 
-Insert ~150+ community-verified TD values from 3DFilamentProfiles.com for 10 brands (Polymaker, Bambu Lab, eSUN, Hatchbox, Overture, Sunlu, Inland, ColorFabb, Fillamentum, Atomic Filament) into the `td_reference_values` table, respecting existing high-confidence entries.
+Create a backend function `scrape-td-values` that uses the existing Firecrawl connector to fetch filament pages from 3DFilamentProfiles.com, parse TD values from the rendered markdown tables, and upsert them into `td_reference_values`. Add a "Fetch External TD" button to the admin toolbar.
 
-## Approach
+## Why Firecrawl
 
-Use the database insert tool to execute an `INSERT ... ON CONFLICT` statement that:
-- Inserts new entries with `source: "3dfilamentprofiles_community"` and `confidence: "medium"`
-- On conflict (same brand/material/color), only updates if the existing confidence is NOT "high"
-- Skips entries where no TD value is provided (e.g., "Yellow (no TD)")
+3DFilamentProfiles.com is a client-rendered Next.js app (no public API -- confirmed 404 on `/api/filaments`). The existing Firecrawl connector already handles JavaScript rendering and returns clean markdown tables that are straightforward to parse. Each brand page shows 50 rows per page with pagination ("Page X of Y").
 
-The unique index `idx_td_ref_unique` on `(lower(brand_name), lower(material_type), lower(color_name))` enables clean upsert behavior.
-
-## SQL Logic
+## Architecture
 
 ```text
-INSERT INTO td_reference_values (brand_name, color_name, material_type, td_value, source, confidence)
+Admin UI  -->  supabase.functions.invoke('scrape-td-values', { brand })
+                    |
+                    v
+              Edge Function
+                    |
+                    +--> Firecrawl scrape (markdown format) per page
+                    |       rate limited: 2s between requests
+                    |
+                    +--> Parse markdown table rows
+                    |       extract: brand, material, type, color, hex, td_value
+                    |
+                    +--> Upsert to td_reference_values
+                            ON CONFLICT skip if confidence = 'high'
+```
+
+## New File: `supabase/functions/scrape-td-values/index.ts`
+
+**Inputs** (JSON body):
+- `brand`: single brand name (e.g., "Polymaker") -- required
+- `allBrands`: boolean -- if true, iterate through all brands in the slug map
+
+**Brand Slug Map**: 31 brands mapped to their 3DFilamentProfiles URL slugs (Polymaker -> "polymaker", "Bambu Lab" -> "bambu-lab", etc.)
+
+**Processing per brand**:
+1. Fetch page 1 via Firecrawl: `https://3dfilamentprofiles.com/filaments/{slug}` with `formats: ['markdown']`
+2. Parse the "Page X of Y" text to determine total pages
+3. Parse the markdown table -- each row has: Brand, Material, Type, Color, RGB Hex, TD, Website/Price, Deal
+4. Extract only rows where TD column contains a numeric value (not empty, not just a link with no number)
+5. For pages 2+, fetch with `?page=N` parameter, with 2-second delay between requests
+6. Construct `material_type` by combining Material + Type columns (e.g., Material="PLA", Type="Basic" -> "PLA Basic"; Material="PLA", Type="PolyTerra" -> "PolyTerra PLA")
+7. Upsert each entry into `td_reference_values` using the existing unique index
+
+**Upsert logic** (same pattern as existing bulk inserts):
+```text
+INSERT INTO td_reference_values (brand_name, color_name, material_type, td_value, color_hex, source, confidence)
 VALUES (...)
 ON CONFLICT (lower(brand_name), lower(material_type), lower(color_name))
-DO UPDATE SET
-  td_value = EXCLUDED.td_value,
-  source = EXCLUDED.source,
-  updated_at = NOW()
+DO UPDATE SET td_value = EXCLUDED.td_value, color_hex = EXCLUDED.color_hex, updated_at = NOW()
 WHERE td_reference_values.confidence != 'high';
 ```
 
-This single statement handles all three cases:
-- New entry: INSERT
-- Existing with "medium"/"low" confidence: UPDATE td_value
-- Existing with "high" confidence: skipped by the WHERE clause
+**Response**: JSON with per-brand summary:
+```text
+{
+  success: true,
+  results: [
+    { brand: "Polymaker", pages: 4, totalRows: 187, withTd: 52, inserted: 38, updated: 6, skipped: 8, errors: 0 }
+  ]
+}
+```
 
-## Data Summary
+**Error handling**:
+- 404 on brand slug: log and skip, continue to next brand
+- Firecrawl failure: retry once after 5 seconds
+- Unparseable TD value: skip row, increment error count
+- Time guard: 120-second internal limit; if approaching, save partial results and return
 
-| Brand | Material Lines | Approx Entries |
-|-------|---------------|----------------|
-| Polymaker | PolyLite ABS, PolyLite ASA, PolyTerra PLA, PolyLite PLA, ASA Basic | ~50 |
-| Bambu Lab | ABS Basic, ABS GF, ASA Basic/CF, PC Basic, PLA Basic, PLA Matte, PETG Basic | ~45 |
-| eSUN | PLA+ | 8 |
-| Hatchbox | PLA, ABS, PETG | ~15 |
-| Overture | PLA, PETG | ~11 |
-| Sunlu | ABS, PLA | ~8 |
-| Inland | PLA | 2 |
-| ColorFabb | PLA Economy, PLA Matte | 3 |
-| Fillamentum | PLA Extrafill, ABS EasyFil, PETG Sparkle, PLA Crystal | ~7 |
-| Atomic Filament | PLA | 2 |
+**Markdown parsing strategy** (based on actual page output observed):
+- Table rows follow the pattern: `| [Brand](url) | [Material](url) | [Type](url) | [Color](url) | #HEX... | [TD_VALUE](url) or empty | ... |`
+- TD values appear as `[0.3](url)` or `[100](url)` when present; empty cell means no TD
+- Parse with regex: split on `|`, extract link text from markdown link syntax `[text](url)`
 
-## Conflict Resolution Details
+## Modified File: `src/components/admin/td-management/TdActionToolbar.tsx`
 
-Existing high-confidence entries that will be preserved (not overwritten):
-- All 71 Prusament "prusa_official" entries
-- Bambu Lab PLA Basic/Matte/PETG Basic (23 entries, "hueforge_community" high)
-- eSUN PLA+ (8 entries, high)
-- Hatchbox PLA (7 entries, high)
-- Polymaker PolyLite PLA and PolyTerra PLA (17 entries, high)
-- Fillamentum PLA Extrafill Traffic White/Black (2 entries, high)
-- Atomic Filament PLA (2 entries, high)
+Add a "Fetch External TD" button (Cloud/Download icon) next to the existing buttons:
 
-Entries that will be updated (existing medium confidence):
-- ColorFabb PLA Economy Black/White
-- Inland PLA Black/White
-- Overture PLA Black/White/Red
-- Sunlu PLA entries
-- Hatchbox Silver
+- On click: call `supabase.functions.invoke('scrape-td-values', { body: { brand: selectedBrand, allBrands: brand === 'all' } })`
+- Show loading state with spinner: "Fetching {brand}..."
+- On success: show toast with summary counts
+- On error: show error toast
+- After completion: invalidate `td-stats` and `td-population-log` queries
+- Uses the existing brand dropdown to filter which brand to scrape
 
-## Technical Steps
+## Config Addition
 
-1. Execute a single bulk `INSERT ... ON CONFLICT` SQL statement with all ~150 values
-2. Verify final row count in td_reference_values after insertion
-3. No code changes needed -- the existing `useTdMatching` hook and `match_td_reference_values` RPC already handle case-insensitive brand matching via `ILIKE`
+Add to `supabase/config.toml`:
+```text
+[functions.scrape-td-values]
+verify_jwt = false
+```
 
-## No Code Changes Required
+## Files Summary
 
-The existing matching infrastructure already handles:
-- Case-insensitive brand matching (`ILIKE '%brand%'`)
-- Multi-word product lines in `product_title` (`ILIKE '%PolyTerra%'`)
-- Single-word material fallback (`material = 'PLA'`)
+| Action | File |
+|--------|------|
+| CREATE | `supabase/functions/scrape-td-values/index.ts` |
+| MODIFY | `src/components/admin/td-management/TdActionToolbar.tsx` |
 
-This is a data-only operation.
+No database schema changes. No new tables. Uses existing Firecrawl connector (already configured). Uses existing `td_reference_values` table and unique index.
 
