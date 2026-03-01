@@ -12671,6 +12671,7 @@ export type Database = {
         }[]
       }
       get_td_coverage_stats: { Args: never; Returns: Json }
+      get_td_reference_match_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
