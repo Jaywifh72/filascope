@@ -142,7 +142,7 @@ export function BrandFAQSection(props: BrandFAQSectionProps) {
               <AccordionTrigger className="text-left text-foreground hover:text-foreground/80 hover:no-underline py-4">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground leading-relaxed pb-4">
+              <AccordionContent forceMount className="data-[state=closed]:hidden text-muted-foreground leading-relaxed pb-4">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>

@@ -24,7 +24,7 @@ export function FAQSection({ faqs, title = 'Frequently Asked Questions', classNa
             <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
               {faq.question}
             </AccordionTrigger>
-            <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">
+            <AccordionContent forceMount className="data-[state=closed]:hidden text-muted-foreground pb-4 leading-relaxed">
               {faq.answer}
             </AccordionContent>
           </AccordionItem>
