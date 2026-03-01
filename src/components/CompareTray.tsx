@@ -287,6 +287,7 @@ export function CompareTray() {
         )}
         style={!isFirstItem ? { transform: 'translateX(-50%)' } : undefined}
         role="region"
+        aria-live="polite"
         aria-label={`Compare tray containing ${count} of ${maxItems} materials`}
       >
         {/* Minimized Bar */}
@@ -380,28 +381,26 @@ export function CompareTray() {
               })}
             </div>
 
-            {/* CENTER: Count + names */}
+            {/* CENTER: Segmented progress + micro-copy */}
             <div className="flex-1 min-w-0 px-2">
-              <p className="text-[13px] text-muted-foreground">
-                {count} / {maxItems} filaments selected
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: maxItems }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "w-2.5 h-2.5 rounded-full transition-colors duration-200",
+                      i < count ? "bg-cyan-500" : "bg-gray-700"
+                    )}
+                  />
+                ))}
+                <span className="text-[11px] text-muted-foreground ml-1">{count}/{maxItems}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {count === 1 && "Add 1 more to start comparing"}
+                {count === 2 && "Ready to compare! Add more for deeper insights"}
+                {count >= 3 && count <= 5 && "Great selection — compare now or add more"}
+                {count === 6 && "Maximum reached — let's compare!"}
               </p>
-              {count > 0 && (
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {items.slice(0, 2).map((item) => (
-                    <span
-                      key={item.id}
-                      className="text-[11px] text-foreground/70 bg-muted/40 px-1.5 py-0.5 rounded truncate max-w-[120px]"
-                    >
-                      {item.product_title?.split(' ').slice(0, 3).join(' ') || 'Filament'}
-                    </span>
-                  ))}
-                  {count > 2 && (
-                    <span className="text-[11px] text-muted-foreground">
-                      + {count - 2} more
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* RIGHT: Compare Now + overflow */}
@@ -451,7 +450,7 @@ export function CompareTray() {
                       disabled={isNavigating}
                       className={cn(
                         "gap-2 font-semibold min-w-[140px]",
-                        canCompare && !isNavigating && "animate-pulse-once"
+                        canCompare && !isNavigating && "compare-cta-glow"
                       )}
                       size="sm"
                     >

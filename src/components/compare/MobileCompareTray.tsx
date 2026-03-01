@@ -109,10 +109,20 @@ export function MobileCompareTray({ onSaveForLater }: MobileCompareTrayProps) {
               </span>
             </div>
             <div className="text-left">
-              <p className="text-sm font-medium">{count} material{count !== 1 ? 's' : ''} selected</p>
-              {!canCompare && (
-                <p className="text-xs text-muted-foreground">Add {2 - count} more to compare</p>
-              )}
+              <div className="flex items-center gap-1">
+                <p className="text-sm font-medium">{count} material{count !== 1 ? 's' : ''}</p>
+                <div className="flex items-center gap-0.5 ml-1">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className={cn("w-1.5 h-1.5 rounded-full", i < count ? "bg-cyan-500" : "bg-gray-700")} />
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {count === 1 && "Add 1 more to start comparing"}
+                {count === 2 && "Ready to compare!"}
+                {count >= 3 && count <= 5 && "Great selection — compare now or add more"}
+                {count === 6 && "Maximum reached — let's compare!"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
