@@ -300,8 +300,15 @@ export default function HueForgeTDDatabase() {
     }
   }, [searchTerm, colorFilter, filteredData.length]);
 
-  // ── Top 10 most opaque ──────────────────────────────────────────────
-  const top10 = useMemo(() => (filaments ? filaments.slice(0, 10) : []), [filaments]);
+  // ── Curated mini-lists ────────────────────────────────────────────────
+  const curatedLists = useMemo(() => {
+    if (!filaments) return { opaque: [], midTone: [], highlights: [] };
+    const opaque = filaments.filter(f => f.transmission_distance != null && f.transmission_distance <= 1.5).slice(0, 3);
+    const midTone = filaments.filter(f => f.transmission_distance != null && f.transmission_distance >= 1.5 && f.transmission_distance <= 3.5).slice(0, 3);
+    const highlights = [...filaments].filter(f => f.transmission_distance != null && f.transmission_distance >= 3.0)
+      .sort((a, b) => (b.transmission_distance ?? 0) - (a.transmission_distance ?? 0)).slice(0, 3);
+    return { opaque, midTone, highlights };
+  }, [filaments]);
 
   // ── Sort handler ────────────────────────────────────────────────────
   const handleSort = (field: SortField) => {
@@ -700,55 +707,66 @@ export default function HueForgeTDDatabase() {
           )}
         </section>
 
-        {/* ── Top 10 Most Popular for HueForge (MOVED UP) ──────────── */}
+        {/* ── Curated Mini-Lists ──────────────────────────────────── */}
         <section className="mt-16 mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">Most Popular Filaments for HueForge</h2>
-          <p className="text-muted-foreground mb-6">
-            The 10 most opaque filaments — lowest TD values, most commonly needed for vivid base
-            layers.
-          </p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-8">Most Popular Filaments for HueForge</h2>
+
           {isLoading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-36" />
+            <div className="space-y-8">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="grid grid-cols-3 gap-4">
+                  {Array.from({ length: 3 }).map((_, j) => <Skeleton key={j} className="h-40" />)}
+                </div>
               ))}
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {top10.map((f, i) => (
-                <Link
-                  key={f.id}
-                  to={`/filament/${f.product_handle || f.id}`}
-                  className="block"
-                >
-                  <Card className="h-full group hover:border-purple-400/50 transition-colors">
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
-                        {f.color_hex && (
-                          <div
-                            className="w-5 h-5 rounded-full border shrink-0"
-                            style={{ backgroundColor: f.color_hex }}
-                          />
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors">
-                        {f.product_title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{f.vendor}</p>
-                      <div className="mt-2 flex items-baseline gap-1">
-                        <span className="text-lg font-bold text-purple-400">
-                          TD {f.transmission_distance}
+            <div className="space-y-10">
+              {([
+                { emoji: '🏆', label: 'Most Opaque (Base Layers)', items: curatedLists.opaque, viewLabel: 'View all opaque filaments →', tdMin: 0, tdMax: 1.5 },
+                { emoji: '🎨', label: 'Best Mid-Tones', items: curatedLists.midTone, viewLabel: 'View all mid-tone filaments →', tdMin: 1.5, tdMax: 3.5 },
+                { emoji: '✨', label: 'Best for Highlights', items: curatedLists.highlights, viewLabel: 'View all highlight filaments →', tdMin: 3.0, tdMax: 10 },
+              ] as const).map((group) => (
+                <div key={group.label}>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                    {group.emoji} {group.label}
+                  </p>
+                  <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1 max-md:flex max-md:overflow-x-auto max-md:snap-x max-md:snap-mandatory max-md:gap-4 max-md:pb-2">
+                    {group.items.map((f, i) => (
+                      <Link
+                        key={f.id}
+                        to={`/filament/${f.product_handle || f.id}`}
+                        className="relative bg-muted/20 border border-border rounded-xl p-4 hover:border-cyan-500/40 hover:bg-muted/40 transition-all duration-200 cursor-pointer group block max-md:min-w-[260px] max-md:snap-center max-md:shrink-0"
+                      >
+                        <span className="absolute -top-2 -left-2 bg-cyan-500 text-black text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center z-10">
+                          #{i + 1}
                         </span>
-                        {f.variant_price != null && (
-                          <span className="text-xs text-muted-foreground ml-auto">
-                            {formatPrice(f.variant_price)}
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                        <div
+                          className="h-12 w-full rounded-lg mb-3 transition-shadow group-hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.1)]"
+                          style={{ backgroundColor: f.color_hex || 'hsl(var(--muted))' }}
+                        />
+                        <p className="text-sm font-semibold text-foreground truncate">{f.product_title}</p>
+                        <p className="text-xs text-muted-foreground mb-2">{f.vendor}</p>
+                        <div className="flex items-center justify-between">
+                          {f.transmission_distance != null && (
+                            <TdValueCell value={f.transmission_distance} />
+                          )}
+                          {f.variant_price != null && (
+                            <span className="text-sm text-muted-foreground">{formatPrice(f.variant_price)}</span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleTdRangeChange([group.tdMin, group.tdMax]);
+                      document.getElementById('td-browser')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="text-sm text-cyan-500 hover:text-cyan-400 transition-colors mt-3 inline-block"
+                  >
+                    {group.viewLabel}
+                  </button>
+                </div>
               ))}
             </div>
           )}
