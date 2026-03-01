@@ -22,6 +22,7 @@ import { MaterialQuickFilters } from "@/components/deals/MaterialQuickFilters";
 import { DealCardSkeletonGrid } from "@/components/deals/DealCardSkeleton";
 import { DealsEmptyState } from "@/components/deals/DealsEmptyState";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
+import { FloatingDealAlertCTA } from "@/components/deals/FloatingDealAlertCTA";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
 import { ItemListSchema, BreadcrumbSchema, Breadcrumbs, FAQSection } from "@/components/seo";
@@ -643,6 +644,11 @@ const Deals = () => {
         </section>
       </section>
       <ScrollToTopButton targetId="deals-filters" />
+      <FloatingDealAlertCTA
+        onClickAlerts={() => {
+          document.getElementById("deal-alerts")?.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
     </div>
     </>
   );

@@ -2148,9 +2148,10 @@ body.embed-mode .offline-banner {
   padding: 0 0.25rem;
 }
 
-/* Reduced motion: disable filter animations */
+/* Reduced motion: disable filter and deal animations */
 @media (prefers-reduced-motion: reduce) {
-  .filter-count-flash {
+  .filter-count-flash,
+  .deal-badge-pulse {
     animation: none;
   }
 }

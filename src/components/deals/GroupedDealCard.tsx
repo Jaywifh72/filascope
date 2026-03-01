@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { DealQualityDots } from "./DealQualityBadge";
 import { Link, useNavigate } from "react-router-dom";
 import { getFilamentHref } from "@/lib/filamentUrl";
-import { TrendingDown, Share2, ExternalLink, Package, Clock, Ship, BadgeCheck } from "lucide-react";
+import { TrendingDown, Share2, Check, ExternalLink, Package, Clock, Ship, BadgeCheck, Trophy, Sparkles } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -273,10 +273,18 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     return () => observer.disconnect();
   }, []);
 
+  const [shareConfirm, setShareConfirm] = useState(false);
+
   const handleShareClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShareOpen(true);
+    const dealUrl = `${window.location.origin}/filament/${group.representativeDeal.id}`;
+    navigator.clipboard.writeText(dealUrl).then(() => {
+      setShareConfirm(true);
+      setTimeout(() => setShareConfirm(false), 1500);
+    }).catch(() => {
+      setShareOpen(true);
+    });
   };
 
   const handleCheckPrice = (e: React.MouseEvent) => {
@@ -330,7 +338,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
         ref={cardRef}
         className={cn(
           "group/card deal-card-hover relative h-full overflow-hidden transition-all duration-200 flex flex-col cursor-pointer",
-          "hover:shadow-lg hover:shadow-primary/10 hover:border-primary/40",
+          "hover:shadow-lg hover:shadow-primary/10 hover:border-primary/40 hover:-translate-y-0.5",
           "focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none",
           dealTier === 'exceptional' && "border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.06)]",
           dealTier === 'great' && "border-emerald-500/30",
@@ -347,18 +355,28 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           }
         }}
       >
-        {/* Hot Deal badge for exceptional tier */}
-        {dealTier === 'exceptional' && (
+        {/* Deal Quality Badge — Top Deal / Great Deal */}
+        {group.bestDiscount >= 50 && (
           <div className="absolute -top-1 -right-1 z-20">
-            <div className="bg-gradient-to-r from-amber-500 to-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg motion-safe:animate-pulse">
-              🔥 Hot Deal
+            <div className={cn(
+              "flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg",
+              group.bestDiscount >= 75
+                ? "bg-gradient-to-r from-amber-500 to-red-500 text-white motion-safe:animate-pulse"
+                : "bg-gradient-to-r from-primary to-emerald-500 text-white"
+            )}>
+              {group.bestDiscount >= 75 ? (
+                <><Trophy className="h-3 w-3" /> Top Deal</>
+              ) : (
+                <><Sparkles className="h-3 w-3" /> Great Deal</>
+              )}
             </div>
           </div>
         )}
 
-        {/* Discount Badge — tiered color system */}
+        {/* Discount Badge — tiered color system with hover pulse */}
         <div className={cn(
-          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-[filter] duration-200 group-hover/card:brightness-110",
+          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all duration-200",
+          "group-hover/card:brightness-110 motion-safe:group-hover/card:scale-105",
           group.bestDiscount >= 50
             ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold animate-deal-pulse"
             : group.bestDiscount >= 35
@@ -388,15 +406,24 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="deal-share-btn absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-muted/50 rounded-full p-1.5 transition-all duration-200 opacity-0 group-hover/card:opacity-100"
+              className={cn(
+                "deal-share-btn absolute top-3 right-3 z-10 h-8 w-8 backdrop-blur-sm rounded-full p-1.5 transition-all duration-200",
+                shareConfirm
+                  ? "bg-emerald-500/90 opacity-100"
+                  : "bg-background/80 hover:bg-muted/50 opacity-0 group-hover/card:opacity-100"
+              )}
               onClick={handleShareClick}
-              aria-label="Share this deal"
+              aria-label={shareConfirm ? "Link copied" : "Share this deal"}
             >
-              <Share2 className="h-4 w-4" aria-hidden="true" />
+              {shareConfirm ? (
+                <Check className="h-4 w-4 text-white" aria-hidden="true" />
+              ) : (
+                <Share2 className="h-4 w-4" aria-hidden="true" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left" className="text-xs">
-            Share deal
+            {shareConfirm ? "Link copied! ✓" : "Share deal"}
           </TooltipContent>
         </Tooltip>
 
@@ -503,13 +530,13 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             />
           )}
 
-          {/* "You save $X" anchoring text */}
+          {/* "You save $X" anchoring text — brightens on hover */}
           {!hasPriceRange && group.representativeDeal.variant_compare_at_price && group.representativeDeal.variant_price && group.representativeDeal.variant_compare_at_price > group.representativeDeal.variant_price && (
             <div className={cn(
-              "flex items-center gap-1 mb-1 text-xs",
-              dealTier === 'exceptional' ? "text-emerald-300 font-bold text-sm" :
-              dealTier === 'great' ? "text-emerald-400 font-semibold" :
-              "text-emerald-400 font-medium"
+              "flex items-center gap-1 mb-1 text-xs transition-all duration-200",
+              dealTier === 'exceptional' ? "text-emerald-300 font-bold text-sm group-hover/card:text-emerald-200" :
+              dealTier === 'great' ? "text-emerald-400 font-semibold group-hover/card:text-emerald-300 group-hover/card:font-bold" :
+              "text-emerald-400 font-medium group-hover/card:text-emerald-300 group-hover/card:font-semibold"
             )}>
               <span>You save</span>
               <RegionalPrice
