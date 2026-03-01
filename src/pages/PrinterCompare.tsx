@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -142,10 +143,9 @@ const PrinterCompare = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">Loading comparison...</p>
+      <div className="min-h-screen bg-background p-4 md:p-6">
+        <div className="max-w-[1800px] mx-auto space-y-6">
+          <TableSkeleton rows={8} columns={5} />
         </div>
       </div>
     );

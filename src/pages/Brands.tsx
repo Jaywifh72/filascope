@@ -4,6 +4,7 @@ import { DocumentHead } from "@/components/seo/DocumentHead";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap, Package, Layers } from "lucide-react";
+import { BrandCardSkeletonGrid } from "@/components/skeletons/BrandCardSkeleton";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
 import BrandsSidebar, { type BrandFilters, DEFAULT_BRAND_FILTERS } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
@@ -529,7 +530,7 @@ const Brands = () => {
 
             {/* Brands Grid */}
             {isLoading ? (
-              <div className="text-center py-12 text-muted-foreground">Loading brands...</div>
+              <BrandCardSkeletonGrid count={12} />
             ) : filteredBrands.length === 0 ? (
               <div className="text-center py-16 px-4">
                 <Building2 className="w-12 h-12 mx-auto text-gray-600 mb-4" />
