@@ -1,105 +1,116 @@
 
 
-# Scrape TD Values from 3DFilamentProfiles.com
+# Enhanced TD Matching Algorithm
 
-## Overview
+## Problem Analysis
 
-Create a backend function `scrape-td-values` that uses the existing Firecrawl connector to fetch filament pages from 3DFilamentProfiles.com, parse TD values from the rendered markdown tables, and upsert them into `td_reference_values`. Add a "Fetch External TD" button to the admin toolbar.
+The current matching engine fails because of three structural mismatches in the data:
 
-## Why Firecrawl
+1. **Missing color_family**: 1,257 of 8,166 filaments (including all Polymaker and Hatchbox) have `color_family = NULL`. Colors are embedded in `product_title` (e.g., "PolyLite(TM) ABS - Black", "BLACK PLA FILAMENT - 1.75MM, 1KG SPOOL").
 
-3DFilamentProfiles.com is a client-rendered Next.js app (no public API -- confirmed 404 on `/api/filaments`). The existing Firecrawl connector already handles JavaScript rendering and returns clean markdown tables that are straightforward to parse. Each brand page shows 50 rows per page with pagination ("Page X of Y").
+2. **Product line naming**: Reference data stores `material_type` as "PolyLite ABS" or "PLA Basic", while filament `product_title` may contain "PolyLite(TM) ABS" (with trademark symbol) or just "ABS".
 
-## Architecture
+3. **No fuzzy matching**: Current code requires exact `color_family === ref.color_name`, missing grey/gray variations and compound color names like "Charcoal Black" vs "Black".
+
+## Solution: Rewrite `useTdMatching.ts` with 5-Rule Cascade
+
+### Architecture Change
+
+Instead of querying per-reference-value (234 DB queries), load all candidate filaments in a single query, then match in-memory. This is both faster and enables multi-rule cascading.
 
 ```text
-Admin UI  -->  supabase.functions.invoke('scrape-td-values', { brand })
-                    |
-                    v
-              Edge Function
-                    |
-                    +--> Firecrawl scrape (markdown format) per page
-                    |       rate limited: 2s between requests
-                    |
-                    +--> Parse markdown table rows
-                    |       extract: brand, material, type, color, hex, td_value
-                    |
-                    +--> Upsert to td_reference_values
-                            ON CONFLICT skip if confidence = 'high'
+1. Load all td_reference_values (single query)
+2. Load all filaments WHERE transmission_distance IS NULL (paginated, 1000/page)
+3. Build lookup maps: material aliases, color normalizer
+4. For each filament, try Rules 1-5 in priority order against all refs
+5. Keep best match (highest confidence) per filament
 ```
 
-## New File: `supabase/functions/scrape-td-values/index.ts`
+### Rule Implementations
 
-**Inputs** (JSON body):
-- `brand`: single brand name (e.g., "Polymaker") -- required
-- `allBrands`: boolean -- if true, iterate through all brands in the slug map
+**Pre-processing** (runs once before matching):
+- Normalize colors: lowercase, strip suffixes (1Kg, 850g, 1.75mm, 2.85mm, Spool, Filament), grey->gray
+- Extract color from product_title for filaments with NULL color_family:
+  - Pattern: "ProductLine - ColorName" (Polymaker style)
+  - Pattern: "COLORNAME MATERIAL FILAMENT" (Hatchbox style)
+  - Pattern: plain color_family field (Bambu Lab style)
+- Build material family map for alias lookups
+- Strip trademark symbols from product_title for matching
 
-**Brand Slug Map**: 31 brands mapped to their 3DFilamentProfiles URL slugs (Polymaker -> "polymaker", "Bambu Lab" -> "bambu-lab", etc.)
+**Rule 1 -- Exact Brand + Color + Material (high)**:
+- vendor matches brand (case-insensitive)
+- Extracted/normalized color matches ref color
+- Material matches via alias map (PLA+ -> PLA family, PLA Basic -> PLA family)
 
-**Processing per brand**:
-1. Fetch page 1 via Firecrawl: `https://3dfilamentprofiles.com/filaments/{slug}` with `formats: ['markdown']`
-2. Parse the "Page X of Y" text to determine total pages
-3. Parse the markdown table -- each row has: Brand, Material, Type, Color, RGB Hex, TD, Website/Price, Deal
-4. Extract only rows where TD column contains a numeric value (not empty, not just a link with no number)
-5. For pages 2+, fetch with `?page=N` parameter, with 2-second delay between requests
-6. Construct `material_type` by combining Material + Type columns (e.g., Material="PLA", Type="Basic" -> "PLA Basic"; Material="PLA", Type="PolyTerra" -> "PolyTerra PLA")
-7. Upsert each entry into `td_reference_values` using the existing unique index
+**Rule 2 -- Product Line Match (high)**:
+- vendor matches brand
+- product_title contains the ref's product line (e.g., "PolyTerra" in "PolyTerra(TM) PLA - Sakura Pink")
+- Color matches (extracted from title or color_family)
 
-**Upsert logic** (same pattern as existing bulk inserts):
+**Rule 3 -- Fuzzy Color Match (medium)**:
+- Brand and material match exactly
+- Color matching with normalization:
+  - "Dark Grey" = "Dark Gray"
+  - "Traffic White" fallback to "White"
+  - "Jet Black" fallback to "Black"
+  - Strip brand prefixes: "Prusa Orange" -> "Orange", "Bambu Green" -> "Green"
+
+**Rule 4 -- Hex Code Proximity (low)**:
+- Brand and material match
+- Reference has hex_code, filament has color_hex
+- RGB Euclidean distance less than 30
+
+**Rule 5 -- Material Family Fallback (low)**:
+- Same brand + same color found
+- TD exists for base material (PLA) but filament is variant (PLA+, PLA Matte)
+- Only within same material family
+
+### Performance Strategy
+
+- Single bulk fetch of filaments (paginated at 1000 rows)
+- Single fetch of all reference values
+- All matching runs in-memory with pre-built indexes (Maps keyed by normalized vendor)
+- Progress updates every 100 filaments
+- Expected runtime: 2-5 seconds for 8,166 filaments
+
+## Files to Modify
+
+| Action | File | Description |
+|--------|------|-------------|
+| REWRITE | `src/hooks/useTdMatching.ts` | New 5-rule cascade engine with color extraction and material aliasing |
+| CREATE | `src/lib/tdMatchingUtils.ts` | Pure utility functions: color normalizer, color extractor, material alias map, hex distance |
+| MODIFY | `src/components/admin/td-management/TdMatchResultsPanel.tsx` | Add confidence filter buttons, summary stats bar, "Select All High" button |
+
+## UI Enhancements to TdMatchResultsPanel
+
+- **Summary bar**: "423 high, 187 medium, 92 low -- 702 total out of 8,166 missing"
+- **Filter buttons**: "All", "High Only", "Medium+Low Only" to toggle visible rows
+- **"Select All High Confidence" button** for quick bulk-apply of safe matches
+- **Match rule column**: Shows which rule matched (e.g., "R1: exact brand+color+material", "R3: fuzzy color grey->gray")
+
+## Technical Details
+
+### Color Extraction from Product Title
+
 ```text
-INSERT INTO td_reference_values (brand_name, color_name, material_type, td_value, color_hex, source, confidence)
-VALUES (...)
-ON CONFLICT (lower(brand_name), lower(material_type), lower(color_name))
-DO UPDATE SET td_value = EXCLUDED.td_value, color_hex = EXCLUDED.color_hex, updated_at = NOW()
-WHERE td_reference_values.confidence != 'high';
+"PolyLite™ ABS - Black"           -> "Black"     (split on " - ", take last part)
+"BLACK PLA FILAMENT - 1.75MM"     -> "Black"     (first word(s) before material keyword)
+"ABS-GF"                          -> null        (no color in title, skip)
+"PLA Basic"                       -> null        (no color, use color_family)
 ```
 
-**Response**: JSON with per-brand summary:
+### Material Alias Map
+
 ```text
-{
-  success: true,
-  results: [
-    { brand: "Polymaker", pages: 4, totalRows: 187, withTd: 52, inserted: 38, updated: 6, skipped: 8, errors: 0 }
-  ]
-}
+Reference "PLA Basic" -> matches filament material "PLA" (strip "Basic")
+Reference "PolyLite ABS" -> matches product_title containing "PolyLite" AND material "ABS"
+Reference "PLA" -> matches material "PLA", "PLA+", "PLA Pro" (family expansion for Rule 5)
 ```
 
-**Error handling**:
-- 404 on brand slug: log and skip, continue to next brand
-- Firecrawl failure: retry once after 5 seconds
-- Unparseable TD value: skip row, increment error count
-- Time guard: 120-second internal limit; if approaching, save partial results and return
+### Matching Priority
 
-**Markdown parsing strategy** (based on actual page output observed):
-- Table rows follow the pattern: `| [Brand](url) | [Material](url) | [Type](url) | [Color](url) | #HEX... | [TD_VALUE](url) or empty | ... |`
-- TD values appear as `[0.3](url)` or `[100](url)` when present; empty cell means no TD
-- Parse with regex: split on `|`, extract link text from markdown link syntax `[text](url)`
-
-## Modified File: `src/components/admin/td-management/TdActionToolbar.tsx`
-
-Add a "Fetch External TD" button (Cloud/Download icon) next to the existing buttons:
-
-- On click: call `supabase.functions.invoke('scrape-td-values', { body: { brand: selectedBrand, allBrands: brand === 'all' } })`
-- Show loading state with spinner: "Fetching {brand}..."
-- On success: show toast with summary counts
-- On error: show error toast
-- After completion: invalidate `td-stats` and `td-population-log` queries
-- Uses the existing brand dropdown to filter which brand to scrape
-
-## Config Addition
-
-Add to `supabase/config.toml`:
-```text
-[functions.scrape-td-values]
-verify_jwt = false
-```
-
-## Files Summary
-
-| Action | File |
-|--------|------|
-| CREATE | `supabase/functions/scrape-td-values/index.ts` |
-| MODIFY | `src/components/admin/td-management/TdActionToolbar.tsx` |
-
-No database schema changes. No new tables. Uses existing Firecrawl connector (already configured). Uses existing `td_reference_values` table and unique index.
+When multiple references match the same filament, keep the one with highest confidence. If tied, prefer:
+1. Exact product line match over base material match
+2. Exact color over fuzzy color
+3. Higher TD specificity (product-line-specific over generic material)
 
