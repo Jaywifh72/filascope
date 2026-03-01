@@ -174,6 +174,26 @@ function isColorDark(hex: string): boolean {
   return (r * 299 + g * 587 + b * 114) / 1000 < 80;
 }
 
+// Detect colors that need contrast ring on dark backgrounds (luminance < 15%)
+function needsContrastRing(hex: string | null | undefined): boolean {
+  if (!hex) return true;
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16) / 255;
+  const g = parseInt(c.substring(2, 4), 16) / 255;
+  const b = parseInt(c.substring(4, 6), 16) / 255;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance < 0.15;
+}
+
+// Fallback hex for filaments with known color family but missing hex
+function getFallbackHex(colorFamily: string | null): string | null {
+  if (!colorFamily) return null;
+  const lower = colorFamily.toLowerCase();
+  if (lower.includes('white') || lower.includes('natural')) return '#F0F0EA';
+  if (lower.includes('black')) return '#1A1A1A';
+  return null;
+}
+
 // ── Component ─────────────────────────────────────────────────────────
 export default function HueForgeTDDatabase() {
   const navigate = useNavigate();
@@ -833,7 +853,8 @@ export default function HueForgeTDDatabase() {
                           }
 
                           const filamentUrl = `/filament/${f.product_handle || f.id}`;
-                          const isDark = f.color_hex && isColorDark(f.color_hex);
+                          const displayHex = f.color_hex || getFallbackHex(f.color_family);
+                          const darkSwatch = needsContrastRing(displayHex);
                           rows.push(
                             <TableRow
                               key={f.id}
@@ -841,14 +862,14 @@ export default function HueForgeTDDatabase() {
                               onClick={() => navigate(filamentUrl)}
                             >
                               <TableCell>
-                                {f.color_hex ? (
+                                {displayHex ? (
                                    <div
-                                    className={`w-8 h-8 rounded-full ring-1 transition-transform duration-150 group-hover:scale-110 ${isDark ? 'ring-white/40' : 'ring-white/20'}`}
-                                    style={{ backgroundColor: f.color_hex }}
+                                    className={`w-8 h-8 rounded-full ring-1 transition-transform duration-150 group-hover:scale-110 ${darkSwatch ? 'ring-muted-foreground/50 shadow-[inset_0_0_6px_rgba(255,255,255,0.08)]' : 'ring-border'}`}
+                                    style={{ backgroundColor: displayHex }}
                                   />
                                 ) : (
-                                  <div className="w-8 h-8 rounded-full ring-1 ring-white/20 bg-muted flex items-center justify-center transition-transform duration-150 group-hover:scale-110">
-                                    <span className="text-xs text-muted-foreground">?</span>
+                                  <div className="w-8 h-8 rounded-full ring-1 ring-muted-foreground/40 ring-dashed bg-muted flex items-center justify-center transition-transform duration-150 group-hover:scale-110">
+                                    <span className="text-[10px] text-muted-foreground">?</span>
                                   </div>
                                 )}
                               </TableCell>
@@ -933,7 +954,8 @@ export default function HueForgeTDDatabase() {
                       const cardLimit = rowsPerPage === Infinity ? sorted.length : rowsPerPage;
                       return sorted.slice(0, cardLimit).map((f, idx) => {
                         const filamentUrl = `/filament/${f.product_handle || f.id}`;
-                        const isDark = f.color_hex && isColorDark(f.color_hex);
+                        const displayHex = f.color_hex || getFallbackHex(f.color_family);
+                        const darkSwatch = needsContrastRing(displayHex);
                         return (
                           <Link
                             key={f.id}
@@ -943,14 +965,14 @@ export default function HueForgeTDDatabase() {
                           >
                             {/* Top: swatch + name + brand */}
                             <div className="flex items-center gap-3 mb-3">
-                              {f.color_hex ? (
+                              {displayHex ? (
                                 <div
-                                  className={`w-10 h-10 rounded-lg ring-1 shrink-0 ${isDark ? 'ring-white/40' : 'ring-white/20'}`}
-                                  style={{ backgroundColor: f.color_hex }}
+                                  className={`w-10 h-10 rounded-lg ring-1 shrink-0 ${darkSwatch ? 'ring-muted-foreground/50 shadow-[inset_0_0_6px_rgba(255,255,255,0.08)]' : 'ring-border'}`}
+                                  style={{ backgroundColor: displayHex }}
                                 />
                               ) : (
-                                <div className="w-10 h-10 rounded-lg ring-1 ring-white/20 bg-muted flex items-center justify-center shrink-0">
-                                  <span className="text-xs text-muted-foreground">?</span>
+                                <div className="w-10 h-10 rounded-lg ring-1 ring-muted-foreground/40 ring-dashed bg-muted flex items-center justify-center shrink-0">
+                                  <span className="text-[10px] text-muted-foreground">?</span>
                                 </div>
                               )}
                               <div className="min-w-0">
@@ -1029,18 +1051,21 @@ export default function HueForgeTDDatabase() {
                     {group.emoji} {group.label}
                   </p>
                   <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1 max-md:flex max-md:overflow-x-auto max-md:snap-x max-md:snap-mandatory max-md:gap-4 max-md:pb-2">
-                    {group.items.map((f, i) => (
+                    {group.items.map((f, i) => {
+                      const displayHex = f.color_hex || getFallbackHex(f.color_family);
+                      const darkSwatch = needsContrastRing(displayHex);
+                      return (
                       <Link
                         key={f.id}
                         to={`/filament/${f.product_handle || f.id}`}
-                        className="relative bg-muted/20 border border-border rounded-xl p-4 hover:border-cyan-500/40 hover:bg-muted/40 transition-all duration-200 cursor-pointer group block max-md:min-w-[260px] max-md:snap-center max-md:shrink-0"
+                        className="relative bg-muted/20 border border-border rounded-xl p-4 hover:border-primary/40 hover:bg-muted/40 transition-all duration-200 cursor-pointer group block max-md:min-w-[260px] max-md:snap-center max-md:shrink-0"
                       >
-                        <span className="absolute -top-2 -left-2 bg-cyan-500 text-black text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center z-10">
+                        <span className="absolute -top-2 -left-2 bg-primary text-primary-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center z-10">
                           #{i + 1}
                         </span>
                         <div
-                          className="h-12 w-full rounded-lg mb-3 transition-shadow group-hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.1)]"
-                          style={{ backgroundColor: f.color_hex || 'hsl(var(--muted))' }}
+                          className={`h-12 w-full rounded-lg mb-3 transition-shadow group-hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.1)] ${darkSwatch ? 'border border-muted-foreground/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.05)]' : ''}`}
+                          style={{ backgroundColor: displayHex || 'hsl(var(--muted))' }}
                         />
                         <p className="text-sm font-semibold text-foreground truncate">{f.product_title}</p>
                         <p className="text-xs text-muted-foreground mb-2">{f.vendor}</p>
@@ -1053,7 +1078,8 @@ export default function HueForgeTDDatabase() {
                           )}
                         </div>
                       </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                   <button
                     onClick={() => {
