@@ -1941,6 +1941,15 @@ body.embed-mode .offline-banner {
   }
 }
 
+/* Compare CTA glow pulse */
+@keyframes compare-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 210, 211, 0.15); }
+  50% { box-shadow: 0 0 12px rgba(0, 210, 211, 0.35); }
+}
+.compare-cta-glow {
+  animation: compare-glow-pulse 2s ease-in-out infinite;
+}
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .deal-card-enter {
@@ -1949,5 +1958,9 @@ body.embed-mode .offline-banner {
   }
   .animate-deal-pulse {
     animation: none;
+  }
+  .compare-cta-glow {
+    animation: none;
+    box-shadow: 0 0 12px rgba(0, 210, 211, 0.25);
   }
 }
