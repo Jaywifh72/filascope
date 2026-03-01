@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { BuildPlateEmptyState } from "@/components/empty-states";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -204,9 +205,7 @@ export default function BuildPlateList() {
 
       {/* Grouped list */}
       {filteredBuildPlates.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          No build plates found matching your criteria
-        </div>
+        <BuildPlateEmptyState />
       ) : (
         <div className="space-y-0">
           {groupedBuildPlates.map(([brand, plates], index) => {

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { HotendEmptyState } from "@/components/empty-states";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -508,9 +509,7 @@ export default function HotendList() {
 
       {/* Hotends by Brand */}
       {filteredNozzles.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No hotends found matching your criteria</p>
-        </div>
+        <HotendEmptyState />
       ) : (
         <div className="space-y-0">
           {sortedBrands.map((brand, index) => {

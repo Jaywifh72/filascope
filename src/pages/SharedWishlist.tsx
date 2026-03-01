@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SharedWishlistEmptyState } from "@/components/empty-states";
 import { useParams, Link } from "react-router-dom";
 import { Heart, ExternalLink, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -99,9 +100,7 @@ const SharedWishlist = () => {
 
         {/* Items Grid */}
         {items.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            This wishlist is empty.
-          </div>
+          <SharedWishlistEmptyState />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => {

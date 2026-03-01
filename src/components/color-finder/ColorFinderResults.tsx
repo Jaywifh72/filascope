@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ColorFinderFilament } from '@/hooks/useColorFinderFilaments';
+import { ColorFinderEmptyState } from '@/components/empty-states';
 
 type SortMode = 'match' | 'price' | 'rated';
 
@@ -176,9 +177,7 @@ export function ColorFinderResults({
 
       {/* Results list */}
       {visibleResults.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p>No filaments found matching your criteria.</p>
-        </div>
+        <ColorFinderEmptyState />
       ) : (
         <div className="space-y-2">
           {visibleResults.map(f => (

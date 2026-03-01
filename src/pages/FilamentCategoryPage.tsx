@@ -12,6 +12,7 @@ import { materialNameToSlug } from "@/lib/materialSlugUtils";
 import { useFinderQuery, DEFAULT_PAGE_SIZE } from "@/hooks/useFinderQuery";
 import { FilamentCard } from "@/components/FilamentCard";
 import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
+import { FilamentsEmptyState } from "@/components/filament/FilamentsEmptyState";
 import { CrawlablePaginationBar } from "@/components/CrawlablePaginationBar";
 import { RelatedSearchesSection } from "@/components/seo/RelatedSearchesSection";
 import { RelatedQuestionsSection } from "@/components/seo/RelatedQuestionsSection";
@@ -819,9 +820,11 @@ export default function FilamentCategoryPage() {
             {isLoading ? (
               <FilamentCardSkeletonGrid count={24} />
             ) : groups.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
-                No filaments found for this category.
-              </div>
+              <FilamentsEmptyState
+                searchTerm=""
+                hasActiveFilters={false}
+                onClearFilters={() => {}}
+              />
             ) : (
               <>
                 <div
