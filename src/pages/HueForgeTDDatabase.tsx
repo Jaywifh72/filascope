@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
@@ -16,6 +16,8 @@ import {
   ChevronDown,
   RefreshCw,
   Palette,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -181,6 +183,30 @@ export default function HueForgeTDDatabase() {
   const [sortField, setSortField] = useState<SortField>('transmission_distance');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { formatPrice } = useCurrency();
+  const [viewTransition, setViewTransition] = useState(false);
+
+  // View mode: card vs table, persisted + mobile-default
+  const LS_VIEW_KEY = 'filascope-td-view-mode';
+  const [viewMode, setViewMode] = useState<'table' | 'card'>(() => {
+    try {
+      const saved = localStorage.getItem(LS_VIEW_KEY);
+      if (saved === 'card' || saved === 'table') return saved;
+    } catch {}
+    return typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table';
+  });
+
+  const switchView = useCallback((mode: 'table' | 'card') => {
+    if (mode === viewMode) return;
+    setViewTransition(true);
+    setTimeout(() => {
+      setViewMode(mode);
+      try { localStorage.setItem(LS_VIEW_KEY, mode); } catch {}
+      setTimeout(() => setViewTransition(false), 30);
+    }, 150);
+  }, [viewMode]);
+
+  // Card-view sort option
+  const [cardSort, setCardSort] = useState('td-asc');
 
   // TD range from URL params or default
   const [tdRange, setTdRange] = useState<[number, number]>(() => {
@@ -563,8 +589,43 @@ export default function HueForgeTDDatabase() {
             />
           </div>
 
-          <div className="text-sm text-muted-foreground mb-4">
-            Showing {Math.min(filteredData.length, 100)} of {filteredData.length} records
+          {/* View toggle + record count + card sort */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {Math.min(filteredData.length, 100)} of {filteredData.length} records
+            </div>
+            <div className="flex items-center gap-3">
+              {viewMode === 'card' && (
+                <Select value={cardSort} onValueChange={setCardSort}>
+                  <SelectTrigger className="w-40 h-8 text-xs">
+                    <SelectValue placeholder="Sort by…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="td-asc">TD Value ↑</SelectItem>
+                    <SelectItem value="td-desc">TD Value ↓</SelectItem>
+                    <SelectItem value="price-asc">Price ↑</SelectItem>
+                    <SelectItem value="price-desc">Price ↓</SelectItem>
+                    <SelectItem value="brand-az">Brand A–Z</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="flex items-center gap-1 bg-muted/40 rounded-lg p-1">
+                <button
+                  onClick={() => switchView('card')}
+                  className={`p-1.5 rounded transition-colors ${viewMode === 'card' ? 'bg-muted text-cyan-400' : 'text-muted-foreground hover:text-foreground'}`}
+                  aria-label="Card view"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => switchView('table')}
+                  className={`p-1.5 rounded transition-colors ${viewMode === 'table' ? 'bg-muted text-cyan-400' : 'text-muted-foreground hover:text-foreground'}`}
+                  aria-label="Table view"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
 
           {isLoading ? (
@@ -574,98 +635,156 @@ export default function HueForgeTDDatabase() {
               ))}
             </div>
           ) : (
-             <div className="border rounded-lg overflow-hidden max-h-[700px] overflow-y-auto">
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-10 border-b border-border shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
-                  <TableRow>
-                    <TableHead className="w-12">Color</TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('vendor')}
-                    >
-                      Brand <SortIndicator field="vendor" />
-                    </TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('material')}
-                    >
-                      Material <SortIndicator field="material" />
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('color_family')}
-                    >
-                      Color Family <SortIndicator field="color_family" />
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50 text-right"
-                      onClick={() => handleSort('transmission_distance')}
-                    >
-                      TD Value <SortIndicator field="transmission_distance" />
-                    </TableHead>
-                    <TableHead className="text-right">Price</TableHead>
-                    <TableHead className="w-20" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData.slice(0, 100).map((f, idx) => {
-                    const filamentUrl = `/filament/${f.product_handle || f.id}`;
-                    const isDark = f.color_hex && isColorDark(f.color_hex);
-                    return (
-                      <TableRow
-                        key={f.id}
-                        className={`group cursor-pointer transition-colors duration-150 hover:bg-muted/40 ${idx % 2 === 1 ? 'bg-muted/10' : ''}`}
-                        onClick={() => navigate(filamentUrl)}
-                      >
-                        <TableCell>
-                          {f.color_hex ? (
-                            <div
-                              className={`w-8 h-8 rounded-full ring-1 transition-transform group-hover:scale-125 ${isDark ? 'ring-white/40' : 'ring-white/20'}`}
-                              style={{ backgroundColor: f.color_hex }}
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full ring-1 ring-white/20 bg-muted flex items-center justify-center transition-transform group-hover:scale-125">
-                              <span className="text-xs text-muted-foreground">?</span>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium">{f.vendor}</TableCell>
-                        <TableCell className="max-w-[200px]">
-                          <span className="truncate block text-cyan-400 group-hover:text-cyan-300 group-hover:underline" title={f.product_title || ''}>
-                            {f.product_title}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{f.material}</Badge>
-                        </TableCell>
-                        <TableCell>{f.color_family}</TableCell>
-                        <TableCell className="text-right">
-                          {f.transmission_distance != null && (
-                            <TdValueCell value={f.transmission_distance} />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right text-sm">
-                          {f.variant_price != null ? formatPrice(f.variant_price) : '—'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                              <Link to={filamentUrl}>
-                                <ExternalLink className="w-4 h-4" />
-                              </Link>
-                            </Button>
-                          </div>
-                        </TableCell>
+            <div className={`transition-opacity duration-150 ${viewTransition ? 'opacity-0' : 'opacity-100'}`}>
+              {viewMode === 'table' ? (
+                /* ── Table View ── */
+                <div className="border rounded-lg overflow-hidden max-h-[700px] overflow-y-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10 border-b border-border shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
+                      <TableRow>
+                        <TableHead className="w-12">Color</TableHead>
+                        <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('vendor')}>
+                          Brand <SortIndicator field="vendor" />
+                        </TableHead>
+                        <TableHead>Product</TableHead>
+                        <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('material')}>
+                          Material <SortIndicator field="material" />
+                        </TableHead>
+                        <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('color_family')}>
+                          Color Family <SortIndicator field="color_family" />
+                        </TableHead>
+                        <TableHead className="cursor-pointer hover:bg-muted/50 text-right" onClick={() => handleSort('transmission_distance')}>
+                          TD Value <SortIndicator field="transmission_distance" />
+                        </TableHead>
+                        <TableHead className="text-right">Price</TableHead>
+                        <TableHead className="w-20" />
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              {filteredData.length > 100 && (
-                <div className="p-4 text-center text-sm text-muted-foreground border-t">
-                  Showing 100 of {filteredData.length} results. Use filters to narrow down or export
-                  full dataset.
+                    </TableHeader>
+                    <TableBody>
+                      {filteredData.slice(0, 100).map((f, idx) => {
+                        const filamentUrl = `/filament/${f.product_handle || f.id}`;
+                        const isDark = f.color_hex && isColorDark(f.color_hex);
+                        return (
+                          <TableRow
+                            key={f.id}
+                            className={`group cursor-pointer transition-colors duration-150 hover:bg-muted/40 ${idx % 2 === 1 ? 'bg-muted/10' : ''}`}
+                            onClick={() => navigate(filamentUrl)}
+                          >
+                            <TableCell>
+                              {f.color_hex ? (
+                                <div
+                                  className={`w-8 h-8 rounded-full ring-1 transition-transform group-hover:scale-125 ${isDark ? 'ring-white/40' : 'ring-white/20'}`}
+                                  style={{ backgroundColor: f.color_hex }}
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full ring-1 ring-white/20 bg-muted flex items-center justify-center transition-transform group-hover:scale-125">
+                                  <span className="text-xs text-muted-foreground">?</span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-medium">{f.vendor}</TableCell>
+                            <TableCell className="max-w-[200px]">
+                              <span className="truncate block text-cyan-400 group-hover:text-cyan-300 group-hover:underline" title={f.product_title || ''}>
+                                {f.product_title}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{f.material}</Badge>
+                            </TableCell>
+                            <TableCell>{f.color_family}</TableCell>
+                            <TableCell className="text-right">
+                              {f.transmission_distance != null && <TdValueCell value={f.transmission_distance} />}
+                            </TableCell>
+                            <TableCell className="text-right text-sm">
+                              {f.variant_price != null ? formatPrice(f.variant_price) : '—'}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="icon" asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                  <Link to={filamentUrl}>
+                                    <ExternalLink className="w-4 h-4" />
+                                  </Link>
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                  {filteredData.length > 100 && (
+                    <div className="p-4 text-center text-sm text-muted-foreground border-t">
+                      Showing 100 of {filteredData.length} results. Use filters to narrow down or export full dataset.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* ── Card View ── */
+                <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {(() => {
+                      let sorted = [...filteredData];
+                      switch (cardSort) {
+                        case 'td-desc': sorted.sort((a, b) => (b.transmission_distance ?? 0) - (a.transmission_distance ?? 0)); break;
+                        case 'price-asc': sorted.sort((a, b) => (a.variant_price ?? 999) - (b.variant_price ?? 999)); break;
+                        case 'price-desc': sorted.sort((a, b) => (b.variant_price ?? 0) - (a.variant_price ?? 0)); break;
+                        case 'brand-az': sorted.sort((a, b) => (a.vendor ?? '').localeCompare(b.vendor ?? '')); break;
+                        default: sorted.sort((a, b) => (a.transmission_distance ?? 0) - (b.transmission_distance ?? 0));
+                      }
+                      return sorted.slice(0, 100).map((f, idx) => {
+                        const filamentUrl = `/filament/${f.product_handle || f.id}`;
+                        const isDark = f.color_hex && isColorDark(f.color_hex);
+                        return (
+                          <Link
+                            key={f.id}
+                            to={filamentUrl}
+                            className="bg-muted/20 border border-border rounded-xl p-4 hover:border-cyan-500/30 transition-all group block animate-fade-in"
+                            style={{ animationDelay: `${Math.min(idx * 30, 300)}ms`, animationFillMode: 'backwards' }}
+                          >
+                            {/* Top: swatch + name + brand */}
+                            <div className="flex items-center gap-3 mb-3">
+                              {f.color_hex ? (
+                                <div
+                                  className={`w-10 h-10 rounded-lg ring-1 shrink-0 ${isDark ? 'ring-white/40' : 'ring-white/20'}`}
+                                  style={{ backgroundColor: f.color_hex }}
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg ring-1 ring-white/20 bg-muted flex items-center justify-center shrink-0">
+                                  <span className="text-xs text-muted-foreground">?</span>
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-semibold text-foreground truncate text-sm group-hover:text-cyan-400 transition-colors">{f.product_title}</p>
+                                <p className="text-xs text-muted-foreground">{f.vendor}</p>
+                              </div>
+                            </div>
+                            {/* Middle: badges */}
+                            <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                              {f.material && (
+                                <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded">{f.material}</span>
+                              )}
+                              {f.color_family && (
+                                <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded">{f.color_family}</span>
+                              )}
+                              {f.transmission_distance != null && <TdValueCell value={f.transmission_distance} />}
+                            </div>
+                            {/* Bottom: price + link */}
+                            <div className="flex justify-between items-center">
+                              <span className="font-semibold text-foreground text-sm">
+                                {f.variant_price != null ? formatPrice(f.variant_price) : '—'}
+                              </span>
+                              <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-cyan-400 transition-colors" />
+                            </div>
+                          </Link>
+                        );
+                      });
+                    })()}
+                  </div>
+                  {filteredData.length > 100 && (
+                    <div className="p-4 text-center text-sm text-muted-foreground mt-3">
+                      Showing 100 of {filteredData.length} results. Use filters to narrow down or export full dataset.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
