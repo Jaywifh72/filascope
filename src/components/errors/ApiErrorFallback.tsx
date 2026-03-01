@@ -1,4 +1,4 @@
-import { AlertTriangle, RefreshCw, WifiOff, ServerCrash } from "lucide-react";
+import { AlertTriangle, AlertCircle, RefreshCw, WifiOff, ServerCrash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -155,13 +155,13 @@ export function InlineError({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center gap-2 text-sm text-muted-foreground", className)}>
-      <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
-      <span>{message}</span>
+    <div className={cn("inline-flex items-center gap-1.5", className)}>
+      <AlertCircle className="w-3.5 h-3.5 text-amber-500/70 flex-shrink-0" />
+      <span className="text-xs text-muted-foreground">{message}</span>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="text-primary hover:underline text-sm font-medium"
+          className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline cursor-pointer font-medium"
         >
           Retry
         </button>
