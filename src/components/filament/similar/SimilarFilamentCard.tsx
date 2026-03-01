@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { getFilamentHref } from "@/lib/filamentUrl";
-import { Star, ThermometerSun, Check, Plus, TrendingDown, TrendingUp } from "lucide-react";
+import { Star, ThermometerSun, Check, Plus, TrendingDown, TrendingUp, ArrowLeftRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +53,18 @@ interface SimilarFilamentCardProps {
   currentPricePerKg?: number | null;
   /** Show a prominent color swatch (for same-color matches) */
   showColorSwatch?: boolean;
+  /** Callback when the "vs" quick-compare button is clicked */
+  onQuickCompare?: (filament: SimilarFilamentData) => void;
 }
+
+const REASON_SUBTITLES: Record<SimilarityReason, string> = {
+  same_material: "Same formula, different brand",
+  same_brand: "From the same manufacturer",
+  similar_price: "Similar quality, lower price",
+  budget_pick: "Better value alternative",
+  premium_pick: "Higher-rated alternative",
+  same_color: "Matching color, different brand",
+};
 
 const REASON_BADGES: Record<SimilarityReason, { label: string; className: string }> = {
   same_material: { label: "Same Material", className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
@@ -80,7 +91,7 @@ function getMaterialColor(material: string | null): string {
   return MATERIAL_COLORS[base] || "bg-violet-500/20 text-violet-400 border-violet-500/30";
 }
 
-export function SimilarFilamentCard({ filament, showCompareToggle = true, currentPricePerKg, showColorSwatch = false }: SimilarFilamentCardProps) {
+export function SimilarFilamentCard({ filament, showCompareToggle = true, currentPricePerKg, showColorSwatch = false, onQuickCompare }: SimilarFilamentCardProps) {
   const [imageError, setImageError] = useState(false);
   const { items, addItem, removeItem } = useCompare();
   const { currency, convertPrice, hasRates, formatPrice } = useRegion();
@@ -180,15 +191,44 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
         </Badge>
       )}
 
-      {/* Why Similar Badge */}
+      {/* Quick Compare "vs" button */}
+      {onQuickCompare && !filament.isCurrent && (
+        <div className="absolute top-3 left-3 z-10">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onQuickCompare(filament);
+                  }}
+                  className={cn(
+                    "w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all",
+                    "bg-background/80 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10"
+                  )}
+                >
+                  <ArrowLeftRight className="w-3 h-3 text-muted-foreground" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">Quick compare</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      )}
+
+      {/* Why Similar Badge + Subtitle */}
       {filament.similarityReason && !filament.isCurrent && (
-        <div className="absolute -top-2.5 left-3 z-10">
+        <div className="absolute -top-2.5 left-3 z-10 flex flex-col">
           <Badge
             variant="outline"
             className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", REASON_BADGES[filament.similarityReason].className)}
           >
             {REASON_BADGES[filament.similarityReason].label}
           </Badge>
+          <span className="text-[10px] text-muted-foreground leading-tight mt-0.5 pl-0.5">
+            {REASON_SUBTITLES[filament.similarityReason]}
+          </span>
         </div>
       )}
 

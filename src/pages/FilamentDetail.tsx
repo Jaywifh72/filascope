@@ -51,6 +51,8 @@ import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { FilamentFAQSchema } from "@/components/seo/FilamentFAQSchema";
 import { cleanFilamentDisplayName, getProductLineName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
+import { ExplorationTrail, pushToTrail } from "@/components/filament/ExplorationTrail";
+import { SimilarScrollHint } from "@/components/filament/SimilarScrollHint";
 import { RelatedFilaments } from "@/components/filament/RelatedFilaments";
 import { BrandQuickLinks } from "@/components/filament/BrandQuickLinks";
 import { RelatedGuidesLinks } from "@/components/filament/RelatedGuidesLinks";
@@ -391,6 +393,13 @@ const { id } = useParams();
         image: filament.featured_image || null,
         url: `/filament/${filament.product_handle || filament.id}`,
         type: "filament",
+      });
+      // Record exploration trail for breadcrumb
+      pushToTrail({
+        id: filament.id,
+        title: filament.product_title || "Unknown",
+        vendor: filament.vendor,
+        handle: filament.product_handle,
       });
 
       // GA4 product view (legacy custom event — preserved for Explore reports)
@@ -968,6 +977,8 @@ const { id } = useParams();
         )}
 
         <BackToResults />
+        {/* Exploration Trail Breadcrumb */}
+        <ExplorationTrail currentId={displayFilament.id} />
         <DetailBreadcrumb
           segments={[
             { label: "Filaments", href: "/filaments" },
@@ -1234,6 +1245,9 @@ const { id } = useParams();
           transmissionDistance={(displayFilament as any).transmission_distance ?? null}
         />
       </div>
+
+      {/* Floating "See Similar" scroll hint (desktop only) */}
+      <SimilarScrollHint count={4} />
 
       <FilamentMobileBottomBar
         filamentId={displayFilament.id}
