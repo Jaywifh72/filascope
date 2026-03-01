@@ -1,9 +1,10 @@
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Breadcrumbs, BreadcrumbSchema } from '@/components/seo';
 import { Button } from '@/components/ui/button';
-import { Layers, RotateCcw } from 'lucide-react';
+import { Layers, RotateCcw, Clipboard, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLayerPreviewState } from '@/components/hueforge/useLayerPreviewState';
@@ -32,6 +33,27 @@ export default function HueForgeLayerPreview() {
   });
 
   const { state, dispatch } = useLayerPreviewState(true);
+  const [copied, setCopied] = useState(false);
+
+  const copyLayerConfig = useCallback(() => {
+    if (!filaments) return;
+    const parts = state.layers
+      .map((l, i) => {
+        if (!l.filamentId) return null;
+        const f = filaments.find((fi) => fi.id === l.filamentId);
+        if (!f) return null;
+        const label = i === 0 ? 'Base' : i === state.layers.length - 1 ? 'Top' : `Mid`;
+        return `${label}(${l.layerCount}x): ${f.vendor} ${f.product_title} TD ${f.transmission_distance?.toFixed(2) ?? '?'}`;
+      })
+      .filter(Boolean);
+    if (!parts.length) return;
+    const text = `HueForge Layer Setup: ${parts.join(' | ')}`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [state.layers, filaments]);
+
+  const hasFilaments = state.layers.some((l) => l.filamentId);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
@@ -85,16 +107,29 @@ export default function HueForgeLayerPreview() {
           <div className="grid md:grid-cols-5 gap-8">
             {/* Left: Slots + Presets + Tips */}
             <div className="md:col-span-2 space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <LayerPreviewPresets filaments={filaments} dispatch={dispatch} />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => dispatch({ type: 'CLEAR' })}
-                  className="shrink-0 ml-2"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset
-                </Button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {hasFilaments && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={copyLayerConfig}
+                      className="text-xs gap-1"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5" /> : <Clipboard className="w-3.5 h-3.5" />}
+                      {copied ? 'Copied!' : 'Copy Config'}
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => dispatch({ type: 'CLEAR' })}
+                    className="shrink-0"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset
+                  </Button>
+                </div>
               </div>
               <LayerSlotSelector layers={state.layers} filaments={filaments} dispatch={dispatch} />
               <LayerPreviewTips />
@@ -102,7 +137,9 @@ export default function HueForgeLayerPreview() {
 
             {/* Right: Visualization + Metrics */}
             <div className="md:col-span-3 space-y-8">
-              <LayerStackVisualization layers={state.layers} filaments={filaments} />
+              <div className="rounded-xl border border-border/50 bg-card/30 p-6">
+                <LayerStackVisualization layers={state.layers} filaments={filaments} />
+              </div>
               <LayerMetricsTable layers={state.layers} filaments={filaments} />
             </div>
           </div>

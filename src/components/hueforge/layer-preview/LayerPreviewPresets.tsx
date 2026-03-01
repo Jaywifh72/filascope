@@ -1,10 +1,12 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 import type { TDFilament } from '../SubstituteFilamentPicker';
 import type { LayerSlot } from '../useLayerPreviewState';
 
 interface PresetDef {
   label: string;
   description: string;
+  toastMsg: string;
   specs: { colorFamily: string; tdApprox: number; layerCount: number }[];
 }
 
@@ -12,6 +14,7 @@ const PRESETS: PresetDef[] = [
   {
     label: 'Classic Portrait',
     description: '4 layers — Black base, Brown, Peach, White top',
+    toastMsg: 'Loaded Portrait preset — 3 base, 2 mid-tone, 1 peach, 1 highlight',
     specs: [
       { colorFamily: 'Black', tdApprox: 0.55, layerCount: 3 },
       { colorFamily: 'Brown', tdApprox: 1.98, layerCount: 2 },
@@ -22,6 +25,7 @@ const PRESETS: PresetDef[] = [
   {
     label: 'High Contrast Duo',
     description: '2 layers — Black base, White top',
+    toastMsg: 'Loaded High Contrast preset — 4 base, 2 highlight',
     specs: [
       { colorFamily: 'Black', tdApprox: 0.55, layerCount: 4 },
       { colorFamily: 'White', tdApprox: 4.22, layerCount: 2 },
@@ -30,6 +34,7 @@ const PRESETS: PresetDef[] = [
   {
     label: 'Landscape',
     description: '3 layers — Black base, Green, Blue top',
+    toastMsg: 'Loaded Landscape preset — 3 base, 2 green, 1 blue',
     specs: [
       { colorFamily: 'Black', tdApprox: 0.55, layerCount: 3 },
       { colorFamily: 'Green', tdApprox: 1.48, layerCount: 2 },
@@ -43,7 +48,6 @@ function findClosest(filaments: TDFilament[], colorFamily: string, tdTarget: num
     (f) => f.color_family?.toLowerCase() === colorFamily.toLowerCase() && f.transmission_distance != null
   );
   if (!candidates.length) {
-    // Fallback: any filament close to TD
     const all = filaments.filter((f) => f.transmission_distance != null);
     if (!all.length) return null;
     return all.reduce((best, f) =>
@@ -69,6 +73,7 @@ export function LayerPreviewPresets({ filaments, dispatch }: Props) {
       return { filamentId: match?.id ?? null, layerCount: spec.layerCount };
     });
     dispatch({ type: 'LOAD_PRESET', layers });
+    toast.success(preset.toastMsg, { duration: 1500 });
   };
 
   return (
