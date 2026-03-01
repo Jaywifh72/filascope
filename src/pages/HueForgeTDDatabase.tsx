@@ -224,6 +224,23 @@ export default function HueForgeTDDatabase() {
     }, 150);
   }, [viewMode]);
 
+  // Rows per page, persisted
+  const LS_ROWS_KEY = 'filascope-td-rows-per-page';
+  const [rowsPerPage, setRowsPerPage] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(LS_ROWS_KEY);
+      if (saved === 'all') return Infinity;
+      const n = parseInt(saved || '100', 10);
+      return [25, 50, 100].includes(n) ? n : 100;
+    } catch { return 100; }
+  });
+
+  const handleRowsPerPageChange = useCallback((val: string) => {
+    const v = val === 'all' ? Infinity : parseInt(val, 10);
+    setRowsPerPage(v);
+    try { localStorage.setItem(LS_ROWS_KEY, val); } catch {}
+  }, []);
+
   // Card-view sort option
   const [cardSort, setCardSort] = useState('td-asc');
 
@@ -654,9 +671,17 @@ export default function HueForgeTDDatabase() {
 
           {/* View toggle + record count + card sort */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {Math.min(filteredData.length, 100)} of {filteredData.length} records
-            </div>
+            {(() => {
+              const limit = rowsPerPage === Infinity ? filteredData.length : rowsPerPage;
+              const shown = Math.min(filteredData.length, limit);
+              const totalDb = filaments?.length || 0;
+              const isFiltered = hasActiveFilters;
+              return (
+                <div className="text-sm text-muted-foreground">
+                  Showing {shown} of {filteredData.length}{isFiltered ? ` matching records (${totalDb} total)` : ' records'}
+                </div>
+              );
+            })()}
             <div className="flex items-center gap-3">
               {viewMode === 'card' && (
                 <Select value={cardSort} onValueChange={setCardSort}>
@@ -764,7 +789,8 @@ export default function HueForgeTDDatabase() {
                     <TableBody>
                       {(() => {
                         const rows: React.ReactNode[] = [];
-                        const sliced = filteredData.slice(0, 100);
+                        const limit = rowsPerPage === Infinity ? filteredData.length : rowsPerPage;
+                        const sliced = filteredData.slice(0, limit);
                         let passedMidTone = false;
                         let passedTranslucent = false;
                         let passedVeryTranslucent = false;
@@ -858,11 +884,38 @@ export default function HueForgeTDDatabase() {
                       })()}
                     </TableBody>
                   </Table>
-                  {filteredData.length > 100 && (
-                    <div className="p-4 text-center text-sm text-muted-foreground border-t">
-                      Showing 100 of {filteredData.length} results. Use filters to narrow down or export full dataset.
-                    </div>
-                  )}
+                  {(() => {
+                    const limit = rowsPerPage === Infinity ? filteredData.length : rowsPerPage;
+                    const shown = Math.min(filteredData.length, limit);
+                    if (shown >= filteredData.length) return null;
+                    const remaining = filteredData.length - shown;
+                    return (
+                      <div className="flex items-center justify-between py-3 px-4 border-t border-border bg-muted/30 rounded-b-lg">
+                        <span className="text-sm text-muted-foreground">
+                          Showing {shown} of {filteredData.length} results
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleRowsPerPageChange('all')}
+                            className="text-sm text-primary hover:text-primary/80 underline-offset-2 hover:underline cursor-pointer"
+                          >
+                            Show remaining {remaining} →
+                          </button>
+                          <Select value={rowsPerPage === Infinity ? 'all' : String(rowsPerPage)} onValueChange={handleRowsPerPageChange}>
+                            <SelectTrigger className="w-28 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="25">25 rows</SelectItem>
+                              <SelectItem value="50">50 rows</SelectItem>
+                              <SelectItem value="100">100 rows</SelectItem>
+                              <SelectItem value="all">All rows</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 /* ── Card View ── */
@@ -877,7 +930,8 @@ export default function HueForgeTDDatabase() {
                         case 'brand-az': sorted.sort((a, b) => (a.vendor ?? '').localeCompare(b.vendor ?? '')); break;
                         default: sorted.sort((a, b) => (a.transmission_distance ?? 0) - (b.transmission_distance ?? 0));
                       }
-                      return sorted.slice(0, 100).map((f, idx) => {
+                      const cardLimit = rowsPerPage === Infinity ? sorted.length : rowsPerPage;
+                      return sorted.slice(0, cardLimit).map((f, idx) => {
                         const filamentUrl = `/filament/${f.product_handle || f.id}`;
                         const isDark = f.color_hex && isColorDark(f.color_hex);
                         return (
@@ -926,11 +980,25 @@ export default function HueForgeTDDatabase() {
                       });
                     })()}
                   </div>
-                  {filteredData.length > 100 && (
-                    <div className="p-4 text-center text-sm text-muted-foreground mt-3">
-                      Showing 100 of {filteredData.length} results. Use filters to narrow down or export full dataset.
-                    </div>
-                  )}
+                  {(() => {
+                    const limit = rowsPerPage === Infinity ? filteredData.length : rowsPerPage;
+                    const shown = Math.min(filteredData.length, limit);
+                    if (shown >= filteredData.length) return null;
+                    const remaining = filteredData.length - shown;
+                    return (
+                      <div className="flex items-center justify-between py-3 px-4 border border-border bg-muted/30 rounded-lg mt-3">
+                        <span className="text-sm text-muted-foreground">
+                          Showing {shown} of {filteredData.length} results
+                        </span>
+                        <button
+                          onClick={() => handleRowsPerPageChange('all')}
+                          className="text-sm text-primary hover:text-primary/80 underline-offset-2 hover:underline cursor-pointer"
+                        >
+                          Show remaining {remaining} →
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
