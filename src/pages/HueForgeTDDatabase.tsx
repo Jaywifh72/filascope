@@ -18,6 +18,7 @@ import {
   Palette,
   LayoutGrid,
   List,
+  Package,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -1091,9 +1092,14 @@ export default function HueForgeTDDatabase() {
                           #{i + 1}
                         </span>
                         <div
-                          className={`h-12 w-full rounded-lg mb-3 transition-shadow group-hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.1)] ${darkSwatch ? 'border border-muted-foreground/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.05)]' : ''}`}
+                          className="relative h-12 w-full rounded-lg mb-3 border border-white/10 overflow-hidden transition-all group-hover:border-white/20"
                           style={{ backgroundColor: displayHex || 'hsl(var(--muted))' }}
-                        />
+                        >
+                          {/* Subtle diagonal gradient for depth on dark swatches */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/[0.05] pointer-events-none" />
+                          {/* Spool watermark */}
+                          <Package className="absolute inset-0 m-auto w-6 h-6 text-white opacity-[0.15] pointer-events-none" />
+                        </div>
                         <p className="text-sm font-semibold text-foreground truncate">{f.product_title}</p>
                         <p className="text-xs text-muted-foreground mb-2">{f.vendor}</p>
                         <div className="flex items-center justify-between">
