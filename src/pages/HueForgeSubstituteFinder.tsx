@@ -4,6 +4,7 @@ import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Breadcrumbs, BreadcrumbSchema } from '@/components/seo';
 import { TdSubstituteFinder } from '@/components/hueforge/TdSubstituteFinder';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
 
 export default function HueForgeSubstituteFinder() {
   const { data: filaments, isLoading } = useQuery({
@@ -42,6 +43,7 @@ export default function HueForgeSubstituteFinder() {
           { name: 'Substitute Finder', url: 'https://filascope.com/hueforge-filament-substitute-finder' },
         ]}
       />
+      <HueForgeToolsNav />
 
       <div className="max-w-5xl mx-auto px-4 py-12">
         {isLoading ? (

@@ -48,6 +48,7 @@ import { trackTDSearch as trackGA4TDSearch } from '@/lib/analytics';
 import { TdRangeSlider } from '@/components/hueforge/TdRangeSlider';
 import { TdDistributionChart } from '@/components/hueforge/TdDistributionChart';
 import { TdValueCell } from '@/components/hueforge/TdValueCell';
+import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
 
 // ── FAQ data ──────────────────────────────────────────────────────────
 const faqData = [
@@ -368,6 +369,7 @@ export default function HueForgeTDDatabase() {
         items={[{ name: "HueForge TD Database", url: "/hueforge-td-database" }]}
         className="max-w-7xl mx-auto px-4 pt-6 pb-1"
       />
+      <HueForgeToolsNav onExportCsv={exportCSV} />
       <DatasetSchema
         name="HueForge Transmissivity Distance (TD) Database"
         description="The world's most comprehensive database of transmissivity distance (TD) values for 3D printing filaments used in HueForge lithophane and multicolor printing. Includes TD values, colors, materials, and pricing across 48+ brands."
@@ -477,43 +479,6 @@ export default function HueForgeTDDatabase() {
             </button>
           </div>
 
-          <div className="flex justify-center gap-3 flex-wrap">
-            <Button
-              onClick={() =>
-                document.getElementById('td-browser')?.scrollIntoView({ behavior: 'smooth' })
-              }
-            >
-              <Search className="w-4 h-4 mr-2" />
-              Find Filaments by TD Value
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/hueforge-filament-substitute-finder">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Find Substitutes
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/hueforge-layer-preview">
-                <Sun className="w-4 h-4 mr-2" />
-                Layer Preview
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/hueforge-color-matcher">
-                <Palette className="w-4 h-4 mr-2" />
-                Match Colors
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/hueforge-project-planner">
-                🧙 Plan a Project
-              </Link>
-            </Button>
-            <Button variant="outline" onClick={exportCSV} disabled={!filteredData.length}>
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
-          </div>
         </section>
 
         {/* ── Browse Filaments Table (MOVED UP) ────────────────────── */}

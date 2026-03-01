@@ -10,6 +10,7 @@ import { PlannerStepColorCount } from '@/components/hueforge/project-planner/Pla
 import { PlannerStepPickFilaments } from '@/components/hueforge/project-planner/PlannerStepPickFilaments';
 import { PlannerStepReview } from '@/components/hueforge/project-planner/PlannerStepReview';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
 
 const STEP_LABELS = ['Project Type', 'Colors', 'Filaments', 'Plan'];
 
@@ -63,6 +64,7 @@ export default function HueForgeProjectPlanner() {
         ]}
         className="max-w-5xl mx-auto px-4 pt-6 pb-1"
       />
+      <HueForgeToolsNav />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <WizardStepIndicator
