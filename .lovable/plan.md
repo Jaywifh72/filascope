@@ -1,110 +1,130 @@
 
 
-# Populate TD Values Edge Function
+# Admin TD Value Management Panel
 
 ## Overview
 
-Create a new edge function `populate-td-values` that discovers HueForge Transmission Distance (TD) values and writes them to `filaments.transmission_distance`. Also create a `td_reference_values` reference table to store curated/community TD data for matching.
+Create a full-featured admin page at `/admin/td-management` for managing HueForge TD values across all filaments. The page integrates with the existing `populate-td-values` edge function and the `td_reference_values` table. A new `td_population_log` table will track all TD value changes for auditing.
 
 ---
 
 ## Database Changes
 
-### New Table: `td_reference_values`
+### New Table: `td_population_log`
 
-Stores curated TD values from the HueForge community and brand specs for matching against filaments.
+Tracks every TD value change (auto or manual) for auditing.
 
 ```text
-td_reference_values
+td_population_log
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
-  brand_name      text NOT NULL          -- e.g. "Bambu Lab"
-  material_type   text NOT NULL          -- e.g. "PLA Basic"
-  color_name      text NOT NULL          -- e.g. "White"
-  color_hex       text                   -- optional, for tighter matching
-  td_value        numeric NOT NULL       -- the TD value (0.1-15.0)
-  source          text NOT NULL          -- 'hueforge_community', 'brand_published', 'user_measured'
-  confidence      text DEFAULT 'medium'  -- 'high', 'medium', 'low'
+  filament_id     uuid REFERENCES filaments(id) ON DELETE CASCADE
+  td_value        numeric NOT NULL
+  previous_value  numeric
+  source          text NOT NULL      -- 'reference_table', 'page_scrape', 'manual', 'csv_import'
+  confidence      text DEFAULT 'medium'
+  status          text DEFAULT 'applied'  -- 'applied', 'skipped', 'error', 'dry-run'
   notes           text
   created_at      timestamptz DEFAULT now()
-  updated_at      timestamptz DEFAULT now()
+  created_by      uuid REFERENCES auth.users(id)
 ```
 
-**Unique constraint**: `(LOWER(brand_name), LOWER(material_type), LOWER(color_name))` to prevent duplicates.
-
-**RLS**: Public read access (no auth needed for lookups). Admin-only write via service role key in edge function.
+RLS: Read/write restricted to admin role via `has_role(auth.uid(), 'admin')`.
 
 ---
 
-## Edge Function: `populate-td-values/index.ts`
+## New Files
 
-### Parameters (POST body)
+### 1. `src/pages/admin/TdManagement.tsx` -- Main Page
 
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| `mode` | string | `'discovery'` | `'discovery'`, `'single-brand'`, or `'dry-run'` |
-| `brand_slug` | string | null | Filter to single brand (vendor ILIKE match) |
-| `limit` | number | 50 | Max filaments to process per invocation |
-| `force_refresh` | boolean | false | Re-check filaments that already have TD values |
-| `source` | string | `'all'` | `'reference-table'`, `'page-scrape'`, or `'all'` |
+Full-width admin page with four tabs:
 
-### Processing Pipeline
+**Tab: Overview (default)**
+- Stats header cards: Total filaments, With TD, Without TD, Coverage %, fetched via aggregate queries
+- Coverage by material: mini horizontal bar chart showing % with TD for each material type
+- Coverage by brand: top 10 brands table with filament count and TD %
 
-1. **Query filaments** needing TD values (where `transmission_distance IS NULL`, filtered by common materials, ordered by vendor)
+**Tab: Filaments**
+- Searchable, filterable, paginated table of filaments showing: Vendor, Title, Material, Color Family, Color Hex swatch, TD Value (inline editable), Last Updated
+- Filters: search input, material dropdown, brand dropdown, TD status (All/Has TD/Missing TD)
+- Sort by vendor, material, TD value, color family
+- Inline editing: click TD cell to toggle input, validate 0.1--15.0, update on Enter/blur, toast confirmation
+- 50 rows per page with pagination controls
 
-2. **Source A -- Reference Table Lookup** (highest priority):
-   - For each filament, query `td_reference_values` matching on:
-     - Brand: `LOWER(vendor) = LOWER(brand_name)` or fuzzy substring match
-     - Color: `LOWER(product_title) ILIKE '%' || LOWER(color_name) || '%'` or `LOWER(color_family) = LOWER(color_name)`
-     - Material: exact match on material type
-   - If a match is found with `confidence = 'high'`, auto-apply. For `'medium'`, apply but flag in results.
+**Tab: Reference Values**
+- CRUD table for `td_reference_values`
+- Add dialog with form: Brand Name, Color Name, Material (dropdown), TD Value (number 0.1--15.0), Source (dropdown), Confidence, Notes
+- Edit/Delete per row
+- Bulk delete for selected rows
 
-3. **Source B -- Product Page Scraping** (fallback):
-   - For filaments with a `product_url` and no reference table match, fetch the page via Firecrawl (using `FIRECRAWL_API_KEY` from env)
-   - Search the markdown/HTML for TD patterns:
-     - Regex: `/(?:TD|transmission\s*distance|transmissivity)\s*[:=]?\s*(\d+\.?\d*)\s*(?:mm)?/gi`
-     - Also check for structured table rows containing "TD" or "Transmission"
-   - Validate extracted value is in 0.1--15.0 range
+**Tab: Population Log**
+- Read-only table from `td_population_log`
+- Columns: Timestamp, Filament name (link), TD Value, Previous Value, Source, Confidence, Status
+- Filters: status, source, date range
 
-4. **Write results**: For each match, update `filaments.transmission_distance = td_value` and set a `td_source` field if one exists (or note the source in the response).
+### 2. `src/components/admin/td-management/TdStatsHeader.tsx`
 
-5. **Return summary**: JSON with counts of matched, updated, skipped, errors, and a details array.
+Stats cards component showing coverage metrics. Uses 4 Card components in a grid with count queries.
 
-### Rate Limiting and Timeouts
+### 3. `src/components/admin/td-management/TdFilamentsTable.tsx`
 
-- Process filaments sequentially with 500ms delay between Firecrawl calls
-- Total function timeout: use `EdgeRuntime.waitUntil()` pattern for background processing (return job summary immediately after reference table matches, run page scraping in background)
-- Cap Firecrawl calls at 20 per invocation to stay within API limits
+The main filaments table with search, filters, inline editing, pagination. Uses Shadcn Table, Input, Select, Badge. Inline edit uses local state toggled per-row, validates on blur/Enter, calls `supabase.from('filaments').update()`, logs to `td_population_log`, and invalidates query cache.
 
-### Authentication
+### 4. `src/components/admin/td-management/TdReferenceTable.tsx`
 
-- Require admin auth (same pattern as other sync functions: check `Authorization` header, verify `has_role('admin')`)
+CRUD table for `td_reference_values`. Add/Edit via Dialog with form fields. Delete with confirmation.
 
-### Dry-Run Mode
+### 5. `src/components/admin/td-management/TdPopulationLog.tsx`
 
-- When `mode = 'dry-run'`, do all matching but don't write to the database. Return what would have been updated.
+Read-only log viewer with filters for status and source.
+
+### 6. `src/components/admin/td-management/TdActionToolbar.tsx`
+
+Action buttons bar:
+- **Run TD Discovery**: Button with dropdown for brand selection + dry-run toggle. Calls `supabase.functions.invoke('populate-td-values', { body: { mode, brand_slug, limit } })`. Shows results in a dialog/inline panel.
+- **Bulk Import CSV**: Opens dialog with file upload, parses CSV client-side, shows preview table, on confirm inserts into `td_reference_values` and attempts matching updates to `filaments`.
+- **Export Missing**: Downloads CSV of filaments where `transmission_distance IS NULL` using the existing `downloadCSV` utility from `src/lib/csvExport.ts`.
+
+### 7. `src/hooks/useTdManagement.ts`
+
+Custom hooks for TD management queries:
+- `useTdStats()` -- aggregate counts
+- `useTdFilaments(filters, page)` -- paginated filaments query
+- `useTdReferenceValues()` -- reference table CRUD
+- `useTdPopulationLog(filters)` -- log entries
+- `useUpdateTdValue()` -- mutation for inline edit
+- `useRunTdDiscovery()` -- mutation for edge function invocation
 
 ---
 
-## Seed Data for `td_reference_values`
+## Modified Files
 
-Populate with well-known TD values from the HueForge community. Initial seed of ~50-100 values covering major brands:
+### `src/App.tsx`
+- Add lazy import: `const AdminTdManagement = lazy(() => import("./pages/admin/TdManagement"))`
+- Add route: `<Route path="/admin/td-management" element={<AdminNewLayoutModule><AdminTdManagement /></AdminNewLayoutModule>} />`
 
-- **Bambu Lab**: PLA Basic (White: 4.29, Black: 0.56, Red: 2.06, etc.), PLA Matte, PETG
-- **Polymaker**: PolyTerra PLA (comprehensive TD data published), PolyLite PLA
-- **eSUN**: PLA+ common colors
-- **Prusament**: PLA (Galaxy Black: 0.84, etc.)
-- **Hatchbox**: PLA common colors
-
-These will be inserted via the migration tool as part of the table creation.
+### `src/components/admin/AdminNewSidebar.tsx`
+- Add TD Management to the "Content" nav group:
+  ```text
+  { title: 'TD Management', href: '/admin/td-management', icon: Sun }
+  ```
+- Import `Sun` from lucide-react (already imported in other admin components)
 
 ---
 
 ## Files Summary
 
-| Action | File | Description |
-|--------|------|-------------|
-| DB Migration | `td_reference_values` table | Reference table for curated TD values + seed data |
-| CREATE | `supabase/functions/populate-td-values/index.ts` | Main edge function |
-| MODIFY | `supabase/config.toml` -- NOT directly | Function config (auto-handled) |
+| Action | File |
+|--------|------|
+| DB Migration | Create `td_population_log` table with RLS |
+| CREATE | `src/pages/admin/TdManagement.tsx` |
+| CREATE | `src/components/admin/td-management/TdStatsHeader.tsx` |
+| CREATE | `src/components/admin/td-management/TdFilamentsTable.tsx` |
+| CREATE | `src/components/admin/td-management/TdReferenceTable.tsx` |
+| CREATE | `src/components/admin/td-management/TdPopulationLog.tsx` |
+| CREATE | `src/components/admin/td-management/TdActionToolbar.tsx` |
+| CREATE | `src/hooks/useTdManagement.ts` |
+| MODIFY | `src/App.tsx` -- lazy import + route |
+| MODIFY | `src/components/admin/AdminNewSidebar.tsx` -- nav link |
 
-No frontend changes needed -- `transmission_distance` is already rendered everywhere.
+No frontend display files (FilamentDetail, SpecificationsTab, HueForgeTDDatabase) are modified. No SEO elements touched.
+
