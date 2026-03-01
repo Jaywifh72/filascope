@@ -763,17 +763,17 @@ export default function HueForgeTDDatabase() {
                         return (
                           <TableRow
                             key={f.id}
-                            className={`group cursor-pointer transition-colors duration-150 hover:bg-muted/40 ${idx % 2 === 1 ? 'bg-muted/10' : ''}`}
+                            className={`group cursor-pointer transition-all duration-150 border-l-[3px] border-l-transparent hover:border-l-primary hover:bg-muted/40 ${idx % 2 === 0 ? 'bg-white/[0.02]' : ''}`}
                             onClick={() => navigate(filamentUrl)}
                           >
                             <TableCell>
                               {f.color_hex ? (
-                                <div
-                                  className={`w-8 h-8 rounded-full ring-1 transition-transform group-hover:scale-125 ${isDark ? 'ring-white/40' : 'ring-white/20'}`}
+                                 <div
+                                  className={`w-8 h-8 rounded-full ring-1 transition-transform duration-150 group-hover:scale-110 ${isDark ? 'ring-white/40' : 'ring-white/20'}`}
                                   style={{ backgroundColor: f.color_hex }}
                                 />
                               ) : (
-                                <div className="w-8 h-8 rounded-full ring-1 ring-white/20 bg-muted flex items-center justify-center transition-transform group-hover:scale-125">
+                                <div className="w-8 h-8 rounded-full ring-1 ring-white/20 bg-muted flex items-center justify-center transition-transform duration-150 group-hover:scale-110">
                                   <span className="text-xs text-muted-foreground">?</span>
                                 </div>
                               )}
@@ -834,7 +834,7 @@ export default function HueForgeTDDatabase() {
                           <Link
                             key={f.id}
                             to={filamentUrl}
-                            className="bg-muted/20 border border-border rounded-xl p-4 hover:border-cyan-500/30 transition-all group block animate-fade-in"
+                            className={`border border-border rounded-xl p-4 hover:border-primary/30 transition-all group block animate-fade-in ${idx % 2 === 0 ? 'bg-muted/20' : 'bg-white/[0.02]'}`}
                             style={{ animationDelay: `${Math.min(idx * 30, 300)}ms`, animationFillMode: 'backwards' }}
                           >
                             {/* Top: swatch + name + brand */}
