@@ -112,14 +112,36 @@ export function useTdReferenceValues() {
   });
 }
 
+export interface ReferenceMatchStat {
+  ref_id: string;
+  matched_count: number;
+  brand_total: number;
+  brand_with_td: number;
+}
+
+export function useReferenceMatchStats() {
+  return useQuery({
+    queryKey: ['td-reference-match-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_td_reference_match_stats' as any);
+      if (error) throw error;
+      const arr = (data as unknown as ReferenceMatchStat[]) ?? [];
+      const map = new Map<string, ReferenceMatchStat>();
+      arr.forEach(s => map.set(s.ref_id, s));
+      return map;
+    },
+    staleTime: 60_000,
+  });
+}
+
 export function useAddReferenceValue() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (row: { brand_name: string; color_name: string; material_type: string; td_value: number; source: string; confidence: string; notes?: string }) => {
+    mutationFn: async (row: { brand_name: string; color_name: string; material_type: string; td_value: number; source: string; confidence: string; notes?: string; hex_code?: string }) => {
       const { error } = await supabase.from('td_reference_values').insert(row);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['td-reference-values'] }); toast({ title: 'Reference value added' }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['td-reference-values'] }); qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] }); toast({ title: 'Reference value added' }); },
     onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 }
@@ -131,7 +153,55 @@ export function useDeleteReferenceValue() {
       const { error } = await supabase.from('td_reference_values').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['td-reference-values'] }); toast({ title: 'Reference value deleted' }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['td-reference-values'] }); qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] }); toast({ title: 'Reference value deleted' }); },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+export function useUpdateReferenceValue() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, any> }) => {
+      const { error } = await supabase.from('td_reference_values').update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['td-reference-values'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
+      toast({ title: 'Reference updated' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+export function useBulkDeleteReferences() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('td_reference_values').delete().in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['td-reference-values'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
+      toast({ title: 'References deleted' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+export function useBulkUpdateConfidence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, confidence }: { ids: string[]; confidence: string }) => {
+      const { error } = await supabase.from('td_reference_values').update({ confidence }).in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['td-reference-values'] });
+      qc.invalidateQueries({ queryKey: ['td-reference-match-stats'] });
+      toast({ title: 'Confidence updated' });
+    },
     onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 }
