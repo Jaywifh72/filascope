@@ -18,6 +18,8 @@ import { BrandLogo } from '@/components/ui/BrandLogo';
 import { toBrandSlug } from '@/utils/brandSlug';
 import { calculateUnifiedScore, type FilamentForScoring } from '@/lib/unifiedFilamentScore';
 import { isValidFinishType } from '@/lib/finishTypeValidation';
+import { TdSubmissionButton } from '@/components/filament/td-community/TdSubmissionButton';
+import { TdVerificationWidget } from '@/components/filament/td-community/TdVerificationWidget';
 import type { CommunityReviewStats } from '@/hooks/useCommunityReviewStats';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -244,6 +246,15 @@ export function FilamentHeroSection({
                   )}
                 </TooltipContent>
               </Tooltip>
+              {/* TD Submission/Verification */}
+              <TdSubmissionButton
+                filamentId={displayFilament.id}
+                filamentName={displayFilament.product_title || displayFilament.display_name || 'Unknown'}
+                currentTd={displayFilament.transmission_distance}
+              />
+              {displayFilament.transmission_distance != null && (
+                <TdVerificationWidget filamentId={displayFilament.id} />
+              )}
               {/* FilaScore Display */}
               {filaScore !== null && (
                 <FilaScoreHeroDisplay

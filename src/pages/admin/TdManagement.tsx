@@ -4,6 +4,7 @@ import { TdFilamentsTable } from '@/components/admin/td-management/TdFilamentsTa
 import { TdReferenceTable } from '@/components/admin/td-management/TdReferenceTable';
 import { TdPopulationLog } from '@/components/admin/td-management/TdPopulationLog';
 import { TdActionToolbar } from '@/components/admin/td-management/TdActionToolbar';
+import { TdSubmissionsReviewPanel } from '@/components/admin/td-management/TdSubmissionsReviewPanel';
 
 export default function TdManagement() {
   return (
@@ -18,6 +19,7 @@ export default function TdManagement() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="filaments">Filaments</TabsTrigger>
           <TabsTrigger value="reference">Reference Values</TabsTrigger>
+          <TabsTrigger value="submissions">Submissions</TabsTrigger>
           <TabsTrigger value="log">Population Log</TabsTrigger>
         </TabsList>
 
@@ -34,6 +36,10 @@ export default function TdManagement() {
 
         <TabsContent value="reference">
           <TdReferenceTable />
+        </TabsContent>
+
+        <TabsContent value="submissions">
+          <TdSubmissionsReviewPanel />
         </TabsContent>
 
         <TabsContent value="log">

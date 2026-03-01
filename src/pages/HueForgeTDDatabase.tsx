@@ -34,6 +34,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
+import { FilamentsNeedingTdSection } from '@/components/filament/td-community/FilamentsNeedingTdSection';
 import { HowToSchema } from '@/components/seo/HowToSchema';
 import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -759,6 +760,9 @@ export default function HueForgeTDDatabase() {
             </div>
           )}
         </section>
+
+        {/* ── Filaments Needing TD Data ─────────────────────────────── */}
+        <FilamentsNeedingTdSection />
 
         {/* ── FAQ ──────────────────────────────────────────────────── */}
         <section className="mt-16 max-w-3xl mx-auto">
