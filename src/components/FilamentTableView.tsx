@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { LikeButton } from "@/components/LikeButton";
-import { ChevronUp, ChevronDown, TreeDeciduous, Layers, Info, Lightbulb, ArrowRight } from "lucide-react";
+import { ChevronUp, ChevronDown, TreeDeciduous, Layers, Info, Lightbulb, ArrowRight, Check, AlertTriangle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/contexts/RegionContext";
 import { resolveFilamentPrice, type FilamentForPricing } from "@/lib/resolveFilamentPrice";
@@ -13,6 +13,9 @@ import { calculateUnifiedScore, getScoreNumberColor, SCORE_EXPLANATION, type Fil
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PriceFreshnessCell } from "@/components/price/PriceFreshnessDot";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useUserPrinterPreference } from "@/hooks/useUserPrinterPreference";
+import { usePrinterSelection } from "@/hooks/usePrinterSelection";
+import { computeFilamentCompatibility } from "@/hooks/useFilamentCompatibility";
 
 interface Filament {
   id: string;
@@ -51,6 +54,7 @@ interface Filament {
   last_scraped_at?: string | null;
   transmission_distance?: number | null;
   product_handle?: string | null;
+  is_nozzle_abrasive?: boolean | null;
 }
 
 interface FilamentTableViewProps {
@@ -168,6 +172,17 @@ export function FilamentTableView({
   const navigate = useNavigate();
   const { formatPrice, convertPrice, currency, hasRates } = useRegion();
   const { isInWishlist } = useWishlist();
+  
+  // Printer compatibility context
+  const { printerName, nozzleTempMax, bedTempMax, hasEnclosure, hasSavedPrinter } = useUserPrinterPreference();
+  const { selectedPrinter } = usePrinterSelection();
+  const hasPrinter = hasSavedPrinter || !!selectedPrinter;
+  const printerCtx = useMemo(() => ({
+    printerName: printerName || selectedPrinter?.model_name || null,
+    nozzleTempMax: nozzleTempMax ?? selectedPrinter?.max_nozzle_temp_c ?? null,
+    bedTempMax: bedTempMax ?? selectedPrinter?.bed_max_temp_c ?? null,
+    hasEnclosure: hasEnclosure || selectedPrinter?.has_enclosure || false,
+  }), [printerName, nozzleTempMax, bedTempMax, hasEnclosure, selectedPrinter]);
 
   // Count selected items for the header badge
   const selectedCount = useMemo(
@@ -216,6 +231,18 @@ export function FilamentTableView({
             <SortableHeader label="Brand" sortKey="brand" sortBy={sortBy} onSortChange={onSortChange} className="min-w-[100px]" />
             <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[180px] max-w-[300px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b border-border">Product</th>
             <SortableHeader label="Type" sortKey="material" sortBy={sortBy} onSortChange={onSortChange} className="min-w-[80px]" />
+            {hasPrinter && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <th className="py-3 px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide text-center w-8 sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b border-border cursor-help">
+                    Fit
+                  </th>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Compatibility with your {printerCtx.printerName || "printer"}
+                </TooltipContent>
+              </Tooltip>
+            )}
             <SortableHeader label="TD" sortKey="td" sortBy={sortBy} onSortChange={onSortChange} className="text-center min-w-[50px]" />
             <SortableHeader label="True Cost" sortKey="true-cost" sortBy={sortBy} onSortChange={onSortChange} className="text-right min-w-[90px]" />
             <SortableHeader label="Price" sortKey="price" sortBy={sortBy} onSortChange={onSortChange} className="text-right min-w-[80px]" />
@@ -378,6 +405,33 @@ export function FilamentTableView({
                     )}
                   </div>
                 </td>
+                {hasPrinter && (() => {
+                  const compat = computeFilamentCompatibility(filament, printerCtx);
+                  return (
+                    <td className="py-3 px-2 text-center">
+                      {compat ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={cn("inline-flex items-center justify-center w-5 h-5 rounded-full text-xs cursor-help", 
+                              compat.level === "compatible" ? "text-emerald-400" :
+                              compat.level === "warning" ? "text-amber-400" : "text-red-400"
+                            )}>
+                              {compat.level === "compatible" ? <Check className="w-3.5 h-3.5" /> :
+                               compat.level === "warning" ? <AlertTriangle className="w-3 h-3" /> :
+                               <XCircle className="w-3.5 h-3.5" />}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs max-w-[220px]">
+                            <p className="font-medium">{compat.shortLabel}</p>
+                            <p className="text-muted-foreground mt-0.5">{compat.message}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
+                  );
+                })()}
                 <td className="py-3 px-3 text-center">
                   {filament.transmission_distance != null ? (
                     <span className="font-mono text-sm font-semibold text-purple-400">
