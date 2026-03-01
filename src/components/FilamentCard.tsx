@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SearchPropertyBadges, type SearchPropertyIntent } from "@/components/filament/SearchPropertyBadges";
 import { Link } from "react-router-dom";
 import { 
@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Lightbulb,
   Printer,
+  Truck,
   AlertTriangle,
   Columns,
   Thermometer,
@@ -370,6 +371,14 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
   const ctaTab = isOutOfStock ? '' : '?tab=pricing';
   const filamentHref = getFilamentHref(filament.id, (filament as any).product_handle);
 
+  // Deal pulse animation timer — pulses for 3 seconds then stops
+  const [dealPulseActive, setDealPulseActive] = useState(true);
+  useEffect(() => {
+    if (!isDeal) return;
+    const timer = setTimeout(() => setDealPulseActive(false), 3000);
+    return () => clearTimeout(timer);
+  }, [isDeal]);
+
   return (
     <div
       role="article"
@@ -381,7 +390,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         isOutOfStock && "is-oos",
         "active:scale-[0.99] active:duration-[50ms]",
         "focus-within:ring-2 focus-within:ring-cyan-500/50 focus-within:ring-offset-2 focus-within:ring-offset-slate-900",
-        "hover:-translate-y-1 hover:shadow-lg hover:shadow-black/30",
+        "hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/30",
         isSelected && "border-2 border-primary bg-primary/5 border-l-[3px] border-l-amber-500",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5 border-l-[3px] border-l-amber-500/60",
       )}
@@ -394,8 +403,18 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         setIsHovered(false);
       }}
     >
-      {/* === PLAN #2: TD Value Badge — top-left overlay === */}
-      {filament.transmission_distance != null && (
+      {/* === Deal Badge — absolute overlay with pulse === */}
+      {isDeal && priceTrend != null && priceTrend < 0 && (
+        <div className={cn(
+          "absolute top-3 left-3 z-10 bg-red-500 text-white font-bold px-2.5 py-1 rounded-lg text-sm shadow-lg",
+          dealPulseActive && "animate-pulse"
+        )}>
+          {Math.abs(Math.round(priceTrend))}% OFF
+        </div>
+      )}
+
+      {/* TD Value Badge — top-left overlay (below deal badge if both) */}
+      {filament.transmission_distance != null && !(isDeal && priceTrend != null && priceTrend < 0) && (
         <div className="absolute top-3 left-3 z-10 bg-black/65 text-white text-[10px] font-semibold px-2 py-0.5 rounded">
           TD {filament.transmission_distance}
         </div>
@@ -419,21 +438,24 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           disabled={isCompareDisabled}
           aria-label={isSelected ? "Remove from comparison" : `Add ${filament.product_title} to comparison`}
           className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer",
-            "transition-all duration-200 ease-out",
+            "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium cursor-pointer",
+            "transition-all duration-150 ease-out",
             isSelected || isPendingSelection
-              ? "bg-amber-500 border border-amber-500 opacity-100"
+              ? "bg-cyan-500/20 border border-cyan-500 text-cyan-400 opacity-100 scale-105"
               : cn(
-                  "bg-card/80 border border-border backdrop-blur-sm",
+                  "bg-card/80 border border-border backdrop-blur-sm text-muted-foreground",
                   "opacity-0 group-hover:opacity-100",
                 ),
             isCompareDisabled && "opacity-30 cursor-not-allowed"
           )}
         >
           {isSelected || isPendingSelection ? (
-            <Check className="w-4 h-4 text-black" strokeWidth={2.5} />
+            <>
+              <Check className="w-3 h-3" strokeWidth={3} />
+              <span>Added</span>
+            </>
           ) : (
-            <Columns className="w-4 h-4 text-muted-foreground" />
+            <span>Compare</span>
           )}
         </button>
       </div>
@@ -755,11 +777,27 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
               ) : null;
             })()}
 
-            {/* === PLAN #3: Freshness dot + hover-only timestamp === */}
+            {/* === Freshness dot + always-visible label === */}
             <div className="inline-flex items-center gap-1.5">
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
-                  <span className={cn("w-2 h-2 rounded-full inline-block flex-shrink-0 cursor-help", getFreshnessDotColor(priceConfidence))} />
+                  <span className={cn(
+                    "inline-flex items-center gap-1 cursor-help"
+                  )}>
+                    <span className={cn(
+                      "w-1.5 h-1.5 rounded-full inline-block flex-shrink-0",
+                      getFreshnessDotColor(priceConfidence),
+                      priceConfidence === 'high' && "animate-pulse"
+                    )} />
+                    <span className={cn(
+                      "text-[11px]",
+                      priceConfidence === 'high' && "text-emerald-400",
+                      priceConfidence === 'medium' && "text-amber-400",
+                      priceConfidence !== 'high' && priceConfidence !== 'medium' && "text-muted-foreground"
+                    )}>
+                      {priceConfidence === 'high' ? 'Updated today' : compactTimeAgo ? `${compactTimeAgo} ago` : 'Outdated'}
+                    </span>
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent
                   side="top"
@@ -769,20 +807,23 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                   {getFreshnessTooltipText(priceConfidence, timeAgo)}
                 </TooltipContent>
               </Tooltip>
-              {isHovered && compactTimeAgo && (
-                <span className="text-[10px] text-muted-foreground animate-in fade-in-0 duration-150">
-                  {compactTimeAgo}
-                </span>
-              )}
             </div>
             
-            {/* Secondary local price when best price is international */}
+            {/* Secondary local price + "Ships to you" badge */}
             {resolved.localPricePerKg != null && resolved.formattedLocalPricePerKg && (
-              <div className="flex items-center gap-1 text-xs">
-                <span className="bg-emerald-400 rounded-full w-2 h-2 inline-block flex-shrink-0" />
-                <span className="text-muted-foreground">
-                  Local: {resolved.formattedLocalPricePerKg}/kg
-                </span>
+              <div className="flex flex-col gap-0.5">
+                {isLocalStore && (
+                  <div className="inline-flex items-center gap-1">
+                    <Truck className="w-3 h-3 text-emerald-400" />
+                    <span className="text-[11px] font-medium text-emerald-400">Ships to you</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="bg-emerald-400 rounded-full w-2 h-2 inline-block flex-shrink-0" />
+                  <span className="text-muted-foreground">
+                    Local: {resolved.formattedLocalPricePerKg}/kg
+                  </span>
+                </div>
               </div>
             )}
           </div>
@@ -935,7 +976,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             "w-full h-10 rounded-lg font-semibold transition-all duration-200",
             isOutOfStock
               ? "bg-transparent text-white hover:bg-white/10"
-              : "bg-amber-500 text-black hover:bg-amber-400 hover:-translate-y-0 hover:shadow-none",
+              : "bg-amber-500 text-black hover:bg-amber-400 hover:-translate-y-0 hover:shadow-none group-hover:shadow-md",
             "active:scale-[0.98]"
           )}
           style={isOutOfStock ? { border: '1px solid rgba(255,255,255,0.3)' } : undefined}
