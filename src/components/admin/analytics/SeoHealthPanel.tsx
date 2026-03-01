@@ -1,13 +1,33 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";
 
 const HREFLANGS = ["en-US", "en-CA", "en-GB", "en-AU", "en", "x-default"];
+const PRERENDER_SITEMAP_PATH = "/sitemap-pages.xml";
 
 type StatusResult = "loading" | "ok" | "error";
+
+async function isValidSitemapResponse(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/xml,text/xml,text/plain,*/*" },
+    });
+
+    if (!response.ok) return false;
+
+    const contentType = response.headers.get("content-type") || "";
+    const body = await response.text();
+
+    return contentType.includes("xml") || /<(urlset|sitemapindex)\b/i.test(body);
+  } catch {
+    return false;
+  }
+}
 
 function StatusBadge({ status, label }: { status: StatusResult; label: string }) {
   if (status === "loading") {
@@ -33,6 +53,29 @@ function StatusBadge({ status, label }: { status: StatusResult; label: string })
 export function SeoHealthPanel() {
   const [robotsStatus, setRobotsStatus] = useState<StatusResult>("loading");
   const [prerenderStatus, setPrerenderStatus] = useState<StatusResult>("loading");
+  const [isRecheckingPrerender, setIsRecheckingPrerender] = useState(false);
+
+  const checkPrerenderStatus = useCallback(async () => {
+    setIsRecheckingPrerender(true);
+    setPrerenderStatus("loading");
+
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string | undefined;
+      const edgeUrl = projectId
+        ? `https://${projectId}.supabase.co/functions/v1/prerender?path=${encodeURIComponent(PRERENDER_SITEMAP_PATH)}`
+        : null;
+
+      const checks = [isValidSitemapResponse(PRERENDER_SITEMAP_PATH)];
+      if (edgeUrl) checks.push(isValidSitemapResponse(edgeUrl));
+
+      const results = await Promise.all(checks);
+      setPrerenderStatus(results.some(Boolean) ? "ok" : "error");
+    } catch {
+      setPrerenderStatus("error");
+    } finally {
+      setIsRecheckingPrerender(false);
+    }
+  }, []);
 
   // Check robots.txt
   useEffect(() => {
@@ -41,13 +84,10 @@ export function SeoHealthPanel() {
       .catch(() => setRobotsStatus("error"));
   }, []);
 
-  // Check prerender edge function is responding
+  // Check prerender health via same-origin sitemap + direct edge fallback
   useEffect(() => {
-    const prerenderUrl = `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml`;
-    fetch(prerenderUrl, { method: "GET" })
-      .then((r) => setPrerenderStatus(r.ok ? "ok" : "error"))
-      .catch(() => setPrerenderStatus("error"));
-  }, []);
+    void checkPrerenderStatus();
+  }, [checkPrerenderStatus]);
 
   // Page counts
   const { data: pageCounts } = useQuery({
@@ -81,7 +121,22 @@ export function SeoHealthPanel() {
                 status="ok"
                 label="Sitemap configured (filascope.com/sitemap.xml)"
               />
-              <StatusBadge status={prerenderStatus} label="Prerender edge function active" />
+              <div className="flex items-center justify-between gap-3">
+                <StatusBadge status={prerenderStatus} label="Prerender edge function active" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => void checkPrerenderStatus()}
+                  disabled={isRecheckingPrerender}
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 ${isRecheckingPrerender ? "animate-spin" : ""}`}
+                  />
+                  Recheck
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
