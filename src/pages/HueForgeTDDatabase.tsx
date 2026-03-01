@@ -13,6 +13,7 @@ import {
   Filter,
   Sun,
   ChevronRight,
+  ChevronDown,
   RefreshCw,
   Palette,
 } from 'lucide-react';
@@ -436,10 +437,33 @@ export default function HueForgeTDDatabase() {
             </div>
           </div>
 
+          {/* NEW: Jump to Database CTA */}
+          <div className="flex flex-col items-center gap-2 mb-8">
+            <Button
+              size="lg"
+              className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-8 rounded-lg text-lg"
+              onClick={() =>
+                document.getElementById('td-browser')?.scrollIntoView({ behavior: 'smooth' })
+              }
+            >
+              <Search className="w-5 h-5 mr-2" />
+              Search the Database
+            </Button>
+            <ChevronDown className="w-6 h-6 text-cyan-500 animate-bounce opacity-60" />
+            <button
+              onClick={() =>
+                document.getElementById('td-education')?.scrollIntoView({ behavior: 'smooth' })
+              }
+              className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors"
+            >
+              Or learn about TD values below ↓
+            </button>
+          </div>
+
           <div className="flex justify-center gap-3 flex-wrap">
             <Button
               onClick={() =>
-                document.getElementById('td-table')?.scrollIntoView({ behavior: 'smooth' })
+                document.getElementById('td-browser')?.scrollIntoView({ behavior: 'smooth' })
               }
             >
               <Search className="w-4 h-4 mr-2" />
@@ -475,200 +499,10 @@ export default function HueForgeTDDatabase() {
           </div>
         </section>
 
-        {/* ── Educational Content ──────────────────────────────────── */}
-        <section className="max-w-4xl mx-auto mb-16 space-y-12">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              What is TD (Transmissivity Distance) in HueForge?
-            </h2>
-            <div className="prose prose-lg dark:prose-invert text-muted-foreground space-y-4">
-              <p>
-                TD (Transmission Distance) measures how many millimeters of light can pass through a filament. Lower TD values (0.1–1.0) indicate opaque filaments, while higher values (4.0–10.0+) indicate translucent ones. This measurement is critical for any project where light interaction matters — lithophanes, HueForge multicolor prints, lamp shades, and decorative light panels all depend on accurate TD data.
-              </p>
-              <p>
-                HueForge, the popular software for creating multicolor prints on single-extruder
-                printers, relies on accurate TD values to calculate how colors blend when stacked
-                layer-by-layer. Without correct TD data the software cannot predict what your finished
-                print will look like, often resulting in washed-out colors or muddy shadows. This is why having a verified TD database is essential for any serious HueForge project.
-              </p>
-              <p>
-                TD values also matter for traditional lithophane printing. A lithophane works by
-                varying wall thickness so that backlighting reveals an image — and the contrast of
-                that image depends directly on how translucent the filament is. Choosing the right TD
-                ensures crisp highlights and deep shadows. A filament with TD 4.0 will produce a very different lithophane than one with TD 8.0, even if they appear identical on the spool.
-              </p>
-
-              {/* TD Value Range Reference */}
-              <div className="not-prose my-6">
-                <h3 className="text-lg font-semibold text-foreground mb-3">TD Value Range Reference</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30">
-                    <div className="w-8 h-8 rounded-full bg-gray-900 border shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Black / Dark Colors</p>
-                      <p className="text-xs text-muted-foreground">TD 0.3 – 0.8 (very opaque)</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30">
-                    <div className="w-8 h-8 rounded-full bg-blue-500 border shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Standard Colors</p>
-                      <p className="text-xs text-muted-foreground">TD 1.5 – 5.0 (moderate)</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30">
-                    <div className="w-8 h-8 rounded-full bg-white border shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">White</p>
-                      <p className="text-xs text-muted-foreground">TD 3.5 – 5.0+ (translucent)</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/80 to-white/30 border shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Translucent / Clear</p>
-                      <p className="text-xs text-muted-foreground">TD 5.0 – 10.0+ (highly translucent)</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              How to Choose Filaments for HueForge Projects
-            </h2>
-            <div className="prose prose-lg dark:prose-invert text-muted-foreground space-y-4">
-              <p>
-                Selecting the right filament for a HueForge project goes beyond just picking colors you like — TD values, layer adhesion, and print consistency all play a role in the final result. The most successful HueForge creators build curated filament palettes where every color has a known, verified TD value. FilaScope is the world's largest HueForge TD database with transmissivity data for <strong>{totalCount}+</strong> filaments, making it the most reliable starting point for palette building.
-              </p>
-              <p>
-                Start with your anchor colors: a true black with TD 0.5–1.0 for deep shadows, and a white with TD 3.5–5.0 for highlights. These two colors form the foundation of almost every HueForge project. From there, add mid-tone colors — skin tones, browns, blues, and greens — in the TD 1.5–3.5 range. The key is knowing exactly how opaque each color prints, which is what TD data tells you.
-              </p>
-              <p>
-                Material choice matters too. Standard PLA is the most popular for HueForge because of its consistent TD, low warping, and wide color availability. Silk PLA offers striking metallic sheens but has characteristically high TD values (often 5.0+), making it better for highlights and accents than base layers. PETG works but is generally more translucent than PLA, requiring careful calibration.
-              </p>
-              <p>
-                Finally, always verify TD values before committing to a large project. Brand-to-brand variation is real — two filaments labeled "Red PLA" can have wildly different TD values. Use <Link to="/hueforge-td-database" className="text-primary hover:underline">FilaScope's TD database</Link> to cross-reference your filament choices, and consider printing a small test swatch to confirm the TD matches your expectations.
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Best Filaments for HueForge by Category
-            </h2>
-            <div className="prose prose-lg dark:prose-invert text-muted-foreground space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Best for Beginners</h3>
-                <p>
-                  If you're new to HueForge, start with well-known PLA brands like Bambu Lab, Polymaker, or eSUN — they have the most widely verified TD values and consistent batch-to-batch quality. Look for standard colors (not silk or matte) with TD values between 2.0–5.0. Browse our <Link to="/guides/best-filaments-hueforge" className="text-primary hover:underline">Best Filaments for HueForge guide</Link> for curated beginner picks.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Best for Detail & Contrast</h3>
-                <p>
-                  For maximum detail in portraits and fine-art HueForge prints, you need filaments with precise, low TD values in your dark layers and consistent mid-range TD for transitions. Matte PLA filaments often provide the best detail because their surface doesn't reflect light, allowing the lithophane effect to shine. Check our <Link to="/filaments/pla" className="text-primary hover:underline">PLA filament catalog</Link> filtered by TD value.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Best for Color Accuracy</h3>
-                <p>
-                  Color accuracy in HueForge depends on matching your physical filament colors to the HueForge color profile. Brands like Polymaker and Bambu Lab publish official HueForge profiles, making color matching much easier. Use <Link to="/colors" className="text-primary hover:underline">FilaScope's Color Finder</Link> to match specific hex colors to real filaments with known TD values.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Most Affordable Options</h3>
-                <p>
-                  HueForge projects use relatively little filament per color, so even budget brands work well. eSUN, SUNLU, and Overture offer PLA with verified TD values at lower price points. Check our <Link to="/deals" className="text-primary hover:underline">Deals page</Link> for current discounts on filaments with TD data.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              How to Use TD Values for Better Lithophanes
-            </h2>
-            <div className="prose prose-lg dark:prose-invert text-muted-foreground space-y-4">
-              <p>
-                Start by selecting a filament whose TD matches your project's requirements. For
-                standard lithophanes, a TD between 4 and 6 provides the best balance of contrast and
-                detail. Lower TD filaments (1–3) are better suited for opaque base layers in
-                multicolor HueForge prints, while higher TD filaments (6+) create beautiful
-                translucent effects when backlit.
-              </p>
-              <p>
-                Use the filters below to narrow down by material — PLA is the most common choice for
-                lithophanes due to its low warping and consistent TD, but PETG offers higher
-                translucency and impact resistance. Once you find a candidate filament, click through
-                to its detail page for printing temperature recommendations, community photos, and
-                pricing.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Top 10 Most Popular for HueForge ─────────────────────── */}
-        <section className="mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">Most Popular Filaments for HueForge</h2>
-          <p className="text-muted-foreground mb-6">
-            The 10 most opaque filaments — lowest TD values, most commonly needed for vivid base
-            layers.
-          </p>
-          {isLoading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-36" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {top10.map((f, i) => (
-                <Link
-                  key={f.id}
-                  to={`/filament/${f.product_handle || f.id}`}
-                  className="block"
-                >
-                  <Card className="h-full group hover:border-purple-400/50 transition-colors">
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
-                        {f.color_hex && (
-                          <div
-                            className="w-5 h-5 rounded-full border shrink-0"
-                            style={{ backgroundColor: f.color_hex }}
-                          />
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors">
-                        {f.product_title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{f.vendor}</p>
-                      <div className="mt-2 flex items-baseline gap-1">
-                        <span className="text-lg font-bold text-purple-400">
-                          TD {f.transmission_distance}
-                        </span>
-                        {f.variant_price != null && (
-                          <span className="text-xs text-muted-foreground ml-auto">
-                            {formatPrice(f.variant_price)}
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* ── Filterable Data Table ────────────────────────────────── */}
-        <section id="td-table">
+        {/* ── Browse Filaments Table (MOVED UP) ────────────────────── */}
+        <section id="td-browser">
           <h2 className="text-2xl md:text-3xl font-bold mb-6">Browse Filaments by TD Value</h2>
 
-          {/* Filters */}
           {/* TD Range Slider */}
           <Card className="mb-4">
             <CardContent className="pt-5 pb-4">
@@ -839,6 +673,201 @@ export default function HueForgeTDDatabase() {
             </div>
           )}
         </section>
+
+        {/* ── Top 10 Most Popular for HueForge (MOVED UP) ──────────── */}
+        <section className="mt-16 mb-16">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">Most Popular Filaments for HueForge</h2>
+          <p className="text-muted-foreground mb-6">
+            The 10 most opaque filaments — lowest TD values, most commonly needed for vivid base
+            layers.
+          </p>
+          {isLoading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-36" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {top10.map((f, i) => (
+                <Link
+                  key={f.id}
+                  to={`/filament/${f.product_handle || f.id}`}
+                  className="block"
+                >
+                  <Card className="h-full group hover:border-purple-400/50 transition-colors">
+                    <CardContent className="pt-4 pb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
+                        {f.color_hex && (
+                          <div
+                            className="w-5 h-5 rounded-full border shrink-0"
+                            style={{ backgroundColor: f.color_hex }}
+                          />
+                        )}
+                      </div>
+                      <p className="text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                        {f.product_title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{f.vendor}</p>
+                      <div className="mt-2 flex items-baseline gap-1">
+                        <span className="text-lg font-bold text-purple-400">
+                          TD {f.transmission_distance}
+                        </span>
+                        {f.variant_price != null && (
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            {formatPrice(f.variant_price)}
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ── Visual Separator + Educational Content (MOVED DOWN) ─── */}
+        <div id="td-education" className="border-t border-border pt-12 mt-12">
+          <p className="text-muted-foreground text-center mb-12">
+            New to HueForge TD values? Read our complete guide below.
+          </p>
+
+          <section className="max-w-4xl mx-auto mb-16 space-y-12">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                What is TD (Transmissivity Distance) in HueForge?
+              </h2>
+              <div className="prose prose-lg dark:prose-invert text-muted-foreground space-y-4">
+                <p>
+                  TD (Transmission Distance) measures how many millimeters of light can pass through a filament. Lower TD values (0.1–1.0) indicate opaque filaments, while higher values (4.0–10.0+) indicate translucent ones. This measurement is critical for any project where light interaction matters — lithophanes, HueForge multicolor prints, lamp shades, and decorative light panels all depend on accurate TD data.
+                </p>
+                <p>
+                  HueForge, the popular software for creating multicolor prints on single-extruder
+                  printers, relies on accurate TD values to calculate how colors blend when stacked
+                  layer-by-layer. Without correct TD data the software cannot predict what your finished
+                  print will look like, often resulting in washed-out colors or muddy shadows. This is why having a verified TD database is essential for any serious HueForge project.
+                </p>
+                <p>
+                  TD values also matter for traditional lithophane printing. A lithophane works by
+                  varying wall thickness so that backlighting reveals an image — and the contrast of
+                  that image depends directly on how translucent the filament is. Choosing the right TD
+                  ensures crisp highlights and deep shadows. A filament with TD 4.0 will produce a very different lithophane than one with TD 8.0, even if they appear identical on the spool.
+                </p>
+
+                {/* TD Value Range Reference */}
+                <div className="not-prose my-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-3">TD Value Range Reference</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30">
+                      <div className="w-8 h-8 rounded-full bg-gray-900 border shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Black / Dark Colors</p>
+                        <p className="text-xs text-muted-foreground">TD 0.3 – 0.8 (very opaque)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30">
+                      <div className="w-8 h-8 rounded-full bg-blue-500 border shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Standard Colors</p>
+                        <p className="text-xs text-muted-foreground">TD 1.5 – 5.0 (moderate)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30">
+                      <div className="w-8 h-8 rounded-full bg-white border shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">White</p>
+                        <p className="text-xs text-muted-foreground">TD 3.5 – 5.0+ (translucent)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/30">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/80 to-white/30 border shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Translucent / Clear</p>
+                        <p className="text-xs text-muted-foreground">TD 5.0 – 10.0+ (highly translucent)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                How to Choose Filaments for HueForge Projects
+              </h2>
+              <div className="prose prose-lg dark:prose-invert text-muted-foreground space-y-4">
+                <p>
+                  Selecting the right filament for a HueForge project goes beyond just picking colors you like — TD values, layer adhesion, and print consistency all play a role in the final result. The most successful HueForge creators build curated filament palettes where every color has a known, verified TD value. FilaScope is the world's largest HueForge TD database with transmissivity data for <strong>{totalCount}+</strong> filaments, making it the most reliable starting point for palette building.
+                </p>
+                <p>
+                  Start with your anchor colors: a true black with TD 0.5–1.0 for deep shadows, and a white with TD 3.5–5.0 for highlights. These two colors form the foundation of almost every HueForge project. From there, add mid-tone colors — skin tones, browns, blues, and greens — in the TD 1.5–3.5 range. The key is knowing exactly how opaque each color prints, which is what TD data tells you.
+                </p>
+                <p>
+                  Material choice matters too. Standard PLA is the most popular for HueForge because of its consistent TD, low warping, and wide color availability. Silk PLA offers striking metallic sheens but has characteristically high TD values (often 5.0+), making it better for highlights and accents than base layers. PETG works but is generally more translucent than PLA, requiring careful calibration.
+                </p>
+                <p>
+                  Finally, always verify TD values before committing to a large project. Brand-to-brand variation is real — two filaments labeled "Red PLA" can have wildly different TD values. Use <Link to="/hueforge-td-database" className="text-primary hover:underline">FilaScope's TD database</Link> to cross-reference your filament choices, and consider printing a small test swatch to confirm the TD matches your expectations.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                Best Filaments for HueForge by Category
+              </h2>
+              <div className="prose prose-lg dark:prose-invert text-muted-foreground space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Best for Beginners</h3>
+                  <p>
+                    If you're new to HueForge, start with well-known PLA brands like Bambu Lab, Polymaker, or eSUN — they have the most widely verified TD values and consistent batch-to-batch quality. Look for standard colors (not silk or matte) with TD values between 2.0–5.0. Browse our <Link to="/guides/best-filaments-hueforge" className="text-primary hover:underline">Best Filaments for HueForge guide</Link> for curated beginner picks.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Best for Detail & Contrast</h3>
+                  <p>
+                    For maximum detail in portraits and fine-art HueForge prints, you need filaments with precise, low TD values in your dark layers and consistent mid-range TD for transitions. Matte PLA filaments often provide the best detail because their surface doesn't reflect light, allowing the lithophane effect to shine. Check our <Link to="/filaments/pla" className="text-primary hover:underline">PLA filament catalog</Link> filtered by TD value.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Best for Color Accuracy</h3>
+                  <p>
+                    Color accuracy in HueForge depends on matching your physical filament colors to the HueForge color profile. Brands like Polymaker and Bambu Lab publish official HueForge profiles, making color matching much easier. Use <Link to="/colors" className="text-primary hover:underline">FilaScope's Color Finder</Link> to match specific hex colors to real filaments with known TD values.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Most Affordable Options</h3>
+                  <p>
+                    HueForge projects use relatively little filament per color, so even budget brands work well. eSUN, SUNLU, and Overture offer PLA with verified TD values at lower price points. Check our <Link to="/deals" className="text-primary hover:underline">Deals page</Link> for current discounts on filaments with TD data.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                How to Use TD Values for Better Lithophanes
+              </h2>
+              <div className="prose prose-lg dark:prose-invert text-muted-foreground space-y-4">
+                <p>
+                  Start by selecting a filament whose TD matches your project's requirements. For
+                  standard lithophanes, a TD between 4 and 6 provides the best balance of contrast and
+                  detail. Lower TD filaments (1–3) are better suited for opaque base layers in
+                  multicolor HueForge prints, while higher TD filaments (6+) create beautiful
+                  translucent effects when backlit.
+                </p>
+                <p>
+                  Use the filters below to narrow down by material — PLA is the most common choice for
+                  lithophanes due to its low warping and consistent TD, but PETG offers higher
+                  translucency and impact resistance. Once you find a candidate filament, click through
+                  to its detail page for printing temperature recommendations, community photos, and
+                  pricing.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
 
         {/* ── Filaments Needing TD Data ─────────────────────────────── */}
         <FilamentsNeedingTdSection />
