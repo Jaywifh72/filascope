@@ -16,6 +16,7 @@ import {
   RotateCcw,
   ExternalLink,
   FileText,
+  Sun,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: 'Affiliate Hub', href: '/admin/affiliate-hub', icon: Handshake },
       { title: 'Pricing Data', href: '/admin/pricing-data', icon: DollarSign },
+      { title: 'TD Management', href: '/admin/td-management', icon: Sun },
     ],
   },
   {

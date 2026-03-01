@@ -9112,6 +9112,95 @@ export type Database = {
         }
         Relationships: []
       }
+      td_population_log: {
+        Row: {
+          confidence: string | null
+          created_at: string | null
+          created_by: string | null
+          filament_id: string | null
+          id: string
+          notes: string | null
+          previous_value: number | null
+          source: string
+          status: string | null
+          td_value: number
+        }
+        Insert: {
+          confidence?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          filament_id?: string | null
+          id?: string
+          notes?: string | null
+          previous_value?: number | null
+          source: string
+          status?: string | null
+          td_value: number
+        }
+        Update: {
+          confidence?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          filament_id?: string | null
+          id?: string
+          notes?: string | null
+          previous_value?: number | null
+          source?: string
+          status?: string | null
+          td_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "td_population_log_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_population_log_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_population_log_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_population_log_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_population_log_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_population_log_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_population_log_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       td_reference_values: {
         Row: {
           brand_name: string
