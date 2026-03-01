@@ -1,126 +1,79 @@
 
 
-# Rebuild Population Log as Grouped Audit Trail
+# Enhanced Reference Values Tab
 
-## Overview
+## Problem
+The Reference Values tab is a basic flat table with no match status indicators, no search/filter, no inline editing, no bulk actions, and no gap analysis. Admins can't tell which references are actually matching filaments.
 
-Replace the flat table in `TdPopulationLog.tsx` with a batch-grouped, expandable audit trail. All grouping and parsing happens client-side from the same `td_population_log` table -- no schema changes needed.
+## Solution: Server-Side Match Stats + Rich UI
 
-## Architecture
+### Step 1: Database RPC Function
+
+Create `get_td_reference_match_stats()` that returns match counts for each reference value by joining `td_reference_values` with `filaments`:
 
 ```text
-td_population_log (existing table, no changes)
-        |
-        v
-  New hook: useTdPopulationLogBatched()
-    - Fetches logs with filament join for product_title/vendor
-    - Groups entries within 10-second windows by source
-    - Returns: { batches[], stats }
-        |
-        v
-  Rebuilt TdPopulationLog.tsx
-    - Stats bar at top
-    - Filter bar (date range, action, status, confidence, brand)
-    - Batch summary cards (collapsible)
-    - Expanded detail table per batch
-    - Pagination (20 batches per page)
+For each reference:
+  - matched_count: filaments WHERE vendor ILIKE brand_name 
+                    AND transmission_distance = td_value 
+                    AND (color_family ILIKE color_name OR product_title ILIKE '%' || color_name || '%')
+  - brand_total: total filaments for that vendor + material
+  - brand_with_td: filaments with any TD for that vendor + material
 ```
+
+Returns JSON array with ref ID, matched_count, brand_total, brand_with_td. Single query, no N+1 problem.
+
+Also create a gap analysis query that identifies:
+- Brands in references with zero matches
+- Duplicate (brand, color, material) entries with different TD values
+
+### Step 2: New Hooks in `useTdManagement.ts`
+
+- `useReferenceMatchStats()` -- calls the RPC, returns a Map keyed by ref ID
+- `useUpdateReferenceValue()` -- mutation for inline edits (`.update()` on `td_reference_values`)
+- `useBulkDeleteReferences()` -- deletes multiple IDs
+- `useBulkUpdateConfidence()` -- updates confidence for multiple IDs
+
+### Step 3: Rewrite `TdReferenceTable.tsx`
+
+Major UI rebuild with these sections:
+
+**Header bar**: Count label + Search input + Filter dropdowns (Source, Confidence, Match Status) + Add Reference button
+
+**Table columns**: Checkbox | Brand | Color | Material | TD | Source | Confidence | Match Status | Coverage | Actions (edit/delete)
+
+**Features**:
+- **Search**: Real-time filter by brand, color, or material
+- **Sortable columns**: Click header to toggle ASC/DESC sort
+- **Inline editing**: Click TD value/confidence/source cells to edit in-place, save on blur/Enter
+- **Bulk actions**: Floating bar when checkboxes selected -- "Delete Selected", "Set Confidence", "Re-run Matching"
+- **Match Status badge**: Green "Matched (N)" / Amber "Partial (N)" / Red "No Match" computed from RPC stats
+- **Coverage column**: "12/47" format showing brand+material TD coverage
+- **Pagination**: 50 rows per page default, with page size selector
+
+**Gap Analysis panel** (collapsible, below table):
+- Brands with references but no matches (naming mismatches)
+- Duplicate references (same brand+color+material, different TD)
+- Stale references (not updated in 30+ days)
+
+**Improved Add Reference dialog**:
+- Brand field with autocomplete from filament vendors
+- Hex code input with color preview swatch
+- Expanded source options including `3dfilamentprofiles_community`, `manufacturer_official`
+- TD range expanded to 0.1-100
 
 ## Files
 
 | Action | File | Description |
 |--------|------|-------------|
-| MODIFY | `src/hooks/useTdManagement.ts` | Replace `useTdPopulationLog` with `useTdPopulationLogBatched` that fetches logs with filament join, groups into batches |
-| REWRITE | `src/components/admin/td-management/TdPopulationLog.tsx` | Full rebuild with batch cards, expandable details, filters, stats bar, pagination |
-
-## Hook: `useTdPopulationLogBatched`
-
-**Query**: Fetch from `td_population_log` with a join to `filaments` to get `product_title` and `vendor`:
-```text
-supabase.from('td_population_log')
-  .select('*, filaments!td_population_log_filament_id_fkey(product_title, vendor, material, color_family)')
-  .order('created_at', { ascending: false })
-  .limit(2000)
-```
-
-Apply filters server-side (status, source, confidence). Date range filter via `.gte('created_at', startDate)`.
-
-**Client-side grouping**: Sort by `created_at` desc, then iterate and group entries where consecutive entries are within 10 seconds of each other AND have the same `source`. Each group becomes a "batch" object:
-
-```text
-interface LogBatch {
-  id: string;           // first entry's id
-  timestamp: string;    // earliest created_at in batch
-  source: string;
-  entries: LogEntry[];
-  summary: {
-    applied: number;
-    skipped: number;
-    errors: number;
-    dryRun: number;
-    highConf: number;
-    medConf: number;
-    lowConf: number;
-    brands: string[];   // unique vendors from joined filament data
-  };
-}
-```
-
-**Filters interface** (expanded from current):
-```text
-interface TdLogFilters {
-  status: string;       // all | applied | skipped | error | dry-run
-  source: string;       // all | reference_match | csv_import | manual | 3dfilamentprofiles_auto
-  confidence: string;   // all | high | medium | low
-  brand: string;        // all | specific vendor
-  dateRange: string;    // 24h | 7d | 30d | all
-}
-```
-
-## Component: `TdPopulationLog.tsx` (Full Rebuild)
-
-### Stats Bar
-Four stat cards at the top:
-- Total runs (batch count)
-- Total TD values applied (sum of applied across all batches)
-- Last run (relative timestamp of most recent batch)
-- Most active brand (brand with most applied entries)
-
-### Filter Bar
-Row of dropdowns: Date Range, Action/Source, Status, Confidence, Brand. All use the existing `Select` component. Brand options derived from unique vendors in the fetched data.
-
-### Batch List
-Each batch renders as a collapsible card using the existing `Collapsible` + `CollapsibleTrigger` + `CollapsibleContent` from Radix. The trigger row shows:
-- Formatted timestamp + relative time (using `formatDistanceToNow`)
-- Source badge with icon mapping: reference_match -> "Run Matching", csv_import -> "Bulk Import", 3dfilamentprofiles_auto -> "Fetch External", manual -> "Manual Edit"
-- Results summary: "X applied, Y skipped, Z errors" with colored text
-- Brands affected: first 3 brand names + "+N more" if more
-- Confidence pills: small badges "X high / Y med / Z low"
-- ChevronDown icon that rotates on expand
-
-### Expanded Detail Table
-Standard `Table` showing individual entries within the batch:
-- Filament (product_title from join, or filament_id fallback)
-- Brand (vendor from join)
-- Color + Material (parsed from notes JSON)
-- TD Value + Previous Value
-- Confidence badge
-- Rule (parsed from notes JSON `matchRule` field, e.g., "R1: Exact Match")
-- Status badge
-
-The notes JSON is parsed with `JSON.parse(log.notes)` wrapped in try/catch. Fields `refBrand`, `refColor`, `refMaterial`, `matchReason`, `matchRule` are extracted and displayed as structured columns.
-
-### Pagination
-Simple "Load More" button that increases the query limit, or page-based with Previous/Next using the existing Pagination components. Show 20 batches at a time.
-
-### Clear Log Button
-A "Clear Log" button with an AlertDialog confirmation. Calls `supabase.from('td_population_log').delete().neq('id', '')` -- deletes all log rows. Does NOT touch filaments.transmission_distance values. Invalidates query cache after.
+| CREATE | Database migration | `get_td_reference_match_stats()` RPC |
+| MODIFY | `src/hooks/useTdManagement.ts` | Add match stats hook, update mutation, bulk operations |
+| REWRITE | `src/components/admin/td-management/TdReferenceTable.tsx` | Full rebuild with all enhancements |
 
 ## Technical Notes
 
-- No database migration needed -- all data already exists in `td_population_log`
-- The filament join provides product_title/vendor without extra queries
-- Notes JSON parsing is defensive (try/catch) since some entries may have plain text notes
-- The 10-second grouping window handles the fact that matching runs insert entries sequentially with small delays between them
-- Pagination at 2000 rows per fetch is sufficient since the table won't grow beyond that quickly; the "Load More" pattern handles overflow
+- The RPC uses a single aggregate query joining `td_reference_values` with `filaments`, avoiding per-row queries
+- Match status is cached via React Query key `['td-reference-match-stats']`, invalidated alongside `['td-reference-values']`
+- Inline edit saves use optimistic updates for responsiveness
+- Gap analysis (duplicates, stale) is computed client-side from the reference data since it's only ~234 rows
+- Brand autocomplete fetches distinct vendors from filaments table (separate small query)
 
