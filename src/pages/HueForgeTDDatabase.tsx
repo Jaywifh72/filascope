@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef, useTransition } from 'react';
+import { cn } from '@/lib/utils';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
@@ -192,6 +193,7 @@ export default function HueForgeTDDatabase() {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
+  const [isScrolledFromTop, setIsScrolledFromTop] = useState(false);
 
   // Debounced search
   const handleSearchChange = useCallback((value: string) => {
@@ -833,8 +835,14 @@ export default function HueForgeTDDatabase() {
                   onScroll={(e) => {
                     const el = e.currentTarget;
                     setIsScrolledToBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 10);
+                    setIsScrolledFromTop(el.scrollTop > 0);
                   }}
                 >
+                  {/* Scroll-from-top gradient */}
+                  <div className={cn(
+                    'sticky top-0 left-0 right-0 h-5 bg-gradient-to-b from-background to-transparent pointer-events-none z-[6] transition-opacity duration-200',
+                    isScrolledFromTop ? 'opacity-100' : 'opacity-0'
+                  )} />
                   <Table>
                     <TableHeader className="sticky top-0 bg-background z-10 border-b border-border shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
                       <TableRow>
@@ -969,9 +977,10 @@ export default function HueForgeTDDatabase() {
                     </TableBody>
                   </Table>
                   {/* Fade-out gradient hint */}
-                  {!isScrolledToBottom && (
-                    <div className="sticky bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none z-[5]" />
-                  )}
+                  <div className={cn(
+                    'sticky bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none z-[5] transition-opacity duration-200',
+                    isScrolledToBottom ? 'opacity-0' : 'opacity-100'
+                  )} />
                   {(() => {
                     const limit = rowsPerPage === Infinity ? filteredData.length : rowsPerPage;
                     const shown = Math.min(filteredData.length, limit);
