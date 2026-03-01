@@ -9112,6 +9112,48 @@ export type Database = {
         }
         Relationships: []
       }
+      td_reference_values: {
+        Row: {
+          brand_name: string
+          color_hex: string | null
+          color_name: string
+          confidence: string | null
+          created_at: string | null
+          id: string
+          material_type: string
+          notes: string | null
+          source: string
+          td_value: number
+          updated_at: string | null
+        }
+        Insert: {
+          brand_name: string
+          color_hex?: string | null
+          color_name: string
+          confidence?: string | null
+          created_at?: string | null
+          id?: string
+          material_type: string
+          notes?: string | null
+          source: string
+          td_value: number
+          updated_at?: string | null
+        }
+        Update: {
+          brand_name?: string
+          color_hex?: string | null
+          color_name?: string
+          confidence?: string | null
+          created_at?: string | null
+          id?: string
+          material_type?: string
+          notes?: string | null
+          source?: string
+          td_value?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tds_review_queue: {
         Row: {
           created_at: string | null
