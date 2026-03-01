@@ -1,66 +1,67 @@
 
-
-# Add Persistent HueForge Tools Sub-Navigation Bar
+# Redesign the Substitute Finder Tool Page
 
 ## Overview
-Create a shared sticky tab bar that appears at the top of all 6 HueForge tool pages, providing instant navigation between tools without losing context. This replaces the ad-hoc button row in the TD Database hero and complements the existing bottom cross-links.
+Transform the sparse substitute finder page into an engaging, full-featured tool with a proper hero section, enhanced search, empty state with clickable examples, filter controls, and improved results grouping.
 
-## New Component: `HueForgeToolsNav`
+## Changes
 
-**File:** `src/components/hueforge/HueForgeToolsNav.tsx`
+### 1. Update `TdSubstituteFinder.tsx` — Major Redesign
 
-A horizontal tab bar driven by the existing `HUEFORGE_TOOLS` data in `HueForgeToolsData.ts`, plus an "Export CSV" action tab.
+**Hero Section:**
+- Enhanced subtitle explaining use cases
+- Three decorative use-case pills below the subtitle: "Out of Stock", "Find Cheaper", "Match a Color"
 
-- Uses `useLocation()` to highlight the active tab with a cyan bottom border
-- Each tab renders the tool's Lucide icon + short name, linking via React Router `<Link>`
-- The "Export CSV" tab receives an optional `onExportCsv` callback prop -- when provided and clicked, it triggers the export and shows a toast; when not provided (non-TD-Database pages), it's hidden
-- Sticky positioning: `sticky top-16 z-30` (below the 64px main navbar)
-- Adds a bottom shadow when scrolled via the existing `useStickyElement` hook pattern
+**Search Interface:**
+- Keep existing `SubstituteFilamentPicker` combobox (it already has search with color swatches, brand, and TD values) but restyle the trigger button to be larger (`h-12`) with improved placeholder text and focus ring styling
 
-**Styling:**
-- Container: `bg-background/80 backdrop-blur-sm border-b border-border`
-- Active tab: `border-b-2 border-cyan-500 text-cyan-400 font-medium`
-- Inactive tab: `text-muted-foreground hover:text-foreground transition-colors`
-- Each tab: `px-4 py-3 text-sm whitespace-nowrap flex items-center gap-2`
+**Filter Controls (new, below search):**
+- "Same color family" toggle (default on) — filters results to matching `color_family`
+- "Same material" toggle (default on) — filters results to matching `material`
+- TD tolerance slider (default +/-0.5, range 0.1 to 2.0) — replaces the hardcoded 0.1/0.5 thresholds
+- Laid out as a horizontal flex row with labels
 
-**Mobile:**
-- `overflow-x-auto` with `snap-x snap-mandatory`, each tab `snap-start`
-- Right-edge fade gradient via a `::after` pseudo-element (CSS class or inline div) to hint at scrollability
-- On screens under 480px, hide tab labels and show icons only using a responsive utility class
+**Empty State (before a filament is selected):**
+- Visual diagram: three connected cards showing "Your Filament -> TD Match -> Substitute" with arrow icons
+- "Popular substitution searches" section with 3-4 clickable example buttons that pre-select specific filaments from the data (find real entries for Overture Black, Bambu Lab White, eSUN Pine Green by scanning the filaments array)
 
-## Pages to Update (5 files)
+**Reference Card Enhancement:**
+- Add "YOUR FILAMENT" label in `text-xs uppercase tracking-wider text-cyan-400` above the card
+- Keep existing card layout
 
-Each page gets `<HueForgeToolsNav />` inserted right after the `<Breadcrumbs>` component and before the main content wrapper. On the TD Database page, the `onExportCsv` prop is passed so the Export CSV tab works.
+**Results Grouping:**
+- Rename sections to use emoji prefixes and adjust thresholds based on the user's TD tolerance slider:
+  - "Exact TD Match" (within tolerance * 0.2)
+  - "Close Match" (within tolerance * 1.0)
+  - "Similar Range" (within tolerance * 2.0)
+- Add a "Save $X" badge on result cards that are cheaper than the source filament
 
-### 1. `src/pages/HueForgeTDDatabase.tsx`
-- Add `<HueForgeToolsNav onExportCsv={exportCSV} />` after breadcrumbs
-- Remove the 6-button row in the hero section (lines ~480-516) since the sticky nav replaces it -- keep the "Search the Database" CTA and "learn about TD values" link
+**No Results State:**
+- Friendly message with suggestions to widen tolerance or remove filters
+- Link to browse all filaments in the TD range on the main database page
 
-### 2. `src/pages/HueForgeSubstituteFinder.tsx`
-- Add `<HueForgeToolsNav />` after `<Breadcrumbs>`
+### 2. Update `SubstituteFilamentPicker.tsx` — Styling Only
 
-### 3. `src/pages/HueForgeLayerPreview.tsx`
-- Add `<HueForgeToolsNav />` after `<Breadcrumbs>`
+- Increase trigger button height to `h-12`
+- Update placeholder text to "Search by filament name, brand, or color..."
+- Add `focus:ring-2 focus:ring-cyan-500/20` styling to the trigger
 
-### 4. `src/pages/HueForgeColorMatcher.tsx`
-- Add `<HueForgeToolsNav />` after breadcrumbs (need to check if breadcrumbs exist; add if missing)
+### 3. Update `SubstituteResultCard.tsx` — Add Savings Badge
 
-### 5. `src/pages/HueForgeProjectPlanner.tsx`
-- Add `<HueForgeToolsNav />` after `<Breadcrumbs>`
+- When the substitute's price is lower than the source price, show a small green badge: "Save $X.XX"
+- Add `sourcePrice` prop to enable this calculation
 
-## Breadcrumb Consistency
-Ensure all 5 sub-tool pages use the same breadcrumb pattern:
-- Visible: `HueForge TD Database > [Tool Name]`
-- Schema: `Home > HueForge TD Database > [Tool Name]`
+### 4. Files Modified
 
-The TD Database page itself keeps: `Home > HueForge TD Database`
+| File | Change |
+|------|--------|
+| `src/components/hueforge/TdSubstituteFinder.tsx` | Major redesign: hero, filters, empty state, results grouping |
+| `src/components/hueforge/SubstituteFilamentPicker.tsx` | Restyle trigger button (h-12, updated placeholder) |
+| `src/components/hueforge/SubstituteResultCard.tsx` | Add sourcePrice prop and savings badge |
 
-## No Changes To
-- `HueForgeToolsData.ts` -- reused as-is
-- `HueForgeToolsCrossLinks.tsx` -- kept as bottom-of-page cross-links (complementary, not replaced)
-- Routing, footer, or navbar
+### Technical Notes
 
-## Implementation Order
-1. Create `HueForgeToolsNav.tsx` component
-2. Update `HueForgeTDDatabase.tsx` -- add nav, remove redundant hero button row
-3. Update the other 4 tool pages -- add nav + fix breadcrumbs if needed
+- The empty state example buttons will find filaments by scanning the `filaments` array for known brand/color combinations (e.g., vendor="Overture" + color_family="Black") and calling `onSelect` with the found filament
+- TD tolerance slider uses Radix `Slider` component (already installed)
+- Filter state (sameColor, sameMaterial, tdTolerance) managed as local `useState` in `TdSubstituteFinder`
+- The matching logic in `useMemo` will be updated to respect the dynamic tolerance and filter toggles instead of hardcoded 0.1/0.5 thresholds
