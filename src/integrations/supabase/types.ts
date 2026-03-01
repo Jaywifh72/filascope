@@ -1850,6 +1850,13 @@ export type Database = {
             foreignKeyName: "broken_links_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "broken_links_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -2330,6 +2337,13 @@ export type Database = {
             foreignKeyName: "community_safety_reports_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "community_safety_reports_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -2443,6 +2457,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "deals_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -2796,6 +2817,13 @@ export type Database = {
             foreignKeyName: "filament_comments_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_comments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -2893,6 +2921,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_inventory_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -3047,6 +3082,13 @@ export type Database = {
             foreignKeyName: "filament_listings_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -3168,6 +3210,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_prices_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -3315,6 +3364,13 @@ export type Database = {
             foreignKeyName: "filament_properties_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: true
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_properties_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: true
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -3404,6 +3460,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_reviews_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -3504,6 +3567,13 @@ export type Database = {
             foreignKeyName: "filament_score_history_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_score_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -3572,6 +3642,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: true
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_search_embeddings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: true
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -3658,6 +3735,13 @@ export type Database = {
             foreignKeyName: "filament_trait_tags_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_trait_tags_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -3729,6 +3813,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_use_cases_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -3818,6 +3909,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_user_ratings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -5046,6 +5144,13 @@ export type Database = {
             foreignKeyName: "price_alerts_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -5141,6 +5246,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_discrepancies_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -5336,6 +5448,13 @@ export type Database = {
             foreignKeyName: "price_history_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -5462,6 +5581,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "print_results_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -5724,6 +5850,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "printer_compatibility_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -7087,6 +7220,13 @@ export type Database = {
             foreignKeyName: "product_questions_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "product_questions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -7232,6 +7372,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "product_regional_slugs_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -7746,6 +7893,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "project_materials_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -8300,6 +8454,13 @@ export type Database = {
             foreignKeyName: "safety_alerts_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "safety_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -8488,6 +8649,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "scrape_errors_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -9064,6 +9232,13 @@ export type Database = {
             foreignKeyName: "sync_activity_log_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "sync_activity_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -9198,6 +9373,13 @@ export type Database = {
             foreignKeyName: "td_population_log_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_population_log_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -9251,6 +9433,207 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      td_submissions: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          filament_id: string
+          id: string
+          layer_height_mm: number | null
+          measurement_method: string
+          notes: string | null
+          nozzle_temp_c: number | null
+          photo_url: string | null
+          printer_model: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_td_value: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          layer_height_mm?: number | null
+          measurement_method: string
+          notes?: string | null
+          nozzle_temp_c?: number | null
+          photo_url?: string | null
+          printer_model?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_td_value: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          layer_height_mm?: number | null
+          measurement_method?: string
+          notes?: string | null
+          nozzle_temp_c?: number | null
+          photo_url?: string | null
+          printer_model?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_td_value?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "td_submissions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_submissions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_submissions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_submissions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_submissions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_submissions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_submissions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_submissions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      td_verifications: {
+        Row: {
+          created_at: string | null
+          filament_id: string
+          id: string
+          notes: string | null
+          user_id: string
+          user_measured_td: number | null
+          vote: string
+        }
+        Insert: {
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          notes?: string | null
+          user_id: string
+          user_measured_td?: number | null
+          vote: string
+        }
+        Update: {
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+          user_measured_td?: number | null
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "td_verifications_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_verifications_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_verifications_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_verifications_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_verifications_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_verifications_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "td_verifications_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "td_verifications_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tds_review_queue: {
         Row: {
@@ -9326,6 +9709,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "tds_review_queue_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -9543,6 +9933,13 @@ export type Database = {
             foreignKeyName: "url_auto_fixes_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "url_auto_fixes_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -9656,6 +10053,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "url_repair_queue_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -9886,6 +10290,13 @@ export type Database = {
             foreignKeyName: "user_browse_history_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_browse_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -9987,6 +10398,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_favorites_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -10333,6 +10751,13 @@ export type Database = {
             foreignKeyName: "user_purchases_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_purchases_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
@@ -10547,6 +10972,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_slicer_profiles_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
@@ -11934,6 +12366,20 @@ export type Database = {
         }
         Relationships: []
       }
+      td_community_stats: {
+        Row: {
+          accurate_votes: number | null
+          community_avg_td: number | null
+          community_td_stddev: number | null
+          filament_id: string | null
+          official_td: number | null
+          submission_count: number | null
+          too_high_votes: number | null
+          too_low_votes: number | null
+          verification_count: number | null
+        }
+        Relationships: []
+      }
       v_active_brands: {
         Row: {
           actual_product_count: number | null
@@ -12169,6 +12615,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
             referencedColumns: ["filament_id"]
           },
           {
