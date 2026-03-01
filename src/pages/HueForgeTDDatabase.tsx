@@ -53,6 +53,7 @@ import { TdRangeSlider } from '@/components/hueforge/TdRangeSlider';
 import { TdDistributionChart } from '@/components/hueforge/TdDistributionChart';
 import { TdValueCell } from '@/components/hueforge/TdValueCell';
 import { HueForgeToolsNav } from '@/components/hueforge/HueForgeToolsNav';
+import { getSwatchColor, needsContrastRing, isApproximateColor } from '@/lib/swatchColor';
 
 // ── FAQ data ──────────────────────────────────────────────────────────
 const faqData = [
@@ -174,25 +175,8 @@ function isColorDark(hex: string): boolean {
   return (r * 299 + g * 587 + b * 114) / 1000 < 80;
 }
 
-// Detect colors that need contrast ring on dark backgrounds (luminance < 15%)
-function needsContrastRing(hex: string | null | undefined): boolean {
-  if (!hex) return true;
-  const c = hex.replace('#', '');
-  const r = parseInt(c.substring(0, 2), 16) / 255;
-  const g = parseInt(c.substring(2, 4), 16) / 255;
-  const b = parseInt(c.substring(4, 6), 16) / 255;
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance < 0.15;
-}
-
-// Fallback hex for filaments with known color family but missing hex
-function getFallbackHex(colorFamily: string | null): string | null {
-  if (!colorFamily) return null;
-  const lower = colorFamily.toLowerCase();
-  if (lower.includes('white') || lower.includes('natural')) return '#F0F0EA';
-  if (lower.includes('black')) return '#1A1A1A';
-  return null;
-}
+// Use shared swatch utilities from @/lib/swatchColor
+// (getFallbackHex and needsContrastRing are now imported)
 
 // ── Component ─────────────────────────────────────────────────────────
 export default function HueForgeTDDatabase() {
@@ -896,7 +880,7 @@ export default function HueForgeTDDatabase() {
                           }
 
                           const filamentUrl = `/filament/${f.product_handle || f.id}`;
-                          const displayHex = f.color_hex || getFallbackHex(f.color_family);
+                          const displayHex = getSwatchColor(f.color_hex, f.color_family);
                           const darkSwatch = needsContrastRing(displayHex);
                           rows.push(
                             <TableRow
@@ -997,7 +981,7 @@ export default function HueForgeTDDatabase() {
                       const cardLimit = rowsPerPage === Infinity ? sorted.length : rowsPerPage;
                       return sorted.slice(0, cardLimit).map((f, idx) => {
                         const filamentUrl = `/filament/${f.product_handle || f.id}`;
-                        const displayHex = f.color_hex || getFallbackHex(f.color_family);
+                        const displayHex = getSwatchColor(f.color_hex, f.color_family);
                         const darkSwatch = needsContrastRing(displayHex);
                         return (
                           <Link
@@ -1095,7 +1079,7 @@ export default function HueForgeTDDatabase() {
                   </p>
                   <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1 max-md:flex max-md:overflow-x-auto max-md:snap-x max-md:snap-mandatory max-md:gap-4 max-md:pb-2">
                     {group.items.map((f, i) => {
-                      const displayHex = f.color_hex || getFallbackHex(f.color_family);
+                      const displayHex = getSwatchColor(f.color_hex, f.color_family);
                       const darkSwatch = needsContrastRing(displayHex);
                       return (
                       <Link
