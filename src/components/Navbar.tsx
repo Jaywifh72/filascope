@@ -32,21 +32,33 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [learnDropdownOpen, setLearnDropdownOpen] = useState(false);
   const learnHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [hasScrolled, setHasScrolled] = useState(false);
-  const [showNavSearch, setShowNavSearch] = useState(false);
-  const [navSearchValue, setNavSearchValue] = useState("");
-  const navSearchRef = useRef<HTMLInputElement>(null);
-  const rotatingPlaceholder = useRotatingPlaceholder({ pathname: location.pathname });
+   const [hasScrolled, setHasScrolled] = useState(false);
+   const [isCompact, setIsCompact] = useState(false);
+   const [showNavSearch, setShowNavSearch] = useState(false);
+   const [navSearchValue, setNavSearchValue] = useState("");
+   const navSearchRef = useRef<HTMLInputElement>(null);
+   const rotatingPlaceholder = useRotatingPlaceholder({ pathname: location.pathname });
 
-  // Detect scroll for sticky nav border + nav search visibility
-  useEffect(() => {
-    const handleScroll = () => {
-      setHasScrolled(window.scrollY > 80);
-      setShowNavSearch(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+   // Detect scroll for sticky nav border, compaction, + nav search visibility
+   useEffect(() => {
+     let lastScrollY = window.scrollY;
+     let ticking = false;
+     const handleScroll = () => {
+       const scrollY = window.scrollY;
+       setHasScrolled(scrollY > 80);
+       setIsCompact(scrollY > 100);
+       setShowNavSearch(scrollY > 300);
+       lastScrollY = scrollY;
+     };
+     const onScroll = () => {
+       if (!ticking) {
+         requestAnimationFrame(() => { handleScroll(); ticking = false; });
+         ticking = true;
+       }
+     };
+     window.addEventListener("scroll", onScroll, { passive: true });
+     return () => window.removeEventListener("scroll", onScroll);
+   }, []);
 
   const handleNavSearch = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && navSearchValue.trim()) {
@@ -242,13 +254,19 @@ const Navbar = () => {
   return <>
       <header>
       <nav className={cn(
-         "sticky top-0 z-50 bg-background/95 backdrop-blur-md transition-all duration-300",
-         hasScrolled ? "border-b border-border/50 shadow-xl shadow-black/20" : "border-b border-transparent shadow-sm"
+         "sticky top-0 z-50 transition-all duration-200 ease-out",
+         isCompact
+           ? "bg-background/98 backdrop-blur-xl border-b border-border/60 shadow-xl shadow-black/20"
+           : "bg-background/95 backdrop-blur-md shadow-sm",
+         hasScrolled ? "border-b border-border/50" : "border-b border-transparent"
       )} aria-label="Main navigation">
         {/* Bottom border for depth */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         
-        <div className="py-4 flex items-center px-4 md:px-6 gap-4 md:gap-6">
+        <div className={cn(
+          "flex items-center px-4 md:px-6 gap-4 md:gap-6 transition-[padding] duration-200 ease-out",
+          isCompact ? "py-2.5" : "py-4"
+        )}>
           {/* Mobile hamburger button with keyboard support */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -270,7 +288,10 @@ const Navbar = () => {
             <img
               src={filascopeLogo}
               alt="FilaScope"
-              className="h-8 md:h-9 w-auto object-contain"
+              className={cn(
+                "w-auto object-contain transition-all duration-200 ease-out",
+                isCompact ? "h-6 md:h-7" : "h-8 md:h-9"
+              )}
               style={{ maxWidth: '224px' }}
               width={224}
               height={72}
@@ -444,30 +465,31 @@ const Navbar = () => {
                     "text-xs font-bold uppercase tracking-widest",
                     "flex items-center gap-2",
                     "transition-all duration-200",
-                    compareCount > 0
-                      ? "border-primary/50 hover:border-primary hover:bg-primary/10 text-primary cursor-pointer"
-                      : "border-border text-muted-foreground opacity-50 cursor-not-allowed",
-                    isActive('/compare') && "bg-primary/10 border-primary text-primary opacity-100"
-                  )}
-                >
-                  <GitCompareArrows className="w-3.5 h-3.5" />
-                  Compare ({compareCount}{compareCount >= 4 ? '/4' : ''})
-                  {compareCount > 0 && (
-                    <span 
-                      className={cn(
-                        "absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5",
-                        "flex items-center justify-center",
-                        "text-[11px] font-bold rounded-full",
-                        "transition-all duration-200",
-                        compareCount >= 4
-                          ? "bg-amber-500 text-white"
-                          : "bg-primary text-primary-foreground",
-                        isCountAnimating && "animate-[bounce_0.4s_ease-in-out]"
-                      )}
-                    >
-                      {compareCount}
-                    </span>
-                  )}
+                   compareCount > 0
+                       ? "border-primary/50 hover:border-primary hover:bg-primary/10 text-primary cursor-pointer"
+                       : "border-border text-muted-foreground opacity-50 cursor-not-allowed",
+                     compareCount >= 4 && "bg-primary/15 border-primary text-primary opacity-100",
+                     isActive('/compare') && "bg-primary/10 border-primary text-primary opacity-100"
+                   )}
+                 >
+                   <GitCompareArrows className="w-3.5 h-3.5" />
+                   Compare ({compareCount}{compareCount >= 4 ? '/4' : ''})
+                   {compareCount > 0 && (
+                     <span 
+                       className={cn(
+                         "absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5",
+                         "flex items-center justify-center",
+                         "text-[11px] font-bold rounded-full",
+                         "transition-all duration-200",
+                         compareCount >= 4
+                           ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
+                           : "bg-primary text-primary-foreground",
+                         isCountAnimating && "animate-[bounce_0.4s_ease-in-out] shadow-[0_0_16px_hsl(var(--primary)/0.5)]"
+                       )}
+                     >
+                       {compareCount}
+                     </span>
+                   )}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="bg-popover border-border text-sm">
@@ -554,16 +576,16 @@ const Navbar = () => {
                         "absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1",
                         "flex items-center justify-center",
                         "text-[10px] font-bold rounded-full",
-                        "transition-all duration-200",
-                        compareCount >= 4
-                          ? "bg-amber-500 text-white"
-                          : "bg-primary text-primary-foreground",
-                        isCountAnimating && "animate-[bounce_0.4s_ease-in-out]"
-                      )}
-                    >
-                      {compareCount}
-                    </span>
-                  )}
+                         "transition-all duration-200",
+                         compareCount >= 4
+                           ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
+                           : "bg-primary text-primary-foreground",
+                         isCountAnimating && "animate-[bounce_0.4s_ease-in-out] shadow-[0_0_16px_hsl(var(--primary)/0.5)]"
+                       )}
+                     >
+                       {compareCount}
+                     </span>
+                   )}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="bg-popover border-border text-sm">

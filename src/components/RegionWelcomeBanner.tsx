@@ -14,7 +14,17 @@ export function RegionWelcomeBanner() {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
+  const [isScrolledAway, setIsScrolledAway] = useState(false);
   const isMobile = useIsMobile();
+
+  // Hide banner on scroll-down, show again near top
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolledAway(window.scrollY > 100);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
@@ -45,7 +55,7 @@ export function RegionWelcomeBanner() {
     animateOut();
   }, [animateOut]);
 
-  if (!isVisible || isLoading) return null;
+  if (!isVisible || isLoading || isScrolledAway) return null;
 
   const confirmLabel = `Yes, I'm in ${regionConfig.name}`;
 

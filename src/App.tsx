@@ -22,6 +22,7 @@ function AdminRedirect() {
 }
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
+import { ScrollProgressBar } from "./components/ScrollProgressBar";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { SiteFooter } from "./components/SiteFooter";
 import { RegionProvider } from "./contexts/RegionContext";
@@ -247,6 +248,7 @@ const App = () => (
                 <SWUpdateNotifier />
                 <MaintenanceModeWrapper>
                 <RegionWelcomeBanner />
+                <ScrollProgressBar />
                 <Navbar />
                 <Suspense fallback={<PageLoadingSkeleton />}>
                   {/* Main content landmark for accessibility */}
