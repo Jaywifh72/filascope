@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { LikeButton } from "@/components/LikeButton";
-import { ChevronUp, ChevronDown, TreeDeciduous, Layers, Info, Lightbulb } from "lucide-react";
+import { ChevronUp, ChevronDown, TreeDeciduous, Layers, Info, Lightbulb, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/contexts/RegionContext";
 import { resolveFilamentPrice, type FilamentForPricing } from "@/lib/resolveFilamentPrice";
@@ -89,6 +89,14 @@ const SORTABLE_COLUMNS: Record<string, string> = {
   "Rating": "scoring",
 };
 
+/** Rating pill color based on score */
+function getRatingPillClasses(score: number): string {
+  if (score >= 9.0) return "bg-emerald-500/20 text-emerald-400";
+  if (score >= 7.0) return "bg-cyan-500/15 text-cyan-400";
+  if (score >= 5.0) return "bg-amber-500/15 text-amber-400";
+  return "bg-muted/40 text-muted-foreground";
+}
+
 function SortableHeader({ 
   label, 
   sortKey, 
@@ -121,8 +129,8 @@ function SortableHeader({
   return (
     <th 
       className={cn(
-        "py-3 px-3 text-xs font-semibold uppercase tracking-wide cursor-pointer select-none group sticky top-0 z-10 bg-muted/80 backdrop-blur-sm",
-        isActive ? "text-primary" : "text-muted-foreground",
+        "py-3 px-3 text-xs font-semibold uppercase tracking-wide cursor-pointer select-none group sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b border-border",
+        isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
         className
       )}
       onClick={handleClick}
@@ -159,6 +167,35 @@ export function FilamentTableView({
   const navigate = useNavigate();
   const { formatPrice, convertPrice, currency, hasRates } = useRegion();
 
+  // Count selected items for the header badge
+  const selectedCount = useMemo(
+    () => filaments.filter((f) => isInCompare(f.id)).length,
+    [filaments, isInCompare]
+  );
+
+  // Detect if sorted by brand for brand grouping
+  const isSortedByBrand = sortBy?.startsWith("brand");
+
+  // Compute average true cost for relative value arrows
+  const avgTrueCost = useMemo(() => {
+    let sum = 0;
+    let count = 0;
+    for (const f of filaments) {
+      const resolved = resolveFilamentPrice(f as FilamentForPricing, {
+        userCurrency: currency,
+        convertFromCurrency: convertPrice,
+        hasRates,
+      });
+      const ppk = resolved.pricePerKg;
+      const maxValid = currency === 'JPY' || currency === 'KRW' ? 100000 : 500;
+      if (ppk && ppk > 0 && ppk < maxValid) {
+        sum += ppk;
+        count++;
+      }
+    }
+    return count > 0 ? sum / count : null;
+  }, [filaments, currency, convertPrice, hasRates]);
+
   return (
     <div 
       className="relative overflow-x-auto rounded-lg border border-border/50 [mask-image:linear-gradient(to_right,black_calc(100%-40px),transparent)] hover:[mask-image:none] transition-all" 
@@ -168,22 +205,26 @@ export function FilamentTableView({
       <table className="w-full" id="filament-table">
         <thead>
           <tr className="border-b border-border">
-            <th className="py-3 px-2 w-8 sticky top-0 z-10 bg-muted/80 backdrop-blur-sm" aria-label="Selection"></th>
-            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[60px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">Color</th>
+            <th className="py-3 px-2 w-8 sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b border-border" aria-label="Selection">
+              {selectedCount > 0 && (
+                <span className="text-[10px] font-medium text-primary whitespace-nowrap">{selectedCount} sel.</span>
+              )}
+            </th>
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[60px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b border-border">Color</th>
             <SortableHeader label="Brand" sortKey="brand" sortBy={sortBy} onSortChange={onSortChange} className="min-w-[100px]" />
-            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[180px] max-w-[300px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">Product</th>
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[180px] max-w-[300px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b border-border">Product</th>
             <SortableHeader label="Type" sortKey="material" sortBy={sortBy} onSortChange={onSortChange} className="min-w-[80px]" />
             <SortableHeader label="TD" sortKey="td" sortBy={sortBy} onSortChange={onSortChange} className="text-center min-w-[50px]" />
             <SortableHeader label="True Cost" sortKey="true-cost" sortBy={sortBy} onSortChange={onSortChange} className="text-right min-w-[90px]" />
             <SortableHeader label="Price" sortKey="price" sortBy={sortBy} onSortChange={onSortChange} className="text-right min-w-[80px]" />
             <SortableHeader label="Stock" sortKey="stock" sortBy={sortBy} onSortChange={onSortChange} className="text-center min-w-[50px]" />
-            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center min-w-[70px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">Updated</th>
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center min-w-[70px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b border-border">Updated</th>
             <SortableHeader label="Rating" sortKey="scoring" sortBy={sortBy} onSortChange={onSortChange} className="text-right min-w-[60px]" />
-            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right min-w-[90px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">Actions</th>
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right min-w-[90px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm border-b border-border">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {filaments.map((filament) => {
+          {filaments.map((filament, rowIndex) => {
             const resolved = resolveFilamentPrice(filament as FilamentForPricing, {
               userCurrency: currency,
               convertFromCurrency: convertPrice,
@@ -207,23 +248,46 @@ export function FilamentTableView({
             const matchPercent = searchHex && normalizedHex && getColorMatchPercent 
               ? getColorMatchPercent(searchHex, normalizedHex) 
               : null;
-            
+
+            const isOutOfStock = filament.variant_available === false;
+            const isSelected = isInCompare(filament.id);
+
+            // True cost relative value arrow
+            const trueCostArrow = (() => {
+              if (!displayPricePerKg || !avgTrueCost) return null;
+              const deviation = (displayPricePerKg - avgTrueCost) / avgTrueCost;
+              if (deviation < -0.15) return "low"; // notably cheaper
+              if (deviation > 0.15) return "high"; // notably more expensive
+              return null;
+            })();
+
+            // Brand grouping: show separator when sorted by brand and brand changes
+            const showBrandSeparator = isSortedByBrand && rowIndex > 0 && filament.vendor !== filaments[rowIndex - 1]?.vendor;
+            const isFirstOfBrand = isSortedByBrand && (rowIndex === 0 || filament.vendor !== filaments[rowIndex - 1]?.vendor);
+
             return (
               <tr 
                 key={filament.id} 
                 className={cn(
-                  "border-b border-border/50 transition-colors cursor-pointer",
-                  isInCompare(filament.id) 
-                    ? "bg-primary/5 hover:bg-primary/10" 
-                    : "hover:bg-muted/50 even:bg-muted/10"
+                  "group border-b border-border/50 transition-colors duration-150 cursor-pointer",
+                  // Zebra striping
+                  rowIndex % 2 === 1 && "bg-muted/10",
+                  // Hover
+                  "hover:bg-muted/50",
+                  // Selected state
+                  isSelected && "bg-primary/5 hover:bg-primary/10 border-l-2 border-l-primary",
+                  // Out of stock
+                  isOutOfStock && "opacity-60",
+                  // Brand separator
+                  showBrandSeparator && "border-t-2 border-t-border/50"
                 )}
                 onClick={() => navigate(getFilamentHref(filament.id, filament.product_handle))}
               >
                 <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
                   <Checkbox 
-                    checked={isInCompare(filament.id)}
+                    checked={isSelected}
                     onCheckedChange={() => {
-                      if (isInCompare(filament.id)) {
+                      if (isSelected) {
                         removeItem(filament.id);
                       } else {
                         addItem({
@@ -246,7 +310,7 @@ export function FilamentTableView({
                     <div className="flex flex-col items-center gap-0.5">
                       <div className="relative">
                         <div 
-                          className="w-8 h-8 rounded-full ring-1 ring-border"
+                          className="w-8 h-8 rounded-full ring-1 ring-border transition-transform duration-200 group-hover:scale-110"
                           style={{ backgroundColor: normalizedHex }}
                           title={filament.color_family || 'Color'}
                         />
@@ -270,10 +334,17 @@ export function FilamentTableView({
                   )}
                 </td>
                 <td className="py-3 px-3">
-                  <span className="text-sm font-medium text-foreground">{filament.vendor}</span>
+                  <span className={cn(
+                    "text-sm font-medium text-foreground",
+                    isFirstOfBrand && "font-semibold"
+                  )}>
+                    {filament.vendor}
+                  </span>
                 </td>
                 <td className="py-3 px-3 max-w-[300px]">
-                  <span className="text-sm text-muted-foreground truncate block">{filament.product_title}</span>
+                  <span className="text-sm text-muted-foreground truncate block group-hover:text-foreground transition-colors duration-150">
+                    {filament.product_title}
+                  </span>
                 </td>
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -312,7 +383,9 @@ export function FilamentTableView({
                   )}
                 </td>
                 <td className="py-3 px-3 text-right">
-                  <span className="font-mono text-sm font-semibold text-cyan-400">
+                  <span className="font-mono text-sm font-semibold text-cyan-400 inline-flex items-center gap-0.5">
+                    {trueCostArrow === "low" && <span className="text-emerald-500 text-[10px]">▼</span>}
+                    {trueCostArrow === "high" && <span className="text-red-400 text-[10px]">▲</span>}
                     {displayPricePerKg ? `${prefix}${formatPrice(displayPricePerKg)}/kg` : "—"}
                   </span>
                 </td>
@@ -323,9 +396,22 @@ export function FilamentTableView({
                 </td>
                 <td className="py-3 px-3 text-center">
                   {filament.variant_available !== false ? (
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mx-auto" title="In Stock" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                          <span className="text-xs text-emerald-400 hidden lg:inline">In Stock</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        In stock{filament.vendor ? ` at ${filament.vendor}` : ''}
+                      </TooltipContent>
+                    </Tooltip>
                   ) : (
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 mx-auto" title="Out of Stock" />
+                    <div className="flex items-center justify-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      <span className="text-xs text-red-400/60 hidden lg:inline">Out of Stock</span>
+                    </div>
                   )}
                 </td>
                 <td className="py-3 px-3 text-center">
@@ -337,8 +423,8 @@ export function FilamentTableView({
                       <TooltipTrigger asChild>
                         <div className="inline-flex items-center gap-1 cursor-help">
                           <span className={cn(
-                            "font-mono text-sm font-semibold",
-                            getScoreNumberColor(overallScore)
+                            "font-mono text-xs font-semibold rounded-md px-2 py-0.5",
+                            getRatingPillClasses(overallScore)
                           )}>
                             {overallScore.toFixed(1)}
                           </span>
@@ -380,9 +466,10 @@ export function FilamentTableView({
                     <LikeButton filamentId={filament.id} size="sm" />
                     <Link 
                       to={getFilamentHref(filament.id, filament.product_handle)}
-                      className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                      className="text-sm font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1"
                     >
                       Details
+                      <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-0.5" />
                     </Link>
                   </div>
                 </td>
