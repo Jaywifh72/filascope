@@ -144,6 +144,7 @@ export function SiteFooter() {
     { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Filament Quiz", href: "/wizard" },
     { name: "Color Finder", href: "/colors" },
+    { name: "HueForge Color Matcher", href: "/hueforge-color-matcher" },
     { name: "3D Printers", href: "/printers" },
   ];
 

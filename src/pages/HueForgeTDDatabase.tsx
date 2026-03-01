@@ -14,6 +14,7 @@ import {
   Sun,
   ChevronRight,
   RefreshCw,
+  Palette,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -454,6 +455,12 @@ export default function HueForgeTDDatabase() {
               <Link to="/hueforge-layer-preview">
                 <Sun className="w-4 h-4 mr-2" />
                 Layer Preview
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/hueforge-color-matcher">
+                <Palette className="w-4 h-4 mr-2" />
+                Match Colors
               </Link>
             </Button>
             <Button variant="outline" onClick={exportCSV} disabled={!filteredData.length}>
