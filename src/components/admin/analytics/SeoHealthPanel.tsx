@@ -41,13 +41,11 @@ export function SeoHealthPanel() {
       .catch(() => setRobotsStatus("error"));
   }, []);
 
-  // Check prerender header
+  // Check prerender edge function is responding
   useEffect(() => {
-    fetch("/api/prerender-test?testpath=/filament/bambu-lab-pla-basic-white", { method: "HEAD" })
-      .then((r) => {
-        const prerender = r.headers.get("x-prerender");
-        setPrerenderStatus(prerender === "true" ? "ok" : "error");
-      })
+    const prerenderUrl = `https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml`;
+    fetch(prerenderUrl, { method: "GET" })
+      .then((r) => setPrerenderStatus(r.ok ? "ok" : "error"))
       .catch(() => setPrerenderStatus("error"));
   }, []);
 
