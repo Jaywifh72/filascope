@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { resolveNozzleTemp, resolveBedTemp } from "@/lib/materialDefaults";
 
 interface AISummaryBlockProps {
@@ -131,9 +132,14 @@ export function AISummaryBlock({
             {specs.map((spec) => (
               <span
                 key={spec.label}
-                className="text-xs bg-background/60 border border-border/50 rounded-md px-2 py-1 text-muted-foreground"
+                className={cn(
+                  "text-xs rounded-md px-2 py-1",
+                  spec.label === "TD Value" && spec.value !== "N/A"
+                    ? "bg-purple-500/10 border border-purple-500/20 text-purple-400"
+                    : "bg-background/60 border border-border/50 text-muted-foreground"
+                )}
               >
-                <span className="font-medium text-foreground/70">{spec.label}:</span>{" "}
+                <span className={cn("font-medium", spec.label === "TD Value" && spec.value !== "N/A" ? "text-purple-300" : "text-foreground/70")}>{spec.label}:</span>{" "}
                 {spec.value}
               </span>
             ))}
