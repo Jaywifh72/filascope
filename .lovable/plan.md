@@ -1,46 +1,34 @@
 
 
-# Enhance Substitution Finder Results Area
+## Enhance Layer Stacking Preview Widget
 
-## Overview
-The Substitution Finder already has the core functionality (reference card, filters, grouped results, empty states). This plan upgrades the visual presentation and adds a "Compare" affordance to make the results area more compelling and useful.
+### Overview
+Make the compact Layer Stacking Preview widget on /hueforge-td-database more visually inviting with a gradient border, improved empty state, shimmer animation, pro tip, and a more prominent CTA button.
 
-## Changes
+### Changes
 
-### 1. Upgrade Reference Card in `TdSubstituteFinder.tsx`
-- Increase color swatch from `w-10 h-10 rounded-full` to `w-12 h-12 rounded-lg`
-- Update "Your Filament" label to use `text-[10px] uppercase tracking-[0.15em] text-primary font-semibold`
-- Restyle card: `bg-primary/5 border border-primary/20 rounded-xl p-4` (remove default Card hover)
-- Show brand and product name on separate lines (brand in `text-sm text-muted-foreground`, name in `text-lg font-semibold`)
-- Move price to the right side of the card
+#### 1. LayerPreviewCompact.tsx - Visual overhaul of the card wrapper
+- Replace the plain `Card` border with a gradient top-border (cyan-to-purple) using a wrapper div with `bg-gradient-to-r from-cyan-500 to-purple-500` and a 2px top strip
+- Update the subtitle to: "See how your HueForge layers will look when printed and backlit"
+- Restyle the "Open Full Preview" button with: `bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg py-2.5`
+- Add a small "PRO TIP" badge below the dropdowns: "Choose a dark base (TD < 1) and a light top (TD > 3) for maximum contrast"
 
-### 2. Switch Results to 2-Column Grid Layout in `TdSubstituteFinder.tsx`
-- Change result containers from `space-y-2` to `grid grid-cols-1 md:grid-cols-2 gap-3`
-- Add colored left-border accents to group headings:
-  - Exact Match: `border-l-2 border-green-500 pl-3` with `text-green-400`
-  - Close Match: `border-l-2 border-amber-500 pl-3` with `text-amber-400`
-  - Similar Range: `border-l-2 border-muted-foreground pl-3` with `text-muted-foreground`
+#### 2. LayerStackVisualization.tsx - Empty state and transitions
+- Enhance the empty state placeholder: replace `animate-pulse` with a custom shimmer sweep using a CSS gradient overlay (`background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%)` with a 3-second animation)
+- Make the placeholder layer rectangles slightly more colorful (muted teal, slate, indigo tones instead of pure gray)
+- Update empty state text to: "Select filaments below to preview how layers blend"
+- Add `animate-fade-in` transition class to the rendered preview (non-empty state) for smooth appearance
 
-### 3. Enhance Result Cards in `SubstituteResultCard.tsx`
-- Increase swatch from `w-8 h-8` to `w-10 h-10 rounded-lg`
-- Update card style: `bg-card/60 border border-border rounded-xl p-4 hover:border-primary/30`
-- Add a "Compare" button next to the existing "View Details" button that links to the filament comparison page with both source and substitute pre-selected
-- Accept a new `sourceHandle` prop to build the compare URL
+#### 3. tailwind.config.ts - Add shimmer keyframe
+- Add a `shimmer` keyframe animation that sweeps a subtle highlight diagonally across the element over 3 seconds, looping infinitely
 
-### 4. Improve No-Results Empty State in `TdSubstituteFinder.tsx`
-- Add a `Search` icon above the text
-- Make suggestions into clickable actions (e.g., button to widen TD, button to toggle off filters)
-- Keep the "Browse all filaments" link
+### Files to modify
+- `src/components/hueforge/layer-preview/LayerPreviewCompact.tsx`
+- `src/components/hueforge/layer-preview/LayerStackVisualization.tsx`
+- `tailwind.config.ts` (add shimmer animation)
 
-### Files Modified
-
-| File | Change |
-|------|--------|
-| `src/components/hueforge/TdSubstituteFinder.tsx` | Reference card styling, 2-column grid, group heading accents, improved empty state |
-| `src/components/hueforge/SubstituteResultCard.tsx` | Larger swatch, rounded-xl card, "Compare" button with source handle |
-
-### Technical Notes
-- The "Compare" link will navigate to `/filament-comparison?a={sourceHandle}&b={substituteHandle}` (or equivalent existing comparison route)
-- No new components needed; changes are styling and layout within existing files
-- The `sourceHandle` prop on `SubstituteResultCard` will be the source filament's `product_handle` or `id`
-
+### Technical details
+- The gradient top-border is achieved with a parent `div` that has `rounded-lg overflow-hidden` with a gradient background, and the card inside with `rounded-t-none border-t-0`
+- The shimmer animation uses `@keyframes shimmer { 0% { transform: translateX(-100%) } 100% { transform: translateX(100%) } }` on an absolute-positioned pseudo-element
+- The pro tip uses a `Badge` with `variant="outline"` styled with amber/yellow tones for visibility
+- No functional changes to filament selection, preview rendering, or navigation
