@@ -139,8 +139,8 @@ async function fetchGscRows(
     dimensions.forEach((dim, i) => { keys[dim] = row.keys[i]; });
     rows.push({
       date: keys["date"] ?? startDate,
-      query: keys["query"] ?? null,
-      page: keys["page"] ?? null,
+      query: keys["query"] ?? "",
+      page: keys["page"] ?? "",
       clicks: row.clicks ?? 0,
       impressions: row.impressions ?? 0,
       ctr: row.ctr ?? 0,
