@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import {
   Select,
@@ -47,6 +48,18 @@ export function DataInventoryControlBar({
   resultCount 
 }: DataInventoryControlBarProps) {
   const selectedLabel = SORT_OPTIONS.find(opt => opt.value === sortBy)?.label || "Sort";
+  const [isFlashing, setIsFlashing] = useState(false);
+  const prevCount = useRef(resultCount);
+
+  useEffect(() => {
+    if (prevCount.current !== resultCount && prevCount.current !== 0) {
+      setIsFlashing(true);
+      const timer = setTimeout(() => setIsFlashing(false), 400);
+      prevCount.current = resultCount;
+      return () => clearTimeout(timer);
+    }
+    prevCount.current = resultCount;
+  }, [resultCount]);
   
   return (
     <div className="w-full bg-muted/40 border border-border rounded-lg px-4 py-3 mb-6">
@@ -56,7 +69,10 @@ export function DataInventoryControlBar({
           <span className="text-sm text-muted-foreground">
             Results
           </span>
-          <span className="text-sm font-semibold text-primary">
+          <span className={cn(
+            "text-sm font-semibold text-primary tabular-nums",
+            isFlashing && "count-flash"
+          )}>
             {resultCount.toLocaleString()}
           </span>
           <span className="text-sm text-muted-foreground">entries</span>

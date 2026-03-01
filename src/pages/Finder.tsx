@@ -1674,7 +1674,7 @@ const Finder = () => {
             />
           ) : (
             /* Grid View - Laboratory Readout Cards */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="filament-grid">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 grid-filter-fade${(isFetching && !isLoading) ? " is-updating" : ""}`} id="filament-grid">
               {displayedGroups.map((group, index) => {
                 const filament = group.representativeFilament;
 

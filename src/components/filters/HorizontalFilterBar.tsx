@@ -90,7 +90,7 @@ interface HorizontalFilterBarProps {
 type DropdownType = 'material' | 'brand' | 'price' | null;
 
 // Shared filter button styles with enhanced active states
-const filterButtonBase = "h-9 px-3 py-2 gap-2 min-w-[120px] justify-between text-sm rounded-lg border transition-all duration-200";
+const filterButtonBase = "h-9 px-3 py-2 gap-2 min-w-[120px] justify-between text-sm rounded-lg border transition-all duration-200 filter-chip-ripple";
 const filterButtonDefault = "bg-muted border-border text-muted-foreground hover:bg-accent hover:border-border-hover hover:scale-[1.01]";
 const filterButtonActive = "border-primary bg-primary/20 text-primary shadow-[0_0_8px_rgba(20,184,166,0.15)] animate-filter-activate";
 const filterButtonOpen = "ring-2 ring-primary/50";
