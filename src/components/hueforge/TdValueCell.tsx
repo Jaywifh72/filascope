@@ -1,24 +1,40 @@
+import { cn } from '@/lib/utils';
+
 interface Props {
   value: number;
 }
 
-function getTdColor(td: number): string {
-  if (td <= 1) return 'hsl(0 60% 40%)';
-  if (td <= 3) return 'hsl(35 80% 50%)';
-  if (td <= 5) return 'hsl(187 70% 45%)';
-  return 'hsl(270 50% 60%)';
+function getTdBadgeClasses(td: number): string {
+  if (td <= 1) return 'bg-gray-800 text-gray-300';
+  if (td <= 3) return 'bg-amber-900/50 text-amber-400';
+  if (td <= 5) return 'bg-cyan-900/50 text-cyan-400';
+  return 'bg-purple-900/50 text-purple-400';
+}
+
+function getTdBarColor(td: number): string {
+  if (td <= 1) return 'bg-gray-400';
+  if (td <= 3) return 'bg-amber-500';
+  if (td <= 5) return 'bg-cyan-500';
+  return 'bg-purple-500';
 }
 
 export function TdValueCell({ value }: Props) {
   const pct = Math.min((value / 10) * 100, 100);
 
   return (
-    <div className="flex items-center gap-2 justify-end">
-      <span className="font-mono font-bold text-purple-400">{value}</span>
-      <div className="hidden md:block w-[60px] h-1.5 rounded-full bg-muted/40 overflow-hidden">
+    <div className="flex flex-col items-end gap-1">
+      <span
+        className={cn(
+          'font-mono font-bold text-sm min-w-[60px] text-center rounded-md px-2 py-0.5',
+          getTdBadgeClasses(value)
+        )}
+      >
+        {value}
+      </span>
+      <div className="w-[60px] h-1 rounded-full bg-muted/40 overflow-hidden">
         <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${pct}%`, backgroundColor: getTdColor(value) }}
+          className={cn('h-full rounded-full transition-all', getTdBarColor(value))}
+          style={{ width: `${pct}%` }}
         />
       </div>
     </div>
