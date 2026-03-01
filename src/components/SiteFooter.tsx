@@ -145,6 +145,7 @@ export function SiteFooter() {
     { name: "Filament Quiz", href: "/wizard" },
     { name: "Color Finder", href: "/colors" },
     { name: "HueForge Color Matcher", href: "/hueforge-color-matcher" },
+    { name: "HueForge Project Planner", href: "/hueforge-project-planner" },
     { name: "3D Printers", href: "/printers" },
   ];
 

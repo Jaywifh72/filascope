@@ -463,6 +463,11 @@ export default function HueForgeTDDatabase() {
                 Match Colors
               </Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link to="/hueforge-project-planner">
+                🧙 Plan a Project
+              </Link>
+            </Button>
             <Button variant="outline" onClick={exportCSV} disabled={!filteredData.length}>
               <Download className="w-4 h-4 mr-2" />
               Export CSV

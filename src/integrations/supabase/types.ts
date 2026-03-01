@@ -10437,6 +10437,42 @@ export type Database = {
           },
         ]
       }
+      user_hueforge_plans: {
+        Row: {
+          created_at: string | null
+          filament_ids: string[]
+          id: string
+          layer_counts: number[] | null
+          name: string
+          notes: string | null
+          project_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filament_ids: string[]
+          id?: string
+          layer_counts?: number[] | null
+          name?: string
+          notes?: string | null
+          project_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filament_ids?: string[]
+          id?: string
+          layer_counts?: number[] | null
+          name?: string
+          notes?: string | null
+          project_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_material_interests: {
         Row: {
           id: string
