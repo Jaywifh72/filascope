@@ -2,6 +2,11 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import {
+  normalizeColor, stripTrademark, extractColorFromTitle,
+  materialsMatch, sameMaterialFamily, extractBaseMaterial,
+  extractProductLine, fuzzyColorMatch, hexDistance,
+} from '@/lib/tdMatchingUtils';
 
 export interface TdMatchResult {
   filamentId: string;
@@ -15,6 +20,7 @@ export interface TdMatchResult {
   tdValue: number;
   confidence: 'high' | 'medium' | 'low';
   matchReason: string;
+  matchRule: number;
   previousTd: number | null;
 }
 
@@ -37,12 +43,162 @@ interface MatchStats {
   applied: number;
   skipped: number;
   errors: number;
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
 }
 
 interface RunOptions {
   dryRun: boolean;
   brandFilter?: string;
 }
+
+// ─── Types for internal processing ───────────────────────────────────
+
+interface RefValue {
+  brand_name: string;
+  color_name: string;
+  material_type: string;
+  td_value: number;
+  color_hex: string | null;
+  normalizedColor: string;
+  productLine: string | null;
+  baseMaterial: string;
+}
+
+interface FilamentCandidate {
+  id: string;
+  vendor: string;
+  product_title: string;
+  color_family: string | null;
+  material: string | null;
+  color_hex: string | null;
+  transmission_distance: number | null;
+  extractedColor: string | null;
+  normalizedColor: string;
+  cleanTitle: string;
+}
+
+// ─── Core matching engine ────────────────────────────────────────────
+
+function tryMatch(
+  fil: FilamentCandidate,
+  refs: RefValue[],
+): TdMatchResult | null {
+  const filVendor = fil.vendor.toLowerCase();
+  const filMaterial = (fil.material ?? '').toLowerCase().trim();
+
+  // Filter refs to same brand first
+  const brandRefs = refs.filter(r => r.brand_name.toLowerCase() === filVendor);
+  if (brandRefs.length === 0) return null;
+
+  let bestMatch: TdMatchResult | null = null;
+  let bestPriority = 99;
+
+  for (const ref of brandRefs) {
+    const refNormColor = ref.normalizedColor;
+    const filNormColor = fil.normalizedColor;
+
+    // ── Rule 1: Exact Brand + Color + Material (high) ──
+    if (bestPriority > 1) {
+      const colorExact = filNormColor === refNormColor;
+      const materialOk = materialsMatch(filMaterial, ref.baseMaterial) ||
+        materialsMatch(filMaterial, ref.material_type);
+      if (colorExact && materialOk) {
+        bestMatch = buildResult(fil, ref, 'high', 1,
+          `R1: exact brand+color+material`);
+        bestPriority = 1;
+        continue;
+      }
+    }
+
+    // ── Rule 2: Product Line Match (high) ──
+    if (bestPriority > 2 && ref.productLine) {
+      const plLower = ref.productLine.toLowerCase();
+      const titleHasProductLine = fil.cleanTitle.toLowerCase().includes(plLower);
+      if (titleHasProductLine) {
+        const colorOk = filNormColor === refNormColor ||
+          fil.cleanTitle.toLowerCase().includes(refNormColor);
+        const baseMat = ref.baseMaterial.toLowerCase();
+        const matOk = filMaterial.includes(baseMat) ||
+          fil.cleanTitle.toLowerCase().includes(baseMat);
+        if (colorOk && matOk) {
+          bestMatch = buildResult(fil, ref, 'high', 2,
+            `R2: product line "${ref.productLine}" + color match`);
+          bestPriority = 2;
+          continue;
+        }
+      }
+    }
+
+    // ── Rule 3: Fuzzy Color Match (medium) ──
+    if (bestPriority > 3) {
+      const materialOk = materialsMatch(filMaterial, ref.baseMaterial) ||
+        materialsMatch(filMaterial, ref.material_type);
+      if (materialOk && filNormColor && refNormColor) {
+        const fuzzy = fuzzyColorMatch(filNormColor, refNormColor);
+        if (fuzzy && filNormColor !== refNormColor) {
+          bestMatch = buildResult(fil, ref, 'medium', 3,
+            `R3: fuzzy color "${fil.extractedColor ?? fil.color_family}" ≈ "${ref.color_name}"`);
+          bestPriority = 3;
+          continue;
+        }
+      }
+    }
+
+    // ── Rule 4: Hex Code Proximity (low) ──
+    if (bestPriority > 4 && ref.color_hex && fil.color_hex) {
+      const materialOk = materialsMatch(filMaterial, ref.baseMaterial) ||
+        materialsMatch(filMaterial, ref.material_type);
+      if (materialOk) {
+        const dist = hexDistance(ref.color_hex, fil.color_hex);
+        if (dist < 30) {
+          bestMatch = buildResult(fil, ref, 'low', 4,
+            `R4: hex proximity (dist=${Math.round(dist)}) ${ref.color_hex}≈${fil.color_hex}`);
+          bestPriority = 4;
+          continue;
+        }
+      }
+    }
+
+    // ── Rule 5: Material Family Fallback (low) ──
+    if (bestPriority > 5) {
+      const colorExact = filNormColor === refNormColor;
+      if (colorExact && sameMaterialFamily(filMaterial, ref.baseMaterial) &&
+          filMaterial !== ref.baseMaterial.toLowerCase()) {
+        bestMatch = buildResult(fil, ref, 'low', 5,
+          `R5: material family fallback "${filMaterial}" ← "${ref.baseMaterial}" TD`);
+        bestPriority = 5;
+        continue;
+      }
+    }
+  }
+
+  return bestMatch;
+}
+
+function buildResult(
+  fil: FilamentCandidate, ref: RefValue,
+  confidence: 'high' | 'medium' | 'low', rule: number, reason: string,
+): TdMatchResult {
+  return {
+    filamentId: fil.id,
+    vendor: fil.vendor,
+    productTitle: fil.product_title,
+    colorFamily: fil.extractedColor ?? fil.color_family ?? '',
+    material: fil.material ?? '',
+    refBrand: ref.brand_name,
+    refColor: ref.color_name,
+    refMaterial: ref.material_type,
+    tdValue: ref.td_value,
+    confidence,
+    matchRule: rule,
+    matchReason: reason,
+    previousTd: fil.transmission_distance ?? null,
+  };
+}
+
+// ─── Hook ────────────────────────────────────────────────────────────
 
 export function useTdMatching() {
   const qc = useQueryClient();
@@ -51,123 +207,139 @@ export function useTdMatching() {
   const [isRunning, setIsRunning] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [progress, setProgress] = useState<MatchProgress>({ current: 0, total: 0, phase: '' });
-  const [stats, setStats] = useState<MatchStats>({ total: 0, matched: 0, applied: 0, skipped: 0, errors: 0 });
+  const [stats, setStats] = useState<MatchStats>({
+    total: 0, matched: 0, applied: 0, skipped: 0, errors: 0,
+    highCount: 0, mediumCount: 0, lowCount: 0,
+  });
 
   const runMatching = useCallback(async ({ dryRun, brandFilter }: RunOptions) => {
     setIsRunning(true);
     setMatches([]);
     setUnmatchedRefs([]);
-    setStats({ total: 0, matched: 0, applied: 0, skipped: 0, errors: 0 });
+    setStats({ total: 0, matched: 0, applied: 0, skipped: 0, errors: 0, highCount: 0, mediumCount: 0, lowCount: 0 });
 
     try {
-      // 1. Fetch reference values
+      // ─── 1. Load all reference values ───
       setProgress({ current: 0, total: 0, phase: 'Loading reference values...' });
       let refQuery = supabase.from('td_reference_values').select('*');
       if (brandFilter && brandFilter !== 'all') {
-        refQuery = refQuery.ilike('brand_name', `%${brandFilter}%`);
+        refQuery = refQuery.ilike('brand_name', brandFilter);
       }
-      const { data: refs, error: refErr } = await refQuery;
+      const { data: rawRefs, error: refErr } = await refQuery;
       if (refErr) throw refErr;
-      if (!refs?.length) {
+      if (!rawRefs?.length) {
         toast({ title: 'No reference values found' });
         setIsRunning(false);
         return;
       }
 
-      const total = refs.length;
-      const allMatches: TdMatchResult[] = [];
-      const unmatched: UnmatchedRef[] = [];
+      // Pre-process references
+      const refs: RefValue[] = rawRefs.map(r => ({
+        brand_name: r.brand_name as string,
+        color_name: r.color_name as string,
+        material_type: r.material_type as string,
+        td_value: Number(r.td_value),
+        color_hex: (r as any).color_hex ?? null,
+        normalizedColor: normalizeColor(r.color_name as string),
+        productLine: extractProductLine(r.material_type as string),
+        baseMaterial: extractBaseMaterial(r.material_type as string),
+      }));
 
-      // 2. Process each reference value
-      for (let i = 0; i < total; i++) {
-        const ref = refs[i];
-        setProgress({ current: i + 1, total, phase: `Matching ${ref.brand_name} ${ref.color_name}...` });
+      // ─── 2. Load all filaments missing TD (paginated) ───
+      setProgress({ current: 0, total: 0, phase: 'Loading filaments...' });
+      const allFilaments: FilamentCandidate[] = [];
+      const PAGE_SIZE = 1000;
+      let page = 0;
+      let hasMore = true;
 
-        // Build query for matching filaments
-        const materialType = ref.material_type as string;
-        const brandName = ref.brand_name as string;
-        const colorName = ref.color_name as string;
-        const isSimpleMaterial = !materialType.includes(' ') && !materialType.includes('+');
-
-        let query = supabase
+      while (hasMore) {
+        let q = supabase
           .from('filaments')
-          .select('id, vendor, product_title, color_family, material, transmission_distance')
-          .ilike('vendor', `%${brandName}%`)
-          .is('transmission_distance', null);
+          .select('id, vendor, product_title, color_family, material, color_hex, transmission_distance')
+          .is('transmission_distance', null)
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-        // For product-line materials (e.g. "PLA Basic", "PolyTerra PLA"), match in product_title
-        // For simple materials (e.g. "PLA"), also try material column
-        if (!isSimpleMaterial) {
-          query = query.ilike('product_title', `%${materialType}%`);
+        if (brandFilter && brandFilter !== 'all') {
+          q = q.ilike('vendor', brandFilter);
         }
 
-        const { data: filaments, error: filErr } = await query;
-        if (filErr) {
-          console.error('Query error for ref:', ref, filErr);
-          continue;
+        const { data, error } = await q;
+        if (error) throw error;
+
+        if (data) {
+          for (const f of data) {
+            const extractedColor = f.color_family ? null : extractColorFromTitle(f.product_title ?? '');
+            const colorSource = f.color_family ?? extractedColor ?? '';
+            allFilaments.push({
+              id: f.id,
+              vendor: f.vendor ?? '',
+              product_title: f.product_title ?? '',
+              color_family: f.color_family,
+              material: f.material,
+              color_hex: f.color_hex ?? null,
+              transmission_distance: f.transmission_distance,
+              extractedColor,
+              normalizedColor: normalizeColor(colorSource),
+              cleanTitle: stripTrademark(f.product_title ?? ''),
+            });
+          }
         }
 
-        let foundMatch = false;
-        for (const fil of filaments ?? []) {
-          const filColor = (fil.color_family ?? '').toLowerCase();
-          const refColor = colorName.toLowerCase();
-
-          // Color matching: require exact match for color_family
-          // For multi-word ref colors, match exactly — don't partial match just the last word
-          const colorMatch = filColor === refColor;
-          if (!colorMatch) continue;
-
-          // Material matching & confidence
-          const titleLower = (fil.product_title ?? '').toLowerCase();
-          const materialLower = materialType.toLowerCase();
-          const titleContainsMaterial = titleLower.includes(materialLower);
-          const baseMaterialMatch = isSimpleMaterial && (fil.material ?? '').toLowerCase() === materialLower;
-
-          if (!titleContainsMaterial && !baseMaterialMatch) continue;
-
-          const confidence: 'high' | 'medium' | 'low' = titleContainsMaterial ? 'high' : 'medium';
-          const matchReason = titleContainsMaterial
-            ? `product_title contains "${materialType}", exact color match`
-            : `base material "${fil.material}" matches, exact color match`;
-
-          allMatches.push({
-            filamentId: fil.id,
-            vendor: fil.vendor ?? '',
-            productTitle: fil.product_title ?? '',
-            colorFamily: fil.color_family ?? '',
-            material: fil.material ?? '',
-            refBrand: brandName,
-            refColor: colorName,
-            refMaterial: materialType,
-            tdValue: Number(ref.td_value),
-            confidence,
-            matchReason,
-            previousTd: fil.transmission_distance ?? null,
-          });
-          foundMatch = true;
-        }
-
-        if (!foundMatch) {
-          unmatched.push({
-            brand_name: brandName,
-            material_type: materialType,
-            color_name: colorName,
-            td_value: Number(ref.td_value),
-          });
-        }
-
-        // Yield to UI every 5 refs
-        if (i % 5 === 0) await new Promise(r => setTimeout(r, 0));
+        hasMore = (data?.length ?? 0) === PAGE_SIZE;
+        page++;
+        setProgress({ current: allFilaments.length, total: 0, phase: `Loaded ${allFilaments.length} filaments...` });
       }
+
+      if (allFilaments.length === 0) {
+        toast({ title: 'No filaments missing TD values' });
+        setIsRunning(false);
+        return;
+      }
+
+      // ─── 3. Run matching engine ───
+      const totalFil = allFilaments.length;
+      const allMatches: TdMatchResult[] = [];
+      const matchedRefKeys = new Set<string>();
+
+      for (let i = 0; i < totalFil; i++) {
+        if (i % 100 === 0) {
+          setProgress({ current: i, total: totalFil, phase: `Matching ${i}/${totalFil} filaments...` });
+          await new Promise(r => setTimeout(r, 0));
+        }
+
+        const result = tryMatch(allFilaments[i], refs);
+        if (result) {
+          allMatches.push(result);
+          matchedRefKeys.add(`${result.refBrand}|${result.refMaterial}|${result.refColor}`.toLowerCase());
+        }
+      }
+
+      // ─── 4. Find unmatched refs ───
+      const unmatched: UnmatchedRef[] = [];
+      for (const ref of refs) {
+        const key = `${ref.brand_name}|${ref.material_type}|${ref.color_name}`.toLowerCase();
+        if (!matchedRefKeys.has(key)) {
+          unmatched.push({
+            brand_name: ref.brand_name,
+            material_type: ref.material_type,
+            color_name: ref.color_name,
+            td_value: ref.td_value,
+          });
+        }
+      }
+
+      const highCount = allMatches.filter(m => m.confidence === 'high').length;
+      const mediumCount = allMatches.filter(m => m.confidence === 'medium').length;
+      const lowCount = allMatches.filter(m => m.confidence === 'low').length;
 
       setMatches(allMatches);
       setUnmatchedRefs(unmatched);
-      setStats(s => ({ ...s, total: total, matched: allMatches.length }));
-      setProgress({ current: total, total, phase: `Found ${allMatches.length} matches` });
+      setStats(s => ({ ...s, total: totalFil, matched: allMatches.length, highCount, mediumCount, lowCount }));
+      setProgress({ current: totalFil, total: totalFil, phase: `Found ${allMatches.length} matches` });
 
       toast({
-        title: `Matching complete`,
-        description: `${allMatches.length} matches found, ${unmatched.length} refs unmatched`,
+        title: 'Matching complete',
+        description: `${highCount} high, ${mediumCount} medium, ${lowCount} low — ${unmatched.length} refs unmatched`,
       });
     } catch (err: any) {
       console.error('Matching error:', err);
@@ -183,7 +355,6 @@ export function useTdMatching() {
     let errors = 0;
 
     try {
-      // Process in batches of 10
       for (let i = 0; i < toApply.length; i += 10) {
         const batch = toApply.slice(i, i + 10);
         setProgress({
@@ -212,27 +383,24 @@ export function useTdMatching() {
                 refColor: match.refColor,
                 refMaterial: match.refMaterial,
                 matchReason: match.matchReason,
+                matchRule: match.matchRule,
               }),
             });
-
             applied++;
           } catch (e: any) {
             console.error('Apply error:', e);
             errors++;
           }
         }
-        // Yield between batches
         await new Promise(r => setTimeout(r, 0));
       }
 
       setStats(s => ({ ...s, applied, errors }));
       setProgress({ current: toApply.length, total: toApply.length, phase: `Applied ${applied} TD values` });
 
-      // Remove applied matches from the list
       const appliedIds = new Set(toApply.map(m => m.filamentId));
       setMatches(prev => prev.filter(m => !appliedIds.has(m.filamentId)));
 
-      // Invalidate caches
       qc.invalidateQueries({ queryKey: ['td-stats'] });
       qc.invalidateQueries({ queryKey: ['td-filaments'] });
       qc.invalidateQueries({ queryKey: ['td-population-log'] });
