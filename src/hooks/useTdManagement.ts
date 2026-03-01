@@ -34,36 +34,46 @@ export interface TdFilamentFilters {
   search: string;
   material: string;
   brand: string;
-  tdStatus: 'all' | 'has-td' | 'missing-td';
+  tdStatus: 'all' | 'has-td' | 'missing-td' | 'high-conf' | 'medium-conf' | 'low-conf' | 'recent-24h';
   sortBy: string;
   sortDir: 'asc' | 'desc';
+  pageSize: number;
 }
-
-const PAGE_SIZE = 50;
 
 export function useTdFilaments(filters: TdFilamentFilters, page: number) {
   return useQuery({
     queryKey: ['td-filaments', filters, page],
     queryFn: async () => {
-      let q = supabase
+      const ps = filters.pageSize || 50;
+      let q: any = supabase
         .from('filaments')
-        .select('id, vendor, product_title, display_name, material, color_family, color_hex, transmission_distance, updated_at', { count: 'exact' });
+        .select('id, vendor, product_title, display_name, material, color_family, color_hex, transmission_distance, td_confidence, td_source, td_matched_at, updated_at', { count: 'exact' });
 
       if (filters.search) {
         q = q.or(`vendor.ilike.%${filters.search}%,product_title.ilike.%${filters.search}%,display_name.ilike.%${filters.search}%`);
       }
       if (filters.material && filters.material !== 'all') q = q.eq('material', filters.material);
       if (filters.brand && filters.brand !== 'all') q = q.eq('vendor', filters.brand);
+
       if (filters.tdStatus === 'has-td') q = q.not('transmission_distance', 'is', null);
       if (filters.tdStatus === 'missing-td') q = q.is('transmission_distance', null);
+      if (filters.tdStatus === 'high-conf') { q = q.not('transmission_distance', 'is', null); q = q.eq('td_confidence', 'high'); }
+      if (filters.tdStatus === 'medium-conf') { q = q.not('transmission_distance', 'is', null); q = q.eq('td_confidence', 'medium'); }
+      if (filters.tdStatus === 'low-conf') { q = q.not('transmission_distance', 'is', null); q = q.eq('td_confidence', 'low'); }
+      if (filters.tdStatus === 'recent-24h') {
+        const since = new Date(Date.now() - 24 * 3600000).toISOString();
+        q = q.not('transmission_distance', 'is', null).gte('td_matched_at', since);
+      }
 
       const col = filters.sortBy || 'vendor';
       q = q.order(col, { ascending: filters.sortDir === 'asc', nullsFirst: false });
-      q = q.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+      if (col !== 'material') q = q.order('material', { ascending: true, nullsFirst: false });
+      if (col !== 'color_family') q = q.order('color_family', { ascending: true, nullsFirst: false });
+      q = q.range(page * ps, (page + 1) * ps - 1);
 
       const { data, count, error } = await q;
       if (error) throw error;
-      return { data: data ?? [], total: count ?? 0, pageSize: PAGE_SIZE };
+      return { data: data ?? [], total: count ?? 0, pageSize: ps };
     },
   });
 }
@@ -73,20 +83,27 @@ export function useTdFilaments(filters: TdFilamentFilters, page: number) {
 export function useUpdateTdValue() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, value, previousValue }: { id: string; value: number | null; previousValue: number | null }) => {
-      const { error } = await supabase.from('filaments').update({ transmission_distance: value } as any).eq('id', id);
+    mutationFn: async ({ id, value, previousValue, source, confidence }: { id: string; value: number | null; previousValue: number | null; source?: string; confidence?: string }) => {
+      const src = source || 'manual';
+      const conf = confidence || 'high';
+      const updates: any = {
+        transmission_distance: value,
+        td_confidence: value != null ? conf : null,
+        td_source: value != null ? src : null,
+        td_matched_at: value != null ? new Date().toISOString() : null,
+      };
+      const { error } = await supabase.from('filaments').update(updates).eq('id', id);
       if (error) throw error;
 
-      // Log to td_population_log
       if (value != null) {
         await supabase.from('td_population_log' as any).insert({
           filament_id: id,
           td_value: value,
           previous_value: previousValue,
-          source: 'manual',
-          confidence: 'high',
+          source: src,
+          confidence: conf,
           status: 'applied',
-          notes: 'Manual admin edit',
+          notes: `Manual admin edit (source: ${src})`,
         });
       }
     },
@@ -96,6 +113,79 @@ export function useUpdateTdValue() {
       toast({ title: 'TD value updated' });
     },
     onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+// ── Bulk TD operations ──
+
+export function useBulkUpdateTd() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, value, source, confidence }: { ids: string[]; value: number; source: string; confidence: string }) => {
+      const { error } = await supabase.from('filaments').update({
+        transmission_distance: value,
+        td_confidence: confidence,
+        td_source: source,
+        td_matched_at: new Date().toISOString(),
+      } as any).in('id', ids);
+      if (error) throw error;
+
+      const logs = ids.map(id => ({
+        filament_id: id,
+        td_value: value,
+        source,
+        confidence,
+        status: 'applied',
+        notes: 'Bulk admin assignment',
+      }));
+      await supabase.from('td_population_log' as any).insert(logs);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['td-filaments'] });
+      qc.invalidateQueries({ queryKey: ['td-stats'] });
+      toast({ title: 'Bulk TD update complete' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+export function useBulkClearTd() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('filaments').update({
+        transmission_distance: null,
+        td_confidence: null,
+        td_source: null,
+        td_matched_at: null,
+      } as any).in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['td-filaments'] });
+      qc.invalidateQueries({ queryKey: ['td-stats'] });
+      toast({ title: 'TD values cleared' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+// ── TD Suggestions (reference values for brand+material) ──
+
+export function useTdSuggestions(vendors: string[]) {
+  return useQuery({
+    queryKey: ['td-suggestions', vendors],
+    enabled: vendors.length > 0,
+    queryFn: async () => {
+      if (!vendors.length) return [];
+      const { data, error } = await supabase
+        .from('td_reference_values')
+        .select('brand_name, color_name, material_type, td_value')
+        .in('brand_name', vendors);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
   });
 }
 
