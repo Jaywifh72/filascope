@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { downloadCSV } from '@/lib/csvExport';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { Play, Upload, Download, Loader2, Zap, Check } from 'lucide-react';
+import { Play, Upload, Download, Loader2, Zap, Check, CloudDownload } from 'lucide-react';
 
 interface RpcMatchResult {
   filament_id: string;
@@ -43,6 +43,9 @@ export function TdActionToolbar() {
   const [quickMatchResults, setQuickMatchResults] = useState<RpcMatchResult[]>([]);
   const [quickMatchLoading, setQuickMatchLoading] = useState(false);
   const [quickMatchApplying, setQuickMatchApplying] = useState(false);
+
+  // Fetch External TD state
+  const [fetchingExternal, setFetchingExternal] = useState(false);
 
   const { data: options } = useTdFilterOptions();
   const addRefMut = useAddReferenceValue();
@@ -93,6 +96,41 @@ export function TdActionToolbar() {
       toast({ title: 'Apply failed', description: err.message, variant: 'destructive' });
     } finally {
       setQuickMatchApplying(false);
+    }
+  };
+
+  // Fetch External TD from 3DFilamentProfiles
+  const handleFetchExternal = async () => {
+    setFetchingExternal(true);
+    try {
+      const body = brand === 'all' ? { allBrands: true } : { brand };
+      const { data, error } = await supabase.functions.invoke('scrape-td-values', { body });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Unknown error');
+
+      const results = data.results || [];
+      const totals = results.reduce(
+        (acc: any, r: any) => ({
+          withTd: acc.withTd + (r.withTd || 0),
+          inserted: acc.inserted + (r.inserted || 0),
+          updated: acc.updated + (r.updated || 0),
+          skipped: acc.skipped + (r.skipped || 0),
+        }),
+        { withTd: 0, inserted: 0, updated: 0, skipped: 0 }
+      );
+
+      toast({
+        title: `Fetched TD values from 3DFilamentProfiles`,
+        description: `${totals.withTd} with TD → ${totals.inserted} inserted, ${totals.updated} updated, ${totals.skipped} skipped (${data.elapsed_seconds}s)`,
+      });
+
+      qc.invalidateQueries({ queryKey: ['td-stats'] });
+      qc.invalidateQueries({ queryKey: ['td-reference'] });
+      qc.invalidateQueries({ queryKey: ['td-population-log'] });
+    } catch (err: any) {
+      toast({ title: 'Fetch External TD failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setFetchingExternal(false);
     }
   };
 
@@ -177,6 +215,12 @@ export function TdActionToolbar() {
         <Button size="sm" variant="secondary" onClick={handleQuickMatch} disabled={quickMatchLoading}>
           {quickMatchLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Zap className="w-4 h-4 mr-1" />}
           Quick Match
+        </Button>
+
+        {/* Fetch External TD */}
+        <Button size="sm" variant="outline" onClick={handleFetchExternal} disabled={fetchingExternal}>
+          {fetchingExternal ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <CloudDownload className="w-4 h-4 mr-1" />}
+          {fetchingExternal ? `Fetching ${brand === 'all' ? 'all' : brand}...` : 'Fetch External TD'}
         </Button>
 
         {isRunning && (
