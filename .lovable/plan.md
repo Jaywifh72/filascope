@@ -1,67 +1,46 @@
 
-# Redesign the Substitute Finder Tool Page
+
+# Enhance Substitution Finder Results Area
 
 ## Overview
-Transform the sparse substitute finder page into an engaging, full-featured tool with a proper hero section, enhanced search, empty state with clickable examples, filter controls, and improved results grouping.
+The Substitution Finder already has the core functionality (reference card, filters, grouped results, empty states). This plan upgrades the visual presentation and adds a "Compare" affordance to make the results area more compelling and useful.
 
 ## Changes
 
-### 1. Update `TdSubstituteFinder.tsx` — Major Redesign
+### 1. Upgrade Reference Card in `TdSubstituteFinder.tsx`
+- Increase color swatch from `w-10 h-10 rounded-full` to `w-12 h-12 rounded-lg`
+- Update "Your Filament" label to use `text-[10px] uppercase tracking-[0.15em] text-primary font-semibold`
+- Restyle card: `bg-primary/5 border border-primary/20 rounded-xl p-4` (remove default Card hover)
+- Show brand and product name on separate lines (brand in `text-sm text-muted-foreground`, name in `text-lg font-semibold`)
+- Move price to the right side of the card
 
-**Hero Section:**
-- Enhanced subtitle explaining use cases
-- Three decorative use-case pills below the subtitle: "Out of Stock", "Find Cheaper", "Match a Color"
+### 2. Switch Results to 2-Column Grid Layout in `TdSubstituteFinder.tsx`
+- Change result containers from `space-y-2` to `grid grid-cols-1 md:grid-cols-2 gap-3`
+- Add colored left-border accents to group headings:
+  - Exact Match: `border-l-2 border-green-500 pl-3` with `text-green-400`
+  - Close Match: `border-l-2 border-amber-500 pl-3` with `text-amber-400`
+  - Similar Range: `border-l-2 border-muted-foreground pl-3` with `text-muted-foreground`
 
-**Search Interface:**
-- Keep existing `SubstituteFilamentPicker` combobox (it already has search with color swatches, brand, and TD values) but restyle the trigger button to be larger (`h-12`) with improved placeholder text and focus ring styling
+### 3. Enhance Result Cards in `SubstituteResultCard.tsx`
+- Increase swatch from `w-8 h-8` to `w-10 h-10 rounded-lg`
+- Update card style: `bg-card/60 border border-border rounded-xl p-4 hover:border-primary/30`
+- Add a "Compare" button next to the existing "View Details" button that links to the filament comparison page with both source and substitute pre-selected
+- Accept a new `sourceHandle` prop to build the compare URL
 
-**Filter Controls (new, below search):**
-- "Same color family" toggle (default on) — filters results to matching `color_family`
-- "Same material" toggle (default on) — filters results to matching `material`
-- TD tolerance slider (default +/-0.5, range 0.1 to 2.0) — replaces the hardcoded 0.1/0.5 thresholds
-- Laid out as a horizontal flex row with labels
+### 4. Improve No-Results Empty State in `TdSubstituteFinder.tsx`
+- Add a `Search` icon above the text
+- Make suggestions into clickable actions (e.g., button to widen TD, button to toggle off filters)
+- Keep the "Browse all filaments" link
 
-**Empty State (before a filament is selected):**
-- Visual diagram: three connected cards showing "Your Filament -> TD Match -> Substitute" with arrow icons
-- "Popular substitution searches" section with 3-4 clickable example buttons that pre-select specific filaments from the data (find real entries for Overture Black, Bambu Lab White, eSUN Pine Green by scanning the filaments array)
-
-**Reference Card Enhancement:**
-- Add "YOUR FILAMENT" label in `text-xs uppercase tracking-wider text-cyan-400` above the card
-- Keep existing card layout
-
-**Results Grouping:**
-- Rename sections to use emoji prefixes and adjust thresholds based on the user's TD tolerance slider:
-  - "Exact TD Match" (within tolerance * 0.2)
-  - "Close Match" (within tolerance * 1.0)
-  - "Similar Range" (within tolerance * 2.0)
-- Add a "Save $X" badge on result cards that are cheaper than the source filament
-
-**No Results State:**
-- Friendly message with suggestions to widen tolerance or remove filters
-- Link to browse all filaments in the TD range on the main database page
-
-### 2. Update `SubstituteFilamentPicker.tsx` — Styling Only
-
-- Increase trigger button height to `h-12`
-- Update placeholder text to "Search by filament name, brand, or color..."
-- Add `focus:ring-2 focus:ring-cyan-500/20` styling to the trigger
-
-### 3. Update `SubstituteResultCard.tsx` — Add Savings Badge
-
-- When the substitute's price is lower than the source price, show a small green badge: "Save $X.XX"
-- Add `sourcePrice` prop to enable this calculation
-
-### 4. Files Modified
+### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/components/hueforge/TdSubstituteFinder.tsx` | Major redesign: hero, filters, empty state, results grouping |
-| `src/components/hueforge/SubstituteFilamentPicker.tsx` | Restyle trigger button (h-12, updated placeholder) |
-| `src/components/hueforge/SubstituteResultCard.tsx` | Add sourcePrice prop and savings badge |
+| `src/components/hueforge/TdSubstituteFinder.tsx` | Reference card styling, 2-column grid, group heading accents, improved empty state |
+| `src/components/hueforge/SubstituteResultCard.tsx` | Larger swatch, rounded-xl card, "Compare" button with source handle |
 
 ### Technical Notes
+- The "Compare" link will navigate to `/filament-comparison?a={sourceHandle}&b={substituteHandle}` (or equivalent existing comparison route)
+- No new components needed; changes are styling and layout within existing files
+- The `sourceHandle` prop on `SubstituteResultCard` will be the source filament's `product_handle` or `id`
 
-- The empty state example buttons will find filaments by scanning the `filaments` array for known brand/color combinations (e.g., vendor="Overture" + color_family="Black") and calling `onSelect` with the found filament
-- TD tolerance slider uses Radix `Slider` component (already installed)
-- Filter state (sameColor, sameMaterial, tdTolerance) managed as local `useState` in `TdSubstituteFinder`
-- The matching logic in `useMemo` will be updated to respect the dynamic tolerance and filter toggles instead of hardcoded 0.1/0.5 thresholds
