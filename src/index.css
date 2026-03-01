@@ -2148,10 +2148,57 @@ body.embed-mode .offline-banner {
   padding: 0 0.25rem;
 }
 
-/* Reduced motion: disable filter and deal animations */
+/* Celebration toast confetti effect — CSS only */
+.celebration-toast {
+  position: relative;
+  overflow: visible;
+}
+
+.celebration-toast::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8px;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, hsl(var(--primary)) 1.5px, transparent 1.5px),
+    radial-gradient(circle, hsl(45 93% 58%) 1.5px, transparent 1.5px),
+    radial-gradient(circle, hsl(160 84% 50%) 1.2px, transparent 1.2px),
+    radial-gradient(circle, hsl(280 80% 60%) 1.5px, transparent 1.5px),
+    radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px),
+    radial-gradient(circle, hsl(45 93% 58%) 1.2px, transparent 1.2px);
+  background-position:
+    10% 0%, 30% 0%, 50% 0%, 70% 0%, 85% 0%, 45% 0%;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+  animation: celebration-confetti 800ms ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes celebration-confetti {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    background-position:
+      10% 0%, 30% 0%, 50% 0%, 70% 0%, 85% 0%, 45% 0%;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-32px);
+    background-position:
+      5% -24px, 25% -32px, 48% -20px, 65% -28px, 80% -18px, 40% -36px;
+  }
+}
+
+/* Reduced motion: disable filter, deal, and celebration animations */
 @media (prefers-reduced-motion: reduce) {
   .filter-count-flash,
   .deal-badge-pulse {
     animation: none;
+  }
+  .celebration-toast::before {
+    display: none;
   }
 }

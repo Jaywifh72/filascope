@@ -3,6 +3,7 @@ import { DealQualityDots } from "./DealQualityBadge";
 import { Link, useNavigate } from "react-router-dom";
 import { getFilamentHref } from "@/lib/filamentUrl";
 import { TrendingDown, Share2, Check, ExternalLink, Package, Clock, Ship, BadgeCheck, Trophy, Sparkles } from "lucide-react";
+import { checkDealDiscoveryMilestone } from "@/hooks/useCelebrationMilestones";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -347,7 +348,10 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
         role="article"
         tabIndex={0}
         aria-label={`${group.baseName} by ${group.representativeDeal.vendor || 'Unknown'} - ${group.bestDiscount}% off`}
-        onClick={() => navigate(`/filament/${group.representativeDeal.id}`)}
+        onClick={() => {
+          navigate(`/filament/${group.representativeDeal.id}`);
+          checkDealDiscoveryMilestone(group.bestDiscount);
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
