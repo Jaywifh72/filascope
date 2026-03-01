@@ -7,6 +7,8 @@ import { SimilarFilamentCard, type SimilarFilamentData, type SimilarityReason } 
 import { useSimilarFilamentsEnhanced } from "@/hooks/useSimilarFilamentsEnhanced";
 import { SimilarSortControls } from "./SimilarSortControls";
 import { ConsiderInsteadBanner } from "./ConsiderInsteadBanner";
+import { InlineComparePanel } from "./InlineComparePanel";
+import { MakersAlsoExplored } from "./MakersAlsoExplored";
 import { toBrandSlug } from "@/utils/brandSlug";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { cn } from "@/lib/utils";
@@ -87,10 +89,12 @@ function FilamentCarousel({
   filaments, 
   currentPricePerKg,
   currentColorHex,
+  onQuickCompare,
 }: { 
   filaments: SimilarFilamentData[]; 
   currentPricePerKg?: number | null;
   currentColorHex?: string | null;
+  onQuickCompare?: (filament: SimilarFilamentData) => void;
 }) {
   if (filaments.length === 0) return null;
 
@@ -103,6 +107,7 @@ function FilamentCarousel({
             showCompareToggle={!filament.isCurrent}
             currentPricePerKg={currentPricePerKg}
             showColorSwatch={filament.similarityReason === "same_color"}
+            onQuickCompare={onQuickCompare}
           />
         </ScrollCarouselItem>
       ))}
@@ -176,6 +181,7 @@ function RelatedCategoriesNav({
 export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSectionProps) {
   const { groupedFilaments, similarFilaments, isLoading, sortOption, setSortOption } = useSimilarFilamentsEnhanced(currentFilament);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
+  const [compareTargetId, setCompareTargetId] = useState<string | null>(null);
 
   const materialBase = currentFilament.material?.split(/[\s\-+]/)[0] || currentFilament.material || "this material";
   const brandName = currentFilament.vendor || "this brand";
@@ -255,8 +261,33 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
   const hasSameBrand = groupedFilaments.sameBrandOtherMaterial.length > 0;
   const showGroupedView = activeCategory === "all" && (hasOtherBrands || hasSameBrand);
 
+  // Build current filament as SimilarFilamentData for inline compare
+  const currentAsSimilar: SimilarFilamentData = {
+    id: currentFilament.id,
+    product_title: currentFilament.product_title,
+    vendor: currentFilament.vendor,
+    material: currentFilament.material,
+    variant_price: currentFilament.variant_price,
+    net_weight_g: currentFilament.net_weight_g,
+    color_hex: currentFilament.color_hex,
+    color_family: currentFilament.color_family,
+    featured_image: currentFilament.featured_image,
+    nozzle_temp_min_c: currentFilament.nozzle_temp_min_c,
+    nozzle_temp_max_c: currentFilament.nozzle_temp_max_c,
+    ease_of_printing_score: currentFilament.ease_of_printing_score,
+    isCurrent: true,
+  };
+
+  const compareTarget = compareTargetId
+    ? similarFilaments.find((f) => f.id === compareTargetId) ?? null
+    : null;
+
+  const handleQuickCompare = (filament: SimilarFilamentData) => {
+    setCompareTargetId((prev) => (prev === filament.id ? null : filament.id));
+  };
+
   return (
-    <section className="py-12 md:py-16 px-4 space-y-8">
+    <section id="similar-filaments-section" className="py-12 md:py-16 px-4 space-y-8">
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -324,6 +355,7 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
                 filaments={groupedFilaments.otherBrandsSameMaterial}
                 currentPricePerKg={currentPricePerKg}
                 currentColorHex={currentFilament.color_hex}
+                onQuickCompare={handleQuickCompare}
               />
             </div>
           )}
@@ -347,6 +379,7 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
                 filaments={groupedFilaments.sameBrandOtherMaterial}
                 currentPricePerKg={currentPricePerKg}
                 currentColorHex={currentFilament.color_hex}
+                onQuickCompare={handleQuickCompare}
               />
             </div>
           )}
@@ -359,6 +392,7 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
               filaments={filteredFilaments}
               currentPricePerKg={currentPricePerKg}
               currentColorHex={currentFilament.color_hex}
+              onQuickCompare={handleQuickCompare}
             />
           ) : (
             <div className="flex flex-col items-center justify-center py-10 text-center bg-card/30 rounded-xl border border-dashed border-border/50">
@@ -377,9 +411,30 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
             filaments={similarFilaments}
             currentPricePerKg={currentPricePerKg}
             currentColorHex={currentFilament.color_hex}
+            onQuickCompare={handleQuickCompare}
           />
         </div>
       )}
+
+      {/* Inline Quick Compare Panel */}
+      {compareTarget && (
+        <div className="grid grid-rows-[1fr] transition-[grid-template-rows] duration-300 motion-reduce:transition-none">
+          <div className="overflow-hidden">
+            <InlineComparePanel
+              current={currentAsSimilar}
+              comparison={compareTarget}
+              onClose={() => setCompareTargetId(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Makers Also Explored */}
+      <MakersAlsoExplored
+        similarFilaments={similarFilaments}
+        currentVendor={currentFilament.vendor}
+        currentMaterial={currentFilament.material}
+      />
 
       {/* Related Categories - internal linking for SEO */}
       <RelatedCategoriesNav material={currentFilament.material} vendor={currentFilament.vendor} colorFamily={currentFilament.color_family} />

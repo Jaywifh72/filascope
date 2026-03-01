@@ -149,7 +149,7 @@ export function LargeColorSwatchGrid({
                           ? "border-border hover:border-primary/50"
                           : "border-transparent hover:border-white/30",
                       isOutOfStock && "opacity-50 cursor-not-allowed hover:scale-100",
-                      wasJustSelected && "animate-[swatchPop_200ms_ease-out]"
+                      wasJustSelected && "animate-[swatchPop_200ms_ease-out] swatch-select-ping"
                     )}
                     style={{ 
                       backgroundColor: colorHex || '#888',

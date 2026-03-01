@@ -2023,3 +2023,23 @@ body.embed-mode .offline-banner {
     transition: none;
   }
 }
+
+/* Swatch select ping — single-shot ring expansion */
+@keyframes swatch-select-ping {
+  0% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+  }
+}
+
+.swatch-select-ping {
+  animation: swatch-select-ping 300ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swatch-select-ping {
+    animation: none;
+  }
+}
