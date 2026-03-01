@@ -140,6 +140,7 @@ export function SiteFooter() {
     { name: "Compare Filaments", href: "/compare" },
     { name: "HueForge TD Database", href: "/hueforge-td-database" },
     { name: "TD Substitute Finder", href: "/hueforge-filament-substitute-finder" },
+    { name: "Layer Stacking Preview", href: "/hueforge-layer-preview" },
     { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Filament Quiz", href: "/wizard" },
     { name: "Color Finder", href: "/colors" },
