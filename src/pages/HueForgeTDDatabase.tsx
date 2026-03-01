@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -160,8 +160,18 @@ interface TDFilament {
 type SortField = 'vendor' | 'material' | 'transmission_distance' | 'color_family';
 type SortDirection = 'asc' | 'desc';
 
+// Helper to detect dark colors for swatch ring visibility
+function isColorDark(hex: string): boolean {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 < 80;
+}
+
 // ── Component ─────────────────────────────────────────────────────────
 export default function HueForgeTDDatabase() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [materialFilter, setMaterialFilter] = useState<string>('all');
@@ -592,9 +602,9 @@ export default function HueForgeTDDatabase() {
               ))}
             </div>
           ) : (
-            <div className="border rounded-lg overflow-hidden">
+             <div className="border rounded-lg overflow-hidden max-h-[700px] overflow-y-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-background z-10 border-b border-border shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
                   <TableRow>
                     <TableHead className="w-12">Color</TableHead>
                     <TableHead
@@ -623,45 +633,61 @@ export default function HueForgeTDDatabase() {
                       TD Value <SortIndicator field="transmission_distance" />
                     </TableHead>
                     <TableHead className="text-right">Price</TableHead>
-                    <TableHead className="w-12" />
+                    <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredData.slice(0, 100).map((f) => (
-                    <TableRow key={f.id}>
-                      <TableCell>
-                        {f.color_hex ? (
-                          <div
-                            className="w-6 h-6 rounded-full border"
-                            style={{ backgroundColor: f.color_hex }}
-                          />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full border bg-muted" />
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{f.vendor}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{f.product_title}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{f.material}</Badge>
-                      </TableCell>
-                      <TableCell>{f.color_family}</TableCell>
-                      <TableCell className="text-right">
-                        {f.transmission_distance != null && (
-                          <TdValueCell value={f.transmission_distance} />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {f.variant_price != null ? formatPrice(f.variant_price) : '—'}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link to={`/filament/${f.product_handle || f.id}`}>
-                            <ExternalLink className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredData.slice(0, 100).map((f, idx) => {
+                    const filamentUrl = `/filament/${f.product_handle || f.id}`;
+                    const isDark = f.color_hex && isColorDark(f.color_hex);
+                    return (
+                      <TableRow
+                        key={f.id}
+                        className={`group cursor-pointer transition-colors duration-150 hover:bg-muted/40 ${idx % 2 === 1 ? 'bg-muted/10' : ''}`}
+                        onClick={() => navigate(filamentUrl)}
+                      >
+                        <TableCell>
+                          {f.color_hex ? (
+                            <div
+                              className={`w-8 h-8 rounded-full ring-1 transition-transform group-hover:scale-125 ${isDark ? 'ring-white/40' : 'ring-white/20'}`}
+                              style={{ backgroundColor: f.color_hex }}
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full ring-1 ring-white/20 bg-muted flex items-center justify-center transition-transform group-hover:scale-125">
+                              <span className="text-xs text-muted-foreground">?</span>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium">{f.vendor}</TableCell>
+                        <TableCell className="max-w-[200px]">
+                          <span className="truncate block text-cyan-400 group-hover:text-cyan-300 group-hover:underline" title={f.product_title || ''}>
+                            {f.product_title}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{f.material}</Badge>
+                        </TableCell>
+                        <TableCell>{f.color_family}</TableCell>
+                        <TableCell className="text-right">
+                          {f.transmission_distance != null && (
+                            <TdValueCell value={f.transmission_distance} />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right text-sm">
+                          {f.variant_price != null ? formatPrice(f.variant_price) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                              <Link to={filamentUrl}>
+                                <ExternalLink className="w-4 h-4" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
               {filteredData.length > 100 && (
