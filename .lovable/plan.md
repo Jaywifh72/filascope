@@ -1,132 +1,64 @@
 
 
-# HueForge Project Planner
+# Reorder TD Database Page: Tools First, Education Second
 
-## Overview
-A guided 4-step wizard at `/hueforge-project-planner` that walks users through configuring a HueForge project and outputs a complete filament shopping list with TD-verified recommendations.
+## What Changes
 
-## Architecture
+The page currently renders ~3,500px of educational text and the Top 10 grid **above** the interactive database table. We will reorder sections so users reach the tool immediately, while keeping every word of educational content in the DOM for SEO crawlers.
+
+## New Section Order
 
 ```text
-src/
-  pages/
-    HueForgeProjectPlanner.tsx              -- Main page, renders wizard
-  components/
-    hueforge/
-      project-planner/
-        useProjectPlannerState.ts           -- Reducer + localStorage persistence
-        PlannerStepProjectType.tsx           -- Step 1: Pick project type
-        PlannerStepColorCount.tsx            -- Step 2: Color count + palette structure
-        PlannerStepPickFilaments.tsx         -- Step 3: Select filaments per slot
-        PlannerStepReview.tsx               -- Step 4: Review + shopping list
-        PlannerFilamentSlotPicker.tsx        -- Per-slot filtered filament selector
-        PlannerPalettePreview.tsx            -- Running swatch strip
+1. Hero (unchanged) + NEW "Search the Database" jump CTA + bouncing arrow
+2. Browse Filaments table (moved up from current position 4)
+3. Top 10 Most Popular grid (moved up from position 3)
+4. --- visual separator: "Understanding TD Values" ---
+5. Educational content (4 sections, moved down -- all text intact)
+6. Filaments Needing TD (unchanged)
+7. TD Substitute Finder (unchanged)
+8. Layer Preview Compact (unchanged)
+9. FAQ accordion (unchanged)
+10. Cross-links (unchanged)
+11. People Also Ask (unchanged)
+12. Related Content (unchanged)
 ```
 
-## State Management (`useProjectPlannerState.ts`)
+## Specific Changes
 
-Uses `useReducer` with localStorage persistence (key: `hfp-project-planner`).
+### 1. Add "Search the Database" CTA after stats counters (line ~438)
+- A large cyan button: "Search the Database" that smooth-scrolls to `#td-browser`
+- Styled: `bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-8 rounded-lg text-lg`
+- Below it: a bouncing `ChevronDown` arrow icon with `animate-bounce opacity-60`
+- Secondary text link: "Or learn about TD values below" scrolling to `#td-education`
+- The existing row of tool buttons remains unchanged below this new CTA
 
-**State shape:**
-```text
-{
-  step: 1-4,
-  projectType: string | null,
-  colorCount: number,
-  slots: Array<{
-    role: string,
-    targetTdMin: number,
-    targetTdMax: number,
-    targetColorFamily: string,
-    selectedFilamentId: string | null
-  }>,
-  customRoles: boolean
-}
-```
+### 2. Reorder JSX sections in the return statement
+- Move the "Browse Filaments by TD Value" section (currently lines 668-841, `id="td-table"`) to render immediately after the hero section, changing its `id` to `td-browser`
+- Move the "Top 10 Most Popular" section (lines 613-665) to render right after the browse table
+- Move all 4 educational content blocks (lines 478-611) to render after the Top 10, wrapped in a new container with `id="td-education"`
 
-**Actions:** SET_PROJECT_TYPE, SET_COLOR_COUNT, SET_SLOT_FILAMENT, SET_STEP, UPDATE_SLOT_ROLE, TOGGLE_CUSTOM_ROLES, RESET
+### 3. Add visual separator above educational content
+- A `div` with `border-t border-gray-800 pt-12 mt-12`
+- Brief intro text: "New to HueForge TD values? Read our complete guide below."
+- The existing H2 headings within the educational sections remain untouched
 
-Navigating back preserves all state. Step validation: Step 3 requires Step 1+2 data; Step 4 requires all slots filled.
+### 4. Update scroll target in hero button
+- The existing "Find Filaments by TD Value" button (line 442) currently scrolls to `#td-table` -- update to `#td-browser` to match the new section id
 
-## Step Details
+## What Does NOT Change
+- No content is hidden, collapsed, or removed from the DOM
+- All 4 structured data schemas (BreadcrumbList, Dataset, FAQPage, HowTo) remain identical
+- All H2/H3 headings keep their text and hierarchy
+- All internal links within educational text remain functional
+- Canonical URL unchanged
+- FAQ and PAA accordion sections stay in their current position (after educational content)
+- No sticky navigation bar in this change (kept simple)
 
-### Step 1 -- Project Type
-- 6 large clickable cards with emoji icons, title, description, and recommended color count
-- Selecting a card auto-advances to Step 2 and sets recommended `colorCount`
-- Reuses existing Card component with cyan border on selection
+## Technical Details
 
-### Step 2 -- Color Count and Palette Direction
-- Number stepper (1-8) pre-set from Step 1
-- Dynamic palette structure preview based on count (auto-generates slot roles with target TD ranges)
-- Slot role mapping:
-  - Slot 1 (base): "Base Layer -- Opaque", TD 0.3-1.0, Black/Very Dark
-  - Middle slots: distributed across TD 1.0-3.5 range
-  - Last slot: "Highlights", TD 3.0+, White/Light
-- "Customize Roles" toggle reveals editable TD range inputs and color family selectors per slot
+**File modified:** `src/pages/HueForgeTDDatabase.tsx` only
 
-### Step 3 -- Pick Filaments
-- For each slot: header with role + target TD range, pre-filtered filament list using the existing `color-finder-filaments` TanStack Query (filtered to `transmission_distance IS NOT NULL` and within target TD range)
-- Reuses `SubstituteFilamentPicker` combobox pattern for each slot
-- Running `PlannerPalettePreview` strip at top showing selected swatches
-- TD coverage score: simple calculation checking if selected filaments span the needed TD range without gaps
-- "Next" enabled only when all slots have selections
+The implementation is purely a JSX reorder within the existing return statement plus inserting a new CTA button element after the stats counters. No new components, no new files, no new dependencies.
 
-### Step 4 -- Review and Shopping List
-- Summary card: project type, color count, TD range coverage, estimated total cost
-- Clean table with Layer, Role, Filament, Brand, TD, Color swatch, Suggested Layers, Price, Buy link
-- Suggested layer counts derived from TD value:
-  - TD < 1: 3-4 layers
-  - TD 1-2: 2-3 layers  
-  - TD 2-3: 1-2 layers
-  - TD 3+: 1 layer
-- Action buttons: Copy Shopping List, Share (URL with encoded selections), Open in Layer Preview (link with params)
-- Print settings recommendations section
-
-## Step Navigation
-- Reuses existing `WizardStepIndicator` component from `src/components/admin/inventory/wizard/`
-- Labels: "Project Type", "Colors", "Filaments", "Plan"
-- Click-back to any completed step without losing data
-
-## Database
-
-New table `user_hueforge_plans` for authenticated users to save plans:
-- Columns: id, user_id, name, project_type, filament_ids (uuid[]), layer_counts (integer[]), notes, created_at, updated_at
-- RLS: users can only manage their own plans
-- "Save Plan" button only shown to authenticated users
-
-## Data Flow
-- Reuses the existing `useColorFinderFilaments` hook (already cached via TanStack Query)
-- Filters to filaments with `transmission_distance IS NOT NULL` client-side
-- All wizard logic is client-side; DB only used for saving plans
-
-## Integration Points
-
-### Routing (App.tsx)
-- Add lazy import + route: `/hueforge-project-planner` -> `HueForgeProjectPlanner`
-
-### TD Database Page (HueForgeTDDatabase.tsx)
-- Add "Plan a Project" button in hero section buttons row
-
-### Footer (SiteFooter.tsx)
-- Add "HueForge Project Planner" to toolLinks array
-
-## Sharing
-- "Share Plan" generates a URL with query params encoding selections: `?type=portrait&f1=uuid&f2=uuid&...`
-- On page load, if URL params present, hydrate state from them
-
-## Responsive Design
-- Desktop: cards in 3x2 grid (Step 1), 2-column layout (Step 3)
-- Mobile: single column, scrollable filament cards, stacked action buttons
-- Step transitions use CSS `transition` for smooth left-to-right feel
-
-## Implementation Sequence
-1. Create `useProjectPlannerState.ts` (reducer + localStorage + palette generation logic)
-2. Build Step 1 (PlannerStepProjectType) -- project type cards
-3. Build Step 2 (PlannerStepColorCount) -- color count + slot role preview
-4. Build Step 3 (PlannerStepPickFilaments + PlannerFilamentSlotPicker) -- filament selection per slot
-5. Build Step 4 (PlannerStepReview) -- shopping list + actions
-6. Build PlannerPalettePreview strip component
-7. Create database migration for `user_hueforge_plans` table with RLS
-8. Compose into HueForgeProjectPlanner.tsx page with SEO
-9. Integrate: route in App.tsx, hero button on TD database page, footer link
+**New imports needed:** `ChevronDown` from `lucide-react` (for the bouncing arrow)
 
