@@ -9,6 +9,7 @@ type MatchBadge = 'perfect' | 'close' | 'td_only' | 'budget' | null;
 interface Props {
   filament: TDFilament;
   sourceTd: number;
+  sourcePrice?: number | null;
   badge: MatchBadge;
   formatPrice?: (price: number) => string;
 }
@@ -27,7 +28,7 @@ function getDeltaColor(delta: number): string {
   return 'text-muted-foreground';
 }
 
-export function SubstituteResultCard({ filament, sourceTd, badge, formatPrice }: Props) {
+export function SubstituteResultCard({ filament, sourceTd, sourcePrice, badge, formatPrice }: Props) {
   const td = filament.transmission_distance ?? 0;
   const delta = td - sourceTd;
   const deltaStr = delta >= 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
@@ -66,6 +67,11 @@ export function SubstituteResultCard({ filament, sourceTd, badge, formatPrice }:
           )}
           {filament.variant_price != null && formatPrice && (
             <span className="text-xs text-muted-foreground">{formatPrice(filament.variant_price)}</span>
+          )}
+          {sourcePrice != null && filament.variant_price != null && filament.variant_price < sourcePrice && formatPrice && (
+            <Badge variant="outline" className="text-[10px] bg-green-500/15 text-green-400 border-green-500/30">
+              Save {formatPrice(sourcePrice - filament.variant_price)}
+            </Badge>
           )}
         </div>
 

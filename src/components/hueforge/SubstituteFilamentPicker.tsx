@@ -54,7 +54,7 @@ export function SubstituteFilamentPicker({ filaments, selectedId, onSelect }: Pr
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-11 text-left font-normal"
+          className="w-full justify-between h-12 text-left font-normal focus:ring-2 focus:ring-primary/20"
         >
           {selected ? (
             <span className="flex items-center gap-2 truncate">
@@ -69,7 +69,7 @@ export function SubstituteFilamentPicker({ filaments, selectedId, onSelect }: Pr
               </span>
             </span>
           ) : (
-            <span className="text-muted-foreground">Select a filament to find substitutes...</span>
+            <span className="text-muted-foreground">Search by filament name, brand, or color...</span>
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
