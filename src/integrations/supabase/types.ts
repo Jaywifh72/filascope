@@ -3968,6 +3968,9 @@ export type Database = {
           surface_resistivity_ohm: number | null
           sync_enabled: boolean | null
           sync_status: string | null
+          td_confidence: string | null
+          td_matched_at: string | null
+          td_source: string | null
           tds_url: string | null
           tensile_modulus_xy_mpa: number | null
           tensile_modulus_z_mpa: number | null
@@ -4114,6 +4117,9 @@ export type Database = {
           surface_resistivity_ohm?: number | null
           sync_enabled?: boolean | null
           sync_status?: string | null
+          td_confidence?: string | null
+          td_matched_at?: string | null
+          td_source?: string | null
           tds_url?: string | null
           tensile_modulus_xy_mpa?: number | null
           tensile_modulus_z_mpa?: number | null
@@ -4260,6 +4266,9 @@ export type Database = {
           surface_resistivity_ohm?: number | null
           sync_enabled?: boolean | null
           sync_status?: string | null
+          td_confidence?: string | null
+          td_matched_at?: string | null
+          td_source?: string | null
           tds_url?: string | null
           tensile_modulus_xy_mpa?: number | null
           tensile_modulus_z_mpa?: number | null
