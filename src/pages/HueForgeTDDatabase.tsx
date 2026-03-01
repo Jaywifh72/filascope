@@ -13,6 +13,7 @@ import {
   Filter,
   Sun,
   ChevronRight,
+  RefreshCw,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ import {
 } from '@/components/ui/accordion';
 import { FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
 import { FilamentsNeedingTdSection } from '@/components/filament/td-community/FilamentsNeedingTdSection';
+import { TdSubstituteFinder } from '@/components/hueforge/TdSubstituteFinder';
 import { HowToSchema } from '@/components/seo/HowToSchema';
 import { RelatedContentBlock } from '@/components/seo/RelatedContentBlock';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -432,7 +434,7 @@ export default function HueForgeTDDatabase() {
             </div>
           </div>
 
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-3 flex-wrap">
             <Button
               onClick={() =>
                 document.getElementById('td-table')?.scrollIntoView({ behavior: 'smooth' })
@@ -440,6 +442,12 @@ export default function HueForgeTDDatabase() {
             >
               <Search className="w-4 h-4 mr-2" />
               Find Filaments by TD Value
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/hueforge-filament-substitute-finder">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Find Substitutes
+              </Link>
             </Button>
             <Button variant="outline" onClick={exportCSV} disabled={!filteredData.length}>
               <Download className="w-4 h-4 mr-2" />
@@ -815,6 +823,13 @@ export default function HueForgeTDDatabase() {
 
         {/* ── Filaments Needing TD Data ─────────────────────────────── */}
         <FilamentsNeedingTdSection />
+
+        {/* ── TD Substitute Finder (inline compact) ────────────────── */}
+        {filaments && filaments.length > 0 && (
+          <section className="mt-16">
+            <TdSubstituteFinder filaments={filaments} compact />
+          </section>
+        )}
 
         {/* ── FAQ ──────────────────────────────────────────────────── */}
         <section className="mt-16 max-w-3xl mx-auto">
