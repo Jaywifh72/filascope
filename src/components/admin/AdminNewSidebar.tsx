@@ -48,6 +48,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Content',
     items: [
       { title: 'Affiliate Hub', href: '/admin/affiliate-hub', icon: Handshake },
+      { title: 'Affiliates', href: '/admin/affiliates', icon: DollarSign },
       { title: 'Pricing Data', href: '/admin/pricing-data', icon: DollarSign },
       { title: 'TD Management', href: '/admin/td-management', icon: Sun },
     ],
