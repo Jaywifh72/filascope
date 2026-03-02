@@ -15,6 +15,8 @@ export interface ClickMetadata {
   currency?: string;
   /** item_category for GA4 select_item — filament material type (PLA, PETG…) */
   material?: string;
+  /** UpPromote source tracking (appended as sca_source) */
+  source?: string;
 }
 
 interface UseAffiliateLinkResult {
@@ -25,6 +27,8 @@ interface UseAffiliateLinkResult {
   discountCodes: AffiliateDiscountCode[];
   isLoading: boolean;
   hasAffiliate: boolean;
+  /** The region_code that was actually matched ('GLOBAL', 'AU', 'UK', etc.) */
+  resolvedRegion: string | null;
 }
 
 /**
@@ -74,7 +78,21 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
       }
       if (exactMatch) return exactMatch as AffiliateProgram;
 
-      // Fallback: any active program for this brand (regardless of region)
+      // Fallback: prefer GLOBAL program, then any active program
+      const { data: globalMatch, error: globalError } = await supabase
+        .from("affiliate_programs")
+        .select("*")
+        .ilike("brand_name", resolvedBrandName!)
+        .eq("region_code", "GLOBAL")
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (globalError) {
+        console.error("[useAffiliateLink] global lookup error:", globalError);
+      }
+      if (globalMatch) return globalMatch as AffiliateProgram;
+
+      // Last resort: any active program
       const { data: fallback, error: fallbackError } = await supabase
         .from("affiliate_programs")
         .select("*")
@@ -131,28 +149,29 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
   /**
    * Build an affiliate link synchronously from a destination URL.
    * Handles domain mismatches between product URLs and affiliate store URLs.
+   * Automatically appends sca_source=filascope-web for UpPromote programs.
    */
   const buildLink = useCallback(
-    (url: string): string => {
+    (url: string, source: string = 'filascope-web'): string => {
       if (!program) return url;
       try {
         // For awin_redirect: pass the full URL so Awin can redirect regardless of domain
         if (program.link_generation_method === "awin_redirect") {
-          return buildAffiliateLinkLocal(program, url);
+          return buildAffiliateLinkLocal(program, url, source);
         }
 
         // For redirect_link: no deep linking, just return the default tracking link
         if (program.link_generation_method === "redirect_link") {
-          return buildAffiliateLinkLocal(program, "");
+          return buildAffiliateLinkLocal(program, "", source);
         }
 
         // For url_parameter and others: extract path and combine with store_base_url
         const urlObj = new URL(url);
         const basePath = urlObj.pathname;
-        return buildAffiliateLinkLocal(program, basePath);
+        return buildAffiliateLinkLocal(program, basePath, source);
       } catch {
         // If url isn't a valid URL, treat it as a path
-        return buildAffiliateLinkLocal(program, url);
+        return buildAffiliateLinkLocal(program, url, source);
       }
     },
     [program]
@@ -163,7 +182,8 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
    */
   const trackAndOpen = useCallback(
     (url: string, metadata: ClickMetadata) => {
-      const finalUrl = buildLink(url);
+      const source = metadata.source || 'filascope-web';
+      const finalUrl = buildLink(url, source);
 
       // GA4 tracking — param names match configured custom dimensions
       trackGA4AffiliateClick({
@@ -214,5 +234,6 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
     discountCodes,
     isLoading: aliasLoading || programLoading,
     hasAffiliate: !!program,
+    resolvedRegion: program?.region_code ?? null,
   };
 }

@@ -156,7 +156,9 @@ export function FilamentPurchaseSidebar({
   const [buyClicked, setBuyClicked] = useState(false);
 
   // New affiliate program tracking
-  const { trackAndOpen, discountCodes, hasAffiliate, inactiveProgram } = useAffiliateLink(vendor);
+  const { trackAndOpen, discountCodes, hasAffiliate, inactiveProgram, resolvedRegion } = useAffiliateLink(vendor);
+  const isGlobalProgram = resolvedRegion === 'GLOBAL';
+  const pendingCodeMessage = isGlobalProgram ? "Discount code coming soon — check back for exclusive offers." : undefined;
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
@@ -513,7 +515,7 @@ export function FilamentPurchaseSidebar({
           <AffiliateInactiveBanner inactiveProgram={inactiveProgram} />
 
           {/* Affiliate Discount Banner */}
-          <AffiliateDiscountBanner discountCodes={discountCodes} className="space-y-1.5" showEmptyState={hasAffiliate} />
+          <AffiliateDiscountBanner discountCodes={discountCodes} className="space-y-1.5" showEmptyState={hasAffiliate} pendingCodeMessage={pendingCodeMessage} />
 
           {/* Disclaimer */}
           <div className="pt-4 border-t border-border/40">

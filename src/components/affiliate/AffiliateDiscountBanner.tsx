@@ -8,13 +8,15 @@ interface AffiliateDiscountBannerProps {
   className?: string;
   /** When true, shows a muted empty state instead of returning null */
   showEmptyState?: boolean;
+  /** Custom message when no active codes exist (e.g. "Discount code coming soon") */
+  pendingCodeMessage?: string;
 }
 
 /**
  * Displays active, assigned discount codes as a small teal banner.
  * Only renders when there are qualifying codes (or showEmptyState is true).
  */
-export function AffiliateDiscountBanner({ discountCodes, className, showEmptyState }: AffiliateDiscountBannerProps) {
+export function AffiliateDiscountBanner({ discountCodes, className, showEmptyState, pendingCodeMessage }: AffiliateDiscountBannerProps) {
   // Only show assigned, active codes
   const activeCodes = discountCodes.filter((c) => c.is_assigned && c.is_active && c.code);
 
@@ -23,7 +25,7 @@ export function AffiliateDiscountBanner({ discountCodes, className, showEmptySta
       return (
         <div className={className}>
           <p className="text-xs text-muted-foreground italic">
-            No discount codes available for this region currently.
+            {pendingCodeMessage || "No discount codes available for this region currently."}
           </p>
         </div>
       );
