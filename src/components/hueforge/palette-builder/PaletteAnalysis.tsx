@@ -246,7 +246,41 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
       </div>
 
       {/* ── Role checks & gap analysis ─────────── */}
-      {palette.length < 2 ? (
+      {palette.length === 1 ? (
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+            Coverage Analysis
+            <Info className="w-3 h-3 text-muted-foreground/60" />
+          </h3>
+          {(() => {
+            const td = palette[0].tdValue;
+            if (td <= 1) return (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-sm">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <p className="text-emerald-300">
+                  <span className="font-medium">Good start!</span> You have an opaque base. Add a mid-tone filament (TD 1–3) next for smoother gradients.
+                </p>
+              </div>
+            );
+            if (td <= 3) return (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm">
+                <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-amber-300">
+                  You have a mid-tone filament. Add an <span className="font-medium">opaque base (TD 0–1)</span> and a <span className="font-medium">highlight (TD 3+)</span> to complete your palette.
+                </p>
+              </div>
+            );
+            return (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-sm">
+                <Lightbulb className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                <p className="text-cyan-300">
+                  You have a highlight filament. Add an <span className="font-medium">opaque base (TD 0–1)</span> first — it's essential for HueForge projects.
+                </p>
+              </div>
+            );
+          })()}
+        </div>
+      ) : palette.length < 2 ? (
         <div className="text-center py-6 text-sm text-muted-foreground">
           Add at least 2 filaments for coverage analysis
         </div>
