@@ -173,7 +173,7 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
       {/* ── Spectrum bar ───────────────────────── */}
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">TD Coverage Spectrum</h3>
-        <div className="relative min-w-[280px] overflow-x-auto">
+        <div className="px-2">
           {/* Gradient bar */}
           <div
             role="img"
@@ -224,8 +224,8 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
               <div
                 key={v}
-                className="absolute top-0 -translate-x-1/2 flex flex-col items-center"
-                style={{ left: `${(v / 10) * 100}%` }}
+                className="absolute top-0 flex flex-col items-center"
+                style={{ left: `${(v / 10) * 100}%`, transform: 'translateX(-50%)' }}
               >
                 <div className="w-px h-1.5 bg-muted-foreground/40" />
                 {v % 2 === 0 && (

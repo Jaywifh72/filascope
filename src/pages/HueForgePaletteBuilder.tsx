@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Palette, ArrowRight, Clipboard, Link2, Download, RotateCcw, BarChart3, Layers, ShoppingCart, Eye, Loader2, MoreHorizontal } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs, BreadcrumbSchema } from "@/components/seo";
 import { Card, CardContent } from "@/components/ui/card";
@@ -473,9 +474,11 @@ export default function HueForgePaletteBuilder() {
         </section>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between gap-2 mb-6 md:mb-8 flex-wrap">
+        <TooltipProvider delayDuration={300}>
+        <div className="flex items-center gap-2 mb-6 md:mb-8 rounded-lg border border-border/60 bg-card/60 px-3 py-2 flex-wrap">
+          {/* Preset loader */}
           <Select onValueChange={handlePresetSelect} disabled={presetLoading}>
-            <SelectTrigger className="w-[180px] sm:w-[200px] h-9 text-sm" aria-label="Load a preset palette">
+            <SelectTrigger className="w-[180px] sm:w-[200px] h-8 text-sm border-border/60" aria-label="Load a preset palette">
               {presetLoading ? (
                 <span className="flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</span>
               ) : (
@@ -488,52 +491,78 @@ export default function HueForgePaletteBuilder() {
               ))}
             </SelectContent>
           </Select>
-          <div className="flex items-center gap-1 shrink-0 flex-wrap">
-            {/* Always-visible buttons */}
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleCopyLink} aria-label="Copy shareable palette link">
-              <Link2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Copy Link</span>
-            </Button>
 
-            {/* Desktop: show all buttons. Mobile: group secondary into dropdown */}
+          {/* Divider */}
+          <div className="w-px h-5 bg-border/60 hidden sm:block" />
+
+          {/* Export actions */}
+          <div className="flex items-center gap-0.5 ml-auto">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleCopyLink} disabled={!hasPalette} aria-label="Copy shareable palette link">
+                  <Link2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Copy Link</span>
+                </Button>
+              </TooltipTrigger>
+              {!hasPalette && <TooltipContent>Add filaments first</TooltipContent>}
+            </Tooltip>
+
             {isMobile ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-xs gap-1" aria-label="More actions">
+                  <Button variant="ghost" size="sm" className="text-xs gap-1" disabled={!hasPalette} aria-label="More actions">
                     <MoreHorizontal className="w-3.5 h-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleCopyConfig}>
+                  <DropdownMenuItem onClick={handleCopyConfig} disabled={!hasPalette}>
                     <Clipboard className="w-3.5 h-3.5 mr-2" /> Copy Config
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportCsv}>
+                  <DropdownMenuItem onClick={handleExportCsv} disabled={!hasPalette}>
                     <Download className="w-3.5 h-3.5 mr-2" /> Export CSV
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <>
-                <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleCopyConfig} aria-label="Copy palette configuration text">
-                  <Clipboard className="w-3.5 h-3.5" /> Copy Config
-                </Button>
-                <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleExportCsv} aria-label="Export palette as CSV file">
-                  <Download className="w-3.5 h-3.5" /> Export CSV
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleCopyConfig} disabled={!hasPalette} aria-label="Copy palette configuration text">
+                      <Clipboard className="w-3.5 h-3.5" /> Copy Config
+                    </Button>
+                  </TooltipTrigger>
+                  {!hasPalette && <TooltipContent>Add filaments first</TooltipContent>}
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleExportCsv} disabled={!hasPalette} aria-label="Export palette as CSV file">
+                      <Download className="w-3.5 h-3.5" /> Export CSV
+                    </Button>
+                  </TooltipTrigger>
+                  {!hasPalette && <TooltipContent>Add filaments first</TooltipContent>}
+                </Tooltip>
               </>
             )}
 
+            {/* Divider before destructive action */}
+            <div className="w-px h-5 bg-border/60 mx-0.5" />
+
             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs gap-1 text-destructive hover:text-destructive"
-                  disabled={!hasPalette}
-                  aria-label="Reset palette"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Reset</span>
-                </Button>
-              </AlertDialogTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs gap-1 text-destructive hover:text-destructive"
+                      disabled={!hasPalette}
+                      aria-label="Reset palette"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Reset</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                {!hasPalette && <TooltipContent>Nothing to reset</TooltipContent>}
+              </Tooltip>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Reset palette?</AlertDialogTitle>
@@ -551,6 +580,7 @@ export default function HueForgePaletteBuilder() {
             </AlertDialog>
           </div>
         </div>
+        </TooltipProvider>
 
         {/* Main grid — responsive: 1-col mobile, 2-col tablet, 5-col desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8">
