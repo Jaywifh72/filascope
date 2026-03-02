@@ -65,7 +65,7 @@ export const brandLogos: Record<string, string> = {
   "Voxel PLA": logo("voxelpla.webp"),
   "VoxelPLA": logo("voxelpla.webp"),
   "3DHOJOR": logo("3dhojor.svg"),
-  "Paramount 3D": logo("paramount3d.svg"),
+  "Paramount 3D": logo("paramount3d.png"),
 
   // Printer brands
   "AnkerMake": logo("ankermake.png"),
