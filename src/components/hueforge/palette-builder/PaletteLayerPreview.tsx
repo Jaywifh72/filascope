@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, ExternalLink, Lightbulb, LightbulbOff } from 'lucide-react';
+import { ExternalLink, Lightbulb, LightbulbOff, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table, TableBody, TableCell, TableFooter,
   TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  calcEffectiveOpacity,
   calcCumulativeTransmission,
   compositeColor,
 } from '@/components/hueforge/useLayerPreviewState';
@@ -17,6 +16,20 @@ import type { PaletteEntry } from '@/hooks/usePaletteBuilder';
 function rgbToHex(r: number, g: number, b: number): string {
   return `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 }
+
+/** Opacity model that accounts for layer height */
+function calcEffectiveOpacityWithHeight(layerCount: number, td: number, layerHeightMm: number): number {
+  if (td <= 0) return 1;
+  const raw = 1 - Math.exp((-layerCount * layerHeightMm) / td);
+  return Math.max(0.1, Math.min(1.0, raw));
+}
+
+const LAYER_HEIGHTS = [
+  { value: '0.08', label: '0.08mm' },
+  { value: '0.12', label: '0.12mm' },
+  { value: '0.16', label: '0.16mm' },
+  { value: '0.20', label: '0.20mm' },
+];
 
 interface Props {
   palette: PaletteEntry[];
@@ -32,7 +45,9 @@ interface ResolvedLayer {
 
 export function PaletteLayerPreview({ palette }: Props) {
   const [backlit, setBacklit] = useState(true);
-  const navigate = useNavigate();
+  const [layerHeight, setLayerHeight] = useState('0.08');
+
+  const layerHeightMm = parseFloat(layerHeight);
 
   const resolved = useMemo<ResolvedLayer[]>(
     () =>
@@ -40,12 +55,12 @@ export function PaletteLayerPreview({ palette }: Props) {
         .filter((p) => p.tdValue != null)
         .map((p) => ({
           hex: p.color || '#808080',
-          opacity: calcEffectiveOpacity(p.layers, p.tdValue),
+          opacity: calcEffectiveOpacityWithHeight(p.layers, p.tdValue, layerHeightMm),
           layerCount: p.layers,
           name: `${p.brand} ${p.filamentName}`,
           td: p.tdValue,
         })),
-    [palette]
+    [palette, layerHeightMm]
   );
 
   const totalLayers = resolved.reduce((s, l) => s + l.layerCount, 0);
@@ -76,14 +91,14 @@ export function PaletteLayerPreview({ palette }: Props) {
   const finalTransmission =
     transmissions.length > 0 ? transmissions[transmissions.length - 1] : 1;
 
-  // Build URL params matching Layer Preview page format: ?l1=id,count&l2=id,count
-  const openInLayerPreview = () => {
+  // Build URL params matching Layer Preview page format
+  const layerPreviewUrl = useMemo(() => {
     const params = new URLSearchParams();
     palette.forEach((p, i) => {
       params.set(`l${i + 1}`, `${p.filamentId},${p.layers}`);
     });
-    navigate(`/hueforge-layer-preview?${params.toString()}`);
-  };
+    return `/hueforge-layer-preview?${params.toString()}`;
+  }, [palette]);
 
   if (!resolved.length) {
     return (
@@ -98,24 +113,37 @@ export function PaletteLayerPreview({ palette }: Props) {
 
   return (
     <div className="space-y-5">
-      {/* Backlight toggle */}
-      <div className="flex justify-center">
+      {/* Controls row: layer height + backlight toggle */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground shrink-0">Layer Height:</label>
+          <Select value={layerHeight} onValueChange={setLayerHeight}>
+            <SelectTrigger className="w-[100px] h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LAYER_HEIGHTS.map((lh) => (
+                <SelectItem key={lh.value} value={lh.value}>{lh.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setBacklit(!backlit)}
-          className="text-xs gap-1.5"
+          className="text-xs gap-1.5 h-7"
         >
           {backlit ? (
             <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
           ) : (
             <LightbulbOff className="w-3.5 h-3.5" />
           )}
-          {backlit ? 'Backlight On' : 'Backlight Off'}
+          {backlit ? 'Backlit' : 'Ambient'}
         </Button>
       </div>
 
-      {/* Visual preview — two squares side by side */}
+      {/* Visual preview — two comparison squares side by side */}
       <div className="flex justify-center gap-6">
         {/* Backlit preview */}
         <div className="flex flex-col items-center gap-1.5">
@@ -127,7 +155,7 @@ export function PaletteLayerPreview({ palette }: Props) {
               />
             )}
             <div
-              className="w-[120px] h-[160px] sm:w-[150px] sm:h-[200px] rounded-lg border border-border/30 overflow-hidden flex flex-col-reverse shadow-inner"
+              className="w-[120px] h-[140px] sm:w-[140px] sm:h-[180px] rounded-lg border border-border/30 overflow-hidden flex flex-col-reverse shadow-inner"
               style={{ backgroundColor: '#ffffff' }}
             >
               {resolved.map((layer, i) => (
@@ -138,8 +166,7 @@ export function PaletteLayerPreview({ palette }: Props) {
                     flex: layer.layerCount,
                     backgroundColor: layer.hex,
                     opacity: layer.opacity,
-                    borderTop:
-                      i > 0 ? '1px solid rgba(255,255,255,0.1)' : undefined,
+                    borderTop: i > 0 ? '1px solid rgba(255,255,255,0.1)' : undefined,
                   }}
                 >
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
@@ -151,13 +178,22 @@ export function PaletteLayerPreview({ palette }: Props) {
               ))}
             </div>
           </div>
-          <span className="text-[10px] text-muted-foreground">Backlit</span>
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-[10px] text-muted-foreground">Backlit</span>
+            {backlitComposite && (
+              <div
+                className="w-6 h-6 rounded border border-border/50"
+                style={{ backgroundColor: backlitComposite }}
+                title={`Composite: ${backlitComposite}`}
+              />
+            )}
+          </div>
         </div>
 
         {/* Ambient preview */}
         <div className="flex flex-col items-center gap-1.5">
           <div
-            className="w-[120px] h-[160px] sm:w-[150px] sm:h-[200px] rounded-lg border border-border/30 overflow-hidden flex flex-col-reverse shadow-inner"
+            className="w-[120px] h-[140px] sm:w-[140px] sm:h-[180px] rounded-lg border border-border/30 overflow-hidden flex flex-col-reverse shadow-inner"
             style={{ backgroundColor: '#000000' }}
           >
             {resolved.map((layer, i) => (
@@ -168,8 +204,7 @@ export function PaletteLayerPreview({ palette }: Props) {
                   flex: layer.layerCount,
                   backgroundColor: layer.hex,
                   opacity: layer.opacity,
-                  borderTop:
-                    i > 0 ? '1px solid rgba(255,255,255,0.1)' : undefined,
+                  borderTop: i > 0 ? '1px solid rgba(255,255,255,0.1)' : undefined,
                 }}
               >
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
@@ -180,30 +215,17 @@ export function PaletteLayerPreview({ palette }: Props) {
               </div>
             ))}
           </div>
-          <span className="text-[10px] text-muted-foreground">Ambient</span>
-        </div>
-      </div>
-
-      {/* Composite swatches */}
-      <div className="flex justify-center gap-4">
-        {backlitComposite && (
-          <div className="flex flex-col items-center gap-1">
-            <div
-              className="w-10 h-10 rounded-lg border border-border/50 shadow-sm"
-              style={{ backgroundColor: backlitComposite }}
-            />
-            <span className="text-[10px] text-muted-foreground">Backlit</span>
-          </div>
-        )}
-        {ambientComposite && (
-          <div className="flex flex-col items-center gap-1">
-            <div
-              className="w-10 h-10 rounded-lg border border-border/50 shadow-sm"
-              style={{ backgroundColor: ambientComposite }}
-            />
+          <div className="flex flex-col items-center gap-0.5">
             <span className="text-[10px] text-muted-foreground">Ambient</span>
+            {ambientComposite && (
+              <div
+                className="w-6 h-6 rounded border border-border/50"
+                style={{ backgroundColor: ambientComposite }}
+                title={`Composite: ${ambientComposite}`}
+              />
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Layer breakdown table */}
@@ -270,11 +292,13 @@ export function PaletteLayerPreview({ palette }: Props) {
         </Table>
       </div>
 
-      {/* Open in full tool */}
+      {/* Open in full tool — new tab */}
       <div className="flex justify-center">
-        <Button variant="outline" size="sm" onClick={openInLayerPreview} className="text-xs gap-1.5">
-          <ExternalLink className="w-3.5 h-3.5" />
-          Open in Layer Preview
+        <Button variant="outline" size="sm" asChild className="text-xs gap-1.5">
+          <a href={layerPreviewUrl} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="w-3.5 h-3.5" />
+            Open in Layer Preview
+          </a>
         </Button>
       </div>
 
@@ -282,8 +306,8 @@ export function PaletteLayerPreview({ palette }: Props) {
       <LayerPreviewTips />
 
       <p className="text-[10px] text-muted-foreground text-center max-w-sm mx-auto leading-relaxed">
-        Simplified visual preview. Actual results depend on slicer settings,
-        layer height, and printer calibration.
+        Simplified visual preview at {layerHeight}mm layer height. Actual results depend on slicer settings
+        and printer calibration.
       </p>
     </div>
   );

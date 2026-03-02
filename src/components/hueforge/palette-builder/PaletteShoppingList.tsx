@@ -93,7 +93,7 @@ function ShoppingRow({
       </Badge>
 
       {/* Layers */}
-      <span className="text-xs text-muted-foreground shrink-0">×{entry.layers}</span>
+      <span className="text-xs text-muted-foreground shrink-0">×{entry.layers} layer{entry.layers !== 1 ? 's' : ''}</span>
 
       {/* Price */}
       <span className="text-sm font-mono shrink-0 min-w-[60px] text-right">
@@ -212,7 +212,12 @@ export function PaletteShoppingList({ palette }: Props) {
       {/* Total estimate */}
       <div className="border-t border-border/60 pt-3 space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Estimated Total</span>
+          <div>
+            <span className="text-sm font-medium">Estimated Total</span>
+            <span className="text-xs text-muted-foreground ml-2">
+              ({palette.length} spool{palette.length !== 1 ? 's' : ''} needed)
+            </span>
+          </div>
           <span className="text-base font-bold font-mono">
             {total > 0 ? formatPrice(total) : '—'}
           </span>
@@ -233,7 +238,7 @@ export function PaletteShoppingList({ palette }: Props) {
       {/* Affiliate disclosure */}
       <p className="text-xs text-muted-foreground pt-2 border-t border-border/40">
         🔗 Links may be affiliate links.{' '}
-        <Link to="/affiliate-disclosure" className="underline hover:text-foreground transition-colors">
+        <Link to="/affiliate-disclosure" className="underline text-cyan-400 hover:text-cyan-300 transition-colors">
           Learn more
         </Link>
       </p>
@@ -278,16 +283,21 @@ function OpenAllButton({
 
   if (purchasableCount === 0) {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="outline" size="sm" className="w-full gap-1.5" disabled>
-              <ExternalLink className="w-3.5 h-3.5" /> Open All Shop Links
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>No purchase links available</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground text-center">
+          Pricing information isn't available for these filaments yet. You can still find them by searching the product names at your preferred retailer.
+        </p>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full gap-1.5" disabled>
+                <ExternalLink className="w-3.5 h-3.5" /> Open All Shop Links
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>No purchase links available</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     );
   }
 
