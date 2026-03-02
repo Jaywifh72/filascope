@@ -8,16 +8,61 @@ interface AffiliateConfig {
   amazon_us_tag: string | null;
   amazon_uk_tag: string | null;
   amazon_de_tag: string | null;
+  amazon_ca_tag?: string | null;
+  amazon_au_tag?: string | null;
+  amazon_jp_tag?: string | null;
   // Awin fields for eSUN/KingRoon/Bambu etc.
   awin_advertiser_id?: string | null;
   awin_affiliate_id?: string | null;
   affiliate_network?: string | null;
 }
 
-// In-memory cache for configs — include a version key so updates to affiliate_configs bust it
+// Hardcoded fallback configs — used when the Edge Function is unreachable (CORS, cold start, outage).
+// Sourced from affiliate_configs + affiliate_programs tables as of 2026-03-02.
+const FALLBACK_CONFIGS: AffiliateConfig[] = [
+  // Amazon — all regions
+  { vendor_name: "Amazon", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: "filascope-20", amazon_uk_tag: "filascope-20", amazon_de_tag: "filascope-20", amazon_ca_tag: "filascope-20", amazon_au_tag: "filascope-20", amazon_jp_tag: "filascope-20", affiliate_network: "amazon" },
+  // Anycubic — GoAffPro ref
+  { vendor_name: "Anycubic", affiliate_id: "JEANJACQUESBOILEAU", affiliate_url_pattern: "?ref=JEANJACQUESBOILEAU", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Creality — UpPromote sca_ref
+  { vendor_name: "Creality", affiliate_id: "432793.sgEubTAk", affiliate_url_pattern: "?sca_ref=432793.sgEubTAk&source=filascope", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "goaffpro" },
+  // eSUN — Awin
+  { vendor_name: "eSUN", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, awin_advertiser_id: "99267", awin_affiliate_id: "2703056", affiliate_network: "awin" },
+  { vendor_name: "eSun", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, awin_advertiser_id: "99267", awin_affiliate_id: "2703056", affiliate_network: "awin" },
+  // KingRoon — Awin
+  { vendor_name: "KingRoon", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, awin_advertiser_id: "101327", awin_affiliate_id: "2703056", affiliate_network: "awin" },
+  // Elegoo — Impact redirect
+  { vendor_name: "Elegoo", affiliate_id: null, affiliate_url_pattern: "redirect:https://elegoo.sjv.io/QYPW6x", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "redirect_link" },
+  // Overture — direct aff param
+  { vendor_name: "Overture", affiliate_id: "126", affiliate_url_pattern: "?aff=126", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Proto-Pasta — direct aff param
+  { vendor_name: "Proto-Pasta", affiliate_id: "247", affiliate_url_pattern: "?aff=247", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Amolen — direct ref param
+  { vendor_name: "Amolen", affiliate_id: "qzaelowj", affiliate_url_pattern: "?ref=qzaelowj", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Eryone — direct ref param
+  { vendor_name: "Eryone", affiliate_id: "wpzqtfek", affiliate_url_pattern: "?ref=wpzqtfek", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Polymaker — aff param
+  { vendor_name: "Polymaker", affiliate_id: "99", affiliate_url_pattern: "?aff=99", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Prusa — fragment-based
+  { vendor_name: "Prusa", affiliate_id: "Jay", affiliate_url_pattern: "{{raw_url}}#a_aid=Jay", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  { vendor_name: "Prusament", affiliate_id: "Jay", affiliate_url_pattern: "{{raw_url}}#a_aid=Jay", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Sunlu — direct ref
+  { vendor_name: "Sunlu", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Bambu Lab — Awin (no IDs in affiliate_configs but row exists)
+  { vendor_name: "Bambu Lab", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "awin" },
+  // Geeetech — direct
+  { vendor_name: "Geeetech", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // FormFutura — direct
+  { vendor_name: "FormFutura", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // 3D-Fuel — direct
+  { vendor_name: "3D-Fuel", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Siraya Tech — UpPromote
+  { vendor_name: "Siraya Tech", affiliate_id: "7165608.JA2wBdEg", affiliate_url_pattern: "?sca_ref=7165608.JA2wBdEg", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+];
+
+// In-memory cache for configs
 let cachedConfigs: AffiliateConfig[] | null = null;
 let configsFetchPromise: Promise<AffiliateConfig[]> | null = null;
-const CACHE_VERSION = "v3"; // bump when affiliate_configs data changes
 
 
 /**
@@ -57,7 +102,6 @@ async function fetchAffiliateProgramsBridge(
       let network: string | null = null;
 
       if (prog.link_generation_method === "url_parameter" && prog.tracking_parameter && prog.tracking_value) {
-        // e.g. ?ref=JEANJACQUESBOILEAU or ?sca_ref=432793.sgEubTAk&source=filascope
         let params = `?${prog.tracking_parameter}=${prog.tracking_value}`;
         if (prog.source_parameter && prog.source_value) {
           params += `&${prog.source_parameter}=${prog.source_value}`;
@@ -69,8 +113,6 @@ async function fetchAffiliateProgramsBridge(
         awin_affiliate = prog.awin_publisher_id;
         network = "awin";
       } else if (prog.link_generation_method === "redirect_link" && prog.link_template) {
-        // e.g. Elegoo: https://elegoo.sjv.io/QYPW6x — use the template as the full redirect URL
-        // Store as a special pattern: "redirect:{{template}}"
         url_pattern = `redirect:${prog.link_template}`;
         network = "redirect_link";
       }
@@ -101,14 +143,25 @@ async function fetchConfigs(): Promise<AffiliateConfig[]> {
 
   configsFetchPromise = (async () => {
     try {
-      // Fetch base configs from edge function (affiliate_configs table)
       const { data, error } = await supabase.functions.invoke("get-affiliate-url", {
         body: { getConfigs: true },
       });
 
-      if (error || !data?.configs) {
-        console.error("Error fetching affiliate configs:", error);
-        return [];
+      if (error) {
+        // Categorize error
+        if (error.message?.includes("FetchError") || error.message?.includes("Failed to send")) {
+          console.warn("[AffiliateLinks] Edge Function unreachable — using fallback configs");
+        } else {
+          console.error("[AffiliateLinks] Edge Function returned error:", error.message || error);
+        }
+        cachedConfigs = FALLBACK_CONFIGS;
+        return cachedConfigs;
+      }
+
+      if (!data?.configs) {
+        console.warn("[AffiliateLinks] Edge Function returned unexpected format — using fallback configs");
+        cachedConfigs = FALLBACK_CONFIGS;
+        return cachedConfigs;
       }
 
       const baseConfigs: AffiliateConfig[] = data.configs;
@@ -120,8 +173,9 @@ async function fetchConfigs(): Promise<AffiliateConfig[]> {
       cachedConfigs = [...baseConfigs, ...bridged];
       return cachedConfigs;
     } catch (err) {
-      console.error("Error calling affiliate function:", err);
-      return [];
+      console.warn("[AffiliateLinks] Edge Function unreachable — using fallback configs", err);
+      cachedConfigs = FALLBACK_CONFIGS;
+      return cachedConfigs;
     }
   })();
 
