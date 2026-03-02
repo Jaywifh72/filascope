@@ -1,6 +1,7 @@
 import { Sparkles, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
+import { SearchBarGated } from "@/components/search/SearchBarGated";
 
 interface PrintersHeroSectionProps {
   searchTerm: string;
@@ -81,18 +82,20 @@ const PrintersHeroSection = ({
               </Button>
               
               {/* Secondary - Search Input with History */}
-              <div className="w-full sm:w-[260px] md:w-[300px] relative">
-                <SearchInputWithHistory
-                  value={searchTerm}
-                  onChange={onSearchChange}
-                  placeholder="Search printers by name, brand, or specs"
-                  context="printers"
-                  className="h-12 sm:h-14 focus-within:ring-2 focus-within:ring-cyan-500/20 focus-within:border-cyan-500/40 transition-all duration-200 rounded-md"
-                />
-                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-xs font-mono bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 pointer-events-none">
-                  /
-                </kbd>
-              </div>
+              <SearchBarGated>
+                <div className="w-full sm:w-[260px] md:w-[300px] relative">
+                  <SearchInputWithHistory
+                    value={searchTerm}
+                    onChange={onSearchChange}
+                    placeholder="Search printers by name, brand, or specs"
+                    context="printers"
+                    className="h-12 sm:h-14 focus-within:ring-2 focus-within:ring-cyan-500/20 focus-within:border-cyan-500/40 transition-all duration-200 rounded-md"
+                  />
+                  <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-xs font-mono bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 pointer-events-none">
+                    /
+                  </kbd>
+                </div>
+              </SearchBarGated>
             </div>
           </div>
           

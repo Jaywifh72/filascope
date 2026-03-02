@@ -9,8 +9,9 @@ import { SyncMonitorContent } from "@/pages/admin/SyncMonitor";
 
 export default function NewAdminPanel() {
   const { enabled: lightModePublic, loading: switchLoading, setEnabled: setLightModePublic } = useFeatureSwitch("light_mode_public");
+  const { enabled: filamentSearchPublic, loading: searchSwitchLoading, setEnabled: setFilamentSearchPublic } = useFeatureSwitch("filament_search_public");
 
-  if (switchLoading) {
+  if (switchLoading || searchSwitchLoading) {
     return <PageLoadingSkeleton />;
   }
 
@@ -42,7 +43,7 @@ export default function NewAdminPanel() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/30">
                 <div className="space-y-1">
                   <Label className="text-sm font-medium">Light mode option</Label>
@@ -55,6 +56,20 @@ export default function NewAdminPanel() {
                 <Switch
                   checked={lightModePublic}
                   onCheckedChange={(checked) => setLightModePublic(checked)}
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/30">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Filament search</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {filamentSearchPublic
+                      ? "Search bar is visible to all users."
+                      : "Search bar is hidden for non-admin users."}
+                  </p>
+                </div>
+                <Switch
+                  checked={filamentSearchPublic}
+                  onCheckedChange={(checked) => setFilamentSearchPublic(checked)}
                 />
               </div>
             </CardContent>
