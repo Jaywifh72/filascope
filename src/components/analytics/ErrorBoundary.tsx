@@ -263,6 +263,12 @@ export function useErrorReporting() {
 // Global error handler for uncaught errors
 export function initializeGlobalErrorHandler() {
   window.addEventListener('error', (event) => {
+    // Suppress benign AbortError from video/animation play() interruptions
+    if (event.message?.includes('AbortError') || event.message?.includes('play() request was interrupted')) {
+      event.preventDefault();
+      return;
+    }
+
     const sessionId = sessionStorage.getItem('analytics_session_id') || 'unknown';
     
     supabase.from('error_logs').insert({
@@ -286,13 +292,20 @@ export function initializeGlobalErrorHandler() {
   });
 
   window.addEventListener('unhandledrejection', (event) => {
+    // Suppress benign AbortError from video/animation play() interruptions
+    const reason = event.reason;
+    if (reason?.name === 'AbortError' || String(reason?.message || reason).includes('play() request was interrupted')) {
+      event.preventDefault();
+      return;
+    }
+
     const sessionId = sessionStorage.getItem('analytics_session_id') || 'unknown';
     
     supabase.from('error_logs').insert({
       error_id: crypto.randomUUID(),
       error_type: 'unhandled_rejection',
-      error_message: event.reason?.message || String(event.reason),
-      error_stack: event.reason?.stack || null,
+      error_message: reason?.message || String(reason),
+      error_stack: reason?.stack || null,
       page_url: window.location.href,
       route: window.location.pathname,
       user_agent: navigator.userAgent,
