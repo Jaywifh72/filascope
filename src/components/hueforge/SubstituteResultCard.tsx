@@ -102,7 +102,7 @@ export function SubstituteResultCard({ filament, sourceTd, sourcePrice, badge, f
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 px-0 text-muted-foreground hover:text-primary"
-                  onClick={() => navigate(`/hueforge-palette-builder?add=${filament.id}`)}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/hueforge-palette-builder?add=${filament.id}`); }}
                 >
                   <Palette className="w-3.5 h-3.5" />
                 </Button>

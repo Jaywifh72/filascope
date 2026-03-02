@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, ExternalLink, Link2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRegion } from '@/contexts/RegionContext';
@@ -63,8 +64,8 @@ function ShoppingRow({
       material: entry.material,
     };
 
-    if (hasAffiliate) {
-      trackAndOpen(productUrl!, meta);
+    if (hasAffiliate && productUrl) {
+      trackAndOpen(productUrl, meta);
     } else {
       window.open(url, '_blank', 'noopener,noreferrer');
     }
@@ -242,6 +243,13 @@ export function PaletteShoppingList({ palette }: Props) {
 
 // ── Open All sub-component ───────────────────────────────────────
 
+function OpenAllRow({ entry, productUrl }: { entry: PaletteEntry; productUrl: string | null }) {
+  const { buildLink } = useAffiliateLink(entry.brand);
+  const affiliateUrl = useMemo(() => (productUrl ? buildLink(productUrl) : null), [productUrl, buildLink]);
+  // Expose the best URL via a data attribute so parent can collect it
+  return <span data-url={affiliateUrl || productUrl || ''} className="hidden" />;
+}
+
 function OpenAllButton({
   palette,
   urlMap,
@@ -251,15 +259,20 @@ function OpenAllButton({
   urlMap: Record<string, FilamentUrlData>;
   purchasableCount: number;
 }) {
-  // We can't call useAffiliateLink per-brand in a loop here,
-  // so the "Open All" will open raw URLs (affiliate wrapping happens
-  // per-row via ShoppingRow). We open them simply.
+  // Render hidden rows to get affiliate-wrapped URLs via hooks
+  const rowRefs = useRef<(HTMLSpanElement | null)[]>([]);
+
   const handleOpenAll = () => {
-    for (const p of palette) {
-      const url = urlMap[p.filamentId]?.product_url;
-      if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
+    const container = document.getElementById('open-all-urls');
+    if (!container) return;
+    const spans = container.querySelectorAll<HTMLSpanElement>('span[data-url]');
+    let opened = 0;
+    spans.forEach((span) => {
+      const url = span.dataset.url;
+      if (url) { window.open(url, '_blank', 'noopener,noreferrer'); opened++; }
+    });
+    if (opened < palette.length) {
+      toast(`Opened ${opened} of ${palette.length} links (${palette.length - opened} had no URL)`);
     }
   };
 
@@ -279,25 +292,32 @@ function OpenAllButton({
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full gap-1.5">
-          <ExternalLink className="w-3.5 h-3.5" /> Open All Shop Links
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Open {purchasableCount} shop links?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will open {purchasableCount} new tab{purchasableCount > 1 ? 's' : ''} with retailer links.
-            Each link supports FilaScope through affiliate tracking.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleOpenAll}>Continue</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <div id="open-all-urls" className="hidden" aria-hidden="true">
+        {palette.map((p) => (
+          <OpenAllRow key={p.filamentId} entry={p} productUrl={urlMap[p.filamentId]?.product_url ?? null} />
+        ))}
+      </div>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" size="sm" className="w-full gap-1.5">
+            <ExternalLink className="w-3.5 h-3.5" /> Open All Shop Links
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Open {purchasableCount} shop links?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will open {purchasableCount} new tab{purchasableCount > 1 ? 's' : ''} with retailer links.
+              Each link supports FilaScope through affiliate tracking.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleOpenAll}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

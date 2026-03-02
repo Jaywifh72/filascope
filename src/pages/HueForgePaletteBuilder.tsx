@@ -168,8 +168,9 @@ export default function HueForgePaletteBuilder() {
     const pParam = searchParams.get('p');
     const addParam = searchParams.get('add');
 
+    const UUID_ADD_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const processAdd = async () => {
-      if (!addParam) return;
+      if (!addParam || !UUID_ADD_RE.test(addParam)) return;
       const { data, error } = await supabase
         .from('filaments')
         .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
@@ -206,10 +207,11 @@ export default function HueForgePaletteBuilder() {
       return;
     }
 
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const segments = pParam.split('|').map((s) => {
       const [id, layersStr] = s.split(',');
       return { id, layers: parseInt(layersStr) || 1 };
-    }).filter((s) => s.id);
+    }).filter((s) => s.id && UUID_RE.test(s.id));
 
     if (!segments.length) {
       if (addParam) {
@@ -305,8 +307,10 @@ export default function HueForgePaletteBuilder() {
     setPresetLoading(true);
     try {
       const entries: PaletteEntry[] = [];
+      const usedIds = new Set<string>();
+
       for (const slot of preset.slots) {
-        const { data } = await supabase
+        let query = supabase
           .from('filaments')
           .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
           .not('transmission_distance', 'is', null)
@@ -314,10 +318,17 @@ export default function HueForgePaletteBuilder() {
           .lte('transmission_distance', slot.tdMax)
           .ilike('color_family', `%${slot.colorFamily}%`)
           .order('transmission_distance', { ascending: true })
-          .limit(1);
+          .limit(5); // fetch extra to allow dedup
+
+        if (usedIds.size > 0) {
+          query = query.not('id', 'in', `(${[...usedIds].join(',')})`);
+        }
+
+        const { data } = await query;
 
         if (data && data.length > 0) {
           const f = data[0];
+          usedIds.add(f.id);
           entries.push({
             filamentId: f.id,
             filamentName: f.product_title ?? '',
@@ -331,17 +342,25 @@ export default function HueForgePaletteBuilder() {
             price: f.variant_price,
           });
         } else {
-          const { data: fallback } = await supabase
+          // Fallback: ignore color family
+          let fallbackQuery = supabase
             .from('filaments')
             .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
             .not('transmission_distance', 'is', null)
             .gte('transmission_distance', slot.tdMin)
             .lte('transmission_distance', slot.tdMax)
             .order('transmission_distance', { ascending: true })
-            .limit(1);
+            .limit(5);
+
+          if (usedIds.size > 0) {
+            fallbackQuery = fallbackQuery.not('id', 'in', `(${[...usedIds].join(',')})`);
+          }
+
+          const { data: fallback } = await fallbackQuery;
 
           if (fallback && fallback.length > 0) {
             const f = fallback[0];
+            usedIds.add(f.id);
             entries.push({
               filamentId: f.id,
               filamentName: f.product_title ?? '',
@@ -542,7 +561,7 @@ export default function HueForgePaletteBuilder() {
             <Card className="border-border/60">
               <CardContent className="p-4">
                 <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-3">Add Filaments</h2>
-                <PaletteFilamentSearch onAdd={addFilament} isFull={isFull} />
+                <PaletteFilamentSearch onAdd={addFilament} isFull={isFull} existingIds={palette.map(p => p.filamentId)} />
               </CardContent>
             </Card>
 

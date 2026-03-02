@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
+import { trackEvent } from '@/lib/analytics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -93,13 +94,14 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
   const allCovered = hasOpaque && hasMidTone && hasTranslucent && gaps.length === 0;
 
   // Fetch suggested filaments for gaps
+  const paletteIds = useMemo(() => palette.map((p) => p.filamentId), [palette]);
   const gapRanges = useMemo(
     () => gaps.map((g) => ({ min: g.from, max: g.to })),
     [gaps]
   );
 
   const { data: suggestions } = useQuery({
-    queryKey: ['palette-gap-suggestions', gapRanges],
+    queryKey: ['palette-gap-suggestions', gapRanges, paletteIds],
     queryFn: async () => {
       if (gapRanges.length === 0) return [];
       const results: Array<{
@@ -110,28 +112,59 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
         color_family: string;
         color_hex: string;
         transmission_distance: number;
+        variant_price: number | null;
         product_handle: string | null;
         gapIndex: number;
       }> = [];
-      for (let i = 0; i < gapRanges.length; i++) {
-        const { min, max } = gapRanges[i];
-        const { data } = await supabase
+      const queries = gapRanges.map(async ({ min, max }, i) => {
+        let query = supabase
           .from('filaments')
-          .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, product_handle')
+          .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
           .not('transmission_distance', 'is', null)
           .gte('transmission_distance', min)
           .lte('transmission_distance', max)
           .order('transmission_distance', { ascending: true })
-          .limit(2);
+          .limit(4);
+        if (paletteIds.length > 0) {
+          query = query.not('id', 'in', `(${paletteIds.join(',')})`);
+        }
+        const { data } = await query;
         if (data) {
           results.push(...data.map((d) => ({ ...d, gapIndex: i } as any)));
         }
-      }
-      return results;
+      });
+      await Promise.all(queries);
+      // Deduplicate and limit to 2 per gap
+      const seen = new Set<string>();
+      return results.filter((r) => {
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      }).slice(0, gapRanges.length * 2);
     },
     enabled: gapRanges.length > 0,
     staleTime: 5 * 60 * 1000,
   });
+
+  const handleAddSuggestion = useCallback((s: NonNullable<typeof suggestions>[0]) => {
+    onAdd({
+      filamentId: s.id,
+      filamentName: s.product_title ?? '',
+      brand: s.vendor ?? '',
+      material: s.material ?? '',
+      color: s.color_hex ?? '',
+      tdValue: s.transmission_distance ?? 0,
+      colorFamily: s.color_family ?? '',
+      slug: s.product_handle ?? undefined,
+      price: s.variant_price,
+    });
+    trackEvent('palette_builder_filament_added', {
+      filament_name: s.product_title ?? '',
+      brand: s.vendor ?? '',
+      td_value: s.transmission_distance ?? 0,
+      source: 'suggestion',
+    });
+  }, [onAdd]);
 
   const isEmpty = palette.length === 0;
 
@@ -321,18 +354,7 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
                   variant="ghost"
                   className="text-xs text-primary gap-1 shrink-0 h-7 px-2"
                   disabled={isFull}
-                  onClick={() =>
-                    onAdd({
-                      filamentId: s.id,
-                      filamentName: s.product_title ?? '',
-                      brand: s.vendor ?? '',
-                      material: s.material ?? '',
-                      color: s.color_hex ?? '',
-                      tdValue: s.transmission_distance ?? 0,
-                      colorFamily: s.color_family ?? '',
-                      slug: s.product_handle ?? undefined,
-                    })
-                  }
+                  onClick={() => handleAddSuggestion(s)}
                 >
                   <Plus className="w-3 h-3" /> Add
                 </Button>

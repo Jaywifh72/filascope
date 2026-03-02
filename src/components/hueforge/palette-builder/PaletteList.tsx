@@ -33,16 +33,16 @@ const PaletteRow = React.memo(function PaletteRow({ entry, idx, total, onRemove,
         <button
           onClick={() => onReorder(entry.filamentId, 'up')}
           disabled={idx === 0}
-          className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+          className="p-1 sm:p-0.5 min-w-[44px] min-h-[22px] sm:min-w-0 sm:min-h-0 rounded hover:bg-muted disabled:opacity-20 transition-colors flex items-center justify-center"
           aria-label={`Move ${entry.filamentName} up`}
         >
           <ChevronUp className="w-3 h-3" />
         </button>
-        <GripVertical className="w-3 h-3 text-muted-foreground/40 mx-auto" aria-hidden="true" />
+        <GripVertical className="w-3 h-3 text-muted-foreground/40 mx-auto hidden sm:block" aria-hidden="true" />
         <button
           onClick={() => onReorder(entry.filamentId, 'down')}
           disabled={idx === total - 1}
-          className="p-0.5 rounded hover:bg-muted disabled:opacity-20 transition-colors"
+          className="p-1 sm:p-0.5 min-w-[44px] min-h-[22px] sm:min-w-0 sm:min-h-0 rounded hover:bg-muted disabled:opacity-20 transition-colors flex items-center justify-center"
           aria-label={`Move ${entry.filamentName} down`}
         >
           <ChevronDown className="w-3 h-3" />
@@ -95,7 +95,7 @@ const PaletteRow = React.memo(function PaletteRow({ entry, idx, total, onRemove,
         <button
           onClick={() => onUpdateLayers(entry.filamentId, entry.layers - 1)}
           disabled={entry.layers <= 1}
-          className="w-5 h-5 rounded flex items-center justify-center hover:bg-muted disabled:opacity-30 transition-colors"
+          className="w-8 h-8 sm:w-5 sm:h-5 rounded flex items-center justify-center hover:bg-muted disabled:opacity-30 transition-colors"
           aria-label={`Decrease layers for ${entry.filamentName}`}
         >
           <Minus className="w-3 h-3" />
@@ -104,7 +104,7 @@ const PaletteRow = React.memo(function PaletteRow({ entry, idx, total, onRemove,
         <button
           onClick={() => onUpdateLayers(entry.filamentId, entry.layers + 1)}
           disabled={entry.layers >= 6}
-          className="w-5 h-5 rounded flex items-center justify-center hover:bg-muted disabled:opacity-30 transition-colors"
+          className="w-8 h-8 sm:w-5 sm:h-5 rounded flex items-center justify-center hover:bg-muted disabled:opacity-30 transition-colors"
           aria-label={`Increase layers for ${entry.filamentName}`}
         >
           <Plus className="w-3 h-3" />

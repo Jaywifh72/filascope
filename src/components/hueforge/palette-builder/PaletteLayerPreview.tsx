@@ -37,7 +37,7 @@ export function PaletteLayerPreview({ palette }: Props) {
   const resolved = useMemo<ResolvedLayer[]>(
     () =>
       palette
-        .filter((p) => p.color && p.tdValue != null)
+        .filter((p) => p.tdValue != null)
         .map((p) => ({
           hex: p.color || '#808080',
           opacity: calcEffectiveOpacity(p.layers, p.tdValue),
