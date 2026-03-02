@@ -1,53 +1,56 @@
 
 
-# Fix: Affiliate Link System - CORS + Hardcoded Fallback
+# Fix: TypeError on `.toLowerCase()` of undefined
 
 ## Root Cause
 
-The `get-affiliate-url` Edge Function has **outdated CORS headers**. The Supabase JS client (v2.86) sends additional headers (`x-supabase-client-platform`, `x-supabase-client-platform-version`, `x-supabase-client-runtime`, `x-supabase-client-runtime-version`) that the Edge Function's `Access-Control-Allow-Headers` does not permit. This causes the browser's CORS preflight (`OPTIONS`) request to fail, blocking every call to the function.
+Several utility functions in `src/lib/` call `.toLowerCase()` on values that can be `null` or `undefined` (e.g., `product_title`, `material`, `vendor` from filament database records). The primary crash site is `src/lib/smartComparisonService.ts` lines 157-158, where `current.product_title.toLowerCase()` and `candidate.product_title.toLowerCase()` are called without null guards. This function runs during filament/comparison page navigation.
 
-## Plan
+## Changes
 
-### 1. Fix CORS headers in the Edge Function
+### 1. `src/lib/smartComparisonService.ts` -- Primary crash fix
 
-**File:** `supabase/functions/get-affiliate-url/index.ts`
+- Line 68: `title.toLowerCase()` -- add fallback: `(title || '').toLowerCase()`
+- Lines 107-108: Add `|| ''` fallbacks for `product_title` and `material`
+- Line 123: `baseMaterial.toLowerCase()` -- already safe via `getBaseMaterial` fallback, but add guard
+- Lines 157-158: `current.product_title.toLowerCase()` and `candidate.product_title.toLowerCase()` -- add `|| ''` fallback
+- Line 167: `candidateMaterial.toLowerCase()` -- add optional guard
 
-Update the `corsHeaders` to include all required Supabase client headers:
+### 2. `src/lib/filamentSimilarity.ts` -- Secondary crash risk
 
-```text
-Before:
-  "authorization, x-client-info, apikey, content-type"
+- Line 93: `filament.finish_type.toLowerCase()` -- already guarded by `if` check, safe
+- Line 108: `(filament.product_title || "").toLowerCase()` -- already safe
+- Audit remaining `.toLowerCase()` calls in this file for any unguarded ones
 
-After:
-  "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version"
-```
+### 3. `src/lib/personalizationEngine.ts` -- Audit and guard
 
-No other changes to the Edge Function logic.
+- Search for unguarded `.toLowerCase()` calls on nullable filament fields
 
-### 2. Add hardcoded fallback configs in `useAffiliateLinks.tsx`
+### 4. `src/lib/fuzzySearch.ts` -- Already safe (takes `string` params)
 
-**File:** `src/hooks/useAffiliateLinks.tsx`
+### 5. `src/components/filament/BrandQuickLinks.tsx`
 
-Add a `FALLBACK_CONFIGS` constant containing affiliate parameters for all major retailers currently tracked. This ensures that if the Edge Function is temporarily unreachable (cold start, deploy, outage), links still get affiliate tracking.
+- Line 25: `material.toLowerCase()` -- already guarded by truthy check on line 22, safe
 
-The fallback will be sourced from the existing `affiliate_configs` and `affiliate_programs` tables. It will cover at minimum: Amazon, Bambu Lab, Anycubic, eSUN, Polymaker, Elegoo, Sunlu, Creality, Prusa/Prusament, Overture, FormFutura, 3D-Fuel, Geeetech, and any other active programs.
+### 6. `src/lib/analytics.ts`
 
-The `fetchConfigs()` function will be updated to return `FALLBACK_CONFIGS` instead of an empty array when the Edge Function call fails.
+- Line 118: `params.affiliateProgram?.toLowerCase()` -- already uses optional chaining, safe
 
-### 3. Improve error logging
+### 7. `src/utils/brandSlug.ts`
 
-**File:** `src/hooks/useAffiliateLinks.tsx`
+- `name.toLowerCase()` -- called on required `string` param, safe
 
-Replace the generic `console.error` with categorized messages:
-- `[AffiliateLinks] Edge Function unreachable — using fallback configs` (network/CORS failure)
-- `[AffiliateLinks] Edge Function returned error: {status/message}` (function returned an error)  
-- `[AffiliateLinks] Edge Function returned unexpected format` (missing `configs` key)
+## Scope
 
-### What stays the same
+Only files where `.toLowerCase()` (or `.toUpperCase()`, `.includes()`, `.split()`) is called on a value sourced from a database record field that could be `null` will be changed. The fix adds `|| ''` fallbacks or optional chaining. No UI, styling, or behavioral changes.
 
-- No UI/layout/styling changes
-- All existing `target="_blank"` and `rel` attributes on buy links remain unchanged
-- The `useAffiliateLink` hook (singular, used for `PrimaryBuyButton`) is unaffected -- it reads from `affiliate_programs` table directly
-- The `transformUrlSync` logic is unchanged
-- The `generate-affiliate-link` Edge Function (separate from `get-affiliate-url`) is unaffected
+## Files to modify
+
+| File | Risk | Fix |
+|------|------|-----|
+| `src/lib/smartComparisonService.ts` | **High** -- confirmed crash | Add `\|\| ''` to lines 68, 157, 158 |
+| `src/lib/filamentSimilarity.ts` | Medium | Audit + guard any unprotected calls |
+| `src/lib/personalizationEngine.ts` | Medium | Audit + guard |
+| `src/hooks/usePersonalizedRecommendations.ts` | Low | Line 88 already guarded by `if` |
+| `src/pages/HueForgeTDDatabase.tsx` | Low | Lines 377-378 sort comparison -- add guards |
 
