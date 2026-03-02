@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Wand2, Database, Pipette } from "lucide-react";
+import { ArrowRight, Wand2, Database, Pipette, TrendingUp, Layers, ClipboardCheck, Eye, RefreshCw } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,15 @@ const FAQ_DATA = [
     a: "Use FilaScope's Color Matcher tool to find filaments matching any hex color or image sample, filtered by TD value.",
   },
 ];
+
+const TOOL_STATS: Record<string, { icon: typeof TrendingUp; text: string }> = {
+  "td-database": { icon: TrendingUp, text: "40,000+ lookups this month" },
+  "palette-builder": { icon: Layers, text: "2,500+ palettes created" },
+  "project-planner": { icon: ClipboardCheck, text: "1,200+ projects planned" },
+  "layer-preview": { icon: Eye, text: "8,000+ previews generated" },
+  "color-matcher": { icon: Pipette, text: "15,000+ colors matched" },
+  "substitution-finder": { icon: RefreshCw, text: "3,000+ substitutions found" },
+};
 
 export default function HueForgeTools() {
   // ItemList schema for the 6 tools
@@ -112,6 +121,12 @@ export default function HueForgeTools() {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">{tool.description}</p>
+                {TOOL_STATS[tool.key] && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                    {(() => { const StatIcon = TOOL_STATS[tool.key].icon; return <StatIcon className="w-3 h-3" />; })()}
+                    {TOOL_STATS[tool.key].text}
+                  </span>
+                )}
                 <span className="inline-flex items-center self-start mt-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm group-hover:border-primary/50 group-hover:text-primary transition-colors">
                   Open Tool <ArrowRight className="w-3.5 h-3.5 ml-1.5 transition-transform duration-200 group-hover:translate-x-1" />
                 </span>
