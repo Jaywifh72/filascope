@@ -1,84 +1,72 @@
 
 
-## Update Affiliate UI for Anycubic UK Support
+## Extend Affiliate UI for Siraya Tech (GLOBAL Program)
 
 ### Summary
-Extend the existing affiliate system to properly handle the Anycubic UK region, focusing on inactive program visibility for admins and graceful empty states for discount codes.
+The existing `useAffiliateLink` hook already falls back to any active program when no region-specific match exists (lines 77-89), so Siraya Tech's GLOBAL program will already be picked up automatically for any user region. The changes needed are primarily UI polish: GLOBAL-aware display labels, source tracking, and softer discount code messaging.
 
----
-
-### 1. Region Detection -- Already Working
-The `detectRegionFromLocale` function in `src/config/regions.ts` already maps `en-GB` to `UK`. The `RegionContext` uses `navigator.language` at priority 3. No changes needed here.
-
----
-
-### 2. Update `useAffiliateLink` to expose inactive programs for admin preview
+### 1. GLOBAL-aware display in useAffiliateLink
 
 **File:** `src/hooks/useAffiliateLink.ts`
 
-Currently, the hook filters `is_active = true` on lines 67 and 81. This means the UK program (is_active=false) is completely invisible.
+The fallback query (lines 77-89) already works but doesn't prioritize GLOBAL explicitly. Update:
+- Change the fallback to prefer `region_code = 'GLOBAL'` over arbitrary matches
+- Add `resolvedRegion` to the return value so consumers know if GLOBAL was used
 
-Changes:
-- Add a second query that fetches inactive programs for the current brand+region (only used for admin display)
-- Add `inactiveProgram` to the return value
-- The `buildLink`, `trackAndOpen`, and `hasAffiliate` remain gated on the **active** program only (no traffic to untracked links)
-
-Return type additions:
+New return field:
 ```typescript
-interface UseAffiliateLinkResult {
-  // ... existing fields
-  inactiveProgram: AffiliateProgram | null;  // NEW: program found but is_active=false
-}
+resolvedRegion: string | null; // 'GLOBAL', 'AU', 'UK', etc.
 ```
 
----
+### 2. GLOBAL display handling in FilamentPurchaseSidebar and FilamentHeroPurchaseCard
 
-### 3. Add admin warning banner for inactive programs
+**Files:**
+- `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`
+- `src/components/filament/hero/FilamentHeroPurchaseCard.tsx`
 
-**File:** `src/components/affiliate/AffiliateInactiveBanner.tsx` (new)
+When `program.region_code === 'GLOBAL'`:
+- Buy button label: "Shop [Brand]" instead of "Buy at [Brand] [Region]"
+- No flag emoji; optionally show a globe icon
+- These components already use `useAffiliateLink`, so just read `program.region_code`
 
-A small component that renders a yellow warning banner when:
-- `inactiveProgram` is not null
-- User `isAdmin` is true (from `useAuth()`)
+### 3. Source tracking prop
 
-Text: "Affiliate program pending verification -- links are inactive until approved. Activate in Admin > Affiliates once GoAffPro confirms your account."
+**File:** `src/hooks/useAffiliateLink.ts`
 
----
+Update `trackAndOpen` to accept an optional `source` field in `ClickMetadata`. Default to `'filascope-web'`. Pass it to the edge function via `trackAffiliateClick` (update the utility to include the `source` field as `sca_source` appended to the URL before opening).
 
-### 4. Integrate inactive banner into product pages
+Since the edge function already supports `source`, add it to the client-side `buildAffiliateLinkLocal` in `src/utils/affiliateLinks.ts` as well, appending `&sca_source=filascope-web` for UpPromote programs (detected by checking if the link template contains `sca_ref`).
 
-**Files:** Wherever `AffiliateDisclosure` or `AffiliateDiscountBanner` are rendered alongside affiliate buy buttons (filament detail sidebar, printer detail page).
-
-- Import `useAuth` and check `isAdmin`
-- If `inactiveProgram` exists and `isAdmin`, render the `AffiliateInactiveBanner`
-- Non-admin users see nothing (no buy button, no banner, no disclosure)
-
----
-
-### 5. Discount code empty state in `AffiliateDiscountBanner`
+### 4. Softer discount code empty state
 
 **File:** `src/components/affiliate/AffiliateDiscountBanner.tsx`
 
-Currently returns `null` when no active codes exist. Update:
-- Accept an optional `showEmptyState?: boolean` prop
-- When `showEmptyState` is true and no codes exist, render: "No discount codes available for this region currently." in muted text
-- When `showEmptyState` is false or omitted, keep current behavior (return null)
+Add a `pendingCodeMessage` optional string prop. When provided and no active codes exist, show that message instead of the generic "No discount codes available" text. For Siraya Tech, pass: "Discount code coming soon -- check back for exclusive offers."
+
+The caller determines the message based on brand/program context.
+
+### 5. BrandAboutTab -- already works
+
+**File:** `src/components/brands/tabs/BrandAboutTab.tsx`
+
+This component already calls `useAffiliateLink(brandName)` and gates website links through the affiliate system. When a user visits the Siraya Tech brand page, it will automatically pick up the GLOBAL program and affiliate-tag the "Visit Website" link. No changes needed here beyond ensuring the buy button label adapts for GLOBAL programs.
+
+### 6. No new components needed
+
+The plan from the user mentions a `ResinBrandAffiliateBanner` -- this is unnecessary because:
+- `BrandAboutTab` already renders affiliate links for the brand page
+- `FilamentPurchaseSidebar` will show the affiliate panel on any Siraya Tech product (if resin products exist in the filaments table)
+- If no Siraya Tech products exist yet, the brand page alone is sufficient
 
 ---
 
-### 6. No changes needed to edge function or database
+### Files to modify
 
-The `generate-affiliate-link` edge function already handles UK templates correctly (verified in the previous task). The region config maps, currency formatting, and flag display already support UK/GBP across the codebase.
-
----
-
-### Technical Details
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/hooks/useAffiliateLink.ts` | Add inactive program lookup query, expose `inactiveProgram` in return |
-| `src/components/affiliate/AffiliateInactiveBanner.tsx` | New component -- yellow admin-only warning |
-| `src/components/affiliate/AffiliateDiscountBanner.tsx` | Add optional `showEmptyState` prop |
-| `src/components/filament/sidebar/StorePricingDisplay.tsx` | Wire up inactive banner for admin preview |
-| `src/pages/FilamentDetail.tsx` | Pass `showEmptyState` where discount banner is used |
+| `src/hooks/useAffiliateLink.ts` | Add `resolvedRegion` return; prioritize GLOBAL fallback; add `source` to trackAndOpen |
+| `src/utils/affiliateLinks.ts` | Add optional `source` param to `buildAffiliateLinkLocal`; append `sca_source` for UpPromote templates |
+| `src/components/affiliate/AffiliateDiscountBanner.tsx` | Add `pendingCodeMessage` prop for softer empty state |
+| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Adapt buy button label for GLOBAL programs; pass source and pendingCodeMessage |
+| `src/components/filament/hero/FilamentHeroPurchaseCard.tsx` | Same GLOBAL label adaptation |
 
