@@ -14,6 +14,7 @@ export interface PaletteEntry {
   colorFamily: string;
   layers: number;
   slug?: string;
+  price?: number | null;
 }
 
 function loadFromStorage(): PaletteEntry[] {
@@ -77,12 +78,19 @@ export function usePaletteBuilder() {
 
   const clearPalette = useCallback(() => {
     setPalette([]);
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  }, []);
+
+  /** Replace the entire palette (used for URL restore & presets) */
+  const loadPalette = useCallback((entries: PaletteEntry[]) => {
+    setPalette(entries.slice(0, MAX_FILAMENTS));
   }, []);
 
   const totalLayers = palette.reduce((sum, p) => sum + p.layers, 0);
   const tdValues = palette.map((p) => p.tdValue);
   const tdMin = tdValues.length ? Math.min(...tdValues) : null;
   const tdMax = tdValues.length ? Math.max(...tdValues) : null;
+  const tdAvg = tdValues.length ? tdValues.reduce((s, v) => s + v, 0) / tdValues.length : null;
 
   return {
     palette,
@@ -91,9 +99,11 @@ export function usePaletteBuilder() {
     updateLayers,
     reorderFilament,
     clearPalette,
+    loadPalette,
     totalLayers,
     tdMin,
     tdMax,
+    tdAvg,
     isFull: palette.length >= MAX_FILAMENTS,
   };
 }
