@@ -1,6 +1,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
+import { useAffiliatePrioritization } from "@/hooks/useAffiliatePrioritization";
 import { QUERY_CONFIG } from "@/lib/queryConfig";
 import { formatProductLineIdForDisplay } from "@/lib/productNameUtils";
 import type { GroupedFilament } from "@/lib/productNameUtils";
@@ -89,6 +90,8 @@ export function useFinderQuery(
   pageSize: number = DEFAULT_PAGE_SIZE
 ): FinderQueryResult {
   const { currentRegion } = useRegionalFiltering();
+  const { isEnabled: affiliateBoostEnabled } = useAffiliatePrioritization();
+  const shouldBoost = affiliateBoostEnabled && filters.sortBy === "scoring-desc";
 
   // Resolve brand display names to vendor names
   const vendorNames =
@@ -129,6 +132,7 @@ export function useFinderQuery(
       filters.hasTdData,
       page,
       pageSize,
+      shouldBoost,
     ],
     placeholderData: keepPreviousData,
     queryFn: async () => {
@@ -164,6 +168,7 @@ export function useFinderQuery(
             filters.selectedColorFamilies.length > 0
               ? (filters.selectedColorFamilies as string[])
               : undefined,
+          p_affiliate_boost: shouldBoost,
         }
       );
 

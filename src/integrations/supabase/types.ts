@@ -13224,35 +13224,66 @@ export type Database = {
         }
         Returns: undefined
       }
-      search_filaments_paginated: {
-        Args: {
-          p_ams_only?: boolean
-          p_brands?: string[]
-          p_brass_only?: boolean
-          p_carbon_fiber?: boolean
-          p_color_families?: string[]
-          p_glass_fiber?: boolean
-          p_glow?: boolean
-          p_has_td?: boolean
-          p_high_speed?: boolean
-          p_large_spools?: boolean
-          p_materials?: string[]
-          p_matte?: boolean
-          p_metallic?: boolean
-          p_offset?: number
-          p_page_size?: number
-          p_price_max?: number
-          p_price_min?: number
-          p_region?: string
-          p_search?: string
-          p_silk?: boolean
-          p_sort?: string
-          p_sparkle?: boolean
-          p_translucent_filter?: boolean
-          p_wood_filled?: boolean
-        }
-        Returns: Json
-      }
+      search_filaments_paginated:
+        | {
+            Args: {
+              p_ams_only?: boolean
+              p_brands?: string[]
+              p_brass_only?: boolean
+              p_carbon_fiber?: boolean
+              p_color_families?: string[]
+              p_glass_fiber?: boolean
+              p_glow?: boolean
+              p_has_td?: boolean
+              p_high_speed?: boolean
+              p_large_spools?: boolean
+              p_materials?: string[]
+              p_matte?: boolean
+              p_metallic?: boolean
+              p_offset?: number
+              p_page_size?: number
+              p_price_max?: number
+              p_price_min?: number
+              p_region?: string
+              p_search?: string
+              p_silk?: boolean
+              p_sort?: string
+              p_sparkle?: boolean
+              p_translucent_filter?: boolean
+              p_wood_filled?: boolean
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_affiliate_boost?: boolean
+              p_ams_only?: boolean
+              p_brands?: string[]
+              p_brass_only?: boolean
+              p_carbon_fiber?: boolean
+              p_color_families?: string[]
+              p_glass_fiber?: boolean
+              p_glow?: boolean
+              p_has_td?: boolean
+              p_high_speed?: boolean
+              p_large_spools?: boolean
+              p_materials?: string[]
+              p_matte?: boolean
+              p_metallic?: boolean
+              p_offset?: number
+              p_page_size?: number
+              p_price_max?: number
+              p_price_min?: number
+              p_region?: string
+              p_search?: string
+              p_silk?: boolean
+              p_sort?: string
+              p_sparkle?: boolean
+              p_translucent_filter?: boolean
+              p_wood_filled?: boolean
+            }
+            Returns: Json
+          }
       search_filaments_ranked:
         | {
             Args: {
