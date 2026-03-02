@@ -235,6 +235,14 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const isStoreLocal = group.isLocal;
   const hasLocalAlternative = !isStoreLocal && !!localStore;
 
+  // Pre-compute affiliate href for anchor tags
+  const primaryProductUrl = group.representativeDeal.product_url;
+  const computedAffiliateUrl = primaryProductUrl
+    ? (getAffiliateUrl(primaryProductUrl, group.representativeDeal.vendor) || primaryProductUrl)
+    : null;
+  const primaryHref = hasLocalAlternative && localStore ? localStore.baseUrl : computedAffiliateUrl;
+  const secondaryHref = hasLocalAlternative ? computedAffiliateUrl : null;
+
   // Region display helpers
   const REGION_NAMES: Record<string, string> = {
     US: 'the US', CA: 'Canada', UK: 'the UK', EU: 'Europe', AU: 'Australia', JP: 'Japan', CN: 'China',
@@ -632,16 +640,23 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             {/* Primary CTA */}
             {(group.representativeDeal.product_url || hasLocalAlternative) && (
               <Button
+                asChild
                 size="sm"
                 className={cn(
                   "deal-cta-btn w-full gap-2 text-xs py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white active:scale-[0.98] transition-all duration-150"
                 )}
-                onClick={hasLocalAlternative ? handleLocalStoreClick : handleCheckPrice}
               >
-                {hasLocalAlternative
-                  ? `Buy at ${localStore!.storeName}`
-                  : <>View Deal at <span className="truncate max-w-[160px] inline-block align-bottom">{group.storeName}</span></>}
-                <ExternalLink className="h-3 w-3" />
+                <a
+                  href={primaryHref || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={hasLocalAlternative ? handleLocalStoreClick : handleCheckPrice}
+                >
+                  {hasLocalAlternative
+                    ? `Buy at ${localStore!.storeName}`
+                    : <>View Deal at <span className="truncate max-w-[160px] inline-block align-bottom">{group.storeName}</span></>}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </Button>
             )}
 
@@ -655,13 +670,20 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             {/* Secondary CTA — original store when local alternative takes primary */}
             {hasLocalAlternative && group.representativeDeal.product_url && (
               <Button
+                asChild
                 variant="outline"
                 size="sm"
                 className="w-full gap-2 text-xs text-muted-foreground"
-                onClick={handleCheckPrice}
               >
-                {group.regionFlag} Also at {group.storeName}
-                <ExternalLink className="h-3 w-3" />
+                <a
+                  href={secondaryHref || group.representativeDeal.product_url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleCheckPrice}
+                >
+                  {group.regionFlag} Also at {group.storeName}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </Button>
             )}
           </div>

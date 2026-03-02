@@ -349,7 +349,7 @@ export function FilamentPurchaseSidebar({
 
           {/* Primary CTA - Always "Buy at [Store]" */}
           <Button
-            onClick={handleBuyClick}
+            asChild={!!affiliateUrl}
             disabled={!affiliateUrl}
             variant="default"
             className={cn(
@@ -362,9 +362,27 @@ export function FilamentPurchaseSidebar({
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
             )}
           >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            {getCtaText(cleanName(regionalPriceResult?.store?.name || finalRetailerName))}
-            <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
+            {affiliateUrl ? (
+              <a
+                href={affiliateUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleBuyClick();
+                }}
+              >
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                {getCtaText(cleanName(regionalPriceResult?.store?.name || finalRetailerName))}
+                <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
+              </a>
+            ) : (
+              <span>
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                {getCtaText(cleanName(regionalPriceResult?.store?.name || finalRetailerName))}
+                <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
+              </span>
+            )}
           </Button>
 
           {/* Divider */}
