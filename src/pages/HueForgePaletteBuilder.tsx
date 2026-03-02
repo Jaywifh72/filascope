@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePaletteBuilder, type PaletteEntry } from "@/hooks/usePaletteBuilder";
 import { PaletteFilamentSearch } from "@/components/hueforge/palette-builder/PaletteFilamentSearch";
@@ -277,6 +278,7 @@ export default function HueForgePaletteBuilder() {
     const text = buildConfigText(palette, tdMin, tdMax, tdAvg);
     navigator.clipboard.writeText(text);
     toast.success('Palette config copied to clipboard!');
+    trackEvent('palette_builder_config_copied', { filament_count: palette.length });
   }, [palette, tdMin, tdMax, tdAvg, hasPalette]);
 
   const handleCopyLink = useCallback(() => {
@@ -284,12 +286,14 @@ export default function HueForgePaletteBuilder() {
     const url = buildShareUrl(palette);
     navigator.clipboard.writeText(url);
     toast.success('Palette link copied to clipboard!');
-  }, [palette, hasPalette]);
+    trackEvent('palette_builder_shared', { filament_count: palette.length, total_layers: totalLayers });
+  }, [palette, hasPalette, totalLayers]);
 
   const handleExportCsv = useCallback(() => {
     if (!hasPalette) { toast.info('Add filaments to export'); return; }
     downloadCsv(palette);
     toast.success('CSV exported');
+    trackEvent('palette_builder_exported', { filament_count: palette.length, format: 'csv' });
   }, [palette, hasPalette]);
 
   // ── Load preset ──────────────────────────────────────────────
@@ -357,6 +361,7 @@ export default function HueForgePaletteBuilder() {
       if (entries.length) {
         loadPalette(entries);
         toast.success(`Loaded ${preset.name} with ${entries.length} filaments`);
+        trackEvent('palette_builder_preset_loaded', { preset_name: preset.name, filament_count: entries.length });
       } else {
         toast.error('Could not find matching filaments for this preset');
       }
@@ -391,7 +396,13 @@ export default function HueForgePaletteBuilder() {
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <DocumentHead
         title="HueForge Palette Builder — Build & Analyze Multi-Filament Palettes | FilaScope"
-        description="Build and analyze multi-filament palettes for HueForge lithophane projects. Check TD coverage, find gaps, get filament suggestions, and create your shopping list."
+        description="Build and analyze multi-filament palettes for HueForge lithophane projects. Check TD coverage, find gaps, get filament suggestions, and create your shopping list on FilaScope."
+        canonical="https://filascope.com/hueforge-palette-builder"
+        ogType="website"
+        ogImage="https://filascope.com/og-image.png"
+        ogSiteName="FilaScope"
+        twitterCard="summary_large_image"
+        twitterSite="@FilaScope"
       />
       <BreadcrumbSchema
         items={[

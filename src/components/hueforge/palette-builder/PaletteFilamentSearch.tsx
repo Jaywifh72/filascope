@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { trackEvent } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -100,6 +101,12 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
       tdValue: f.transmission_distance ?? 0,
       colorFamily: f.color_family ?? '',
       slug: f.product_handle ?? undefined,
+    });
+    trackEvent('palette_builder_filament_added', {
+      filament_name: f.product_title ?? '',
+      brand: f.vendor ?? '',
+      td_value: f.transmission_distance ?? 0,
+      source: 'search',
     });
     setQuery('');
     setDebouncedQuery('');
