@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, GitCompareArrows } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Eye, GitCompareArrows, Palette } from 'lucide-react';
 import { getFilamentSlug } from '@/lib/filamentUrl';
 import { SwatchCircle } from './SwatchCircle';
 import type { TDFilament } from './SubstituteFilamentPicker';
@@ -32,6 +33,7 @@ function getDeltaColor(delta: number): string {
 }
 
 export function SubstituteResultCard({ filament, sourceTd, sourcePrice, badge, formatPrice, sourceHandle }: Props) {
+  const navigate = useNavigate();
   const td = filament.transmission_distance ?? 0;
   const delta = td - sourceTd;
   const deltaStr = delta >= 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
@@ -93,6 +95,21 @@ export function SubstituteResultCard({ filament, sourceTd, sourcePrice, badge, f
               </Link>
             </Button>
           )}
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 px-0 text-muted-foreground hover:text-primary"
+                  onClick={() => navigate(`/hueforge-palette-builder?add=${filament.id}`)}
+                >
+                  <Palette className="w-3.5 h-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Add to Palette Builder</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     </div>
