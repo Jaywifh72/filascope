@@ -9,7 +9,8 @@ const corsHeaders = {
 function buildAffiliateUrl(
   program: Record<string, unknown>,
   path: string,
-  utmCampaign?: string
+  utmCampaign?: string,
+  useToolbar?: boolean
 ): string {
   const linkGenerationMethod = program.link_generation_method as string | null;
   const defaultTrackingLink = program.default_tracking_link as string | null;
@@ -47,9 +48,15 @@ function buildAffiliateUrl(
   }
 
   // URL parameter mode
-  const linkTemplate = program.link_template as string;
+  let linkTemplate = program.link_template as string;
   const storeBaseUrl = program.store_base_url as string;
   const trackingValue = (program.tracking_value as string) || "";
+
+  // Anycubic toolbar variant: swap ?ref= for ?toolbar= in the template
+  if (useToolbar && linkTemplate.includes("?ref=")) {
+    linkTemplate = linkTemplate.replace("?ref=", "?toolbar=");
+    console.log("[toolbar mode] Rewritten template:", linkTemplate);
+  }
 
   let url = linkTemplate
     .replace("{store_url}", storeBaseUrl)
@@ -88,6 +95,7 @@ Deno.serve(async (req) => {
       source_page,
       source_component,
       utm_campaign,
+      use_toolbar = false,
     } = await req.json();
 
     if (!brand_name || !region_code) {
@@ -126,7 +134,7 @@ Deno.serve(async (req) => {
     }
 
     // Build affiliate URL
-    const affiliateUrl = buildAffiliateUrl(program, path, utm_campaign);
+    const affiliateUrl = buildAffiliateUrl(program, path, utm_campaign, use_toolbar);
 
     // Log click
     const clickData = {
