@@ -10,7 +10,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { ExternalLink, Pencil, Plus, Link2, Image, Settings } from "lucide-react";
+import { ExternalLink, Pencil, Plus, Link2, Image, Settings, Globe, BarChart3 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { AffiliateLinkTester } from "./AffiliateLinkTester";
 import { ProgramFormDialog } from "./ProgramFormDialog";
@@ -20,11 +20,21 @@ const REGION_FLAGS: Record<string, string> = {
   AU: "🇦🇺", UK: "🇬🇧", US: "🇺🇸", CA: "🇨🇦", EU: "🇪🇺", JP: "🇯🇵", CN: "🇨🇳",
 };
 
+const PLATFORM_STYLES: Record<string, { className: string; label: string }> = {
+  GoAffPro: { className: "bg-muted text-muted-foreground", label: "GoAffPro" },
+  UpPromote: { className: "bg-violet-500/15 text-violet-400 border-violet-500/30", label: "UpPromote" },
+};
+
 /** Extract a URL from program notes matching a pattern */
 function extractUrlFromNotes(notes: string | null, pattern: RegExp): string | null {
   if (!notes) return null;
   const match = notes.match(pattern);
   return match ? match[0] : null;
+}
+
+/** Extract UpPromote marketing URL from notes */
+function extractMarketingUrl(notes: string | null): string | null {
+  return extractUrlFromNotes(notes, /https:\/\/af\.uppromote\.com\/\S+\/marketing/);
 }
 
 export function ProgramsTab() {
@@ -35,12 +45,10 @@ export function ProgramsTab() {
   const [activateProgram, setActivateProgram] = useState<AffiliateProgram | null>(null);
 
   const handleToggleActive = (program: AffiliateProgram) => {
-    // If activating an inactive program, show confirmation dialog
     if (!program.is_active) {
       setActivateProgram(program);
       return;
     }
-    // Deactivating — no confirmation needed
     updateProgram.mutate(
       { id: program.id, is_active: false },
       {
@@ -103,20 +111,33 @@ export function ProgramsTab() {
               </TableHeader>
               <TableBody>
                 {(programs || []).map((p) => {
-                  const flag = REGION_FLAGS[p.region_code] || "🌐";
+                  const isGlobal = p.region_code === "GLOBAL";
+                  const flag = isGlobal ? null : (REGION_FLAGS[p.region_code] || "🌐");
                   const pending = isPendingVerification(p);
                   const creativesUrl = getCreativesUrl(p);
                   const settingsUrl = getSettingsUrl(p);
+                  const marketingUrl = extractMarketingUrl(p.program_notes);
+                  const platformStyle = PLATFORM_STYLES[p.affiliate_network] || { className: "bg-muted text-muted-foreground", label: p.affiliate_network };
 
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.brand_name}</TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium">
-                          {flag} {p.region_code}
-                        </span>
+                        {isGlobal ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-400">
+                            <Globe className="w-3 h-3" /> GLOBAL
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium">
+                            {flag} {p.region_code}
+                          </span>
+                        )}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{p.affiliate_network}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-xs ${platformStyle.className}`}>
+                          {platformStyle.label}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-sm">
                         {p.commission_rate != null
                           ? p.commission_type === "fixed"
@@ -145,7 +166,7 @@ export function ProgramsTab() {
                               </Badge>
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs text-xs">
-                              Account submitted. Awaiting GoAffPro approval (24–48hrs). Activate once confirmed.
+                              Account submitted. Awaiting approval (24–48hrs). Activate once confirmed.
                             </TooltipContent>
                           </Tooltip>
                         ) : (
@@ -172,7 +193,21 @@ export function ProgramsTab() {
                               <TooltipContent>Portal</TooltipContent>
                             </Tooltip>
                           )}
-                          {creativesUrl && (
+                          {/* Marketing assets - UpPromote */}
+                          {marketingUrl && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" asChild>
+                                  <a href={marketingUrl} target="_blank" rel="noopener noreferrer">
+                                    <Image className="w-4 h-4" />
+                                  </a>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Marketing Assets</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {/* GoAffPro creatives */}
+                          {!marketingUrl && creativesUrl && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon" asChild>
@@ -182,6 +217,19 @@ export function ProgramsTab() {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>Creatives</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {/* Reports link (UpPromote portal doubles as reports) */}
+                          {p.affiliate_network === "UpPromote" && p.portal_url && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" asChild>
+                                  <a href={p.portal_url} target="_blank" rel="noopener noreferrer">
+                                    <BarChart3 className="w-4 h-4" />
+                                  </a>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Reports</TooltipContent>
                             </Tooltip>
                           )}
                           {settingsUrl && (
@@ -225,7 +273,7 @@ export function ProgramsTab() {
               Activate {activateProgram?.brand_name} {activateProgram?.region_code} affiliate program?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Confirm your GoAffPro account (ID: {activateProgram?.affiliate_id || "N/A"}) has been approved before activating. Untracked clicks will not earn commission.
+              Confirm your affiliate account (ID: {activateProgram?.affiliate_id || "N/A"}) has been approved before activating. Untracked clicks will not earn commission.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

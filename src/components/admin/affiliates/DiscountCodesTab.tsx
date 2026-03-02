@@ -4,11 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Pencil, Plus, Tag } from "lucide-react";
+import { AlertTriangle, Copy, ExternalLink, Pencil, Plus, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { DiscountCodeFormDialog } from "./DiscountCodeFormDialog";
 import type { AffiliateDiscountCode } from "@/types/affiliate";
+
+/** Check if a code row is a placeholder (inactive + CHECK-DASHBOARD code) */
+function isPlaceholderCode(c: AffiliateDiscountCode): boolean {
+  return !c.is_active && c.code === "CHECK-DASHBOARD";
+}
 
 export function DiscountCodesTab() {
   const { data: programs } = useAffiliatePrograms();
@@ -44,10 +50,10 @@ export function DiscountCodesTab() {
 
   const { data: codes, isLoading } = useAffiliateDiscountCodes(undefined, queryIds);
 
-  // Build a lookup from program_id to brand+region
+  // Build a lookup from program_id to brand+region+network
   const programMap = useMemo(() => {
-    const m = new Map<string, { brand: string; region: string }>();
-    (programs || []).forEach((p) => m.set(p.id, { brand: p.brand_name, region: p.region_code }));
+    const m = new Map<string, { brand: string; region: string; network: string; portalUrl: string | null }>();
+    (programs || []).forEach((p) => m.set(p.id, { brand: p.brand_name, region: p.region_code, network: p.affiliate_network, portalUrl: p.portal_url }));
     return m;
   }, [programs]);
 
@@ -65,11 +71,27 @@ export function DiscountCodesTab() {
   const filteredBrandLabel = brandFilter !== "all" ? brandFilter : null;
   const filteredRegionLabel = regionFilter !== "all" ? regionFilter : null;
 
+  // Check if any visible codes are placeholders — show info banner
+  const hasPlaceholders = filteredCodes.some(isPlaceholderCode);
+  const placeholderProgram = hasPlaceholders
+    ? (() => {
+        const pc = filteredCodes.find(isPlaceholderCode);
+        return pc ? programMap.get(pc.program_id) : null;
+      })()
+    : null;
+
   const handleToggleActive = (code: AffiliateDiscountCode) => {
+    const wasPlaceholder = isPlaceholderCode(code);
     updateCode.mutate(
       { id: code.id, program_id: code.program_id, is_active: !code.is_active },
       {
-        onSuccess: () => toast({ title: "Code updated" }),
+        onSuccess: () => {
+          if (!code.is_active && wasPlaceholder) {
+            toast({ title: "Coupon code activated" });
+          } else {
+            toast({ title: "Code updated" });
+          }
+        },
         onError: (e) => toast({ title: "Error", description: e.message, variant: "destructive" }),
       }
     );
@@ -77,11 +99,10 @@ export function DiscountCodesTab() {
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    toast({ title: "Code copied" });
+    toast({ title: "Copied" });
   };
 
   const handleAddFromEmpty = () => {
-    // Find matching program for pre-fill
     const matchingProgram = (programs || []).find(
       (p) =>
         (brandFilter === "all" || p.brand_name === brandFilter) &&
@@ -124,6 +145,30 @@ export function DiscountCodesTab() {
         </div>
       </div>
 
+      {/* Placeholder info banner */}
+      {hasPlaceholders && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
+          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1 text-sm">
+            <p className="text-foreground font-medium">No active coupon code confirmed yet</p>
+            <p className="text-muted-foreground text-xs">
+              Check your UpPromote dashboard for an assigned coupon code, then edit the placeholder row with the real code and activate it.
+            </p>
+            {placeholderProgram?.portalUrl && (
+              <a
+                href={placeholderProgram.portalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
+              >
+                Open UpPromote Dashboard
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
@@ -158,15 +203,24 @@ export function DiscountCodesTab() {
               <TableBody>
                 {filteredCodes.map((c) => {
                   const info = programMap.get(c.program_id);
+                  const placeholder = isPlaceholderCode(c);
                   return (
-                    <TableRow key={c.id}>
+                    <TableRow key={c.id} className={placeholder ? "bg-amber-500/5" : undefined}>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">{c.code}</code>
-                          {c.code && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyCode(c.code!)}>
-                              <Copy className="w-3 h-3" />
-                            </Button>
+                          {placeholder ? (
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs">
+                              Placeholder
+                            </Badge>
+                          ) : (
+                            <>
+                              <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">{c.code}</code>
+                              {c.code && (
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyCode(c.code!)}>
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </>
                           )}
                         </div>
                       </TableCell>
