@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 const STORAGE_KEY = 'filascope-palette-builder';
@@ -17,11 +17,26 @@ export interface PaletteEntry {
   price?: number | null;
 }
 
+function isValidEntry(x: unknown): x is PaletteEntry {
+  return (
+    typeof x === 'object' && x !== null &&
+    typeof (x as any).filamentId === 'string' &&
+    typeof (x as any).tdValue === 'number'
+  );
+}
+
 function loadFromStorage(): PaletteEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as PaletteEntry[];
-  } catch { /* ignore */ }
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.every(isValidEntry)) return parsed;
+      // Corrupted shape — clear it
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  } catch {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  }
   return [];
 }
 
@@ -33,24 +48,25 @@ function saveToStorage(entries: PaletteEntry[]) {
 
 export function usePaletteBuilder() {
   const [palette, setPalette] = useState<PaletteEntry[]>(loadFromStorage);
+  const paletteRef = useRef(palette);
+  paletteRef.current = palette;
 
   useEffect(() => {
     saveToStorage(palette);
   }, [palette]);
 
   const addFilament = useCallback((entry: Omit<PaletteEntry, 'layers'>) => {
-    setPalette((prev) => {
-      if (prev.length >= MAX_FILAMENTS) {
-        toast.error('Maximum 12 filaments per palette');
-        return prev;
-      }
-      if (prev.some((p) => p.filamentId === entry.filamentId)) {
-        toast('This filament is already in your palette');
-        return prev;
-      }
-      toast.success(`${entry.filamentName} added to palette`);
-      return [...prev, { ...entry, layers: 1 }];
-    });
+    const prev = paletteRef.current;
+    if (prev.length >= MAX_FILAMENTS) {
+      toast.error('Maximum 12 filaments per palette');
+      return;
+    }
+    if (prev.some((p) => p.filamentId === entry.filamentId)) {
+      toast('This filament is already in your palette');
+      return;
+    }
+    setPalette((cur) => [...cur, { ...entry, layers: 1 }]);
+    toast.success(`${entry.filamentName} added to palette`);
   }, []);
 
   const removeFilament = useCallback((id: string) => {

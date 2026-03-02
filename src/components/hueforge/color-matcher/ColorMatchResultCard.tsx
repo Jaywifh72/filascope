@@ -81,7 +81,7 @@ export function ColorMatchResultCard({ filament, targetHex, matchPercent, td }: 
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 px-0 text-muted-foreground hover:text-primary"
-                  onClick={() => navigate(`/hueforge-palette-builder?add=${filament.id}`)}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/hueforge-palette-builder?add=${filament.id}`); }}
                 >
                   <Palette className="w-3.5 h-3.5" />
                 </Button>

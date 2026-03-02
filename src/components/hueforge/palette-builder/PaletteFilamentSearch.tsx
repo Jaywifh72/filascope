@@ -27,9 +27,10 @@ function getTdBadgeClasses(td: number): string {
 interface Props {
   onAdd: (entry: Omit<PaletteEntry, 'layers'>) => void;
   isFull: boolean;
+  existingIds?: string[];
 }
 
-export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
+export function PaletteFilamentSearch({ onAdd, isFull, existingIds = [] }: Props) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeRange, setActiveRange] = useState(0);
@@ -74,19 +75,22 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
     gcTime: 30 * 60 * 1000,
   });
 
+  const existingSet = useMemo(() => new Set(existingIds), [existingIds]);
+
   const results = useMemo(() => {
     if (!filaments || !debouncedQuery) return [];
     const range = TD_RANGES[activeRange];
     const q = debouncedQuery.toLowerCase();
     return filaments
       .filter((f) => {
+        if (existingSet.has(f.id)) return false;
         const td = f.transmission_distance ?? 0;
         if (td < range.min || td > range.max) return false;
         const searchable = `${f.product_title} ${f.vendor} ${f.color_family} ${f.material}`.toLowerCase();
         return searchable.includes(q);
       })
       .slice(0, 20);
-  }, [filaments, debouncedQuery, activeRange]);
+  }, [filaments, debouncedQuery, activeRange, existingSet]);
 
   // Reset active index when results change
   useEffect(() => { setActiveIndex(-1); }, [results]);
@@ -101,6 +105,7 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
       tdValue: f.transmission_distance ?? 0,
       colorFamily: f.color_family ?? '',
       slug: f.product_handle ?? undefined,
+      price: f.variant_price,
     });
     trackEvent('palette_builder_filament_added', {
       filament_name: f.product_title ?? '',
