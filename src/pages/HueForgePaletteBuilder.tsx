@@ -159,6 +159,8 @@ export default function HueForgePaletteBuilder() {
   const isMobile = useIsMobile();
   const [presetLoading, setPresetLoading] = useState(false);
   const [urlRestored, setUrlRestored] = useState(false);
+  const [activePreset, setActivePreset] = useState<string | undefined>(undefined);
+  const [skeletonCount, setSkeletonCount] = useState(0);
 
   const hasPalette = palette.length > 0;
 
@@ -305,6 +307,8 @@ export default function HueForgePaletteBuilder() {
     if (!preset) return;
 
     setPresetLoading(true);
+    setSkeletonCount(preset.slots.length);
+    setActivePreset(presetKey);
     try {
       const entries: PaletteEntry[] = [];
       const usedIds = new Set<string>();
@@ -318,7 +322,7 @@ export default function HueForgePaletteBuilder() {
           .lte('transmission_distance', slot.tdMax)
           .ilike('color_family', `%${slot.colorFamily}%`)
           .order('transmission_distance', { ascending: true })
-          .limit(5); // fetch extra to allow dedup
+          .limit(5);
 
         if (usedIds.size > 0) {
           query = query.not('id', 'in', `(${[...usedIds].join(',')})`);
@@ -342,7 +346,6 @@ export default function HueForgePaletteBuilder() {
             price: f.variant_price,
           });
         } else {
-          // Fallback: ignore color family
           let fallbackQuery = supabase
             .from('filaments')
             .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
@@ -382,12 +385,18 @@ export default function HueForgePaletteBuilder() {
         toast.success(`Loaded ${preset.name} with ${entries.length} filaments`);
         trackEvent('palette_builder_preset_loaded', { preset_name: preset.name, filament_count: entries.length });
       } else {
-        toast.error('Could not find matching filaments for this preset');
+        toast.error('Could not load preset — no matching filaments found in the database. Try again or build your palette manually.');
+        setActivePreset(undefined);
+      }
+      if (entries.length > 0 && entries.length < preset.slots.length) {
+        toast.warning('Could not load preset — some filaments weren\'t found in the database. Try again or build your palette manually.');
       }
     } catch {
-      toast.error('Failed to load preset');
+      toast.error('Could not load preset — some filaments weren\'t found in the database. Try again or build your palette manually.');
+      setActivePreset(undefined);
     } finally {
       setPresetLoading(false);
+      setSkeletonCount(0);
     }
   }, [loadPalette]);
 
@@ -400,6 +409,26 @@ export default function HueForgePaletteBuilder() {
       loadPreset(value);
     }
   }, [hasPalette, loadPreset]);
+
+  // Reset activePreset when user manually modifies palette
+  const handleRemoveFilament = useCallback((id: string) => {
+    setActivePreset(undefined);
+    removeFilament(id);
+  }, [removeFilament]);
+
+  const handleUpdateLayers = useCallback((id: string, count: number) => {
+    setActivePreset(undefined);
+    updateLayers(id, count);
+  }, [updateLayers]);
+
+  const handleReorderFilament = useCallback((id: string, direction: 'up' | 'down') => {
+    reorderFilament(id, direction);
+  }, [reorderFilament]);
+
+  const handleAddFilament = useCallback((entry: Omit<PaletteEntry, 'layers'>) => {
+    setActivePreset(undefined);
+    addFilament(entry);
+  }, [addFilament]);
 
   // Memoize summary text
   const summaryText = useMemo(() => {
@@ -477,7 +506,7 @@ export default function HueForgePaletteBuilder() {
         <TooltipProvider delayDuration={300}>
         <div className="flex items-center gap-2 mb-6 md:mb-8 rounded-lg border border-border/60 bg-card/60 px-3 py-2 flex-wrap">
           {/* Preset loader */}
-          <Select onValueChange={handlePresetSelect} disabled={presetLoading}>
+          <Select value={activePreset ?? ''} onValueChange={handlePresetSelect} disabled={presetLoading}>
             <SelectTrigger className="w-[180px] sm:w-[200px] h-8 text-sm border-border/60" aria-label="Load a preset palette">
               {presetLoading ? (
                 <span className="flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</span>
@@ -572,7 +601,7 @@ export default function HueForgePaletteBuilder() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => { clearPalette(); toast.success('Palette cleared'); }}>
+                  <AlertDialogAction onClick={() => { clearPalette(); setActivePreset(undefined); toast.success('Palette cleared'); }}>
                     Reset
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -590,7 +619,7 @@ export default function HueForgePaletteBuilder() {
             <Card className="border-border/60">
               <CardContent className="p-4">
                 <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-3">Add Filaments</h2>
-                <PaletteFilamentSearch onAdd={addFilament} isFull={isFull} existingIds={palette.map(p => p.filamentId)} />
+                <PaletteFilamentSearch onAdd={handleAddFilament} isFull={isFull} existingIds={palette.map(p => p.filamentId)} />
               </CardContent>
             </Card>
 
@@ -602,12 +631,25 @@ export default function HueForgePaletteBuilder() {
                 </h2>
                 {/* Live region for screen readers */}
                 <div aria-live="polite" aria-atomic="false">
-                  {hasPalette ? (
+                  {presetLoading && skeletonCount > 0 ? (
+                    <div className="space-y-1.5">
+                      {Array.from({ length: skeletonCount }).map((_, i) => (
+                        <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/60 animate-pulse">
+                          <div className="w-5 h-5 rounded-full bg-muted shrink-0" />
+                          <div className="flex-1 space-y-1.5">
+                            <div className="h-3 bg-muted rounded w-3/4" />
+                            <div className="h-2.5 bg-muted rounded w-1/2" />
+                          </div>
+                          <div className="h-4 w-10 bg-muted rounded" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : hasPalette ? (
                     <PaletteList
                       palette={palette}
-                      onRemove={removeFilament}
-                      onUpdateLayers={updateLayers}
-                      onReorder={reorderFilament}
+                      onRemove={handleRemoveFilament}
+                      onUpdateLayers={handleUpdateLayers}
+                      onReorder={handleReorderFilament}
                     />
                   ) : (
                     <div className="flex flex-col items-center text-center py-6">
@@ -654,7 +696,7 @@ export default function HueForgePaletteBuilder() {
                 <Card className="border-border/60">
                   <CardContent className="p-4 md:p-6">
                     <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Palette Analysis</h2>
-                    <PaletteAnalysis palette={palette} onAdd={addFilament} isFull={isFull} />
+                    <PaletteAnalysis palette={palette} onAdd={handleAddFilament} isFull={isFull} />
                   </CardContent>
                 </Card>
 
