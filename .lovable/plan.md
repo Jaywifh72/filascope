@@ -1,76 +1,53 @@
 
 
-## Apply Affiliate Prioritization to Printer Listings
+# Fix: Affiliate Link System - CORS + Hardcoded Fallback
 
-### Summary
-Add affiliate priority boosting to the printer listings page. Since printers use client-side fetching and sorting (unlike filaments which use a server-side RPC), the boost data will be fetched as a separate lightweight query and applied during the client-side sort step.
+## Root Cause
 
-### Architecture Difference from Filaments
-- **Filaments**: Server-side RPC (`search_filaments_paginated`) with `p_affiliate_boost` parameter -- boost applied in SQL ORDER BY
-- **Printers**: All printers fetched at once via `supabase.from("printers").select(...)`, then filtered and sorted client-side in a `useMemo` block in `Printers.tsx`
+The `get-affiliate-url` Edge Function has **outdated CORS headers**. The Supabase JS client (v2.86) sends additional headers (`x-supabase-client-platform`, `x-supabase-client-platform-version`, `x-supabase-client-runtime`, `x-supabase-client-runtime-version`) that the Edge Function's `Access-Control-Allow-Headers` does not permit. This causes the browser's CORS preflight (`OPTIONS`) request to fail, blocking every call to the function.
 
-Because of this, the printer boost must be applied client-side during the sort phase.
+## Plan
 
-### Join Path for Boost Data
+### 1. Fix CORS headers in the Edge Function
+
+**File:** `supabase/functions/get-affiliate-url/index.ts`
+
+Update the `corsHeaders` to include all required Supabase client headers:
+
 ```text
-printers.brand_id
-  -> printer_brands.id (get brand name)
-  -> automated_brands (match by LOWER(brand_name) = LOWER(brand))
-  -> brand_regional_stores (match by brand_id + region_code)
-  -> affiliate_priority_boost (integer, 0-100)
+Before:
+  "authorization, x-client-info, apikey, content-type"
+
+After:
+  "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version"
 ```
 
-### Implementation
+No other changes to the Edge Function logic.
 
-#### 1. New Hook: `src/hooks/usePrinterAffiliateBoost.ts`
-A lightweight hook that fetches the boost mapping for the current region:
-- Queries `brand_regional_stores` joined through `automated_brands` and `printer_brands` to get a map of `printer_brand_id -> boost_value`
-- Only fetches when `useAffiliatePrioritization().isEnabled` is true
-- Returns a `Map<string, number>` keyed by `printer_brands.id` (the brand_id on the printer row)
-- Uses React Query with 30-minute staleTime (same as the settings hook)
-- Falls back to empty map on error
+### 2. Add hardcoded fallback configs in `useAffiliateLinks.tsx`
 
-#### 2. Modify `src/pages/Printers.tsx`
-- Import `useAffiliatePrioritization` and `usePrinterAffiliateBoost`
-- Call `usePrinterAffiliateBoost(region)` to get the boost map
-- Detect "default sort": the initial `sortBy` state is `"price-asc"` -- boost applies only when `sortBy === "price-asc"` (the default)
-- In the sort `useMemo` (around line 471), when boost is enabled AND sort is default:
-  - Before the existing price sort, first sort by boost value DESC (printers from boosted brands float to top)
-  - Within the same boost tier, preserve the existing price-asc sort
-  - Out-of-stock / discontinued printers remain at the bottom (existing behavior preserved)
+**File:** `src/hooks/useAffiliateLinks.tsx`
 
-The sort modification:
-```typescript
-// Inside the sort callback (line 471-484)
-if (affiliateBoostEnabled && sortBy === "price-asc" && boostMap.size > 0) {
-  const boostA = boostMap.get(a.brand_id) ?? 0;
-  const boostB = boostMap.get(b.brand_id) ?? 0;
-  if (boostA !== boostB) return boostB - boostA; // higher boost first
-}
-// Then fall through to existing sort logic
-```
+Add a `FALLBACK_CONFIGS` constant containing affiliate parameters for all major retailers currently tracked. This ensures that if the Edge Function is temporarily unreachable (cold start, deploy, outage), links still get affiliate tracking.
 
-#### 3. No Database Migration Needed
-The `brand_regional_stores.affiliate_priority_boost` column already exists. No new views or functions are needed -- a simple client-side query suffices.
+The fallback will be sourced from the existing `affiliate_configs` and `affiliate_programs` tables. It will cover at minimum: Amazon, Bambu Lab, Anycubic, eSUN, Polymaker, Elegoo, Sunlu, Creality, Prusa/Prusament, Overture, FormFutura, 3D-Fuel, Geeetech, and any other active programs.
 
-### Default Sort Detection
-The default sort is `"price-asc"` (set on line 115 of `Printers.tsx`). When a user explicitly changes the sort via the dropdown, `sortBy` changes to another value, and the boost naturally stops applying.
+The `fetchConfigs()` function will be updated to return `FALLBACK_CONFIGS` instead of an empty array when the Edge Function call fails.
 
-### Files to Create
-| File | Purpose |
-|------|---------|
-| `src/hooks/usePrinterAffiliateBoost.ts` | Fetches brand boost map for current region |
+### 3. Improve error logging
 
-### Files to Modify
-| File | Change |
-|------|--------|
-| `src/pages/Printers.tsx` | Import hooks, apply boost in sort useMemo |
+**File:** `src/hooks/useAffiliateLinks.tsx`
 
-### Edge Cases
-- If `brand_regional_stores` has no boost rows for the region, the map is empty and sort is unaffected
-- If the prioritization setting is disabled, the boost query is skipped entirely
-- If the boost query fails, it silently returns an empty map
-- Non-default sorts are completely unaffected
-- Discontinued printers remain hidden by default (existing behavior)
-- No UI indicators added -- invisible to users
+Replace the generic `console.error` with categorized messages:
+- `[AffiliateLinks] Edge Function unreachable — using fallback configs` (network/CORS failure)
+- `[AffiliateLinks] Edge Function returned error: {status/message}` (function returned an error)  
+- `[AffiliateLinks] Edge Function returned unexpected format` (missing `configs` key)
+
+### What stays the same
+
+- No UI/layout/styling changes
+- All existing `target="_blank"` and `rel` attributes on buy links remain unchanged
+- The `useAffiliateLink` hook (singular, used for `PrimaryBuyButton`) is unaffected -- it reads from `affiliate_programs` table directly
+- The `transformUrlSync` logic is unchanged
+- The `generate-affiliate-link` Edge Function (separate from `get-affiliate-url`) is unaffected
 
