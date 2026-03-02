@@ -64,6 +64,46 @@ const FALLBACK_CONFIGS: AffiliateConfig[] = [
 let cachedConfigs: AffiliateConfig[] | null = null;
 let configsFetchPromise: Promise<AffiliateConfig[]> | null = null;
 
+const CACHE_KEY = "filascope_affiliate_configs";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function readLocalCache(): AffiliateConfig[] | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { ts: number; data: AffiliateConfig[] };
+    if (Date.now() - parsed.ts > CACHE_TTL_MS) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalCache(data: AffiliateConfig[]) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+  } catch { /* quota exceeded — ignore */ }
+}
+
+async function fetchWithRetry<T>(fn: () => Promise<T>, retries = 2, baseDelayMs = 1000): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < retries) {
+        const delay = baseDelayMs * Math.pow(3, attempt); // 1s, 3s
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 
 /**
  * Fetch affiliate_programs rows and convert them into AffiliateConfig shape
@@ -141,28 +181,22 @@ async function fetchConfigs(): Promise<AffiliateConfig[]> {
   
   if (configsFetchPromise) return configsFetchPromise;
 
+  // Immediately use localStorage cache if available
+  const localCached = readLocalCache();
+  if (localCached) {
+    cachedConfigs = localCached;
+  }
+
   configsFetchPromise = (async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("get-affiliate-url", {
-        body: { getConfigs: true },
+      const data = await fetchWithRetry(async () => {
+        const { data, error } = await supabase.functions.invoke("get-affiliate-url", {
+          body: { getConfigs: true },
+        });
+        if (error) throw error;
+        if (!data?.configs) throw new Error("Unexpected response format");
+        return data;
       });
-
-      if (error) {
-        // Categorize error
-        if (error.message?.includes("FetchError") || error.message?.includes("Failed to send")) {
-          console.warn("[AffiliateLinks] Edge Function unreachable — using fallback configs");
-        } else {
-          console.error("[AffiliateLinks] Edge Function returned error:", error.message || error);
-        }
-        cachedConfigs = FALLBACK_CONFIGS;
-        return cachedConfigs;
-      }
-
-      if (!data?.configs) {
-        console.warn("[AffiliateLinks] Edge Function returned unexpected format — using fallback configs");
-        cachedConfigs = FALLBACK_CONFIGS;
-        return cachedConfigs;
-      }
 
       const baseConfigs: AffiliateConfig[] = data.configs;
 
@@ -171,10 +205,13 @@ async function fetchConfigs(): Promise<AffiliateConfig[]> {
       const bridged = await fetchAffiliateProgramsBridge(existingNames);
 
       cachedConfigs = [...baseConfigs, ...bridged];
+      writeLocalCache(cachedConfigs);
       return cachedConfigs;
     } catch (err) {
-      console.warn("[AffiliateLinks] Edge Function unreachable — using fallback configs", err);
-      cachedConfigs = FALLBACK_CONFIGS;
+      console.warn("[AffiliateLinks] Edge Function unreachable after retries — using fallback", err);
+      // Use localStorage cache if available, else hardcoded fallbacks
+      const localFallback = readLocalCache();
+      cachedConfigs = localFallback || FALLBACK_CONFIGS;
       return cachedConfigs;
     }
   })();
