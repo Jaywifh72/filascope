@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Palette, ArrowRight, Clipboard, Link2, Download, RotateCcw, BarChart3, Layers, ShoppingCart } from "lucide-react";
+import { Palette, ArrowRight, Clipboard, Link2, Download, RotateCcw, BarChart3, Layers, ShoppingCart, Eye } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs, BreadcrumbSchema } from "@/components/seo";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { usePaletteBuilder } from "@/hooks/usePaletteBuilder";
 import { PaletteFilamentSearch } from "@/components/hueforge/palette-builder/PaletteFilamentSearch";
 import { PaletteList } from "@/components/hueforge/palette-builder/PaletteList";
 import { PaletteAnalysis } from "@/components/hueforge/palette-builder/PaletteAnalysis";
+import { PaletteLayerPreview } from "@/components/hueforge/palette-builder/PaletteLayerPreview";
 
 export default function HueForgePaletteBuilder() {
   const {
@@ -180,14 +181,14 @@ export default function HueForgePaletteBuilder() {
               </CardContent>
             </Card>
 
-            {/* Layer Preview — placeholder */}
+            {/* Layer Preview — live */}
             <Card className="border-border/60">
               <CardContent className="p-6">
-                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Layer Preview</h2>
-                <div className="min-h-[160px] flex flex-col items-center justify-center text-center">
-                  <Layers className="w-8 h-8 text-muted-foreground/40 mb-3" />
-                  <p className="text-sm text-muted-foreground">Add filaments to see layer stacking preview</p>
-                </div>
+                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4 flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5" />
+                  Layer Preview
+                </h2>
+                <PaletteLayerPreview palette={palette} />
               </CardContent>
             </Card>
 
