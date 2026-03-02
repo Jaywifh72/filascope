@@ -22,6 +22,7 @@ import { PaletteFilamentSearch } from "@/components/hueforge/palette-builder/Pal
 import { PaletteList } from "@/components/hueforge/palette-builder/PaletteList";
 import { PaletteAnalysis } from "@/components/hueforge/palette-builder/PaletteAnalysis";
 import { PaletteLayerPreview } from "@/components/hueforge/palette-builder/PaletteLayerPreview";
+import { PaletteShoppingList } from "@/components/hueforge/palette-builder/PaletteShoppingList";
 
 // ── Preset definitions ──────────────────────────────────────────
 
@@ -525,14 +526,14 @@ export default function HueForgePaletteBuilder() {
               </CardContent>
             </Card>
 
-            {/* Shopping List — placeholder */}
+            {/* Shopping List */}
             <Card className="border-border/60">
               <CardContent className="p-6">
-                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Shopping List</h2>
-                <div className="min-h-[160px] flex flex-col items-center justify-center text-center">
-                  <ShoppingCart className="w-8 h-8 text-muted-foreground/40 mb-3" />
-                  <p className="text-sm text-muted-foreground">Add filaments to see pricing and purchase links</p>
-                </div>
+                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4 flex items-center gap-1.5">
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  Shopping List
+                </h2>
+                <PaletteShoppingList palette={palette} />
               </CardContent>
             </Card>
           </div>
