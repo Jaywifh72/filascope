@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 90" width="384" height="90">
+  <!-- Horizontal line accents through letterforms -->
+  <line x1="20" y1="30" x2="180" y2="30" stroke="#1B2A4A" stroke-width="1.5" opacity="0.15"/>
+  <line x1="20" y1="45" x2="180" y2="45" stroke="#1B2A4A" stroke-width="1.5" opacity="0.15"/>
+  <line x1="20" y1="60" x2="180" y2="60" stroke="#1B2A4A" stroke-width="1.5" opacity="0.15"/>
+  
+  <!-- Main wordmark -->
+  <text x="192" y="62" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="52" fill="#1B2A4A" letter-spacing="3">
+    <tspan>3D</tspan><tspan letter-spacing="4">HOJOR</tspan>
+  </text>
+  
+  <!-- Colored accent dots on the 3D portion -->
+  <circle cx="68" cy="30" r="3" fill="#4CAF50"/>
+  <circle cx="78" cy="45" r="3" fill="#E91E63"/>
+  <circle cx="88" cy="60" r="3" fill="#2196F3"/>
+  <circle cx="98" cy="37" r="2.5" fill="#9C27B0"/>
+  
+  <!-- Subtle horizontal lines through the 3D area -->
+  <line x1="55" y1="33" x2="105" y2="33" stroke="#1B2A4A" stroke-width="1" opacity="0.2"/>
+  <line x1="55" y1="48" x2="105" y2="48" stroke="#1B2A4A" stroke-width="1" opacity="0.2"/>
+  <line x1="55" y1="55" x2="105" y2="55" stroke="#1B2A4A" stroke-width="1" opacity="0.2"/>
+</svg>

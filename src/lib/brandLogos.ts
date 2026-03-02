@@ -64,6 +64,8 @@ export const brandLogos: Record<string, string> = {
   "Ziro": logo("ziro.webp"),
   "Voxel PLA": logo("voxelpla.webp"),
   "VoxelPLA": logo("voxelpla.webp"),
+  "3DHOJOR": logo("3dhojor.svg"),
+  "Paramount 3D": logo("paramount3d.svg"),
 
   // Printer brands
   "AnkerMake": logo("ankermake.png"),
@@ -85,8 +87,6 @@ export const brandLogos: Record<string, string> = {
   "TreeD": logo("treed.png"),
 
   // Brands without local logo files — will gracefully fallback to BrandLogo initial
-  "3DHOJOR": "",
-  "Paramount 3D": "",
   "Amazon Basics": "",
   "Artillery": "",
   "Yousu": "",

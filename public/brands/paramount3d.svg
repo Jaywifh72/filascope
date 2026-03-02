@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 70" width="384" height="70">
+  <!-- PARAMOUNT text in bold red -->
+  <text x="10" y="45" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="42" fill="#C41E2F" letter-spacing="2">PARAMOUNT</text>
+  
+  <!-- 3D text slightly smaller in dark gray -->
+  <text x="338" y="45" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="800" font-size="34" fill="#333333">3D</text>
+  
+  <!-- Red underline -->
+  <line x1="10" y1="55" x2="374" y2="55" stroke="#C41E2F" stroke-width="2.5"/>
+</svg>
