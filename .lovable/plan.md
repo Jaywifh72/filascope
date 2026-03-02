@@ -1,56 +1,64 @@
 
 
-# Fix: TypeError on `.toLowerCase()` of undefined
+# Enhance Homepage Search to Support Brand + Material Queries
+
+## Problem
+
+The autocomplete dropdown (used on homepage and header search) only queries the `product_title` column via `ILIKE`. When a user types "Bambu Lab PLA", no product has that exact string in its title, so zero results appear. Meanwhile, the full search results page already works correctly because it uses full-text search across multiple fields.
 
 ## Root Cause
 
-Several utility functions in `src/lib/` call `.toLowerCase()` on values that can be `null` or `undefined` (e.g., `product_title`, `material`, `vendor` from filament database records). The primary crash site is `src/lib/smartComparisonService.ts` lines 157-158, where `current.product_title.toLowerCase()` and `candidate.product_title.toLowerCase()` are called without null guards. This function runs during filament/comparison page navigation.
+The `useSearchAutocomplete` hook (line 108-111) queries:
+```
+.ilike("product_title", `%${q}%`)
+```
 
-## Changes
+This misses matches where the query spans multiple columns (e.g., "Bambu Lab" is in `vendor`, "PLA" is in `material`).
 
-### 1. `src/lib/smartComparisonService.ts` -- Primary crash fix
+## Solution
 
-- Line 68: `title.toLowerCase()` -- add fallback: `(title || '').toLowerCase()`
-- Lines 107-108: Add `|| ''` fallbacks for `product_title` and `material`
-- Line 123: `baseMaterial.toLowerCase()` -- already safe via `getBaseMaterial` fallback, but add guard
-- Lines 157-158: `current.product_title.toLowerCase()` and `candidate.product_title.toLowerCase()` -- add `|| ''` fallback
-- Line 167: `candidateMaterial.toLowerCase()` -- add optional guard
+Modify the **filaments query** in `useSearchAutocomplete.ts` to use Postgres full-text search (`textSearch` on the existing `search_vector` column) with an `ILIKE` fallback, matching the same approach used by `search_filaments_ranked`.
 
-### 2. `src/lib/filamentSimilarity.ts` -- Secondary crash risk
+### Changes
 
-- Line 93: `filament.finish_type.toLowerCase()` -- already guarded by `if` check, safe
-- Line 108: `(filament.product_title || "").toLowerCase()` -- already safe
-- Audit remaining `.toLowerCase()` calls in this file for any unguarded ones
+#### 1. `src/hooks/useSearchAutocomplete.ts` -- Filaments query (lines 97-120)
 
-### 3. `src/lib/personalizationEngine.ts` -- Audit and guard
+Replace the single `.ilike("product_title", ...)` with a two-step approach:
 
-- Search for unguarded `.toLowerCase()` calls on nullable filament fields
+1. **Primary**: Use `.textSearch('search_vector', query, { type: 'websearch' })` which matches against the pre-built tsvector (includes `product_title`, `vendor`, `material`, `finish_type`, `color_family`, `display_name`).
+2. **Fallback**: If FTS returns zero results (e.g., partial words that don't tokenize well), fall back to an `.or()` filter across `product_title`, `vendor`, `material`, and `display_name` using `ILIKE`.
 
-### 4. `src/lib/fuzzySearch.ts` -- Already safe (takes `string` params)
+This ensures "Bambu Lab PLA" matches filaments where vendor="Bambu Lab" AND material="PLA".
 
-### 5. `src/components/filament/BrandQuickLinks.tsx`
+#### 2. `src/hooks/useSearchSuggestions.ts` -- Product suggestions query (lines 156-161)
 
-- Line 25: `material.toLowerCase()` -- already guarded by truthy check on line 22, safe
+Apply the same fix: replace `.ilike("product_title", ...)` with `.or()` across `product_title`, `vendor`, `material`, and `display_name`. This hook is used in the older search suggestion flow.
 
-### 6. `src/lib/analytics.ts`
+#### 3. `src/components/projects/FilamentSearchDialog.tsx` -- Project filament search (lines 42-45)
 
-- Line 118: `params.affiliateProgram?.toLowerCase()` -- already uses optional chaining, safe
+Same pattern: expand the `ILIKE` to an `.or()` filter so the project filament picker also benefits from multi-field search.
 
-### 7. `src/utils/brandSlug.ts`
+### No database changes needed
 
-- `name.toLowerCase()` -- called on required `string` param, safe
+The `search_vector` tsvector column already indexes `vendor`, `material`, `product_title`, `finish_type`, `color_family`, and `display_name`. No new indexes or migrations are required.
 
-## Scope
+### No UI changes
 
-Only files where `.toLowerCase()` (or `.toUpperCase()`, `.includes()`, `.split()`) is called on a value sourced from a database record field that could be `null` will be changed. The fix adds `|| ''` fallbacks or optional chaining. No UI, styling, or behavioral changes.
+The autocomplete dropdown structure, styling, and grouping logic remain identical. Only the underlying query changes.
 
-## Files to modify
+## Technical Detail
 
-| File | Risk | Fix |
-|------|------|-----|
-| `src/lib/smartComparisonService.ts` | **High** -- confirmed crash | Add `\|\| ''` to lines 68, 157, 158 |
-| `src/lib/filamentSimilarity.ts` | Medium | Audit + guard any unprotected calls |
-| `src/lib/personalizationEngine.ts` | Medium | Audit + guard |
-| `src/hooks/usePersonalizedRecommendations.ts` | Low | Line 88 already guarded by `if` |
-| `src/pages/HueForgeTDDatabase.tsx` | Low | Lines 377-378 sort comparison -- add guards |
+The filaments query in `useSearchAutocomplete.ts` will change from:
+
+```typescript
+.ilike("product_title", `%${q}%`)
+```
+
+To:
+
+```typescript
+.or(`product_title.ilike.%${q}%,vendor.ilike.%${q}%,material.ilike.%${q}%,display_name.ilike.%${q}%`)
+```
+
+For multi-word queries like "Bambu Lab PLA", the tokens will also be split and each matched individually using `.textSearch()` first, falling back to the `.or()` approach.
 
