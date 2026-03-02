@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronUp, ChevronDown, Minus, Plus, X, GripVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronUp, ChevronDown, Minus, Plus, X, GripVertical, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { SwatchCircle } from '@/components/hueforge/SwatchCircle';
 import { cn } from '@/lib/utils';
@@ -21,12 +20,16 @@ interface RowProps {
   onRemove: (id: string) => void;
   onUpdateLayers: (id: string, count: number) => void;
   onReorder: (id: string, direction: 'up' | 'down') => void;
+  highlighted: boolean;
 }
 
-const PaletteRow = React.memo(function PaletteRow({ entry, idx, total, onRemove, onUpdateLayers, onReorder }: RowProps) {
+const PaletteRow = React.memo(function PaletteRow({ entry, idx, total, onRemove, onUpdateLayers, onReorder, highlighted }: RowProps) {
   return (
     <div
-      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/60 hover:border-primary/30 transition-colors group"
+      className={cn(
+        "flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card/60 hover:border-primary/30 transition-all group",
+        highlighted && "bg-cyan-500/10 border-cyan-500/30"
+      )}
     >
       {/* Reorder controls */}
       <div className="flex flex-col gap-0.5 shrink-0">
@@ -49,28 +52,44 @@ const PaletteRow = React.memo(function PaletteRow({ entry, idx, total, onRemove,
         </button>
       </div>
 
-      {/* Swatch */}
-      <SwatchCircle
-        hexColor={entry.color}
-        colorFamily={entry.colorFamily}
-        size="w-5 h-5"
-      />
+      {/* Swatch + color family */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <SwatchCircle
+          hexColor={entry.color}
+          colorFamily={entry.colorFamily}
+          size="w-5 h-5"
+        />
+        {entry.colorFamily && (
+          <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">{entry.colorFamily}</span>
+        )}
+      </div>
 
-      {/* Name & brand */}
+      {/* Name, brand & color family (mobile) */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {entry.slug ? (
-            <Link
-              to={`/filament/${entry.slug}`}
-              className="text-sm font-medium truncate hover:text-primary transition-colors"
+            <a
+              href={`/filament/${entry.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium truncate hover:text-primary transition-colors inline-flex items-center gap-1"
             >
               {entry.filamentName}
-            </Link>
+              <ExternalLink className="w-3 h-3 shrink-0 opacity-50" />
+            </a>
           ) : (
             <span className="text-sm font-medium truncate">{entry.filamentName}</span>
           )}
         </div>
-        <span className="text-xs text-muted-foreground truncate block">{entry.brand}</span>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="truncate">{entry.brand}</span>
+          {entry.colorFamily && (
+            <span className="sm:hidden">· {entry.colorFamily}</span>
+          )}
+          {entry.price != null && (
+            <span className="shrink-0">${entry.price.toFixed(2)}</span>
+          )}
+        </div>
       </div>
 
       {/* Material */}
@@ -91,24 +110,27 @@ const PaletteRow = React.memo(function PaletteRow({ entry, idx, total, onRemove,
       </span>
 
       {/* Layer controls */}
-      <div className="flex items-center gap-0.5 shrink-0">
-        <button
-          onClick={() => onUpdateLayers(entry.filamentId, entry.layers - 1)}
-          disabled={entry.layers <= 1}
-          className="w-8 h-8 sm:w-5 sm:h-5 rounded flex items-center justify-center hover:bg-muted disabled:opacity-30 transition-colors"
-          aria-label={`Decrease layers for ${entry.filamentName}`}
-        >
-          <Minus className="w-3 h-3" />
-        </button>
-        <span className="text-xs font-mono w-4 text-center" aria-label={`${entry.layers} layers`}>{entry.layers}</span>
-        <button
-          onClick={() => onUpdateLayers(entry.filamentId, entry.layers + 1)}
-          disabled={entry.layers >= 6}
-          className="w-8 h-8 sm:w-5 sm:h-5 rounded flex items-center justify-center hover:bg-muted disabled:opacity-30 transition-colors"
-          aria-label={`Increase layers for ${entry.filamentName}`}
-        >
-          <Plus className="w-3 h-3" />
-        </button>
+      <div className="flex flex-col items-center shrink-0">
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={() => onUpdateLayers(entry.filamentId, entry.layers - 1)}
+            disabled={entry.layers <= 1}
+            className="w-8 h-8 sm:w-5 sm:h-5 rounded flex items-center justify-center hover:bg-muted disabled:opacity-30 transition-colors"
+            aria-label={`Decrease layers for ${entry.filamentName}`}
+          >
+            <Minus className="w-3 h-3" />
+          </button>
+          <span className="text-xs font-mono w-4 text-center" aria-label={`${entry.layers} layers`}>{entry.layers}</span>
+          <button
+            onClick={() => onUpdateLayers(entry.filamentId, entry.layers + 1)}
+            disabled={entry.layers >= 6}
+            className="w-8 h-8 sm:w-5 sm:h-5 rounded flex items-center justify-center hover:bg-muted disabled:opacity-30 transition-colors"
+            aria-label={`Increase layers for ${entry.filamentName}`}
+          >
+            <Plus className="w-3 h-3" />
+          </button>
+        </div>
+        <span className="text-[9px] text-muted-foreground leading-none mt-0.5">layers</span>
       </div>
 
       {/* Remove */}
@@ -131,6 +153,29 @@ interface Props {
 }
 
 export function PaletteList({ palette, onRemove, onUpdateLayers, onReorder }: Props) {
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const prevOrderRef = useRef<string[]>([]);
+
+  // Track reorder to flash highlight
+  useEffect(() => {
+    const currentOrder = palette.map(p => p.filamentId);
+    const prevOrder = prevOrderRef.current;
+
+    if (prevOrder.length === currentOrder.length && prevOrder.length > 0) {
+      // Find which item moved
+      for (let i = 0; i < currentOrder.length; i++) {
+        if (currentOrder[i] !== prevOrder[i]) {
+          setHighlightedId(currentOrder[i]);
+          const timer = setTimeout(() => setHighlightedId(null), 500);
+          prevOrderRef.current = currentOrder;
+          return () => clearTimeout(timer);
+        }
+      }
+    }
+
+    prevOrderRef.current = currentOrder;
+  }, [palette]);
+
   return (
     <div className="space-y-1.5" role="list" aria-label="Palette filaments">
       {palette.map((entry, idx) => (
@@ -142,6 +187,7 @@ export function PaletteList({ palette, onRemove, onUpdateLayers, onReorder }: Pr
           onRemove={onRemove}
           onUpdateLayers={onUpdateLayers}
           onReorder={onReorder}
+          highlighted={highlightedId === entry.filamentId}
         />
       ))}
     </div>
