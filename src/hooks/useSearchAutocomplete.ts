@@ -104,10 +104,27 @@ export function useSearchAutocomplete(
     placeholderData: keepPreviousData,
     staleTime: 30_000,
     queryFn: async () => {
+      // Primary: full-text search across search_vector (vendor, material, product_title, etc.)
+      const { data: ftsData, error: ftsError } = await supabase
+        .from("filaments")
+        .select("id, product_title, vendor, variant_price, color_hex, product_handle")
+        .textSearch("search_vector", q, { type: "websearch" })
+        .limit(5);
+      if (ftsError) throw ftsError;
+      if (ftsData && ftsData.length > 0) return (ftsData).map((f) => ({
+        id: f.id,
+        name: f.product_title || "",
+        vendor: f.vendor,
+        price: f.variant_price,
+        colorHex: f.color_hex,
+        slug: f.product_handle || f.id,
+      }));
+
+      // Fallback: broad ILIKE across multiple columns
       const { data, error } = await supabase
         .from("filaments")
         .select("id, product_title, vendor, variant_price, color_hex, product_handle")
-        .ilike("product_title", `%${q}%`)
+        .or(`product_title.ilike.%${q}%,vendor.ilike.%${q}%,material.ilike.%${q}%,display_name.ilike.%${q}%`)
         .limit(5);
       if (error) throw error;
       return (data || []).map((f) => ({
