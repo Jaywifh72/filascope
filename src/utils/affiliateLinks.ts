@@ -49,7 +49,8 @@ export async function generateAffiliateLink(
  */
 export function buildAffiliateLinkLocal(
   program: AffiliateProgram,
-  path: string = ""
+  path: string = "",
+  source?: string
 ): string {
   // For redirect_link programs, return the default tracking link directly
   if (program.link_generation_method === "redirect_link" && program.default_tracking_link) {
@@ -58,6 +59,9 @@ export function buildAffiliateLinkLocal(
     url += `${separator}utm_source=filascope&utm_medium=affiliate`;
     if (program.source_parameter && program.source_value) {
       url += `&${program.source_parameter}=${program.source_value}`;
+    }
+    if (source && url.includes("sca_ref")) {
+      url += `&sca_source=${source}`;
     }
     return url;
   }
@@ -92,6 +96,11 @@ export function buildAffiliateLinkLocal(
 
   const separator = url.includes("?") ? "&" : "?";
   url += `${separator}utm_source=filascope&utm_medium=affiliate`;
+
+  // UpPromote source tracking: append sca_source for templates that use sca_ref
+  if (source && url.includes("sca_ref")) {
+    url += `&sca_source=${source}`;
+  }
 
   return url;
 }

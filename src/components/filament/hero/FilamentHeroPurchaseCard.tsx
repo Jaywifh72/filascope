@@ -101,7 +101,9 @@ export function FilamentHeroPurchaseCard({
   
 
   // New affiliate program tracking
-  const { trackAndOpen, discountCodes, hasAffiliate, inactiveProgram } = useAffiliateLink(vendor);
+  const { trackAndOpen, discountCodes, hasAffiliate, inactiveProgram, resolvedRegion } = useAffiliateLink(vendor);
+  const isGlobalProgram = resolvedRegion === 'GLOBAL';
+  const pendingCodeMessage = isGlobalProgram ? "Discount code coming soon — check back for exclusive offers." : undefined;
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
@@ -333,7 +335,7 @@ export function FilamentHeroPurchaseCard({
       <AffiliateInactiveBanner inactiveProgram={inactiveProgram} />
 
       {/* Affiliate Discount Banner */}
-      <AffiliateDiscountBanner discountCodes={discountCodes} className="space-y-1.5 mt-3" showEmptyState={hasAffiliate} />
+      <AffiliateDiscountBanner discountCodes={discountCodes} className="space-y-1.5 mt-3" showEmptyState={hasAffiliate} pendingCodeMessage={pendingCodeMessage} />
 
       {/* Trust Signals */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/30">
