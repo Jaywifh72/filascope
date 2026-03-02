@@ -156,18 +156,68 @@ export default function HueForgePaletteBuilder() {
 
   const hasPalette = palette.length > 0;
 
-  // ── URL restore (?p=) ────────────────────────────────────────
+  // ── URL restore (?p=) and ?add= handler ──────────────────────
   useEffect(() => {
     if (urlRestored) return;
     const pParam = searchParams.get('p');
-    if (!pParam) { setUrlRestored(true); return; }
+    const addParam = searchParams.get('add');
 
+    const processAdd = async () => {
+      if (!addParam) return;
+      const { data, error } = await supabase
+        .from('filaments')
+        .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
+        .eq('id', addParam)
+        .maybeSingle();
+
+      if (error || !data || data.transmission_distance == null) {
+        toast.error('Could not add filament — it may not have TD data');
+        return;
+      }
+
+      addFilament({
+        filamentId: data.id,
+        filamentName: data.product_title ?? '',
+        brand: data.vendor ?? '',
+        material: data.material ?? '',
+        color: data.color_hex ?? '',
+        tdValue: data.transmission_distance ?? 0,
+        colorFamily: data.color_family ?? '',
+        slug: data.product_handle ?? undefined,
+        price: data.variant_price,
+      });
+    };
+
+    if (!pParam) {
+      // No ?p= — just handle ?add= if present
+      if (addParam) {
+        processAdd().finally(() => {
+          navigate('/hueforge-palette-builder', { replace: true });
+          setUrlRestored(true);
+        });
+      } else {
+        setUrlRestored(true);
+      }
+      return;
+    }
+
+    // Handle ?p= first, then ?add=
     const segments = pParam.split('|').map((s) => {
       const [id, layersStr] = s.split(',');
       return { id, layers: parseInt(layersStr) || 1 };
     }).filter((s) => s.id);
 
-    if (!segments.length) { setUrlRestored(true); return; }
+    if (!segments.length) {
+      if (addParam) {
+        processAdd().finally(() => {
+          navigate('/hueforge-palette-builder', { replace: true });
+          setUrlRestored(true);
+        });
+      } else {
+        setUrlRestored(true);
+      }
+      return;
+    }
 
     (async () => {
       const ids = segments.map((s) => s.id);
@@ -178,6 +228,8 @@ export default function HueForgePaletteBuilder() {
 
       if (error || !data) {
         toast.error('Failed to load shared palette');
+        if (addParam) await processAdd();
+        navigate('/hueforge-palette-builder', { replace: true });
         setUrlRestored(true);
         return;
       }
@@ -209,7 +261,9 @@ export default function HueForgePaletteBuilder() {
         toast.warning('Some filaments could not be loaded from the shared palette');
       }
 
-      // Clean URL
+      // Process ?add= after palette restore
+      if (addParam) await processAdd();
+
       navigate('/hueforge-palette-builder', { replace: true });
       setUrlRestored(true);
     })();

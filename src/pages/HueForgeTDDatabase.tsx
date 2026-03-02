@@ -944,6 +944,21 @@ export default function HueForgeTDDatabase() {
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-100 transition-opacity">
+                                  <TooltipProvider delayDuration={300}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="w-7 h-7 text-muted-foreground hover:text-primary"
+                                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/hueforge-palette-builder?add=${f.id}`); }}
+                                        >
+                                          <Palette className="w-3.5 h-3.5" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="left"><p>Add to Palette Builder</p></TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   <Button variant="ghost" size="icon" asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                                     <Link to={filamentUrl}>
                                       <ExternalLink className="w-4 h-4" />

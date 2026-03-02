@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, Palette } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ColorFinderFilament } from '@/hooks/useColorFinderFilaments';
 import { useCurrency } from '@/hooks/useCurrency';
 
@@ -27,6 +28,7 @@ function matchColor(pct: number) {
 
 export function ColorMatchResultCard({ filament, targetHex, matchPercent, td }: Props) {
   const { formatPrice } = useCurrency();
+  const navigate = useNavigate();
   const badge = tdBadge(td);
   const price = filament.variant_price;
 
@@ -72,6 +74,21 @@ export function ColorMatchResultCard({ filament, targetHex, matchPercent, td }: 
               </Link>
             </Button>
           )}
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 px-0 text-muted-foreground hover:text-primary"
+                  onClick={() => navigate(`/hueforge-palette-builder?add=${filament.id}`)}
+                >
+                  <Palette className="w-3.5 h-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Add to Palette Builder</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     </div>
