@@ -165,6 +165,7 @@ const HueForgeLayerPreview = lazy(() => import("./pages/HueForgeLayerPreview"));
 const HueForgeColorMatcher = lazy(() => import("./pages/HueForgeColorMatcher"));
 const HueForgeProjectPlanner = lazy(() => import("./pages/HueForgeProjectPlanner"));
 const HueForgeTools = lazy(() => import("./pages/HueForgeTools"));
+const HueForgePaletteBuilder = lazy(() => import("./pages/HueForgePaletteBuilder"));
 const QuizScoringTest = lazy(() => import("./components/reference/repos/quiz/QuizScoringTest"));
 const LearningCenter = lazy(() => import("./pages/LearningCenter"));
 const GuideDetail = lazy(() => import("./pages/GuideDetail"));
@@ -375,6 +376,7 @@ const App = () => (
                   <Route path="/hueforge-color-matcher" element={<HueForgeColorMatcher />} />
                   <Route path="/hueforge-project-planner" element={<HueForgeProjectPlanner />} />
                   <Route path="/hueforge-tools" element={<HueForgeTools />} />
+                  <Route path="/hueforge-palette-builder" element={<HueForgePaletteBuilder />} />
                   <Route path="/learn" element={<LearningCenter />} />
                   <Route path="/learn/hueforge" element={<Navigate to="/guides/what-is-hueforge-td" replace />} />
                   <Route path="/learn/:slug" element={<GuideDetail />} />
