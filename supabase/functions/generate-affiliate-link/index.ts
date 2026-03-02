@@ -10,7 +10,8 @@ function buildAffiliateUrl(
   program: Record<string, unknown>,
   path: string,
   utmCampaign?: string,
-  useToolbar?: boolean
+  useToolbar?: boolean,
+  source?: string
 ): string {
   const linkGenerationMethod = program.link_generation_method as string | null;
   const defaultTrackingLink = program.default_tracking_link as string | null;
@@ -27,6 +28,9 @@ function buildAffiliateUrl(
     }
     if (utmCampaign) {
       url += `&utm_campaign=${encodeURIComponent(utmCampaign)}`;
+    }
+    if (source) {
+      url += `&sca_source=${encodeURIComponent(source)}`;
     }
     return url;
   }
@@ -78,6 +82,11 @@ function buildAffiliateUrl(
     url += `&utm_campaign=${encodeURIComponent(utmCampaign)}`;
   }
 
+  // UpPromote source tracking: append sca_source if provided
+  if (source) {
+    url += `&sca_source=${encodeURIComponent(source)}`;
+  }
+
   return url;
 }
 
@@ -96,6 +105,7 @@ Deno.serve(async (req) => {
       source_component,
       utm_campaign,
       use_toolbar = false,
+      source,
     } = await req.json();
 
     if (!brand_name || !region_code) {
@@ -109,8 +119,9 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Look up active program
-    const { data: program, error: programError } = await supabase
+    // 1. Try exact region match
+    let resolvedRegion = region_code;
+    const { data: exactProgram, error: exactError } = await supabase
       .from("affiliate_programs")
       .select("*")
       .eq("brand_name", brand_name)
@@ -118,12 +129,34 @@ Deno.serve(async (req) => {
       .eq("is_active", true)
       .maybeSingle();
 
-    if (programError) {
-      console.error("Program lookup error:", programError);
+    if (exactError) {
+      console.error("Program lookup error:", exactError);
       return new Response(
         JSON.stringify({ affiliate_url: null, has_affiliate: false }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    let program = exactProgram;
+
+    // 2. Fallback to GLOBAL if no exact match
+    if (!program) {
+      const { data: globalProgram, error: globalError } = await supabase
+        .from("affiliate_programs")
+        .select("*")
+        .eq("brand_name", brand_name)
+        .eq("region_code", "GLOBAL")
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (globalError) {
+        console.error("Global program lookup error:", globalError);
+      }
+
+      if (globalProgram) {
+        program = globalProgram;
+        resolvedRegion = "GLOBAL";
+      }
     }
 
     if (!program) {
@@ -134,7 +167,7 @@ Deno.serve(async (req) => {
     }
 
     // Build affiliate URL
-    const affiliateUrl = buildAffiliateUrl(program, path, utm_campaign, use_toolbar);
+    const affiliateUrl = buildAffiliateUrl(program, path, utm_campaign, use_toolbar, source);
 
     // Log click
     const clickData = {
@@ -172,6 +205,7 @@ Deno.serve(async (req) => {
         has_affiliate: true,
         program_status: program.account_status,
         discount_codes: codes || [],
+        resolved_region: resolvedRegion,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
