@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SiteFooter } from "@/components/SiteFooter";
-import { HueForgeToolsCrossLinks } from "@/components/hueforge/HueForgeToolsCrossLinks";
 import { HueForgeToolsNav } from "@/components/hueforge/HueForgeToolsNav";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
@@ -605,55 +604,100 @@ export default function HueForgePaletteBuilder() {
               </CardContent>
             </Card>
 
-            {/* Summary bar */}
-            <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground flex items-center gap-2 flex-wrap" role="status" aria-label="Palette summary">
-              <span>{summaryText.filaments}</span>
-              <span className="text-border">|</span>
-              <span>{summaryText.layers}</span>
-              <span className="text-border">|</span>
-              <span>{summaryText.td}</span>
-            </div>
+            {/* Summary bar — only when palette has filaments */}
+            {hasPalette && (
+              <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground flex items-center gap-2 flex-wrap" role="status" aria-label="Palette summary">
+                <span>{summaryText.filaments}</span>
+                <span className="text-border">|</span>
+                <span>{summaryText.layers}</span>
+                <span className="text-border">|</span>
+                <span>{summaryText.td}</span>
+              </div>
+            )}
           </div>
 
           {/* Right column */}
           <div className="md:col-span-1 lg:col-span-3 space-y-6">
-            {/* Palette Analysis */}
-            <Card className="border-border/60">
-              <CardContent className="p-4 md:p-6">
-                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Palette Analysis</h2>
-                <PaletteAnalysis palette={palette} onAdd={addFilament} isFull={isFull} />
-              </CardContent>
-            </Card>
+            {hasPalette ? (
+              <>
+                {/* Palette Analysis */}
+                <Card className="border-border/60">
+                  <CardContent className="p-4 md:p-6">
+                    <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Palette Analysis</h2>
+                    <PaletteAnalysis palette={palette} onAdd={addFilament} isFull={isFull} />
+                  </CardContent>
+                </Card>
 
-            {/* Layer Preview — full width on tablet */}
-            <Card className="border-border/60 md:col-span-2 lg:col-span-1">
-              <CardContent className="p-4 md:p-6">
-                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4 flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5" />
-                  Layer Preview
-                </h2>
-                <PaletteLayerPreview palette={palette} />
-              </CardContent>
-            </Card>
+                {/* Layer Preview */}
+                <Card className="border-border/60">
+                  <CardContent className="p-4 md:p-6">
+                    <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4 flex items-center gap-1.5">
+                      <Eye className="w-3.5 h-3.5" />
+                      Layer Preview
+                    </h2>
+                    <PaletteLayerPreview palette={palette} />
+                  </CardContent>
+                </Card>
 
-            {/* Shopping List */}
-            <Card className="border-border/60 md:col-span-2 lg:col-span-1">
-              <CardContent className="p-4 md:p-6">
-                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4 flex items-center gap-1.5">
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  Shopping List
-                </h2>
-                <PaletteShoppingList palette={palette} />
-              </CardContent>
-            </Card>
+                {/* Shopping List */}
+                <Card className="border-border/60">
+                  <CardContent className="p-4 md:p-6">
+                    <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4 flex items-center gap-1.5">
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      Shopping List
+                    </h2>
+                    <PaletteShoppingList palette={palette} />
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              /* Collapsed "What You'll See" preview when palette is empty */
+              <Card className="border-border/60">
+                <CardContent className="p-4 md:p-6">
+                  <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">
+                    Palette Analysis & Tools
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Add filaments to unlock these analysis tools:
+                  </p>
+                  <ul className="space-y-3 text-sm">
+                    <li className="flex items-start gap-2.5">
+                      <BarChart3 className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-foreground">TD Coverage Spectrum</span>
+                        <span className="text-muted-foreground"> — See how your filaments span the opacity range</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <Layers className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-foreground">Gap Analysis</span>
+                        <span className="text-muted-foreground"> — Get warnings about missing TD ranges</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <Eye className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-foreground">Layer Preview</span>
+                        <span className="text-muted-foreground"> — Visualize your color stack with backlit simulation</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <ShoppingCart className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-foreground">Shopping List</span>
+                        <span className="text-muted-foreground"> — Get prices and buy links for your whole palette</span>
+                      </div>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Cross-links & footer */}
-      <div className="max-w-5xl mx-auto px-4">
-        <HueForgeToolsCrossLinks />
-      </div>
+      {/* Footer */}
       <SiteFooter />
     </div>
   );
