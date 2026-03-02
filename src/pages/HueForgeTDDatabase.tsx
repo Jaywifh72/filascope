@@ -374,8 +374,8 @@ export default function HueForgeTDDatabase() {
       if (aVal === null) return 1;
       if (bVal === null) return -1;
       if (typeof aVal === 'string') {
-        aVal = aVal.toLowerCase();
-        bVal = (bVal as string).toLowerCase();
+        aVal = (aVal || '').toLowerCase();
+        bVal = ((bVal as string) || '').toLowerCase();
       }
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
