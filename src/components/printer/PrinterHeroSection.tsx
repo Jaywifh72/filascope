@@ -37,7 +37,7 @@ function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
               <Icon className="h-4 w-4 text-primary" />
             </div>
             <span className="text-[10px] uppercase tracking-wider text-gray-500 whitespace-nowrap">{label}</span>
-            <span className="text-[11px] font-semibold text-white w-full leading-tight text-center break-words" title={value}>{value}</span>
+            <span className="text-[11px] font-semibold text-foreground w-full leading-tight text-center break-words" title={value}>{value}</span>
           </div>
         </TooltipTrigger>
         <TooltipContent side="top">
