@@ -81,15 +81,29 @@ export function PaletteFilamentSearch({ onAdd, isFull, existingIds = [] }: Props
     if (!filaments || !debouncedQuery) return [];
     const range = TD_RANGES[activeRange];
     const q = debouncedQuery.toLowerCase();
-    return filaments
+    const filtered = filaments
       .filter((f) => {
         if (existingSet.has(f.id)) return false;
         const td = f.transmission_distance ?? 0;
         if (td < range.min || td > range.max) return false;
         const searchable = `${f.product_title} ${f.vendor} ${f.color_family} ${f.material}`.toLowerCase();
         return searchable.includes(q);
-      })
-      .slice(0, 20);
+      });
+
+    // Deduplicate: if same vendor + material + TD + price, keep only the first per color_family
+    const seen = new Map<string, Set<string>>();
+    const deduped = filtered.filter((f) => {
+      const td = f.transmission_distance ?? 0;
+      const key = `${(f.vendor ?? '').toLowerCase()}|${(f.material ?? '').toLowerCase()}|${td.toFixed(2)}|${f.variant_price ?? ''}`;
+      const colorKey = (f.color_family ?? f.color_hex ?? f.id).toLowerCase();
+      if (!seen.has(key)) seen.set(key, new Set());
+      const colors = seen.get(key)!;
+      if (colors.has(colorKey)) return false;
+      colors.add(colorKey);
+      return true;
+    });
+
+    return deduped.slice(0, 20);
   }, [filaments, debouncedQuery, activeRange, existingSet]);
 
   // Reset active index when results change
@@ -223,30 +237,39 @@ export function PaletteFilamentSearch({ onAdd, isFull, existingIds = [] }: Props
               <SwatchCircle
                 hexColor={f.color_hex}
                 colorFamily={f.color_family}
-                size="w-4 h-4"
+                size="w-5 h-5"
               />
-              <span className="text-xs text-muted-foreground shrink-0 max-w-[80px] truncate">
-                {f.vendor}
-              </span>
-              <span className="text-sm truncate flex-1">{f.product_title}</span>
-              {f.material && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 hidden sm:inline-flex">
-                  {f.material}
-                </Badge>
-              )}
-              <span
-                className={cn(
-                  'font-mono text-xs rounded px-1.5 py-0.5 shrink-0',
-                  getTdBadgeClasses(f.transmission_distance ?? 0)
-                )}
-              >
-                {f.transmission_distance?.toFixed(2)}
-              </span>
-              {f.variant_price != null && (
-                <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">
-                  ${f.variant_price.toFixed(2)}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground shrink-0">{f.vendor}</span>
+                  {f.color_family && (
+                    <span className="text-[10px] font-medium text-muted-foreground/80 bg-muted/60 px-1.5 py-0.5 rounded-full shrink-0">
+                      {f.color_family}
+                    </span>
+                  )}
+                  {f.material && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 hidden sm:inline-flex">
+                      {f.material}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm line-clamp-2 leading-snug mt-0.5">{f.product_title}</p>
+              </div>
+              <div className="flex flex-col items-end gap-0.5 shrink-0">
+                <span
+                  className={cn(
+                    'font-mono text-xs rounded px-1.5 py-0.5',
+                    getTdBadgeClasses(f.transmission_distance ?? 0)
+                  )}
+                >
+                  {f.transmission_distance?.toFixed(2)}
                 </span>
-              )}
+                {f.variant_price != null && (
+                  <span className="text-xs text-muted-foreground">
+                    ${f.variant_price.toFixed(2)}
+                  </span>
+                )}
+              </div>
             </button>
           ))}
         </div>
