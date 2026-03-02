@@ -5,7 +5,7 @@ import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Pencil, Plus } from "lucide-react";
+import { Copy, Pencil, Plus, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { DiscountCodeFormDialog } from "./DiscountCodeFormDialog";
 import type { AffiliateDiscountCode } from "@/types/affiliate";
@@ -17,6 +17,7 @@ export function DiscountCodesTab() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [editingCode, setEditingCode] = useState<AffiliateDiscountCode | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [prefillProgramId, setPrefillProgramId] = useState<string | null>(null);
   const updateCode = useUpdateDiscountCode();
 
   const uniqueBrands = useMemo(
@@ -59,6 +60,11 @@ export function DiscountCodesTab() {
     });
   }, [codes, statusFilter]);
 
+  // Determine if we're filtering to a specific brand+region with no codes
+  const isFilteredEmpty = filteredCodes.length === 0 && (brandFilter !== "all" || regionFilter !== "all");
+  const filteredBrandLabel = brandFilter !== "all" ? brandFilter : null;
+  const filteredRegionLabel = regionFilter !== "all" ? regionFilter : null;
+
   const handleToggleActive = (code: AffiliateDiscountCode) => {
     updateCode.mutate(
       { id: code.id, program_id: code.program_id, is_active: !code.is_active },
@@ -72,6 +78,17 @@ export function DiscountCodesTab() {
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     toast({ title: "Code copied" });
+  };
+
+  const handleAddFromEmpty = () => {
+    // Find matching program for pre-fill
+    const matchingProgram = (programs || []).find(
+      (p) =>
+        (brandFilter === "all" || p.brand_name === brandFilter) &&
+        (regionFilter === "all" || p.region_code === regionFilter)
+    );
+    setPrefillProgramId(matchingProgram?.id || null);
+    setShowAdd(true);
   };
 
   return (
@@ -101,7 +118,7 @@ export function DiscountCodesTab() {
           </SelectContent>
         </Select>
         <div className="ml-auto">
-          <Button size="sm" onClick={() => setShowAdd(true)}>
+          <Button size="sm" onClick={() => { setPrefillProgramId(null); setShowAdd(true); }}>
             <Plus className="w-4 h-4 mr-1" /> Add Code
           </Button>
         </div>
@@ -111,6 +128,19 @@ export function DiscountCodesTab() {
         <CardContent className="p-0">
           {isLoading ? (
             <p className="text-muted-foreground text-sm py-8 text-center">Loading codes…</p>
+          ) : isFilteredEmpty ? (
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+              <Tag className="w-10 h-10 text-muted-foreground mb-3" />
+              <h3 className="text-sm font-semibold text-foreground mb-1">
+                No discount codes{filteredBrandLabel ? ` for ${filteredBrandLabel}` : ""}{filteredRegionLabel ? ` ${filteredRegionLabel}` : ""}
+              </h3>
+              <p className="text-xs text-muted-foreground max-w-sm mb-4">
+                No codes have been added yet for this region. Add one using the button below when promotional codes are available.
+              </p>
+              <Button size="sm" onClick={handleAddFromEmpty}>
+                <Plus className="w-4 h-4 mr-1" /> Add Discount Code
+              </Button>
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -176,7 +206,7 @@ export function DiscountCodesTab() {
                     </TableRow>
                   );
                 })}
-                {filteredCodes.length === 0 && (
+                {filteredCodes.length === 0 && !isFilteredEmpty && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                       No discount codes found
@@ -192,10 +222,11 @@ export function DiscountCodesTab() {
       <DiscountCodeFormDialog
         open={showAdd || !!editingCode}
         onOpenChange={(open) => {
-          if (!open) { setShowAdd(false); setEditingCode(null); }
+          if (!open) { setShowAdd(false); setEditingCode(null); setPrefillProgramId(null); }
         }}
         code={editingCode}
         programs={programs || []}
+        prefillProgramId={prefillProgramId}
       />
     </div>
   );
