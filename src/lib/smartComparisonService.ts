@@ -65,7 +65,7 @@ const MATERIAL_ALTERNATIVES: Record<string, { materials: string[]; reason: strin
  * Detects variant type from product title
  */
 function detectVariantType(title: string): string | null {
-  const lowerTitle = title.toLowerCase();
+  const lowerTitle = (title || '').toLowerCase();
   
   for (const variant of Object.keys(VARIANT_COMPARISONS)) {
     if (lowerTitle.includes(variant)) {
@@ -154,8 +154,8 @@ export function scoreComparisonRelevance(
   let reason = "Similar material";
   let type: SmartComparisonSuggestion["relevanceType"] = "alternative";
   
-  const currentTitle = current.product_title.toLowerCase();
-  const candidateTitle = candidate.product_title.toLowerCase();
+  const currentTitle = (current.product_title || '').toLowerCase();
+  const candidateTitle = (candidate.product_title || '').toLowerCase();
   const currentMaterial = getBaseMaterial(current.material);
   const candidateMaterial = getBaseMaterial(candidate.material);
   
