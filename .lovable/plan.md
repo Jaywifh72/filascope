@@ -1,72 +1,99 @@
 
 
-## Extend Affiliate UI for Siraya Tech (GLOBAL Program)
+## Add "Product Prioritization" Tab to Affiliate Hub
 
-### Summary
-The existing `useAffiliateLink` hook already falls back to any active program when no region-specific match exists (lines 77-89), so Siraya Tech's GLOBAL program will already be picked up automatically for any user region. The changes needed are primarily UI polish: GLOBAL-aware display labels, source tracking, and softer discount code messaging.
+### Overview
+Add a 4th tab to the Affiliate Hub admin page with global prioritization controls, a brand-by-region priority matrix, and affiliate coverage gap analysis. This requires one schema migration, one data seed, and four new components.
 
-### 1. GLOBAL-aware display in useAffiliateLink
+### Database Changes
 
-**File:** `src/hooks/useAffiliateLink.ts`
+**Migration: Add `affiliate_priority_boost` column to `brand_regional_stores`**
+- `ALTER TABLE brand_regional_stores ADD COLUMN affiliate_priority_boost integer NOT NULL DEFAULT 0;`
+- This column stores 0-100 boost values per brand-region pair.
 
-The fallback query (lines 77-89) already works but doesn't prioritize GLOBAL explicitly. Update:
-- Change the fallback to prefer `region_code = 'GLOBAL'` over arbitrary matches
-- Add `resolvedRegion` to the return value so consumers know if GLOBAL was used
+**Data Insert: Seed `site_settings` with `affiliate_prioritization` key**
+- Insert a row with key `affiliate_prioritization` and JSON value:
+  ```json
+  { "enabled": false, "default_boost": 25, "max_boost": 100, "boost_deals_active": false }
+  ```
 
-New return field:
-```typescript
-resolvedRegion: string | null; // 'GLOBAL', 'AU', 'UK', etc.
+### Schema Adaptation Notes
+The user's description references columns/tables that don't exist as described. Here's how the plan maps to actual schema:
+- **Affiliate status per brand/region**: Derived from `affiliate_programs` table (has `brand_id`, `region_code`, `is_active`) -- NOT from a `stores.affiliate_enabled` column.
+- **Active deals with affiliate links**: Derived from `deals` table joining to `filaments` to get vendor/brand, checking `affiliate_link IS NOT NULL` and `end_date >= now()`.
+- The `stores` table has `affiliate_tag`/`affiliate_network` but NOT `affiliate_enabled` or `priority` -- these won't be used.
+
+### New Components
+
+#### 1. `src/components/admin/affiliate-hub/ProductPrioritizationTab.tsx`
+Main tab wrapper that composes the three sub-components below. Fetches data only when the tab is active (lazy via TabsContent).
+
+#### 2. `src/components/admin/affiliate-hub/PrioritySettingsCard.tsx`
+- Reads `site_settings` where key = `affiliate_prioritization`
+- Master toggle: "Enable Affiliate Prioritization" with warning banner when off
+- Numeric inputs for `default_boost` (0-100) and `max_boost` (0-100)
+- Checkbox for `boost_deals_active`
+- "Save Settings" button that updates the `site_settings` row via Supabase client
+- Success toast on save
+
+#### 3. `src/components/admin/affiliate-hub/BrandPriorityMatrix.tsx`
+- Queries `brand_regional_stores` joined with `automated_brands` to get brand names and current `affiliate_priority_boost` values
+- Queries `affiliate_programs` to determine affiliate status per brand/region
+- Region columns derived from distinct `region_code` values in `brand_regional_stores` (currently: US, CA, EU, UK, AU, JP, CN)
+- Each cell: editable compact number input + colored dot (green = has active affiliate program, gray = no affiliate, amber = has active deal but no affiliate)
+- Dot tooltips show affiliate status details
+- Filter buttons: "All Brands" / "Affiliated Only" / "No Affiliate"
+- "Quick Set" dropdown with presets (set affiliated to 75, 50, reset all to 0, etc.) -- applies locally, requires explicit save
+- "Save All Changes" button: batch-updates modified `affiliate_priority_boost` values via individual Supabase update calls; shows change count + success toast
+
+#### 4. `src/components/admin/affiliate-hub/CoverageGapAnalysis.tsx`
+- Queries `automated_brands` and cross-references with `affiliate_programs` to find:
+  - Brands with zero affiliate programs (shown as amber warning cards)
+  - Brands with partial regional coverage (shown as blue info cards listing missing regions)
+- Summary row: "X of Y brands have affiliate programs" with a progress bar
+- "Set Up Affiliate" links on gap cards (link to Brand Programs tab)
+
+### Integration
+
+**File: `src/pages/AdminAffiliateHub.tsx`**
+- Import `ProductPrioritizationTab` and `TrendingUp` icon
+- Add 4th `TabsTrigger` with value `prioritization` and label "Product Prioritization"
+- Add corresponding `TabsContent` rendering `<ProductPrioritizationTab />`
+
+### Data Flow
+```text
+site_settings (affiliate_prioritization)
+       |
+       v
+PrioritySettingsCard (read/write global config)
+
+brand_regional_stores + automated_brands + affiliate_programs
+       |
+       v
+BrandPriorityMatrix (read stores, show affiliate status, edit boost values)
+
+automated_brands + affiliate_programs
+       |
+       v
+CoverageGapAnalysis (read-only gap report)
 ```
 
-### 2. GLOBAL display handling in FilamentPurchaseSidebar and FilamentHeroPurchaseCard
+### Files to Create
+| File | Purpose |
+|------|---------|
+| `src/components/admin/affiliate-hub/ProductPrioritizationTab.tsx` | Tab wrapper |
+| `src/components/admin/affiliate-hub/PrioritySettingsCard.tsx` | Global settings card |
+| `src/components/admin/affiliate-hub/BrandPriorityMatrix.tsx` | Brand x region grid |
+| `src/components/admin/affiliate-hub/CoverageGapAnalysis.tsx` | Gap analysis |
 
-**Files:**
-- `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`
-- `src/components/filament/hero/FilamentHeroPurchaseCard.tsx`
-
-When `program.region_code === 'GLOBAL'`:
-- Buy button label: "Shop [Brand]" instead of "Buy at [Brand] [Region]"
-- No flag emoji; optionally show a globe icon
-- These components already use `useAffiliateLink`, so just read `program.region_code`
-
-### 3. Source tracking prop
-
-**File:** `src/hooks/useAffiliateLink.ts`
-
-Update `trackAndOpen` to accept an optional `source` field in `ClickMetadata`. Default to `'filascope-web'`. Pass it to the edge function via `trackAffiliateClick` (update the utility to include the `source` field as `sca_source` appended to the URL before opening).
-
-Since the edge function already supports `source`, add it to the client-side `buildAffiliateLinkLocal` in `src/utils/affiliateLinks.ts` as well, appending `&sca_source=filascope-web` for UpPromote programs (detected by checking if the link template contains `sca_ref`).
-
-### 4. Softer discount code empty state
-
-**File:** `src/components/affiliate/AffiliateDiscountBanner.tsx`
-
-Add a `pendingCodeMessage` optional string prop. When provided and no active codes exist, show that message instead of the generic "No discount codes available" text. For Siraya Tech, pass: "Discount code coming soon -- check back for exclusive offers."
-
-The caller determines the message based on brand/program context.
-
-### 5. BrandAboutTab -- already works
-
-**File:** `src/components/brands/tabs/BrandAboutTab.tsx`
-
-This component already calls `useAffiliateLink(brandName)` and gates website links through the affiliate system. When a user visits the Siraya Tech brand page, it will automatically pick up the GLOBAL program and affiliate-tag the "Visit Website" link. No changes needed here beyond ensuring the buy button label adapts for GLOBAL programs.
-
-### 6. No new components needed
-
-The plan from the user mentions a `ResinBrandAffiliateBanner` -- this is unnecessary because:
-- `BrandAboutTab` already renders affiliate links for the brand page
-- `FilamentPurchaseSidebar` will show the affiliate panel on any Siraya Tech product (if resin products exist in the filaments table)
-- If no Siraya Tech products exist yet, the brand page alone is sufficient
-
----
-
-### Files to modify
-
+### Files to Modify
 | File | Change |
 |------|--------|
-| `src/hooks/useAffiliateLink.ts` | Add `resolvedRegion` return; prioritize GLOBAL fallback; add `source` to trackAndOpen |
-| `src/utils/affiliateLinks.ts` | Add optional `source` param to `buildAffiliateLinkLocal`; append `sca_source` for UpPromote templates |
-| `src/components/affiliate/AffiliateDiscountBanner.tsx` | Add `pendingCodeMessage` prop for softer empty state |
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Adapt buy button label for GLOBAL programs; pass source and pendingCodeMessage |
-| `src/components/filament/hero/FilamentHeroPurchaseCard.tsx` | Same GLOBAL label adaptation |
+| `src/pages/AdminAffiliateHub.tsx` | Add 4th tab trigger + content |
+
+### Database Operations
+| Type | Detail |
+|------|--------|
+| Migration | Add `affiliate_priority_boost` integer column to `brand_regional_stores` |
+| Data insert | Seed `affiliate_prioritization` row in `site_settings` |
 
