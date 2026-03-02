@@ -6,17 +6,30 @@ import { trackDiscountCode as trackGA4DiscountCode } from "@/lib/analytics";
 interface AffiliateDiscountBannerProps {
   discountCodes: AffiliateDiscountCode[];
   className?: string;
+  /** When true, shows a muted empty state instead of returning null */
+  showEmptyState?: boolean;
 }
 
 /**
  * Displays active, assigned discount codes as a small teal banner.
- * Only renders when there are qualifying codes.
+ * Only renders when there are qualifying codes (or showEmptyState is true).
  */
-export function AffiliateDiscountBanner({ discountCodes, className }: AffiliateDiscountBannerProps) {
+export function AffiliateDiscountBanner({ discountCodes, className, showEmptyState }: AffiliateDiscountBannerProps) {
   // Only show assigned, active codes
   const activeCodes = discountCodes.filter((c) => c.is_assigned && c.is_active && c.code);
 
-  if (activeCodes.length === 0) return null;
+  if (activeCodes.length === 0) {
+    if (showEmptyState) {
+      return (
+        <div className={className}>
+          <p className="text-xs text-muted-foreground italic">
+            No discount codes available for this region currently.
+          </p>
+        </div>
+      );
+    }
+    return null;
+  }
 
   const handleCodeClick = (code: AffiliateDiscountCode) => {
     trackGA4DiscountCode(

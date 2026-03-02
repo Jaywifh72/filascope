@@ -19,6 +19,7 @@ export interface ClickMetadata {
 
 interface UseAffiliateLinkResult {
   program: AffiliateProgram | null;
+  inactiveProgram: AffiliateProgram | null;
   buildLink: (url: string) => string;
   trackAndOpen: (url: string, metadata: ClickMetadata) => void;
   discountCodes: AffiliateDiscountCode[];
@@ -86,6 +87,25 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
         return null;
       }
       return (fallback as AffiliateProgram) ?? null;
+    },
+  });
+
+  // Fetch inactive program for admin preview (only when no active program found)
+  const { data: inactiveProgram = null } = useQuery({
+    queryKey: ["affiliate-program-inactive", resolvedBrandName, region],
+    enabled: !!resolvedBrandName && !aliasLoading && !program,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("affiliate_programs")
+        .select("*")
+        .ilike("brand_name", resolvedBrandName!)
+        .eq("region_code", region)
+        .eq("is_active", false)
+        .limit(1)
+        .maybeSingle();
+      if (error || !data) return null;
+      return data as AffiliateProgram;
     },
   });
 
@@ -188,6 +208,7 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
 
   return {
     program,
+    inactiveProgram,
     buildLink,
     trackAndOpen,
     discountCodes,
