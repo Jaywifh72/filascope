@@ -140,9 +140,11 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
       {/* ── Spectrum bar ───────────────────────── */}
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">TD Coverage Spectrum</h3>
-        <div className="relative">
+        <div className="relative min-w-[280px] overflow-x-auto">
           {/* Gradient bar */}
           <div
+            role="img"
+            aria-label="TD coverage spectrum showing filament positions from opaque at 0 to translucent at 10"
             className={cn(
               'w-full h-8 rounded-lg overflow-hidden relative',
               isEmpty && 'opacity-30'
@@ -164,6 +166,7 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
                           left: `${pct}%`,
                           backgroundColor: entry.color || '#808080',
                         }}
+                        aria-label={`${entry.brand} ${entry.filamentName}, TD ${entry.tdValue.toFixed(2)}`}
                       />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
@@ -276,7 +279,7 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
 
       {/* ── Stats grid ─────────────────────────── */}
       {stats && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {[
             { label: 'Filaments', value: stats.count, icon: LayersIcon },
             { label: 'Total Layers', value: stats.totalLayers, icon: Hash },

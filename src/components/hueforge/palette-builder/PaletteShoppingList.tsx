@@ -76,6 +76,8 @@ function ShoppingRow({
       <span
         className="w-4 h-4 rounded-full shrink-0 border border-border/60"
         style={{ backgroundColor: entry.color || '#888' }}
+        aria-label={`${entry.colorFamily || 'Unknown'} color swatch`}
+        role="img"
       />
 
       {/* Name + brand */}

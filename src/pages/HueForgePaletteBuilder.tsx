@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Palette, ArrowRight, Clipboard, Link2, Download, RotateCcw, BarChart3, Layers, ShoppingCart, Eye, Loader2 } from "lucide-react";
+import { Palette, ArrowRight, Clipboard, Link2, Download, RotateCcw, BarChart3, Layers, ShoppingCart, Eye, Loader2, MoreHorizontal } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs, BreadcrumbSchema } from "@/components/seo";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,8 +15,12 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePaletteBuilder, type PaletteEntry } from "@/hooks/usePaletteBuilder";
 import { PaletteFilamentSearch } from "@/components/hueforge/palette-builder/PaletteFilamentSearch";
 import { PaletteList } from "@/components/hueforge/palette-builder/PaletteList";
@@ -151,6 +155,7 @@ export default function HueForgePaletteBuilder() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [presetLoading, setPresetLoading] = useState(false);
   const [urlRestored, setUrlRestored] = useState(false);
 
@@ -189,7 +194,6 @@ export default function HueForgePaletteBuilder() {
     };
 
     if (!pParam) {
-      // No ?p= — just handle ?add= if present
       if (addParam) {
         processAdd().finally(() => {
           navigate('/hueforge-palette-builder', { replace: true });
@@ -201,7 +205,6 @@ export default function HueForgePaletteBuilder() {
       return;
     }
 
-    // Handle ?p= first, then ?add=
     const segments = pParam.split('|').map((s) => {
       const [id, layersStr] = s.split(',');
       return { id, layers: parseInt(layersStr) || 1 };
@@ -261,9 +264,7 @@ export default function HueForgePaletteBuilder() {
         toast.warning('Some filaments could not be loaded from the shared palette');
       }
 
-      // Process ?add= after palette restore
       if (addParam) await processAdd();
-
       navigate('/hueforge-palette-builder', { replace: true });
       setUrlRestored(true);
     })();
@@ -301,7 +302,6 @@ export default function HueForgePaletteBuilder() {
     try {
       const entries: PaletteEntry[] = [];
       for (const slot of preset.slots) {
-        // Find best matching filament for this slot
         const { data } = await supabase
           .from('filaments')
           .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
@@ -327,7 +327,6 @@ export default function HueForgePaletteBuilder() {
             price: f.variant_price,
           });
         } else {
-          // Fallback: ignore color family, just match TD range
           const { data: fallback } = await supabase
             .from('filaments')
             .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
@@ -378,6 +377,16 @@ export default function HueForgePaletteBuilder() {
     }
   }, [hasPalette, loadPreset]);
 
+  // Memoize summary text
+  const summaryText = useMemo(() => {
+    if (!hasPalette) return { filaments: '0 filaments', layers: '0 layers', td: 'TD range: —' };
+    return {
+      filaments: `${palette.length} filament${palette.length !== 1 ? 's' : ''}`,
+      layers: `${totalLayers} layer${totalLayers !== 1 ? 's' : ''}`,
+      td: `TD: ${tdMin?.toFixed(2)} – ${tdMax?.toFixed(2)}`,
+    };
+  }, [palette.length, totalLayers, tdMin, tdMax, hasPalette]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <DocumentHead
@@ -418,26 +427,26 @@ export default function HueForgePaletteBuilder() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
         {/* Hero */}
-        <section className="text-center mb-12">
+        <section className="text-center mb-8 md:mb-12">
           <Badge variant="outline" className="mb-4 text-sm">
             <Palette className="w-3 h-3 mr-1 text-primary" />
             Palette Builder
           </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-primary bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-primary bg-clip-text text-transparent">
             HueForge Palette Builder
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
             Build and analyze multi-filament palettes for your HueForge projects.
             Check TD coverage, find gaps, and share your palette — all in one place.
           </p>
         </section>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between gap-2 mb-8 flex-wrap">
+        <div className="flex items-center justify-between gap-2 mb-6 md:mb-8 flex-wrap">
           <Select onValueChange={handlePresetSelect} disabled={presetLoading}>
-            <SelectTrigger className="w-[200px] h-9 text-sm">
+            <SelectTrigger className="w-[180px] sm:w-[200px] h-9 text-sm" aria-label="Load a preset palette">
               {presetLoading ? (
                 <span className="flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</span>
               ) : (
@@ -451,15 +460,38 @@ export default function HueForgePaletteBuilder() {
             </SelectContent>
           </Select>
           <div className="flex items-center gap-1 shrink-0 flex-wrap">
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleCopyConfig}>
-              <Clipboard className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Copy Config</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleCopyLink}>
+            {/* Always-visible buttons */}
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleCopyLink} aria-label="Copy shareable palette link">
               <Link2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Copy Link</span>
             </Button>
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleExportCsv}>
-              <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Export CSV</span>
-            </Button>
+
+            {/* Desktop: show all buttons. Mobile: group secondary into dropdown */}
+            {isMobile ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-xs gap-1" aria-label="More actions">
+                    <MoreHorizontal className="w-3.5 h-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleCopyConfig}>
+                    <Clipboard className="w-3.5 h-3.5 mr-2" /> Copy Config
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportCsv}>
+                    <Download className="w-3.5 h-3.5 mr-2" /> Export CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleCopyConfig} aria-label="Copy palette configuration text">
+                  <Clipboard className="w-3.5 h-3.5" /> Copy Config
+                </Button>
+                <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={handleExportCsv} aria-label="Export palette as CSV file">
+                  <Download className="w-3.5 h-3.5" /> Export CSV
+                </Button>
+              </>
+            )}
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -468,6 +500,7 @@ export default function HueForgePaletteBuilder() {
                   size="sm"
                   className="text-xs gap-1 text-destructive hover:text-destructive"
                   disabled={!hasPalette}
+                  aria-label="Reset palette"
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Reset</span>
                 </Button>
@@ -490,10 +523,10 @@ export default function HueForgePaletteBuilder() {
           </div>
         </div>
 
-        {/* Main two-column grid */}
-        <div className="grid md:grid-cols-5 gap-8">
+        {/* Main grid — responsive: 1-col mobile, 2-col tablet, 5-col desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8">
           {/* Left column */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="md:col-span-1 lg:col-span-2 space-y-6">
             {/* Add Filaments */}
             <Card className="border-border/60">
               <CardContent className="p-4">
@@ -508,70 +541,63 @@ export default function HueForgePaletteBuilder() {
                 <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-3">
                   Your Palette {hasPalette && <span className="text-primary ml-1">({palette.length})</span>}
                 </h2>
-                {hasPalette ? (
-                  <PaletteList
-                    palette={palette}
-                    onRemove={removeFilament}
-                    onUpdateLayers={updateLayers}
-                    onReorder={reorderFilament}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center text-center py-6">
-                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
-                      <Palette className="w-6 h-6 text-muted-foreground" />
+                {/* Live region for screen readers */}
+                <div aria-live="polite" aria-atomic="false">
+                  {hasPalette ? (
+                    <PaletteList
+                      palette={palette}
+                      onRemove={removeFilament}
+                      onUpdateLayers={updateLayers}
+                      onReorder={reorderFilament}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center text-center py-6">
+                      <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
+                        <Palette className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-base font-semibold mb-1">Start Building Your Palette</h3>
+                      <p className="text-sm text-muted-foreground mb-5 max-w-xs">
+                        Search for filaments above or load a preset to get started.
+                      </p>
+                      <div className="flex items-center gap-3 flex-wrap justify-center">
+                        <Button variant="outline" size="sm" onClick={() => handlePresetSelect('portrait')}>
+                          Load a Preset
+                        </Button>
+                        <Button asChild size="sm">
+                          <Link to="/hueforge-td-database">
+                            Browse TD Database <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
-                    <h3 className="text-base font-semibold mb-1">Start Building Your Palette</h3>
-                    <p className="text-sm text-muted-foreground mb-5 max-w-xs">
-                      Search for filaments above or load a preset to get started.
-                    </p>
-                    <div className="flex items-center gap-3 flex-wrap justify-center">
-                      <Button variant="outline" size="sm" onClick={() => handlePresetSelect('portrait')}>
-                        Load a Preset
-                      </Button>
-                      <Button asChild size="sm">
-                        <Link to="/hueforge-td-database">
-                          Browse TD Database <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </CardContent>
             </Card>
 
             {/* Summary bar */}
-            {hasPalette ? (
-              <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground flex items-center gap-2">
-                <span>{palette.length} filament{palette.length !== 1 ? 's' : ''}</span>
-                <span className="text-border">|</span>
-                <span>{totalLayers} layer{totalLayers !== 1 ? 's' : ''}</span>
-                <span className="text-border">|</span>
-                <span>TD: {tdMin?.toFixed(2)} – {tdMax?.toFixed(2)}</span>
-              </div>
-            ) : (
-              <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground flex items-center gap-2">
-                <span>0 filaments</span>
-                <span className="text-border">|</span>
-                <span>0 layers</span>
-                <span className="text-border">|</span>
-                <span>TD range: —</span>
-              </div>
-            )}
+            <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground flex items-center gap-2 flex-wrap" role="status" aria-label="Palette summary">
+              <span>{summaryText.filaments}</span>
+              <span className="text-border">|</span>
+              <span>{summaryText.layers}</span>
+              <span className="text-border">|</span>
+              <span>{summaryText.td}</span>
+            </div>
           </div>
 
           {/* Right column */}
-          <div className="md:col-span-3 space-y-6">
+          <div className="md:col-span-1 lg:col-span-3 space-y-6">
             {/* Palette Analysis */}
             <Card className="border-border/60">
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Palette Analysis</h2>
                 <PaletteAnalysis palette={palette} onAdd={addFilament} isFull={isFull} />
               </CardContent>
             </Card>
 
-            {/* Layer Preview */}
-            <Card className="border-border/60">
-              <CardContent className="p-6">
+            {/* Layer Preview — full width on tablet */}
+            <Card className="border-border/60 md:col-span-2 lg:col-span-1">
+              <CardContent className="p-4 md:p-6">
                 <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4 flex items-center gap-1.5">
                   <Eye className="w-3.5 h-3.5" />
                   Layer Preview
@@ -581,8 +607,8 @@ export default function HueForgePaletteBuilder() {
             </Card>
 
             {/* Shopping List */}
-            <Card className="border-border/60">
-              <CardContent className="p-6">
+            <Card className="border-border/60 md:col-span-2 lg:col-span-1">
+              <CardContent className="p-4 md:p-6">
                 <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4 flex items-center gap-1.5">
                   <ShoppingCart className="w-3.5 h-3.5" />
                   Shopping List

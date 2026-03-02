@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Search } from 'lucide-react';
@@ -31,11 +31,14 @@ interface Props {
 export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [activeRange, setActiveRange] = useState(0); // index into TD_RANGES
+  const [activeRange, setActiveRange] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  // Debounce
+  // Debounce 300ms
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
     return () => clearTimeout(timer);
@@ -52,7 +55,7 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Fetch all TD filaments (same query as Layer Preview / TD Database)
+  // Fetch all TD filaments
   const { data: filaments } = useQuery({
     queryKey: ['hueforge-td-database'],
     queryFn: async () => {
@@ -84,7 +87,10 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
       .slice(0, 20);
   }, [filaments, debouncedQuery, activeRange]);
 
-  const handleSelect = (f: (typeof results)[0]) => {
+  // Reset active index when results change
+  useEffect(() => { setActiveIndex(-1); }, [results]);
+
+  const handleSelect = useCallback((f: (typeof results)[0]) => {
     onAdd({
       filamentId: f.id,
       filamentName: f.product_title ?? '',
@@ -98,14 +104,50 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
     setQuery('');
     setDebouncedQuery('');
     setIsOpen(false);
-  };
+  }, [onAdd]);
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!isOpen || !results.length) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setActiveIndex((prev) => Math.min(prev + 1, results.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setActiveIndex((prev) => Math.max(prev - 1, 0));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (activeIndex >= 0 && activeIndex < results.length) {
+          handleSelect(results[activeIndex]);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsOpen(false);
+        break;
+    }
+  }, [isOpen, results, activeIndex, handleSelect]);
+
+  // Scroll active option into view
+  useEffect(() => {
+    if (activeIndex < 0 || !listRef.current) return;
+    const el = listRef.current.children[activeIndex] as HTMLElement;
+    el?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex]);
+
+  const listboxId = 'palette-search-listbox';
 
   return (
     <div ref={wrapperRef} className="space-y-3">
       {/* Search input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
         <Input
+          ref={inputRef}
           placeholder="Search by filament name, brand, or color…"
           className="pl-9"
           value={query}
@@ -114,16 +156,25 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
             setIsOpen(true);
           }}
           onFocus={() => { if (debouncedQuery) setIsOpen(true); }}
+          onKeyDown={handleKeyDown}
           disabled={isFull}
+          role="combobox"
+          aria-expanded={isOpen && !!debouncedQuery}
+          aria-controls={listboxId}
+          aria-activedescendant={activeIndex >= 0 ? `palette-option-${activeIndex}` : undefined}
+          aria-autocomplete="list"
+          aria-label="Search filaments to add to palette"
         />
       </div>
 
       {/* TD range chips */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="TD range filter">
         {TD_RANGES.map((range, i) => (
           <button
             key={range.label}
             onClick={() => setActiveRange(i)}
+            role="radio"
+            aria-checked={i === activeRange}
             className={cn(
               'px-2.5 py-1 text-xs rounded-full border transition-colors',
               i === activeRange
@@ -138,12 +189,24 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
 
       {/* Dropdown results */}
       {isOpen && debouncedQuery && results.length > 0 && (
-        <div className="border border-border rounded-lg bg-card shadow-lg max-h-[320px] overflow-y-auto">
-          {results.map((f) => (
+        <div
+          ref={listRef}
+          id={listboxId}
+          role="listbox"
+          aria-label="Filament search results"
+          className="border border-border rounded-lg bg-card shadow-lg max-h-[min(320px,50vh)] overflow-y-auto"
+        >
+          {results.map((f, i) => (
             <button
               key={f.id}
+              id={`palette-option-${i}`}
+              role="option"
+              aria-selected={i === activeIndex}
               onClick={() => handleSelect(f)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors border-b border-border/40 last:border-b-0"
+              className={cn(
+                'w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors border-b border-border/40 last:border-b-0',
+                i === activeIndex && 'bg-muted/50'
+              )}
             >
               <SwatchCircle
                 hexColor={f.color_hex}
@@ -155,7 +218,7 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
               </span>
               <span className="text-sm truncate flex-1">{f.product_title}</span>
               {f.material && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 hidden sm:inline-flex">
                   {f.material}
                 </Badge>
               )}
@@ -168,7 +231,7 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
                 {f.transmission_distance?.toFixed(2)}
               </span>
               {f.variant_price != null && (
-                <span className="text-xs text-muted-foreground shrink-0">
+                <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">
                   ${f.variant_price.toFixed(2)}
                 </span>
               )}
@@ -177,7 +240,7 @@ export function PaletteFilamentSearch({ onAdd, isFull }: Props) {
         </div>
       )}
       {isOpen && debouncedQuery && results.length === 0 && (
-        <div className="border border-border rounded-lg bg-card p-4 text-center text-sm text-muted-foreground">
+        <div className="border border-border rounded-lg bg-card p-4 text-center text-sm text-muted-foreground" role="status">
           No filaments found matching "{debouncedQuery}"
         </div>
       )}
