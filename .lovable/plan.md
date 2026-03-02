@@ -1,128 +1,85 @@
 
 
-## Mobile Filter Experience Redesign
+## Onboard Anycubic Australia — Using Existing Affiliate Tables
 
-### Current State
+### Important Discovery
 
-The mobile filter system already has solid foundations:
-- **`MobileFilamentFilterSheet.tsx`**: A bottom sheet (Radix Sheet with `side="bottom"`, 85vh) containing accordion-style sections for Printer, Materials, Brands, Reinforcements, and Spool Size. Has a sticky footer with "Clear All" + "Apply Filters (N)" buttons and an active filter count badge on the trigger.
-- **`MobileActiveFilterChips.tsx`**: Horizontal scrollable row of applied filter badges with remove buttons, shown below the filter bar.
-- **Finder.tsx (lines 1427-1525)**: Sticky mobile controls bar at `top-16 z-30` with the filter sheet trigger + a separate Sort dropdown side by side, followed by the active chips row.
+Your project already has a fully functional affiliate system with these existing tables:
+- **`affiliate_programs`** — programs linked to `automated_brands` via `brand_id`, keyed by `brand_name` + `region_code`
+- **`affiliate_discount_codes`** — codes linked to programs via `program_id`
+- **`affiliate_clicks`** — click tracking with RLS already in place
+- **`affiliate_campaigns`** — campaign management
 
-### What Needs to Change
+There is **no `brands` table** — the brand entity is `automated_brands`. The Affiliate Hub admin page, the `generate-affiliate-link` edge function, and all hooks (`useAffiliatePrograms`, etc.) all use these existing tables.
 
-The existing architecture is close to the goal. Enhancements are layered on top without restructuring:
+**Creating new parallel tables (`brand_affiliate_programs`, `discount_codes`) would fragment the system and break the existing Affiliate Hub.** Instead, the plan seeds Anycubic AU data into the existing tables.
 
----
+### What Will Be Done
 
-### 1. Enhanced Filter Trigger Button
+#### Step 1: Ensure Anycubic exists in `automated_brands`
 
-**File: `MobileFilamentFilterSheet.tsx` (lines 165-177)**
+Query for existing Anycubic row (it likely already exists given the codebase references). If not present, insert it with:
+- `brand_name`: 'Anycubic', `brand_slug`: 'anycubic', `display_name`: 'Anycubic'
+- `base_url`: 'https://store.anycubic.com', `website_url`: 'https://www.anycubic.au'
+- `is_visible`: true, `platform_type`: 'shopify'
 
-- Add `border-cyan-500/50` ring when filters are active (already has a count badge, just needs border emphasis)
-- Append current sort label next to count: "Filters (3) . Scoring" -- pass `sortBy` as a new prop
-- Haptic feedback on open (`navigator.vibrate?.(10)`)
+#### Step 2: Insert into `affiliate_programs`
 
-### 2. Move Sort Into the Sheet
+Using the existing table schema, insert one row:
 
-**File: `MobileFilamentFilterSheet.tsx`**
+| Field | Value |
+|-------|-------|
+| brand_name | Anycubic |
+| region_code | AU |
+| affiliate_network | GoAffPro |
+| affiliate_id | 19374300 |
+| portal_url | https://anycubic-au.goaffpro.com/ |
+| commission_rate | 5.00 |
+| commission_type | percentage |
+| link_template | `https://www.anycubic.au/{path}?ref=JEANJACQUESBOILEAU` |
+| store_base_url | https://www.anycubic.au |
+| tracking_parameter | ref |
+| tracking_value | JEANJACQUESBOILEAU |
+| is_active | true |
+| account_status | active |
+| referral_handle | JEANJACQUESBOILEAU |
+| account_email | Admin@Filascope.com |
+| program_notes | Account: Jean-Jacques Boileau, Registered: 2026-02-21, PayPal: jeanjacquesboileau@gmail.com |
+| link_generation_method | url_parameter |
 
-- Add `sortBy` and `onSortChange` as new props
-- Render a "Sort By" row as the FIRST section inside the sheet (above Printer), styled as a horizontal row of toggle pills: "Score", "Price (low)", "Price (high)", "A-Z"
-- Remove the separate Sort `<Select>` from `Finder.tsx` mobile controls bar (lines 1473-1484)
+The `brand_id` will be set by looking up the Anycubic row from `automated_brands`.
 
-**File: `Finder.tsx` (lines 1427-1486)**
+#### Step 3: Insert 9 discount codes into `affiliate_discount_codes`
 
-- Remove the standalone Sort dropdown
-- Pass `sortBy` and `setSortBy` into `MobileFilamentFilterSheet`
-- Show sort label on the filter button
+Each code linked to the program via `program_id`:
 
-### 3. Two-Tier Filter Prioritization
+| code | discount_type | discount_value | display_text | is_exclusive |
+|------|--------------|----------------|--------------|--------------|
+| JEANJACQUESBOIL | fixed | 25.00 | Save $25 AUD on your Anycubic AU order | true |
+| FANW3P | fixed | 30.00 | Save $30 AUD on Wash & Cure 3 Plus | false |
+| FANW3 | fixed | 20.00 | Save $20 AUD on Wash & Cure 3 | false |
+| FANPM4 | fixed | 20.00 | Save $20 AUD on Photon Mono 4 | false |
+| FANPM7 | fixed | 50.00 | Save $50 AUD on Photon Mono M7 | false |
+| FANS1MC | fixed | 100.00 | Save $100 AUD on Kobra S1 Max Combo | false |
+| FANS1M | fixed | 100.00 | Save $100 AUD on Kobra S1 Max | false |
+| FANPM7M | fixed | 100.00 | Save $100 AUD on Photon Mono M7 Max | false |
+| FANK3MC | fixed | 60.00 | Save $60 AUD on Kobra 3 Max Combo | false |
 
-**File: `MobileFilamentFilterSheet.tsx`**
+All with `is_active: true`, `is_assigned: true`, `valid_from: '2026-02-21'`, `valid_until: null`.
 
-Reorganize the sheet content into two tiers:
+#### Step 4: No migration needed
 
-**Top Tier (always visible, no accordion collapse needed):**
-- **Quick Materials**: PLA, PETG, ABS, ASA, TPU as horizontal scrollable toggle chips (extracted from `MATERIAL_BASE_OPTIONS` top 5). These are visually distinct from the accordion sections -- styled as a row of rounded pills.
-- **Quick Brands**: Show user's preferred brands (from the existing `usePrinterSelection` or a new `useUserSettings` hook) as toggle chips. Fall back to the top 5 `VERIFIED_BRANDS` if no preferences set.
+All three tables already exist with appropriate columns and RLS policies. The existing `generate-affiliate-link` edge function already handles `url_parameter` link generation and returns discount codes. No schema changes required.
 
-**Bottom Tier (under "More Filters" collapsible):**
-- Printer setup, remaining materials, remaining brands, Reinforcements, Spool Size, Color, Print Specs -- all existing accordion sections, wrapped in a single "Advanced Filters" expandable container.
+### Technical Details
 
-No filter logic changes -- the same `onMaterialChange`, `onBrandChange` callbacks are called.
+- Data insertion will use the database insert tool (not migrations, since this is data seeding)
+- The Anycubic brand_id lookup will be done first to get the FK reference
+- The program insertion will use the existing `affiliate_programs` schema which already has all needed fields
+- The discount codes table uses `program_id` (not `brand_id` directly) so the program must be inserted first
+- The existing Affiliate Hub UI at `/admin/affiliate-hub` will automatically display the new program and codes
 
-### 4. Live Result Count in Footer
+### No Code Changes Needed
 
-**File: `MobileFilamentFilterSheet.tsx`**
-
-- Add a `resultCount` prop (passed from `Finder.tsx` as `totalCount`)
-- Replace "Apply Filters (N)" button text with "Show {resultCount} results"
-- Add a brief cyan flash animation class when count changes (using a `useEffect` + `prevCount` ref pattern, same as `DataInventoryControlBar`)
-- "Clear all filters" stays as the left button
-
-**File: `Finder.tsx`**
-
-- Pass `totalCount` to `MobileFilamentFilterSheet`
-
-### 5. Enhanced Active Filter Chips
-
-**File: `MobileActiveFilterChips.tsx`**
-
-- Add fade-out gradient overlays (left/right) using `::before`/`::after` pseudo-elements when content overflows
-- Add chip removal animation: `transition-all duration-150` with `scale-95 opacity-0` on remove (using a local `removing` state with 150ms delay before actual removal callback)
-- Add an "Edit" pill at the end of the row that re-opens the filter sheet (pass `onEdit` prop)
-
-**File: `Finder.tsx`**
-
-- Pass `onEdit` callback that opens the filter sheet
-
-### 6. Printer Compatibility Quick Filter
-
-**File: `MobileFilamentFilterSheet.tsx`**
-
-- At the top of the sheet (above quick materials), if `selectedPrinter` is set, render a one-tap suggestion banner:
-  - "Show only filaments for your {printer name}" as a tappable row
-  - Clicking it applies the printer's compatible material types as filters
-  - Style: `bg-primary/10 border border-primary/30 rounded-xl p-3` with printer icon
-  - This is a convenience shortcut -- it calls the existing `onMaterialChange` callbacks for compatible materials
-
-### 7. Scroll Behavior and Accordion Improvements
-
-**File: `MobileFilamentFilterSheet.tsx`**
-
-- The Radix Sheet already prevents body scroll when open
-- Add `overscroll-behavior: contain` to the sheet content via `style` prop
-- Replace instant show/hide of accordion content with CSS `grid-template-rows` transition (0fr to 1fr) for smooth expand/collapse over 200ms
-- When sheet opens, if any section has active filters, auto-expand that section (set `expandedSection` to first active section in a `useEffect`)
-
-### 8. Touch-Friendly Sizing
-
-**File: `MobileFilamentFilterSheet.tsx`**
-
-- All chips/pills already use `min-h-[44px]` -- verify and enforce `min-w-[44px]` on all interactive elements
-- Increase gap between filter chips from `gap-2` to `gap-2.5` for better touch targeting
-- Quick material chips at top: `h-11 px-4` rounded pills
-
-### 9. CSS Additions
-
-**File: `src/index.css`**
-
-- Add `@keyframes filter-count-flash` for the result count cyan highlight
-- Add `.mobile-filter-chip-exit` animation class for chip removal
-- Add `.filter-scroll-fade` gradient mask utility for the chips row
-- Wrap all in `prefers-reduced-motion: reduce` override
-
----
-
-### Summary of Changes
-
-| File | Change |
-|------|--------|
-| `src/components/filters/MobileFilamentFilterSheet.tsx` | Two-tier layout, sort integration, live count footer, printer quick filter, accordion transitions, new props |
-| `src/components/filters/MobileActiveFilterChips.tsx` | Fade gradients, removal animations, "Edit" link |
-| `src/pages/Finder.tsx` | Remove standalone sort dropdown, pass new props (sortBy, resultCount, onEdit) |
-| `src/index.css` | New animation keyframes for count flash and chip removal |
-
-No new files needed. No filter logic, URL handling, or SEO changes. All enhancements are mobile-only (`lg:hidden` / below `md:` breakpoint).
+The existing Affiliate Hub, edge function, and hooks already support this data shape. Once seeded, Anycubic AU will appear in the admin dashboard and the `generate-affiliate-link` function will automatically generate links for `brand_name: 'Anycubic', region_code: 'AU'`.
 
