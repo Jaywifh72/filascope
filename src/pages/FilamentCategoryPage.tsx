@@ -22,6 +22,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { useIntelligentSearch } from "@/hooks/useIntelligentSearch";
 import IntelligentSearchBar from "@/components/search/IntelligentSearchBar";
 import IntelligentSearchResults from "@/components/search/IntelligentSearchResults";
+import { SearchBarGated } from "@/components/search/SearchBarGated";
 
 // ─────────────────────────────────────────────
 // Per-material SEO meta + intro text
@@ -793,15 +794,17 @@ export default function FilamentCategoryPage() {
           </div>
         )}
 
-        {/* Intelligent Search Bar */}
-        <div className="mb-6">
-          <IntelligentSearchBar
-            query={aiQuery}
-            onQueryChange={setAiQuery}
-            isLoading={aiLoading && isIntelligentMode}
-            isIntelligentMode={isIntelligentMode}
-          />
-        </div>
+        {/* Intelligent Search Bar — gated by feature switch */}
+        <SearchBarGated>
+          <div className="mb-6">
+            <IntelligentSearchBar
+              query={aiQuery}
+              onQueryChange={setAiQuery}
+              isLoading={aiLoading && isIntelligentMode}
+              isIntelligentMode={isIntelligentMode}
+            />
+          </div>
+        </SearchBarGated>
 
         {/* Conditional: AI results vs normal grid */}
         {isAiActive ? (

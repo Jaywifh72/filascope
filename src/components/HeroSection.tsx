@@ -6,6 +6,7 @@ import { useDealsCount } from "@/hooks/useDealsCount";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { HeroProductGrid } from "@/components/HeroProductGrid";
+import { SearchBarGated } from "@/components/search/SearchBarGated";
 
 
 
@@ -271,28 +272,30 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               </div>
             </div>
             
-            {/* Search Input with History & Suggestions */}
-            <div 
-              className="w-full max-w-full sm:max-w-[500px] mb-6 animate-fade-in search-icon-pulse"
-              style={{ animationDelay: "0.25s" }}
-            >
-              <style>{`
-                .search-icon-pulse svg:first-child {
-                  animation: searchPulse 5s ease-in-out infinite;
-                }
-                @keyframes searchPulse {
-                  0%, 90%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
-                  95% { opacity: 1; transform: translateY(-50%) scale(1.15); }
-                }
-              `}</style>
-              <SearchInputWithHistory
-                value={searchTerm}
-                onChange={onSearchChange}
-                placeholder={searchSuggestions[currentSuggestionIndex]}
-                context="filaments"
-                className="h-12 sm:h-14"
-              />
-            </div>
+            {/* Search Input with History & Suggestions — gated by feature switch */}
+            <SearchBarGated>
+              <div 
+                className="w-full max-w-full sm:max-w-[500px] mb-6 animate-fade-in search-icon-pulse"
+                style={{ animationDelay: "0.25s" }}
+              >
+                <style>{`
+                  .search-icon-pulse svg:first-child {
+                    animation: searchPulse 5s ease-in-out infinite;
+                  }
+                  @keyframes searchPulse {
+                    0%, 90%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
+                    95% { opacity: 1; transform: translateY(-50%) scale(1.15); }
+                  }
+                `}</style>
+                <SearchInputWithHistory
+                  value={searchTerm}
+                  onChange={onSearchChange}
+                  placeholder={searchSuggestions[currentSuggestionIndex]}
+                  context="filaments"
+                  className="h-12 sm:h-14"
+                />
+              </div>
+            </SearchBarGated>
 
             {/* Quick Match contextual tip */}
             <div className="w-full max-w-full sm:max-w-[600px] mb-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
