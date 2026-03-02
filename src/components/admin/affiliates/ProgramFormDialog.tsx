@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Copy } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useCreateProgram, useUpdateProgram } from "@/hooks/useAffiliatePrograms";
 import type { AffiliateProgram } from "@/types/affiliate";
@@ -34,6 +34,13 @@ const EMPTY = {
 function extractSettingsUrl(notes: string): string | null {
   const match = notes.match(/https:\/\/\S+goaffpro\.com\/settings\S*/);
   return match ? match[0] : null;
+}
+
+/** Extract sca_ref value from a link template */
+function extractScaRef(template: string): { param: string; token: string } | null {
+  const match = template.match(/sca_ref=([^\s&]+)/);
+  if (!match) return null;
+  return { param: `sca_ref=${match[1]}`, token: match[1] };
 }
 
 export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
@@ -66,6 +73,12 @@ export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
   const set = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const settingsUrl = extractSettingsUrl(form.program_notes);
+  const scaRef = useMemo(() => extractScaRef(form.link_template), [form.link_template]);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied" });
+  };
 
   const handleSave = async () => {
     if (!form.brand_name || !form.region_code || !form.link_template) {
@@ -94,7 +107,7 @@ export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
       } else {
         await createProgram.mutateAsync(payload);
       }
-      toast({ title: "Changes saved" });
+      toast({ title: `${form.brand_name} program saved` });
       onOpenChange(false);
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -110,9 +123,9 @@ export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
 
         <div className="space-y-4">
           <Field label="Brand Name *" value={form.brand_name} onChange={(v) => set("brand_name", v)} />
-          <Field label="Region Code *" value={form.region_code} onChange={(v) => set("region_code", v)} placeholder="AU, UK, US, EU…" />
+          <Field label="Region Code *" value={form.region_code} onChange={(v) => set("region_code", v)} placeholder="AU, UK, US, EU, GLOBAL…" />
           <Field label="Affiliate ID" value={form.affiliate_id} onChange={(v) => set("affiliate_id", v)} />
-          <Field label="Platform / Network" value={form.affiliate_network} onChange={(v) => set("affiliate_network", v)} placeholder="GoAffPro, Impact, Awin…" />
+          <Field label="Platform / Network" value={form.affiliate_network} onChange={(v) => set("affiliate_network", v)} placeholder="GoAffPro, UpPromote, Impact, Awin…" />
           <Field label="Portal URL" value={form.portal_url} onChange={(v) => set("portal_url", v)} />
           <div className="grid grid-cols-2 gap-3">
             <Field label="Commission Rate" value={form.commission_rate} onChange={(v) => set("commission_rate", v)} type="number" />
@@ -135,6 +148,28 @@ export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
           <Field label="Base Store URL" value={form.store_base_url} onChange={(v) => set("store_base_url", v)} />
           <Field label="Tracking Parameter" value={form.tracking_parameter} onChange={(v) => set("tracking_parameter", v)} />
           <Field label="Tracking Value" value={form.tracking_value} onChange={(v) => set("tracking_value", v)} />
+
+          {/* UpPromote ref fields — read-only convenience display */}
+          {scaRef && (
+            <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+              <p className="text-xs font-medium text-muted-foreground">UpPromote Ref (parsed from template)</p>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-muted-foreground w-24 flex-shrink-0">Ref Parameter</label>
+                <code className="text-xs font-mono bg-muted px-2 py-1 rounded flex-1 truncate">{scaRef.param}</code>
+                <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => copyToClipboard(scaRef.param)}>
+                  <Copy className="w-3 h-3" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-muted-foreground w-24 flex-shrink-0">Full Ref Token</label>
+                <code className="text-xs font-mono bg-muted px-2 py-1 rounded flex-1 truncate">{scaRef.token}</code>
+                <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => copyToClipboard(scaRef.token)}>
+                  <Copy className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Notes</label>
             <Textarea value={form.program_notes} onChange={(e) => set("program_notes", e.target.value)} rows={3} />

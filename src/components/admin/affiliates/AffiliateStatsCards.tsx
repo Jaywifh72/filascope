@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MousePointerClick, TrendingUp, CalendarDays, Trophy } from "lucide-react";
 
-const REGION_OPTIONS = ["All", "AU", "UK", "US", "CA", "EU"];
+const REGION_OPTIONS = ["All", "AU", "UK", "US", "CA", "EU", "GLOBAL"];
 
 export function AffiliateStatsCards() {
   const [regionFilter, setRegionFilter] = useState("All");
