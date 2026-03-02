@@ -1,64 +1,59 @@
 
+# Replace Palette Builder "Coming Soon" with Functional Scaffold
 
-# Enhance Homepage Search to Support Brand + Material Queries
+## Overview
+Replace the placeholder content in `src/pages/HueForgePaletteBuilder.tsx` with a real tool layout matching the structural patterns from Layer Preview, TD Database, and Project Planner pages. No new components or routes needed -- just rewriting the single page file.
 
-## Problem
+## Structure (matching Layer Preview pattern exactly)
 
-The autocomplete dropdown (used on homepage and header search) only queries the `product_title` column via `ILIKE`. When a user types "Bambu Lab PLA", no product has that exact string in its title, so zero results appear. Meanwhile, the full search results page already works correctly because it uses full-text search across multiple fields.
+### Page Shell (unchanged pattern)
+- Same gradient wrapper, DocumentHead (improved SEO), BreadcrumbSchema, Breadcrumbs, HueForgeToolsNav
 
-## Root Cause
+### Hero Section
+- Badge: "Palette Builder" with Palette icon (cyan/primary style, not amber "Coming Soon")
+- H1: "HueForge Palette Builder" with `bg-gradient-to-r from-purple-400 to-primary bg-clip-text text-transparent`
+- Subtitle paragraph below
 
-The `useSearchAutocomplete` hook (line 108-111) queries:
-```
-.ilike("product_title", `%${q}%`)
-```
+### Toolbar Row
+- Flex row with gap, matching the Layer Preview toolbar (Load Preset | Copy Config | Reset):
+  - `Select` component for "Load Preset" (empty, no options)
+  - "Copy Config" button (Clipboard icon, ghost variant)
+  - "Copy Link" button (Link icon, ghost variant)
+  - "Export CSV" button (Download icon, ghost variant)
+  - "Reset" button (RotateCcw icon, ghost variant, text-destructive)
+- All buttons are non-functional scaffolds (no onClick logic beyond optional toast)
 
-This misses matches where the query spans multiple columns (e.g., "Bambu Lab" is in `vendor`, "PLA" is in `material`).
+### Main Content -- Two-Column Grid
+`grid md:grid-cols-5 gap-8` (same as Layer Preview)
 
-## Solution
+**Left Column (md:col-span-2, space-y-6):**
+1. "Add Filaments" card -- contains a Search input (disabled placeholder)
+2. "Your Palette" card -- empty state with:
+   - Palette icon (muted)
+   - "Start Building Your Palette" heading
+   - "Search for filaments above or load a preset to get started." subtext
+   - Two buttons: "Load a Preset" (outline) and "Browse TD Database" (default, with ArrowRight icon linking to /hueforge-td-database)
+3. Summary bar placeholder -- small muted card showing "0 filaments | 0 layers | TD range: --"
 
-Modify the **filaments query** in `useSearchAutocomplete.ts` to use Postgres full-text search (`textSearch` on the existing `search_vector` column) with an `ILIKE` fallback, matching the same approach used by `search_filaments_ranked`.
+**Right Column (md:col-span-3, space-y-6):**
+Three placeholder cards, each with:
+- Section heading (uppercase tracking-wide text-xs text-muted-foreground, matching Layer Preview section headers)
+- Muted placeholder text centered in a min-height area
+1. "Palette Analysis" -- "Add filaments to see coverage analysis"
+2. "Layer Preview" -- "Add filaments to see layer stacking preview"  
+3. "Shopping List" -- "Add filaments to see pricing and purchase links"
 
-### Changes
+### Bottom
+- HueForgeToolsCrossLinks (kept from current page)
+- SiteFooter (kept from current page)
 
-#### 1. `src/hooks/useSearchAutocomplete.ts` -- Filaments query (lines 97-120)
+## SEO Updates
+- title: "HueForge Palette Builder -- Build & Analyze Multi-Filament Palettes | FilaScope"
+- description: "Build and analyze multi-filament palettes for HueForge lithophane projects. Check TD coverage, find gaps, get filament suggestions, and create your shopping list."
 
-Replace the single `.ilike("product_title", ...)` with a two-step approach:
+## Files Modified
+| File | Change |
+|------|--------|
+| `src/pages/HueForgePaletteBuilder.tsx` | Full rewrite of page content (same file, new content) |
 
-1. **Primary**: Use `.textSearch('search_vector', query, { type: 'websearch' })` which matches against the pre-built tsvector (includes `product_title`, `vendor`, `material`, `finish_type`, `color_family`, `display_name`).
-2. **Fallback**: If FTS returns zero results (e.g., partial words that don't tokenize well), fall back to an `.or()` filter across `product_title`, `vendor`, `material`, and `display_name` using `ILIKE`.
-
-This ensures "Bambu Lab PLA" matches filaments where vendor="Bambu Lab" AND material="PLA".
-
-#### 2. `src/hooks/useSearchSuggestions.ts` -- Product suggestions query (lines 156-161)
-
-Apply the same fix: replace `.ilike("product_title", ...)` with `.or()` across `product_title`, `vendor`, `material`, and `display_name`. This hook is used in the older search suggestion flow.
-
-#### 3. `src/components/projects/FilamentSearchDialog.tsx` -- Project filament search (lines 42-45)
-
-Same pattern: expand the `ILIKE` to an `.or()` filter so the project filament picker also benefits from multi-field search.
-
-### No database changes needed
-
-The `search_vector` tsvector column already indexes `vendor`, `material`, `product_title`, `finish_type`, `color_family`, and `display_name`. No new indexes or migrations are required.
-
-### No UI changes
-
-The autocomplete dropdown structure, styling, and grouping logic remain identical. Only the underlying query changes.
-
-## Technical Detail
-
-The filaments query in `useSearchAutocomplete.ts` will change from:
-
-```typescript
-.ilike("product_title", `%${q}%`)
-```
-
-To:
-
-```typescript
-.or(`product_title.ilike.%${q}%,vendor.ilike.%${q}%,material.ilike.%${q}%,display_name.ilike.%${q}%`)
-```
-
-For multi-word queries like "Bambu Lab PLA", the tokens will also be split and each matched individually using `.textSearch()` first, falling back to the `.or()` approach.
-
+No new files, no route changes, no database changes needed.
