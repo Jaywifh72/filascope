@@ -2,8 +2,6 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Wand2, Database, Pipette } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs, BreadcrumbSchema } from "@/components/seo";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HUEFORGE_TOOLS } from "@/components/hueforge/HueForgeToolsData";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -49,11 +47,12 @@ export default function HueForgeTools() {
       <section className="max-w-5xl mx-auto px-4 pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {HUEFORGE_TOOLS.map((tool) => (
-            <Card
+            <Link
               key={tool.key}
-              className={`group relative overflow-hidden transition-all hover:border-primary/40 hover:shadow-lg border-l-4 ${tool.accentClass}`}
+              to={tool.href}
+              className={`group relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:border-primary/40 hover:shadow-xl hover:-translate-y-0.5 border-l-4 ${tool.accentClass} focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none cursor-pointer`}
             >
-              <CardContent className="p-6 flex flex-col gap-3">
+              <div className="p-6 flex flex-col gap-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -68,13 +67,11 @@ export default function HueForgeTools() {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">{tool.description}</p>
-                <Button asChild variant="outline" size="sm" className="self-start mt-1 group-hover:border-primary/50 group-hover:text-primary transition-colors">
-                  <Link to={tool.href}>
-                    Open Tool <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+                <span className="inline-flex items-center self-start mt-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm group-hover:border-primary/50 group-hover:text-primary transition-colors">
+                  Open Tool <ArrowRight className="w-3.5 h-3.5 ml-1.5 transition-transform duration-200 group-hover:translate-x-1" />
+                </span>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
