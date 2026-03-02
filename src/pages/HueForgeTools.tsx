@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Wand2, Database, Pipette, TrendingUp, Layers, ClipboardCheck, Eye, RefreshCw } from "lucide-react";
+import { ArrowRight, Wand2, Database, Pipette, TrendingUp, Layers, ClipboardCheck, Eye, RefreshCw, ClipboardList, Palette } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +136,44 @@ export default function HueForgeTools() {
         </div>
       </section>
 
-      {/* Getting Started */}
+      {/* Workflow Stepper */}
+      <section className="max-w-5xl mx-auto px-4 pb-12">
+        <h2 className="text-xl font-semibold mb-6">Your HueForge Workflow</h2>
+        <p className="text-sm text-muted-foreground mb-8">Follow this proven workflow to plan, build, and print stunning HueForge projects.</p>
+        <div className="flex flex-col md:flex-row md:items-start gap-0">
+          {[
+            { step: 1, title: "Plan Your Project", icon: ClipboardList, accent: "green", desc: "Start with the Project Planner to define your design and get a filament shopping list.", href: "/hueforge-project-planner" },
+            { step: 2, title: "Find & Match Colors", icon: Pipette, accent: "rose", desc: "Use Color Matcher to find filaments that match your target colors by hex code or image.", href: "/hueforge-color-matcher" },
+            { step: 3, title: "Build Your Palette", icon: Palette, accent: "amber", desc: "Combine filaments in the Palette Builder. Check TD coverage and identify gaps.", href: "/hueforge-palette-builder" },
+            { step: 4, title: "Preview & Print", icon: Layers, accent: "violet", desc: "Visualize layer stacking, then print with confidence.", href: "/hueforge-layer-preview" },
+          ].map((s, i, arr) => (
+            <div key={s.step} className="flex flex-col md:flex-row md:items-start flex-1">
+              <Link
+                to={s.href}
+                className={`group flex-1 p-4 rounded-lg bg-muted/50 border border-border transition-all duration-200 hover:bg-muted hover:border-${s.accent}-500/40`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`w-6 h-6 rounded-full bg-${s.accent}-500/10 text-${s.accent}-500 text-xs font-bold flex items-center justify-center`}>
+                    {s.step}
+                  </span>
+                  <s.icon className={`w-4 h-4 text-${s.accent}-500`} />
+                </div>
+                <h3 className="text-sm font-semibold mb-1">{s.title}</h3>
+                <p className="text-xs text-muted-foreground">{s.desc}</p>
+              </Link>
+              {i < arr.length - 1 && (
+                <>
+                  {/* Desktop connector */}
+                  <div className="hidden md:block border-t border-dashed border-border flex-none w-6 self-center mt-8" />
+                  {/* Mobile connector */}
+                  <div className="md:hidden border-l border-dashed border-border h-6 ml-3" />
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="max-w-5xl mx-auto px-4 pb-12">
         <h2 className="text-xl font-semibold mb-5">Getting Started with HueForge</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
