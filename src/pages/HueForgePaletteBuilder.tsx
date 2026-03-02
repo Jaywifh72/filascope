@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { usePaletteBuilder } from "@/hooks/usePaletteBuilder";
 import { PaletteFilamentSearch } from "@/components/hueforge/palette-builder/PaletteFilamentSearch";
 import { PaletteList } from "@/components/hueforge/palette-builder/PaletteList";
+import { PaletteAnalysis } from "@/components/hueforge/palette-builder/PaletteAnalysis";
 
 export default function HueForgePaletteBuilder() {
   const {
@@ -171,21 +172,35 @@ export default function HueForgePaletteBuilder() {
 
           {/* Right column */}
           <div className="md:col-span-3 space-y-6">
-            {[
-              { heading: "Palette Analysis", icon: BarChart3, text: "Add filaments to see coverage analysis" },
-              { heading: "Layer Preview", icon: Layers, text: "Add filaments to see layer stacking preview" },
-              { heading: "Shopping List", icon: ShoppingCart, text: "Add filaments to see pricing and purchase links" },
-            ].map((section) => (
-              <Card key={section.heading} className="border-border/60">
-                <CardContent className="p-6">
-                  <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">{section.heading}</h2>
-                  <div className="min-h-[160px] flex flex-col items-center justify-center text-center">
-                    <section.icon className="w-8 h-8 text-muted-foreground/40 mb-3" />
-                    <p className="text-sm text-muted-foreground">{section.text}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {/* Palette Analysis — live */}
+            <Card className="border-border/60">
+              <CardContent className="p-6">
+                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Palette Analysis</h2>
+                <PaletteAnalysis palette={palette} onAdd={addFilament} isFull={isFull} />
+              </CardContent>
+            </Card>
+
+            {/* Layer Preview — placeholder */}
+            <Card className="border-border/60">
+              <CardContent className="p-6">
+                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Layer Preview</h2>
+                <div className="min-h-[160px] flex flex-col items-center justify-center text-center">
+                  <Layers className="w-8 h-8 text-muted-foreground/40 mb-3" />
+                  <p className="text-sm text-muted-foreground">Add filaments to see layer stacking preview</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Shopping List — placeholder */}
+            <Card className="border-border/60">
+              <CardContent className="p-6">
+                <h2 className="uppercase tracking-wide text-xs text-muted-foreground font-semibold mb-4">Shopping List</h2>
+                <div className="min-h-[160px] flex flex-col items-center justify-center text-center">
+                  <ShoppingCart className="w-8 h-8 text-muted-foreground/40 mb-3" />
+                  <p className="text-sm text-muted-foreground">Add filaments to see pricing and purchase links</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
