@@ -38,7 +38,7 @@ export function SwatchCircle({
       <div
         className={cn(
           size,
-          'rounded-full ring-1 ring-muted-foreground/40 shrink-0',
+          'rounded-full border border-border shrink-0',
           className,
         )}
         style={{ background: NO_COLOR_GRADIENT }}
@@ -51,12 +51,7 @@ export function SwatchCircle({
     <div
       className={cn(
         size,
-        'rounded-full ring-1 shrink-0',
-        isLight
-          ? 'ring-gray-500'
-          : isDark
-            ? 'ring-white/20'
-            : 'ring-white/20',
+        'rounded-full border border-border shrink-0',
         isDark && 'shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]',
         className,
       )}

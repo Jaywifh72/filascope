@@ -232,7 +232,7 @@ export function PaletteLayerPreview({ palette }: Props) {
                 <TableCell className="text-sm">
                   <span className="flex items-center gap-1.5">
                     <span
-                      className="w-3 h-3 rounded-full border shrink-0 inline-block"
+                      className="w-3 h-3 rounded-full border border-border shrink-0 inline-block"
                       style={{ backgroundColor: r.hex }}
                     />
                     <span className="truncate max-w-[140px]">{r.name}</span>

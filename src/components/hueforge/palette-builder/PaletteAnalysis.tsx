@@ -121,8 +121,8 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
           .from('filaments')
           .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, product_handle')
           .not('transmission_distance', 'is', null)
-          .gte('transmission_distance', min)
-          .lte('transmission_distance', max)
+          .gt('transmission_distance', min)
+          .lt('transmission_distance', max)
           .order('transmission_distance', { ascending: true })
           .limit(4);
         if (paletteIds.length > 0) {
@@ -194,7 +194,7 @@ export function PaletteAnalysis({ palette, onAdd, isFull }: Props) {
                   <Tooltip delayDuration={100}>
                     <TooltipTrigger asChild>
                       <div
-                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full ring-2 ring-white shadow-md cursor-default z-10 transition-transform hover:scale-125"
+                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full ring-2 ring-white border border-border shadow-md cursor-default z-10 transition-transform hover:scale-125"
                         style={{
                           left: `${pct}%`,
                           backgroundColor: entry.color || '#808080',
