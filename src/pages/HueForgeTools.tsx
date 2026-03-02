@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Wand2, Database, Pipette } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { Breadcrumbs, BreadcrumbSchema } from "@/components/seo";
+import { Breadcrumbs } from "@/components/seo";
 import { Badge } from "@/components/ui/badge";
 import { HUEFORGE_TOOLS } from "@/components/hueforge/HueForgeToolsData";
 import { SiteFooter } from "@/components/SiteFooter";
+import { useJsonLd } from "@/components/seo/useJsonLd";
+
+const BASE_URL = "https://filascope.com";
 
 const BADGE_STYLES: Record<string, string> = {
   Popular: "bg-primary/20 text-primary border-primary/30",
@@ -18,15 +21,57 @@ const QUICK_PATHS = [
   { label: "I just need TD data", desc: "Browse the TD Database", href: "/hueforge-td-database", icon: Database },
 ];
 
+const FAQ_DATA = [
+  {
+    q: "How do I get started with HueForge?",
+    a: "If you're new to HueForge, start with FilaScope's guided Project Planner. It walks you through each step to plan your HueForge project and generates a complete filament shopping list.",
+  },
+  {
+    q: "Where can I find HueForge TD values?",
+    a: "FilaScope's TD Value Database lets you search and filter over 111 filaments by transmissivity data. It's the foundation for all HueForge planning.",
+  },
+  {
+    q: "How do I match colors for HueForge?",
+    a: "Use FilaScope's Color Matcher tool to find filaments matching any hex color or image sample, filtered by TD value.",
+  },
+];
+
 export default function HueForgeTools() {
+  // ItemList schema for the 6 tools
+  useJsonLd({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "HueForge Tools",
+    description: "FilaScope's complete toolkit for HueForge creators.",
+    numberOfItems: HUEFORGE_TOOLS.length,
+    itemListElement: HUEFORGE_TOOLS.map((tool, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: tool.name,
+      url: `${BASE_URL}${tool.href}`,
+      description: tool.description,
+    })),
+  });
+
+  // FAQPage schema
+  useJsonLd({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_DATA.map((faq) => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a,
+      },
+    })),
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <DocumentHead
         title="HueForge Tools — TD Database, Palette Builder, Color Matcher & More | FilaScope"
         description="Free HueForge tools for 3D printing. Search TD values, build filament palettes, preview layer stacking, match colors from images, and plan multicolor prints."
-      />
-      <BreadcrumbSchema
-        items={[{ name: "HueForge Tools", url: "/hueforge-tools" }]}
       />
       <Breadcrumbs
         items={[{ name: "HueForge Tools", url: "/hueforge-tools" }]}
