@@ -1262,6 +1262,7 @@ export type Database = {
       }
       brand_regional_stores: {
         Row: {
+          affiliate_priority_boost: number
           base_url: string
           brand_id: string
           created_at: string
@@ -1280,6 +1281,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          affiliate_priority_boost?: number
           base_url: string
           brand_id: string
           created_at?: string
@@ -1298,6 +1300,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          affiliate_priority_boost?: number
           base_url?: string
           brand_id?: string
           created_at?: string
