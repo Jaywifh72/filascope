@@ -36,6 +36,7 @@ import { CheaperAlternativeCallout } from '@/components/filament/CheaperAlternat
 import { useAffiliateLink } from '@/hooks/useAffiliateLink';
 import { AffiliateDiscountBanner } from '@/components/affiliate/AffiliateDiscountBanner';
 import { AffiliateDisclosure } from '@/components/affiliate/AffiliateDisclosure';
+import { AffiliateInactiveBanner } from '@/components/affiliate/AffiliateInactiveBanner';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -155,7 +156,7 @@ export function FilamentPurchaseSidebar({
   const [buyClicked, setBuyClicked] = useState(false);
 
   // New affiliate program tracking
-  const { trackAndOpen, discountCodes, hasAffiliate } = useAffiliateLink(vendor);
+  const { trackAndOpen, discountCodes, hasAffiliate, inactiveProgram } = useAffiliateLink(vendor);
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
@@ -508,10 +509,11 @@ export function FilamentPurchaseSidebar({
             productTitle={productTitle || ""}
           />
 
+          {/* Affiliate Inactive Banner (admin only) */}
+          <AffiliateInactiveBanner inactiveProgram={inactiveProgram} />
+
           {/* Affiliate Discount Banner */}
-          {discountCodes.length > 0 && (
-            <AffiliateDiscountBanner discountCodes={discountCodes} className="space-y-1.5" />
-          )}
+          <AffiliateDiscountBanner discountCodes={discountCodes} className="space-y-1.5" showEmptyState={hasAffiliate} />
 
           {/* Disclaimer */}
           <div className="pt-4 border-t border-border/40">
