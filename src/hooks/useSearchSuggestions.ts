@@ -157,7 +157,7 @@ export function useSearchSuggestions(
         const { data, error } = await supabase
           .from("filaments")
           .select("id, product_title, vendor, product_handle, material")
-          .ilike("product_title", `%${debouncedQuery}%`)
+          .or(`product_title.ilike.%${debouncedQuery}%,vendor.ilike.%${debouncedQuery}%,material.ilike.%${debouncedQuery}%,display_name.ilike.%${debouncedQuery}%`)
           .limit(30);
 
         if (error) throw error;

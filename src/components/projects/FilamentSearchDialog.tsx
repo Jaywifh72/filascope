@@ -41,7 +41,7 @@ export function FilamentSearchDialog({
       const { data, error } = await supabase
         .from("filaments")
         .select("id, product_title, vendor, material, color_hex, featured_image")
-        .ilike("product_title", `%${debouncedSearch}%`)
+        .or(`product_title.ilike.%${debouncedSearch}%,vendor.ilike.%${debouncedSearch}%,material.ilike.%${debouncedSearch}%,display_name.ilike.%${debouncedSearch}%`)
         .limit(20);
       if (error) throw error;
       return data;
