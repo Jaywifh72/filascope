@@ -177,19 +177,42 @@ export default function HueForgeTools() {
       <section className="max-w-5xl mx-auto px-4 pb-12">
         <h2 className="text-xl font-semibold mb-5">Getting Started with HueForge</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {QUICK_PATHS.map((qp) => (
-            <Link
-              key={qp.href}
-              to={qp.href}
-              className="group flex items-start gap-3 p-4 rounded-lg border border-border hover:border-primary/40 bg-card hover:bg-muted/50 transition-all"
-            >
-              <qp.icon className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <div>
-                <span className="text-sm font-medium group-hover:text-primary transition-colors">{qp.label}</span>
-                <p className="text-xs text-muted-foreground mt-0.5">{qp.desc}</p>
-              </div>
-            </Link>
-          ))}
+          {/* Card 1 — Beginners */}
+          <Link
+            to="/hueforge-project-planner"
+            className="group relative flex items-start gap-3 p-4 rounded-lg border border-green-500/30 bg-green-500/5 hover:border-green-500/50 hover:bg-green-500/10 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+          >
+            <span className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-500/15 text-green-500 border border-green-500/20">Recommended</span>
+            <Wand2 className="w-5 h-5 text-primary mt-0.5 shrink-0 group-hover:scale-110 transition-transform duration-200" />
+            <div>
+              <span className="text-sm font-medium group-hover:text-primary transition-colors">I'm new to HueForge</span>
+              <p className="text-xs text-muted-foreground mt-0.5">Start with the guided Project Planner</p>
+            </div>
+          </Link>
+          {/* Card 2 — Intermediate */}
+          <Link
+            to="/hueforge-color-matcher"
+            className="group flex items-start gap-3 p-4 rounded-lg border border-border border-l-2 border-l-rose-500/40 bg-card hover:border-primary/40 hover:bg-muted/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+          >
+            <Pipette className="w-5 h-5 text-primary mt-0.5 shrink-0 group-hover:scale-110 transition-transform duration-200" />
+            <div>
+              <span className="text-sm font-medium group-hover:text-primary transition-colors">I know what colors I need</span>
+              <p className="text-xs text-muted-foreground mt-0.5">Jump to Color Matcher</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-1">For intermediate HueForge users</p>
+            </div>
+          </Link>
+          {/* Card 3 — Experienced */}
+          <Link
+            to="/hueforge-td-database"
+            className="group flex items-start gap-3 p-4 rounded-lg border border-border border-l-2 border-l-primary/40 bg-card hover:border-primary/40 hover:bg-muted/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+          >
+            <Database className="w-5 h-5 text-primary mt-0.5 shrink-0 group-hover:scale-110 transition-transform duration-200" />
+            <div>
+              <span className="text-sm font-medium group-hover:text-primary transition-colors">I just need TD data</span>
+              <p className="text-xs text-muted-foreground mt-0.5">Browse the TD Database</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-1">For experienced makers</p>
+            </div>
+          </Link>
         </div>
       </section>
 
