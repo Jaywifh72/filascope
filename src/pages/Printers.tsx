@@ -10,6 +10,7 @@ import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
 import { useSearchContext } from "@/hooks/useSearchContext";
 import { useRegion } from "@/contexts/RegionContext";
 import { getPrinterSortPrice } from "@/utils/printerRegionalPrice";
+import { usePrinterAffiliateBoost } from "@/hooks/usePrinterAffiliateBoost";
 
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -96,7 +97,8 @@ export default function Printers() {
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
   const { region, getConversionRate, currency } = useRegion();
-  
+  const { boostMap, isEnabled: affiliateBoostEnabled } = usePrinterAffiliateBoost(region);
+
   // Scroll restoration hook (kept for potential future use)
   
   // Search analytics tracking
@@ -471,7 +473,14 @@ export default function Printers() {
     return filtered.sort((a, b) => {
       const getPrinterPrice = (p: Printer) => getPrinterSortPrice(p as any, region);
       const getVolume = (p: Printer) => (p.build_volume_x_mm || 0) * (p.build_volume_y_mm || 0) * (p.build_volume_z_mm || 0);
-      
+
+      // Affiliate boost: only on default sort (price-asc)
+      if (affiliateBoostEnabled && sortBy === "price-asc" && boostMap.size > 0) {
+        const boostA = boostMap.get(a.brand_id) ?? 0;
+        const boostB = boostMap.get(b.brand_id) ?? 0;
+        if (boostA !== boostB) return boostB - boostA;
+      }
+
       switch (sortBy) {
         case "name-asc": return a.model_name.localeCompare(b.model_name);
         case "name-desc": return b.model_name.localeCompare(a.model_name);
@@ -482,7 +491,7 @@ export default function Printers() {
         default: return 0;
       }
     });
-  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, activeChip, region, showDiscontinued]);
+  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, activeChip, region, showDiscontinued, affiliateBoostEnabled, boostMap]);
 
   const advancedFilterCount = 
     advancedFilters.brands.length +
