@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useCreateProgram, useUpdateProgram } from "@/hooks/useAffiliatePrograms";
 import type { AffiliateProgram } from "@/types/affiliate";
@@ -28,6 +29,12 @@ const EMPTY = {
   tracking_parameter: "",
   tracking_value: "",
 };
+
+/** Extract GoAffPro settings URL from notes */
+function extractSettingsUrl(notes: string): string | null {
+  const match = notes.match(/https:\/\/\S+goaffpro\.com\/settings\S*/);
+  return match ? match[0] : null;
+}
 
 export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
   const [form, setForm] = useState(EMPTY);
@@ -58,6 +65,8 @@ export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
 
   const set = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
+  const settingsUrl = extractSettingsUrl(form.program_notes);
+
   const handleSave = async () => {
     if (!form.brand_name || !form.region_code || !form.link_template) {
       toast({ title: "Missing required fields", variant: "destructive" });
@@ -85,7 +94,7 @@ export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
       } else {
         await createProgram.mutateAsync(payload);
       }
-      toast({ title: "Program saved" });
+      toast({ title: "Changes saved" });
       onOpenChange(false);
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -101,7 +110,7 @@ export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
 
         <div className="space-y-4">
           <Field label="Brand Name *" value={form.brand_name} onChange={(v) => set("brand_name", v)} />
-          <Field label="Region Code *" value={form.region_code} onChange={(v) => set("region_code", v)} placeholder="AU, US, EU…" />
+          <Field label="Region Code *" value={form.region_code} onChange={(v) => set("region_code", v)} placeholder="AU, UK, US, EU…" />
           <Field label="Affiliate ID" value={form.affiliate_id} onChange={(v) => set("affiliate_id", v)} />
           <Field label="Platform / Network" value={form.affiliate_network} onChange={(v) => set("affiliate_network", v)} placeholder="GoAffPro, Impact, Awin…" />
           <Field label="Portal URL" value={form.portal_url} onChange={(v) => set("portal_url", v)} />
@@ -130,6 +139,19 @@ export function ProgramFormDialog({ open, onOpenChange, program }: Props) {
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Notes</label>
             <Textarea value={form.program_notes} onChange={(e) => set("program_notes", e.target.value)} rows={3} />
           </div>
+
+          {/* Payment setup link parsed from notes */}
+          {settingsUrl && (
+            <a
+              href={settingsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+            >
+              Configure payment at GoAffPro Settings
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
         </div>
 
         <DialogFooter>

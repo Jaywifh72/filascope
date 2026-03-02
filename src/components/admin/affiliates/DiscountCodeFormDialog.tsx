@@ -14,6 +14,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   code: AffiliateDiscountCode | null;
   programs: AffiliateProgram[];
+  prefillProgramId?: string | null;
 }
 
 const EMPTY = {
@@ -28,7 +29,7 @@ const EMPTY = {
   description: "",
 };
 
-export function DiscountCodeFormDialog({ open, onOpenChange, code, programs }: Props) {
+export function DiscountCodeFormDialog({ open, onOpenChange, code, programs, prefillProgramId }: Props) {
   const [form, setForm] = useState(EMPTY);
   const createCode = useCreateDiscountCode();
   const updateCode = useUpdateDiscountCode();
@@ -48,9 +49,9 @@ export function DiscountCodeFormDialog({ open, onOpenChange, code, programs }: P
         description: code.description || "",
       });
     } else {
-      setForm(EMPTY);
+      setForm({ ...EMPTY, program_id: prefillProgramId || "" });
     }
-  }, [code, open]);
+  }, [code, open, prefillProgramId]);
 
   const set = (key: string, value: string | boolean) => setForm((prev) => ({ ...prev, [key]: value }));
 
