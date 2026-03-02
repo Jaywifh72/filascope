@@ -1,0 +1,1 @@
+ALTER TABLE brand_regional_stores ADD COLUMN affiliate_priority_boost integer NOT NULL DEFAULT 0;

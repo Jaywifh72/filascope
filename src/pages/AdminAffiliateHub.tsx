@@ -7,13 +7,14 @@ import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Handshake, Plus } from "lucide-react";
+import { Handshake, Plus, TrendingUp } from "lucide-react";
 import { useAffiliatePrograms } from "@/hooks/useAffiliatePrograms";
 import { AffiliateSummaryStats } from "@/components/admin/affiliate-hub/AffiliateSummaryStats";
 import { BrandAccordionItem } from "@/components/admin/affiliate-hub/BrandAccordionItem";
 import { ProgramFormDialog } from "@/components/admin/affiliate-hub/ProgramFormDialog";
 import { ClickAnalyticsTab } from "@/components/admin/affiliate-hub/ClickAnalyticsTab";
 import { BrandMappingTab } from "@/components/admin/affiliate-hub/BrandMappingTab";
+import { ProductPrioritizationTab } from "@/components/admin/affiliate-hub/ProductPrioritizationTab";
 
 const AdminAffiliateHub = () => {
   const { data: programs = [], isLoading } = useAffiliatePrograms();
@@ -53,6 +54,9 @@ const AdminAffiliateHub = () => {
               <TabsTrigger value="programs">Brand Programs</TabsTrigger>
               <TabsTrigger value="analytics">Click Analytics</TabsTrigger>
               <TabsTrigger value="mapping">Brand Mapping</TabsTrigger>
+              <TabsTrigger value="prioritization" className="gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5" /> Product Prioritization
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="programs" className="mt-4">
@@ -88,6 +92,10 @@ const AdminAffiliateHub = () => {
 
             <TabsContent value="mapping" className="mt-4">
               <BrandMappingTab />
+            </TabsContent>
+
+            <TabsContent value="prioritization" className="mt-4">
+              <ProductPrioritizationTab />
             </TabsContent>
           </Tabs>
         </div>
