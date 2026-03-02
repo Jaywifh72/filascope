@@ -201,7 +201,7 @@ export function StorePricingDisplay({
         {/* Buy Button */}
         {showBuyButton && (affiliateUrl || storePrice.productUrl) && (
           <Button
-            onClick={handleBuyClick}
+            asChild
             className={cn(
               "w-full font-bold tracking-wide",
               size === 'lg' && "h-14 text-lg",
@@ -214,9 +214,19 @@ export function StorePricingDisplay({
               "hover:-translate-y-0.5 transition-all duration-200"
             )}
           >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Buy at {storePrice.storeName}
-            <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
+            <a
+              href={affiliateUrl || storePrice.productUrl || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                handleBuyClick();
+              }}
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Buy at {storePrice.storeName}
+              <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
+            </a>
           </Button>
         )}
       </div>

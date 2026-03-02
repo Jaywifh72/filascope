@@ -256,7 +256,7 @@ export function StickyBuyBar({
             
             {/* CTA Button */}
             <Button
-              onClick={handleBuyClick}
+              asChild={stockStatus !== 'out_of_stock'}
               disabled={stockStatus === 'out_of_stock'}
               className={cn(
                 "min-w-[200px] h-[52px] px-7",
@@ -272,12 +272,33 @@ export function StickyBuyBar({
               )}
               aria-label={`Buy ${filament.product_title} from ${filament.vendor}`}
             >
-              <ShoppingCart className="w-[18px] h-[18px] mr-2.5" />
-              <span>BUY NOW</span>
-              <span className="ml-3 pl-3 border-l border-primary-foreground/20 flex items-center gap-1.5 text-sm font-semibold opacity-80">
-                <ExternalLink className="w-3.5 h-3.5" />
-                {displayStoreName}
-              </span>
+              {stockStatus !== 'out_of_stock' ? (
+                <a
+                  href={affiliateUrl || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleBuyClick();
+                  }}
+                >
+                  <ShoppingCart className="w-[18px] h-[18px] mr-2.5" />
+                  <span>BUY NOW</span>
+                  <span className="ml-3 pl-3 border-l border-primary-foreground/20 flex items-center gap-1.5 text-sm font-semibold opacity-80">
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    {displayStoreName}
+                  </span>
+                </a>
+              ) : (
+                <span>
+                  <ShoppingCart className="w-[18px] h-[18px] mr-2.5" />
+                  <span>BUY NOW</span>
+                  <span className="ml-3 pl-3 border-l border-primary-foreground/20 flex items-center gap-1.5 text-sm font-semibold opacity-80">
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    {displayStoreName}
+                  </span>
+                </span>
+              )}
             </Button>
           </div>
         </div>
@@ -331,7 +352,7 @@ export function StickyBuyBar({
 
           {/* Full-width button */}
           <Button
-            onClick={handleBuyClick}
+            asChild={stockStatus !== 'out_of_stock'}
             disabled={stockStatus === 'out_of_stock'}
             className={cn(
               "w-full h-14",
@@ -345,10 +366,29 @@ export function StickyBuyBar({
             )}
             aria-label={`Buy ${filament.product_title} from ${displayStoreName}`}
           >
-            <ShoppingCart className="w-5 h-5 mr-2 flex-shrink-0" />
-            <span className="truncate">
-              Buy{formattedPrice ? ` — ${formattedPrice}/kg` : ` at ${displayStoreName}`}
-            </span>
+            {stockStatus !== 'out_of_stock' ? (
+              <a
+                href={affiliateUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleBuyClick();
+                }}
+              >
+                <ShoppingCart className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="truncate">
+                  Buy{formattedPrice ? ` — ${formattedPrice}/kg` : ` at ${displayStoreName}`}
+                </span>
+              </a>
+            ) : (
+              <span>
+                <ShoppingCart className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="truncate">
+                  Buy{formattedPrice ? ` — ${formattedPrice}/kg` : ` at ${displayStoreName}`}
+                </span>
+              </span>
+            )}
           </Button>
         </div>
       </div>

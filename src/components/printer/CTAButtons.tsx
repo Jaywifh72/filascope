@@ -63,16 +63,12 @@ export function CTAButtons({
             href={affiliateUrl}
             target="_blank"
             rel="nofollow sponsored noopener noreferrer"
-            className="block w-full"
             onClick={handleBuyClick}
+            className={`w-full ${buttonHeight} ${buttonPadding} bg-primary text-primary-foreground ${fontSize} font-semibold rounded-lg flex items-center justify-center gap-2 whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group`}
           >
-            <button
-              className={`w-full ${buttonHeight} ${buttonPadding} bg-primary text-primary-foreground ${fontSize} font-semibold rounded-lg flex items-center justify-center gap-2 whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group`}
-            >
-              <ShoppingCart className={iconSize} />
-              {storeName ? `Buy at ${storeName}` : 'Buy Now'}
-              <ExternalLink className={`${iconSize} opacity-70`} />
-            </button>
+            <ShoppingCart className={iconSize} />
+            {storeName ? `Buy at ${storeName}` : 'Buy Now'}
+            <ExternalLink className={`${iconSize} opacity-70`} />
           </a>
         </div>
       )}

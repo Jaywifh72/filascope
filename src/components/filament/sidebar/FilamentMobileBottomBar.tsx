@@ -118,8 +118,8 @@ export function FilamentMobileBottomBar({
           {/* Buy button - always "Buy at [Store]" */}
           {affiliateUrl ? (
             <Button 
+              asChild
               size="lg" 
-              onClick={handleBuyClick}
               variant="default"
               className={cn(
                 "gap-2 px-4 min-h-11",
@@ -128,9 +128,19 @@ export function FilamentMobileBottomBar({
                 "shadow-[0_2px_8px_rgba(0,212,212,0.2)]"
               )}
             >
-              <ShoppingCart className="h-4 w-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Buy at {cleanStoreName}</span>
-              <ExternalLink className="h-3 w-3 opacity-70 flex-shrink-0" />
+              <a
+                href={builtUrl || affiliateUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleBuyClick();
+                }}
+              >
+                <ShoppingCart className="h-4 w-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">Buy at {cleanStoreName}</span>
+                <ExternalLink className="h-3 w-3 opacity-70 flex-shrink-0" />
+              </a>
             </Button>
           ) : (
             <Button size="lg" disabled className="gap-2 px-4 opacity-50">
