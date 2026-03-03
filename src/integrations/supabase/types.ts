@@ -1542,6 +1542,60 @@ export type Database = {
           },
         ]
       }
+      brand_scraping_configs: {
+        Row: {
+          adapter_key: string
+          base_url: string
+          brand_id: string
+          brand_name: string
+          created_at: string | null
+          default_material_type: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          platform: string
+          regional_url_pattern: Json | null
+          scrape_method: string
+          spec_extraction: Json | null
+          updated_at: string | null
+          variant_mapping: Json
+        }
+        Insert: {
+          adapter_key: string
+          base_url: string
+          brand_id: string
+          brand_name: string
+          created_at?: string | null
+          default_material_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          platform: string
+          regional_url_pattern?: Json | null
+          scrape_method?: string
+          spec_extraction?: Json | null
+          updated_at?: string | null
+          variant_mapping: Json
+        }
+        Update: {
+          adapter_key?: string
+          base_url?: string
+          brand_id?: string
+          brand_name?: string
+          created_at?: string | null
+          default_material_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          platform?: string
+          regional_url_pattern?: Json | null
+          scrape_method?: string
+          spec_extraction?: Json | null
+          updated_at?: string | null
+          variant_mapping?: Json
+        }
+        Relationships: []
+      }
       brand_sync_config: {
         Row: {
           brand_id: string
@@ -3121,6 +3175,151 @@ export type Database = {
             columns: ["retailer_id"]
             isOneToOne: false
             referencedRelation: "retailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filament_onboarding_items: {
+        Row: {
+          admin_override_data: Json | null
+          color_name: string | null
+          created_at: string | null
+          display_name: string | null
+          error_message: string | null
+          existing_filament_id: string | null
+          extracted_data: Json
+          id: string
+          image_url: string | null
+          inserted_filament_id: string | null
+          is_duplicate: boolean | null
+          job_id: string
+          material_type: string | null
+          price_aud: number | null
+          price_cad: number | null
+          price_eur: number | null
+          price_gbp: number | null
+          price_usd: number | null
+          status: string
+          variant_sku: string | null
+        }
+        Insert: {
+          admin_override_data?: Json | null
+          color_name?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          error_message?: string | null
+          existing_filament_id?: string | null
+          extracted_data: Json
+          id?: string
+          image_url?: string | null
+          inserted_filament_id?: string | null
+          is_duplicate?: boolean | null
+          job_id: string
+          material_type?: string | null
+          price_aud?: number | null
+          price_cad?: number | null
+          price_eur?: number | null
+          price_gbp?: number | null
+          price_usd?: number | null
+          status?: string
+          variant_sku?: string | null
+        }
+        Update: {
+          admin_override_data?: Json | null
+          color_name?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          error_message?: string | null
+          existing_filament_id?: string | null
+          extracted_data?: Json
+          id?: string
+          image_url?: string | null
+          inserted_filament_id?: string | null
+          is_duplicate?: boolean | null
+          job_id?: string
+          material_type?: string | null
+          price_aud?: number | null
+          price_cad?: number | null
+          price_eur?: number | null
+          price_gbp?: number | null
+          price_usd?: number | null
+          status?: string
+          variant_sku?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_onboarding_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "filament_onboarding_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filament_onboarding_jobs: {
+        Row: {
+          admin_user_id: string | null
+          brand_id: string
+          completed_at: string | null
+          config_id: string | null
+          created_at: string | null
+          duplicate_count: number | null
+          extracted_filaments: Json | null
+          extraction_errors: Json | null
+          id: string
+          inserted_count: number | null
+          raw_data: Json | null
+          selected_filament_ids: string[] | null
+          skipped_count: number | null
+          source_url: string
+          started_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_user_id?: string | null
+          brand_id: string
+          completed_at?: string | null
+          config_id?: string | null
+          created_at?: string | null
+          duplicate_count?: number | null
+          extracted_filaments?: Json | null
+          extraction_errors?: Json | null
+          id?: string
+          inserted_count?: number | null
+          raw_data?: Json | null
+          selected_filament_ids?: string[] | null
+          skipped_count?: number | null
+          source_url: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_user_id?: string | null
+          brand_id?: string
+          completed_at?: string | null
+          config_id?: string | null
+          created_at?: string | null
+          duplicate_count?: number | null
+          extracted_filaments?: Json | null
+          extraction_errors?: Json | null
+          id?: string
+          inserted_count?: number | null
+          raw_data?: Json | null
+          selected_filament_ids?: string[] | null
+          skipped_count?: number | null
+          source_url?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_onboarding_jobs_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "brand_scraping_configs"
             referencedColumns: ["id"]
           },
         ]
