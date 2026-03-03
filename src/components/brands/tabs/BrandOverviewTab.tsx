@@ -3,7 +3,7 @@ import { BrandGuidesLinks } from "@/components/brands/BrandGuidesLinks";
 import { Badge } from "@/components/ui/badge";
 import { 
   Zap, Leaf, Cpu, Package, Layers, ArrowRight, 
-  ChevronLeft, ChevronRight, BadgeCheck, TrendingUp, GitCompareArrows
+  ChevronLeft, ChevronRight, BadgeCheck, TrendingUp, GitCompareArrows, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -15,6 +15,64 @@ import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization"
 import { useCompare } from "@/hooks/useCompare";
 import { cn } from "@/lib/utils";
 import { normalizeColorHex } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+// =============================================
+// Material Category Grouping
+// =============================================
+
+interface MaterialCategory {
+  id: string;
+  name: string;
+  colorClass: string;
+  dotClass: string;
+  match: (mat: string) => boolean;
+}
+
+const MATERIAL_CATEGORIES: MaterialCategory[] = [
+  {
+    id: 'fire-rated',
+    name: 'Fire Rated',
+    colorClass: 'bg-red-400',
+    dotClass: 'bg-red-400',
+    match: (m) => /flameguard|fr\s*v0|fr-/i.test(m),
+  },
+  {
+    id: 'eco',
+    name: 'Eco & Recycled',
+    colorClass: 'bg-emerald-400',
+    dotClass: 'bg-emerald-400',
+    match: (m) => /^r-|^r(?=pla|petg|abs)/i.test(m) || /\b(bio|eco|recycled)\b/i.test(m),
+  },
+  {
+    id: 'flexible',
+    name: 'Flexible',
+    colorClass: 'bg-green-400',
+    dotClass: 'bg-green-400',
+    match: (m) => /s-flex|tpu|tpe|\bflex\b/i.test(m),
+  },
+  {
+    id: 'specialty',
+    name: 'Specialty',
+    colorClass: 'bg-purple-400',
+    dotClass: 'bg-purple-400',
+    match: (m) => /silk|glitter|glow|metal|wood|crystal|thermoactive|stone|galaxy|marble|iridescent/i.test(m),
+  },
+  {
+    id: 'engineering',
+    name: 'Engineering',
+    colorClass: 'bg-amber-400',
+    dotClass: 'bg-amber-400',
+    match: (m) => /\b(asa|pa\b|nylon|pc\b|pctg|abs)\b/i.test(m),
+  },
+  {
+    id: 'standard',
+    name: 'Standard',
+    colorClass: 'bg-cyan-400',
+    dotClass: 'bg-cyan-400',
+    match: () => true, // default fallback
+  },
+];
 
 // Helper: convert material name to URL slug (matches materialSlugUtils.ts pattern)
 const materialToSlug = (mat: string): string =>
@@ -172,6 +230,19 @@ export function BrandOverviewTab({
       }
     });
     return counts;
+  }, [groupedProducts]);
+
+  // Min price per material (USD) for tooltips
+  const materialPriceData = useMemo(() => {
+    const prices: Record<string, number> = {};
+    groupedProducts.forEach((product) => {
+      if (product.material && product.priceRange?.min != null) {
+        if (prices[product.material] === undefined || product.priceRange.min < prices[product.material]) {
+          prices[product.material] = product.priceRange.min;
+        }
+      }
+    });
+    return prices;
   }, [groupedProducts]);
 
   // Carousel scroll handlers
@@ -424,39 +495,183 @@ export function BrandOverviewTab({
         </div>
       )}
 
-      {/* Materials Offered Section */}
+      {/* Materials Offered Section — Grouped by Category */}
       {availableMaterials.length > 0 && (
-        <div id="materials-offered">
-          <h2 className="text-lg font-semibold text-white mb-4">Materials Offered</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {availableMaterials.map((material) => (
-              <a
-                key={material}
-                href={`/materials/${materialToSlug(material)}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  onFilterByMaterial(material);
-                }}
-                title={material}
-                className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 text-left hover:border-primary/50 hover:bg-gray-800/50 transition-all group min-h-[72px] flex flex-col justify-center"
-              >
-                <div className="flex items-start gap-2 mb-1">
-                  <Layers className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm font-semibold text-white group-hover:text-primary transition-colors line-clamp-2">
-                    {material}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-400">
-                  {(materialCounts[material] || 0) === 1 ? '1 product' : `${materialCounts[material] || 0} products`}
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
+        <MaterialsGroupedSection
+          availableMaterials={availableMaterials}
+          materialCounts={materialCounts}
+          materialPriceData={materialPriceData}
+          onFilterByMaterial={onFilterByMaterial}
+          pricePrefix={pricePrefix}
+          formatPriceFn={formatPrice}
+          convertUsdPrice={convertUsdPrice}
+        />
       )}
 
       {/* Brand Guides Links — SEO cross-linking to relevant buying guides */}
       <BrandGuidesLinks brandName={brandName} />
+    </div>
+  );
+}
+
+// =============================================
+// Materials Grouped Section Component
+// =============================================
+
+interface MaterialsGroupedSectionProps {
+  availableMaterials: string[];
+  materialCounts: Record<string, number>;
+  materialPriceData: Record<string, number>;
+  onFilterByMaterial: (material: string) => void;
+  pricePrefix: string;
+  formatPriceFn: (amount: number) => string;
+  convertUsdPrice: (usd: number) => number;
+}
+
+function MaterialsGroupedSection({
+  availableMaterials,
+  materialCounts,
+  materialPriceData,
+  onFilterByMaterial,
+  pricePrefix,
+  formatPriceFn,
+  convertUsdPrice,
+}: MaterialsGroupedSectionProps) {
+  // Group materials into categories
+  const materialGroups = useMemo(() => {
+    const groups: Record<string, string[]> = {};
+    MATERIAL_CATEGORIES.forEach(c => { groups[c.id] = []; });
+
+    for (const mat of availableMaterials) {
+      for (const cat of MATERIAL_CATEGORIES) {
+        if (cat.match(mat)) {
+          groups[cat.id].push(mat);
+          break;
+        }
+      }
+    }
+
+    return MATERIAL_CATEGORIES
+      .filter(c => groups[c.id].length > 0)
+      .map(c => ({
+        ...c,
+        materials: groups[c.id].sort((a, b) => a.localeCompare(b)),
+      }));
+  }, [availableMaterials]);
+
+  // First 3 non-empty groups expanded by default
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
+    return new Set(materialGroups.slice(0, 3).map(g => g.id));
+  });
+
+  const allExpanded = materialGroups.every(g => expandedGroups.has(g.id));
+
+  const toggleGroup = (id: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allExpanded) {
+      setExpandedGroups(new Set(materialGroups.slice(0, 3).map(g => g.id)));
+    } else {
+      setExpandedGroups(new Set(materialGroups.map(g => g.id)));
+    }
+  };
+
+  return (
+    <div id="materials-offered">
+      <h2 className="text-lg font-semibold text-white mb-4">Materials Offered</h2>
+      <div className="space-y-3">
+        {materialGroups.map((group) => {
+          const isExpanded = expandedGroups.has(group.id);
+          return (
+            <div key={group.id}>
+              {/* Group Header */}
+              <button
+                onClick={() => toggleGroup(group.id)}
+                className="flex items-center gap-2 w-full text-left mb-2 group/header"
+              >
+                <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", group.dotClass)} />
+                <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">
+                  {group.name}
+                </span>
+                <span className="text-xs text-gray-600">({group.materials.length})</span>
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    "text-gray-500 transition-transform duration-200 ml-auto",
+                    !isExpanded && "-rotate-90"
+                  )}
+                />
+              </button>
+
+              {/* Group Content — always in DOM for SEO */}
+              <div className={cn(
+                "grid transition-all duration-300 ease-out",
+                isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+              )}>
+                <div className="overflow-hidden">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                    <TooltipProvider delayDuration={200}>
+                      {group.materials.map((material) => {
+                        const count = materialCounts[material] || 0;
+                        const minPriceUsd = materialPriceData[material];
+                        const tooltipText = minPriceUsd != null
+                          ? `${count} product${count !== 1 ? 's' : ''} from ${pricePrefix}${formatPriceFn(convertUsdPrice(minPriceUsd))}`
+                          : `${count} product${count !== 1 ? 's' : ''}`;
+
+                        return (
+                          <Tooltip key={material}>
+                            <TooltipTrigger asChild>
+                              <a
+                                href={`/materials/${materialToSlug(material)}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  onFilterByMaterial(material);
+                                }}
+                                title={material}
+                                className="bg-gray-800/30 border border-gray-700 rounded-lg px-3 py-2.5 text-left hover:bg-gray-700/60 hover:border-cyan-500/30 transition-all group flex items-center gap-2"
+                              >
+                                <span className={cn("w-2 h-2 rounded-full flex-shrink-0", group.dotClass)} />
+                                <div className="min-w-0 flex-1">
+                                  <span className="text-sm font-medium text-white group-hover:text-primary transition-colors line-clamp-1 block">
+                                    {material}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {count === 1 ? '1 product' : `${count} products`}
+                                  </span>
+                                </div>
+                              </a>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">
+                              {tooltipText}
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </TooltipProvider>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Show all / Show less toggle */}
+      {materialGroups.length > 3 && (
+        <button
+          onClick={toggleAll}
+          className="mt-4 text-cyan-400 hover:text-cyan-300 text-sm transition-colors"
+        >
+          {allExpanded ? 'Show less' : `Show all ${availableMaterials.length} materials`}
+        </button>
+      )}
     </div>
   );
 }
