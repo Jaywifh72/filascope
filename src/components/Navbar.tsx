@@ -45,8 +45,8 @@ const Navbar = () => {
      let ticking = false;
      const handleScroll = () => {
        const scrollY = window.scrollY;
-       setHasScrolled(scrollY > 80);
-       setIsCompact(scrollY > 100);
+    setHasScrolled(scrollY > 20);
+        setIsCompact(scrollY > 100);
        setShowNavSearch(scrollY > 300);
        lastScrollY = scrollY;
      };
@@ -252,13 +252,11 @@ const Navbar = () => {
   // Flattened items for tablet/mobile "More" dropdown
   const learnItemsFlat = learnMenuSections.flatMap(section => section.items);
   return <>
-      <header>
       <nav className={cn(
-         "sticky top-0 z-50 transition-all duration-200 ease-out",
-         isCompact
-           ? "bg-background/98 backdrop-blur-xl border-b border-border/60 shadow-xl shadow-black/20"
-           : "bg-background/95 backdrop-blur-md shadow-sm",
-         hasScrolled ? "border-b border-border/50" : "border-b border-transparent"
+         "sticky top-0 z-50 transition-all duration-300 ease-out will-change-transform",
+         hasScrolled
+           ? "bg-background/95 backdrop-blur-xl shadow-lg shadow-black/20 border-b border-border/40"
+           : "bg-transparent border-b border-transparent shadow-none"
       )} aria-label="Main navigation">
         {/* Bottom border for depth */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
@@ -759,7 +757,6 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-      </header>
       
       {/* Trending Panel */}
       <TrendingPanel isOpen={trendingPanel.isOpen} onClose={trendingPanel.closePanel} selectedTab={trendingPanel.selectedTab} onTabChange={trendingPanel.setSelectedTab} activeTrends={trendingPanel.activeTrends} predictions={trendingPanel.predictions} isLoading={trendingPanel.isLoading} error={trendingPanel.error} viewedTrendIds={trendingPanel.viewedTrendIds} />
