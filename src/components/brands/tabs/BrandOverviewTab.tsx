@@ -3,13 +3,13 @@ import { BrandGuidesLinks } from "@/components/brands/BrandGuidesLinks";
 import { Badge } from "@/components/ui/badge";
 import { 
   Zap, Leaf, Cpu, Package, Layers, ArrowRight, 
-  ChevronLeft, ChevronRight, BadgeCheck, TrendingUp, GitCompareArrows, ChevronDown
+  ChevronLeft, ChevronRight, BadgeCheck, TrendingUp, GitCompareArrows, ChevronDown, Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Link, useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import { useRegion } from "@/contexts/RegionContext";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
 import { useCompare } from "@/hooks/useCompare";
@@ -97,6 +97,7 @@ interface BrandOverviewTabProps {
   hasHighSpeedProducts: boolean;
   hasEcoSpools: boolean;
   hasRFID: boolean;
+  hasHueForgeData?: boolean;
   isVerified?: boolean;
   onViewAllProducts: () => void;
   onFilterByMaterial: (material: string) => void;
@@ -106,6 +107,8 @@ interface HighlightCard {
   icon: React.ReactNode;
   title: string;
   description: string;
+  onClick?: () => void;
+  ariaLabel?: string;
 }
 
 /** Get up to 5 unique color hexes from variants */
@@ -133,6 +136,7 @@ export function BrandOverviewTab({
   hasHighSpeedProducts,
   hasEcoSpools,
   hasRFID,
+  hasHueForgeData = false,
   isVerified = false,
   onViewAllProducts,
   onFilterByMaterial,
@@ -141,6 +145,8 @@ export function BrandOverviewTab({
   const { formatPrice, convertPrice, currency, hasRates } = useRegion();
   const { addItem, isInCompare, isFull } = useCompare();
   const carouselRef = useRef<HTMLDivElement>(null);
+  const highlightsRef = useRef<HTMLDivElement>(null);
+  const [highlightsVisible, setHighlightsVisible] = useState(false);
 
   // Convert USD price range to regional currency
   const convertUsdPrice = useCallback((usdPrice: number): number => {
@@ -152,6 +158,23 @@ export function BrandOverviewTab({
   const pricePrefix = isConverted ? '~' : '';
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+
+  // IntersectionObserver for highlight cards staggered animation
+  useEffect(() => {
+    const el = highlightsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHighlightsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Build dynamic highlights based on brand data — priority order
   const highlights = useMemo<HighlightCard[]>(() => {
@@ -170,12 +193,16 @@ export function BrandOverviewTab({
         icon: <Package className="w-6 h-6" />,
         title: "Extensive Catalog",
         description: `${groupedProducts.length} products across ${availableMaterials.length} material types`,
+        onClick: onViewAllProducts,
+        ariaLabel: "View all products",
       });
     } else if (groupedProducts.length >= 10) {
       candidates.push({
         icon: <Package className="w-6 h-6" />,
         title: "Wide Selection",
         description: `${groupedProducts.length} products across ${availableMaterials.length} material ${availableMaterials.length === 1 ? 'type' : 'types'}`,
+        onClick: onViewAllProducts,
+        ariaLabel: "View all products",
       });
     }
 
@@ -184,6 +211,18 @@ export function BrandOverviewTab({
         icon: <Zap className="w-6 h-6" />,
         title: "High-Speed Ready",
         description: "Includes filaments optimized for high-speed printing",
+        onClick: () => navigate(`/filaments?vendor=${encodeURIComponent(brandName)}&speed=high`),
+        ariaLabel: "View high-speed filaments",
+      });
+    }
+
+    if (hasHueForgeData) {
+      candidates.push({
+        icon: <Palette className="w-6 h-6" />,
+        title: "HueForge Ready",
+        description: "TD values available for color-accurate prints",
+        onClick: () => navigate('/hueforge-tools'),
+        ariaLabel: "Explore HueForge tools",
       });
     }
 
@@ -212,7 +251,7 @@ export function BrandOverviewTab({
     }
 
     return candidates.slice(0, 4);
-  }, [groupedProducts.length, availableMaterials.length, hasHighSpeedProducts, hasEcoSpools, hasRFID, isVerified]);
+  }, [groupedProducts.length, availableMaterials.length, hasHighSpeedProducts, hasEcoSpools, hasRFID, hasHueForgeData, isVerified, onViewAllProducts, navigate, brandName]);
 
   // Sort products by variant count (most colors first) for popularity
   const popularProducts = useMemo(() => {
@@ -300,15 +339,30 @@ export function BrandOverviewTab({
   return (
     <div className="space-y-8">
       {/* Brand Highlights Section - only show with 2+ highlights */}
-      {highlights.length >= 2 && <div>
-        <h2 className="text-lg font-semibold text-white mb-4">Brand Highlights</h2>
+      {highlights.length >= 2 && <div ref={highlightsRef}>
+        <h2 className="text-lg font-semibold text-white mb-4 border-l-[3px] border-cyan-500 pl-3">Brand Highlights</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {highlights.map((highlight, idx) => (
             <div
               key={idx}
-              className="bg-gray-800/30 border border-gray-700 rounded-xl p-6 hover:border-primary/30 hover:bg-gray-800/50 transition-all duration-200"
+              className={cn(
+                "relative bg-gray-800/30 border border-gray-700 rounded-xl p-6 group/highlight overflow-hidden",
+                "transition-all duration-500 ease-out",
+                highlightsVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-5",
+                highlight.onClick && "cursor-pointer hover:bg-muted/30"
+              )}
+              style={{ transitionDelay: highlightsVisible ? `${idx * 100}ms` : '0ms' }}
+              onClick={highlight.onClick}
+              role={highlight.onClick ? "button" : undefined}
+              aria-label={highlight.ariaLabel}
+              tabIndex={highlight.onClick ? 0 : undefined}
+              onKeyDown={highlight.onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); highlight.onClick?.(); } } : undefined}
             >
-              <div className="text-primary mb-3">
+              {/* Top accent line — visible on hover */}
+              <div className="absolute top-0 left-4 w-10 h-[3px] bg-cyan-500 rounded-b opacity-0 group-hover/highlight:opacity-100 transition-opacity duration-300" />
+              <div className="text-primary mb-3 transition-opacity duration-700 group-hover/highlight:animate-pulse">
                 {highlight.icon}
               </div>
               <div className="text-base font-semibold text-white mb-1">
@@ -326,7 +380,7 @@ export function BrandOverviewTab({
       {popularProducts.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Popular Products</h2>
+            <h2 className="text-lg font-semibold text-white border-l-[3px] border-cyan-500 pl-3">Popular Products</h2>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -585,7 +639,7 @@ function MaterialsGroupedSection({
 
   return (
     <div id="materials-offered">
-      <h2 className="text-lg font-semibold text-white mb-4">Materials Offered</h2>
+      <h2 className="text-lg font-semibold text-white mb-4 border-l-[3px] border-cyan-500 pl-3">Materials Offered</h2>
       <div className="space-y-3">
         {materialGroups.map((group) => {
           const isExpanded = expandedGroups.has(group.id);

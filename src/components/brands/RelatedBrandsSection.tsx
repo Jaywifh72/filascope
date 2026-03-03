@@ -50,7 +50,7 @@ export function RelatedBrandsSection({ brandName }: RelatedBrandsSectionProps) {
 
   return (
     <section className="mt-12 pt-10 border-t border-border">
-      <h2 className="text-xl font-bold mb-1">Related Brands</h2>
+      <h2 className="text-xl font-bold mb-1 border-l-[3px] border-cyan-500 pl-3">Related Brands</h2>
       <p className="text-sm text-muted-foreground mb-6">
         Explore similar filament manufacturers and competitors
       </p>
