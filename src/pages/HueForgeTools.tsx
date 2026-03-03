@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Wand2, Database, Pipette, TrendingUp, Layers, ClipboardCheck, Eye, RefreshCw, ClipboardList, Palette, ChevronDown } from "lucide-react";
+import { ArrowRight, Wand2, Database, Pipette, TrendingUp, Layers, ClipboardCheck, Eye, RefreshCw, ClipboardList, Palette, ChevronDown, BookOpen, Trophy, Ruler, Sun } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
 import { Badge } from "@/components/ui/badge";
@@ -231,19 +231,24 @@ export default function HueForgeTools() {
       {/* Learn More */}
       <section className="max-w-5xl mx-auto px-4 pb-16">
         <h2 className="text-xl font-semibold mb-4">Learn More</h2>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { name: "What is HueForge TD?", href: "/guides/what-is-hueforge-td" },
-            { name: "Best Filaments for HueForge", href: "/guides/best-filaments-for-hueforge" },
-            { name: "How to Measure TD", href: "/guides/how-to-measure-filament-td" },
-            { name: "Best White Filaments for HueForge", href: "/guides/best-white-filaments-for-hueforge" },
+            { name: "What is HueForge TD?", desc: "Understand transmissivity and why it matters", href: "/guides/what-is-hueforge-td", icon: BookOpen },
+            { name: "Best Filaments for HueForge", desc: "Top-rated filaments ranked by TD accuracy", href: "/guides/best-filaments-for-hueforge", icon: Trophy },
+            { name: "How to Measure TD", desc: "DIY methods to measure your filament's TD", href: "/guides/how-to-measure-filament-td", icon: Ruler },
+            { name: "Best White Filaments for HueForge", desc: "The best base layers for vibrant prints", href: "/guides/best-white-filaments-for-hueforge", icon: Sun },
           ].map((g) => (
             <Link
               key={g.href}
               to={g.href}
-              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+              className="group p-3 rounded-lg border border-border bg-card hover:border-primary/30 hover:bg-muted/50 transition-all duration-200 flex flex-col gap-1"
             >
-              {g.name} <ArrowRight className="w-3 h-3" />
+              <div className="flex items-center gap-2">
+                <g.icon className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">{g.name}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{g.desc}</p>
+              <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-1 transition-transform mt-1" />
             </Link>
           ))}
         </div>
