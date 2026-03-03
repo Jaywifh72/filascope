@@ -23,16 +23,28 @@ const QUICK_PATHS = [
 
 const FAQ_DATA = [
   {
+    q: "What is HueForge and how does it work?",
+    a: "HueForge is a software tool that lets you create stunning multi-color 3D prints by stacking filament layers of different colors and opacities. It uses Transmission Distance (TD) values to calculate how light passes through each layer, predicting exactly how colors will blend in the finished print. This lets you create lithophanes, portraits, and artistic prints with remarkable color depth using a standard single-extruder 3D printer.",
+  },
+  {
+    q: "What are HueForge TD values and why do they matter?",
+    a: "TD (Transmission Distance) values measure how far light travels through a single layer of filament, expressed in millimeters. Lower TD means more opaque filament, higher TD means more translucent. TD values are the single most important specification for HueForge projects because they determine how colors blend when layered. Without accurate TD values, your print colors won't match your design — making a reliable TD database essential for every HueForge artist.",
+  },
+  {
+    q: "Where can I find HueForge TD values for my filament?",
+    a: "FilaScope's TD Value Database is the largest public collection of filament Transmission Distance values, covering 111+ filaments across 48+ brands. You can search by brand, material type, color, or TD range. Each filament entry includes verified TD values alongside pricing, material specs, and retailer availability. Visit the TD Value Database to search for your filament.",
+  },
+  {
+    q: "What is the best filament for HueForge?",
+    a: "The best filament for HueForge depends on your project. For base layers, you want high-TD (translucent) filaments — white PLA typically works best. For top detail layers, you want low-TD (opaque) filaments for strong contrast. Popular choices include Polymaker PolyTerra PLA for its consistent TD values, Bambu Lab PLA Basic for affordability, and SUNLU PLA for wide color selection. Use FilaScope's Palette Builder to check TD coverage for any combination of filaments.",
+  },
+  {
+    q: "How do I measure my filament's TD value?",
+    a: "You can measure TD by printing a calibration model (a thin-wall test print) and measuring light transmission with a lux meter or the HueForge calibration tool built into the software. Alternatively, you can use FilaScope's TD Value Database which tracks community-verified TD values so you don't need to measure every spool yourself. For filaments not yet in the database, our guide on How to Measure TD walks you through the DIY process step by step.",
+  },
+  {
     q: "How do I get started with HueForge?",
-    a: "If you're new to HueForge, start with FilaScope's guided Project Planner. It walks you through each step to plan your HueForge project and generates a complete filament shopping list.",
-  },
-  {
-    q: "Where can I find HueForge TD values?",
-    a: "FilaScope's TD Value Database lets you search and filter over 111 filaments by transmissivity data. It's the foundation for all HueForge planning.",
-  },
-  {
-    q: "How do I match colors for HueForge?",
-    a: "Use FilaScope's Color Matcher tool to find filaments matching any hex color or image sample, filtered by TD value.",
+    a: "Start by choosing an image, then use FilaScope's Project Planner to plan your layers and generate a filament shopping list. Next, use the Color Matcher to find filaments matching your target colors filtered by TD value. Build your palette in the Palette Builder to check TD coverage and identify gaps. Finally, preview your layer stacking before printing. FilaScope's tools guide you through every step — from first project to advanced multi-layer prints.",
   },
 ];
 
@@ -293,6 +305,19 @@ export default function HueForgeTools() {
               <p className="text-xs text-muted-foreground">{g.desc}</p>
               <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-1 transition-transform mt-1" />
             </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="max-w-5xl mx-auto px-4 pb-16">
+        <h2 className="text-xl font-semibold mb-6">Frequently Asked Questions About HueForge &amp; TD Values</h2>
+        <div className="space-y-6">
+          {FAQ_DATA.map((faq) => (
+            <div key={faq.q}>
+              <h3 className="text-sm font-semibold text-foreground mb-1.5">{faq.q}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+            </div>
           ))}
         </div>
       </section>
