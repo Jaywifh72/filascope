@@ -5,7 +5,9 @@ import { toBrandSlug, isEncodedBrandName } from "@/utils/brandSlug";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw, Package, ArrowRight } from "lucide-react";
+import { BrandDetailSkeleton } from "@/components/brands/BrandDetailSkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DetailBreadcrumb } from "@/components/navigation/DetailBreadcrumb";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
@@ -599,6 +601,14 @@ const BrandDetail = () => {
     return regions.length > 0 ? regions : ['US'];
   }, [filaments]);
 
+  // Loading state — show skeleton while filaments are fetching
+  if (isLoading) {
+    return <BrandDetailSkeleton />;
+  }
+
+  // Empty product state — brand exists but has no indexed products
+  const hasNoProducts = !filaments || filaments.length === 0;
+
   return (
     <div className="min-h-screen p-8">
       {/* Breadcrumb Schema - now handled by DetailBreadcrumb */}
@@ -769,6 +779,18 @@ const BrandDetail = () => {
 
         {/* Tab Content — all panels always in DOM for crawler discoverability */}
         <div className="mt-6">
+          {hasNoProducts ? (
+            <EmptyState
+              icon={Package}
+              title="No products indexed yet"
+              message="We're working on adding products from this brand. Check back soon!"
+              action={{
+                label: 'Browse all filaments →',
+                href: '/',
+                variant: 'outline',
+              }}
+            />
+          ) : (<>
           {/* Overview Tab */}
           <div id="tabpanel-overview" role="tabpanel" aria-labelledby="tab-overview" hidden={activeTab !== "overview"}>
             <BrandOverviewTab
@@ -833,6 +855,7 @@ const BrandDetail = () => {
               isBudgetFriendly={isBudgetFriendly}
             />}
           </div>
+          </>)}
         </div>
 
         {/* Related Brands */}
