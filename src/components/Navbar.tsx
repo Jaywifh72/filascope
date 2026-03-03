@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Search } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Search, ArrowRight } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 // Logo served from storage at 224px (retina for 112px display) instead of bundling the 885KB source
@@ -75,20 +75,39 @@ const Navbar = () => {
   }, []);
 
   // Compare tray state
-  const { items: compareItems } = useCompare();
+  const { items: compareItems, maxItems: compareMax } = useCompare();
   const compareCount = compareItems.length;
   const prevCountRef = useRef(compareCount);
   const [isCountAnimating, setIsCountAnimating] = useState(false);
+  const [isBorderFlashing, setIsBorderFlashing] = useState(false);
+  const isFull = compareCount >= (compareMax || 6);
 
-  // Animate badge when count changes
+  // Animate badge + border when count increases
   useEffect(() => {
     if (compareCount !== prevCountRef.current) {
       setIsCountAnimating(true);
+      if (compareCount > prevCountRef.current) {
+        setIsBorderFlashing(true);
+        setTimeout(() => setIsBorderFlashing(false), 600);
+      }
       const timeout = setTimeout(() => setIsCountAnimating(false), 300);
       prevCountRef.current = compareCount;
       return () => clearTimeout(timeout);
     }
+    prevCountRef.current = compareCount;
   }, [compareCount]);
+
+  // Cmd+Shift+C to open compare
+  useEffect(() => {
+    const handleCompareShortcut = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        if (compareCount > 0) navigate("/compare");
+      }
+    };
+    document.addEventListener("keydown", handleCompareShortcut);
+    return () => document.removeEventListener("keydown", handleCompareShortcut);
+  }, [compareCount, navigate]);
 
   // Trending panel state
   const trendingPanel = useTrendingPanel();
@@ -432,48 +451,57 @@ const Navbar = () => {
             </button>
 
             {/* Compare Button - Desktop */}
-            <Tooltip delayDuration={300}>
+            <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <button 
                   onClick={() => compareCount > 0 ? navigate('/compare') : undefined} 
                   className={cn(
-                    "relative border rounded-lg px-4 py-2",
-                    "text-xs font-bold uppercase tracking-widest",
+                    "relative border rounded-lg px-3.5 py-2",
+                    "text-sm font-semibold tracking-wide",
                     "flex items-center gap-2",
                     "transition-all duration-200",
-                   compareCount > 0
-                       ? "border-primary/50 hover:border-primary hover:bg-primary/10 text-primary cursor-pointer"
-                       : "border-border text-muted-foreground opacity-50 cursor-not-allowed",
-                     compareCount >= 4 && "bg-primary/15 border-primary text-primary opacity-100",
-                     isActive('/compare') && "bg-primary/10 border-primary text-primary opacity-100"
-                   )}
-                 >
-                   <GitCompareArrows className="w-3.5 h-3.5" />
-                   Compare ({compareCount}{compareCount >= 4 ? '/4' : ''})
-                   {compareCount > 0 && (
-                     <span 
-                       className={cn(
-                         "absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5",
-                         "flex items-center justify-center",
-                         "text-[11px] font-bold rounded-full",
-                         "transition-all duration-200",
-                         compareCount >= 4
-                           ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
-                           : "bg-primary text-primary-foreground",
-                         isCountAnimating && "animate-[bounce_0.4s_ease-in-out] shadow-[0_0_16px_hsl(var(--primary)/0.5)]"
-                       )}
-                     >
-                       {compareCount}
-                     </span>
-                   )}
+                    "motion-reduce:transition-none",
+                    compareCount > 0
+                      ? cn(
+                          "border-primary/60 text-primary bg-primary/5 cursor-pointer",
+                          "hover:bg-primary/10 hover:border-primary",
+                          "shadow-[0_0_8px_hsl(var(--primary)/0.15)]",
+                          isBorderFlashing && "animate-compare-ring-pulse",
+                        )
+                      : "border-border/30 text-muted-foreground/60 bg-transparent hover:border-border/50 hover:text-muted-foreground hover:bg-muted/20 cursor-default",
+                    isFull && "border-emerald-500/60 shadow-[0_0_8px_rgba(16,185,129,0.15)]",
+                    isActive('/compare') && compareCount > 0 && "bg-primary/10 border-primary"
+                  )}
+                >
+                  <GitCompareArrows className="w-4 h-4" />
+                  {isFull ? "Compare Now" : "Compare"}
+                  {isFull && <ArrowRight className="w-3.5 h-3.5" />}
+                  {compareCount > 0 && (
+                    <span 
+                      className={cn(
+                        "absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1",
+                        "flex items-center justify-center",
+                        "text-xs font-bold rounded-full",
+                        "transition-all duration-200",
+                        "motion-reduce:animate-none",
+                        isFull
+                          ? "bg-emerald-500 text-white"
+                          : "bg-primary text-primary-foreground",
+                        isCountAnimating && "animate-compare-badge-pop"
+                      )}
+                    >
+                      {compareCount}
+                    </span>
+                  )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-popover border-border text-sm">
+              <TooltipContent side="bottom" className="bg-popover text-popover-foreground text-xs px-2.5 py-1.5 rounded-md shadow-md max-w-[200px] text-center">
                 {compareCount === 0 
-                  ? "Add filaments or printers to compare" 
-                  : compareCount >= 4 
-                    ? "Maximum 4 items for comparison" 
-                    : "Compare materials side-by-side"}
+                  ? <span>Add filaments to compare<br/><kbd className="text-[10px] text-muted-foreground/60 font-mono">⌘⇧C</kbd></span>
+                  : isFull
+                    ? <span>Compare list full — click to compare now!<br/><kbd className="text-[10px] text-muted-foreground/60 font-mono">⌘⇧C</kbd></span>
+                    : <span>Compare {compareCount} filament{compareCount !== 1 ? 's' : ''} — add up to {compareMax || 6}<br/><kbd className="text-[10px] text-muted-foreground/60 font-mono">⌘⇧C</kbd></span>
+                }
               </TooltipContent>
             </Tooltip>
           </div>
@@ -529,47 +557,54 @@ const Navbar = () => {
             </DropdownMenu>
 
             {/* Compare Button - Tablet */}
-            <Tooltip delayDuration={300}>
+            <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <button 
                   onClick={() => compareCount > 0 ? navigate('/compare') : undefined}
                   className={cn(
                     "relative border rounded-lg px-3 py-1.5",
-                    "text-xs font-bold uppercase tracking-widest",
+                    "text-sm font-semibold",
                     "flex items-center gap-2",
                     "transition-all duration-200",
+                    "motion-reduce:transition-none",
                     compareCount > 0
-                      ? "border-primary/50 hover:border-primary hover:bg-primary/10 text-primary cursor-pointer"
-                      : "border-border text-muted-foreground opacity-50 cursor-not-allowed",
-                    isActive('/compare') && "bg-primary/10 border-primary text-primary opacity-100"
+                      ? cn(
+                          "border-primary/60 text-primary bg-primary/5 cursor-pointer",
+                          "hover:bg-primary/10 hover:border-primary",
+                          isBorderFlashing && "animate-compare-ring-pulse",
+                        )
+                      : "border-border/30 text-muted-foreground/60 bg-transparent hover:border-border/50 hover:text-muted-foreground cursor-default",
+                    isFull && "border-emerald-500/60",
+                    isActive('/compare') && compareCount > 0 && "bg-primary/10 border-primary"
                   )}
                 >
                   <GitCompareArrows className="w-3.5 h-3.5" />
-                  Compare ({compareCount})
+                  {isFull ? "Compare Now" : "Compare"}
                   {compareCount > 0 && (
                     <span 
                       className={cn(
-                        "absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1",
+                        "absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1",
                         "flex items-center justify-center",
-                        "text-[10px] font-bold rounded-full",
-                         "transition-all duration-200",
-                         compareCount >= 4
-                           ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
-                           : "bg-primary text-primary-foreground",
-                         isCountAnimating && "animate-[bounce_0.4s_ease-in-out] shadow-[0_0_16px_hsl(var(--primary)/0.5)]"
-                       )}
-                     >
-                       {compareCount}
-                     </span>
-                   )}
+                        "text-xs font-bold rounded-full",
+                        "transition-all duration-200",
+                        "motion-reduce:animate-none",
+                        isFull
+                          ? "bg-emerald-500 text-white"
+                          : "bg-primary text-primary-foreground",
+                        isCountAnimating && "animate-compare-badge-pop"
+                      )}
+                    >
+                      {compareCount}
+                    </span>
+                  )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-popover border-border text-sm">
+              <TooltipContent side="bottom" className="bg-popover text-popover-foreground text-xs px-2 py-1 rounded-md shadow-md">
                 {compareCount === 0 
-                  ? "Add filaments or printers to compare" 
-                  : compareCount >= 4 
-                    ? "Maximum 4 items for comparison" 
-                    : "Compare materials side-by-side"}
+                  ? "Add filaments to compare"
+                  : isFull
+                    ? "Compare list full — click to compare!"
+                    : `Compare ${compareCount} — add up to ${compareMax || 6}`}
               </TooltipContent>
             </Tooltip>
           </div>
