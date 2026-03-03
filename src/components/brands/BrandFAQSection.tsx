@@ -132,18 +132,20 @@ export function BrandFAQSection(props: BrandFAQSectionProps) {
           </h2>
         </div>
 
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible className="w-full space-y-1">
           {faqs.map((faq, index) => (
             <AccordionItem
               key={index}
               value={`faq-${index}`}
-              className="border-border"
+              className="border-border rounded-lg overflow-hidden transition-all duration-200"
             >
-              <AccordionTrigger className="text-left text-foreground hover:text-foreground/80 hover:no-underline py-4">
+              <AccordionTrigger className="text-left text-foreground hover:text-foreground/80 hover:no-underline py-4 px-1">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent forceMount className="data-[state=closed]:hidden text-muted-foreground leading-relaxed pb-4">
-                {faq.answer}
+              <AccordionContent forceMount className="data-[state=closed]:hidden pb-4 px-1">
+                <div className="border-l-2 border-cyan-500/20 pl-4 text-muted-foreground leading-relaxed">
+                  {faq.answer}
+                </div>
               </AccordionContent>
             </AccordionItem>
           ))}
