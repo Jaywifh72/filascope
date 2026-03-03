@@ -133,6 +133,7 @@ const PrinterUrlHealth = lazy(() => import("./pages/admin/PrinterUrlHealth"));
 const PriceSync = lazy(() => import("./pages/admin/PriceSync"));
 const PrinterPriceAudit = lazy(() => import("./pages/admin/PrinterPriceAudit"));
 const AdminTdManagement = lazy(() => import("./pages/admin/TdManagement"));
+const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));
 const AdminAffiliatesNew = lazy(() => import("./pages/admin/Affiliates"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const FilamentCategoryPage = lazy(() => import("./pages/FilamentCategoryPage"));
@@ -314,6 +315,7 @@ const App = () => (
                   <Route path="/admin/price-sync" element={<AdminNewLayoutModule><PriceSync /></AdminNewLayoutModule>} />
                   <Route path="/admin/price-audit" element={<AdminNewLayoutModule><PrinterPriceAudit /></AdminNewLayoutModule>} />
                   <Route path="/admin/td-management" element={<AdminNewLayoutModule><AdminTdManagement /></AdminNewLayoutModule>} />
+                  <Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />
                   <Route path="/admin/affiliates" element={<AdminNewLayoutModule><AdminAffiliatesNew /></AdminNewLayoutModule>} />
                   <Route path="/admin/*" element={<AdminRedirect />} />
                   <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
