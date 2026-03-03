@@ -767,6 +767,10 @@ const BrandDetail = () => {
         {/* Brand Answer Block for AEO */}
         {filaments && filaments.length > 0 && (
           <div className="mx-auto max-w-4xl mb-6">
+            {/* Last updated freshness signal for search engines */}
+            <time dateTime={new Date().toISOString().split('T')[0]} className="sr-only">
+              Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </time>
             <p className={`text-sm text-muted-foreground leading-relaxed ${descExpanded ? '' : 'line-clamp-2 md:line-clamp-none'}`}>
               {displayName} is a 3D printer filament manufacturer
               {brandInfo?.founded ? ` founded in ${brandInfo.founded}` : ''}
