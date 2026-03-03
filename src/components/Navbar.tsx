@@ -578,25 +578,33 @@ const Navbar = () => {
           <RegionSelector />
 
           {/* Right-side utilities */}
-          <div className="hidden md:block h-6 w-px bg-border" />
-          <div className="flex items-center gap-3 shrink-0 ml-auto">
+          <div className="hidden md:block w-px h-5 bg-border/40 mx-1.5" />
+          <div className="flex items-center gap-1 shrink-0 ml-auto">
             <WishlistButton />
             <RecentlyViewedDropdown />
-            
             <ThemeToggle />
+            
+            <div className="w-px h-5 bg-border/40 mx-1.5" />
             
             {/* User Avatar / Login */}
             {user ? <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" aria-label="Open account menu">
-                    <Avatar className="w-9 h-9 border border-border hover:border-primary/50 transition-colors cursor-pointer">
-                      <AvatarImage src={avatarUrl || undefined} alt="Profile" />
-                      <AvatarFallback className="text-sm font-medium bg-muted text-foreground">
-                        {getInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-0.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background group" aria-label="Account">
+                        <Avatar className="w-8 h-8 border border-border group-hover:ring-2 group-hover:ring-primary/30 transition-all duration-150 cursor-pointer">
+                          <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+                          <AvatarFallback className="text-xs font-medium bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-150">
+                            {getInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="bg-popover text-popover-foreground text-xs px-2 py-1 rounded-md shadow-md">
+                    Account
+                  </TooltipContent>
+                </Tooltip>
                 <DropdownMenuContent align="end" className="bg-card border-border min-w-[200px]">
                   <div className="flex items-center gap-3 px-3 py-2.5">
                     <Avatar className="w-10 h-10">
@@ -646,13 +654,20 @@ const Navbar = () => {
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu> : <button onClick={() => navigate('/auth')} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" aria-label="Sign in">
-                <Avatar className="w-9 h-9 border border-border hover:border-primary/50 transition-colors cursor-pointer">
-                  <AvatarFallback className="bg-muted">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                  </AvatarFallback>
-                </Avatar>
-              </button>}
+              </DropdownMenu> : <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <button onClick={() => navigate('/auth')} className="p-0.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background group" aria-label="Sign in">
+                    <Avatar className="w-8 h-8 border border-border group-hover:ring-2 group-hover:ring-primary/30 transition-all duration-150 cursor-pointer">
+                      <AvatarFallback className="bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors duration-150">
+                        <User className="w-4 h-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-popover text-popover-foreground text-xs px-2 py-1 rounded-md shadow-md">
+                  Sign in
+                </TooltipContent>
+              </Tooltip>}
           </div>
         </div>
 
