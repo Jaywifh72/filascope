@@ -3,7 +3,7 @@ import { BrandGuidesLinks } from "@/components/brands/BrandGuidesLinks";
 import { Badge } from "@/components/ui/badge";
 import { 
   Zap, Leaf, Cpu, Package, Layers, ArrowRight, 
-  ChevronLeft, ChevronRight, BadgeCheck, TrendingUp
+  ChevronLeft, ChevronRight, BadgeCheck, TrendingUp, GitCompareArrows
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -12,6 +12,9 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useMemo, useRef, useState, useCallback } from "react";
 import { useRegion } from "@/contexts/RegionContext";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
+import { useCompare } from "@/hooks/useCompare";
+import { cn } from "@/lib/utils";
+import { normalizeColorHex } from "@/lib/utils";
 
 // Helper: convert material name to URL slug (matches materialSlugUtils.ts pattern)
 const materialToSlug = (mat: string): string =>
@@ -47,6 +50,23 @@ interface HighlightCard {
   description: string;
 }
 
+/** Get up to 5 unique color hexes from variants */
+function getSwatchColors(variants: Filament[], max = 5): { colors: string[]; overflow: number } {
+  const seen = new Set<string>();
+  const colors: string[] = [];
+  for (const v of variants) {
+    if (!v.color_hex) continue;
+    const hex = normalizeColorHex(v.color_hex);
+    if (hex && !seen.has(hex.toUpperCase())) {
+      seen.add(hex.toUpperCase());
+      colors.push(hex);
+      if (colors.length >= max) break;
+    }
+  }
+  const total = new Set(variants.map(v => v.color_hex ? normalizeColorHex(v.color_hex)?.toUpperCase() : null).filter(Boolean)).size;
+  return { colors, overflow: Math.max(0, total - max) };
+}
+
 export function BrandOverviewTab({
   brandName,
   brandLogo,
@@ -61,6 +81,7 @@ export function BrandOverviewTab({
 }: BrandOverviewTabProps) {
   const navigate = useNavigate();
   const { formatPrice, convertPrice, currency, hasRates } = useRegion();
+  const { addItem, isInCompare, isFull } = useCompare();
   const carouselRef = useRef<HTMLDivElement>(null);
 
   // Convert USD price range to regional currency
@@ -78,7 +99,6 @@ export function BrandOverviewTab({
   const highlights = useMemo<HighlightCard[]>(() => {
     const candidates: HighlightCard[] = [];
 
-    // Priority 1: Verified
     if (isVerified) {
       candidates.push({
         icon: <BadgeCheck className="w-6 h-6" />,
@@ -87,7 +107,6 @@ export function BrandOverviewTab({
       });
     }
 
-    // Priority 2: Catalog size
     if (groupedProducts.length >= 100) {
       candidates.push({
         icon: <Package className="w-6 h-6" />,
@@ -102,7 +121,6 @@ export function BrandOverviewTab({
       });
     }
 
-    // Priority 3: High-speed
     if (hasHighSpeedProducts) {
       candidates.push({
         icon: <Zap className="w-6 h-6" />,
@@ -111,7 +129,6 @@ export function BrandOverviewTab({
       });
     }
 
-    // Priority 4: Eco spools
     if (hasEcoSpools) {
       candidates.push({
         icon: <Leaf className="w-6 h-6" />,
@@ -120,7 +137,6 @@ export function BrandOverviewTab({
       });
     }
 
-    // Priority 5: RFID
     if (hasRFID) {
       candidates.push({
         icon: <Cpu className="w-6 h-6" />,
@@ -129,7 +145,6 @@ export function BrandOverviewTab({
       });
     }
 
-    // Priority 6: Live pricing (always true for brands with products)
     if (groupedProducts.length > 0) {
       candidates.push({
         icon: <TrendingUp className="w-6 h-6" />,
@@ -177,6 +192,23 @@ export function BrandOverviewTab({
       });
       setTimeout(updateScrollButtons, 300);
     }
+  };
+
+  const handleCompareClick = (e: React.MouseEvent, product: GroupedProduct) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const variant = product.variants[0];
+    if (!variant) return;
+    addItem({
+      id: variant.id,
+      product_title: variant.product_title,
+      vendor: variant.vendor,
+      material: variant.material,
+      color_hex: variant.color_hex,
+      variant_price: variant.variant_price,
+      net_weight_g: variant.net_weight_g,
+      featured_image: variant.featured_image,
+    });
   };
 
   if (groupedProducts.length === 0) {
@@ -236,12 +268,12 @@ export function BrandOverviewTab({
           </div>
           
           {/* Carousel Container */}
-          <div className="relative group">
+          <div className="relative group/carousel">
             {/* Left Arrow */}
             {canScrollLeft && (
               <button
                 onClick={() => scrollCarousel("left")}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity -ml-3"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full p-2 shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-opacity -ml-3"
               >
                 <ChevronLeft className="w-5 h-5 text-white" />
               </button>
@@ -251,7 +283,7 @@ export function BrandOverviewTab({
             {canScrollRight && popularProducts.length > 4 && (
               <button
                 onClick={() => scrollCarousel("right")}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity -mr-3"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full p-2 shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-opacity -mr-3"
               >
                 <ChevronRight className="w-5 h-5 text-white" />
               </button>
@@ -262,29 +294,33 @@ export function BrandOverviewTab({
               <div className="absolute left-0 top-0 bottom-2 w-12 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
             )}
             {canScrollRight && popularProducts.length > 4 && (
-              <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-2 w-16 bg-gradient-to-l from-gray-950 via-gray-950/80 to-transparent z-[5] pointer-events-none" />
             )}
 
             {/* Scrollable Products */}
             <div
               ref={carouselRef}
               onScroll={updateScrollButtons}
-              className="flex gap-4 overflow-x-auto overflow-y-hidden scrollbar-hide pb-2 -mx-1 px-1"
+              className="flex gap-4 overflow-x-auto overflow-y-hidden scrollbar-hide pb-2 -mx-1 px-1 snap-x snap-mandatory"
             >
               {popularProducts.map((product) => {
                 const filamentHref = `/filament/${product.variants[0]?.product_handle || product.variants[0]?.id}`;
+                const { colors: swatchColors, overflow: swatchOverflow } = getSwatchColors(product.variants);
+                const firstVariant = product.variants[0];
+                const inCompare = firstVariant ? isInCompare(firstVariant.id) : false;
+
                 return (
                 <Link
                   key={product.baseName}
                   to={filamentHref}
-                  className="flex-shrink-0 w-[200px] block"
+                  className="flex-shrink-0 w-[200px] block group/card snap-start"
                 >
                   <Card
-                    className="bg-gray-800/30 border-gray-700 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 h-full"
+                    className="bg-gray-800/30 border-gray-700 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-200 h-full"
                   >
-                  <CardContent className="p-4">
+                  <CardContent className="p-4 flex flex-col min-h-[180px]">
                     {/* Product Image */}
-                    <div className="aspect-square rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center mb-3">
+                    <div className="relative aspect-square rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center mb-3">
                       {product.representativeImage ? (
                         <>
                       <img
@@ -292,7 +328,7 @@ export function BrandOverviewTab({
                             srcSet={getImageSrcSet(product.representativeImage, [200, 400, 600])}
                             sizes="(max-width: 640px) 150px, (max-width: 1024px) 166px, 166px"
                             alt={product.baseName}
-                            className="w-full h-full object-cover group-hover/card:scale-105 transition-transform"
+                            className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300"
                             loading="lazy"
                             onError={(e) => {
                               const target = e.currentTarget;
@@ -308,6 +344,21 @@ export function BrandOverviewTab({
                       ) : (
                         <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[50%] max-h-[50%] opacity-30" />
                       )}
+
+                      {/* Compare quick-action */}
+                      <button
+                        onClick={(e) => handleCompareClick(e, product)}
+                        className={cn(
+                          "absolute top-2 right-2 z-10 p-1.5 rounded-md transition-all duration-200",
+                          inCompare
+                            ? "opacity-100 bg-cyan-600 text-white"
+                            : "opacity-0 group-hover/card:opacity-100 bg-gray-900/70 text-gray-300 hover:bg-cyan-600 hover:text-white",
+                          isFull && !inCompare && "pointer-events-none"
+                        )}
+                        aria-label={inCompare ? "Added to compare" : "Add to compare"}
+                      >
+                        <GitCompareArrows className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                     
                     {/* Product Name */}
@@ -319,11 +370,29 @@ export function BrandOverviewTab({
                     {product.material && (
                       <Badge 
                         variant="secondary" 
-                        className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 mb-2 max-w-[140px] truncate"
+                        className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 mb-2 max-w-[140px] truncate w-fit"
                         title={product.material}
                       >
                         {product.material}
                       </Badge>
+                    )}
+
+                    {/* Color Swatches */}
+                    {swatchColors.length > 0 && (
+                      <div className="flex items-center gap-1 mb-2">
+                        {swatchColors.map((hex, i) => (
+                          <span
+                            key={i}
+                            className="w-3 h-3 rounded-full border border-border flex-shrink-0"
+                            style={{ backgroundColor: hex }}
+                            role="img"
+                            aria-label={`Color swatch`}
+                          />
+                        ))}
+                        {swatchOverflow > 0 && (
+                          <span className="text-[10px] text-muted-foreground ml-0.5">+{swatchOverflow}</span>
+                        )}
+                      </div>
                     )}
                     
                     {/* Price - converted to user's regional currency */}
@@ -341,8 +410,8 @@ export function BrandOverviewTab({
                       <div className="text-xs text-muted-foreground/60 italic mb-3">Price unavailable</div>
                     )}
                     
-                    {/* View Details Link */}
-                    <span className="w-full text-xs h-8 border border-border rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-colors">
+                    {/* View Details Link — pushed to bottom */}
+                    <span className="mt-auto w-full text-xs h-8 border border-border rounded-md flex items-center justify-center text-muted-foreground group-hover/card:bg-cyan-600 group-hover/card:text-white group-hover/card:border-cyan-600 transition-colors duration-200">
                       View Details
                     </span>
                   </CardContent>
@@ -357,7 +426,7 @@ export function BrandOverviewTab({
 
       {/* Materials Offered Section */}
       {availableMaterials.length > 0 && (
-        <div>
+        <div id="materials-offered">
           <h2 className="text-lg font-semibold text-white mb-4">Materials Offered</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {availableMaterials.map((material) => (
