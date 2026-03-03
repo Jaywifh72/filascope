@@ -819,6 +819,7 @@ const BrandDetail = () => {
               hasHighSpeedProducts={filaments?.some(f => f.high_speed_capable) ?? false}
               hasEcoSpools={filaments?.some(f => f.spool_material === 'cardboard' || f.spool_material === 'mixed') ?? false}
               hasRFID={filaments?.some(f => f.transmission_distance && f.transmission_distance > 0) ?? false}
+              hasHueForgeData={filaments?.some(f => f.transmission_distance != null) ?? false}
               isVerified={automatedBrand?.is_visible ?? false}
               onViewAllProducts={() => setActiveTab("products")}
               onFilterByMaterial={(material) => {
