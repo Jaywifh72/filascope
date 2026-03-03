@@ -1,15 +1,9 @@
 import { useState } from "react";
-import { Filter, Layers, Tag, Palette, Scale, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Filter, Layers, Tag, Palette, Scale, ChevronDown, ChevronRight, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-
-interface FilterSection {
-  id: string;
-  title: string;
-  icon: React.ElementType;
-  options: { id: string; label: string; count: number }[];
-}
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PriceRange {
   id: string;
@@ -61,22 +55,29 @@ function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-gray-800 last:border-b-0">
+    <div className="border-b border-border/50 last:border-b-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-3 px-4 hover:bg-gray-800/30 transition-colors"
+        className="w-full flex items-center justify-between py-3 px-4 hover:bg-muted/30 transition-colors"
       >
         <div className="flex items-center gap-2">
           <Icon className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-white">{title}</span>
+          <span className="text-sm font-medium text-foreground">{title}</span>
         </div>
         {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
         )}
       </button>
-      {isOpen && <div className="px-4 pb-4 space-y-2">{children}</div>}
+      <div className={cn(
+        "grid transition-all duration-300 ease-in-out",
+        isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+      )}>
+        <div className="overflow-hidden">
+          <div className="px-4 pb-4 space-y-2">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -99,7 +100,7 @@ function FilterCheckbox({
   return (
     <label
       htmlFor={id}
-      className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-gray-800/50 cursor-pointer transition-colors group"
+      className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted/30 cursor-pointer transition-colors group"
     >
       <Checkbox
         id={id}
@@ -109,15 +110,17 @@ function FilterCheckbox({
       />
       {colorHex && (
         <div
-          className="w-4 h-4 rounded-full border border-gray-600 flex-shrink-0"
+          className="w-4 h-4 rounded-full border border-border flex-shrink-0"
           style={{ backgroundColor: colorHex }}
+          role="img"
+          aria-label={label}
         />
       )}
-      <span className="text-sm text-gray-300 group-hover:text-white flex-1 truncate">
+      <span className="text-sm text-muted-foreground group-hover:text-foreground flex-1 truncate">
         {label}
       </span>
       {count !== undefined && (
-        <span className="text-xs text-gray-500 tabular-nums">{count}</span>
+        <span className="text-xs text-muted-foreground/60 tabular-nums">{count}</span>
       )}
     </label>
   );
@@ -137,16 +140,22 @@ export function BrandProductsFilterSidebar({
   onClearAll,
   hasActiveFilters,
 }: BrandProductsFilterSidebarProps) {
+  const [materialSearch, setMaterialSearch] = useState("");
+
+  const filteredMaterials = materialSearch
+    ? materials.filter(m => m.label.toLowerCase().includes(materialSearch.toLowerCase()))
+    : materials;
+
   return (
-    <aside className="w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border border-gray-800 bg-gray-900/60 backdrop-blur-sm">
+    <aside className="w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border border-border bg-card/60 backdrop-blur-sm max-lg:w-full max-lg:sticky-none max-lg:border-0 max-lg:bg-transparent max-lg:backdrop-blur-none max-lg:max-h-none">
       {/* Header */}
-      <div className="p-4 border-b border-gray-800">
+      <div className="p-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-md bg-primary/10 border border-primary/20">
               <Filter className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-sm font-semibold text-gray-300">
+            <span className="text-sm font-semibold text-muted-foreground">
               Filter Products
             </span>
           </div>
@@ -155,7 +164,7 @@ export function BrandProductsFilterSidebar({
               variant="ghost"
               size="sm"
               onClick={onClearAll}
-              className="h-7 px-2 text-xs text-gray-400 hover:text-white"
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
             >
               <X className="w-3 h-3 mr-1" />
               Clear
@@ -164,11 +173,23 @@ export function BrandProductsFilterSidebar({
         </div>
       </div>
 
-      {/* Material Type */}
+      {/* Material Type with search */}
       {materials.length > 0 && (
         <CollapsibleSection title="Material Type" icon={Layers} defaultOpen>
+          {materials.length > 8 && (
+            <div className="relative mb-2">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search materials..."
+                value={materialSearch}
+                onChange={(e) => setMaterialSearch(e.target.value)}
+                className="w-full bg-muted/50 border border-border rounded-md pl-8 pr-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+              />
+            </div>
+          )}
           <div className="space-y-0.5 max-h-48 overflow-y-auto">
-            {materials.map((material) => (
+            {filteredMaterials.map((material) => (
               <FilterCheckbox
                 key={material.id}
                 id={`material-${material.id}`}
@@ -180,6 +201,9 @@ export function BrandProductsFilterSidebar({
                 }
               />
             ))}
+            {filteredMaterials.length === 0 && (
+              <p className="text-xs text-muted-foreground py-2 pl-2">No materials match "{materialSearch}"</p>
+            )}
           </div>
         </CollapsibleSection>
       )}
@@ -201,27 +225,40 @@ export function BrandProductsFilterSidebar({
         </div>
       </CollapsibleSection>
 
-      {/* Color */}
+      {/* Color — swatch grid */}
       {colors.length > 0 && (
         <CollapsibleSection title="Color" icon={Palette} defaultOpen={false}>
-          <div className="space-y-0.5 max-h-64 overflow-y-auto">
-            {colors.slice(0, 20).map((color) => (
-              <FilterCheckbox
-                key={color.id}
-                id={`color-${color.id}`}
-                label={color.label}
-                count={color.count}
-                checked={selectedColors.includes(color.id)}
-                onCheckedChange={(checked) => onColorChange(color.id, checked)}
-                colorHex={color.hex}
-              />
-            ))}
-            {colors.length > 20 && (
-              <div className="text-xs text-gray-500 pt-2 pl-2">
-                +{colors.length - 20} more colors
-              </div>
+          <TooltipProvider delayDuration={150}>
+            <div className="grid grid-cols-6 gap-2">
+              {colors.slice(0, 30).map((color) => {
+                const isSelected = selectedColors.includes(color.id);
+                return (
+                  <Tooltip key={color.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => onColorChange(color.id, !isSelected)}
+                        className={cn(
+                          "w-6 h-6 rounded-full border transition-all duration-200 cursor-pointer",
+                          isSelected
+                            ? "ring-2 ring-cyan-400 ring-offset-2 ring-offset-background border-cyan-400"
+                            : "border-border hover:scale-110"
+                        )}
+                        style={{ backgroundColor: color.hex || '#888' }}
+                        role="img"
+                        aria-label={color.label}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      {color.label} ({color.count})
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+            {colors.length > 30 && (
+              <p className="text-xs text-muted-foreground mt-2">+{colors.length - 30} more colors</p>
             )}
-          </div>
+          </TooltipProvider>
         </CollapsibleSection>
       )}
 

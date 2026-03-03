@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { Package, ArrowUpDown, X, ExternalLink, SearchX, GitCompareArrows } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Package, ArrowUpDown, X, ExternalLink, SearchX, GitCompareArrows, Filter, LayoutGrid, LayoutList } from "lucide-react";
 import { useCompare } from "@/hooks/useCompare";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,6 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { normalizeColorHex } from "@/lib/utils";
 import { useRegion } from "@/contexts/RegionContext";
 import { useRegionalStore } from "@/hooks/useRegionalStore";
@@ -55,10 +63,21 @@ export function BrandProductsTab({
 }: BrandProductsTabProps) {
   const navigate = useNavigate();
 
-
   const { formatPrice } = useRegion();
   const { getRegionalUrl } = useRegionalStore();
   const { addItem, isInCompare, isFull } = useCompare();
+
+  // View mode (persisted)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    try { return (localStorage.getItem('brand-products-view') as 'grid' | 'list') || 'grid'; } catch { return 'grid'; }
+  });
+  const setAndPersistView = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    try { localStorage.setItem('brand-products-view', mode); } catch {}
+  };
+
+  // Mobile filter sheet
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Filter states
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>(
@@ -154,87 +173,50 @@ export function BrandProductsTab({
     selectedColors.length > 0 ||
     selectedSpoolSizes.length > 0;
 
+  const activeFilterCount = selectedMaterials.length + selectedPriceRanges.length + selectedColors.length + selectedSpoolSizes.length;
+
   // Filter products
   const filteredProducts = useMemo(() => {
     return groupedProducts.filter((product) => {
-      // Material filter
       if (selectedMaterials.length > 0 && product.material) {
-        if (!selectedMaterials.includes(product.material)) {
-          return false;
-        }
+        if (!selectedMaterials.includes(product.material)) return false;
       }
-
-      // Price range filter
       if (selectedPriceRanges.length > 0 && product.priceRange.min !== null) {
         const price = product.priceRange.min;
         const matchesPrice = selectedPriceRanges.some((rangeId) => {
           const range = PRICE_RANGES.find((r) => r.id === rangeId);
           if (!range) return false;
-          const minOk = range.min === null || price >= range.min;
-          const maxOk = range.max === null || price < range.max;
-          return minOk && maxOk;
+          return (range.min === null || price >= range.min) && (range.max === null || price < range.max);
         });
         if (!matchesPrice) return false;
       }
-
-      // Color filter
       if (selectedColors.length > 0) {
-        const productColors = product.variants
-          .map((v) => v.color_family)
-          .filter(Boolean);
-        const hasMatchingColor = selectedColors.some((c) =>
-          productColors.includes(c)
-        );
-        if (!hasMatchingColor) return false;
+        const productColors = product.variants.map((v) => v.color_family).filter(Boolean);
+        if (!selectedColors.some((c) => productColors.includes(c))) return false;
       }
-
-      // Spool size filter
       if (selectedSpoolSizes.length > 0) {
-        const productWeights = product.variants
-          .map((v) => v.net_weight_g)
-          .filter((w): w is number => w !== null);
+        const productWeights = product.variants.map((v) => v.net_weight_g).filter((w): w is number => w !== null);
         const hasMatchingSize = selectedSpoolSizes.some((sizeId) => {
           const size = SPOOL_SIZES.find((s) => s.id === sizeId);
           if (!size) return false;
-          return productWeights.some(
-            (w) => w >= size.weightMin && w <= size.weightMax
-          );
+          return productWeights.some((w) => w >= size.weightMin && w <= size.weightMax);
         });
         if (!hasMatchingSize) return false;
       }
-
       return true;
     });
-  }, [
-    groupedProducts,
-    selectedMaterials,
-    selectedPriceRanges,
-    selectedColors,
-    selectedSpoolSizes,
-  ]);
+  }, [groupedProducts, selectedMaterials, selectedPriceRanges, selectedColors, selectedSpoolSizes]);
 
   // Sort products
   const sortedProducts = useMemo(() => {
     const sorted = [...filteredProducts];
     switch (sortBy) {
-      case "name-asc":
-        sorted.sort((a, b) => a.baseName.localeCompare(b.baseName));
-        break;
-      case "name-desc":
-        sorted.sort((a, b) => b.baseName.localeCompare(a.baseName));
-        break;
-      case "price-asc":
-        sorted.sort((a, b) => (a.priceRange.min ?? 999) - (b.priceRange.min ?? 999));
-        break;
-      case "price-desc":
-        sorted.sort((a, b) => (b.priceRange.min ?? 0) - (a.priceRange.min ?? 0));
-        break;
-      case "colors-desc":
-        sorted.sort((a, b) => b.variants.length - a.variants.length);
-        break;
-      case "material":
-        sorted.sort((a, b) => (a.material || "").localeCompare(b.material || ""));
-        break;
+      case "name-asc": sorted.sort((a, b) => a.baseName.localeCompare(b.baseName)); break;
+      case "name-desc": sorted.sort((a, b) => b.baseName.localeCompare(a.baseName)); break;
+      case "price-asc": sorted.sort((a, b) => (a.priceRange.min ?? 999) - (b.priceRange.min ?? 999)); break;
+      case "price-desc": sorted.sort((a, b) => (b.priceRange.min ?? 0) - (a.priceRange.min ?? 0)); break;
+      case "colors-desc": sorted.sort((a, b) => b.variants.length - a.variants.length); break;
+      case "material": sorted.sort((a, b) => (a.material || "").localeCompare(b.material || "")); break;
     }
     return sorted;
   }, [filteredProducts, sortBy]);
@@ -242,16 +224,12 @@ export function BrandProductsTab({
   // Active filter chips
   const activeFilters = useMemo(() => {
     const filters: { id: string; label: string; type: string }[] = [];
-    selectedMaterials.forEach((m) =>
-      filters.push({ id: m, label: m, type: "material" })
-    );
+    selectedMaterials.forEach((m) => filters.push({ id: m, label: m, type: "material" }));
     selectedPriceRanges.forEach((p) => {
       const range = PRICE_RANGES.find((r) => r.id === p);
       if (range) filters.push({ id: p, label: range.label, type: "price" });
     });
-    selectedColors.forEach((c) =>
-      filters.push({ id: c, label: c, type: "color" })
-    );
+    selectedColors.forEach((c) => filters.push({ id: c, label: c, type: "color" }));
     selectedSpoolSizes.forEach((s) => {
       const size = SPOOL_SIZES.find((sz) => sz.id === s);
       if (size) filters.push({ id: s, label: size.label, type: "size" });
@@ -261,22 +239,29 @@ export function BrandProductsTab({
 
   const removeFilter = (filter: { id: string; type: string }) => {
     switch (filter.type) {
-      case "material":
-        handleMaterialChange(filter.id, false);
-        break;
-      case "price":
-        handlePriceRangeChange(filter.id, false);
-        break;
-      case "color":
-        handleColorChange(filter.id, false);
-        break;
-      case "size":
-        handleSpoolSizeChange(filter.id, false);
-        break;
+      case "material": handleMaterialChange(filter.id, false); break;
+      case "price": handlePriceRangeChange(filter.id, false); break;
+      case "color": handleColorChange(filter.id, false); break;
+      case "size": handleSpoolSizeChange(filter.id, false); break;
     }
   };
 
   const totalVariants = filaments.length;
+
+  const filterSidebarProps = {
+    materials: materialOptions,
+    colors: colorOptions,
+    selectedMaterials,
+    selectedPriceRanges,
+    selectedColors,
+    selectedSpoolSizes,
+    onMaterialChange: handleMaterialChange,
+    onPriceRangeChange: handlePriceRangeChange,
+    onColorChange: handleColorChange,
+    onSpoolSizeChange: handleSpoolSizeChange,
+    onClearAll: handleClearAll,
+    hasActiveFilters,
+  };
 
   if (groupedProducts.length === 0) {
     return (
@@ -297,20 +282,7 @@ export function BrandProductsTab({
     <div className="flex gap-6">
       {/* Filter Sidebar - Desktop */}
       <div className="hidden lg:block">
-        <BrandProductsFilterSidebar
-          materials={materialOptions}
-          colors={colorOptions}
-          selectedMaterials={selectedMaterials}
-          selectedPriceRanges={selectedPriceRanges}
-          selectedColors={selectedColors}
-          selectedSpoolSizes={selectedSpoolSizes}
-          onMaterialChange={handleMaterialChange}
-          onPriceRangeChange={handlePriceRangeChange}
-          onColorChange={handleColorChange}
-          onSpoolSizeChange={handleSpoolSizeChange}
-          onClearAll={handleClearAll}
-          hasActiveFilters={hasActiveFilters}
-        />
+        <BrandProductsFilterSidebar {...filterSidebarProps} />
       </div>
 
       {/* Main Content */}
@@ -319,21 +291,84 @@ export function BrandProductsTab({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <Package className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-white">
-              {sortedProducts.length} Products
-              <span className="text-gray-500 font-normal ml-2">
-                ({totalVariants} variants)
-              </span>
+            <h2 className="text-lg font-semibold text-foreground">
+              {hasActiveFilters ? (
+                <>
+                  Showing {sortedProducts.length} of {groupedProducts.length} Products
+                  <button onClick={handleClearAll} className="ml-2 text-xs text-primary hover:text-primary/80 font-normal underline underline-offset-2">
+                    Clear filters
+                  </button>
+                </>
+              ) : (
+                <>
+                  {sortedProducts.length} Products
+                  <span className="text-muted-foreground font-normal ml-2">
+                    ({totalVariants} variants)
+                  </span>
+                </>
+              )}
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Select
-              value={sortBy}
-              onValueChange={(value) => setSortBy(value as SortOption)}
-            >
-              <SelectTrigger className="w-[180px] h-9 bg-gray-800/50 border-gray-700">
-                <ArrowUpDown className="w-4 h-4 mr-2 text-gray-400" />
+          <div className="flex items-center gap-2">
+            {/* Mobile Filter Button */}
+            <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="lg:hidden relative">
+                  <Filter className="w-4 h-4 mr-1.5" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[80vh] rounded-t-2xl">
+                <SheetHeader>
+                  <SheetTitle>Filter Products</SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto py-4">
+                  <BrandProductsFilterSidebar {...filterSidebarProps} />
+                </div>
+                <SheetFooter className="flex-row gap-3 pt-4 border-t border-border">
+                  <Button variant="outline" onClick={handleClearAll} className="flex-1">
+                    Clear All
+                  </Button>
+                  <Button onClick={() => setMobileFilterOpen(false)} className="flex-1">
+                    Show {sortedProducts.length} Results
+                  </Button>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+
+            {/* Grid/List Toggle */}
+            <div className="hidden sm:flex items-center border border-border rounded-md">
+              <button
+                onClick={() => setAndPersistView('grid')}
+                className={cn(
+                  "p-1.5 transition-colors",
+                  viewMode === 'grid' ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-label="Grid view"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setAndPersistView('list')}
+                className={cn(
+                  "p-1.5 transition-colors",
+                  viewMode === 'list' ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-label="List view"
+              >
+                <LayoutList className="w-4 h-4" />
+              </button>
+            </div>
+
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+              <SelectTrigger className="w-[180px] h-9 bg-card/50 border-border">
+                <ArrowUpDown className="w-4 h-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Sort By" />
               </SelectTrigger>
               <SelectContent>
@@ -370,159 +405,236 @@ export function BrandProductsTab({
               variant="ghost"
               size="sm"
               onClick={handleClearAll}
-              className="h-7 text-xs text-gray-400 hover:text-white"
+              className="h-7 text-xs text-muted-foreground hover:text-foreground"
             >
               Clear All
             </Button>
           </div>
         )}
 
-        {/* Products Grid */}
+        {/* Products Grid / List */}
         {sortedProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {sortedProducts.map((product) => {
-              const filamentHref = `/filament/${product.variants[0]?.product_handle || product.variants[0]?.id}`;
-              const firstVariant = product.variants[0];
-              const inCompare = firstVariant ? isInCompare(firstVariant.id) : false;
+          viewMode === 'list' ? (
+            /* List View */
+            <div className="space-y-2">
+              {sortedProducts.map((product) => {
+                const filamentHref = `/filament/${product.variants[0]?.product_handle || product.variants[0]?.id}`;
+                const hasPricing = product.priceRange?.min != null;
+                const firstVariant = product.variants[0];
+                const inCompare = firstVariant ? isInCompare(firstVariant.id) : false;
 
-              const handleCompareClick = (e: React.MouseEvent) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!firstVariant) return;
-                addItem({
-                  id: firstVariant.id,
-                  product_title: firstVariant.product_title,
-                  vendor: firstVariant.vendor,
-                  material: firstVariant.material,
-                  color_hex: firstVariant.color_hex,
-                  variant_price: firstVariant.variant_price,
-                  net_weight_g: firstVariant.net_weight_g,
-                  featured_image: firstVariant.featured_image,
-                });
-              };
-
-              return (
-              <Card
-                key={product.baseName}
-                className="bg-card border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer group/card overflow-hidden"
-                onClick={() => window.location.href = filamentHref}
-              >
-                {/* Image Container - fixed height */}
-                <div className="relative aspect-[4/3] overflow-hidden bg-gray-800 rounded-t-lg">
-                  {product.representativeImage ? (
-                    <img
-                      src={product.representativeImage}
-                      alt={product.baseName}
-                      className="w-full h-full object-contain group-hover/card:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center">
-                      <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[50%] max-h-[50%] opacity-20" />
-                    </div>
-                  )}
-
-                  {/* Compare quick-action */}
-                  <button
-                    onClick={handleCompareClick}
-                    className={cn(
-                      "absolute top-2 right-2 z-10 p-1.5 rounded-md transition-all duration-200",
-                      inCompare
-                        ? "opacity-100 bg-cyan-600 text-white"
-                        : "opacity-0 group-hover/card:opacity-100 bg-gray-900/70 text-gray-300 hover:bg-cyan-600 hover:text-white",
-                      isFull && !inCompare && "pointer-events-none"
-                    )}
-                    aria-label={inCompare ? "Added to compare" : "Add to compare"}
-                  >
-                    <GitCompareArrows className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <CardContent className="p-4 flex flex-col min-h-[200px]">
-                  {/* Product Name */}
-                  <h3 className="font-semibold text-white text-sm line-clamp-2 mb-2 min-h-[40px]">
-                    {product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}
-                  </h3>
-
-                  {/* Material & Variants */}
-                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                    {product.material && (
-                      <MaterialBadge material={product.material} />
-                    )}
-                    {product.variants.length > 1 && (
-                      <Badge variant="outline" className="text-xs">
-                        {product.variants.length} colors
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Color Swatches - placeholder space for alignment */}
-                  <div className="min-h-[20px] flex items-center gap-0.5 mb-2">
-                    {product.variants.length > 1 && (
-                      <>
-                        {product.variants.slice(0, 6).map((variant, idx) => {
-                          const colorHex = variant.color_hex
-                            ? normalizeColorHex(variant.color_hex)
-                            : null;
-                          return colorHex ? (
-                            <div
-                              key={idx}
-                              className="w-3.5 h-3.5 rounded-full border border-border flex-shrink-0"
-                              style={{ backgroundColor: colorHex }}
-                              title={variant.color_family || variant.product_title}
-                            />
-                          ) : null;
-                        })}
-                        {product.variants.length > 6 && (
-                          <span className="text-[10px] text-muted-foreground ml-1">
-                            +{product.variants.length - 6}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Price Range - with fallback for missing prices */}
-                  <div className="min-h-[24px] mb-3">
-                    {product.priceRange && product.priceRange.min !== null ? (
-                      <div className="text-sm">
-                        {product.priceRange.min === product.priceRange.max ? (
-                          <span className="font-semibold text-foreground">
-                            {formatPrice(product.priceRange.min)}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            {formatPrice(product.priceRange.min!)} - {formatPrice(product.priceRange.max!)}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div>
-                        <span className="text-gray-500 text-xs italic">Price unavailable</span>
-                        <a
-                          href={filamentHref}
-                          onClick={(e) => { e.stopPropagation(); }}
-                          className="block text-cyan-500 text-xs hover:text-cyan-400 transition-colors mt-0.5"
-                        >
-                          Check retailer →
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* View Details - pinned to bottom */}
+                return (
                   <a
+                    key={product.baseName}
                     href={filamentHref}
-                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.location.href = filamentHref; }}
-                    className="mt-auto w-full text-xs h-8 inline-flex items-center justify-center rounded-md border border-border text-muted-foreground group-hover/card:bg-cyan-600 group-hover/card:text-white group-hover/card:border-cyan-600 transition-colors duration-200"
+                    className={cn(
+                      "flex items-center gap-4 p-3 rounded-lg border transition-all duration-200 group/card hover:shadow-md",
+                      hasPricing
+                        ? "border-border bg-card hover:border-primary/50"
+                        : "border-dashed border-border/60 bg-card/50 hover:border-amber-500/40"
+                    )}
                   >
-                    View Details
+                    {/* Thumbnail */}
+                    <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted/30 flex-shrink-0">
+                      {product.representativeImage ? (
+                        <img src={product.representativeImage} alt={product.baseName} className="w-full h-full object-contain" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <BrandLogo src={brandLogo} brandName={brandName} size="sm" className="opacity-20" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-foreground truncate">
+                        {product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {product.material && <MaterialBadge material={product.material} />}
+                        {product.variants.length > 1 && (
+                          <span className="text-xs text-muted-foreground">{product.variants.length} colors</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className="text-right flex-shrink-0">
+                      {hasPricing ? (
+                        <div>
+                          {product.priceRange.min !== product.priceRange.max ? (
+                            <>
+                              <span className="text-sm font-bold text-foreground">from {formatPrice(product.priceRange.min!)}</span>
+                              <span className="text-xs text-muted-foreground block">{formatPrice(product.priceRange.min!)} – {formatPrice(product.priceRange.max!)}</span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-bold text-foreground">{formatPrice(product.priceRange.min!)}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-amber-400">Check retailer →</span>
+                      )}
+                    </div>
                   </a>
-                </CardContent>
-              </Card>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Grid View */
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {sortedProducts.map((product) => {
+                const filamentHref = `/filament/${product.variants[0]?.product_handle || product.variants[0]?.id}`;
+                const firstVariant = product.variants[0];
+                const inCompare = firstVariant ? isInCompare(firstVariant.id) : false;
+                const hasPricing = product.priceRange?.min != null;
+
+                const handleCompareClick = (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!firstVariant) return;
+                  addItem({
+                    id: firstVariant.id,
+                    product_title: firstVariant.product_title,
+                    vendor: firstVariant.vendor,
+                    material: firstVariant.material,
+                    color_hex: firstVariant.color_hex,
+                    variant_price: firstVariant.variant_price,
+                    net_weight_g: firstVariant.net_weight_g,
+                    featured_image: firstVariant.featured_image,
+                  });
+                };
+
+                return (
+                  <Card
+                    key={product.baseName}
+                    className={cn(
+                      "hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer group/card overflow-hidden",
+                      hasPricing
+                        ? "bg-card border-border hover:border-primary/50"
+                        : "bg-card/50 border-dashed border-border/60 hover:border-amber-500/40"
+                    )}
+                    onClick={() => window.location.href = filamentHref}
+                  >
+                    {/* Image Container */}
+                    <div className="relative aspect-[4/3] overflow-hidden bg-muted/20 rounded-t-lg">
+                      {product.representativeImage ? (
+                        <img
+                          src={product.representativeImage}
+                          alt={product.baseName}
+                          className="w-full h-full object-contain group-hover/card:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[50%] max-h-[50%] opacity-20" />
+                        </div>
+                      )}
+
+                      {/* Compare quick-action */}
+                      <button
+                        onClick={handleCompareClick}
+                        className={cn(
+                          "absolute top-2 right-2 z-10 p-1.5 rounded-md transition-all duration-200",
+                          inCompare
+                            ? "opacity-100 bg-primary text-primary-foreground"
+                            : "opacity-0 group-hover/card:opacity-100 bg-background/70 text-muted-foreground hover:bg-primary hover:text-primary-foreground",
+                          isFull && !inCompare && "pointer-events-none"
+                        )}
+                        aria-label={inCompare ? "Added to compare" : "Add to compare"}
+                      >
+                        <GitCompareArrows className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <CardContent className="p-4 flex flex-col min-h-[200px]">
+                      {/* Product Name */}
+                      <h3 className="font-semibold text-foreground text-sm line-clamp-2 mb-2 min-h-[40px]">
+                        {product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}
+                      </h3>
+
+                      {/* Material & Variants */}
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                        {product.material && <MaterialBadge material={product.material} />}
+                        {product.variants.length > 1 && (
+                          <Badge variant="outline" className="text-xs">
+                            {product.variants.length} colors
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Color Swatches */}
+                      <div className="min-h-[20px] flex items-center gap-0.5 mb-2">
+                        {product.variants.length > 1 && (
+                          <>
+                            {product.variants.slice(0, 6).map((variant, idx) => {
+                              const colorHex = variant.color_hex ? normalizeColorHex(variant.color_hex) : null;
+                              return colorHex ? (
+                                <div
+                                  key={idx}
+                                  className="w-3.5 h-3.5 rounded-full border border-border flex-shrink-0"
+                                  style={{ backgroundColor: colorHex }}
+                                  title={variant.color_family || variant.product_title}
+                                  role="img"
+                                  aria-label={variant.color_family || 'Color swatch'}
+                                />
+                              ) : null;
+                            })}
+                            {product.variants.length > 6 && (
+                              <span className="text-[10px] text-muted-foreground ml-1">
+                                +{product.variants.length - 6}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Price — enhanced */}
+                      <div className="min-h-[24px] mb-3">
+                        {hasPricing ? (
+                          <div>
+                            {product.priceRange.min === product.priceRange.max ? (
+                              <span className="text-lg font-bold text-foreground">
+                                {formatPrice(product.priceRange.min!)}
+                              </span>
+                            ) : (
+                              <>
+                                <span className="text-lg font-bold text-foreground">
+                                  from {formatPrice(product.priceRange.min!)}
+                                </span>
+                                <span className="block text-xs text-muted-foreground">
+                                  {formatPrice(product.priceRange.min!)} – {formatPrice(product.priceRange.max!)}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="text-muted-foreground text-xs italic">Price unavailable</span>
+                            <a
+                              href={filamentHref}
+                              onClick={(e) => { e.stopPropagation(); }}
+                              className="block text-amber-400 text-xs hover:text-amber-300 transition-colors mt-0.5"
+                            >
+                              Check retailer →
+                            </a>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* View Details */}
+                      <a
+                        href={filamentHref}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.location.href = filamentHref; }}
+                        className="mt-auto w-full text-xs h-8 inline-flex items-center justify-center rounded-md border border-border text-muted-foreground group-hover/card:bg-primary group-hover/card:text-primary-foreground group-hover/card:border-primary transition-colors duration-200"
+                      >
+                        View Details
+                      </a>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )
         ) : (
           <EmptyState
             icon={SearchX}
