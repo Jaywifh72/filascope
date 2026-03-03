@@ -479,3 +479,6 @@ verify_jwt = false
 
 [functions.populate-td-values]
 verify_jwt = false
+
+[functions.extract-filament-data]
+verify_jwt = false
