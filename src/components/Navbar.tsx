@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 const filascopeLogo = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/render/image/public/site-assets/logo-filascope.webp?width=224&resize=contain`;
 
 import { RegionSelector } from "@/components/RegionSelector";
+import { SearchCommandPalette } from "@/components/search/SearchCommandPalette";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { RecentlyViewedDropdown } from "@/components/RecentlyViewedDropdown";
 import { TrendingPanel } from "@/components/TrendingPanel";
@@ -19,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useCompare } from "@/hooks/useCompare";
 import { preloadRoute } from "@/lib/preloadRoutes";
 import { useDealsCount } from "@/hooks/useDealsCount";
-import { useRotatingPlaceholder } from "@/hooks/useRotatingPlaceholder";
+
 const Navbar = () => {
   const {
     user,
@@ -34,10 +35,7 @@ const Navbar = () => {
   const learnHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
    const [hasScrolled, setHasScrolled] = useState(false);
    const [isCompact, setIsCompact] = useState(false);
-   const [showNavSearch, setShowNavSearch] = useState(false);
-   const [navSearchValue, setNavSearchValue] = useState("");
-   const navSearchRef = useRef<HTMLInputElement>(null);
-   const rotatingPlaceholder = useRotatingPlaceholder({ pathname: location.pathname });
+   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false);
 
    // Detect scroll for sticky nav border, compaction, + nav search visibility
    useEffect(() => {
@@ -47,7 +45,7 @@ const Navbar = () => {
        const scrollY = window.scrollY;
     setHasScrolled(scrollY > 20);
         setIsCompact(scrollY > 100);
-       setShowNavSearch(scrollY > 300);
+       // showNavSearch removed — using command palette now
        lastScrollY = scrollY;
      };
      const onScroll = () => {
@@ -60,13 +58,21 @@ const Navbar = () => {
      return () => window.removeEventListener("scroll", onScroll);
    }, []);
 
-  const handleNavSearch = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && navSearchValue.trim()) {
-      navigate(`/filaments?search=${encodeURIComponent(navSearchValue.trim())}`);
-      setNavSearchValue("");
-      navSearchRef.current?.blur();
-    }
-  }, [navSearchValue, navigate]);
+  // Cmd+K / "/" shortcut to open search palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchPaletteOpen(true);
+      }
+      if (e.key === "/" && !["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault();
+        setSearchPaletteOpen(true);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Compare tray state
   const { items: compareItems } = useCompare();
@@ -413,45 +419,17 @@ const Navbar = () => {
             {/* Visual separator */}
             <div className="h-5 w-px bg-border/50 mx-2" />
 
-            {/* Compact Nav Search — appears on scroll */}
-            <div
-              className={cn(
-                "overflow-hidden transition-all duration-200 ease-out",
-                showNavSearch ? "max-w-[280px] opacity-100" : "max-w-0 opacity-0"
-              )}
+            {/* Search trigger button — opens Cmd+K palette */}
+            <button
+              onClick={() => setSearchPaletteOpen(true)}
+              className="flex items-center gap-1.5 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-150"
+              aria-label="Search (⌘K)"
             >
-              <div 
-                className="relative"
-                onMouseEnter={rotatingPlaceholder.handlers.onMouseEnter}
-                onMouseLeave={rotatingPlaceholder.handlers.onMouseLeave}
-              >
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <input
-                  ref={navSearchRef}
-                  type="text"
-                  placeholder={rotatingPlaceholder.placeholder}
-                  value={navSearchValue}
-                  onChange={(e) => {
-                    setNavSearchValue(e.target.value);
-                    rotatingPlaceholder.setHasValue(e.target.value.length > 0);
-                  }}
-                  onFocus={rotatingPlaceholder.handlers.onFocus}
-                  onBlur={rotatingPlaceholder.handlers.onBlur}
-                  onKeyDown={handleNavSearch}
-                  className={cn(
-                    "h-9 w-[240px] pl-8 pr-3 text-sm rounded-lg",
-                    "bg-white/[0.07] border border-white/20 text-foreground",
-                    "shadow-inner shadow-black/20",
-                    "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
-                    "transition-all duration-200",
-                    rotatingPlaceholder.isAnimating
-                      ? "placeholder:opacity-0 placeholder:transition-opacity placeholder:duration-200"
-                      : "placeholder:opacity-100 placeholder:transition-opacity placeholder:duration-200 placeholder:text-muted-foreground/60"
-                  )}
-                  aria-label="Search filaments, printers, and brands"
-                />
-              </div>
-            </div>
+              <Search className="w-5 h-5" />
+              <kbd className="hidden xl:inline-flex items-center px-1 py-0.5 text-[10px] font-mono text-muted-foreground/60 bg-muted/30 rounded">
+                ⌘K
+              </kbd>
+            </button>
 
             {/* Compare Button - Desktop */}
             <Tooltip delayDuration={300}>
@@ -760,6 +738,7 @@ const Navbar = () => {
       
       {/* Trending Panel */}
       <TrendingPanel isOpen={trendingPanel.isOpen} onClose={trendingPanel.closePanel} selectedTab={trendingPanel.selectedTab} onTabChange={trendingPanel.setSelectedTab} activeTrends={trendingPanel.activeTrends} predictions={trendingPanel.predictions} isLoading={trendingPanel.isLoading} error={trendingPanel.error} viewedTrendIds={trendingPanel.viewedTrendIds} />
+      <SearchCommandPalette open={searchPaletteOpen} onClose={() => setSearchPaletteOpen(false)} />
     </>;
 };
 export default Navbar;

@@ -39,31 +39,24 @@ export function RegionSelector() {
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
-                "flex items-center gap-2 h-9 px-3 py-1.5 rounded-lg",
-                "bg-muted/50 border border-border hover:border-primary/50 hover:bg-muted/80",
-                "text-foreground",
-                "transition-all duration-200",
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg",
+                "bg-transparent border border-transparent",
+                "hover:bg-muted/50 hover:border-border/50",
+                "text-sm font-medium text-muted-foreground",
+                "transition-all duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                isOpen && "border-primary ring-2 ring-primary/20"
+                isOpen && "bg-muted/50 border-border/50"
               )}
               aria-label={`Select region, current: ${regionConfig.name} (${currencyCode})`}
             >
               <span className="text-base leading-none" aria-hidden="true">
                 {regionConfig.flag}
               </span>
-              <span className="hidden sm:inline text-sm font-medium">
-                {regionConfig.code}
-              </span>
-              <span className="text-xs text-muted-foreground hidden sm:inline">·</span>
-              <span className="text-sm font-medium hidden sm:inline">
-                {currencyConfig?.symbol || '$'}{currencyCode}
-              </span>
-              {/* Mobile: just currency code */}
-              <span className="sm:hidden text-sm font-medium">
+              <span className="text-sm font-medium">
                 {currencyCode}
               </span>
               <ChevronDown className={cn(
-                "w-3 h-3 text-muted-foreground transition-transform duration-200",
+                "w-3 h-3 text-muted-foreground/70 transition-transform duration-200",
                 isOpen && "rotate-180"
               )} />
             </button>
