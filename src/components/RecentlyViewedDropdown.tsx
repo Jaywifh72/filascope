@@ -23,25 +23,22 @@ export function RecentlyViewedDropdown() {
           <PopoverTrigger asChild>
             <button
               className={cn(
-                "relative p-2 rounded-lg transition-colors duration-200",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                count > 0
-                  ? "text-muted-foreground hover:text-primary cursor-pointer"
-                  : "text-muted-foreground/50 cursor-default"
+                "relative p-2 rounded-lg transition-colors duration-150",
+                "text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/70",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                count === 0 && "opacity-50"
               )}
               aria-label={count > 0 ? `Recently viewed (${count})` : "No recently viewed items"}
             >
               <Clock className="w-5 h-5" />
               {count > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
-                  {count}
-                </span>
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-muted-foreground/60" />
               )}
             </button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-popover border-border text-sm">
-          {count > 0 ? `Recently viewed (${count})` : "No recently viewed items"}
+        <TooltipContent side="bottom" className="bg-popover text-popover-foreground text-xs px-2 py-1 rounded-md shadow-md">
+          Recently Viewed
         </TooltipContent>
       </Tooltip>
 

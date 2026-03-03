@@ -9,6 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -48,46 +49,63 @@ export function WishlistButton() {
 
   if (!user) {
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative text-muted-foreground hover:text-primary transition-colors duration-200"
-        onClick={() => navigate("/auth")}
-        aria-label="Sign in to access wishlist"
-      >
-        <Heart className="h-5 w-5" />
-      </Button>
+      <Tooltip delayDuration={200}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/70 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            onClick={() => navigate("/auth")}
+            aria-label="Sign in to access wishlist"
+          >
+            <Heart className="h-5 w-5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="bg-popover text-popover-foreground text-xs px-2 py-1 rounded-md shadow-md">
+          Saved Items
+        </TooltipContent>
+      </Tooltip>
     );
   }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "relative opacity-60 hover:opacity-100 text-muted-foreground hover:text-primary transition-all duration-200",
-            firstItemPulse && "wishlist-nav-pulse"
-          )}
-          aria-label={`Saved Items${stats.totalItems > 0 ? `, ${stats.totalItems} items` : ''}`}
-        >
-          <Heart
-            className={cn(
-              "h-5 w-5 transition-colors",
-              stats.totalItems > 0 && "fill-rose-500 text-rose-500"
-            )}
-          />
-          {stats.totalItems > 0 && (
-            <span className={cn(
-              "absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1 transition-transform",
-              countBounce && "wishlist-count-bounce"
-            )}>
-              {stats.totalItems}
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
+      <Tooltip delayDuration={200}>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/70 transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                firstItemPulse && "wishlist-nav-pulse"
+              )}
+              aria-label={`Saved Items${stats.totalItems > 0 ? `, ${stats.totalItems} items` : ''}`}
+            >
+              <Heart
+                className={cn(
+                  "h-5 w-5 transition-colors",
+                  stats.totalItems > 0 && "fill-rose-500 text-rose-500"
+                )}
+              />
+              {stats.totalItems > 0 && (
+                <span className={cn(
+                  "absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1 transition-transform",
+                  countBounce && "wishlist-count-bounce"
+                )}>
+                  {stats.totalItems}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        {!open && (
+          <TooltipContent side="bottom" className="bg-popover text-popover-foreground text-xs px-2 py-1 rounded-md shadow-md">
+            {stats.totalItems > 0 ? `Saved Items (${stats.totalItems})` : "Saved Items"}
+          </TooltipContent>
+        )}
+      </Tooltip>
       <PopoverContent
         className="w-80 p-0"
         align="end"
