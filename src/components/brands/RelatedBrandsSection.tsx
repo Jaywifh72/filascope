@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import { toBrandSlug } from "@/utils/brandSlug";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { useRef, useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 // Static adjacency map — curated competitors for major brands.
 // Each entry: [brand name, context tag explaining why related]
@@ -45,6 +47,18 @@ export function RelatedBrandsSection({ brandName }: RelatedBrandsSectionProps) {
     k => k.toLowerCase() === brandName.toLowerCase()
   );
   const related = key ? RELATED_BRANDS_MAP[key] : null;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const check = () => setCanScrollRight(el.scrollWidth > el.clientWidth + el.scrollLeft + 10);
+    check();
+    el.addEventListener('scroll', check);
+    window.addEventListener('resize', check);
+    return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
+  }, [related]);
 
   if (!related || related.length === 0) return null;
 
@@ -52,33 +66,61 @@ export function RelatedBrandsSection({ brandName }: RelatedBrandsSectionProps) {
     <section className="mt-12 pt-10 border-t border-border">
       <h2 className="text-xl font-bold mb-1 border-l-[3px] border-cyan-500 pl-3">Related Brands</h2>
       <p className="text-sm text-muted-foreground mb-6">
-        Explore similar filament manufacturers and competitors
+        Explore manufacturers similar to {brandName}
       </p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {related.map(([name, context]) => {
-          const slug = toBrandSlug(name);
-          const logo = getBrandLogo(name);
-          return (
-            <Link
-              key={name}
-              to={`/brands/${slug}`}
-              className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:bg-accent/40 hover:border-primary/20 transition-all duration-200"
-            >
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted/50 p-1 flex items-center justify-center">
-                <BrandLogo src={logo} brandName={name} size="sm" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium text-foreground block truncate">
-                  {name}
-                </span>
-                <span className="text-[10px] text-muted-foreground/60 block">
+
+      {/* Desktop: grid, Mobile: horizontal scroll */}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 max-md:flex max-md:overflow-x-auto max-md:snap-x max-md:snap-mandatory max-md:scrollbar-hide max-md:-mx-1 max-md:px-1 max-md:pb-2"
+        >
+          {related.map(([name, context]) => {
+            const slug = toBrandSlug(name);
+            const logo = getBrandLogo(name);
+            return (
+              <Link
+                key={name}
+                to={`/brands/${slug}`}
+                className={cn(
+                  "group flex flex-col gap-2 rounded-xl border border-border bg-card p-4",
+                  "hover:border-cyan-500/30 hover:bg-muted/30 hover:-translate-y-1 hover:shadow-lg",
+                  "transition-all duration-200",
+                  "max-md:flex-shrink-0 max-md:w-[200px] max-md:snap-start"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted/50 p-1 flex items-center justify-center">
+                    <BrandLogo src={logo} brandName={name} size="sm" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-foreground block truncate">
+                      {name}
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                </div>
+
+                {/* Why related tag */}
+                <span className="bg-muted/50 text-muted-foreground text-xs px-2 py-0.5 rounded-full w-fit">
                   {context}
                 </span>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-            </Link>
-          );
-        })}
+
+                {/* Compare CTA — hover only */}
+                <span className="text-xs text-cyan-400 hover:text-cyan-300 underline-offset-2 hover:underline opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+                  Compare with {brandName}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Mobile swipe indicator */}
+        {canScrollRight && (
+          <div className="md:hidden absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-background to-transparent pointer-events-none flex items-center justify-end pr-1">
+            <ChevronRight className="w-4 h-4 text-muted-foreground animate-pulse" />
+          </div>
+        )}
       </div>
     </section>
   );
