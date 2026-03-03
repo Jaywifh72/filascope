@@ -177,6 +177,27 @@ export default function HueForgeTools() {
     ],
   });
 
+  // HowTo schema for the workflow section
+  useJsonLd({
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to Plan and Print a HueForge Project",
+    description: "A step-by-step workflow to plan, build, and print stunning HueForge multi-color 3D prints using FilaScope's free tools and TD value database.",
+    step: [
+      { "@type": "HowToStep", position: 1, name: "Plan Your Project", text: "Start with FilaScope's Project Planner to define your HueForge design. Upload your reference image, set your layer count, and the planner generates a complete filament shopping list with TD-optimized recommendations.", url: `${BASE_URL}/hueforge-project-planner` },
+      { "@type": "HowToStep", position: 2, name: "Find and Match Colors", text: "Use FilaScope's Color Matcher to find filaments that match your target colors by hex code or image sample. Results are filtered by TD value to ensure HueForge compatibility.", url: `${BASE_URL}/hueforge-color-matcher` },
+      { "@type": "HowToStep", position: 3, name: "Build Your Palette", text: "Combine your selected filaments in the Palette Builder. Check TD coverage across your palette, identify opacity gaps, and verify that your layer stack will produce the expected color blending.", url: `${BASE_URL}/hueforge-palette-builder` },
+      { "@type": "HowToStep", position: 4, name: "Preview and Print", text: "Visualize your layer stacking with the Layer Stacking Preview tool to see how colors will blend based on TD values. Once satisfied, print your HueForge project with confidence.", url: `${BASE_URL}/hueforge-layer-preview` },
+    ],
+    tool: [
+      { "@type": "HowToTool", name: "FilaScope TD Value Database" },
+      { "@type": "HowToTool", name: "FilaScope Project Planner" },
+      { "@type": "HowToTool", name: "FilaScope Color Matcher" },
+      { "@type": "HowToTool", name: "FilaScope Palette Builder" },
+      { "@type": "HowToTool", name: "FilaScope Layer Stacking Preview" },
+    ],
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <DocumentHead
