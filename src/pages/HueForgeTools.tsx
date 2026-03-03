@@ -203,6 +203,13 @@ export default function HueForgeTools() {
       <DocumentHead
         title="HueForge Tools — TD Database, Palette Builder, Color Matcher & More | FilaScope"
         description="Free HueForge tools and the web's largest filament Transmission Distance (TD) database. Search 111+ filament TD values, build palettes, preview layer stacking, match colors, find substitutes, and plan HueForge projects."
+        ogImage="https://filascope.com/og-hueforge-tools.png"
+        ogImageWidth="1200"
+        ogImageHeight="630"
+        ogImageAlt="FilaScope HueForge Tools — TD Value Database, Palette Builder, Color Matcher, Layer Preview, and Project Planner for HueForge 3D printing"
+        twitterImage="https://filascope.com/og-hueforge-tools.png"
+        author="FilaScope"
+        keywords="HueForge, HueForge tools, TD values, transmissivity data, filament TD database, HueForge palette builder, HueForge color matcher, filament transmissivity, 3D printing filament, HueForge filament, layer stacking preview, filament substitution"
       />
       <Breadcrumbs
         items={[{ name: "HueForge Tools", url: "/hueforge-tools" }]}
