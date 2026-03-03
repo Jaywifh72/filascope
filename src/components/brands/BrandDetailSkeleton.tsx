@@ -1,10 +1,9 @@
 import { SkeletonBox, SkeletonText, SkeletonImage } from "@/components/ui/skeleton-primitives";
-import { cn } from "@/lib/utils";
 
 /**
  * Full-page skeleton for the brand detail page.
  * Matches the real layout: hero → description → tabs → product grid.
- * Uses staggered animation delays for a polished loading feel.
+ * Uses staggered animation delays (75ms increments) for a polished loading feel.
  */
 export function BrandDetailSkeleton() {
   return (
@@ -19,13 +18,18 @@ export function BrandDetailSkeleton() {
 
         {/* Hero section skeleton */}
         <div className="flex items-start gap-5 mb-8">
-          {/* Brand logo */}
-          <SkeletonBox className="w-16 h-16 rounded-lg shrink-0" />
+          {/* Brand logo — larger for emphasis */}
+          <SkeletonBox className="w-20 h-20 rounded-lg shrink-0" />
           <div className="flex-1 space-y-3">
             {/* Brand name */}
-            <SkeletonBox className="h-8 w-48" />
-            {/* Location / subtitle */}
-            <SkeletonBox className="h-4 w-36" style={{ animationDelay: '75ms' }} />
+            <SkeletonBox className="h-8 w-64" />
+            {/* Subtitle */}
+            <SkeletonBox className="h-4 w-32" style={{ animationDelay: '75ms' }} />
+            {/* CTA buttons */}
+            <div className="flex gap-2 mt-2">
+              <SkeletonBox className="h-9 w-32 rounded-md" style={{ animationDelay: '150ms' }} />
+              <SkeletonBox className="h-9 w-28 rounded-md" style={{ animationDelay: '225ms' }} />
+            </div>
           </div>
         </div>
 
@@ -34,7 +38,7 @@ export function BrandDetailSkeleton() {
           {[0, 1, 2, 3].map(i => (
             <SkeletonBox
               key={i}
-              className="h-16 rounded-lg"
+              className="h-20 rounded-lg"
               style={{ animationDelay: `${i * 75}ms` }}
             />
           ))}
@@ -56,37 +60,51 @@ export function BrandDetailSkeleton() {
           ))}
         </div>
 
-        {/* Materials grid skeleton */}
+        {/* Brand Highlights skeleton */}
         <div className="mb-8">
-          <SkeletonBox className="h-5 w-32 mb-4" />
-          <div className="flex flex-wrap gap-2">
-            {[0, 1, 2, 3, 4, 5].map(i => (
+          <SkeletonBox className="h-5 w-36 mb-4" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[0, 1, 2, 3].map(i => (
               <SkeletonBox
                 key={i}
-                className="h-10 w-32 rounded-lg"
+                className="h-28 rounded-xl"
                 style={{ animationDelay: `${i * 75}ms` }}
               />
             ))}
           </div>
         </div>
 
-        {/* Popular Products grid skeleton */}
-        <div>
+        {/* Popular Products skeleton — staggered cards */}
+        <div className="mb-8">
           <SkeletonBox className="h-5 w-40 mb-4" />
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="flex gap-4 overflow-hidden">
             {[0, 1, 2, 3, 4, 5].map(i => (
               <div
                 key={i}
-                className="rounded-lg border border-border/30 overflow-hidden"
-                style={{ animationDelay: `${i * 75}ms` }}
+                className="flex-shrink-0 w-[200px] rounded-lg border border-border/30 overflow-hidden"
+                style={{ animationDelay: `${i * 100}ms` }}
               >
-                <SkeletonImage aspectRatio="4/3" />
+                <SkeletonImage aspectRatio="1/1" />
                 <div className="p-3 space-y-2">
-                  <SkeletonBox className="h-4 w-3/4" />
-                  <SkeletonBox className="h-3 w-1/2" />
-                  <SkeletonBox className="h-3 w-1/3" />
+                  <SkeletonBox className="h-4 w-3/4" style={{ animationDelay: `${i * 100 + 50}ms` }} />
+                  <SkeletonBox className="h-3 w-1/2" style={{ animationDelay: `${i * 100 + 100}ms` }} />
+                  <SkeletonBox className="h-3 w-1/3" style={{ animationDelay: `${i * 100 + 150}ms` }} />
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Materials skeleton */}
+        <div>
+          <SkeletonBox className="h-5 w-32 mb-4" />
+          <div className="space-y-3">
+            {[0, 1, 2].map(i => (
+              <SkeletonBox
+                key={i}
+                className="h-12 rounded-lg"
+                style={{ animationDelay: `${i * 75}ms` }}
+              />
             ))}
           </div>
         </div>
