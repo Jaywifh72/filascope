@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Wand2, Database, Pipette, TrendingUp, Layers, ClipboardCheck, Eye, RefreshCw, ClipboardList, Palette } from "lucide-react";
+import { ArrowRight, Wand2, Database, Pipette, TrendingUp, Layers, ClipboardCheck, Eye, RefreshCw, ClipboardList, Palette, ChevronDown } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +95,18 @@ export default function HueForgeTools() {
         <p className="text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed">
           FilaScope's complete toolkit for HueForge creators. Browse TD data, build palettes, preview layers, match colors, and plan projects — all in one place.
         </p>
+        <details id="what-is-td" className="mt-4 max-w-2xl mx-auto group/td">
+          <summary className="text-sm text-primary hover:text-primary/80 cursor-pointer inline-flex items-center gap-1 list-none [&::-webkit-details-marker]:hidden">
+            What is TD (Transmissivity Data)?
+            <ChevronDown className="w-3 h-3 transition-transform duration-200 group-open/td:rotate-180" />
+          </summary>
+          <div className="mt-3 p-4 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground leading-relaxed text-left">
+            TD (Transmissivity Data) measures how much light passes through a filament layer. Lower TD values mean more opaque filaments, higher TD values mean more translucent. HueForge uses TD values to calculate how colors blend when layered — making TD the single most important spec for planning your print.
+            <Link to="/guides/what-is-hueforge-td" className="text-primary text-xs hover:underline mt-2 inline-flex items-center gap-1">
+              Read the full guide <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </details>
       </header>
 
       {/* Tool Grid */}
