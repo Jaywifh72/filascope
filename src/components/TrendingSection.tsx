@@ -206,7 +206,7 @@ export function TrendingSection() {
   if (!isLoading && !isError && (!filaments || filaments.length === 0)) return null;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-4">
+    <section id="trending-section" className="max-w-7xl mx-auto px-4 py-4">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>

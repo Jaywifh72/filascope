@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Link } from "react-router-dom";
-import { Search, Users, RefreshCw } from "lucide-react";
+import { Users, RefreshCw } from "lucide-react";
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { SearchBarGated } from "@/components/search/SearchBarGated";
+import { SmartContextBar } from "@/components/SmartContextBar";
 
 const CACHE_KEY = "hero_stats_cache";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -199,14 +199,9 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             </div>
           </SearchBarGated>
 
-          {/* Quick Match contextual tip */}
-          <div className="w-full max-w-full sm:max-w-[600px] mb-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <p className="text-[13px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              New here?{' '}
-              <Link to="/wizard" className="font-medium hover:underline" style={{ color: '#F59E0B' }}>
-                → Take the 60-second Filament Quiz
-              </Link>
-            </p>
+          {/* Smart Context Bar — personalized chips */}
+          <div className="w-full max-w-full sm:max-w-[600px] mb-4">
+            <SmartContextBar />
           </div>
         </div>
       </div>
