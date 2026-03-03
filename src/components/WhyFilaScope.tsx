@@ -29,10 +29,8 @@ const columns = [
 ];
 
 const WhyFilaScope = () => {
-  const handleScroll = () => {
-    document
-      .getElementById("filament-catalog")
-      ?.scrollIntoView({ behavior: "smooth" });
+  const handleBackToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handlePrinterFocus = () => {
@@ -80,11 +78,11 @@ const WhyFilaScope = () => {
 
         <div className="flex justify-center mt-8">
           <button
-            onClick={handleScroll}
+            onClick={handleBackToTop}
             className="bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-2.5 rounded-lg font-medium inline-flex items-center gap-2 transition-colors"
           >
-            Start Exploring
-            <ArrowRight size={16} />
+            Back to Top
+            <ArrowRight size={16} className="rotate-[-90deg]" />
           </button>
         </div>
       </div>

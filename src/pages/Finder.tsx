@@ -48,7 +48,8 @@ import HeroSection from "@/components/HeroSection";
 import { WebSiteSchema, OrganizationSchema, TrendingItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
-import { DiscoveryZone } from "@/components/DiscoveryZone";
+import { QuickPathsPills } from "@/components/QuickPathsPills";
+import { HeroProductGrid } from "@/components/HeroProductGrid";
 import { SearchIntelligenceBar } from "@/components/search/SearchIntelligenceBar";
 import { FilamentFilters } from "@/components/FilamentFilters";
 import { TechnicalConsoleSidebar } from "@/components/TechnicalConsoleSidebar";
@@ -1087,44 +1088,17 @@ const Finder = () => {
         isLoading={isLoading || filamentCount === undefined}
       />
 
-      {/* What is FilaScope — AEO answer block */}
-      <section className="max-w-4xl mx-auto px-4 py-10 text-center space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">What is FilaScope?</h2>
-        <p className="text-muted-foreground text-base leading-relaxed">
-          FilaScope is a free 3D printer filament comparison platform that indexes 1,076+ filaments from 49+ brands with real-time pricing from 15+ retailers worldwide. It features the largest public HueForge Transmission Distance (TD) database, detailed material specifications, printer compatibility data, and FilaScore quality ratings — helping makers find the perfect filament for any project.
-        </p>
-        <p className="text-muted-foreground text-base leading-relaxed">
-          Whether you need the best PLA for beginners, the strongest PETG for functional parts, or a specific TD value for HueForge lithophane printing, FilaScope's data-driven approach compares filaments across 6 regional markets so you can make informed decisions with transparent, up-to-date pricing.
-        </p>
-      </section>
-
-      {/* Quick Match banner moved to sidebar and mobile bottom sheet */}
-
-      {/* Why FilaScope value proposition */}
-      <WhyFilaScope />
-
-      {/* Trending Section — between hero and registry */}
+      {/* Trending Section — immediately after hero */}
       <TrendingSection />
 
-      {/* Discovery Zone — curated entry points */}
-      <DiscoveryZone
+      {/* Quick Paths — compact pill links for discovery */}
+      <QuickPathsPills
         resetFilters={resetFilters}
         updateFilter={updateFilter}
-        unfilteredProductCount={unfilteredProductCount}
       />
 
-      {/* Spacer between value props and catalog */}
-      <div className="py-2" />
-
-      {/* Bridge: Discovery → Catalog transition */}
-      <div id="catalog-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-semibold text-foreground">Explore the Filament Catalog</h2>
-          <p className="text-sm text-muted-foreground mt-1.5">
-            Explore {unfilteredProductCount ? `${unfilteredProductCount.toLocaleString()}+` : "1,000+"} filaments from {unfilteredBrandCount > 0 ? `${unfilteredBrandCount}+` : "40+"} brands. Filter by material, printer compatibility, price, and more.
-          </p>
-        </div>
-      </div>
+      {/* Spacer before catalog */}
+      <div className="py-1" />
 
       {/* Region Transition Indicator - fixed at top of viewport during region changes */}
       <RegionTransitionIndicator 
@@ -1796,6 +1770,27 @@ const Finder = () => {
       {/* Mobile Quick Match Prompt */}
       <MobileQuickMatchPrompt />
       <ScrollToTopButton />
+
+      {/* === ZONE 4: SEO + TRUST (below catalog) === */}
+
+      {/* What is FilaScope — AEO answer block */}
+      <section className="max-w-4xl mx-auto px-4 py-10 text-center space-y-4">
+        <h2 className="text-2xl font-bold text-foreground">What is FilaScope?</h2>
+        <p className="text-muted-foreground text-base leading-relaxed">
+          FilaScope is a free 3D printer filament comparison platform that indexes 1,076+ filaments from 49+ brands with real-time pricing from 15+ retailers worldwide. It features the largest public HueForge Transmission Distance (TD) database, detailed material specifications, printer compatibility data, and FilaScore quality ratings — helping makers find the perfect filament for any project.
+        </p>
+        <p className="text-muted-foreground text-base leading-relaxed">
+          Whether you need the best PLA for beginners, the strongest PETG for functional parts, or a specific TD value for HueForge lithophane printing, FilaScope's data-driven approach compares filaments across 6 regional markets so you can make informed decisions with transparent, up-to-date pricing.
+        </p>
+      </section>
+
+      {/* Why FilaScope value proposition */}
+      <WhyFilaScope />
+
+      {/* Brand logos — trust signal */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 py-8 flex justify-center">
+        <HeroProductGrid />
+      </div>
 
       {/* AI snippet zone — supplementary SEO content */}
       <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-10 text-center" style={{ background: 'rgba(255,255,255,0.015)' }}>
