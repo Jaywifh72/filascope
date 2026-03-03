@@ -482,3 +482,6 @@ verify_jwt = false
 
 [functions.extract-filament-data]
 verify_jwt = false
+
+[functions.insert-onboarded-filaments]
+verify_jwt = false
