@@ -9,13 +9,16 @@ interface SkipLinkProps {
   className?: string;
 }
 
+const skipLinkClasses =
+  "sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-6 focus:py-3 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:font-semibold focus:text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background focus:shadow-lg transition-none";
+
 /**
  * Skip to Main Content Link
  * 
  * WCAG 2.1 AA Requirement: Bypass Blocks (2.4.1)
  * Provides keyboard users a way to skip repetitive navigation
  * 
- * The link is visually hidden until focused, then appears at the top of the viewport.
+ * Uses sr-only + focus:not-sr-only pattern for bulletproof hiding.
  */
 export const SkipLink = ({ 
   targetId = "main-content", 
@@ -26,7 +29,6 @@ export const SkipLink = ({
     e.preventDefault();
     const target = document.getElementById(targetId);
     if (target) {
-      // Set tabindex to make the target focusable if it isn't already
       if (!target.hasAttribute("tabindex")) {
         target.setAttribute("tabindex", "-1");
       }
@@ -39,22 +41,7 @@ export const SkipLink = ({
     <a
       href={`#${targetId}`}
       onClick={handleClick}
-      className={cn(
-        // Visually hidden by default
-        "absolute left-4 -translate-y-full",
-        // Appear on focus with smooth transition
-        "focus:translate-y-4 focus:z-[9999]",
-        "transition-transform duration-200",
-        // High contrast styling for visibility
-        "bg-primary text-primary-foreground",
-        "px-6 py-3 rounded-md",
-        "font-semibold text-sm",
-        // Strong focus indicator
-        "focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background",
-        // Shadow for separation from content
-        "shadow-lg",
-        className
-      )}
+      className={cn(skipLinkClasses, className)}
     >
       {children}
     </a>
@@ -71,19 +58,15 @@ export const SkipLinks = ({
   links: Array<{ targetId: string; label: string }> 
 }) => {
   return (
-    <div className="skip-links-container">
-      {links.map((link, index) => (
+    <>
+      {links.map((link) => (
         <SkipLink 
           key={link.targetId} 
           targetId={link.targetId}
-          className={cn(
-            // Stack multiple skip links vertically when focused
-            index > 0 && "focus:translate-y-16"
-          )}
         >
           {link.label}
         </SkipLink>
       ))}
-    </div>
+    </>
   );
 };
