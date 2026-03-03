@@ -12,12 +12,13 @@ import { DetailBreadcrumb } from "@/components/navigation/DetailBreadcrumb";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRegion } from "@/contexts/RegionContext";
 import { normalizeColorHex } from "@/lib/utils";
 import { formatProductLineIdForDisplay } from "@/lib/productNameUtils";
 import { BrandHeroSection } from "@/components/brands/BrandHeroSection";
+import { BrandQuickNav } from "@/components/brands/BrandQuickNav";
 import { BrandTabNav, BrandTabContent, type BrandTab } from "@/components/brands/tabs/BrandTabNav";
 import { BrandOverviewTab } from "@/components/brands/tabs/BrandOverviewTab";
 import { BrandAboutTab } from "@/components/brands/tabs/BrandAboutTab";
@@ -311,6 +312,7 @@ const BrandDetail = () => {
    const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
    const [activeTab, setActiveTab] = useState<BrandTab>("overview");
    const [descExpanded, setDescExpanded] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
   const { isAdmin } = useAuth();
   const { formatPrice } = useRegion();
 
@@ -611,6 +613,20 @@ const BrandDetail = () => {
 
   return (
     <div className="min-h-screen p-8">
+      {/* Sticky Quick-Nav Bar */}
+      <BrandQuickNav
+        brandName={displayName}
+        brandLogo={brandLogo}
+        isVerified={automatedBrand?.is_visible ?? false}
+        website={brandInfo?.website}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        heroRef={heroRef}
+        onVisitWebsite={brandInfo?.website ? () => {
+          window.open(brandInfo.website, '_blank', 'noopener,noreferrer');
+        } : undefined}
+      />
+
       {/* Breadcrumb Schema - now handled by DetailBreadcrumb */}
 
       {/* Brand SEO */}
@@ -660,6 +676,7 @@ const BrandDetail = () => {
         />
 
         {/* Brand Hero Section */}
+        <div ref={heroRef}>
         <BrandHeroSection
           brandName={displayName}
           brandLogo={brandLogo}
@@ -725,6 +742,7 @@ const BrandDetail = () => {
             window.history.replaceState(null, "", "#products");
           }}
         />
+        </div>
 
         {/* Brand Answer Block for AEO */}
         {filaments && filaments.length > 0 && (
