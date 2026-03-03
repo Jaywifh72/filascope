@@ -12,6 +12,7 @@ import { ExtractionResultsTable } from '@/components/admin/filament-onboarding/E
 import { OnboardingPreviewDialog } from '@/components/admin/filament-onboarding/OnboardingPreviewDialog';
 import { JobHistoryTable } from '@/components/admin/filament-onboarding/JobHistoryTable';
 import { ImportConfirmDialog } from '@/components/admin/filament-onboarding/ImportConfirmDialog';
+import { BrandConfigsSection } from '@/components/admin/filament-onboarding/BrandConfigsSection';
 
 type OnboardingItem = {
   id: string;
@@ -350,6 +351,9 @@ export default function FilamentOnboarding() {
           />
         </CardContent>
       </Card>
+
+      {/* Section 6: Brand Scraping Configs */}
+      <BrandConfigsSection />
 
       {/* Preview Dialog */}
       {previewItem && (
