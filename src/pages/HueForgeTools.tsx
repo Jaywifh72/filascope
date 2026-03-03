@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { ArrowRight, Wand2, Database, Pipette, TrendingUp, Layers, ClipboardCheck, Eye, RefreshCw, ClipboardList, Palette, ChevronDown, BookOpen, Trophy, Ruler, Sun } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
@@ -45,6 +46,28 @@ const TOOL_STATS: Record<string, { icon: typeof TrendingUp; text: string }> = {
 };
 
 export default function HueForgeTools() {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [revealed, setRevealed] = useState(false);
+
+  const reveal = useCallback(() => setRevealed(true), []);
+
+  useEffect(() => {
+    // Respect reduced motion
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) { reveal(); return; }
+
+    // Fallback: force-show after 1s
+    const timeout = setTimeout(reveal, 1000);
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { reveal(); observer.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    if (gridRef.current) observer.observe(gridRef.current);
+
+    return () => { clearTimeout(timeout); observer.disconnect(); };
+  }, [reveal]);
+
   // ItemList schema for the 6 tools
   useJsonLd({
     "@context": "https://schema.org",
@@ -110,11 +133,12 @@ export default function HueForgeTools() {
 
       {/* Tool Grid */}
       <section className="max-w-5xl mx-auto px-4 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {HUEFORGE_TOOLS.map((tool) => (
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {HUEFORGE_TOOLS.map((tool, i) => (
             <Link
               key={tool.key}
               to={tool.href}
+              style={!revealed ? { opacity: 0, transform: "translateY(1rem)", willChange: "transform, opacity", transition: `opacity 400ms ease-out ${i * 80}ms, transform 400ms ease-out ${i * 80}ms` } : { opacity: 1, transform: "translateY(0)", transition: `opacity 400ms ease-out ${i * 80}ms, transform 400ms ease-out ${i * 80}ms` }}
               className={`group relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:border-primary/40 hover:shadow-xl hover:-translate-y-0.5 border-l-4 ${tool.accentClass} focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none cursor-pointer`}
             >
               <div className="p-6 flex flex-col gap-3">
