@@ -437,7 +437,7 @@ export function BrandProductsTab({
                     {/* Thumbnail */}
                     <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted/30 flex-shrink-0">
                       {product.representativeImage ? (
-                        <img src={product.representativeImage} alt={product.baseName} className="w-full h-full object-contain" loading="lazy" />
+                        <img src={product.representativeImage} alt={`${product.baseName} 3D printing filament spool by ${brandName}`} className="w-full h-full object-contain" loading="lazy" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <BrandLogo src={brandLogo} brandName={brandName} size="sm" className="opacity-20" />
@@ -520,7 +520,7 @@ export function BrandProductsTab({
                       {product.representativeImage ? (
                         <img
                           src={product.representativeImage}
-                          alt={product.baseName}
+                          alt={`${product.baseName} 3D printing filament spool by ${brandName}`}
                           className="w-full h-full object-contain group-hover/card:scale-105 transition-transform duration-300"
                           loading="lazy"
                         />

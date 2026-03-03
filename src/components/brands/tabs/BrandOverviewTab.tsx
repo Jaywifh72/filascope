@@ -463,7 +463,7 @@ export function BrandOverviewTab({
                             src={getOptimizedImageUrl(product.representativeImage, 400)}
                             srcSet={getImageSrcSet(product.representativeImage, [200, 400, 600])}
                             sizes="(max-width: 640px) 150px, (max-width: 1024px) 166px, 166px"
-                            alt={product.baseName}
+                            alt={`${product.baseName} 3D printing filament spool by ${brandName}`}
                             className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300"
                             loading="lazy"
                             onError={(e) => {
@@ -498,9 +498,9 @@ export function BrandOverviewTab({
                     </div>
                     
                     {/* Product Name */}
-                    <div className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[40px]" title={product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}>
+                    <h3 className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[40px]" title={product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}>
                       {product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}
-                    </div>
+                    </h3>
                     
                     {/* Material Badge with tooltip */}
                     {product.material && (
@@ -737,9 +737,9 @@ function MaterialsGroupedSection({
                 className="flex items-center gap-2 w-full text-left mb-2 group/header"
               >
                 <span className={cn("w-3 h-3 rounded-full flex-shrink-0 shadow-sm", group.dotClass)} />
-                <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                   {group.name}
-                </span>
+                </h3>
                 <span className="text-xs text-muted-foreground/60 font-mono">({group.materials.length})</span>
                 <ChevronDown
                   size={14}
