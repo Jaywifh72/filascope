@@ -132,18 +132,23 @@ export default function HueForgeTools() {
         <p className="relative text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed">
           The most complete HueForge toolkit on the web. Search the largest filament TD value database, build multi-filament palettes, preview layer stacking, match colors by hex or image, and plan your next HueForge project — all free, all in one place.
         </p>
-        <details id="what-is-td" className="relative mt-4 max-w-2xl mx-auto group/td">
-          <summary className="text-sm text-primary hover:text-primary/80 cursor-pointer inline-flex items-center gap-1 list-none [&::-webkit-details-marker]:hidden">
-            What is TD (Transmissivity Data)?
-            <ChevronDown className="w-3 h-3 transition-transform duration-200 group-open/td:rotate-180" />
-          </summary>
-          <div className="mt-3 p-4 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground leading-relaxed text-left">
-            TD (Transmissivity Data) measures how much light passes through a filament layer. Lower TD values mean more opaque filaments, higher TD values mean more translucent. HueForge uses TD values to calculate how colors blend when layered — making TD the single most important spec for planning your print.
+        <section id="what-is-td" className="relative mt-6 max-w-2xl mx-auto text-left">
+          <h2 className="text-lg font-semibold text-foreground mb-3">What is TD (Transmissivity Data)?</h2>
+          <div className="p-4 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground leading-relaxed space-y-3">
+            <p>
+              TD (Transmission Distance) measures how far light travels through a single layer of 3D printing filament, expressed in millimeters. It's the single most important specification for HueForge projects because it determines how colors blend, overlap, and show through when layers are stacked.
+            </p>
+            <p>
+              A filament with a low TD value (under 1.0 mm) is more opaque — ideal for solid top layers and high-contrast details. A filament with a high TD value (above 3.0 mm) is more translucent — perfect for base layers where you want underlying colors to show through. HueForge uses these TD values to calculate exactly how your final lithophane or multi-color print will look before you print it.
+            </p>
+            <p>
+              FilaScope's TD Value Database tracks verified Transmission Distance values for 111+ filaments across 48+ brands — the largest public TD dataset available. Whether you're planning your first HueForge print or optimizing a complex 8-layer palette, accurate TD data is the foundation of every successful project.
+            </p>
             <Link to="/guides/what-is-hueforge-td" className="text-primary text-xs hover:underline mt-2 inline-flex items-center gap-1">
               Read the full guide <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-        </details>
+        </section>
       </header>
 
       {/* Tool Grid */}
