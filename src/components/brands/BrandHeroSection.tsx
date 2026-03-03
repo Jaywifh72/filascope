@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useAffiliateLink } from '@/hooks/useAffiliateLink';
+import { toast } from '@/hooks/use-toast';
 
 interface BrandHeroSectionProps {
   brandName: string;
@@ -22,6 +23,10 @@ interface BrandHeroSectionProps {
   topMaterials: string[];
   avgPriceRange?: string;
   rating?: number | null;
+  reviewCount?: number;
+  onNavigateToProducts?: () => void;
+  onNavigateToMaterials?: () => void;
+  onNavigateToProductsSorted?: () => void;
   className?: string;
 }
 
@@ -30,11 +35,23 @@ interface SpecCardProps {
   label: string;
   value: string;
   tooltip?: string;
+  onClick?: () => void;
 }
 
-function SpecCard({ icon, label, value, tooltip }: SpecCardProps) {
+function SpecCard({ icon, label, value, tooltip, onClick }: SpecCardProps) {
   const card = (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0">
+    <div
+      className={cn(
+        "bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0",
+        "transition-all duration-200",
+        "hover:border-cyan-500/40 hover:bg-gray-800/80 hover:scale-[1.02]",
+        onClick && "cursor-pointer"
+      )}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+    >
       <div className="text-primary flex-shrink-0 mt-0.5">
         {icon}
       </div>
@@ -70,6 +87,51 @@ function TrustIndicator({ icon: Icon, label }: { icon: React.ElementType; label:
   );
 }
 
+function RatingStars({ rating, reviewCount }: { rating?: number | null; reviewCount?: number }) {
+  if (rating && rating > 0) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-0.5">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Star
+              key={i}
+              className={cn(
+                "w-4 h-4",
+                i <= Math.round(rating)
+                  ? "fill-amber-400 text-amber-400"
+                  : "fill-none text-gray-600"
+              )}
+            />
+          ))}
+        </div>
+        <span className="text-lg font-bold text-white">{rating.toFixed(1)}</span>
+        {reviewCount != null && reviewCount > 0 && (
+          <span className="text-xs text-gray-400">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Star key={i} className="w-4 h-4 fill-none text-gray-600" />
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => {
+          toast({ title: "Reviews coming soon!", description: "We're building a community review system." });
+        }}
+        className="text-xs text-cyan-400 hover:text-cyan-300 underline underline-offset-2 cursor-pointer"
+      >
+        Be the first to rate
+      </button>
+    </div>
+  );
+}
+
 export function BrandHeroSection({
   brandName,
   brandLogo,
@@ -82,6 +144,10 @@ export function BrandHeroSection({
   topMaterials,
   avgPriceRange,
   rating,
+  reviewCount,
+  onNavigateToProducts,
+  onNavigateToMaterials,
+  onNavigateToProductsSorted,
   className,
 }: BrandHeroSectionProps) {
   // Build materials display: show up to 3 + count
@@ -115,9 +181,18 @@ export function BrandHeroSection({
           <div className="relative w-[120px] h-[120px] lg:w-[150px] lg:h-[150px] flex items-center justify-center bg-gray-800/50 border border-gray-700 rounded-lg p-4">
             <BrandLogo src={brandLogo} brandName={brandName} size="lg" />
             {isVerified && (
-              <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
-                <BadgeCheck className="w-4 h-4 text-black" />
-              </div>
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
+                      <BadgeCheck className="w-4 h-4 text-black" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">This manufacturer has been verified by the FilaScope team</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>
@@ -131,10 +206,19 @@ export function BrandHeroSection({
               <span className="block text-base sm:text-lg font-normal text-primary/80 mt-0.5">3D Filaments</span>
             </h1>
             {isVerified && (
-              <span className="flex items-center gap-1 text-sm text-primary bg-primary/10 px-2 py-1 rounded-full">
-                <BadgeCheck className="w-4 h-4" />
-                Verified
-              </span>
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="flex items-center gap-1 text-sm text-primary bg-primary/10 px-2 py-1 rounded-full">
+                      <BadgeCheck className="w-4 h-4" />
+                      Verified
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">This manufacturer has been verified by the FilaScope team</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
 
@@ -181,36 +265,31 @@ export function BrandHeroSection({
               icon={<Package className="w-5 h-5" />}
               label="Products"
               value={productsDisplay}
+              onClick={onNavigateToProducts}
             />
             <SpecCard
               icon={<Layers className="w-5 h-5" />}
               label="Materials"
               value={materialsDisplay}
               tooltip={materialsTooltip}
+              onClick={onNavigateToMaterials}
             />
             <SpecCard
               icon={<Tag className="w-5 h-5" />}
               label="Price Range"
               value={avgPriceRange || '—'}
               tooltip={avgPriceRange === '$' ? 'Budget-Friendly: Typically under $25/kg' : avgPriceRange === '$$' ? 'Mid-Range: Typically $25-40/kg' : avgPriceRange === '$$$' ? 'Premium: Typically $40+/kg' : undefined}
+              onClick={onNavigateToProductsSorted}
             />
-            {rating ? (
-              <SpecCard
-                icon={<Star className="w-5 h-5 fill-amber-400 text-amber-400" />}
-                label="Community Rating"
-                value={rating.toFixed(1)}
-              />
-            ) : (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0">
-                <div className="text-slate-600 flex-shrink-0 mt-0.5">
-                  <Star className="w-5 h-5" />
-                </div>
-                <div className="min-w-0 overflow-hidden">
-                  <p className="text-xs text-gray-400 mb-1">Rating</p>
-                  <p className="text-sm text-slate-400 italic leading-tight">Be the first to rate</p>
-                </div>
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0 transition-all duration-200 hover:border-cyan-500/40 hover:bg-gray-800/80 hover:scale-[1.02]">
+              <div className="text-primary flex-shrink-0 mt-0.5">
+                <Star className={cn("w-5 h-5", rating && rating > 0 ? "fill-amber-400 text-amber-400" : "text-slate-600")} />
               </div>
-            )}
+              <div className="min-w-0 overflow-hidden">
+                <p className="text-xs text-gray-400 mb-1">Community Rating</p>
+                <RatingStars rating={rating} reviewCount={reviewCount} />
+              </div>
+            </div>
           </div>
 
           {/* Action Buttons */}

@@ -701,6 +701,18 @@ const BrandDetail = () => {
             return undefined;
           })()}
           rating={null}
+          onNavigateToProducts={() => {
+            setActiveTab("products");
+            window.history.replaceState(null, "", "#products");
+          }}
+          onNavigateToMaterials={() => {
+            const el = document.getElementById("materials-offered");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }}
+          onNavigateToProductsSorted={() => {
+            setActiveTab("products");
+            window.history.replaceState(null, "", "#products");
+          }}
         />
 
         {/* Brand Answer Block for AEO */}
