@@ -110,6 +110,73 @@ export default function HueForgeTools() {
     })),
   });
 
+  // SoftwareApplication schema for all 6 tools
+  useJsonLd({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        name: "FilaScope TD Value Database",
+        description: "Search and filter HueForge Transmission Distance (TD) values for 111+ filaments across 48+ brands. The largest public filament TD database for HueForge project planning.",
+        url: `${BASE_URL}/hueforge-td-database`,
+        applicationCategory: "UtilitiesApplication",
+        operatingSystem: "Web",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "FilaScope HueForge Palette Builder",
+        description: "Build and analyze multi-filament palettes for HueForge. Check TD coverage across your selected filaments, identify gaps, and share your palette with other makers.",
+        url: `${BASE_URL}/hueforge-palette-builder`,
+        applicationCategory: "DesignApplication",
+        operatingSystem: "Web",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "FilaScope HueForge Project Planner",
+        description: "Step-by-step wizard to plan your HueForge project. Define your design, select filament layers, and generate a complete shopping list with TD-optimized filament recommendations.",
+        url: `${BASE_URL}/hueforge-project-planner`,
+        applicationCategory: "DesignApplication",
+        operatingSystem: "Web",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "FilaScope Layer Stacking Preview",
+        description: "Visualize how filament layers blend based on TD values before you print. Preview color mixing and opacity for HueForge multi-layer 3D prints.",
+        url: `${BASE_URL}/hueforge-layer-preview`,
+        applicationCategory: "DesignApplication",
+        operatingSystem: "Web",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "FilaScope HueForge Color Matcher",
+        description: "Find 3D printing filaments matching any hex color or image sample, filtered by Transmission Distance (TD) value for HueForge compatibility.",
+        url: `${BASE_URL}/hueforge-color-matcher`,
+        applicationCategory: "UtilitiesApplication",
+        operatingSystem: "Web",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "FilaScope Filament Substitution Finder",
+        description: "Find TD-equivalent filament alternatives from other brands when your filament is out of stock. Match by Transmission Distance value for seamless HueForge substitutions.",
+        url: `${BASE_URL}/hueforge-filament-substitute-finder`,
+        applicationCategory: "UtilitiesApplication",
+        operatingSystem: "Web",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL },
+      },
+    ],
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <DocumentHead
