@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
-import { BrandLogo } from "@/components/ui/BrandLogo";
 import {
   Select,
   SelectContent,
@@ -439,8 +438,13 @@ export function BrandProductsTab({
                       {product.representativeImage ? (
                         <img src={product.representativeImage} alt={`${product.baseName} 3D printing filament spool by ${brandName}`} className="w-full h-full object-contain" loading="lazy" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <BrandLogo src={brandLogo} brandName={brandName} size="sm" className="opacity-20" />
+                        <div
+                          className="w-full h-full flex items-center justify-center rounded-lg"
+                          style={{ background: `linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 100%)` }}
+                        >
+                          <span className="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider">
+                            {product.material?.slice(0, 4) || '?'}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -525,8 +529,16 @@ export function BrandProductsTab({
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center">
-                          <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[50%] max-h-[50%] opacity-20" />
+                        <div
+                          className="w-full h-full flex flex-col items-center justify-center gap-1.5"
+                          style={{ background: `linear-gradient(145deg, hsl(var(--muted)) 0%, hsl(var(--accent) / 0.3) 100%)` }}
+                        >
+                          <span className="text-lg font-bold text-muted-foreground/40 uppercase tracking-widest">
+                            {product.material?.slice(0, 5) || '?'}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/30 uppercase tracking-wider">
+                            Image coming soon
+                          </span>
                         </div>
                       )}
 

@@ -5,7 +5,7 @@ import { toBrandSlug, isEncodedBrandName } from "@/utils/brandSlug";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle2, Clock, AlertCircle, AlertTriangle, RefreshCw, Package, ArrowRight, SearchX } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, AlertCircle, AlertTriangle, RefreshCw, Package, ArrowRight, SearchX, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandDetailSkeleton } from "@/components/brands/BrandDetailSkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -31,7 +31,52 @@ import { BrandBadgesDisplay, getBrandBadges } from "@/components/brands/BrandBad
 import { BrandFAQSection } from "@/components/brands/BrandFAQSection";
 import { RelatedBrandsSection } from "@/components/brands/RelatedBrandsSection";
 
+import { toast } from "sonner";
+
 type Filament = Tables<"filaments">;
+
+// Admin-only component for triggering Fiberlogy image sync
+function AdminFiberlogySync({ brandId }: { brandId?: string | null }) {
+  const [syncing, setSyncing] = useState(false);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-fiberlogy-images");
+      if (error) throw error;
+      setResult(data);
+      toast.success(`Synced ${data?.updated || 0} images`);
+    } catch (err: unknown) {
+      toast.error(`Sync failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  return (
+    <div className="mb-4 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+      <div className="flex items-center gap-3">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleSync}
+          disabled={syncing}
+          className="gap-1.5 text-xs border-amber-500/30 hover:border-amber-500/50"
+        >
+          <ImageIcon className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Syncing Images..." : "Sync Fiberlogy Images from np3dp.com"}
+        </Button>
+        {result && (
+          <span className="text-xs text-muted-foreground">
+            Matched: {String(result.matched ?? 0)} | Updated: {String(result.updated ?? 0)} | Skipped: {String(result.skipped ?? 0)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface GroupedProduct {
   baseName: string;
@@ -810,7 +855,10 @@ const BrandDetail = () => {
           </div>
         )}
 
-        {/* Admin Scraping Status - Removed from user-facing page */}
+        {/* Admin Tools */}
+        {isAdmin && brandSlug === 'fiberlogy' && (
+          <AdminFiberlogySync brandId={automatedBrand?.id} />
+        )}
 
         {/* Tab Navigation */}
         <BrandTabNav 

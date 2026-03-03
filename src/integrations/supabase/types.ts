@@ -4088,6 +4088,7 @@ export type Database = {
           value_score: number | null
           variant_available: boolean | null
           variant_compare_at_price: number | null
+          variant_image: string | null
           variant_price: number | null
           variant_sku: string | null
           vendor: string | null
@@ -4237,6 +4238,7 @@ export type Database = {
           value_score?: number | null
           variant_available?: boolean | null
           variant_compare_at_price?: number | null
+          variant_image?: string | null
           variant_price?: number | null
           variant_sku?: string | null
           vendor?: string | null
@@ -4386,6 +4388,7 @@ export type Database = {
           value_score?: number | null
           variant_available?: boolean | null
           variant_compare_at_price?: number | null
+          variant_image?: string | null
           variant_price?: number | null
           variant_sku?: string | null
           vendor?: string | null
