@@ -793,6 +793,18 @@ const BrandDetail = () => {
               brandInfo={brandInfo}
               productCount={groupedProducts.length}
               materialsCount={availableMaterials.length}
+              onNavigateToProducts={() => {
+                setActiveTab("products");
+                window.history.replaceState(null, "", "#products");
+              }}
+              onNavigateToMaterials={() => {
+                setActiveTab("overview");
+                window.history.replaceState(null, "", "#overview");
+                setTimeout(() => {
+                  const el = document.getElementById("materials-offered");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
             />
             {/* FAQ Section for SEO - always in DOM */}
             {(filaments?.length ?? 0) > 0 && <BrandFAQSection

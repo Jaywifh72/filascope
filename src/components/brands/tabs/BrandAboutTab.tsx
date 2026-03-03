@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Globe, MapPin, Calendar, Building2, ExternalLink, Mail, HelpCircle } from "lucide-react";
+import { Globe, MapPin, Calendar, Building2, ExternalLink, Mail, HelpCircle, Users, Package, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAffiliateLink } from "@/hooks/useAffiliateLink";
+import { cn } from "@/lib/utils";
 
 interface BrandInfo {
   summary?: string;
@@ -30,6 +31,8 @@ interface BrandAboutTabProps {
   brandInfo: BrandInfo | null;
   productCount: number;
   materialsCount: number;
+  onNavigateToProducts?: () => void;
+  onNavigateToMaterials?: () => void;
 }
 
 // Helper to format website URL for display
@@ -44,11 +47,9 @@ const formatWebsiteDisplay = (url: string): string => {
 
 // Helper to split summary into paragraphs
 const formatDescription = (summary: string): string[] => {
-  // Split on double newlines or period followed by space and capital letter for natural breaks
   const paragraphs = summary
     .split(/\n\n+/)
     .flatMap((p) => {
-      // If paragraph is very long, try to split on sentence boundaries
       if (p.length > 400) {
         const sentences = p.match(/[^.!?]+[.!?]+\s*/g) || [p];
         const chunks: string[] = [];
@@ -71,11 +72,28 @@ const formatDescription = (summary: string): string[] => {
   return paragraphs;
 };
 
+// Company info field component
+function InfoField({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+        <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
+      </div>
+      <div className="text-sm text-white font-medium pl-6">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function BrandAboutTab({
   brandName,
   brandInfo,
   productCount,
   materialsCount,
+  onNavigateToProducts,
+  onNavigateToMaterials,
 }: BrandAboutTabProps) {
   const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(brandName);
   if (!brandInfo) {
@@ -110,9 +128,12 @@ export function BrandAboutTab({
             {paragraphs.map((paragraph, idx) => (
               <p
                 key={idx}
-                className={`text-gray-300 leading-relaxed mb-4 last:mb-0 ${
-                  idx === 0 ? "text-lg font-medium text-gray-200" : ""
-                }`}
+                className={cn(
+                  "leading-relaxed mb-4 last:mb-0",
+                  idx === 0
+                    ? "text-base text-gray-200 border-l-2 border-cyan-500/30 pl-4"
+                    : "text-sm text-gray-400"
+                )}
               >
                 {paragraph}
               </p>
@@ -133,93 +154,65 @@ export function BrandAboutTab({
           <h2 className="text-xl font-semibold text-white mb-4">Company Information</h2>
           <Card className="bg-gray-800/30 border-gray-700">
             <CardContent className="p-6">
-              <div className="grid sm:grid-cols-2 gap-6">
-                {brandInfo.founded && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Calendar className="w-4 h-4" />
-                      <span>Founded</span>
-                    </div>
-                    <div className="text-base text-white font-medium">
-                      {brandInfo.founded}
-                    </div>
-                  </div>
-                )}
+              <div className="grid sm:grid-cols-2 gap-x-8 gap-y-5 divide-y sm:divide-y-0 sm:divide-x divide-gray-700/30">
+                {/* Left column */}
+                <div className="space-y-5">
+                  <InfoField icon={Calendar} label="Founded">
+                    {brandInfo.founded || "—"}
+                  </InfoField>
 
-                {(brandInfo.headquarters || brandInfo.location) && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin className="w-4 h-4" />
-                      <span>Headquarters</span>
-                    </div>
-                    <div className="text-base text-white font-medium">
-                      {brandInfo.headquarters || brandInfo.location}
-                    </div>
-                  </div>
-                )}
+                  <InfoField icon={MapPin} label="Headquarters">
+                    {brandInfo.headquarters || brandInfo.location || "—"}
+                  </InfoField>
 
-                {brandInfo.companyType && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Building2 className="w-4 h-4" />
-                      <span>Company Type</span>
-                    </div>
-                    <div className="text-base text-white font-medium capitalize">
-                      {brandInfo.companyType.replace(/-/g, " ")}
-                    </div>
-                  </div>
-                )}
-
-                {brandInfo.website && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Globe className="w-4 h-4" />
-                      <span>Website</span>
-                    </div>
-                    <a
-                      href={hasAffiliate ? buildLink(brandInfo.website) : brandInfo.website}
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      className="text-base text-primary hover:underline font-medium inline-flex items-center gap-1"
-                      onClick={(e) => {
-                        if (hasAffiliate) {
-                          e.preventDefault();
-                          trackAndOpen(brandInfo.website!, {
-                            sourcePage: window.location.pathname,
-                            sourceComponent: 'BrandAboutTab-CompanyInfo',
-                          });
-                        }
-                      }}
-                    >
-                      {formatWebsiteDisplay(brandInfo.website)}
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
-
-                {(brandInfo.ceo || brandInfo.president || brandInfo.founder) && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Building2 className="w-4 h-4" />
-                      <span>{brandInfo.ceo ? "CEO" : brandInfo.president ? "President" : "Founder"}</span>
-                    </div>
-                    <div className="text-base text-white font-medium">
+                  {(brandInfo.ceo || brandInfo.president || brandInfo.founder) && (
+                    <InfoField icon={Building2} label={brandInfo.ceo ? "CEO" : brandInfo.president ? "President" : "Founder"}>
                       {brandInfo.ceo || brandInfo.president || brandInfo.founder}
-                    </div>
-                  </div>
-                )}
+                    </InfoField>
+                  )}
+                </div>
 
-                {brandInfo.parentCompany && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Building2 className="w-4 h-4" />
-                      <span>Parent Company</span>
-                    </div>
-                    <div className="text-base text-white font-medium">
+                {/* Right column */}
+                <div className="space-y-5 pt-5 sm:pt-0 sm:pl-8">
+                  <InfoField icon={Building2} label="Company Type">
+                    {brandInfo.companyType
+                      ? <span className="capitalize">{brandInfo.companyType.replace(/-/g, " ")}</span>
+                      : "—"}
+                  </InfoField>
+
+                  <InfoField icon={Users} label="Employees">
+                    {brandInfo.employees || "—"}
+                  </InfoField>
+
+                  <InfoField icon={Globe} label="Website">
+                    {brandInfo.website ? (
+                      <a
+                        href={hasAffiliate ? buildLink(brandInfo.website) : brandInfo.website}
+                        target="_blank"
+                        rel="nofollow noopener noreferrer"
+                        className="text-primary hover:text-cyan-400 transition-colors inline-flex items-center gap-1"
+                        onClick={(e) => {
+                          if (hasAffiliate) {
+                            e.preventDefault();
+                            trackAndOpen(brandInfo.website!, {
+                              sourcePage: window.location.pathname,
+                              sourceComponent: 'BrandAboutTab-CompanyInfo',
+                            });
+                          }
+                        }}
+                      >
+                        {formatWebsiteDisplay(brandInfo.website)}
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    ) : "—"}
+                  </InfoField>
+
+                  {brandInfo.parentCompany && (
+                    <InfoField icon={Building2} label="Parent Company">
                       {brandInfo.parentCompany}
-                    </div>
-                  </div>
-                )}
+                    </InfoField>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -230,16 +223,32 @@ export function BrandAboutTab({
       <section>
         <h2 className="text-xl font-semibold text-white mb-4">Product Catalog</h2>
         <div className="grid grid-cols-2 gap-4 w-full">
-          <Card className="bg-card/50 border border-border/30 border-t-2 border-t-primary/40">
+          <Card
+            className={cn(
+              "bg-card/50 border border-border/30 border-t-2 border-t-primary/40 transition-all duration-200",
+              onNavigateToProducts && "cursor-pointer hover:scale-[1.02] hover:border-cyan-500/30"
+            )}
+            onClick={onNavigateToProducts}
+          >
             <CardContent className="p-4 text-center">
+              <Package className="w-5 h-5 text-primary mx-auto mb-1.5 opacity-60" />
               <div className="text-3xl font-bold text-primary">{productCount}</div>
               <div className="text-sm text-gray-400">Products</div>
+              <div className="w-12 h-0.5 bg-primary/30 rounded-full mx-auto mt-2" />
             </CardContent>
           </Card>
-          <Card className="bg-card/50 border border-border/30 border-t-2 border-t-primary/40">
+          <Card
+            className={cn(
+              "bg-card/50 border border-border/30 border-t-2 border-t-primary/40 transition-all duration-200",
+              onNavigateToMaterials && "cursor-pointer hover:scale-[1.02] hover:border-cyan-500/30"
+            )}
+            onClick={onNavigateToMaterials}
+          >
             <CardContent className="p-4 text-center">
+              <Layers className="w-5 h-5 text-primary mx-auto mb-1.5 opacity-60" />
               <div className="text-3xl font-bold text-primary">{materialsCount}</div>
               <div className="text-sm text-gray-400">Materials</div>
+              <div className="w-12 h-0.5 bg-primary/30 rounded-full mx-auto mt-2" />
             </CardContent>
           </Card>
         </div>
