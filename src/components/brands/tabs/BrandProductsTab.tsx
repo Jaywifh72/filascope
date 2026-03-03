@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Package, ArrowUpDown, X, ExternalLink, SearchX } from "lucide-react";
+import { Package, ArrowUpDown, X, ExternalLink, SearchX, GitCompareArrows } from "lucide-react";
+import { useCompare } from "@/hooks/useCompare";
+import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +34,7 @@ interface GroupedProduct {
   categoryUrl: string | null;
 }
 
-type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc" | "colors-desc";
+type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc" | "colors-desc" | "material";
 
 interface BrandProductsTabProps {
   brandName: string;
@@ -56,6 +58,7 @@ export function BrandProductsTab({
 
   const { formatPrice } = useRegion();
   const { getRegionalUrl } = useRegionalStore();
+  const { addItem, isInCompare, isFull } = useCompare();
 
   // Filter states
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>(
@@ -229,6 +232,9 @@ export function BrandProductsTab({
       case "colors-desc":
         sorted.sort((a, b) => b.variants.length - a.variants.length);
         break;
+      case "material":
+        sorted.sort((a, b) => (a.material || "").localeCompare(b.material || ""));
+        break;
     }
     return sorted;
   }, [filteredProducts, sortBy]);
@@ -336,6 +342,7 @@ export function BrandProductsTab({
                 <SelectItem value="price-asc">Price: Low to High</SelectItem>
                 <SelectItem value="price-desc">Price: High to Low</SelectItem>
                 <SelectItem value="colors-desc">Most Colors</SelectItem>
+                <SelectItem value="material">Material Type</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -372,150 +379,145 @@ export function BrandProductsTab({
 
         {/* Products Grid */}
         {sortedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {sortedProducts.map((product) => {
               const filamentHref = `/filament/${product.variants[0]?.product_handle || product.variants[0]?.id}`;
+              const firstVariant = product.variants[0];
+              const inCompare = firstVariant ? isInCompare(firstVariant.id) : false;
+
+              const handleCompareClick = (e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!firstVariant) return;
+                addItem({
+                  id: firstVariant.id,
+                  product_title: firstVariant.product_title,
+                  vendor: firstVariant.vendor,
+                  material: firstVariant.material,
+                  color_hex: firstVariant.color_hex,
+                  variant_price: firstVariant.variant_price,
+                  net_weight_g: firstVariant.net_weight_g,
+                  featured_image: firstVariant.featured_image,
+                });
+              };
+
               return (
               <Card
                 key={product.baseName}
-                className="bg-card border-border hover:border-primary/50 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer group"
+                className="bg-card border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer group/card overflow-hidden"
                 onClick={() => window.location.href = filamentHref}
               >
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    {/* Product Image */}
-                    <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center relative">
-                      {product.representativeImage ? (
-                        <img
-                          src={product.representativeImage}
-                          alt={product.baseName}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <>
-                          <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[60%] max-h-[60%] opacity-20" />
-                          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <span className="text-2xl font-bold text-primary">
-                                {product.material?.charAt(0) || "📦"}
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground font-medium">
-                              {product.material || "Filament"}
-                            </div>
-                          </div>
-                        </>
-                      )}
+                {/* Image Container - fixed height */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-gray-800 rounded-t-lg">
+                  {product.representativeImage ? (
+                    <img
+                      src={product.representativeImage}
+                      alt={product.baseName}
+                      className="w-full h-full object-contain group-hover/card:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[50%] max-h-[50%] opacity-20" />
                     </div>
+                  )}
 
-                    {/* Product Info */}
-                    <div className="space-y-3">
-                      <h3 className="font-semibold text-lg line-clamp-2">
-                        {product.baseName.replace(
-                          /\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i,
-                          ""
-                        )}
-                      </h3>
+                  {/* Compare quick-action */}
+                  <button
+                    onClick={handleCompareClick}
+                    className={cn(
+                      "absolute top-2 right-2 z-10 p-1.5 rounded-md transition-all duration-200",
+                      inCompare
+                        ? "opacity-100 bg-cyan-600 text-white"
+                        : "opacity-0 group-hover/card:opacity-100 bg-gray-900/70 text-gray-300 hover:bg-cyan-600 hover:text-white",
+                      isFull && !inCompare && "pointer-events-none"
+                    )}
+                    aria-label={inCompare ? "Added to compare" : "Add to compare"}
+                  >
+                    <GitCompareArrows className="w-3.5 h-3.5" />
+                  </button>
+                </div>
 
-                      {/* Material & Variants */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {product.material && (
-                          <MaterialBadge material={product.material} />
+                <CardContent className="p-4 flex flex-col min-h-[200px]">
+                  {/* Product Name */}
+                  <h3 className="font-semibold text-white text-sm line-clamp-2 mb-2 min-h-[40px]">
+                    {product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}
+                  </h3>
+
+                  {/* Material & Variants */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                    {product.material && (
+                      <MaterialBadge material={product.material} />
+                    )}
+                    {product.variants.length > 1 && (
+                      <Badge variant="outline" className="text-xs">
+                        {product.variants.length} colors
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Color Swatches - placeholder space for alignment */}
+                  <div className="min-h-[20px] flex items-center gap-0.5 mb-2">
+                    {product.variants.length > 1 && (
+                      <>
+                        {product.variants.slice(0, 6).map((variant, idx) => {
+                          const colorHex = variant.color_hex
+                            ? normalizeColorHex(variant.color_hex)
+                            : null;
+                          return colorHex ? (
+                            <div
+                              key={idx}
+                              className="w-3.5 h-3.5 rounded-full border border-border flex-shrink-0"
+                              style={{ backgroundColor: colorHex }}
+                              title={variant.color_family || variant.product_title}
+                            />
+                          ) : null;
+                        })}
+                        {product.variants.length > 6 && (
+                          <span className="text-[10px] text-muted-foreground ml-1">
+                            +{product.variants.length - 6}
+                          </span>
                         )}
-                        {product.variants.length > 1 && (
-                          <Badge variant="outline" className="text-xs">
-                            {product.variants.length} colors
-                          </Badge>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Price Range - with fallback for missing prices */}
+                  <div className="min-h-[24px] mb-3">
+                    {product.priceRange && product.priceRange.min !== null ? (
+                      <div className="text-sm">
+                        {product.priceRange.min === product.priceRange.max ? (
+                          <span className="font-semibold text-foreground">
+                            {formatPrice(product.priceRange.min)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            {formatPrice(product.priceRange.min!)} - {formatPrice(product.priceRange.max!)}
+                          </span>
                         )}
                       </div>
-
-                      {/* Color Swatches - Max 6 (reserve space for consistent card height) */}
-                      <div className="min-h-[16px] flex items-center gap-0.5">
-                        {product.variants.length > 1 && (
-                          <>
-                            {product.variants.slice(0, 6).map((variant, idx) => {
-                              const colorHex = variant.color_hex
-                                ? normalizeColorHex(variant.color_hex)
-                                : null;
-                              return colorHex ? (
-                                <div
-                                  key={idx}
-                                  className="w-4 h-4 rounded-full border border-border flex-shrink-0"
-                                  style={{ backgroundColor: colorHex }}
-                                  title={
-                                    variant.color_family || variant.product_title
-                                  }
-                                />
-                              ) : null;
-                            })}
-                            {product.variants.length > 6 && (
-                              <span className="text-xs text-muted-foreground ml-1.5">
-                                +{product.variants.length - 6} more
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </div>
-
-                      {/* Price Range */}
-                      {product.priceRange &&
-                        product.priceRange.min !== null && (
-                          <div className="text-sm">
-                            {product.priceRange.min ===
-                            product.priceRange.max ? (
-                              <span className="font-semibold text-foreground">
-                                {formatPrice(product.priceRange.min)}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">
-                                {formatPrice(product.priceRange.min!)} -{" "}
-                                {formatPrice(product.priceRange.max!)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                      {/* View buttons */}
-                      {product.variants.length > 1 ? (
-                        <div className="pt-2">
-                          <a
-                            href={filamentHref}
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.location.href = filamentHref; }}
-                            className="w-full text-xs inline-flex items-center justify-center rounded-md border border-border py-1.5 hover:border-primary hover:bg-primary/10 transition-colors"
-                          >
-                            View Details
-                          </a>
-
-                          {product.categoryUrl && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full mt-2 text-xs"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(
-                                  getRegionalUrl(product.categoryUrl, brandName),
-                                  "_blank"
-                                );
-                              }}
-                            >
-                              <ExternalLink className="w-3 h-3 mr-1" />
-                              View Collection
-                            </Button>
-                          )}
-                        </div>
-                      ) : (
+                    ) : (
+                      <div>
+                        <span className="text-gray-500 text-xs italic">Price unavailable</span>
                         <a
                           href={filamentHref}
-                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.location.href = filamentHref; }}
-                          className="w-full mt-2 text-sm inline-flex items-center justify-center rounded-md border border-border py-2 hover:border-primary hover:bg-primary/10 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); }}
+                          className="block text-cyan-500 text-xs hover:text-cyan-400 transition-colors mt-0.5"
                         >
-                          View Details
+                          Check retailer →
                         </a>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
+
+                  {/* View Details - pinned to bottom */}
+                  <a
+                    href={filamentHref}
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.location.href = filamentHref; }}
+                    className="mt-auto w-full text-xs h-8 inline-flex items-center justify-center rounded-md border border-border text-muted-foreground group-hover/card:bg-cyan-600 group-hover/card:text-white group-hover/card:border-cyan-600 transition-colors duration-200"
+                  >
+                    View Details
+                  </a>
                 </CardContent>
               </Card>
               );
