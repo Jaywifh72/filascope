@@ -5,7 +5,8 @@ import { toBrandSlug, isEncodedBrandName } from "@/utils/brandSlug";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw, Package, ArrowRight } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, AlertCircle, AlertTriangle, RefreshCw, Package, ArrowRight, SearchX } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { BrandDetailSkeleton } from "@/components/brands/BrandDetailSkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DetailBreadcrumb } from "@/components/navigation/DetailBreadcrumb";
@@ -361,7 +362,7 @@ const BrandDetail = () => {
     enabled: !!brandSlug && isAdmin,
   });
 
-  const { data: filaments, isLoading } = useQuery({
+  const { data: filaments, isLoading, isError, refetch } = useQuery({
     queryKey: ["brand-filaments", brandSlug],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -608,6 +609,25 @@ const BrandDetail = () => {
     return <BrandDetailSkeleton />;
   }
 
+  // Error state
+  if (isError) {
+    return (
+      <div className="min-h-screen p-8">
+        <div className="max-w-md mx-auto flex flex-col items-center justify-center text-center py-24">
+          <AlertTriangle className="w-12 h-12 text-amber-400 mb-4" strokeWidth={1.5} />
+          <h1 className="text-xl font-semibold text-foreground mb-2">Unable to load brand information</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            We're having trouble loading data for this brand. Please try again.
+          </p>
+          <div className="flex gap-3">
+            <Button onClick={() => refetch()}>Retry</Button>
+            <Button variant="outline" onClick={() => navigate('/brands')}>Browse All Brands</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Empty product state — brand exists but has no indexed products
   const hasNoProducts = !filaments || filaments.length === 0;
 
@@ -798,19 +818,24 @@ const BrandDetail = () => {
         {/* Tab Content — all panels always in DOM for crawler discoverability */}
         <div className="mt-6">
           {hasNoProducts ? (
-            <EmptyState
-              icon={Package}
-              title="No products indexed yet"
-              message="We're working on adding products from this brand. Check back soon!"
-              action={{
-                label: 'Browse all filaments →',
-                href: '/',
-                variant: 'outline',
-              }}
-            />
+            <div className="flex flex-col items-center justify-center text-center py-16 max-w-md mx-auto">
+              <Package className="w-12 h-12 text-muted-foreground mb-4" strokeWidth={1.5} />
+              <h3 className="text-xl font-semibold text-foreground mb-2">No products indexed yet for {displayName}</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                We're working on adding products. Check back soon!
+              </p>
+              <Button variant="outline" onClick={() => navigate('/filaments')}>
+                Browse All Filaments
+              </Button>
+            </div>
           ) : (<>
           {/* Overview Tab */}
-          <div id="tabpanel-overview" role="tabpanel" aria-labelledby="tab-overview" hidden={activeTab !== "overview"}>
+          <div
+            id="tabpanel-overview"
+            role="tabpanel"
+            aria-labelledby="tab-overview"
+            className={activeTab === "overview" ? "animate-fade-in" : "hidden"}
+          >
             <BrandOverviewTab
               brandName={displayName}
               brandLogo={brandLogo}
@@ -830,7 +855,12 @@ const BrandDetail = () => {
           </div>
 
           {/* Products Tab */}
-          <div id="tabpanel-products" role="tabpanel" aria-labelledby="tab-products" hidden={activeTab !== "products"}>
+          <div
+            id="tabpanel-products"
+            role="tabpanel"
+            aria-labelledby="tab-products"
+            className={activeTab === "products" ? "animate-fade-in" : "hidden"}
+          >
             <BrandProductsTab
               brandName={displayName}
               brandLogo={brandLogo}
@@ -842,7 +872,12 @@ const BrandDetail = () => {
           </div>
 
           {/* About Tab — always rendered so Googlebot indexes brand descriptions, FAQs, company info */}
-          <div id="tabpanel-about" role="tabpanel" aria-labelledby="tab-about" hidden={activeTab !== "about"}>
+          <div
+            id="tabpanel-about"
+            role="tabpanel"
+            aria-labelledby="tab-about"
+            className={activeTab === "about" ? "animate-fade-in" : "hidden"}
+          >
             <BrandAboutTab
               brandName={displayName}
               brandInfo={brandInfo}
