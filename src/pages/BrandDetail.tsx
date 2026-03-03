@@ -306,8 +306,9 @@ const BrandDetail = () => {
   const navigate = useNavigate();
   const decodedBrand = brand ? decodeURIComponent(brand) : "";
   const brandSlug = toBrandSlug(decodedBrand);
-  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<BrandTab>("overview");
+   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
+   const [activeTab, setActiveTab] = useState<BrandTab>("overview");
+   const [descExpanded, setDescExpanded] = useState(false);
   const { isAdmin } = useAuth();
   const { formatPrice } = useRegion();
 
@@ -717,20 +718,33 @@ const BrandDetail = () => {
 
         {/* Brand Answer Block for AEO */}
         {filaments && filaments.length > 0 && (
-          <p className="text-sm text-muted-foreground mx-auto max-w-4xl mb-6 leading-relaxed">
-            {displayName} is a 3D printer filament manufacturer
-            {brandInfo?.founded ? ` founded in ${brandInfo.founded}` : ''}
-            {brandInfo?.location ? ` and headquartered in ${brandInfo.location}` : ''}.
-            {' '}FilaScope indexes {groupedProducts.length} {displayName} filament product{groupedProducts.length !== 1 ? 's' : ''}
-            {' '}({filaments.length.toLocaleString()} color variant{filaments.length !== 1 ? 's' : ''})
-            {' '}across {availableMaterials.length} material type{availableMaterials.length !== 1 ? 's' : ''}
-            {availableMaterials.length > 0
-              ? ` including ${availableMaterials.slice(0, 6).join(', ')}${availableMaterials.length > 6 ? `, and more` : ''}`
-              : ''}.
-            {brandPriceRange
-              ? ` Prices range from ${formatPrice(brandPriceRange.min)} to ${formatPrice(brandPriceRange.max)} with real-time pricing tracked from multiple retailers.`
-              : ' Real-time pricing is tracked from multiple retailers.'}
-          </p>
+          <div className="mx-auto max-w-4xl mb-6">
+            <p className={`text-sm text-muted-foreground leading-relaxed ${descExpanded ? '' : 'line-clamp-2 md:line-clamp-none'}`}>
+              {displayName} is a 3D printer filament manufacturer
+              {brandInfo?.founded ? ` founded in ${brandInfo.founded}` : ''}
+              {brandInfo?.location ? ` and headquartered in ${brandInfo.location}` : ''}.
+              {' '}FilaScope indexes <strong className="text-white font-semibold">{groupedProducts.length}</strong> {displayName} filament product{groupedProducts.length !== 1 ? 's' : ''}
+              {' '}(<strong className="text-white font-semibold">{filaments.length.toLocaleString()}</strong> color variant{filaments.length !== 1 ? 's' : ''})
+              {' '}across <strong className="text-white font-semibold">{availableMaterials.length}</strong> material type{availableMaterials.length !== 1 ? 's' : ''}
+              {availableMaterials.length > 0
+                ? ` including ${availableMaterials.slice(0, 6).join(', ')}${availableMaterials.length > 6 ? `, and more` : ''}`
+                : ''}.
+              {brandPriceRange
+                ? <> Prices range from <strong className="text-white font-semibold">{formatPrice(brandPriceRange.min)}</strong> to <strong className="text-white font-semibold">{formatPrice(brandPriceRange.max)}</strong> with real-time pricing tracked from multiple retailers.</>
+                : ' Real-time pricing is tracked from multiple retailers.'}
+            </p>
+            <button
+              onClick={() => setDescExpanded(v => !v)}
+              className="text-cyan-400 text-xs mt-1 md:hidden hover:underline"
+            >
+              {descExpanded ? 'Read less' : 'Read more'}
+            </button>
+            <div className="flex flex-wrap gap-4 text-xs text-gray-500 mt-3">
+              {brandInfo?.location && <span>🏭 Made in {brandInfo.location}</span>}
+              {availableMaterials.length > 0 && <span>📦 {availableMaterials.length} Material Types</span>}
+              {brandPriceRange && <span>💰 From {formatPrice(brandPriceRange.min)}/spool</span>}
+            </div>
+          </div>
         )}
 
         {/* Brand Badges */}
