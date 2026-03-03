@@ -321,6 +321,15 @@ export function BrandOverviewTab({
     });
   };
 
+  // Scroll progress tracking
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const updateScrollProgress = () => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    setScrollProgress(maxScroll > 0 ? scrollLeft / maxScroll : 0);
+  };
+
   if (groupedProducts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-16 max-w-md mx-auto">
@@ -380,16 +389,17 @@ export function BrandOverviewTab({
       {popularProducts.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white border-l-[3px] border-cyan-500 pl-3">Popular Products</h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-white border-l-[3px] border-cyan-500 pl-3">Popular Products</h2>
+              <span className="text-xs bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">🔥 Trending</span>
+            </div>
+            <button 
               onClick={onViewAllProducts} 
-              className="text-primary hover:text-primary/80"
+              className="group/viewall inline-flex items-center gap-1 text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
             >
-              View All
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+              View All {groupedProducts.length} Products
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/viewall:translate-x-1" />
+            </button>
           </div>
           
           {/* Carousel Container */}
@@ -398,9 +408,9 @@ export function BrandOverviewTab({
             {canScrollLeft && (
               <button
                 onClick={() => scrollCarousel("left")}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full p-2 shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-opacity -ml-3"
+                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border shadow-lg items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all duration-200 hover:bg-cyan-500/20 hover:border-cyan-500/50 -ml-4"
               >
-                <ChevronLeft className="w-5 h-5 text-white" />
+                <ChevronLeft className="w-5 h-5 text-foreground" />
               </button>
             )}
             
@@ -408,9 +418,9 @@ export function BrandOverviewTab({
             {canScrollRight && popularProducts.length > 4 && (
               <button
                 onClick={() => scrollCarousel("right")}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full p-2 shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-opacity -mr-3"
+                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border shadow-lg items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all duration-200 hover:bg-cyan-500/20 hover:border-cyan-500/50 -mr-4"
               >
-                <ChevronRight className="w-5 h-5 text-white" />
+                <ChevronRight className="w-5 h-5 text-foreground" />
               </button>
             )}
 
@@ -419,18 +429,19 @@ export function BrandOverviewTab({
               <div className="absolute left-0 top-0 bottom-2 w-12 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
             )}
             {canScrollRight && popularProducts.length > 4 && (
-              <div className="absolute right-0 top-0 bottom-2 w-16 bg-gradient-to-l from-gray-950 via-gray-950/80 to-transparent z-[5] pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-2 w-16 bg-gradient-to-l from-background via-background/80 to-transparent z-[5] pointer-events-none" />
             )}
 
             {/* Scrollable Products */}
             <div
               ref={carouselRef}
-              onScroll={updateScrollButtons}
-              className="flex gap-4 overflow-x-auto overflow-y-hidden scrollbar-hide pb-2 -mx-1 px-1 snap-x snap-mandatory"
+              onScroll={() => { updateScrollButtons(); updateScrollProgress(); }}
+              className="flex gap-4 overflow-x-auto overflow-y-hidden scrollbar-hide pb-2 -mx-1 px-1 snap-x snap-mandatory scroll-smooth"
             >
               {popularProducts.map((product) => {
                 const filamentHref = `/filament/${product.variants[0]?.product_handle || product.variants[0]?.id}`;
                 const { colors: swatchColors, overflow: swatchOverflow } = getSwatchColors(product.variants);
+                const totalColors = swatchOverflow + swatchColors.length;
                 const firstVariant = product.variants[0];
                 const inCompare = firstVariant ? isInCompare(firstVariant.id) : false;
 
@@ -491,15 +502,23 @@ export function BrandOverviewTab({
                       {product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}
                     </div>
                     
-                    {/* Material Badge */}
+                    {/* Material Badge with tooltip */}
                     {product.material && (
-                      <Badge 
-                        variant="secondary" 
-                        className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 mb-2 max-w-[140px] truncate w-fit"
-                        title={product.material}
-                      >
-                        {product.material}
-                      </Badge>
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Badge 
+                                variant="secondary" 
+                                className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 mb-2 max-w-[140px] truncate w-fit cursor-default"
+                              >
+                                {product.material}
+                              </Badge>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">{product.material}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
 
                     {/* Color Swatches */}
@@ -511,23 +530,30 @@ export function BrandOverviewTab({
                             className="w-3 h-3 rounded-full border border-border flex-shrink-0"
                             style={{ backgroundColor: hex }}
                             role="img"
-                            aria-label={`Color swatch`}
+                            aria-label="Color swatch"
                           />
                         ))}
                         {swatchOverflow > 0 && (
-                          <span className="text-[10px] text-muted-foreground ml-0.5">+{swatchOverflow}</span>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-[10px] text-muted-foreground ml-0.5 cursor-default">+{swatchOverflow}</span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">Available in {totalColors} colors</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                     )}
                     
                     {/* Price - converted to user's regional currency */}
                     {product.priceRange && product.priceRange.min !== null ? (
-                      <div className="text-sm text-foreground font-semibold mb-3">
+                      <div className="text-base text-foreground font-bold mb-3">
                         {product.priceRange.min === product.priceRange.max ? (
                           <span>{pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.min))}/kg</span>
                         ) : (
-                          <span className="text-muted-foreground">
-                            {pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.min))} - {pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.max))}/kg
+                          <span>
+                            {pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.min))} – {pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.max))}<span className="text-sm font-normal text-muted-foreground">/kg</span>
                           </span>
                         )}
                       </div>
@@ -536,7 +562,7 @@ export function BrandOverviewTab({
                     )}
                     
                     {/* View Details Link — pushed to bottom */}
-                    <span className="mt-auto w-full text-xs h-8 border border-border rounded-md flex items-center justify-center text-muted-foreground group-hover/card:bg-cyan-600 group-hover/card:text-white group-hover/card:border-cyan-600 transition-colors duration-200">
+                    <span className="mt-auto w-full text-xs h-8 border border-border rounded-md flex items-center justify-center text-muted-foreground group-hover/card:bg-cyan-500/10 group-hover/card:text-cyan-400 group-hover/card:border-cyan-500/50 transition-all duration-200">
                       View Details
                     </span>
                   </CardContent>
@@ -545,6 +571,16 @@ export function BrandOverviewTab({
                 );
               })}
             </div>
+
+            {/* Scroll progress indicator */}
+            {popularProducts.length > 4 && (
+              <div className="mt-3 h-1 bg-muted/30 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-cyan-500 rounded-full transition-all duration-150"
+                  style={{ width: `${Math.max(10, scrollProgress * 100)}%` }}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
