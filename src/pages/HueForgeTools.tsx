@@ -72,8 +72,8 @@ export default function HueForgeTools() {
   useJsonLd({
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "HueForge Tools",
-    description: "FilaScope's complete toolkit for HueForge creators.",
+    name: "HueForge Tools & Transmissivity Data",
+    description: "The most complete HueForge toolkit on the web.",
     numberOfItems: HUEFORGE_TOOLS.length,
     itemListElement: HUEFORGE_TOOLS.map((tool, i) => ({
       "@type": "ListItem",
@@ -102,7 +102,7 @@ export default function HueForgeTools() {
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <DocumentHead
         title="HueForge Tools — TD Database, Palette Builder, Color Matcher & More | FilaScope"
-        description="Free HueForge tools for 3D printing. Search TD values, build filament palettes, preview layer stacking, match colors from images, and plan multicolor prints."
+        description="Free HueForge tools and the web's largest filament Transmission Distance (TD) database. Search 111+ filament TD values, build palettes, preview layer stacking, match colors, find substitutes, and plan HueForge projects."
       />
       <Breadcrumbs
         items={[{ name: "HueForge Tools", url: "/hueforge-tools" }]}
@@ -127,10 +127,10 @@ export default function HueForgeTools() {
           <rect width="100%" height="100%" fill="url(#hero-dots)" />
         </svg>
         <h1 className="relative text-3xl md:text-4xl font-bold mb-3 hero-shimmer">
-          HueForge Tools
+          HueForge Tools &amp; Transmissivity Data
         </h1>
         <p className="relative text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed">
-          FilaScope's complete toolkit for HueForge creators. Browse TD data, build palettes, preview layers, match colors, and plan projects — all in one place.
+          The most complete HueForge toolkit on the web. Search the largest filament TD value database, build multi-filament palettes, preview layer stacking, match colors by hex or image, and plan your next HueForge project — all free, all in one place.
         </p>
         <details id="what-is-td" className="relative mt-4 max-w-2xl mx-auto group/td">
           <summary className="text-sm text-primary hover:text-primary/80 cursor-pointer inline-flex items-center gap-1 list-none [&::-webkit-details-marker]:hidden">
