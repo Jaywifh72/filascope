@@ -239,6 +239,9 @@ export default function HueForgeTools() {
         <p className="relative text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed">
           The most complete HueForge toolkit on the web. Search the largest filament TD value database, build multi-filament palettes, preview layer stacking, match colors by hex or image, and plan your next HueForge project — all free, all in one place.
         </p>
+        <p className="relative text-xs text-muted-foreground/60 mt-3">
+          Last updated: <time dateTime="2026-03">March 2026</time> · 111+ filaments with TD values · 48+ brands tracked
+        </p>
         <section id="what-is-td" className="relative mt-6 max-w-2xl mx-auto text-left">
           <h2 className="text-lg font-semibold text-foreground mb-3">What is TD (Transmissivity Data)?</h2>
           <div className="p-4 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground leading-relaxed space-y-3">
@@ -257,6 +260,23 @@ export default function HueForgeTools() {
           </div>
         </section>
       </header>
+
+      {/* Authority Stats Bar */}
+      <div className="max-w-5xl mx-auto px-4 pb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-muted/50 border border-border">
+          {[
+            { value: "111+", label: "Filaments with TD Data" },
+            { value: "48+", label: "Brands Tracked" },
+            { value: "40,000+", label: "Monthly TD Lookups" },
+            { value: "6", label: "Free HueForge Tools" },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center py-2">
+              <div className="text-xl md:text-2xl font-bold text-primary">{stat.value}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Tool Grid */}
       <section className="max-w-5xl mx-auto px-4 pb-12">
