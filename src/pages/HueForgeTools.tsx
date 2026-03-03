@@ -4,7 +4,6 @@ import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
 import { Badge } from "@/components/ui/badge";
 import { HUEFORGE_TOOLS } from "@/components/hueforge/HueForgeToolsData";
-import { SiteFooter } from "@/components/SiteFooter";
 import { useJsonLd } from "@/components/seo/useJsonLd";
 
 const BASE_URL = "https://filascope.com";
@@ -253,8 +252,6 @@ export default function HueForgeTools() {
           ))}
         </div>
       </section>
-
-      <SiteFooter />
     </div>
   );
 }
