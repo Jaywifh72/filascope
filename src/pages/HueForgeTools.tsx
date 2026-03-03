@@ -110,14 +110,29 @@ export default function HueForgeTools() {
       />
 
       {/* Hero */}
-      <header className="max-w-5xl mx-auto px-4 pt-8 pb-10 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold mb-3">
+      <header className="relative max-w-5xl mx-auto px-4 pt-8 pb-10 text-center overflow-hidden">
+        {/* Radial gradient */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at 50% 30%, hsl(var(--primary) / 0.07), transparent 70%)" }}
+          aria-hidden="true"
+        />
+        {/* Dot pattern */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.03] dark:opacity-[0.03]" aria-hidden="true">
+          <defs>
+            <pattern id="hero-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="1" fill="currentColor" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#hero-dots)" />
+        </svg>
+        <h1 className="relative text-3xl md:text-4xl font-bold mb-3 hero-shimmer">
           HueForge Tools
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed">
+        <p className="relative text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed">
           FilaScope's complete toolkit for HueForge creators. Browse TD data, build palettes, preview layers, match colors, and plan projects — all in one place.
         </p>
-        <details id="what-is-td" className="mt-4 max-w-2xl mx-auto group/td">
+        <details id="what-is-td" className="relative mt-4 max-w-2xl mx-auto group/td">
           <summary className="text-sm text-primary hover:text-primary/80 cursor-pointer inline-flex items-center gap-1 list-none [&::-webkit-details-marker]:hidden">
             What is TD (Transmissivity Data)?
             <ChevronDown className="w-3 h-3 transition-transform duration-200 group-open/td:rotate-180" />
