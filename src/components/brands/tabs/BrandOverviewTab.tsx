@@ -673,42 +673,92 @@ function MaterialsGroupedSection({
     }
   };
 
+  // Distribution data for mini chart
+  const totalMaterials = availableMaterials.length;
+
   return (
     <div id="materials-offered">
-      <h2 className="text-lg font-semibold text-white mb-4 border-l-[3px] border-cyan-500 pl-3">Materials Offered</h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-white border-l-[3px] border-cyan-500 pl-3">Materials Offered</h2>
+        <p className="text-sm text-muted-foreground mt-1 pl-[15px]">Browse the complete material catalog</p>
+      </div>
+
+      {/* Mini Material Distribution Chart */}
+      {materialGroups.length > 1 && (
+        <TooltipProvider delayDuration={150}>
+          <div className="mb-5">
+            <div className="flex h-2 rounded-full overflow-hidden bg-muted/20">
+              {materialGroups.map((group) => {
+                const pct = (group.materials.length / totalMaterials) * 100;
+                return (
+                  <Tooltip key={group.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        className={cn(
+                          "h-full transition-all duration-200 hover:brightness-125 cursor-pointer",
+                          group.colorClass
+                        )}
+                        style={{ width: `${Math.max(pct, 2)}%` }}
+                        onClick={() => {
+                          const isExp = expandedGroups.has(group.id);
+                          if (!isExp) toggleGroup(group.id);
+                          document.getElementById(`mat-group-${group.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }}
+                        aria-label={`${group.name}: ${group.materials.length} materials`}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      {group.name}: {group.materials.length} material{group.materials.length !== 1 ? 's' : ''}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+              {materialGroups.map((group) => (
+                <span key={group.id} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <span className={cn("w-2 h-2 rounded-full", group.dotClass)} />
+                  {group.name} <span className="font-mono">{group.materials.length}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        </TooltipProvider>
+      )}
+
       <div className="space-y-3">
         {materialGroups.map((group) => {
           const isExpanded = expandedGroups.has(group.id);
           return (
-            <div key={group.id}>
+            <div key={group.id} id={`mat-group-${group.id}`}>
               {/* Group Header */}
               <button
                 onClick={() => toggleGroup(group.id)}
                 className="flex items-center gap-2 w-full text-left mb-2 group/header"
               >
-                <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", group.dotClass)} />
-                <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">
+                <span className={cn("w-3 h-3 rounded-full flex-shrink-0 shadow-sm", group.dotClass)} />
+                <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                   {group.name}
                 </span>
-                <span className="text-xs text-gray-600">({group.materials.length})</span>
+                <span className="text-xs text-muted-foreground/60 font-mono">({group.materials.length})</span>
                 <ChevronDown
                   size={14}
                   className={cn(
-                    "text-gray-500 transition-transform duration-200 ml-auto",
+                    "text-muted-foreground transition-transform duration-300 ml-auto",
                     !isExpanded && "-rotate-90"
                   )}
                 />
               </button>
 
-              {/* Group Content — always in DOM for SEO */}
+              {/* Group Content — always in DOM for SEO, animated with grid-rows */}
               <div className={cn(
-                "grid transition-all duration-300 ease-out",
+                "grid transition-all duration-300 ease-in-out",
                 isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
               )}>
                 <div className="overflow-hidden">
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                     <TooltipProvider delayDuration={200}>
-                      {group.materials.map((material) => {
+                      {group.materials.map((material, chipIdx) => {
                         const count = materialCounts[material] || 0;
                         const minPriceUsd = materialPriceData[material];
                         const tooltipText = minPriceUsd != null
@@ -725,17 +775,28 @@ function MaterialsGroupedSection({
                                   onFilterByMaterial(material);
                                 }}
                                 title={material}
-                                className="bg-gray-800/30 border border-gray-700 rounded-lg px-3 py-2.5 text-left hover:bg-gray-700/60 hover:border-cyan-500/30 transition-all group flex items-center gap-2"
+                                className={cn(
+                                  "bg-gray-800/30 border border-gray-700 rounded-lg px-3 py-2.5 text-left",
+                                  "hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all duration-200",
+                                  "group/chip flex items-center gap-2"
+                                )}
+                                style={{
+                                  transitionDelay: isExpanded ? `${chipIdx * 50}ms` : '0ms',
+                                }}
                               >
                                 <span className={cn("w-2 h-2 rounded-full flex-shrink-0", group.dotClass)} />
                                 <div className="min-w-0 flex-1">
-                                  <span className="text-sm font-medium text-white group-hover:text-primary transition-colors line-clamp-1 block">
+                                  <span className="text-sm font-medium text-foreground group-hover/chip:text-primary transition-colors line-clamp-1 block">
                                     {material}
                                   </span>
-                                  <span className="text-xs text-gray-500">
+                                  <span className={cn(
+                                    "text-xs text-muted-foreground",
+                                    count > 1 && "font-medium"
+                                  )}>
                                     {count === 1 ? '1 product' : `${count} products`}
                                   </span>
                                 </div>
+                                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/chip:opacity-100 transition-opacity duration-200 flex-shrink-0" />
                               </a>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
@@ -753,13 +814,13 @@ function MaterialsGroupedSection({
         })}
       </div>
 
-      {/* Show all / Show less toggle */}
+      {/* Show all / Collapse toggle */}
       {materialGroups.length > 3 && (
         <button
           onClick={toggleAll}
-          className="mt-4 text-cyan-400 hover:text-cyan-300 text-sm transition-colors"
+          className="mt-4 bg-muted/30 hover:bg-muted/50 border border-border rounded-lg px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-all duration-200"
         >
-          {allExpanded ? 'Show less' : `Show all ${availableMaterials.length} materials`}
+          {allExpanded ? 'Collapse Materials' : `Show all ${availableMaterials.length} materials`}
         </button>
       )}
     </div>
