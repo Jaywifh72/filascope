@@ -32,6 +32,9 @@ export interface DocumentHeadOptions {
   ogUrl?: string;
   ogType?: string;
   ogImage?: string;
+  ogImageWidth?: string;
+  ogImageHeight?: string;
+  ogImageAlt?: string;
   ogSiteName?: string;
   twitterCard?: string;
   twitterSite?: string;
@@ -40,6 +43,8 @@ export interface DocumentHeadOptions {
   twitterImage?: string;
   /** Extra <meta name="keywords"> */
   keywords?: string;
+  /** Extra <meta name="author"> */
+  author?: string;
   /** Extra <meta name="rating"> */
   rating?: string;
   /** Extra <meta name="geo.region"> */
@@ -125,6 +130,9 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
     if (opts.ogUrl || opts.canonical) upsertMeta('property', 'og:url', opts.ogUrl || opts.canonical!);
     if (opts.ogType) upsertMeta('property', 'og:type', opts.ogType);
     if (opts.ogImage) upsertMeta('property', 'og:image', opts.ogImage);
+    if (opts.ogImageWidth) upsertMeta('property', 'og:image:width', opts.ogImageWidth);
+    if (opts.ogImageHeight) upsertMeta('property', 'og:image:height', opts.ogImageHeight);
+    if (opts.ogImageAlt) upsertMeta('property', 'og:image:alt', opts.ogImageAlt);
     if (opts.ogSiteName) upsertMeta('property', 'og:site_name', opts.ogSiteName);
     if (opts.ogLocale) upsertMeta('property', 'og:locale', opts.ogLocale);
 
@@ -137,6 +145,7 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
 
     // Optional extras
     if (opts.keywords) upsertMeta('name', 'keywords', opts.keywords);
+    if (opts.author) upsertMeta('name', 'author', opts.author);
     if (opts.rating) upsertMeta('name', 'rating', opts.rating);
     if (opts.geoRegion) upsertMeta('name', 'geo.region', opts.geoRegion);
 
@@ -166,6 +175,9 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
       if (opts.ogUrl || opts.canonical) upsertMeta('property', 'og:url', DEFAULTS.ogUrl);
       if (opts.ogType) upsertMeta('property', 'og:type', DEFAULTS.ogType);
       if (opts.ogImage) upsertMeta('property', 'og:image', DEFAULTS.ogImage);
+      if (opts.ogImageWidth) removeMeta('property', 'og:image:width');
+      if (opts.ogImageHeight) removeMeta('property', 'og:image:height');
+      if (opts.ogImageAlt) removeMeta('property', 'og:image:alt');
       if (opts.ogSiteName) upsertMeta('property', 'og:site_name', DEFAULTS.ogSiteName);
       if (opts.twitterCard) upsertMeta('name', 'twitter:card', DEFAULTS.twitterCard);
       if (opts.twitterSite) upsertMeta('name', 'twitter:site', DEFAULTS.twitterSite);
@@ -175,6 +187,7 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
 
       // Remove optional extras only if they were set
       if (opts.keywords) removeMeta('name', 'keywords');
+      if (opts.author) removeMeta('name', 'author');
       if (opts.rating) removeMeta('name', 'rating');
       if (opts.geoRegion) removeMeta('name', 'geo.region');
       if (opts.ogLocale) removeMeta('property', 'og:locale');
@@ -192,9 +205,9 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
     };
   }, [
     opts.title, opts.description, opts.canonical,
-    opts.ogTitle, opts.ogDescription, opts.ogUrl, opts.ogType, opts.ogImage, opts.ogSiteName, opts.ogLocale,
+    opts.ogTitle, opts.ogDescription, opts.ogUrl, opts.ogType, opts.ogImage, opts.ogImageWidth, opts.ogImageHeight, opts.ogImageAlt, opts.ogSiteName, opts.ogLocale,
     opts.twitterCard, opts.twitterSite, opts.twitterTitle, opts.twitterDescription, opts.twitterImage,
-    opts.keywords, opts.rating, opts.geoRegion,
+    opts.keywords, opts.author, opts.rating, opts.geoRegion,
     opts.productBrand, opts.productCategory, opts.productPriceAmount, opts.productPriceCurrency,
     opts.productAvailability, opts.productTargetCountry, opts.productTransmissionDistance,
     opts.paginationPrev, opts.paginationNext, opts.robots,
