@@ -22,6 +22,7 @@ function AdminRedirect() {
 }
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
+import { MobileBottomTabBar } from "./components/navigation/MobileBottomTabBar";
 import { ScrollProgressBar } from "./components/ScrollProgressBar";
 import { useCelebrationMilestones } from "./hooks/useCelebrationMilestones";
 
@@ -262,7 +263,7 @@ const App = () => (
                 <Navbar />
                 <Suspense fallback={<PageLoadingSkeleton />}>
                   {/* Main content landmark for accessibility */}
-                  <main id="main-content" tabIndex={-1} className="outline-none">
+                  <main id="main-content" tabIndex={-1} className="outline-none pb-20 md:pb-0">
                   <Routes>
                   <Route path="/" element={<Finder />} />
                   <Route path="/finder" element={<Finder />} />
@@ -456,6 +457,7 @@ const App = () => (
                 {/* PWA: Install prompt banner */}
                 <PWAInstallBanner />
               </Suspense>
+              <MobileBottomTabBar />
                 <SiteFooter />
                 </MaintenanceModeWrapper>
                 </GlobalKeyboardHandler>

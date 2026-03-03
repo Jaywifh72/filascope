@@ -286,45 +286,47 @@ const Navbar = () => {
         {/* Bottom border for depth */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         
-        <div className={cn(
-          "flex items-center px-4 md:px-6 gap-4 md:gap-6 transition-[padding] duration-200 ease-out",
-          isCompact ? "py-2.5" : "py-4"
-        )}>
-          {/* Mobile hamburger button with keyboard support */}
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape' && mobileMenuOpen) {
-                setMobileMenuOpen(false);
-              }
-            }}
-            className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-navigation"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
-          </button>
+         <div className={cn(
+           "flex items-center px-4 md:px-6 gap-4 md:gap-6 transition-[padding] duration-200 ease-out",
+           isCompact ? "py-2.5 md:py-2.5" : "py-0 md:py-4",
+           "h-12 md:h-auto"
+         )}>
+           {/* Mobile hamburger button — hidden on mobile (moved to bottom tab bar), shown on tablet */}
+           <button 
+             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+             onKeyDown={(e) => {
+               if (e.key === 'Escape' && mobileMenuOpen) {
+                 setMobileMenuOpen(false);
+               }
+             }}
+             className="hidden md:flex lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+             aria-expanded={mobileMenuOpen}
+             aria-controls="mobile-navigation"
+           >
+             {mobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
+           </button>
 
-          {/* Logo - Only icon and wordmark */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 active:scale-95 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded" aria-label="FilaScope home">
-            <img
-              src={filascopeLogo}
-              alt="FilaScope"
-              className={cn(
-                "w-auto object-contain transition-all duration-200 ease-out",
-                isCompact ? "h-6 md:h-7" : "h-8 md:h-9"
-              )}
-              style={{ maxWidth: '224px' }}
-              width={224}
-              height={72}
-              sizes="112px"
-              loading="eager"
-              decoding="async"
-              // @ts-ignore – fetchpriority valid HTML
-              fetchpriority="high"
-            />
-          </Link>
+           {/* Logo - Only icon and wordmark */}
+           <Link to="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 active:scale-95 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded" aria-label="FilaScope home">
+             <img
+               src={filascopeLogo}
+               alt="FilaScope"
+               className={cn(
+                 "w-auto object-contain transition-all duration-200 ease-out",
+                 "max-h-7 md:max-h-none",
+                 isCompact ? "h-6 md:h-7" : "h-7 md:h-9"
+               )}
+               style={{ maxWidth: '224px' }}
+               width={224}
+               height={72}
+               sizes="112px"
+               loading="eager"
+               decoding="async"
+               // @ts-ignore – fetchpriority valid HTML
+               fetchpriority="high"
+             />
+           </Link>
 
           {/* Desktop Navigation Links (lg and up) */}
           <div role="navigation" aria-label="Desktop navigation" className="hidden lg:flex items-center flex-1 justify-center gap-6">
@@ -609,12 +611,34 @@ const Navbar = () => {
             </Tooltip>
           </div>
 
-          {/* Region Selector - Prominent position */}
-          <RegionSelector />
+          {/* Region Selector - Prominent position (desktop/tablet) */}
+          <div className="hidden md:block">
+            <RegionSelector />
+          </div>
 
-          {/* Right-side utilities */}
+          {/* Mobile right-side: search + region flag + hamburger */}
+          <div className="flex md:hidden items-center gap-1 ml-auto">
+            <button
+              onClick={() => setSearchPaletteOpen(true)}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-150"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+            <RegionSelector />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-150"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {/* Right-side utilities (tablet/desktop) */}
           <div className="hidden md:block w-px h-5 bg-border/40 mx-1.5" />
-          <div className="flex items-center gap-1 shrink-0 ml-auto">
+          <div className="hidden md:flex items-center gap-1 shrink-0 ml-auto">
             <WishlistButton />
             <RecentlyViewedDropdown />
             <ThemeToggle />
@@ -706,7 +730,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu - Slide down animation */}
+        {/* Mobile Menu - Slide down animation (tablet fallback, mobile uses bottom tab bar) */}
         <div 
           id="mobile-navigation"
           role="navigation"
