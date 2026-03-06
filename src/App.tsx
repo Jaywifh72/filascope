@@ -133,7 +133,7 @@ const PrinterUrlHealth = lazy(() => import("./pages/admin/PrinterUrlHealth"));
 const PriceSync = lazy(() => import("./pages/admin/PriceSync"));
 const PrinterPriceAudit = lazy(() => import("./pages/admin/PrinterPriceAudit"));
 const AdminTdManagement = lazy(() => import("./pages/admin/TdManagement"));
-const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));
+const AdminFilamentOnboarding = lazy(() => import("./pages/admin/BrandCatalogSync"));
 const AdminAffiliatesNew = lazy(() => import("./pages/admin/Affiliates"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const FilamentCategoryPage = lazy(() => import("./pages/FilamentCategoryPage"));
