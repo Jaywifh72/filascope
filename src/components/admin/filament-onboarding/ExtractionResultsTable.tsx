@@ -2,7 +2,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Eye, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -105,7 +105,22 @@ export function ExtractionResultsTable({ items, selectedItems, onToggleItem, onT
               </TableCell>
               <TableCell className="font-medium">{item.color_name ?? '—'}</TableCell>
               <TableCell>{item.material_type ?? '—'}</TableCell>
-              <TableCell className="max-w-[200px] truncate">{item.display_name ?? '—'}</TableCell>
+              <TableCell className="max-w-[200px] truncate">
+                {item.inserted_filament_id ? (
+                  <a
+                    href={`/filaments/${item.inserted_filament_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:underline"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {item.display_name ?? '—'}
+                    <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                  </a>
+                ) : (
+                  item.display_name ?? '—'
+                )}
+              </TableCell>
               <TableCell className="text-right tabular-nums">{formatPrice(item.price_usd)}</TableCell>
               <TableCell className="text-right tabular-nums">{formatPrice(item.price_eur)}</TableCell>
               <TableCell className="text-right tabular-nums">{formatPrice(item.price_cad)}</TableCell>
