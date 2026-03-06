@@ -391,12 +391,31 @@ export default function FilamentOnboarding() {
       {selectedItems.size > 0 && (
         <div className="sticky bottom-0 z-30 bg-card border border-border rounded-lg p-4 shadow-xl flex items-center justify-between">
           <span className="text-sm font-medium">
-            {selectedItems.size} filament{selectedItems.size !== 1 ? 's' : ''} selected for import
+            {selectedItems.size} filament{selectedItems.size !== 1 ? 's' : ''} selected
           </span>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setSelectedItems(new Set())}>Cancel</Button>
-            <Button onClick={() => setShowImportDialog(true)}>
-              Import Selected Filaments
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => setSelectedItems(new Set())}>Cancel</Button>
+            <BulkActionPopover
+              label="Material"
+              options={MATERIAL_OPTIONS}
+              onSelect={(val) => bulkSetOverride('material', val)}
+            />
+            <BulkActionPopover
+              label="Finish"
+              options={FINISH_OPTIONS}
+              onSelect={(val) => bulkSetOverride('finish_type', val)}
+            />
+            <BulkActionPopover
+              label="Color Family"
+              options={COLOR_FAMILY_OPTIONS}
+              onSelect={(val) => bulkSetOverride('color_family', val)}
+            />
+            <Button variant="outline" size="sm" onClick={bulkSkip} className="gap-1">
+              <Ban className="h-3 w-3" />
+              Skip
+            </Button>
+            <Button size="sm" onClick={() => setShowImportDialog(true)}>
+              Import Selected ({selectedItems.size})
             </Button>
           </div>
         </div>
