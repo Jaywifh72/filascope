@@ -120,16 +120,23 @@ Deno.serve(async (req) => {
 
     console.log(`[import-synced] Starting import: ${item_ids.length} items for ${brand_name}`);
 
-    // ── STEP 1: Load Items ──
-    const { data: items, error: itemsErr } = await supabase
-      .from("brand_sync_items")
-      .select("*")
-      .eq("job_id", job_id)
-      .in("id", item_ids)
-      .in("status", ["new", "price_changed"]);
+    // ── STEP 1: Load Items (batched to avoid URL length limits) ──
+    const items: any[] = [];
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < item_ids.length; i += BATCH_SIZE) {
+      const batch = item_ids.slice(i, i + BATCH_SIZE);
+      const { data, error: batchErr } = await supabase
+        .from("brand_sync_items")
+        .select("*")
+        .eq("job_id", job_id)
+        .in("id", batch)
+        .in("status", ["new", "price_changed"]);
 
-    if (itemsErr) throw new Error(`Failed to load items: ${itemsErr.message}`);
-    if (!items || items.length === 0) {
+      if (batchErr) throw new Error(`Failed to load items batch ${i}: ${batchErr.message}`);
+      if (data) items.push(...data);
+    }
+
+    if (items.length === 0) {
       return new Response(
         JSON.stringify({ success: true, imported: 0, updated_prices: 0, errors: 0, message: "No eligible items found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
