@@ -52,7 +52,7 @@ const NAV_GROUPS: NavGroup[] = [
       { title: 'Affiliates', href: '/admin/affiliates', icon: DollarSign },
       { title: 'Pricing Data', href: '/admin/pricing-data', icon: DollarSign },
       { title: 'TD Management', href: '/admin/td-management', icon: Sun },
-      { title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus },
+      { title: 'Brand Catalog Sync', href: '/admin/filament-onboarding', icon: PackagePlus },
     ],
   },
   {
