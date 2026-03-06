@@ -7,12 +7,25 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { PackagePlus, Loader2, AlertTriangle, Download } from 'lucide-react';
+import { PackagePlus, Loader2, AlertTriangle, Download, Ban } from 'lucide-react';
 import { ExtractionResultsTable } from '@/components/admin/filament-onboarding/ExtractionResultsTable';
 import { OnboardingPreviewDialog } from '@/components/admin/filament-onboarding/OnboardingPreviewDialog';
 import { JobHistoryTable } from '@/components/admin/filament-onboarding/JobHistoryTable';
 import { ImportConfirmDialog } from '@/components/admin/filament-onboarding/ImportConfirmDialog';
 import { BrandConfigsSection } from '@/components/admin/filament-onboarding/BrandConfigsSection';
+import { BulkActionPopover } from '@/components/admin/filament-onboarding/BulkActionPopover';
+
+const MATERIAL_OPTIONS = [
+  'PLA', 'PLA+', 'PETG', 'ABS', 'TPU', 'ASA', 'PA/Nylon', 'PLA Meta', 'Matte PLA', 'HSPLA',
+];
+const FINISH_OPTIONS = [
+  'Standard', 'Matte', 'Silk/Shimmer', 'Sparkle', 'Glow-in-the-Dark',
+  'Transparent', 'Neon', 'Wood Fill', 'Carbon Fiber', 'Marble',
+];
+const COLOR_FAMILY_OPTIONS = [
+  'White', 'Black', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Pink',
+  'Purple', 'Grey', 'Brown', 'Cream', 'Multi', 'Other',
+];
 
 type OnboardingItem = {
   id: string;
@@ -206,6 +219,57 @@ export default function FilamentOnboarding() {
 
   const selectedForImport = items?.filter(i => selectedItems.has(i.id)) ?? [];
 
+  // Bulk override helper
+  const bulkSetOverride = useCallback(async (field: string, value: string) => {
+    const ids = Array.from(selectedItems);
+    if (ids.length === 0) return;
+
+    // For each selected item, merge the new field into existing admin_override_data
+    const targetItems = items?.filter(i => ids.includes(i.id)) ?? [];
+    const updates = targetItems.map(item => ({
+      id: item.id,
+      admin_override_data: {
+        ...(item.admin_override_data as Record<string, unknown> ?? {}),
+        [field]: value,
+      },
+    }));
+
+    let errorCount = 0;
+    for (const u of updates) {
+      const { error } = await supabase
+        .from('filament_onboarding_items')
+        .update({ admin_override_data: u.admin_override_data as any })
+        .eq('id', u.id);
+      if (error) errorCount++;
+    }
+
+    await refetchItems();
+    const label = field === 'color_family' ? 'color family' : field.replace('_', ' ');
+    if (errorCount > 0) {
+      toast({ title: `Updated ${ids.length - errorCount} items`, description: `${errorCount} failed`, variant: 'destructive' });
+    } else {
+      toast({ title: `Set ${label} to "${value}" for ${ids.length} filament${ids.length !== 1 ? 's' : ''}` });
+    }
+  }, [selectedItems, items, refetchItems]);
+
+  const bulkSkip = useCallback(async () => {
+    const ids = Array.from(selectedItems);
+    if (ids.length === 0) return;
+
+    const { error } = await supabase
+      .from('filament_onboarding_items')
+      .update({ status: 'skipped' })
+      .in('id', ids);
+
+    if (error) {
+      toast({ title: 'Error skipping items', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: `Marked ${ids.length} filament${ids.length !== 1 ? 's' : ''} as skipped` });
+      setSelectedItems(new Set());
+      await refetchItems();
+    }
+  }, [selectedItems, refetchItems]);
+
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
       {/* Section 1: Extraction Form */}
@@ -327,12 +391,31 @@ export default function FilamentOnboarding() {
       {selectedItems.size > 0 && (
         <div className="sticky bottom-0 z-30 bg-card border border-border rounded-lg p-4 shadow-xl flex items-center justify-between">
           <span className="text-sm font-medium">
-            {selectedItems.size} filament{selectedItems.size !== 1 ? 's' : ''} selected for import
+            {selectedItems.size} filament{selectedItems.size !== 1 ? 's' : ''} selected
           </span>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setSelectedItems(new Set())}>Cancel</Button>
-            <Button onClick={() => setShowImportDialog(true)}>
-              Import Selected Filaments
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => setSelectedItems(new Set())}>Cancel</Button>
+            <BulkActionPopover
+              label="Material"
+              options={MATERIAL_OPTIONS}
+              onSelect={(val) => bulkSetOverride('material', val)}
+            />
+            <BulkActionPopover
+              label="Finish"
+              options={FINISH_OPTIONS}
+              onSelect={(val) => bulkSetOverride('finish_type', val)}
+            />
+            <BulkActionPopover
+              label="Color Family"
+              options={COLOR_FAMILY_OPTIONS}
+              onSelect={(val) => bulkSetOverride('color_family', val)}
+            />
+            <Button variant="outline" size="sm" onClick={bulkSkip} className="gap-1">
+              <Ban className="h-3 w-3" />
+              Skip
+            </Button>
+            <Button size="sm" onClick={() => setShowImportDialog(true)}>
+              Import Selected ({selectedItems.size})
             </Button>
           </div>
         </div>
