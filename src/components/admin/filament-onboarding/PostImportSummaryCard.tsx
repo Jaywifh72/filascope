@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { CheckCircle2, AlertTriangle, Info, BarChart3, Package, Link2, ChevronDown } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Info, BarChart3, Package, Link2, ChevronDown, RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export interface PostImportResults {
   price_history_initialized: number;
@@ -18,11 +20,15 @@ export interface PostImportResults {
 
 interface Props {
   results: PostImportResults;
+  jobId?: string;
+  brandId?: string;
+  onResultsUpdated?: (results: PostImportResults) => void;
 }
 
-export function PostImportSummaryCard({ results }: Props) {
+export function PostImportSummaryCard({ results, jobId, brandId, onResultsUpdated }: Props) {
   const [urlsOpen, setUrlsOpen] = useState(false);
   const [warningsOpen, setWarningsOpen] = useState(false);
+  const [rerunning, setRerunning] = useState(false);
 
   const qualityColor = results.avg_data_quality >= 80
     ? 'text-green-500' : results.avg_data_quality >= 50
@@ -33,6 +39,46 @@ export function PostImportSummaryCard({ results }: Props) {
     : results.td_status === 'brand_has_td'
       ? 'Brand has existing TD data'
       : 'Not available for this brand';
+
+  const hasErrors = results.urls_broken.length > 0 || results.quality_warnings.length > 0;
+
+  const handleRerun = async () => {
+    if (!jobId || !brandId) return;
+    setRerunning(true);
+    try {
+      // Get filament IDs from onboarding items for this job
+      const { data: jobItems } = await supabase
+        .from('filament_onboarding_items')
+        .select('inserted_filament_id')
+        .eq('job_id', jobId)
+        .not('inserted_filament_id', 'is', null);
+
+      const filamentIds = (jobItems ?? [])
+        .map(i => i.inserted_filament_id)
+        .filter(Boolean) as string[];
+
+      if (filamentIds.length === 0) {
+        toast({ title: 'No inserted filaments found for this job', variant: 'destructive' });
+        setRerunning(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('post-import-filament-setup', {
+        body: { filament_ids: filamentIds, brand_id: brandId, job_id: jobId },
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Post-import setup re-run complete' });
+      if (data?.results && onResultsUpdated) {
+        onResultsUpdated(data.results);
+      }
+    } catch (e: any) {
+      toast({ title: 'Re-run failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setRerunning(false);
+    }
+  };
 
   return (
     <Card className="border-border/50">
@@ -105,12 +151,20 @@ export function PostImportSummaryCard({ results }: Props) {
           </Collapsible>
         )}
 
-        {/* Timestamp */}
-        {results.completed_at && (
-          <p className="text-xs text-muted-foreground pt-1 border-t border-border/50">
-            Completed {format(new Date(results.completed_at), 'MMM d, yyyy HH:mm')}
-          </p>
-        )}
+        {/* Footer: timestamp + re-run button */}
+        <div className="flex items-center justify-between pt-1 border-t border-border/50">
+          {results.completed_at && (
+            <p className="text-xs text-muted-foreground">
+              Completed {format(new Date(results.completed_at), 'MMM d, yyyy HH:mm')}
+            </p>
+          )}
+          {hasErrors && jobId && brandId && (
+            <Button variant="outline" size="sm" onClick={handleRerun} disabled={rerunning} className="gap-1.5">
+              {rerunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              Re-run Setup
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

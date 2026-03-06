@@ -6,7 +6,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle2, AlertTriangle, Info, BarChart3 } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertTriangle, Info, BarChart3, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -302,15 +302,23 @@ export function ImportConfirmDialog({ open, onOpenChange, items, brandName, bran
               </div>
             )}
 
-            {/* Brand page link */}
-            {brandSlug && (
-              <a
-                href={`/brands/${brandSlug}`}
-                className="text-sm text-primary hover:underline inline-block"
-              >
-                View on Brand Page →
+            {/* Verification links */}
+            <div className="flex flex-wrap gap-2 pt-1 border-t border-border/50">
+              {brandSlug && (
+                <a href={`/brands/${brandSlug}`} target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                  View Brand Page <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+              <a href={`/filament-database?brand=${encodeURIComponent(brandName)}`} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                View in Database <ExternalLink className="h-3 w-3" />
               </a>
-            )}
+              <a href={`/admin/affiliates?brand=${encodeURIComponent(brandName)}`} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                Check Affiliate Links <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
           </div>
         )}
 
