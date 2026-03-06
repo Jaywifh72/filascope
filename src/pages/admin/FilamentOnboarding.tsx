@@ -219,6 +219,57 @@ export default function FilamentOnboarding() {
 
   const selectedForImport = items?.filter(i => selectedItems.has(i.id)) ?? [];
 
+  // Bulk override helper
+  const bulkSetOverride = useCallback(async (field: string, value: string) => {
+    const ids = Array.from(selectedItems);
+    if (ids.length === 0) return;
+
+    // For each selected item, merge the new field into existing admin_override_data
+    const targetItems = items?.filter(i => ids.includes(i.id)) ?? [];
+    const updates = targetItems.map(item => ({
+      id: item.id,
+      admin_override_data: {
+        ...(item.admin_override_data as Record<string, unknown> ?? {}),
+        [field]: value,
+      },
+    }));
+
+    let errorCount = 0;
+    for (const u of updates) {
+      const { error } = await supabase
+        .from('filament_onboarding_items')
+        .update({ admin_override_data: u.admin_override_data as any })
+        .eq('id', u.id);
+      if (error) errorCount++;
+    }
+
+    await refetchItems();
+    const label = field === 'color_family' ? 'color family' : field.replace('_', ' ');
+    if (errorCount > 0) {
+      toast({ title: `Updated ${ids.length - errorCount} items`, description: `${errorCount} failed`, variant: 'destructive' });
+    } else {
+      toast({ title: `Set ${label} to "${value}" for ${ids.length} filament${ids.length !== 1 ? 's' : ''}` });
+    }
+  }, [selectedItems, items, refetchItems]);
+
+  const bulkSkip = useCallback(async () => {
+    const ids = Array.from(selectedItems);
+    if (ids.length === 0) return;
+
+    const { error } = await supabase
+      .from('filament_onboarding_items')
+      .update({ status: 'skipped' })
+      .in('id', ids);
+
+    if (error) {
+      toast({ title: 'Error skipping items', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: `Marked ${ids.length} filament${ids.length !== 1 ? 's' : ''} as skipped` });
+      setSelectedItems(new Set());
+      await refetchItems();
+    }
+  }, [selectedItems, refetchItems]);
+
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
       {/* Section 1: Extraction Form */}
