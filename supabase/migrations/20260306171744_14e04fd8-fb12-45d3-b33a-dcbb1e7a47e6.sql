@@ -1,0 +1,1 @@
+COMMENT ON COLUMN public.filament_onboarding_jobs.post_import_results IS 'Results from post-import orchestrator: price history init, URL validation, TD status, data quality scores';
