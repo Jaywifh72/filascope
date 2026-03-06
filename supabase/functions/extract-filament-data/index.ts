@@ -765,36 +765,90 @@ Deno.serve(async (req) => {
 
     const config = configData as ScrapingConfig;
     const productHandle = extractHandle(sourceUrl);
-    if (!productHandle) {
-      return failJob(`Could not extract product handle from URL: ${sourceUrl}`);
-    }
+    const isCollectionUrl = !productHandle; // homepage, /collections/, etc.
 
     // ── Fetch product data ──
     let rawProduct: any;
+    let allProducts: any[] | null = null; // populated for collection URLs
 
     if (config.platform === "shopify" || config.scrape_method === "json_endpoint") {
-      // Shopify JSON endpoint
-      const jsonUrl = toShopifyJsonUrl(sourceUrl);
-      console.log(`[extract-filament-data] Fetching Shopify JSON: ${jsonUrl}`);
+      if (isCollectionUrl) {
+        // Shopify store/collection URL — fetch all products via /products.json
+        const baseUrl = new URL(sourceUrl);
+        const allFetched: any[] = [];
+        let page = 1;
+        const maxPages = 10; // safety limit: 250 * 10 = 2500 products max
 
-      const response = await fetch(jsonUrl, {
-        headers: {
-          "User-Agent": CHROME_UA,
-          Accept: "application/json",
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-      });
+        console.log(`[extract-filament-data] Collection URL detected — fetching all products from ${baseUrl.origin}/products.json`);
 
-      if (!response.ok) {
-        return failJob(`HTTP ${response.status} fetching ${jsonUrl}`);
-      }
+        while (page <= maxPages) {
+          const pageUrl = `${baseUrl.origin}/products.json?limit=250&page=${page}`;
+          const response = await fetch(pageUrl, {
+            headers: {
+              "User-Agent": CHROME_UA,
+              Accept: "application/json",
+              "Accept-Language": "en-US,en;q=0.9",
+            },
+          });
 
-      rawProduct = await response.json();
+          if (!response.ok) {
+            if (page === 1) {
+              return failJob(`HTTP ${response.status} fetching ${pageUrl}. Make sure this is a Shopify store.`);
+            }
+            break;
+          }
 
-      if (!rawProduct?.product) {
-        return failJob("Invalid Shopify JSON response — no product object");
+          const data = await response.json();
+          const products = data?.products;
+          if (!products || !Array.isArray(products) || products.length === 0) break;
+
+          allFetched.push(...products);
+          console.log(`[extract-filament-data] Page ${page}: fetched ${products.length} products (total: ${allFetched.length})`);
+
+          if (products.length < 250) break;
+          page++;
+        }
+
+        if (allFetched.length === 0) {
+          return failJob(`No products found at ${baseUrl.origin}/products.json — is this a Shopify store?`);
+        }
+
+        allProducts = allFetched;
+        // Set rawProduct to first product for compatibility, actual processing uses allProducts below
+        rawProduct = { product: allFetched[0] };
+      } else {
+        // Single Shopify product JSON endpoint
+        const jsonUrl = toShopifyJsonUrl(sourceUrl);
+        console.log(`[extract-filament-data] Fetching Shopify JSON: ${jsonUrl}`);
+
+        const response = await fetch(jsonUrl, {
+          headers: {
+            "User-Agent": CHROME_UA,
+            Accept: "application/json",
+            "Accept-Language": "en-US,en;q=0.9",
+          },
+        });
+
+        if (!response.ok) {
+          return failJob(`HTTP ${response.status} fetching ${jsonUrl}`);
+        }
+
+        rawProduct = await response.json();
+
+        if (!rawProduct?.product) {
+          return failJob("Invalid Shopify JSON response — no product object");
+        }
       }
     } else {
+      // Non-Shopify platforms require a product URL
+      if (isCollectionUrl) {
+        return failJob(
+          `This URL doesn't point to a specific product page. ` +
+          `For ${config.platform} stores, please provide a direct product URL ` +
+          `(e.g. containing /products/ or /product/ in the path).`
+        );
+      }
+
       // Non-Shopify: fetch HTML, try JSON-LD extraction
       console.log(`[extract-filament-data] Fetching HTML: ${sourceUrl}`);
       const response = await fetch(sourceUrl, {
@@ -826,13 +880,40 @@ Deno.serve(async (req) => {
     // ── Route to adapter ──
     let adapterResult: { filaments: ExtractedFilament[]; warnings: string[] };
 
-    switch (adapterKey) {
-      case "sunlu":
-        adapterResult = adaptSunlu(rawProduct, config, productHandle);
-        break;
-      default:
-        adapterResult = adaptGenericShopify(rawProduct, config, productHandle);
-        break;
+    if (allProducts) {
+      // Collection mode: process each product through the adapter
+      const allFilaments: ExtractedFilament[] = [];
+      const allWarnings: string[] = [];
+      
+      for (const product of allProducts) {
+        const handle = product.handle || product.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
+        const wrappedProduct = { product };
+        
+        let result: { filaments: ExtractedFilament[]; warnings: string[] };
+        switch (adapterKey) {
+          case "sunlu":
+            result = adaptSunlu(wrappedProduct, config, handle);
+            break;
+          default:
+            result = adaptGenericShopify(wrappedProduct, config, handle);
+            break;
+        }
+        
+        allFilaments.push(...result.filaments);
+        allWarnings.push(...result.warnings);
+      }
+      
+      adapterResult = { filaments: allFilaments, warnings: allWarnings };
+      console.log(`[extract-filament-data] Collection mode: processed ${allProducts.length} products → ${allFilaments.length} filaments`);
+    } else {
+      switch (adapterKey) {
+        case "sunlu":
+          adapterResult = adaptSunlu(rawProduct, config, productHandle!);
+          break;
+        default:
+          adapterResult = adaptGenericShopify(rawProduct, config, productHandle!);
+          break;
+      }
     }
 
     const { filaments, warnings } = adapterResult;
