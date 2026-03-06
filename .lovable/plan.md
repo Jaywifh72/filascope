@@ -1,59 +1,63 @@
 
 
-# Filament Onboarding Admin Page
+# Post-Import Filament Setup Edge Function
 
 ## Overview
-Create a new admin page at `/admin/filament-onboarding` with 5 sections: extraction form, results table, review/confirm bar, preview dialog, and job history. Uses the existing `AdminNewLayout` pattern with `AdminNewSidebar` navigation.
+Create a new Edge Function that runs after filament onboarding import, performing 5 setup steps: price history initialization, URL validation, TD discovery queuing, data quality scoring, and job result storage.
 
-## Files to Create
+## Database Migration
 
-### 1. `src/pages/admin/FilamentOnboarding.tsx` — Main page component
-- Section 1: Horizontal form with brand combobox (loads from `brands`), URL input, Extract button
-- Brand selector checks `brand_scraping_configs` for matching `adapter_key`; shows warning badge if none
-- Extract button creates `filament_onboarding_jobs` row, invokes `extract-filament-data` edge function
-- Section 2: Results summary bar + filter tabs (All/New/Duplicates/Errors) + data table
-- Section 5: Job history table at bottom
+Add `post_import_results` JSONB column to `filament_onboarding_jobs`:
 
-### 2. `src/components/admin/filament-onboarding/ExtractionResultsTable.tsx`
-- Selectable table with columns: checkbox, thumbnail, color, material, display name, regional prices, SKU, status badge, actions
-- Duplicate rows get yellow tint, error rows get red tint
-- Select all checkbox in header
-- Filter by status tab
+```sql
+ALTER TABLE public.filament_onboarding_jobs
+  ADD COLUMN IF NOT EXISTS post_import_results jsonb;
+```
 
-### 3. `src/components/admin/filament-onboarding/OnboardingPreviewDialog.tsx`
-- Dialog showing large image, 2-column field layout
-- Editable fields: display_name, color_family, color_hex (with `react-colorful`), material, temps, prices
-- Save updates `admin_override_data` on the item
-- Mark as Skip button
+## Edge Function: `supabase/functions/post-import-filament-setup/index.ts`
 
-### 4. `src/components/admin/filament-onboarding/JobHistoryTable.tsx`
-- Table of recent `filament_onboarding_jobs`: date, brand, URL (truncated), status badge, counts
-- Clicking a row loads that job's items into the results section
+**Auth**: Admin JWT validation using the same pattern as `extract-filament-data` (service role client for DB ops).
 
-### 5. `src/components/admin/filament-onboarding/ImportConfirmDialog.tsx`
-- Confirmation dialog before bulk insert
-- Progress display during insertion
-- Inserts selected items into `filaments` table, updates item status + job counts
-- Success toast with link to brand page
+**5 Steps** (each wrapped in try/catch, failures don't block subsequent steps):
 
-## Files to Edit
+### Step 1 — Initialize Price History
+- Query `filaments` for each ID, selecting `variant_price`, `price_cad`, `price_eur`, `price_gbp`, `price_aud`
+- For each non-null price, insert into `price_history` matching the existing format:
+  ```typescript
+  { filament_id, price, region: "US"|"CA"|"EU"|"UK"|"AU", source: "onboarding_import" }
+  ```
 
-### 6. `src/components/admin/AdminNewSidebar.tsx`
-- Add `PackagePlus` icon import
-- Add `{ title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus }` to Content group after TD Management
+### Step 2 — Validate Product URLs
+- Collect non-null URLs from each filament: `product_url`, `product_url_ca`, `product_url_eu`, `product_url_uk`, `product_url_au`
+- HEAD request with 5s timeout, `User-Agent: FilaScope-LinkCheck/1.0`
+- Record broken URLs as warnings
+- Store results in job metadata (no new column on filaments — use job's `post_import_results`)
 
-### 7. `src/App.tsx`
-- Add lazy import: `const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));`
-- Add route: `<Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />`
+### Step 3 — Queue TD Discovery
+- Query `td_reference_values` for matching `brand_name` (via the brand's name from `automated_brands`)
+- If references exist: insert into `td_population_log` with `status: 'pending'`, `source: 'onboarding_auto'`
+- If none: note "TD data not available for this brand"
 
-## Edge Function for Insert
-The existing `extract-filament-data` handles extraction. For the insert step, the page will use direct Supabase client inserts (admin has RLS access via `has_role`). Each selected item's `extracted_data` (merged with `admin_override_data`) gets inserted into `filaments`, then the item's `status` and `inserted_filament_id` are updated.
+### Step 4 — Calculate Data Quality Score
+- For each filament, check: `display_name`, `color_family`, `color_hex` (not `#808080`), `material`, any price, any regional URL, `featured_image`, nozzle temps, bed temps
+- Compute completeness percentage (filled / total fields)
+- Collect warnings for missing critical fields
 
-## Key Technical Details
-- Brand selector uses `supabase.from('brands').select('id, name, logo_url')` with search
-- Config check: `supabase.from('brand_scraping_configs').select('adapter_key').eq('brand_id', selectedBrandId)`
-- Extraction invoke: `supabase.functions.invoke('extract-filament-data', { body: { job_id, source_url, adapter_key } })`
-- Job history: `supabase.from('filament_onboarding_jobs').select('*').order('created_at', { ascending: false }).limit(20)`
-- Items load: `supabase.from('filament_onboarding_items').select('*').eq('job_id', jobId)`
-- Sticky bottom bar with selection count + import button using `position: sticky; bottom: 0`
+### Step 5 — Update Job Record
+- Update `filament_onboarding_jobs.post_import_results` with aggregated results
+
+## Config
+Add to `supabase/config.toml`:
+```toml
+[functions.post-import-filament-setup]
+verify_jwt = false
+```
+
+## File Changes
+
+| File | Change |
+|------|--------|
+| `supabase/functions/post-import-filament-setup/index.ts` | New Edge Function |
+| `supabase/config.toml` | Register function |
+| Migration | Add `post_import_results` column to `filament_onboarding_jobs` |
 
