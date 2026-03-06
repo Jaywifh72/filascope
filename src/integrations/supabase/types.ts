@@ -3268,6 +3268,7 @@ export type Database = {
           extraction_errors: Json | null
           id: string
           inserted_count: number | null
+          post_import_results: Json | null
           raw_data: Json | null
           selected_filament_ids: string[] | null
           skipped_count: number | null
@@ -3287,6 +3288,7 @@ export type Database = {
           extraction_errors?: Json | null
           id?: string
           inserted_count?: number | null
+          post_import_results?: Json | null
           raw_data?: Json | null
           selected_filament_ids?: string[] | null
           skipped_count?: number | null
@@ -3306,6 +3308,7 @@ export type Database = {
           extraction_errors?: Json | null
           id?: string
           inserted_count?: number | null
+          post_import_results?: Json | null
           raw_data?: Json | null
           selected_filament_ids?: string[] | null
           skipped_count?: number | null
