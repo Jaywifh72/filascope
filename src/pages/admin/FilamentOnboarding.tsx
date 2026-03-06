@@ -437,6 +437,14 @@ export default function FilamentOnboarding() {
         </CardContent>
       </Card>
 
+      {/* Post-import summary for active job */}
+      {activeJobId && (() => {
+        const activeJob = jobHistory?.find(j => j.id === activeJobId);
+        return activeJob?.post_import_results ? (
+          <PostImportSummaryCard results={activeJob.post_import_results} />
+        ) : null;
+      })()}
+
       {/* Section 6: Brand Scraping Configs */}
       <BrandConfigsSection />
 
