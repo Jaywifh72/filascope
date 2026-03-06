@@ -14,6 +14,7 @@ import { JobHistoryTable } from '@/components/admin/filament-onboarding/JobHisto
 import { ImportConfirmDialog } from '@/components/admin/filament-onboarding/ImportConfirmDialog';
 import { BrandConfigsSection } from '@/components/admin/filament-onboarding/BrandConfigsSection';
 import { BulkActionPopover } from '@/components/admin/filament-onboarding/BulkActionPopover';
+import { PostImportSummaryCard, type PostImportResults } from '@/components/admin/filament-onboarding/PostImportSummaryCard';
 
 const MATERIAL_OPTIONS = [
   'PLA', 'PLA+', 'PETG', 'ABS', 'TPU', 'ASA', 'PA/Nylon', 'PLA Meta', 'Matte PLA', 'HSPLA',
@@ -59,6 +60,7 @@ type OnboardingJob = {
   skipped_count: number | null;
   duplicate_count: number | null;
   created_at: string | null;
+  post_import_results: PostImportResults | null;
 };
 
 export default function FilamentOnboarding() {
@@ -125,7 +127,7 @@ export default function FilamentOnboarding() {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
-      return (data ?? []) as OnboardingJob[];
+      return (data ?? []) as unknown as OnboardingJob[];
     },
   });
 
@@ -434,6 +436,14 @@ export default function FilamentOnboarding() {
           />
         </CardContent>
       </Card>
+
+      {/* Post-import summary for active job */}
+      {activeJobId && (() => {
+        const activeJob = jobHistory?.find(j => j.id === activeJobId);
+        return activeJob?.post_import_results ? (
+          <PostImportSummaryCard results={activeJob.post_import_results} />
+        ) : null;
+      })()}
 
       {/* Section 6: Brand Scraping Configs */}
       <BrandConfigsSection />
