@@ -14,6 +14,7 @@ import { JobHistoryTable } from '@/components/admin/filament-onboarding/JobHisto
 import { ImportConfirmDialog } from '@/components/admin/filament-onboarding/ImportConfirmDialog';
 import { BrandConfigsSection } from '@/components/admin/filament-onboarding/BrandConfigsSection';
 import { BulkActionPopover } from '@/components/admin/filament-onboarding/BulkActionPopover';
+import { PostImportSummaryCard, type PostImportResults } from '@/components/admin/filament-onboarding/PostImportSummaryCard';
 
 const MATERIAL_OPTIONS = [
   'PLA', 'PLA+', 'PETG', 'ABS', 'TPU', 'ASA', 'PA/Nylon', 'PLA Meta', 'Matte PLA', 'HSPLA',
@@ -59,6 +60,7 @@ type OnboardingJob = {
   skipped_count: number | null;
   duplicate_count: number | null;
   created_at: string | null;
+  post_import_results: PostImportResults | null;
 };
 
 export default function FilamentOnboarding() {
