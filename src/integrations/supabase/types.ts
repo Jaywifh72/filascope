@@ -1676,54 +1676,93 @@ export type Database = {
       }
       brand_sync_items: {
         Row: {
+          admin_override_data: Json | null
+          available_regions: string[] | null
+          color_family: string | null
+          color_hex: string | null
           color_name: string | null
-          created_at: string
+          created_at: string | null
           display_name: string | null
           error_message: string | null
           existing_filament_id: string | null
           extracted_data: Json
+          finish_type: string | null
           id: string
           image_url: string | null
+          inserted_filament_id: string | null
           is_new: boolean
           job_id: string
           material_type: string | null
+          price_aud: number | null
+          price_cad: number | null
           price_diff: Json | null
-          prices: Json | null
+          price_eur: number | null
+          price_gbp: number | null
+          price_usd: number | null
+          product_handle: string | null
           status: string
+          updated_at: string | null
+          variant_image_url: string | null
           variant_sku: string | null
         }
         Insert: {
+          admin_override_data?: Json | null
+          available_regions?: string[] | null
+          color_family?: string | null
+          color_hex?: string | null
           color_name?: string | null
-          created_at?: string
+          created_at?: string | null
           display_name?: string | null
           error_message?: string | null
           existing_filament_id?: string | null
           extracted_data: Json
+          finish_type?: string | null
           id?: string
           image_url?: string | null
+          inserted_filament_id?: string | null
           is_new?: boolean
           job_id: string
           material_type?: string | null
+          price_aud?: number | null
+          price_cad?: number | null
           price_diff?: Json | null
-          prices?: Json | null
+          price_eur?: number | null
+          price_gbp?: number | null
+          price_usd?: number | null
+          product_handle?: string | null
           status?: string
+          updated_at?: string | null
+          variant_image_url?: string | null
           variant_sku?: string | null
         }
         Update: {
+          admin_override_data?: Json | null
+          available_regions?: string[] | null
+          color_family?: string | null
+          color_hex?: string | null
           color_name?: string | null
-          created_at?: string
+          created_at?: string | null
           display_name?: string | null
           error_message?: string | null
           existing_filament_id?: string | null
           extracted_data?: Json
+          finish_type?: string | null
           id?: string
           image_url?: string | null
+          inserted_filament_id?: string | null
           is_new?: boolean
           job_id?: string
           material_type?: string | null
+          price_aud?: number | null
+          price_cad?: number | null
           price_diff?: Json | null
-          prices?: Json | null
+          price_eur?: number | null
+          price_gbp?: number | null
+          price_usd?: number | null
+          product_handle?: string | null
           status?: string
+          updated_at?: string | null
+          variant_image_url?: string | null
           variant_sku?: string | null
         }
         Relationships: [
@@ -1794,45 +1833,72 @@ export type Database = {
       }
       brand_sync_jobs: {
         Row: {
+          admin_user_id: string | null
           brand_id: string
-          brand_slug: string
-          catalog_stats: Json | null
+          changed_count: number | null
           completed_at: string | null
-          created_at: string
-          duration_seconds: number | null
+          config_id: string | null
+          created_at: string | null
+          error_count: number | null
+          errors: Json | null
+          filament_products_found: number | null
           id: string
-          started_at: string
+          imported_count: number | null
+          matched_count: number | null
+          new_count: number | null
+          post_import_results: Json | null
+          skip_reasons: Json | null
+          skipped_products: number | null
+          started_at: string | null
           status: string
-          sync_results_summary: Json | null
-          triggered_by: string | null
+          total_store_products: number | null
+          updated_at: string | null
           warnings: string[] | null
         }
         Insert: {
+          admin_user_id?: string | null
           brand_id: string
-          brand_slug: string
-          catalog_stats?: Json | null
+          changed_count?: number | null
           completed_at?: string | null
-          created_at?: string
-          duration_seconds?: number | null
+          config_id?: string | null
+          created_at?: string | null
+          error_count?: number | null
+          errors?: Json | null
+          filament_products_found?: number | null
           id?: string
-          started_at?: string
+          imported_count?: number | null
+          matched_count?: number | null
+          new_count?: number | null
+          post_import_results?: Json | null
+          skip_reasons?: Json | null
+          skipped_products?: number | null
+          started_at?: string | null
           status?: string
-          sync_results_summary?: Json | null
-          triggered_by?: string | null
+          total_store_products?: number | null
+          updated_at?: string | null
           warnings?: string[] | null
         }
         Update: {
+          admin_user_id?: string | null
           brand_id?: string
-          brand_slug?: string
-          catalog_stats?: Json | null
+          changed_count?: number | null
           completed_at?: string | null
-          created_at?: string
-          duration_seconds?: number | null
+          config_id?: string | null
+          created_at?: string | null
+          error_count?: number | null
+          errors?: Json | null
+          filament_products_found?: number | null
           id?: string
-          started_at?: string
+          imported_count?: number | null
+          matched_count?: number | null
+          new_count?: number | null
+          post_import_results?: Json | null
+          skip_reasons?: Json | null
+          skipped_products?: number | null
+          started_at?: string | null
           status?: string
-          sync_results_summary?: Json | null
-          triggered_by?: string | null
+          total_store_products?: number | null
+          updated_at?: string | null
           warnings?: string[] | null
         }
         Relationships: [
@@ -1869,6 +1935,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_jobs_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "brand_scraping_configs"
             referencedColumns: ["id"]
           },
         ]
