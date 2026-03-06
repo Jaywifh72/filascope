@@ -1,59 +1,85 @@
 
 
-# Filament Onboarding Admin Page
+## Plan: Create `sync-brand-catalog` Edge Function
 
-## Overview
-Create a new admin page at `/admin/filament-onboarding` with 5 sections: extraction form, results table, review/confirm bar, preview dialog, and job history. Uses the existing `AdminNewLayout` pattern with `AdminNewSidebar` navigation.
+This is a large Edge Function (~600-800 lines) that performs full catalog sync for Shopify brands. It reuses most logic from `extract-filament-data` but adds filament filtering, price diffing, and a dedicated storage schema.
 
-## Files to Create
+### 1. Database Migration — Two New Tables
 
-### 1. `src/pages/admin/FilamentOnboarding.tsx` — Main page component
-- Section 1: Horizontal form with brand combobox (loads from `brands`), URL input, Extract button
-- Brand selector checks `brand_scraping_configs` for matching `adapter_key`; shows warning badge if none
-- Extract button creates `filament_onboarding_jobs` row, invokes `extract-filament-data` edge function
-- Section 2: Results summary bar + filter tabs (All/New/Duplicates/Errors) + data table
-- Section 5: Job history table at bottom
+**`brand_sync_jobs`** — stores catalog sync job metadata:
+- `id` (uuid, PK), `brand_id` (uuid, FK→automated_brands), `brand_slug` (text), `status` (text: pending/running/completed/failed), `started_at` / `completed_at` (timestamptz), `duration_seconds` (numeric)
+- `catalog_stats` (jsonb) — total_store_products, filament_products, skipped with reasons
+- `sync_results_summary` (jsonb) — new_count, changed_count, matched_count, error_count
+- `warnings` (text[])
+- `triggered_by` (uuid, nullable)
 
-### 2. `src/components/admin/filament-onboarding/ExtractionResultsTable.tsx`
-- Selectable table with columns: checkbox, thumbnail, color, material, display name, regional prices, SKU, status badge, actions
-- Duplicate rows get yellow tint, error rows get red tint
-- Select all checkbox in header
-- Filter by status tab
+**`brand_sync_items`** — stores per-filament results:
+- `id` (uuid, PK), `job_id` (uuid, FK→brand_sync_jobs), `status` (text: new/price_changed/matched/error)
+- `extracted_data` (jsonb), `display_name`, `color_name`, `material_type`, `image_url`
+- `prices` (jsonb — {usd, eur, gbp, cad, aud})
+- `variant_sku` (text), `is_new` (boolean), `existing_filament_id` (uuid, nullable, FK→filaments)
+- `price_diff` (jsonb, nullable — {field, old, new} for changed prices)
+- `error_message` (text, nullable)
+- `created_at` (timestamptz)
 
-### 3. `src/components/admin/filament-onboarding/OnboardingPreviewDialog.tsx`
-- Dialog showing large image, 2-column field layout
-- Editable fields: display_name, color_family, color_hex (with `react-colorful`), material, temps, prices
-- Save updates `admin_override_data` on the item
-- Mark as Skip button
+RLS: Admin-only read/write using `has_role(auth.uid(), 'admin')`.
 
-### 4. `src/components/admin/filament-onboarding/JobHistoryTable.tsx`
-- Table of recent `filament_onboarding_jobs`: date, brand, URL (truncated), status badge, counts
-- Clicking a row loads that job's items into the results section
+### 2. Shared Module: `_shared/filament-utils.ts`
 
-### 5. `src/components/admin/filament-onboarding/ImportConfirmDialog.tsx`
-- Confirmation dialog before bulk insert
-- Progress display during insertion
-- Inserts selected items into `filaments` table, updates item status + job counts
-- Success toast with link to brand page
+Extract from `extract-filament-data/index.ts` into a shared file:
+- `COLOR_HEX_MAP`, `COLOR_FAMILY_MAP`
+- `guessColorHex()`, `guessColorFamily()`, `guessFinishType()`
+- `stripMaterialPrefix()`, `parseSpecsFromHtml()`
+- `detectOptionPositions()` + keyword arrays
+- `ExtractedFilament` interface, `ScrapingConfig` interface
 
-## Files to Edit
+Both `extract-filament-data` and `sync-brand-catalog` will import from this shared module. Update `extract-filament-data` imports accordingly.
 
-### 6. `src/components/admin/AdminNewSidebar.tsx`
-- Add `PackagePlus` icon import
-- Add `{ title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus }` to Content group after TD Management
+### 3. Edge Function: `sync-brand-catalog/index.ts`
 
-### 7. `src/App.tsx`
-- Add lazy import: `const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));`
-- Add route: `<Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />`
+**Auth**: Same admin JWT / service-role pattern as `extract-filament-data`.
 
-## Edge Function for Insert
-The existing `extract-filament-data` handles extraction. For the insert step, the page will use direct Supabase client inserts (admin has RLS access via `has_role`). Each selected item's `extracted_data` (merged with `admin_override_data`) gets inserted into `filaments`, then the item's `status` and `inserted_filament_id` are updated.
+**Step-by-step flow** (all within one Deno.serve handler):
 
-## Key Technical Details
-- Brand selector uses `supabase.from('brands').select('id, name, logo_url')` with search
-- Config check: `supabase.from('brand_scraping_configs').select('adapter_key').eq('brand_id', selectedBrandId)`
-- Extraction invoke: `supabase.functions.invoke('extract-filament-data', { body: { job_id, source_url, adapter_key } })`
-- Job history: `supabase.from('filament_onboarding_jobs').select('*').order('created_at', { ascending: false }).limit(20)`
-- Items load: `supabase.from('filament_onboarding_items').select('*').eq('job_id', jobId)`
-- Sticky bottom bar with selection count + import button using `position: sticky; bottom: 0`
+1. **Parse input** — `{ brand_id, config_id }`
+2. **Load config** — Query `brand_scraping_configs` by `config_id`, query `automated_brands` by `brand_id`
+3. **Create job** — Insert into `brand_sync_jobs` with status `running`
+4. **Fetch catalog** — Paginate Shopify `/products.json?limit=250&page=N` with 100ms delays and 429 backoff (max 10 pages = 2500 products)
+5. **Filter filaments** — Classify each product as filament/non-filament using title keywords (PLA, PETG, ABS, etc.) and option names. Exclude dryer/printer/resin/accessories. Skip clearance/region-only bundles. Track skip reasons.
+6. **Extract per product** — For each filament product:
+   - Detect option positions (region/material/color) using shared `detectOptionPositions()`
+   - Group variants by color
+   - For each color group: extract material, color name/hex/family, display_name, regional prices, regional URLs, images, specs from body_html, SKU, finish type
+   - Uses all shared utility functions
+7. **Diff against DB** — For each extracted filament:
+   - Primary match: `brand_id` + `variant_sku`
+   - Secondary match: `brand_id` + `material` (ILIKE) + color name similarity
+   - If matched: compare prices → categorize as `matched` or `price_changed`
+   - If not matched: categorize as `new`
+8. **Store results** — Insert items into `brand_sync_items`, update `brand_sync_jobs` with summary
+9. **Return response** — JSON with catalog_stats, sync_results, counts, warnings
+
+**Resilience**: Try/catch per product, 120s time guard, rate limit handling.
+
+### 4. Config Registration
+
+Add to `supabase/config.toml`:
+```toml
+[functions.sync-brand-catalog]
+verify_jwt = false
+```
+
+### 5. Files Changed
+
+| File | Action |
+|------|--------|
+| `supabase/functions/_shared/filament-utils.ts` | **Create** — shared maps, interfaces, utility functions |
+| `supabase/functions/extract-filament-data/index.ts` | **Edit** — replace inline maps/functions with imports from shared module |
+| `supabase/functions/sync-brand-catalog/index.ts` | **Create** — main function (~500 lines) |
+| `supabase/config.toml` | **Edit** — add function entry |
+| Database migration | **Create** — `brand_sync_jobs` + `brand_sync_items` tables with RLS |
+
+### 6. Deployment
+
+Deploy both `sync-brand-catalog` and re-deploy `extract-filament-data` (since its imports change). Test with a known brand config.
 
