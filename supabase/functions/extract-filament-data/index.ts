@@ -311,6 +311,61 @@ function stripMaterialPrefix(colorName: string, material: string): string {
 }
 
 // ============================================================
+// Smart Option Position Detection for SUNLU
+// ============================================================
+
+const REGION_KEYWORDS = ["ship", "shipment", "country", "region", "destination"];
+const MATERIAL_KEYWORDS = ["material", "type", "types", "category"];
+const COLOR_KEYWORDS = ["color", "colour"];
+
+function detectOptionPositions(
+  product: any,
+  config: ScrapingConfig
+): { regionKey: string | null; materialKey: string | null; colorKey: string | null } {
+  const fallback = {
+    regionKey: config.variant_mapping?.region_option || "option1",
+    materialKey: config.variant_mapping?.material_option || "option2",
+    colorKey: config.variant_mapping?.color_option || "option3",
+  };
+
+  if (!product?.options?.length) return fallback;
+
+  let regionKey: string | null = null;
+  let materialKey: string | null = null;
+  let colorKey: string | null = null;
+
+  for (const opt of product.options) {
+    const name = (opt.name || "").toLowerCase().trim();
+    const key = `option${opt.position}` as string;
+
+    // Compound "Material/Color" → treat as Color
+    if (name.includes("material") && name.includes("color")) {
+      colorKey = key;
+      continue;
+    }
+
+    if (!regionKey && REGION_KEYWORDS.some((kw) => name.includes(kw))) {
+      regionKey = key;
+    } else if (!colorKey && COLOR_KEYWORDS.some((kw) => name.includes(kw))) {
+      colorKey = key;
+    } else if (!materialKey && MATERIAL_KEYWORDS.some((kw) => name.includes(kw))) {
+      materialKey = key;
+    }
+    // "Package"/"Specifications" are intentionally ignored
+  }
+
+  if (!regionKey) console.warn("[detectOptionPositions] Could not detect region option, using fallback");
+  if (!materialKey) console.warn("[detectOptionPositions] Could not detect material option, using fallback");
+  if (!colorKey) console.warn("[detectOptionPositions] Could not detect color option, using fallback");
+
+  return {
+    regionKey: regionKey || fallback.regionKey,
+    materialKey: materialKey || fallback.materialKey,
+    colorKey: colorKey || fallback.colorKey,
+  };
+}
+
+// ============================================================
 // SUNLU Adapter
 // ============================================================
 
@@ -328,10 +383,11 @@ function adaptSunlu(
     return { filaments, warnings };
   }
 
+  const detected = detectOptionPositions(product, config);
   const regionMap: Record<string, string> = config.variant_mapping?.region_map || {};
-  const regionOption = config.variant_mapping?.region_option || "option1";
-  const materialOption = config.variant_mapping?.material_option || "option2";
-  const colorOption = config.variant_mapping?.color_option || "option3";
+  const regionOption = detected.regionKey;
+  const materialOption = detected.materialKey;
+  const colorOption = detected.colorKey;
 
   // Parse specs from body_html
   const specs = parseSpecsFromHtml(product.body_html || "", config.spec_extraction || null);
