@@ -528,9 +528,10 @@ Deno.serve(async (req) => {
       .from("brand_sync_jobs")
       .insert({
         brand_id: brandId,
-        brand_slug: brandData.brand_slug,
-        status: "running",
-        triggered_by: adminUserId,
+        config_id: configId,
+        status: "syncing",
+        admin_user_id: adminUserId,
+        started_at: new Date().toISOString(),
       })
       .select("id")
       .single();
@@ -606,15 +607,19 @@ Deno.serve(async (req) => {
       display_name: r.filament.display_name,
       color_name: r.filament.color_family || r.filament.display_name.split(" - ").pop() || null,
       material_type: r.filament.material,
+      color_hex: r.filament.color_hex,
+      color_family: r.filament.color_family,
+      finish_type: r.filament.finish_type,
       image_url: r.filament.featured_image,
-      prices: {
-        usd: r.filament.price_usd,
-        eur: r.filament.price_eur,
-        gbp: r.filament.price_gbp,
-        cad: r.filament.price_cad,
-        aud: r.filament.price_aud,
-      },
+      variant_image_url: r.filament.variant_image,
+      price_usd: r.filament.price_usd,
+      price_eur: r.filament.price_eur,
+      price_gbp: r.filament.price_gbp,
+      price_cad: r.filament.price_cad,
+      price_aud: r.filament.price_aud,
       variant_sku: r.filament.variant_sku,
+      product_handle: r.filament.product_handle,
+      available_regions: r.filament.available_regions,
       is_new: r.status === "new",
       existing_filament_id: r.existingId,
       price_diff: r.priceDiff,
@@ -630,9 +635,19 @@ Deno.serve(async (req) => {
         display_name: err.handle,
         color_name: null,
         material_type: null,
+        color_hex: null,
+        color_family: null,
+        finish_type: null,
         image_url: null,
-        prices: null as any,
+        variant_image_url: null,
+        price_usd: null,
+        price_eur: null,
+        price_gbp: null,
+        price_cad: null,
+        price_aud: null,
         variant_sku: null,
+        product_handle: null,
+        available_regions: null,
         is_new: false,
         existing_filament_id: null,
         price_diff: null,
@@ -651,29 +666,22 @@ Deno.serve(async (req) => {
 
     // ── Step 8: Update job with summary ──
     const durationMs = Date.now() - startTime;
-    const catalogStats = {
-      total_store_products: allProducts.length,
-      filament_products: filamentProducts.length,
-      skipped_products: allProducts.length - filamentProducts.length,
-      skip_reasons: skipReasons,
-    };
-
-    const syncResultsSummary = {
-      new_count: newFilaments.length,
-      changed_count: priceChanged.length,
-      matched_count: matched.length,
-      error_count: extractionErrors.length,
-    };
 
     await supabase
       .from("brand_sync_jobs")
       .update({
         status: "completed",
         completed_at: new Date().toISOString(),
-        duration_seconds: Math.round(durationMs / 1000),
-        catalog_stats: catalogStats,
-        sync_results_summary: syncResultsSummary,
+        total_store_products: allProducts.length,
+        filament_products_found: filamentProducts.length,
+        skipped_products: allProducts.length - filamentProducts.length,
+        skip_reasons: skipReasons,
+        new_count: newFilaments.length,
+        changed_count: priceChanged.length,
+        matched_count: matched.length,
+        error_count: extractionErrors.length,
         warnings: warnings.length > 0 ? warnings : null,
+        errors: extractionErrors.length > 0 ? extractionErrors : null,
       })
       .eq("id", jobId);
 
