@@ -7,12 +7,25 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { PackagePlus, Loader2, AlertTriangle, Download } from 'lucide-react';
+import { PackagePlus, Loader2, AlertTriangle, Download, Ban } from 'lucide-react';
 import { ExtractionResultsTable } from '@/components/admin/filament-onboarding/ExtractionResultsTable';
 import { OnboardingPreviewDialog } from '@/components/admin/filament-onboarding/OnboardingPreviewDialog';
 import { JobHistoryTable } from '@/components/admin/filament-onboarding/JobHistoryTable';
 import { ImportConfirmDialog } from '@/components/admin/filament-onboarding/ImportConfirmDialog';
 import { BrandConfigsSection } from '@/components/admin/filament-onboarding/BrandConfigsSection';
+import { BulkActionPopover } from '@/components/admin/filament-onboarding/BulkActionPopover';
+
+const MATERIAL_OPTIONS = [
+  'PLA', 'PLA+', 'PETG', 'ABS', 'TPU', 'ASA', 'PA/Nylon', 'PLA Meta', 'Matte PLA', 'HSPLA',
+];
+const FINISH_OPTIONS = [
+  'Standard', 'Matte', 'Silk/Shimmer', 'Sparkle', 'Glow-in-the-Dark',
+  'Transparent', 'Neon', 'Wood Fill', 'Carbon Fiber', 'Marble',
+];
+const COLOR_FAMILY_OPTIONS = [
+  'White', 'Black', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Pink',
+  'Purple', 'Grey', 'Brown', 'Cream', 'Multi', 'Other',
+];
 
 type OnboardingItem = {
   id: string;
