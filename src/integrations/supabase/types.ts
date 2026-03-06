@@ -1674,6 +1674,205 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_sync_items: {
+        Row: {
+          color_name: string | null
+          created_at: string
+          display_name: string | null
+          error_message: string | null
+          existing_filament_id: string | null
+          extracted_data: Json
+          id: string
+          image_url: string | null
+          is_new: boolean
+          job_id: string
+          material_type: string | null
+          price_diff: Json | null
+          prices: Json | null
+          status: string
+          variant_sku: string | null
+        }
+        Insert: {
+          color_name?: string | null
+          created_at?: string
+          display_name?: string | null
+          error_message?: string | null
+          existing_filament_id?: string | null
+          extracted_data: Json
+          id?: string
+          image_url?: string | null
+          is_new?: boolean
+          job_id: string
+          material_type?: string | null
+          price_diff?: Json | null
+          prices?: Json | null
+          status?: string
+          variant_sku?: string | null
+        }
+        Update: {
+          color_name?: string | null
+          created_at?: string
+          display_name?: string | null
+          error_message?: string | null
+          existing_filament_id?: string | null
+          extracted_data?: Json
+          id?: string
+          image_url?: string | null
+          is_new?: boolean
+          job_id?: string
+          material_type?: string | null
+          price_diff?: Json | null
+          prices?: Json | null
+          status?: string
+          variant_sku?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_sync_items_existing_filament_id_fkey"
+            columns: ["existing_filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "brand_sync_items_existing_filament_id_fkey"
+            columns: ["existing_filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_items_existing_filament_id_fkey"
+            columns: ["existing_filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_items_existing_filament_id_fkey"
+            columns: ["existing_filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "brand_sync_items_existing_filament_id_fkey"
+            columns: ["existing_filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "brand_sync_items_existing_filament_id_fkey"
+            columns: ["existing_filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "brand_sync_items_existing_filament_id_fkey"
+            columns: ["existing_filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_items_existing_filament_id_fkey"
+            columns: ["existing_filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "brand_sync_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_sync_jobs: {
+        Row: {
+          brand_id: string
+          brand_slug: string
+          catalog_stats: Json | null
+          completed_at: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          started_at: string
+          status: string
+          sync_results_summary: Json | null
+          triggered_by: string | null
+          warnings: string[] | null
+        }
+        Insert: {
+          brand_id: string
+          brand_slug: string
+          catalog_stats?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          started_at?: string
+          status?: string
+          sync_results_summary?: Json | null
+          triggered_by?: string | null
+          warnings?: string[] | null
+        }
+        Update: {
+          brand_id?: string
+          brand_slug?: string
+          catalog_stats?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          started_at?: string
+          status?: string
+          sync_results_summary?: Json | null
+          triggered_by?: string | null
+          warnings?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_sync_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brand_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_sync_logs: {
         Row: {
           brand_id: string | null

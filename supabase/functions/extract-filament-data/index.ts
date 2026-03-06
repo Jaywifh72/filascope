@@ -9,6 +9,21 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  COLOR_HEX_MAP,
+  COLOR_FAMILY_MAP,
+  ScrapingConfig,
+  ExtractedFilament,
+  guessColorHex,
+  guessColorFamily,
+  guessFinishType,
+  stripMaterialPrefix,
+  parseSpecsFromHtml,
+  detectOptionPositions,
+  REGION_KEYWORDS,
+  MATERIAL_KEYWORDS,
+  COLOR_KEYWORDS,
+} from "../_shared/filament-utils.ts";
 
 // ============================================================
 // CORS
@@ -19,135 +34,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-// ============================================================
-// Color Hex Map — ~30 common filament colors → approximate hex
-// ============================================================
-
-const COLOR_HEX_MAP: Record<string, string> = {
-  "white": "#FFFFFF",
-  "black": "#000000",
-  "red": "#FF0000",
-  "blue": "#0000FF",
-  "green": "#008000",
-  "yellow": "#FFFF00",
-  "orange": "#FFA500",
-  "pink": "#FFC0CB",
-  "purple": "#800080",
-  "grey": "#808080",
-  "gray": "#808080",
-  "gold": "#FFD700",
-  "silver": "#C0C0C0",
-  "cyan": "#00FFFF",
-  "magenta": "#FF00FF",
-  "brown": "#8B4513",
-  "beige": "#F5F5DC",
-  "mint green": "#98FF98",
-  "sky blue": "#87CEEB",
-  "lavender": "#E6E6FA",
-  "olive": "#808000",
-  "coffee": "#6F4E37",
-  "oak": "#C8AD7F",
-  "lemon": "#FFF44F",
-  "cherry": "#DE3163",
-  "bone white": "#F9F6EE",
-  "ceramic white": "#F0EAD6",
-  "grass green": "#7CFC00",
-  "klein blue": "#002FA7",
-  "midnight": "#191970",
-  "roasted chestnut": "#4A2C2A",
-  "transparent": "#FFFFFF",
-  "natural": "#F5F5DC",
-  "navy": "#000080",
-  "teal": "#008080",
-  "coral": "#FF7F50",
-  "ivory": "#FFFFF0",
-  "charcoal": "#36454F",
-  "cream": "#FFFDD0",
-  "maroon": "#800000",
-  "lime": "#00FF00",
-  "peach": "#FFCBA4",
-};
-
-// ============================================================
-// Color Family Map — color name keywords → family category
-// ============================================================
-
-const COLOR_FAMILY_MAP: Record<string, string> = {
-  "white": "White", "bone": "White", "ceramic": "White", "ivory": "White", "cream": "White",
-  "black": "Black", "charcoal": "Black", "midnight": "Black",
-  "red": "Red", "cherry": "Red", "maroon": "Red", "crimson": "Red",
-  "blue": "Blue", "navy": "Blue", "sky": "Blue", "klein": "Blue", "cobalt": "Blue", "royal": "Blue",
-  "green": "Green", "grass": "Green", "olive": "Green", "mint": "Green", "lime": "Green", "teal": "Green",
-  "yellow": "Yellow", "lemon": "Yellow",
-  "orange": "Orange", "tangerine": "Orange", "coral": "Orange",
-  "pink": "Pink", "rose": "Pink", "salmon": "Pink", "magenta": "Pink",
-  "purple": "Purple", "violet": "Purple", "lavender": "Purple", "plum": "Purple",
-  "brown": "Brown", "coffee": "Brown", "chestnut": "Brown", "oak": "Brown", "chocolate": "Brown",
-  "grey": "Grey", "gray": "Grey", "silver": "Grey",
-  "gold": "Gold",
-  "transparent": "Transparent", "clear": "Transparent",
-  "natural": "Natural", "beige": "Natural",
-  "cyan": "Blue",
-  "peach": "Orange",
-};
-
-// ============================================================
-// Types
-// ============================================================
-
-interface ScrapingConfig {
-  id: string;
-  brand_id: string;
-  brand_name: string;
-  platform: string;
-  base_url: string;
-  scrape_method: string;
-  adapter_key: string;
-  regional_url_pattern: Record<string, string> | null;
-  variant_mapping: Record<string, any>;
-  spec_extraction: Record<string, string> | null;
-  default_material_type: string | null;
-}
-
-interface ExtractedFilament {
-  brand_id: string;
-  material: string;
-  product_title: string;
-  display_name: string;
-  color_family: string | null;
-  color_hex: string | null;
-  featured_image: string | null;
-  variant_image: string | null;
-  nozzle_temp_min_c: number | null;
-  nozzle_temp_max_c: number | null;
-  bed_temp_min_c: number | null;
-  bed_temp_max_c: number | null;
-  diameter_nominal_mm: number;
-  net_weight_g: number | null;
-  product_url: string;
-  product_url_us: string | null;
-  product_url_eu: string | null;
-  product_url_uk: string | null;
-  product_url_ca: string | null;
-  product_url_au: string | null;
-  price_usd: number | null;
-  price_eur: number | null;
-  price_gbp: number | null;
-  price_cad: number | null;
-  price_aud: number | null;
-  product_handle: string;
-  variant_sku: string | null;
-  finish_type: string | null;
-  spool_material: string | null;
-  pack_quantity: number;
-  print_speed_max_mms: number | null;
-  high_speed_capable: boolean | null;
-  drying_temp_c: number | null;
-  drying_time_hours: number | null;
-  variant_available: boolean;
-  available_regions: string[];
-}
 
 // ============================================================
 // Helpers
@@ -175,194 +61,6 @@ function toShopifyJsonUrl(productUrl: string): string {
     );
   }
   return url.toString();
-}
-
-function guessColorHex(colorName: string): string | null {
-  const lower = colorName.toLowerCase().trim();
-  if (COLOR_HEX_MAP[lower]) return COLOR_HEX_MAP[lower];
-  // Try partial match — check if any key is contained in the name
-  for (const [key, hex] of Object.entries(COLOR_HEX_MAP)) {
-    if (lower.includes(key)) return hex;
-  }
-  return null;
-}
-
-function guessColorFamily(colorName: string): string | null {
-  const lower = colorName.toLowerCase().trim();
-  // Check each keyword
-  for (const [keyword, family] of Object.entries(COLOR_FAMILY_MAP)) {
-    if (lower.includes(keyword)) return family;
-  }
-  return null;
-}
-
-function guessFinishType(material: string, title: string): string | null {
-  const combined = `${material} ${title}`.toLowerCase();
-  if (combined.includes("silk")) return "Silk";
-  if (combined.includes("matte")) return "Matte";
-  if (combined.includes("marble")) return "Marble";
-  if (combined.includes("galaxy")) return "Galaxy";
-  if (combined.includes("sparkle") || combined.includes("glitter")) return "Sparkle";
-  if (combined.includes("glow") || combined.includes("luminous")) return "Glow-in-the-Dark";
-  if (combined.includes("transparent") || combined.includes("translucent")) return "Transparent";
-  if (combined.includes("neon")) return "Neon";
-  if (combined.includes("wood")) return "Wood Fill";
-  if (combined.includes("carbon")) return "Carbon Fiber";
-  return "Standard";
-}
-
-function parseSpecsFromHtml(
-  bodyHtml: string,
-  specConfig: Record<string, string> | null
-): {
-  diameter: number | null;
-  nozzleTempMin: number | null;
-  nozzleTempMax: number | null;
-  bedTempMin: number | null;
-  bedTempMax: number | null;
-  netWeight: number | null;
-  printSpeedMax: number | null;
-  dryingTemp: number | null;
-  dryingTime: number | null;
-} {
-  const result = {
-    diameter: null as number | null,
-    nozzleTempMin: null as number | null,
-    nozzleTempMax: null as number | null,
-    bedTempMin: null as number | null,
-    bedTempMax: null as number | null,
-    netWeight: null as number | null,
-    printSpeedMax: null as number | null,
-    dryingTemp: null as number | null,
-    dryingTime: null as number | null,
-  };
-
-  if (!bodyHtml) return result;
-
-  // Strip HTML tags for cleaner regex matching
-  const text = bodyHtml.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ");
-
-  const tryRegex = (pattern: string): RegExpMatchArray | null => {
-    try {
-      return text.match(new RegExp(pattern, "i"));
-    } catch {
-      return null;
-    }
-  };
-
-  // Diameter
-  const diamRe = specConfig?.diameter_regex || "(?:Diameter|Filament\\s+Diameter)[:\\s]*([\\d.]+)\\s*(?:mm)?";
-  const diamMatch = tryRegex(diamRe);
-  if (diamMatch?.[1]) result.diameter = parseFloat(diamMatch[1]);
-
-  // Nozzle temperature range
-  const nozzleRe = specConfig?.nozzle_temp_regex || "(?:Printing|Nozzle|Extruder)\\s*(?:Temp(?:erature)?)[:\\s]*([\\d]+)\\s*[°℃]?\\s*[–\\-~to]+\\s*([\\d]+)";
-  const nozzleMatch = tryRegex(nozzleRe);
-  if (nozzleMatch?.[1] && nozzleMatch?.[2]) {
-    result.nozzleTempMin = parseInt(nozzleMatch[1]);
-    result.nozzleTempMax = parseInt(nozzleMatch[2]);
-  }
-
-  // Bed temperature range
-  const bedRe = specConfig?.bed_temp_regex || "(?:Bed|Platform|Heated\\s*Bed)\\s*(?:Temp(?:erature)?)[:\\s]*([\\d]+)\\s*[°℃]?\\s*[–\\-~to]+\\s*([\\d]+)";
-  const bedMatch = tryRegex(bedRe);
-  if (bedMatch?.[1] && bedMatch?.[2]) {
-    result.bedTempMin = parseInt(bedMatch[1]);
-    result.bedTempMax = parseInt(bedMatch[2]);
-  }
-
-  // Net weight
-  const weightRe = specConfig?.weight_regex || "(?:Net\\s+Weight|Weight)[:\\s]*([\\d.]+)\\s*(?:kg|g)";
-  const weightMatch = tryRegex(weightRe);
-  if (weightMatch?.[1]) {
-    const w = parseFloat(weightMatch[1]);
-    result.netWeight = w < 50 ? Math.round(w * 1000) : Math.round(w); // convert kg→g if needed
-  }
-
-  // Print speed
-  const speedRe = specConfig?.speed_regex || "(?:Print(?:ing)?\\s+Speed)[:\\s]*(?:up\\s+to\\s+)?([\\d]+)\\s*(?:mm/s|mm\\/s)";
-  const speedMatch = tryRegex(speedRe);
-  if (speedMatch?.[1]) result.printSpeedMax = parseInt(speedMatch[1]);
-
-  // Drying temp
-  const dryTempRe = specConfig?.drying_temp_regex || "(?:Dry(?:ing)?\\s+Temp(?:erature)?)[:\\s]*([\\d]+)";
-  const dryTempMatch = tryRegex(dryTempRe);
-  if (dryTempMatch?.[1]) result.dryingTemp = parseInt(dryTempMatch[1]);
-
-  // Drying time
-  const dryTimeRe = specConfig?.drying_time_regex || "(?:Dry(?:ing)?\\s+Time)[:\\s]*([\\d]+)\\s*(?:h|hours?)";
-  const dryTimeMatch = tryRegex(dryTimeRe);
-  if (dryTimeMatch?.[1]) result.dryingTime = parseInt(dryTimeMatch[1]);
-
-  return result;
-}
-
-function stripMaterialPrefix(colorName: string, material: string): string {
-  // "PLA White" → "White", "PLA Neon Red" → "Neon Red"
-  const prefixes = [material, material.toUpperCase(), material.toLowerCase()];
-  let cleaned = colorName.trim();
-  for (const prefix of prefixes) {
-    if (cleaned.startsWith(prefix + " ")) {
-      cleaned = cleaned.slice(prefix.length + 1).trim();
-      break;
-    }
-  }
-  return cleaned || colorName;
-}
-
-// ============================================================
-// Smart Option Position Detection for SUNLU
-// ============================================================
-
-const REGION_KEYWORDS = ["ship", "shipment", "country", "region", "destination"];
-const MATERIAL_KEYWORDS = ["material", "type", "types", "category"];
-const COLOR_KEYWORDS = ["color", "colour"];
-
-function detectOptionPositions(
-  product: any,
-  config: ScrapingConfig
-): { regionKey: string | null; materialKey: string | null; colorKey: string | null } {
-  const fallback = {
-    regionKey: config.variant_mapping?.region_option || "option1",
-    materialKey: config.variant_mapping?.material_option || "option2",
-    colorKey: config.variant_mapping?.color_option || "option3",
-  };
-
-  if (!product?.options?.length) return fallback;
-
-  let regionKey: string | null = null;
-  let materialKey: string | null = null;
-  let colorKey: string | null = null;
-
-  for (const opt of product.options) {
-    const name = (opt.name || "").toLowerCase().trim();
-    const key = `option${opt.position}` as string;
-
-    // Compound "Material/Color" → treat as Color
-    if (name.includes("material") && name.includes("color")) {
-      colorKey = key;
-      continue;
-    }
-
-    if (!regionKey && REGION_KEYWORDS.some((kw) => name.includes(kw))) {
-      regionKey = key;
-    } else if (!colorKey && COLOR_KEYWORDS.some((kw) => name.includes(kw))) {
-      colorKey = key;
-    } else if (!materialKey && MATERIAL_KEYWORDS.some((kw) => name.includes(kw))) {
-      materialKey = key;
-    }
-    // "Package"/"Specifications" are intentionally ignored
-  }
-
-  if (!regionKey) console.warn("[detectOptionPositions] Could not detect region option, using fallback");
-  if (!materialKey) console.warn("[detectOptionPositions] Could not detect material option, using fallback");
-  if (!colorKey) console.warn("[detectOptionPositions] Could not detect color option, using fallback");
-
-  return {
-    regionKey: regionKey || fallback.regionKey,
-    materialKey: materialKey || fallback.materialKey,
-    colorKey: colorKey || fallback.colorKey,
-  };
 }
 
 // ============================================================
