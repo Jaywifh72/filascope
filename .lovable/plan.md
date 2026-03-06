@@ -1,124 +1,59 @@
 
 
-## Plan: Fix Extraction Quality in sync-brand-catalog
+# Filament Onboarding Admin Page
 
-This plan focuses on two files: the Edge Function `supabase/functions/sync-brand-catalog/index.ts` (primary) and the shared utils `supabase/functions/_shared/filament-utils.ts` (new helpers). No UI, DB, or routing changes.
+## Overview
+Create a new admin page at `/admin/filament-onboarding` with 5 sections: extraction form, results table, review/confirm bar, preview dialog, and job history. Uses the existing `AdminNewLayout` pattern with `AdminNewSidebar` navigation.
 
----
+## Files to Create
 
-### 1. Enhanced `classifyProduct()` — Better Filtering (sync-brand-catalog ~lines 47-100)
+### 1. `src/pages/admin/FilamentOnboarding.tsx` — Main page component
+- Section 1: Horizontal form with brand combobox (loads from `brands`), URL input, Extract button
+- Brand selector checks `brand_scraping_configs` for matching `adapter_key`; shows warning badge if none
+- Extract button creates `filament_onboarding_jobs` row, invokes `extract-filament-data` edge function
+- Section 2: Results summary bar + filter tabs (All/New/Duplicates/Errors) + data table
+- Section 5: Job history table at bottom
 
-Add these exclusion rules before existing logic:
+### 2. `src/components/admin/filament-onboarding/ExtractionResultsTable.tsx`
+- Selectable table with columns: checkbox, thumbnail, color, material, display name, regional prices, SKU, status badge, actions
+- Duplicate rows get yellow tint, error rows get red tint
+- Select all checkbox in header
+- Filter by status tab
 
-- Title contains "clearance" (case-insensitive) → skip
-- Title starts with `[` and contains `Only]` → skip (catches `[Canada Only]`, `[Europe Only]`, etc.)
-- Title contains both "combo" and "mix" → skip (multi-material samplers)
-- Title contains "bundle" and a quantity pattern like `\d+g\*\d+` or "pack" → skip
-- Product has an option named "Price" or "Note" → skip (warranty/service products)
-- Product options don't include any color/material/region-like option AND don't include filament keywords in title → skip
+### 3. `src/components/admin/filament-onboarding/OnboardingPreviewDialog.tsx`
+- Dialog showing large image, 2-column field layout
+- Editable fields: display_name, color_family, color_hex (with `react-colorful`), material, temps, prices
+- Save updates `admin_override_data` on the item
+- Mark as Skip button
 
-### 2. Fix Core Variant Grouping — Group by COLOR, Not COLOR+REGION (sync-brand-catalog ~lines 214-332)
+### 4. `src/components/admin/filament-onboarding/JobHistoryTable.tsx`
+- Table of recent `filament_onboarding_jobs`: date, brand, URL (truncated), status badge, counts
+- Clicking a row loads that job's items into the results section
 
-**Root cause fix.** Currently `colorKey` groups by the raw option value which includes region info for multi-region products. The fix:
+### 5. `src/components/admin/filament-onboarding/ImportConfirmDialog.tsx`
+- Confirmation dialog before bulk insert
+- Progress display during insertion
+- Inserts selected items into `filaments` table, updates item status + job counts
+- Success toast with link to brand page
 
-- Add `mapRegionToCode()` helper (inline in the Edge Function)
-- When grouping variants, extract the **color** value using `detected.colorKey` and group by that alone
-- Within each color group, iterate variants to extract per-region prices using `detected.regionKey` + `mapRegionToCode()`
-- Also group by **material** within each color group if `detected.materialKey` exists (so "PLA / Black" and "PETG / Black" stay separate)
-- The grouping key becomes `{material}|{color}` — region is never part of the key
+## Files to Edit
 
-### 3. Robust `getMaterial()` — Aggressive Cleaning (sync-brand-catalog ~lines 198-212)
+### 6. `src/components/admin/AdminNewSidebar.tsx`
+- Add `PackagePlus` icon import
+- Add `{ title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus }` to Content group after TD Management
 
-Replace the simple `cleanMaterial()` call with aggressive cleaning:
+### 7. `src/App.tsx`
+- Add lazy import: `const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));`
+- Add route: `<Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />`
 
-- Remove weight patterns: `\d+(\.\d+)?\s*[kK][gG]`, `\d+[gG]\b`
-- Split on `|` and take first part
-- Remove parenthetical content: `\(.*?\)`
-- Remove quantity patterns: `\d+\*[A-Z]\d+`
-- Strip known color names (BLACK, WHITE, RED, etc.) from material string
-- Apply known mappings: "PLA Neon Series" → "PLA", "High Speed PLA" → "HSPLA", "Matte PLA" → "Matte PLA", "PLA Meta" → "PLA Meta", "PLA Transparent Series" → "PLA"
-- Fallback: parse from product title using ordered material keywords (most specific first: "Silk PLA" before "PLA", "PLA+" before "PLA")
-- Final fallback: `config.default_material_type || "PLA"`
+## Edge Function for Insert
+The existing `extract-filament-data` handles extraction. For the insert step, the page will use direct Supabase client inserts (admin has RLS access via `has_role`). Each selected item's `extracted_data` (merged with `admin_override_data`) gets inserted into `filaments`, then the item's `status` and `inserted_filament_id` are updated.
 
-This will be a new `cleanMaterialAggressive()` function in the Edge Function (not shared utils, to avoid breaking `extract-filament-data`).
-
-### 4. Clean Color Name Extraction (sync-brand-catalog, after color grouping)
-
-After getting the raw color option value, apply cleaning pipeline:
-
-1. Strip material prefix (existing `stripMaterialPrefix`)
-2. Strip weight patterns: `\d+(\.\d+)?\s*[kK][gG]`, `\d+[gG]\b`
-3. Strip region markers: `\(AU PLUG\)`, `\(EU PLUG\)`, `\(US PLUG\)`
-4. Strip product codes: `\d+\*[A-Z]\d+`, `DLZ-\w+`
-5. If contains `|`, take the part that best matches a color (contains a COLOR_HEX_MAP key, or is shortest)
-6. Title-case: "BLACK" → "Black", "SKY BLUE" → "Sky Blue"
-7. If empty after cleaning → "Default"
-
-New function `cleanColorName()` inline in the Edge Function.
-
-### 5. Display Name Generation (sync-brand-catalog ~line 285)
-
-Replace current `displayName = \`${material} - ${colorName}\`` with:
-- If cleaned color is "Default" or empty → just material name
-- Otherwise → `"{Material} - {Color}"` with both properly cased
-
-### 6. Price Change Detection — Ignore Null→Value (sync-brand-catalog ~lines 399-403)
-
-In `diffAgainstDatabase()`, change the comparison:
-```
-// OLD: if (newVal !== null && oldVal !== newVal)
-// NEW: if (newVal !== null && oldVal !== null && oldVal > 0 && Math.abs(oldVal - newVal) > 0.01)
-```
-When old is null/0 and new has a value → treat as "matched" (data enrichment, not a price change).
-
-### 7. Variant Image Resolution (sync-brand-catalog ~lines 270-276)
-
-Improve image matching per color group:
-- Check each variant in the color group for `featured_image.src`
-- Check `product.images[]` for images whose `variant_ids` include any variant ID from this color group
-- `featured_image` = product's first image (hero shot)
-- `variant_image` = color-specific image from variant or variant_ids match
-
-### 8. `mapRegionToCode()` Helper (sync-brand-catalog, new function)
-
-```typescript
-function mapRegionToCode(regionValue: string | null, regionMap: Record<string, string>): string | null {
-  if (!regionValue) return null;
-  // Config region_map exact match first
-  for (const [mapKey, code] of Object.entries(regionMap)) {
-    if (regionValue.includes(mapKey)) return code;
-  }
-  // Fallback keyword matching
-  const rv = regionValue.toLowerCase();
-  if (rv.includes('usa') || rv.includes('united states')) return 'US';
-  if (rv.includes('europe') || rv.includes('eu')) return 'EU';
-  if (rv.includes('canada')) return 'CA';
-  if (rv.includes('australia')) return 'AU';
-  if (rv.includes('uk') || rv.includes('united kingdom')) return 'UK';
-  return null;
-}
-```
-
-### 9. Import Flow Verification
-
-The existing code in `BrandCatalogSync.tsx`, `NewFilamentsTable.tsx`, and `import-synced-filaments/index.ts` is correctly wired:
-- Checkboxes work (select/deselect/all)
-- Sticky import bar appears when items selected
-- Import button calls `import-synced-filaments` with correct `item_ids`
-- Import function reads from `brand_sync_items`, inserts into `filaments`, sets `auto_created: true`, handles `admin_override_data` merge
-
-No UI changes needed.
-
----
-
-### Files Modified
-
-| File | Changes |
-|------|---------|
-| `supabase/functions/sync-brand-catalog/index.ts` | Rewrite `classifyProduct()`, `extractFilamentsFromProduct()`, `getMaterial()`, `diffAgainstDatabase()`. Add `mapRegionToCode()`, `cleanMaterialAggressive()`, `cleanColorName()`, `titleCase()`. |
-
-### Files NOT Modified
-- `_shared/filament-utils.ts` — no changes to avoid breaking other consumers
-- `import-synced-filaments/index.ts` — already correct
-- All UI components — already correct
+## Key Technical Details
+- Brand selector uses `supabase.from('brands').select('id, name, logo_url')` with search
+- Config check: `supabase.from('brand_scraping_configs').select('adapter_key').eq('brand_id', selectedBrandId)`
+- Extraction invoke: `supabase.functions.invoke('extract-filament-data', { body: { job_id, source_url, adapter_key } })`
+- Job history: `supabase.from('filament_onboarding_jobs').select('*').order('created_at', { ascending: false }).limit(20)`
+- Items load: `supabase.from('filament_onboarding_items').select('*').eq('job_id', jobId)`
+- Sticky bottom bar with selection count + import button using `position: sticky; bottom: 0`
 
