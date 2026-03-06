@@ -1,0 +1,1 @@
+ALTER TABLE public.filament_onboarding_jobs ADD COLUMN IF NOT EXISTS post_import_results jsonb;
