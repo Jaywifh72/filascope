@@ -691,16 +691,11 @@ Deno.serve(async (req) => {
         success: true,
         job_id: jobId,
         brand_name: brandData.brand_name,
-        catalog_stats: catalogStats,
-        sync_results: {
-          new_filaments: newFilaments.map((r) => r.filament),
-          price_changed: priceChanged.map((r) => ({
-            ...r.filament,
-            existing_id: r.existingId,
-            price_diff: r.priceDiff,
-          })),
-          matched: matched.length, // Don't send full matched array to keep response small
-          errors: extractionErrors,
+        catalog_stats: {
+          total_store_products: allProducts.length,
+          filament_products_found: filamentProducts.length,
+          skipped_products: allProducts.length - filamentProducts.length,
+          skip_reasons: skipReasons,
         },
         new_count: newFilaments.length,
         changed_count: priceChanged.length,
@@ -714,15 +709,13 @@ Deno.serve(async (req) => {
   } catch (err: any) {
     console.error(`[sync-brand-catalog] Fatal error:`, err.message);
 
-    // Update job as failed if we have a job ID
     if (jobId) {
       await supabase
         .from("brand_sync_jobs")
         .update({
           status: "failed",
           completed_at: new Date().toISOString(),
-          duration_seconds: Math.round((Date.now() - startTime) / 1000),
-          warnings: [`Fatal error: ${err.message}`],
+          errors: { fatal: err.message },
         })
         .eq("id", jobId);
     }
