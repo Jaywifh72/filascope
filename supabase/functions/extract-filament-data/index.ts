@@ -847,6 +847,89 @@ Deno.serve(async (req) => {
     const duplicateResults = await checkDuplicates(supabase, filaments);
     const duplicateCount = duplicateResults.filter((r) => r.isDuplicate).length;
 
+    // ── Affiliate program check ──
+    interface AffiliateStatus {
+      has_program: boolean;
+      covered_regions: string[];
+      missing_regions: string[];
+      program_name?: string;
+    }
+
+    let affiliateStatus: AffiliateStatus = {
+      has_program: false,
+      covered_regions: [],
+      missing_regions: [],
+    };
+
+    try {
+      const { data: programs } = await supabase
+        .from("affiliate_programs")
+        .select("brand_name, region_code, is_active")
+        .eq("brand_name", config.brand_name)
+        .eq("is_active", true);
+
+      if (programs && programs.length > 0) {
+        const coveredRegions = programs.map((p: any) => p.region_code as string);
+        const isGlobal = coveredRegions.includes("GLOBAL");
+
+        // Collect all regions the extracted filaments cover
+        const filamentRegions = new Set<string>();
+        for (const f of filaments) {
+          if (f.available_regions) {
+            for (const r of f.available_regions) filamentRegions.add(r);
+          }
+          if (f.product_url_us) filamentRegions.add("US");
+          if (f.product_url_eu) filamentRegions.add("EU");
+          if (f.product_url_uk) filamentRegions.add("UK");
+          if (f.product_url_ca) filamentRegions.add("CA");
+          if (f.product_url_au) filamentRegions.add("AU");
+        }
+
+        const missingRegions = isGlobal
+          ? []
+          : [...filamentRegions].filter((r) => !coveredRegions.includes(r));
+
+        affiliateStatus = {
+          has_program: true,
+          covered_regions: coveredRegions,
+          missing_regions: missingRegions,
+          program_name: programs[0].brand_name,
+        };
+
+        if (missingRegions.length > 0) {
+          warnings.push(`Affiliate missing for regions: ${missingRegions.join(", ")}`);
+        }
+      } else {
+        warnings.push("No affiliate program found for this brand");
+
+        // Determine all filament regions for the gap report
+        const filamentRegions = new Set<string>();
+        for (const f of filaments) {
+          if (f.available_regions) {
+            for (const r of f.available_regions) filamentRegions.add(r);
+          }
+        }
+        affiliateStatus.missing_regions = [...filamentRegions];
+      }
+    } catch (affErr: any) {
+      console.warn("[extract-filament-data] Affiliate check failed (non-blocking):", affErr.message);
+      warnings.push("Affiliate check failed — could not query programs");
+    }
+
+    // Tag each filament with affiliate gaps
+    for (const f of filaments) {
+      (f as any).affiliate_gaps = affiliateStatus.missing_regions.length > 0
+        ? affiliateStatus.missing_regions.filter((r) =>
+            (f.available_regions || []).includes(r) ||
+            (r === "US" && f.product_url_us) ||
+            (r === "EU" && f.product_url_eu) ||
+            (r === "UK" && f.product_url_uk) ||
+            (r === "CA" && f.product_url_ca) ||
+            (r === "AU" && f.product_url_au)
+          )
+        : [];
+    }
+
     // ── Store results ──
     const extractionErrors = warnings.length > 0 ? { warnings } : null;
 
@@ -858,6 +941,7 @@ Deno.serve(async (req) => {
         extracted_filaments: filaments,
         extraction_errors: extractionErrors,
         duplicate_count: duplicateCount,
+        affiliate_status: affiliateStatus,
         completed_at: new Date().toISOString(),
       })
       .eq("id", jobId);
