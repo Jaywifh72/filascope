@@ -237,6 +237,25 @@ function classifyProduct(product: any): ClassifyResult {
     return { isFilament: false, reason: "service_product" };
   }
 
+  // ── HARD EXCLUSION: products that are primarily non-filament even if they mention filament ──
+  // These are dryers, printers, enclosures, etc. that bundle filament as an add-on
+  const HARD_EXCLUSION_KEYWORDS = [
+    "dryer", "filadryer", "printer", "enclosure", "resin", "nozzle", "extruder",
+    "hotend", "hot end", "build plate", "pei", "bed leveling", "spool holder",
+    "filament holder", "filament connector", "splicer", "warranty", "worry-free",
+    "wash", "cure", "lcd", "screen", "upgrade", "accessories", "board", "protection",
+  ];
+  for (const kw of HARD_EXCLUSION_KEYWORDS) {
+    if (title.includes(kw)) {
+      return { isFilament: false, reason: "non_filament" };
+    }
+  }
+
+  // Skip "prime deal" / "resin" products even if they mention filament
+  if (title.includes("resin") && !title.includes("filament")) {
+    return { isFilament: false, reason: "non_filament" };
+  }
+
   // Skip products with no color/material/region-like options AND no filament keywords in title
   const hasRelevantOption = optionNames.some(
     (n: string) =>
@@ -249,17 +268,7 @@ function classifyProduct(product: any): ClassifyResult {
   );
   const hasFilamentInTitle = FILAMENT_KEYWORDS.some((fk) => title.includes(fk));
   if (!hasRelevantOption && !hasFilamentInTitle) {
-    // Products with just [Pack, Types] or [Price, Note] — bundles or non-filament
     return { isFilament: false, reason: "no_relevant_options" };
-  }
-
-  // Check exclusion keywords
-  for (const kw of NON_FILAMENT_KEYWORDS) {
-    if (title.includes(kw)) {
-      if (!hasFilamentInTitle) {
-        return { isFilament: false, reason: "non_filament" };
-      }
-    }
   }
 
   // Exclude by product_type
