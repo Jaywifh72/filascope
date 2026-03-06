@@ -880,13 +880,40 @@ Deno.serve(async (req) => {
     // ── Route to adapter ──
     let adapterResult: { filaments: ExtractedFilament[]; warnings: string[] };
 
-    switch (adapterKey) {
-      case "sunlu":
-        adapterResult = adaptSunlu(rawProduct, config, productHandle);
-        break;
-      default:
-        adapterResult = adaptGenericShopify(rawProduct, config, productHandle);
-        break;
+    if (allProducts) {
+      // Collection mode: process each product through the adapter
+      const allFilaments: ExtractedFilament[] = [];
+      const allWarnings: string[] = [];
+      
+      for (const product of allProducts) {
+        const handle = product.handle || product.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
+        const wrappedProduct = { product };
+        
+        let result: { filaments: ExtractedFilament[]; warnings: string[] };
+        switch (adapterKey) {
+          case "sunlu":
+            result = adaptSunlu(wrappedProduct, config, handle);
+            break;
+          default:
+            result = adaptGenericShopify(wrappedProduct, config, handle);
+            break;
+        }
+        
+        allFilaments.push(...result.filaments);
+        allWarnings.push(...result.warnings);
+      }
+      
+      adapterResult = { filaments: allFilaments, warnings: allWarnings };
+      console.log(`[extract-filament-data] Collection mode: processed ${allProducts.length} products → ${allFilaments.length} filaments`);
+    } else {
+      switch (adapterKey) {
+        case "sunlu":
+          adapterResult = adaptSunlu(rawProduct, config, productHandle!);
+          break;
+        default:
+          adapterResult = adaptGenericShopify(rawProduct, config, productHandle!);
+          break;
+      }
     }
 
     const { filaments, warnings } = adapterResult;
