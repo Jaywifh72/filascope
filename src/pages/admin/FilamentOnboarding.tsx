@@ -127,7 +127,7 @@ export default function FilamentOnboarding() {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
-      return (data ?? []) as OnboardingJob[];
+      return (data ?? []) as unknown as OnboardingJob[];
     },
   });
 
