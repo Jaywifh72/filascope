@@ -101,6 +101,11 @@ function useTableCoverage() {
         bsiError,
         phTotal,
         phMinMax,
+        fpTotal,
+        pruTotal,
+        pruProductIds,
+        flatPriceCount,
+        flatUrlCount,
       ] = await Promise.all([
         supabase.from('filaments').select('*', { count: 'exact', head: true }),
         supabase.from('filaments').select('*', { count: 'exact', head: true }).not('variant_price', 'is', null),
@@ -122,6 +127,14 @@ function useTableCoverage() {
         supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }).eq('status', 'error'),
         supabase.from('price_history').select('*', { count: 'exact', head: true }),
         supabase.from('price_history').select('recorded_at').order('recorded_at', { ascending: true }).limit(1),
+        // Schema health queries
+        supabase.from('filament_properties').select('*', { count: 'exact', head: true }),
+        supabase.from('product_regional_urls').select('*', { count: 'exact', head: true }),
+        supabase.from('product_regional_urls').select('product_id'),
+        supabase.from('filaments').select('*', { count: 'exact', head: true })
+          .or('price_cad.not.is.null,price_eur.not.is.null,price_gbp.not.is.null,price_aud.not.is.null,price_jpy.not.is.null'),
+        supabase.from('filaments').select('*', { count: 'exact', head: true })
+          .or('product_url_ca.not.is.null,product_url_eu.not.is.null,product_url_uk.not.is.null,product_url_au.not.is.null,product_url_jp.not.is.null'),
       ]);
 
       const uniqueListingFilaments = new Set((listingFilamentIds.data || []).map((r: any) => r.filament_id)).size;
@@ -149,6 +162,13 @@ function useTableCoverage() {
           error: bsiError.count || 0,
         },
         priceHistory: { total: phTotal.count || 0, earliest: phMinMax.data?.[0]?.recorded_at ?? 'N/A' },
+        schemaHealth: {
+          filamentProperties: fpTotal.count || 0,
+          pruTotal: pruTotal.count || 0,
+          pruUniqueFilaments: new Set((pruProductIds.data || []).map((r: any) => r.product_id)).size,
+          flatPricePopulated: flatPriceCount.count || 0,
+          flatUrlPopulated: flatUrlCount.count || 0,
+        },
       };
     },
     staleTime: 1000 * 60 * 5,
