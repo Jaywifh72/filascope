@@ -233,6 +233,7 @@ Deno.serve(async (req) => {
               high_speed_capable: merged.high_speed_capable,
               drying_temp_c: merged.drying_temp_c,
               drying_time_hours: merged.drying_time_hours,
+              td: merged.td_value ?? merged.td,
               variant_available: merged.variant_available ?? true,
               available_regions: merged.available_regions ?? item.available_regions,
               auto_created: true,

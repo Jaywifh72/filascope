@@ -255,6 +255,7 @@ export function parseSpecsFromHtml(
     spoolOuterDiameterMm: null as number | null,
     spoolWidthMm: null as number | null,
     spoolMaterial: null as string | null,
+    tdValue: null as number | null,
     weightSource: null as "body_html" | "variant_title" | "product_title" | null,
   };
 
@@ -307,6 +308,14 @@ export function parseSpecsFromHtml(
   const dryTimeRe = specConfig?.drying_time_regex || "(?:Dry(?:ing)?\\s+Time)[:\\s]*([\\d]+)\\s*(?:h|hours?)";
   const dryTimeMatch = tryRegex(dryTimeRe);
   if (dryTimeMatch?.[1]) result.dryingTime = parseInt(dryTimeMatch[1]);
+
+  // Transmission Distance (TD) extraction
+  const tdRe = specConfig?.td_regex || "(?:transmission\\s*distance|(?<!\\w)td|transmittance|light\\s*transmission)\\s*[:=]?\\s*(\\d+(?:\\.\\d+)?)";
+  const tdMatch = tryRegex(tdRe);
+  if (tdMatch?.[1]) {
+    const tdVal = parseFloat(tdMatch[1]);
+    if (tdVal > 0 && tdVal <= 20) result.tdValue = tdVal;
+  }
 
   // Spool outer diameter: "spool diameter", "spool OD", "outer diameter"
   const spoolDiamRe = specConfig?.spool_diameter_regex || "(?:spool\\s+(?:outer\\s+)?diameter|spool\\s+OD|outer\\s+diameter)[:\\s]*([\\d.]+)\\s*(mm|in(?:ch(?:es)?)?|\")?";
