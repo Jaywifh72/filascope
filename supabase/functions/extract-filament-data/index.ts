@@ -19,6 +19,7 @@ import {
   guessFinishType,
   stripMaterialPrefix,
   parseSpecsFromHtml,
+  extractWeightFromText,
   detectOptionPositions,
   REGION_KEYWORDS,
   MATERIAL_KEYWORDS,
@@ -89,6 +90,24 @@ function adaptSunlu(
 
   // Parse specs from body_html
   const specs = parseSpecsFromHtml(product.body_html || "", config.spec_extraction || null);
+
+  // Fallback weight extraction from variant/product titles
+  if (specs.netWeight == null) {
+    // Try first variant title
+    const firstVariantTitle = product.variants?.[0]?.title || "";
+    const variantWeight = extractWeightFromText(firstVariantTitle);
+    if (variantWeight != null) {
+      specs.netWeight = variantWeight;
+      specs.weightSource = "variant_title";
+    } else {
+      // Try product title
+      const titleWeight = extractWeightFromText(product.title || "");
+      if (titleWeight != null) {
+        specs.netWeight = titleWeight;
+        specs.weightSource = "product_title";
+      }
+    }
+  }
 
   // Build regional URLs from config
   const regionalUrls = config.regional_url_pattern || {};
@@ -172,6 +191,7 @@ function adaptSunlu(
       bed_temp_max_c: specs.bedTempMax,
       diameter_nominal_mm: specs.diameter || 1.75,
       net_weight_g: specs.netWeight,
+      weight_source: specs.weightSource,
       product_url: buildRegionalUrl("US") || `${config.base_url}/products/${productHandle}`,
       product_url_us: buildRegionalUrl("US"),
       product_url_eu: buildRegionalUrl("EU"),
@@ -222,6 +242,22 @@ function adaptGenericShopify(
   }
 
   const specs = parseSpecsFromHtml(product.body_html || "", config.spec_extraction || null);
+
+  // Fallback weight extraction from variant/product titles
+  if (specs.netWeight == null) {
+    const firstVariantTitle = product.variants?.[0]?.title || "";
+    const variantWeight = extractWeightFromText(firstVariantTitle);
+    if (variantWeight != null) {
+      specs.netWeight = variantWeight;
+      specs.weightSource = "variant_title";
+    } else {
+      const titleWeight = extractWeightFromText(product.title || "");
+      if (titleWeight != null) {
+        specs.netWeight = titleWeight;
+        specs.weightSource = "product_title";
+      }
+    }
+  }
   const mapping = config.variant_mapping || {};
   const colorOption = mapping.color_option || "option1";
   const regionalUrls = config.regional_url_pattern || {};
@@ -278,6 +314,7 @@ function adaptGenericShopify(
       bed_temp_max_c: specs.bedTempMax,
       diameter_nominal_mm: specs.diameter || 1.75,
       net_weight_g: specs.netWeight,
+      weight_source: specs.weightSource,
       product_url: buildRegionalUrl("US") || `${config.base_url}/products/${productHandle}`,
       product_url_us: buildRegionalUrl("US"),
       product_url_eu: buildRegionalUrl("EU"),

@@ -17,6 +17,7 @@ import {
   guessFinishType,
   stripMaterialPrefix,
   parseSpecsFromHtml,
+  extractWeightFromText,
   detectOptionPositions,
   FILAMENT_KEYWORDS,
   NON_FILAMENT_KEYWORDS,
@@ -395,6 +396,22 @@ function extractFilamentsFromProduct(
   // Parse specs from body_html
   const specs = parseSpecsFromHtml(product.body_html || "", config.spec_extraction || null);
 
+  // Fallback weight extraction from variant/product titles
+  if (specs.netWeight == null) {
+    const firstVariantTitle = product.variants?.[0]?.title || "";
+    const variantWeight = extractWeightFromText(firstVariantTitle);
+    if (variantWeight != null) {
+      specs.netWeight = variantWeight;
+      specs.weightSource = "variant_title";
+    } else {
+      const titleWeight = extractWeightFromText(product.title || "");
+      if (titleWeight != null) {
+        specs.netWeight = titleWeight;
+        specs.weightSource = "product_title";
+      }
+    }
+  }
+
   // ── FIX 3: Robust material extraction ──
   function getMaterial(variant: any): string {
     if (detected.materialKey) {
@@ -530,6 +547,7 @@ function extractFilamentsFromProduct(
       bed_temp_max_c: specs.bedTempMax,
       diameter_nominal_mm: specs.diameter || 1.75,
       net_weight_g: specs.netWeight,
+      weight_source: specs.weightSource,
       product_url: buildRegionalUrl("US") || `${config.base_url}/products/${productHandle}`,
       product_url_us: buildRegionalUrl("US"),
       product_url_eu: buildRegionalUrl("EU"),

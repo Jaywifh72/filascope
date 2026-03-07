@@ -133,6 +133,36 @@ export interface ExtractedFilament {
   drying_time_hours: number | null;
   variant_available: boolean;
   available_regions: string[];
+  weight_source: "body_html" | "variant_title" | "product_title" | null;
+}
+
+/**
+ * Extract weight in grams from a text string.
+ * Supports kg, g, and lb patterns.
+ * Returns weight in grams or null.
+ */
+export function extractWeightFromText(text: string): number | null {
+  if (!text) return null;
+
+  const kgMatch = text.match(/(\d+(?:\.\d+)?)\s*kg/i);
+  if (kgMatch?.[1]) {
+    const w = parseFloat(kgMatch[1]) * 1000;
+    if (w > 0 && w <= 50000) return Math.round(w);
+  }
+
+  const gMatch = text.match(/(\d+(?:\.\d+)?)\s*g\b/i);
+  if (gMatch?.[1]) {
+    const w = parseFloat(gMatch[1]);
+    if (w > 0 && w <= 50000) return Math.round(w);
+  }
+
+  const lbMatch = text.match(/(\d+(?:\.\d+)?)\s*lb/i);
+  if (lbMatch?.[1]) {
+    const w = parseFloat(lbMatch[1]) * 453.592;
+    if (w > 0 && w <= 50000) return Math.round(w);
+  }
+
+  return null;
 }
 
 // ============================================================
@@ -210,6 +240,7 @@ export function parseSpecsFromHtml(
   spoolOuterDiameterMm: number | null;
   spoolWidthMm: number | null;
   spoolMaterial: string | null;
+  weightSource: "body_html" | "variant_title" | "product_title" | null;
 } {
   const result = {
     diameter: null as number | null,
@@ -224,6 +255,7 @@ export function parseSpecsFromHtml(
     spoolOuterDiameterMm: null as number | null,
     spoolWidthMm: null as number | null,
     spoolMaterial: null as string | null,
+    weightSource: null as "body_html" | "variant_title" | "product_title" | null,
   };
 
   if (!bodyHtml) return result;
@@ -261,6 +293,7 @@ export function parseSpecsFromHtml(
   if (weightMatch?.[1]) {
     const w = parseFloat(weightMatch[1]);
     result.netWeight = w < 50 ? Math.round(w * 1000) : Math.round(w);
+    result.weightSource = "body_html";
   }
 
   const speedRe = specConfig?.speed_regex || "(?:Print(?:ing)?\\s+Speed)[:\\s]*(?:up\\s+to\\s+)?([\\d]+)\\s*(?:mm/s|mm\\/s)";
