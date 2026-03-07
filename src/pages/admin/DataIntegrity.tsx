@@ -86,6 +86,7 @@ function useTableCoverage() {
         filWithoutPrice,
         listingsTotal,
         listingFilamentIds,
+        effectiveCoverage,
         prpTotal,
         prpProductIds,
         bsiTotal,
@@ -103,6 +104,10 @@ function useTableCoverage() {
         supabase.from('filaments').select('*', { count: 'exact', head: true }).is('variant_price', null),
         supabase.from('filament_listings').select('*', { count: 'exact', head: true }),
         supabase.from('filament_listings').select('filament_id'),
+        // Effective coverage: filaments with at least one price AND at least one URL (synthetic fallback works)
+        supabase.from('filaments').select('*', { count: 'exact', head: true })
+          .or('variant_price.not.is.null,price_aud.not.is.null,price_cad.not.is.null,price_eur.not.is.null,price_gbp.not.is.null,price_jpy.not.is.null')
+          .or('product_url.not.is.null,product_url_au.not.is.null,product_url_ca.not.is.null,product_url_eu.not.is.null,product_url_jp.not.is.null,product_url_uk.not.is.null'),
         supabase.from('product_regional_prices').select('*', { count: 'exact', head: true }),
         supabase.from('product_regional_prices').select('product_id'),
         supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }),
@@ -119,10 +124,17 @@ function useTableCoverage() {
       const uniqueListingFilaments = new Set((listingFilamentIds.data || []).map((r: any) => r.filament_id)).size;
       const uniquePrpProducts = new Set((prpProductIds.data || []).map((r: any) => r.product_id)).size;
       const total = filTotal.count || 0;
+      const effectiveCount = effectiveCoverage.count || 0;
 
       return {
         filaments: { total, withPrice: filWithPrice.count || 0, withoutPrice: filWithoutPrice.count || 0 },
-        listings: { total: listingsTotal.count || 0, uniqueFilaments: uniqueListingFilaments, coveragePct: total > 0 ? Math.round((uniqueListingFilaments / total) * 100) : 0 },
+        listings: {
+          total: listingsTotal.count || 0,
+          uniqueFilaments: uniqueListingFilaments,
+          coveragePct: total > 0 ? Math.round((uniqueListingFilaments / total) * 100) : 0,
+          effectiveCount,
+          effectivePct: total > 0 ? Math.round((effectiveCount / total) * 100) : 0,
+        },
         prp: { total: prpTotal.count || 0, uniqueProducts: uniquePrpProducts },
         bsi: {
           total: bsiTotal.count || 0,
