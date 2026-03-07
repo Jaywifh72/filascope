@@ -18,6 +18,7 @@ import {
   FileText,
   Sun,
   PackagePlus,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -74,6 +75,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'System',
     items: [
+      { title: 'Data Integrity', href: '/admin/data-integrity', icon: ShieldCheck },
       { title: 'OldAdmin Dashboard', href: '/old-admin/dashboard', icon: ExternalLink, external: true },
     ],
   },
