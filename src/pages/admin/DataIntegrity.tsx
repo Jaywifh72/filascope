@@ -520,6 +520,54 @@ export default function DataIntegrity() {
                 { label: 'Earliest', value: coverage.priceHistory.earliest !== 'N/A' ? new Date(coverage.priceHistory.earliest).toLocaleDateString() : 'N/A' },
               ]}
             />
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    Schema Health
+                  </CardTitle>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[280px]">
+                        <p className="text-xs">The filaments table has 148 columns. Regional prices and URLs are being migrated from flat columns to product_regional_prices and product_regional_urls tables. Coverage shown here tracks that migration progress.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">filaments table</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="font-mono font-semibold">148 columns</span>
+                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0">wide</Badge>
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">filament_properties</span>
+                  <span className="font-mono font-semibold">{coverage.schemaHealth.filamentProperties.toLocaleString()} rows</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">product_regional_prices</span>
+                  <span className="font-mono font-semibold">{coverage.prp.total.toLocaleString()} rows · {coverage.prp.uniqueProducts.toLocaleString()} filaments</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">product_regional_urls</span>
+                  <span className="font-mono font-semibold">{coverage.schemaHealth.pruTotal.toLocaleString()} rows · {coverage.schemaHealth.pruUniqueFilaments.toLocaleString()} filaments</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Flat price columns populated</span>
+                  <span className="font-mono font-semibold">{coverage.schemaHealth.flatPricePopulated.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Flat URL columns populated</span>
+                  <span className="font-mono font-semibold">{coverage.schemaHealth.flatUrlPopulated.toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ) : null}
       </section>
