@@ -240,6 +240,7 @@ export function parseSpecsFromHtml(
   spoolOuterDiameterMm: number | null;
   spoolWidthMm: number | null;
   spoolMaterial: string | null;
+  weightSource: "body_html" | "variant_title" | "product_title" | null;
 } {
   const result = {
     diameter: null as number | null,
