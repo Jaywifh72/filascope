@@ -1,31 +1,59 @@
 
 
-## Plan: Add CN (China) Region Support
+# Filament Onboarding Admin Page
 
-### Step 1: Database Migration
-Create a single migration adding 4 columns:
-- `filaments.price_cny` (numeric, NULL)
-- `filaments.product_url_cn` (text, NULL)
-- `brand_sync_items.price_cny` (numeric, NULL)
-- `brand_sync_items.product_url_cn` (text, NULL)
+## Overview
+Create a new admin page at `/admin/filament-onboarding` with 5 sections: extraction form, results table, review/confirm bar, preview dialog, and job history. Uses the existing `AdminNewLayout` pattern with `AdminNewSidebar` navigation.
 
-All use `ADD COLUMN IF NOT EXISTS`. No drops, no RLS changes.
+## Files to Create
 
-### Step 2: Update `supabase/functions/import-synced-filaments/index.ts`
-Four targeted insertions following the existing JP pattern:
+### 1. `src/pages/admin/FilamentOnboarding.tsx` — Main page component
+- Section 1: Horizontal form with brand combobox (loads from `brands`), URL input, Extract button
+- Brand selector checks `brand_scraping_configs` for matching `adapter_key`; shows warning badge if none
+- Extract button creates `filament_onboarding_jobs` row, invokes `extract-filament-data` edge function
+- Section 2: Results summary bar + filter tabs (All/New/Duplicates/Errors) + data table
+- Section 5: Job history table at bottom
 
-1. **Line ~170** (priceUpdate block): Add `if (merged.price_cny != null) priceUpdate.price_cny = merged.price_cny;`
-2. **Line ~220** (INSERT object): Add `price_cny: merged.price_cny,` and `product_url_cn: merged.product_url_cn,`
-3. **Line ~279** (regionMap): Add `{ field: "price_cny", altField: "price_cny", region: "CN" },`
-4. **Line ~319** (urlFields): Add `"product_url_cn"` to the array
+### 2. `src/components/admin/filament-onboarding/ExtractionResultsTable.tsx`
+- Selectable table with columns: checkbox, thumbnail, color, material, display name, regional prices, SKU, status badge, actions
+- Duplicate rows get yellow tint, error rows get red tint
+- Select all checkbox in header
+- Filter by status tab
 
-No other logic changes.
+### 3. `src/components/admin/filament-onboarding/OnboardingPreviewDialog.tsx`
+- Dialog showing large image, 2-column field layout
+- Editable fields: display_name, color_family, color_hex (with `react-colorful`), material, temps, prices
+- Save updates `admin_override_data` on the item
+- Mark as Skip button
 
-### Step 3: Region Config — Already Done
-`src/config/regions.ts` already has CN entry. `src/types/regional.ts` already includes CN in `RegionCode` union and `REGION_CONFIGS`. `src/config/currencies.ts` already has CNY. No changes needed here.
+### 4. `src/components/admin/filament-onboarding/JobHistoryTable.tsx`
+- Table of recent `filament_onboarding_jobs`: date, brand, URL (truncated), status badge, counts
+- Clicking a row loads that job's items into the results section
 
-### Files to edit
-1. New migration SQL file (1 file created)
-2. `supabase/functions/import-synced-filaments/index.ts` (4 line-level edits)
-3. `src/integrations/supabase/types.ts` (auto-updated after migration)
+### 5. `src/components/admin/filament-onboarding/ImportConfirmDialog.tsx`
+- Confirmation dialog before bulk insert
+- Progress display during insertion
+- Inserts selected items into `filaments` table, updates item status + job counts
+- Success toast with link to brand page
+
+## Files to Edit
+
+### 6. `src/components/admin/AdminNewSidebar.tsx`
+- Add `PackagePlus` icon import
+- Add `{ title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus }` to Content group after TD Management
+
+### 7. `src/App.tsx`
+- Add lazy import: `const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));`
+- Add route: `<Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />`
+
+## Edge Function for Insert
+The existing `extract-filament-data` handles extraction. For the insert step, the page will use direct Supabase client inserts (admin has RLS access via `has_role`). Each selected item's `extracted_data` (merged with `admin_override_data`) gets inserted into `filaments`, then the item's `status` and `inserted_filament_id` are updated.
+
+## Key Technical Details
+- Brand selector uses `supabase.from('brands').select('id, name, logo_url')` with search
+- Config check: `supabase.from('brand_scraping_configs').select('adapter_key').eq('brand_id', selectedBrandId)`
+- Extraction invoke: `supabase.functions.invoke('extract-filament-data', { body: { job_id, source_url, adapter_key } })`
+- Job history: `supabase.from('filament_onboarding_jobs').select('*').order('created_at', { ascending: false }).limit(20)`
+- Items load: `supabase.from('filament_onboarding_items').select('*').eq('job_id', jobId)`
+- Sticky bottom bar with selection count + import button using `position: sticky; bottom: 0`
 
