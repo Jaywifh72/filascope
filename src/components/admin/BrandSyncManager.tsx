@@ -401,6 +401,24 @@ export function BrandSyncManager() {
               </SelectContent>
             </Select>
             {getSyncTypeBadge()}
+            {selectedBrandSlug && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    {BRANDS_WITH_CUSTOM_DEFAULTS.includes(selectedBrandSlug) ? (
+                      <Badge className="bg-green-600 hover:bg-green-600 cursor-help">Full Enrichment</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-yellow-600 border-yellow-500 cursor-help">Generic Enrichment</Badge>
+                    )}
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <p>{BRANDS_WITH_CUSTOM_DEFAULTS.includes(selectedBrandSlug)
+                      ? 'Custom enrichment with known print settings and TDS patterns.'
+                      : 'Fallback temperature defaults only. Create a custom defaults file for full enrichment.'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div>
 
