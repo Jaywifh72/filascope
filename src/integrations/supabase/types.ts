@@ -1695,12 +1695,14 @@ export type Database = {
           material_type: string | null
           price_aud: number | null
           price_cad: number | null
+          price_cny: number | null
           price_diff: Json | null
           price_eur: number | null
           price_gbp: number | null
           price_jpy: number | null
           price_usd: number | null
           product_handle: string | null
+          product_url_cn: string | null
           status: string
           updated_at: string | null
           variant_image_url: string | null
@@ -1726,12 +1728,14 @@ export type Database = {
           material_type?: string | null
           price_aud?: number | null
           price_cad?: number | null
+          price_cny?: number | null
           price_diff?: Json | null
           price_eur?: number | null
           price_gbp?: number | null
           price_jpy?: number | null
           price_usd?: number | null
           product_handle?: string | null
+          product_url_cn?: string | null
           status?: string
           updated_at?: string | null
           variant_image_url?: string | null
@@ -1757,12 +1761,14 @@ export type Database = {
           material_type?: string | null
           price_aud?: number | null
           price_cad?: number | null
+          price_cny?: number | null
           price_diff?: Json | null
           price_eur?: number | null
           price_gbp?: number | null
           price_jpy?: number | null
           price_usd?: number | null
           product_handle?: string | null
+          product_url_cn?: string | null
           status?: string
           updated_at?: string | null
           variant_image_url?: string | null
@@ -4362,6 +4368,7 @@ export type Database = {
           poissons_ratio: number | null
           price_aud: number | null
           price_cad: number | null
+          price_cny: number | null
           price_confidence: string | null
           price_eur: number | null
           price_gbp: number | null
@@ -4378,6 +4385,7 @@ export type Database = {
           product_url: string | null
           product_url_au: string | null
           product_url_ca: string | null
+          product_url_cn: string | null
           product_url_eu: string | null
           product_url_jp: string | null
           product_url_uk: string | null
@@ -4512,6 +4520,7 @@ export type Database = {
           poissons_ratio?: number | null
           price_aud?: number | null
           price_cad?: number | null
+          price_cny?: number | null
           price_confidence?: string | null
           price_eur?: number | null
           price_gbp?: number | null
@@ -4528,6 +4537,7 @@ export type Database = {
           product_url?: string | null
           product_url_au?: string | null
           product_url_ca?: string | null
+          product_url_cn?: string | null
           product_url_eu?: string | null
           product_url_jp?: string | null
           product_url_uk?: string | null
@@ -4662,6 +4672,7 @@ export type Database = {
           poissons_ratio?: number | null
           price_aud?: number | null
           price_cad?: number | null
+          price_cny?: number | null
           price_confidence?: string | null
           price_eur?: number | null
           price_gbp?: number | null
@@ -4678,6 +4689,7 @@ export type Database = {
           product_url?: string | null
           product_url_au?: string | null
           product_url_ca?: string | null
+          product_url_cn?: string | null
           product_url_eu?: string | null
           product_url_jp?: string | null
           product_url_uk?: string | null
