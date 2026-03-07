@@ -1194,6 +1194,12 @@ export default function DataIntegrity() {
         ) : null}
       </section>
 
+      {/* ── Section: 3-Way Price Source Conflicts ── */}
+      <section className="space-y-3">
+        <SectionHeader title="Price Source Conflicts (3-Way)" />
+        <PriceSourceConflicts />
+      </section>
+
       {/* ── Section 6: Store/Retailer Overlap Audit ── */}
       <StoreRetailerOverlapSection />
 
