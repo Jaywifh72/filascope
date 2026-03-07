@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2, Info, ChevronDown, ChevronRight } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { PriceSourceAudit } from '@/components/admin/data-integrity/PriceSourceAudit';
+import { Progress } from '@/components/ui/progress';
 import { TableUsageAudit } from '@/components/admin/data-integrity/TableUsageAudit';
 import { PriceSourceConflicts } from '@/components/admin/data-integrity/PriceSourceConflicts';
 
@@ -423,6 +424,111 @@ function ExchangeRatesCard() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// ── Section 9: Ingestion Gap Monitor ──
+
+const INGESTION_FIELDS = [
+  { key: 'jpyPrices', label: 'JPY Prices' },
+  { key: 'cnyPrices', label: 'CNY Prices' },
+  { key: 'spoolDiameter', label: 'Spool Diameter' },
+  { key: 'spoolWidth', label: 'Spool Width' },
+  { key: 'spoolMaterial', label: 'Spool Material' },
+  { key: 'colorHex', label: 'Color Hex (real)' },
+  { key: 'netWeight', label: 'Net Weight' },
+  { key: 'parsedDiameter', label: 'Parsed Diameter' },
+  { key: 'tdValues', label: 'TD Values' },
+] as const;
+
+function IngestionGapMonitor() {
+  const { data, isLoading, isError, dataUpdatedAt } = useQuery({
+    queryKey: ['ingestion-gap-monitor'],
+    queryFn: async () => {
+      const [
+        total,
+        jpyPrices,
+        cnyPrices,
+        spoolDiameter,
+        spoolWidth,
+        spoolMaterial,
+        colorHex,
+        netWeight,
+        parsedDiameter,
+        tdValues,
+      ] = await Promise.all([
+        supabase.from('filaments').select('*', { count: 'exact', head: true }),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).not('price_jpy', 'is', null),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).not('price_cny', 'is', null),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).not('spool_outer_d_mm', 'is', null),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).not('spool_width_mm', 'is', null),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).not('spool_material', 'is', null),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).not('color_hex', 'is', null).neq('color_hex', '#808080'),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).not('net_weight_g', 'is', null),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).eq('diameter_is_assumed', false),
+        supabase.from('filaments').select('*', { count: 'exact', head: true }).not('td', 'is', null),
+      ]);
+
+      return {
+        total: total.count || 0,
+        jpyPrices: jpyPrices.count || 0,
+        cnyPrices: cnyPrices.count || 0,
+        spoolDiameter: spoolDiameter.count || 0,
+        spoolWidth: spoolWidth.count || 0,
+        spoolMaterial: spoolMaterial.count || 0,
+        colorHex: colorHex.count || 0,
+        netWeight: netWeight.count || 0,
+        parsedDiameter: parsedDiameter.count || 0,
+        tdValues: tdValues.count || 0,
+      };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return (
+    <section className="space-y-3">
+      <SectionHeader title="Ingestion Gap Monitor" dataUpdatedAt={dataUpdatedAt} />
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">Failed to load ingestion gap data.</p>
+      ) : data ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {INGESTION_FIELDS.map(({ key, label }) => {
+            const count = data[key];
+            const pct = data.total > 0 ? Math.round((count / data.total) * 100) : 0;
+            const color = pct >= 80 ? 'green' : pct >= 20 ? 'yellow' : 'red';
+            const progressClass =
+              color === 'green'
+                ? '[&>div]:bg-green-500'
+                : color === 'yellow'
+                ? '[&>div]:bg-yellow-500'
+                : '[&>div]:bg-red-500';
+            const badgeVariant =
+              color === 'green' ? 'default' : color === 'yellow' ? 'secondary' : 'destructive';
+
+            return (
+              <Card key={key}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{label}</CardTitle>
+                    <Badge variant={badgeVariant} className="text-[10px] px-1.5 py-0">
+                      {pct}%
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="text-sm font-mono font-semibold">
+                    {count.toLocaleString()} / {data.total.toLocaleString()}
+                  </div>
+                  <Progress value={pct} className={`h-2 ${progressClass}`} />
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
@@ -1211,6 +1317,9 @@ export default function DataIntegrity() {
         <SectionHeader title="Table Usage Audit" />
         <TableUsageAudit />
       </section>
+
+      {/* ── Section 9: Ingestion Gap Monitor ── */}
+      <IngestionGapMonitor />
     </div>
   );
 }
