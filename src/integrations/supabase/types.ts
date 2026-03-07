@@ -9731,6 +9731,7 @@ export type Database = {
           color_name: string
           confidence: string | null
           created_at: string | null
+          filament_id: string | null
           id: string
           material_type: string
           notes: string | null
@@ -9744,6 +9745,7 @@ export type Database = {
           color_name: string
           confidence?: string | null
           created_at?: string | null
+          filament_id?: string | null
           id?: string
           material_type: string
           notes?: string | null
@@ -9757,6 +9759,7 @@ export type Database = {
           color_name?: string
           confidence?: string | null
           created_at?: string | null
+          filament_id?: string | null
           id?: string
           material_type?: string
           notes?: string | null
@@ -9764,7 +9767,64 @@ export type Database = {
           td_value?: number
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_td_reference_values_filament"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "fk_td_reference_values_filament"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_td_reference_values_filament"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_td_reference_values_filament"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "fk_td_reference_values_filament"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "fk_td_reference_values_filament"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "fk_td_reference_values_filament"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_td_reference_values_filament"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       td_submissions: {
         Row: {
