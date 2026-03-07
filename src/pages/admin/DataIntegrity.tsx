@@ -416,6 +416,177 @@ function StoreRetailerOverlapSection() {
   );
 }
 
+// ── Section 7: Affiliate Config Audit ──
+
+interface AffiliateConflict {
+  brand: string;
+  progRate: number | null;
+  confRate: number | null;
+  progNetwork: string;
+  confNetwork: string;
+  progTemplate: string;
+  confTemplate: string;
+  rateDiff: boolean;
+  networkDiff: boolean;
+}
+
+function AffiliateConfigAuditSection() {
+  const [expanded, setExpanded] = useState(false);
+
+  const { data, isLoading, dataUpdatedAt } = useQuery({
+    queryKey: ['data-integrity', 'affiliate-config-audit'],
+    queryFn: async () => {
+      const [progsRes, confsRes] = await Promise.all([
+        supabase.from('affiliate_programs').select('id, brand_name, affiliate_network, commission_rate, link_template, is_active'),
+        supabase.from('affiliate_configs').select('id, vendor_name, affiliate_network, commission_rate, tracking_url_template, is_active'),
+      ]);
+
+      const progs = progsRes.data || [];
+      const confs = confsRes.data || [];
+
+      // Group by lowercase brand name
+      const progMap = new Map<string, typeof progs>();
+      progs.forEach((p: any) => {
+        const key = (p.brand_name || '').toLowerCase().trim();
+        if (!progMap.has(key)) progMap.set(key, []);
+        progMap.get(key)!.push(p);
+      });
+
+      const confMap = new Map<string, typeof confs>();
+      confs.forEach((c: any) => {
+        const key = (c.vendor_name || '').toLowerCase().trim();
+        if (!confMap.has(key)) confMap.set(key, []);
+        confMap.get(key)!.push(c);
+      });
+
+      const allKeys = new Set([...progMap.keys(), ...confMap.keys()]);
+      const programsOnly: string[] = [];
+      const configsOnly: string[] = [];
+      const conflicts: AffiliateConflict[] = [];
+
+      allKeys.forEach((key) => {
+        const hasProg = progMap.has(key);
+        const hasConf = confMap.has(key);
+        if (hasProg && !hasConf) programsOnly.push(key);
+        else if (!hasProg && hasConf) configsOnly.push(key);
+        else if (hasProg && hasConf) {
+          const p = progMap.get(key)![0];
+          const c = confMap.get(key)![0];
+          conflicts.push({
+            brand: p.brand_name || c.vendor_name || key,
+            progRate: p.commission_rate,
+            confRate: c.commission_rate,
+            progNetwork: p.affiliate_network || '',
+            confNetwork: c.affiliate_network || '',
+            progTemplate: p.link_template || '',
+            confTemplate: c.tracking_url_template || '',
+            rateDiff: p.commission_rate !== c.commission_rate,
+            networkDiff: (p.affiliate_network || '').toLowerCase() !== (c.affiliate_network || '').toLowerCase(),
+          });
+        }
+      });
+
+      return {
+        programsOnly: programsOnly.sort(),
+        configsOnly: configsOnly.sort(),
+        conflicts: conflicts.sort((a, b) => a.brand.localeCompare(b.brand)),
+      };
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  return (
+    <section className="space-y-3">
+      <SectionHeader title="Affiliate Config Audit" dataUpdatedAt={dataUpdatedAt} />
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : data ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-mono font-bold text-foreground">{data.programsOnly.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">Programs only</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-mono font-bold text-foreground">{data.configsOnly.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">Configs only</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-mono font-bold text-foreground">{data.conflicts.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">Both (potential conflicts)</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {data.conflicts.length > 0 && (
+            <Card>
+              <button
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-accent transition-colors text-left"
+                onClick={() => setExpanded(!expanded)}
+              >
+                {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {data.conflicts.length} brands in both tables — compare
+              </button>
+              {expanded && (
+                <div className="px-0 pb-0 overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Brand</TableHead>
+                        <TableHead>Program Rate</TableHead>
+                        <TableHead>Config Rate</TableHead>
+                        <TableHead>Network Match</TableHead>
+                        <TableHead className="max-w-[180px]">Program Template</TableHead>
+                        <TableHead className="max-w-[180px]">Config Template</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.conflicts.map((c) => {
+                        const hasIssue = c.rateDiff || c.networkDiff;
+                        return (
+                          <TableRow key={c.brand} className={hasIssue ? 'bg-destructive/5' : ''}>
+                            <TableCell className="text-xs font-medium">{c.brand}</TableCell>
+                            <TableCell className={`text-xs font-mono ${c.rateDiff ? 'text-destructive font-semibold' : ''}`}>
+                              {c.progRate != null ? `${c.progRate}%` : '—'}
+                            </TableCell>
+                            <TableCell className={`text-xs font-mono ${c.rateDiff ? 'text-destructive font-semibold' : ''}`}>
+                              {c.confRate != null ? `${c.confRate}%` : '—'}
+                            </TableCell>
+                            <TableCell>
+                              {c.networkDiff ? (
+                                <Badge variant="destructive" className="text-[10px]">
+                                  {c.progNetwork} ≠ {c.confNetwork}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px]">{c.progNetwork || '—'}</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-[10px] font-mono max-w-[180px] truncate text-muted-foreground">
+                              {c.progTemplate || '—'}
+                            </TableCell>
+                            <TableCell className="text-[10px] font-mono max-w-[180px] truncate text-muted-foreground">
+                              {c.confTemplate || '—'}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </Card>
+          )}
+        </>
+      ) : null}
+    </section>
+  );
+}
+
 // ── Main Page ──
 
 export default function DataIntegrity() {
@@ -897,6 +1068,9 @@ export default function DataIntegrity() {
 
       {/* ── Section 6: Store/Retailer Overlap Audit ── */}
       <StoreRetailerOverlapSection />
+
+      {/* ── Section 7: Affiliate Config Audit ── */}
+      <AffiliateConfigAuditSection />
     </div>
   );
 }
