@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import { PriceSourceAudit } from '@/components/admin/data-integrity/PriceSourceAudit';
 
 // ── Helpers ──
 
