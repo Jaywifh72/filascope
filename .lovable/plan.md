@@ -1,37 +1,59 @@
 
 
-## Cross-Region Deduplication for Brand Sync Pipeline
+# Filament Onboarding Admin Page
 
-### Problem
-When `sync-brand-products` processes products from different regional stores (US, CA, UK, EU, etc.), the same filament can get inserted as separate rows if the `product_id` differs across regions. This creates duplicates.
+## Overview
+Create a new admin page at `/admin/filament-onboarding` with 5 sections: extraction form, results table, review/confirm bar, preview dialog, and job history. Uses the existing `AdminNewLayout` pattern with `AdminNewSidebar` navigation.
 
-### Implementation
+## Files to Create
 
-**File 1: `supabase/functions/_shared/cross-region-dedup.ts`** (new)
+### 1. `src/pages/admin/FilamentOnboarding.tsx` — Main page component
+- Section 1: Horizontal form with brand combobox (loads from `brands`), URL input, Extract button
+- Brand selector checks `brand_scraping_configs` for matching `adapter_key`; shows warning badge if none
+- Extract button creates `filament_onboarding_jobs` row, invokes `extract-filament-data` edge function
+- Section 2: Results summary bar + filter tabs (All/New/Duplicates/Errors) + data table
+- Section 5: Job history table at bottom
 
-Export `findCrossRegionMatch(supabase, brandId, productTitle, material, colorHex, vendor)`:
-- Query `filaments` matching on `brand_id` + `material` + (`color_hex = colorHex` OR `product_title ILIKE productTitle`)
-- If exactly 1 match → return its ID
-- If multiple → pick the one with most regional prices filled (count non-null among `variant_price`, `price_cad`, `price_eur`, `price_gbp`, `price_aud`, `price_jpy`) as a quality proxy
-- If none → return null
+### 2. `src/components/admin/filament-onboarding/ExtractionResultsTable.tsx`
+- Selectable table with columns: checkbox, thumbnail, color, material, display name, regional prices, SKU, status badge, actions
+- Duplicate rows get yellow tint, error rows get red tint
+- Select all checkbox in header
+- Filter by status tab
 
-**File 2: `supabase/functions/sync-brand-products/index.ts`** (edit ~line 621)
+### 3. `src/components/admin/filament-onboarding/OnboardingPreviewDialog.tsx`
+- Dialog showing large image, 2-column field layout
+- Editable fields: display_name, color_family, color_hex (with `react-colorful`), material, temps, prices
+- Save updates `admin_override_data` on the item
+- Mark as Skip button
 
-In the `else` branch (no existing product found by `product_id`), before the INSERT block:
-- Call `findCrossRegionMatch()` with the product's brand_id, title, material, colorHex, vendor
-- If match found: treat as UPDATE (use existing update logic with `getRegionalFieldMapping` to merge the new region's price/URL), log the cross-region match, append region to `cross_region_source` array, increment `summary.updated`
-- If no match: proceed with existing INSERT as-is, setting `cross_region_source` to `[productRegion]`
+### 4. `src/components/admin/filament-onboarding/JobHistoryTable.tsx`
+- Table of recent `filament_onboarding_jobs`: date, brand, URL (truncated), status badge, counts
+- Clicking a row loads that job's items into the results section
 
-**File 3: Database migration** (new)
+### 5. `src/components/admin/filament-onboarding/ImportConfirmDialog.tsx`
+- Confirmation dialog before bulk insert
+- Progress display during insertion
+- Inserts selected items into `filaments` table, updates item status + job counts
+- Success toast with link to brand page
 
-```sql
-ALTER TABLE public.filaments 
-ADD COLUMN IF NOT EXISTS cross_region_source text[] DEFAULT NULL;
-```
+## Files to Edit
 
-### What stays unchanged
-- Existing `product_id` matching (line 591-596) — still the primary dedup
-- Existing INSERT logic for genuinely new products
-- All RLS policies
-- The `buildUpdateData` helper function logic
+### 6. `src/components/admin/AdminNewSidebar.tsx`
+- Add `PackagePlus` icon import
+- Add `{ title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus }` to Content group after TD Management
+
+### 7. `src/App.tsx`
+- Add lazy import: `const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));`
+- Add route: `<Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />`
+
+## Edge Function for Insert
+The existing `extract-filament-data` handles extraction. For the insert step, the page will use direct Supabase client inserts (admin has RLS access via `has_role`). Each selected item's `extracted_data` (merged with `admin_override_data`) gets inserted into `filaments`, then the item's `status` and `inserted_filament_id` are updated.
+
+## Key Technical Details
+- Brand selector uses `supabase.from('brands').select('id, name, logo_url')` with search
+- Config check: `supabase.from('brand_scraping_configs').select('adapter_key').eq('brand_id', selectedBrandId)`
+- Extraction invoke: `supabase.functions.invoke('extract-filament-data', { body: { job_id, source_url, adapter_key } })`
+- Job history: `supabase.from('filament_onboarding_jobs').select('*').order('created_at', { ascending: false }).limit(20)`
+- Items load: `supabase.from('filament_onboarding_items').select('*').eq('job_id', jobId)`
+- Sticky bottom bar with selection count + import button using `position: sticky; bottom: 0`
 

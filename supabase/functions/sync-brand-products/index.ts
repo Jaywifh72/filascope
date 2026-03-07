@@ -13,6 +13,7 @@ import {
 } from '../_shared/filament-schema.ts';
 import { validateScrapedProduct, type ScrapedProduct } from '../_shared/scraper-validation.ts';
 import { getColorHex, getColorFamily, extractColorFromTitle } from '../_shared/color-mapping.ts';
+import { findCrossRegionMatch } from '../_shared/cross-region-dedup.ts';
 import {
   shouldIncludeVariant,
   createFilterStats,
@@ -619,68 +620,126 @@ Deno.serve(async (req) => {
               const regionStats = regionBreakdown.find(r => r.region === productRegion);
               if (regionStats) regionStats.updated++;
             } else {
-              // Create new filament - use regional fields based on region
-              const insertData: Record<string, any> = {
-                product_id: product.productId,
-                product_title: product.title,
-                vendor: brand.brand_name,
-                brand_id: brand.id,
-                variant_available: product.available ?? true,
-                featured_image: product.imageUrl,
-                mpn: product.mpn,
-                tds_url: product.tdsUrl,
-                color_hex: product.colorHex,
-                color_family: product.colorFamily,
-                product_line_id: product.productLineId,
-                nozzle_temp_min_c: product.nozzleTempMin,
-                nozzle_temp_max_c: product.nozzleTempMax,
-                bed_temp_min_c: product.bedTempMin,
-                bed_temp_max_c: product.bedTempMax,
-                diameter_nominal_mm: product.diameterMm ?? 1.75,
-                net_weight_g: product.netWeightG,
-                material: product.material,
-                finish_type: null,
-                spool_material: null,
-                pack_quantity: 1,
-                print_speed_max_mms: null,
-                high_speed_capable: null,
-                drying_temp_c: null,
-                drying_time_hours: null,
-                spool_outer_d_mm: null,
-                spool_width_mm: null,
-                sync_source: 'sync-brand-products',
-                auto_created: true,
-                auto_updated: true,
-                last_scraped_at: new Date().toISOString(),
-                sync_status: 'synced',
-              };
+              // Cross-region dedup: check if this product exists under a different product_id
+              const crossRegionMatchId = await findCrossRegionMatch(
+                supabase,
+                brand.id,
+                product.title,
+                product.material || null,
+                product.colorHex || null,
+                brand.brand_name
+              );
 
-              // Set regional price/URL fields using shared mapping
-              const fieldMap = getRegionalFieldMapping(productRegion);
-              if (product.price !== undefined) {
-                insertData[fieldMap.priceField] = product.price;
+              if (crossRegionMatchId) {
+                // Merge this region's data into the existing filament
+                console.log(`[sync-brand-products] Cross-region match: merging ${productRegion} data into existing filament ${crossRegionMatchId}`);
+                
+                const fieldMap = getRegionalFieldMapping(productRegion);
+                const mergeData: Record<string, any> = {
+                  last_scraped_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                  auto_updated: true,
+                  sync_status: 'synced',
+                };
+
+                if (product.price !== undefined) {
+                  mergeData[fieldMap.priceField] = product.price;
+                }
+                if (fieldMap.compareAtPriceField && product.compareAtPrice !== undefined) {
+                  mergeData[fieldMap.compareAtPriceField] = product.compareAtPrice;
+                }
+                if (product.url) {
+                  mergeData[fieldMap.urlField] = product.url;
+                }
+
+                // Append region to cross_region_source array
+                const { data: existingRow } = await supabase
+                  .from('filaments')
+                  .select('cross_region_source')
+                  .eq('id', crossRegionMatchId)
+                  .maybeSingle();
+
+                const currentSources: string[] = existingRow?.cross_region_source || [];
+                if (!currentSources.includes(productRegion)) {
+                  mergeData.cross_region_source = [...currentSources, productRegion];
+                }
+
+                const { error: mergeError } = await supabase
+                  .from('filaments')
+                  .update(mergeData)
+                  .eq('id', crossRegionMatchId);
+
+                if (mergeError) throw mergeError;
+                productResult.action = 'updated';
+                summary.updated++;
+
+                const regionStats = regionBreakdown.find(r => r.region === productRegion);
+                if (regionStats) regionStats.updated++;
+              } else {
+                // Create new filament - use regional fields based on region
+                const insertData: Record<string, any> = {
+                  product_id: product.productId,
+                  product_title: product.title,
+                  vendor: brand.brand_name,
+                  brand_id: brand.id,
+                  variant_available: product.available ?? true,
+                  featured_image: product.imageUrl,
+                  mpn: product.mpn,
+                  tds_url: product.tdsUrl,
+                  color_hex: product.colorHex,
+                  color_family: product.colorFamily,
+                  product_line_id: product.productLineId,
+                  nozzle_temp_min_c: product.nozzleTempMin,
+                  nozzle_temp_max_c: product.nozzleTempMax,
+                  bed_temp_min_c: product.bedTempMin,
+                  bed_temp_max_c: product.bedTempMax,
+                  diameter_nominal_mm: product.diameterMm ?? 1.75,
+                  net_weight_g: product.netWeightG,
+                  material: product.material,
+                  finish_type: null,
+                  spool_material: null,
+                  pack_quantity: 1,
+                  print_speed_max_mms: null,
+                  high_speed_capable: null,
+                  drying_temp_c: null,
+                  drying_time_hours: null,
+                  spool_outer_d_mm: null,
+                  spool_width_mm: null,
+                  sync_source: 'sync-brand-products',
+                  cross_region_source: [productRegion],
+                  auto_created: true,
+                  auto_updated: true,
+                  last_scraped_at: new Date().toISOString(),
+                  sync_status: 'synced',
+                };
+
+                // Set regional price/URL fields using shared mapping
+                const fieldMap = getRegionalFieldMapping(productRegion);
+                if (product.price !== undefined) {
+                  insertData[fieldMap.priceField] = product.price;
+                }
+                if (fieldMap.compareAtPriceField && product.compareAtPrice !== undefined) {
+                  insertData[fieldMap.compareAtPriceField] = product.compareAtPrice;
+                }
+                if (product.url) {
+                  insertData[fieldMap.urlField] = product.url;
+                }
+
+                // Set available_regions array
+                insertData.available_regions = buildAvailableRegions(insertData);
+
+                const { error: insertError } = await supabase
+                  .from('filaments')
+                  .insert(insertData);
+
+                if (insertError) throw insertError;
+                productResult.action = 'created';
+                summary.created++;
+                
+                // Update region breakdown
+                const regionStats = regionBreakdown.find(r => r.region === productRegion);
+                if (regionStats) regionStats.created++;
               }
-              if (fieldMap.compareAtPriceField && product.compareAtPrice !== undefined) {
-                insertData[fieldMap.compareAtPriceField] = product.compareAtPrice;
-              }
-              if (product.url) {
-                insertData[fieldMap.urlField] = product.url;
-              }
-
-              // Set available_regions array
-              insertData.available_regions = buildAvailableRegions(insertData);
-
-              const { error: insertError } = await supabase
-                .from('filaments')
-                .insert(insertData);
-
-              if (insertError) throw insertError;
-              productResult.action = 'created';
-              summary.created++;
-              
-              // Update region breakdown
-              const regionStats = regionBreakdown.find(r => r.region === productRegion);
-              if (regionStats) regionStats.created++;
             }
           } catch (err) {
             const errorMsg = err instanceof Error ? err.message : 'Unknown error';
