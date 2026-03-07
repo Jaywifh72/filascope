@@ -255,6 +255,7 @@ export function parseSpecsFromHtml(
     spoolOuterDiameterMm: null as number | null,
     spoolWidthMm: null as number | null,
     spoolMaterial: null as string | null,
+    weightSource: null as "body_html" | "variant_title" | "product_title" | null,
   };
 
   if (!bodyHtml) return result;
