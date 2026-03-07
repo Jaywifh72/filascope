@@ -66,9 +66,11 @@ export function PriceSourceConflicts() {
           )}
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">
+            <p className="text-sm font-medium text-foreground">
               {isLoading ? 'Checking…' : count === 0
-                ? `No 3-way price conflicts detected (>${threshold}% threshold)`
-                : `${count} filament×region pairs have >${threshold}% price divergence across sources`}
+                ? `No 3-way price conflicts detected (${threshold}%+ threshold)`
+                : `${count} filament×region pairs have ${threshold}%+ price divergence across sources`}
+            </p>
             </p>
             {count > 0 && (
               <p className="text-xs text-muted-foreground mt-0.5">
