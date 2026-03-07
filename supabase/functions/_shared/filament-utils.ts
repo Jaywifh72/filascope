@@ -293,6 +293,7 @@ export function parseSpecsFromHtml(
   if (weightMatch?.[1]) {
     const w = parseFloat(weightMatch[1]);
     result.netWeight = w < 50 ? Math.round(w * 1000) : Math.round(w);
+    result.weightSource = "body_html";
   }
 
   const speedRe = specConfig?.speed_regex || "(?:Print(?:ing)?\\s+Speed)[:\\s]*(?:up\\s+to\\s+)?([\\d]+)\\s*(?:mm/s|mm\\/s)";
