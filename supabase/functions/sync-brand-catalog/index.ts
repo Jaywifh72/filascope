@@ -17,6 +17,7 @@ import {
   guessFinishType,
   stripMaterialPrefix,
   parseSpecsFromHtml,
+  extractWeightFromText,
   detectOptionPositions,
   FILAMENT_KEYWORDS,
   NON_FILAMENT_KEYWORDS,
