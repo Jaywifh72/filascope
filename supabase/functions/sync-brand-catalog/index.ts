@@ -544,7 +544,7 @@ function extractFilamentsFromProduct(
       product_handle: productHandle,
       variant_sku: variantSku,
       finish_type: finishType,
-      spool_material: null,
+      spool_material: specs.spoolMaterial,
       spool_outer_d_mm: specs.spoolOuterDiameterMm,
       spool_width_mm: specs.spoolWidthMm,
       print_speed_max_mms: specs.printSpeedMax,
