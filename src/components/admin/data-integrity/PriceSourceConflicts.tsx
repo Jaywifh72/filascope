@@ -74,7 +74,7 @@ export function PriceSourceConflicts() {
             </p>
             {count > 0 && (
               <p className="text-xs text-muted-foreground mt-0.5">
-                {severeCount > 0 && <span className="text-destructive font-medium">{severeCount} severe (>20%) · </span>}
+                {severeCount > 0 && <span className="text-destructive font-medium">{severeCount} severe (20%+) · </span>}
                 Regions: {[...byRegion.entries()].map(([r, n]) => `${r}: ${n}`).join(', ')}
               </p>
             )}
