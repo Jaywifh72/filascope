@@ -153,6 +153,78 @@ export const COLOR_NAME_TO_HEX: Record<string, string> = {
   "light gray": "#D3D3D3",
   ash: "#B2BEB5",
 
+  // --- Nature / Elements ---
+  nebula: "#4B0082",
+  galaxy: "#2E1A47",
+  "galaxy black": "#1A1A2E",
+  cosmic: "#2E1A47",
+  sunrise: "#FF6B35",
+  sunset: "#FF4500",
+  ocean: "#006994",
+  forest: "#228B22",
+  arctic: "#E0F0FF",
+  "arctic white": "#F0F8FF",
+  lava: "#CF1020",
+  storm: "#4F666A",
+  thunder: "#4F666A",
+  sky: "#87CEEB",
+  cloud: "#F0F0F0",
+  fog: "#C8C8C8",
+  mist: "#D3D3D3",
+  dusk: "#4E3B5E",
+  dawn: "#FFB347",
+  fire: "#FF4500",
+  flame: "#E25822",
+  earth: "#5B3A29",
+  snow: "#FFFAFA",
+  ice: "#D6ECEF",
+
+  // --- Gemstone ---
+  pearl: "#FDEADB",
+  opal: "#A8C3BC",
+  jade: "#00A86B",
+  ruby: "#E0115F",
+  sapphire: "#0F52BA",
+  topaz: "#FFC87C",
+  obsidian: "#1B1B1B",
+
+  // --- Earthy / Material ---
+  bamboo: "#D4C99E",
+  bone: "#E3DAC9",
+  sand: "#C2B280",
+  clay: "#B66A50",
+  stone: "#928E85",
+  champagne: "#F7E7CE",
+  espresso: "#3C1414",
+  honey: "#EB9605",
+  butterscotch: "#E29C45",
+  cinnamon: "#D2691E",
+  "olive drab": "#6B8E23",
+
+  // --- Fruit / Food ---
+  melon: "#FEBAAD",
+  berry: "#8E4585",
+  grape: "#6F2DA8",
+  aubergine: "#3D0C02",
+  eggplant: "#614051",
+  pistachio: "#93C572",
+
+  // --- Botanical ---
+  seafoam: "#93E9BE",
+  eucalyptus: "#44D7A8",
+  petrol: "#005F6B",
+
+  // --- Metal ---
+  steel: "#71797E",
+  gunmetal: "#2C3539",
+  titanium: "#878681",
+  chrome: "#DBE4EB",
+  iron: "#48494B",
+  rust: "#B7410E",
+  oxide: "#B7410E",
+  patina: "#407A52",
+  verdigris: "#43B3AE",
+
   // --- Transparent / Special ---
   transparent: "#FFFFFF",
   clear: "#FFFFFF",
@@ -339,7 +411,34 @@ export function guessColorHex(colorName: string): string | null {
       bestKey = key;
     }
   }
-  return bestKey ? COLOR_NAME_TO_HEX[bestKey] : null;
+  if (bestKey) return COLOR_NAME_TO_HEX[bestKey];
+
+  // Fallback: check for base color words (e.g. "Galaxy Blue" → blue)
+  const FALLBACK_COLOR_WORDS: Record<string, string> = {
+    red: "#E53E3F",
+    blue: "#3182CE",
+    green: "#22C55E",
+    yellow: "#FACC15",
+    orange: "#F97316",
+    purple: "#8B5CF6",
+    pink: "#EC4899",
+    black: "#000000",
+    white: "#FFFFFF",
+    grey: "#9CA3AF",
+    gray: "#9CA3AF",
+    brown: "#92400E",
+    silver: "#C0C0C0",
+    gold: "#FFD700",
+    cyan: "#06B6D4",
+    teal: "#008080",
+    magenta: "#FF00FF",
+  };
+
+  for (const [word, hex] of Object.entries(FALLBACK_COLOR_WORDS)) {
+    if (cleaned.includes(word)) return hex;
+  }
+
+  return null;
 }
 
 // ---------------------------------------------------------------------------
