@@ -209,6 +209,7 @@ export function parseSpecsFromHtml(
   dryingTime: number | null;
   spoolOuterDiameterMm: number | null;
   spoolWidthMm: number | null;
+  spoolMaterial: string | null;
 } {
   const result = {
     diameter: null as number | null,
@@ -222,6 +223,7 @@ export function parseSpecsFromHtml(
     dryingTime: null as number | null,
     spoolOuterDiameterMm: null as number | null,
     spoolWidthMm: null as number | null,
+    spoolMaterial: null as string | null,
   };
 
   if (!bodyHtml) return result;
@@ -291,6 +293,50 @@ export function parseSpecsFromHtml(
     const unit = (spoolWidthMatch[2] || "mm").toLowerCase();
     if (unit.startsWith("in") || unit === '"') val = val * 25.4;
     if (val >= 30 && val <= 120) result.spoolWidthMm = Math.round(val * 10) / 10;
+  }
+
+  // Spool material extraction
+  const textLower = text.toLowerCase();
+  const normalizeSpoolMaterial = (raw: string): string | null => {
+    const l = raw.toLowerCase().trim();
+    if (/cardboard|paper|recycled\s*cardboard/.test(l)) return "cardboard";
+    if (/\babs\b|plastic/.test(l)) return "abs";
+    if (/polycarbonate|\bpc\b/.test(l)) return "pc";
+    if (/reusable|master\s*spool/.test(l)) return "reusable";
+    if (/refill|no\s*spool|eco\s*refill/.test(l)) return "refill";
+    return null;
+  };
+
+  // Pattern 1: "spool material: X", "spool type: X", "spool: X"
+  const spoolMatRe = /(?:spool\s+(?:material|type))\s*[:\s]\s*(\w[\w\s]*)/i;
+  const spoolMatMatch = text.match(spoolMatRe);
+  if (spoolMatMatch?.[1]) {
+    result.spoolMaterial = normalizeSpoolMaterial(spoolMatMatch[1]);
+  }
+
+  // Pattern 2: "cardboard spool", "recyclable spool", "eco spool", "ABS spool"
+  if (!result.spoolMaterial) {
+    const adjectiveSpoolRe = /\b(cardboard|paper|recycled?\s*cardboard|abs|plastic|polycarbonate|reusable|eco|recyclable)\s+spool/i;
+    const adjMatch = text.match(adjectiveSpoolRe);
+    if (adjMatch?.[1]) {
+      const mapped = normalizeSpoolMaterial(adjMatch[1]);
+      if (mapped) result.spoolMaterial = mapped;
+      else if (/eco|recyclable/i.test(adjMatch[1])) result.spoolMaterial = "cardboard";
+    }
+  }
+
+  // Pattern 3: "refill" or "refill package" (no spool)
+  if (!result.spoolMaterial) {
+    if (/\brefill(?:\s+package)?\b/i.test(textLower)) {
+      result.spoolMaterial = "refill";
+    }
+  }
+
+  // Pattern 4: "master spool" standalone
+  if (!result.spoolMaterial) {
+    if (/\bmaster\s+spool\b/i.test(textLower)) {
+      result.spoolMaterial = "reusable";
+    }
   }
 
   return result;
