@@ -124,6 +124,8 @@ export interface ExtractedFilament {
   variant_sku: string | null;
   finish_type: string | null;
   spool_material: string | null;
+  spool_outer_d_mm: number | null;
+  spool_width_mm: number | null;
   pack_quantity: number;
   print_speed_max_mms: number | null;
   high_speed_capable: boolean | null;
@@ -205,6 +207,8 @@ export function parseSpecsFromHtml(
   printSpeedMax: number | null;
   dryingTemp: number | null;
   dryingTime: number | null;
+  spoolOuterDiameterMm: number | null;
+  spoolWidthMm: number | null;
 } {
   const result = {
     diameter: null as number | null,
@@ -216,6 +220,8 @@ export function parseSpecsFromHtml(
     printSpeedMax: null as number | null,
     dryingTemp: null as number | null,
     dryingTime: null as number | null,
+    spoolOuterDiameterMm: null as number | null,
+    spoolWidthMm: null as number | null,
   };
 
   if (!bodyHtml) return result;
@@ -266,6 +272,26 @@ export function parseSpecsFromHtml(
   const dryTimeRe = specConfig?.drying_time_regex || "(?:Dry(?:ing)?\\s+Time)[:\\s]*([\\d]+)\\s*(?:h|hours?)";
   const dryTimeMatch = tryRegex(dryTimeRe);
   if (dryTimeMatch?.[1]) result.dryingTime = parseInt(dryTimeMatch[1]);
+
+  // Spool outer diameter: "spool diameter", "spool OD", "outer diameter"
+  const spoolDiamRe = specConfig?.spool_diameter_regex || "(?:spool\\s+(?:outer\\s+)?diameter|spool\\s+OD|outer\\s+diameter)[:\\s]*([\\d.]+)\\s*(mm|in(?:ch(?:es)?)?|\")?";
+  const spoolDiamMatch = tryRegex(spoolDiamRe);
+  if (spoolDiamMatch?.[1]) {
+    let val = parseFloat(spoolDiamMatch[1]);
+    const unit = (spoolDiamMatch[2] || "mm").toLowerCase();
+    if (unit.startsWith("in") || unit === '"') val = val * 25.4;
+    if (val >= 100 && val <= 350) result.spoolOuterDiameterMm = Math.round(val * 10) / 10;
+  }
+
+  // Spool width: "spool width", "hub width", "spool thickness"
+  const spoolWidthRe = specConfig?.spool_width_regex || "(?:spool\\s+width|hub\\s+width|spool\\s+thickness)[:\\s]*([\\d.]+)\\s*(mm|in(?:ch(?:es)?)?|\")?";
+  const spoolWidthMatch = tryRegex(spoolWidthRe);
+  if (spoolWidthMatch?.[1]) {
+    let val = parseFloat(spoolWidthMatch[1]);
+    const unit = (spoolWidthMatch[2] || "mm").toLowerCase();
+    if (unit.startsWith("in") || unit === '"') val = val * 25.4;
+    if (val >= 30 && val <= 120) result.spoolWidthMm = Math.round(val * 10) / 10;
+  }
 
   return result;
 }
