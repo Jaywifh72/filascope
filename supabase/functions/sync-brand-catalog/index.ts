@@ -396,6 +396,22 @@ function extractFilamentsFromProduct(
   // Parse specs from body_html
   const specs = parseSpecsFromHtml(product.body_html || "", config.spec_extraction || null);
 
+  // Fallback weight extraction from variant/product titles
+  if (specs.netWeight == null) {
+    const firstVariantTitle = product.variants?.[0]?.title || "";
+    const variantWeight = extractWeightFromText(firstVariantTitle);
+    if (variantWeight != null) {
+      specs.netWeight = variantWeight;
+      specs.weightSource = "variant_title";
+    } else {
+      const titleWeight = extractWeightFromText(product.title || "");
+      if (titleWeight != null) {
+        specs.netWeight = titleWeight;
+        specs.weightSource = "product_title";
+      }
+    }
+  }
+
   // ── FIX 3: Robust material extraction ──
   function getMaterial(variant: any): string {
     if (detected.materialKey) {

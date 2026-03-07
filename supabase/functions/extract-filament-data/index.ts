@@ -241,6 +241,22 @@ function adaptGenericShopify(
   }
 
   const specs = parseSpecsFromHtml(product.body_html || "", config.spec_extraction || null);
+
+  // Fallback weight extraction from variant/product titles
+  if (specs.netWeight == null) {
+    const firstVariantTitle = product.variants?.[0]?.title || "";
+    const variantWeight = extractWeightFromText(firstVariantTitle);
+    if (variantWeight != null) {
+      specs.netWeight = variantWeight;
+      specs.weightSource = "variant_title";
+    } else {
+      const titleWeight = extractWeightFromText(product.title || "");
+      if (titleWeight != null) {
+        specs.netWeight = titleWeight;
+        specs.weightSource = "product_title";
+      }
+    }
+  }
   const mapping = config.variant_mapping || {};
   const colorOption = mapping.color_option || "option1";
   const regionalUrls = config.regional_url_pattern || {};
