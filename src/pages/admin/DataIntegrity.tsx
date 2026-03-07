@@ -388,11 +388,11 @@ export default function DataIntegrity() {
             />
             <StatCard
               title="filament_listings"
-              coveragePct={coverage.listings.coveragePct}
+              coveragePct={coverage.listings.effectivePct}
               stats={[
                 { label: 'Total rows', value: coverage.listings.total },
-                { label: 'Unique filaments', value: coverage.listings.uniqueFilaments },
-                { label: 'Coverage', value: `${coverage.listings.coveragePct}%` },
+                { label: 'Direct coverage', value: `${coverage.listings.coveragePct}% (${coverage.listings.uniqueFilaments.toLocaleString()} listings)` },
+                { label: 'Effective coverage', value: `~${coverage.listings.effectivePct}% (${coverage.listings.effectiveCount.toLocaleString()} via fallback)` },
               ]}
               action={
                 isAdmin ? (
