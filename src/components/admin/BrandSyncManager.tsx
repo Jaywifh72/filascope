@@ -232,8 +232,20 @@ export function BrandSyncManager() {
           <Wand2 className="w-5 h-5" />
           <CardTitle>Brand Sync Manager</CardTitle>
         </div>
-        <CardDescription>
-          Execute high-fidelity sync pipelines for any brand. Brands with dedicated sync functions will use optimized enrichment.
+        <CardDescription className="flex items-center justify-between">
+          <span>Execute high-fidelity sync pipelines for any brand. Brands with dedicated sync functions will use optimized enrichment.</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="ml-3 shrink-0 cursor-help">
+                  {brands.filter(b => BRANDS_WITH_CUSTOM_DEFAULTS.includes(b.brand_slug)).length}/{brands.length} full enrichment
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p>Full = custom enrichment with known print settings and TDS patterns. Generic = fallback temperature defaults only.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -377,6 +389,11 @@ export function BrandSyncManager() {
                       </span>
                       {hasBrandSpecificFunction(brand.brand_slug) && (
                         <Zap className="w-3 h-3 text-green-500" />
+                      )}
+                      {BRANDS_WITH_CUSTOM_DEFAULTS.includes(brand.brand_slug) ? (
+                        <Badge variant="default" className="text-[10px] px-1.5 py-0 h-4 bg-green-600 hover:bg-green-600">Full</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 text-yellow-600 border-yellow-500">Generic</Badge>
                       )}
                     </div>
                   </SelectItem>
