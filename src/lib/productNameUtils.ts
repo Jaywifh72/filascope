@@ -588,6 +588,41 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
       productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
   
+  // PRUSAMENT: Prepend brand name to material + line display
+  // Format: prusament__asa__standard → "Prusament ASA"
+  //         prusament__pc__blend → "Prusament PC Blend"
+  //         prusament__petg__magnetite → "Prusament PETG Magnetite"
+  //         prusament__pa11-cf__carbon → "Prusament PA11-CF Carbon"
+  if (parts[0] === 'prusament' && parts.length >= 3) {
+    const materialSlug = parts[1]; // e.g., "asa", "pc", "petg", "pa11-cf"
+    const lineSlug = parts.slice(2).join(' '); // e.g., "standard", "blend", "magnetite"
+
+    // Format material: keep compound materials hyphenated
+    const COMPOUND_MATERIALS = ['pa11-cf', 'pc-abs', 'pa-cf', 'pa-gf'];
+    let material: string;
+    if (COMPOUND_MATERIALS.includes(materialSlug.toLowerCase())) {
+      material = materialSlug.toUpperCase();
+    } else if (materialSlug.includes('-')) {
+      material = materialSlug.split('-').map(w => {
+        const u = w.toUpperCase();
+        if (['PLA','PETG','ABS','ASA','TPU','PC','PA','PEI','PVB','HIPS','CF','GF'].includes(u)) return u;
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      }).join(' ');
+    } else {
+      material = materialSlug.toUpperCase();
+    }
+
+    // Format line name, stripping "standard"
+    let lineName = lineSlug
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase())
+      .replace(/\b(Standard)\b/gi, '')
+      .trim();
+
+    const base = lineName ? `${material} ${lineName}` : material;
+    return `Prusament ${base}`.trim();
+  }
+
   // NUMAKERS: Handle underscore-based material slugs
   // Format: numakers__pla_silk__pla-silk → "PLA Silk"
   //         numakers__petg_hs__petg-hs-filament → "PETG-HS"
