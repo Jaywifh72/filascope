@@ -52,6 +52,7 @@ import {
 
 // Shared utilities
 import { getColorHex, getColorFamily } from '../_shared/color-mapping.ts';
+import { enrichGenericProduct } from '../_shared/generic-brand-defaults.ts';
 
 // ============================================================================
 // CONFIGURATION
