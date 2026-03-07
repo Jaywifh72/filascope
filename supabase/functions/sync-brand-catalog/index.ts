@@ -545,7 +545,8 @@ function extractFilamentsFromProduct(
       variant_sku: variantSku,
       finish_type: finishType,
       spool_material: null,
-      pack_quantity: 1,
+      spool_outer_d_mm: specs.spoolOuterDiameterMm,
+      spool_width_mm: specs.spoolWidthMm,
       print_speed_max_mms: specs.printSpeedMax,
       high_speed_capable:
         material.includes("HSPLA") ||

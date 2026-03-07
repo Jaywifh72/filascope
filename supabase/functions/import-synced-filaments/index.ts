@@ -225,6 +225,8 @@ Deno.serve(async (req) => {
               variant_sku: merged.variant_sku ?? item.variant_sku,
               finish_type: merged.finish_type ?? item.finish_type,
               spool_material: merged.spool_material,
+              spool_outer_d_mm: merged.spool_outer_d_mm,
+              spool_width_mm: merged.spool_width_mm,
               pack_quantity: merged.pack_quantity ?? 1,
               print_speed_max_mms: merged.print_speed_max_mms,
               high_speed_capable: merged.high_speed_capable,
