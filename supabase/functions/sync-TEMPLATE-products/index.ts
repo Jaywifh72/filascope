@@ -349,7 +349,7 @@ Deno.serve(async (req) => {
 
         for (const product of products || []) {
           try {
-            // TODO: Uncomment and use your brand's enrichment function
+             // TODO: Uncomment and use your brand's enrichment function instead
             /*
             const enrichment = enrich[Brand]Product(
               product.product_title,
@@ -363,19 +363,19 @@ Deno.serve(async (req) => {
             );
             */
             
-            // Placeholder enrichment logic - replace with brand-specific
-            const enrichment = {
-              tdsUrl: product.tds_url,
-              material: product.material,
-              nozzleTempMin: product.nozzle_temp_min_c,
-              nozzleTempMax: product.nozzle_temp_max_c,
-              bedTempMin: product.bed_temp_min_c,
-              bedTempMax: product.bed_temp_max_c,
-              finishType: 'Standard',
-              productLineId: `${BRAND_CONFIG.slug}-${(product.material || 'unknown').toLowerCase()}`,
-              highSpeedCapable: false,
-              isAbrasive: false,
-            };
+            // Generic fallback enrichment — provides material-based temp defaults,
+            // finish type detection, high-speed & abrasive flags for any brand.
+            const enrichment = enrichGenericProduct(
+              product.product_title,
+              product.material,
+              product.tds_url,
+              product.nozzle_temp_min_c,
+              product.nozzle_temp_max_c,
+              product.bed_temp_min_c,
+              product.bed_temp_max_c,
+              null, // color name if available
+              BRAND_CONFIG.slug,
+            );
 
             // Track what was enriched
             if (enrichment.tdsUrl && !product.tds_url) tdsMatched++;
