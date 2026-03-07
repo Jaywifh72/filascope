@@ -13590,6 +13590,14 @@ export type Database = {
           store_url: string
         }[]
       }
+      get_table_row_counts: {
+        Args: never
+        Returns: {
+          has_rls: boolean
+          row_count: number
+          table_name: string
+        }[]
+      }
       get_td_coverage_stats: { Args: never; Returns: Json }
       get_td_reference_match_stats: { Args: never; Returns: Json }
       has_role: {
