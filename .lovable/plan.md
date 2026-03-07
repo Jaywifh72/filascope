@@ -1,60 +1,59 @@
 
 
-## Plan: Create `backfill-filament-listings` Edge Function
+# Filament Onboarding Admin Page
 
-### Overview
-A new Edge Function that populates the `filament_listings` table from existing `filaments` data (8,535 rows with embedded regional prices) and `product_regional_prices` (413 rows). No migration needed — the unique constraint `UNIQUE(filament_id, retailer_id, region)` already exists.
+## Overview
+Create a new admin page at `/admin/filament-onboarding` with 5 sections: extraction form, results table, review/confirm bar, preview dialog, and job history. Uses the existing `AdminNewLayout` pattern with `AdminNewSidebar` navigation.
 
-### Retailer Mapping Strategy
-The `filament_listings` table requires a `retailer_id` (FK to `retailers`). The function will:
-1. Load all retailers from `retailers` table
-2. For each filament, match `vendor` name to a retailer by case-insensitive name/slug match
-3. If no match found, find or create a retailer for the brand (upsert into `retailers` with slug derived from vendor name)
-4. Cache the vendor→retailer mapping to avoid repeated lookups
+## Files to Create
 
-### File: `supabase/functions/backfill-filament-listings/index.ts`
+### 1. `src/pages/admin/FilamentOnboarding.tsx` — Main page component
+- Section 1: Horizontal form with brand combobox (loads from `brands`), URL input, Extract button
+- Brand selector checks `brand_scraping_configs` for matching `adapter_key`; shows warning badge if none
+- Extract button creates `filament_onboarding_jobs` row, invokes `extract-filament-data` edge function
+- Section 2: Results summary bar + filter tabs (All/New/Duplicates/Errors) + data table
+- Section 5: Job history table at bottom
 
-**Auth**: Same pattern as `import-synced-filaments` — Bearer token → `getUser()` → admin role check via `user_roles`.
+### 2. `src/components/admin/filament-onboarding/ExtractionResultsTable.tsx`
+- Selectable table with columns: checkbox, thumbnail, color, material, display name, regional prices, SKU, status badge, actions
+- Duplicate rows get yellow tint, error rows get red tint
+- Select all checkbox in header
+- Filter by status tab
 
-**Flow**:
+### 3. `src/components/admin/filament-onboarding/OnboardingPreviewDialog.tsx`
+- Dialog showing large image, 2-column field layout
+- Editable fields: display_name, color_family, color_hex (with `react-colorful`), material, temps, prices
+- Save updates `admin_override_data` on the item
+- Mark as Skip button
 
-1. Load all retailers into a map (slug → id, name → id)
-2. Fetch filaments in batches of 100 using pagination (`.range(offset, offset+99)`)
-3. For each filament with at least one non-null price:
-   - Resolve `retailer_id` from vendor name → retailers map
-   - If no retailer match, upsert a new retailer row with `name=vendor, slug=slugify(vendor)`
-   - Generate listing rows for each region where price exists:
+### 4. `src/components/admin/filament-onboarding/JobHistoryTable.tsx`
+- Table of recent `filament_onboarding_jobs`: date, brand, URL (truncated), status badge, counts
+- Clicking a row loads that job's items into the results section
 
-     | Region | Price Column | URL Column | Currency |
-     |--------|-------------|------------|----------|
-     | US | `variant_price` | `product_url` | USD |
-     | AU | `price_aud` | `product_url_au` | AUD |
-     | CA | `price_cad` | `product_url_ca` | CAD |
-     | EU | `price_eur` | `product_url_eu` | EUR |
-     | UK | `price_gbp` | `product_url_uk` | GBP |
-     | JP | `price_jpy` | `product_url_jp` | JPY |
+### 5. `src/components/admin/filament-onboarding/ImportConfirmDialog.tsx`
+- Confirmation dialog before bulk insert
+- Progress display during insertion
+- Inserts selected items into `filaments` table, updates item status + job counts
+- Success toast with link to brand page
 
-   - Skip if price is null or URL is null (listings need a product_url — it's NOT NULL)
-   - Set `is_primary = (region === filament.primary_region || (region === 'US' && !primary_region))`
-   - Set `price_source = 'backfill_from_filaments'`, `available = true`
-   - Set `compare_at_price = msrp` if msrp differs from current_price
+## Files to Edit
 
-4. Upsert each batch into `filament_listings` using `onConflict: 'filament_id,retailer_id,region'`
-5. After filaments pass, fetch `product_regional_prices` rows and create additional listings for any filament+region combos not already covered (only if there's a matching URL in `product_regional_urls`)
-6. Return summary JSON
+### 6. `src/components/admin/AdminNewSidebar.tsx`
+- Add `PackagePlus` icon import
+- Add `{ title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus }` to Content group after TD Management
 
-**Batching**: Process 100 filaments at a time. Upsert listings in chunks of 200 rows.
+### 7. `src/App.tsx`
+- Add lazy import: `const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));`
+- Add route: `<Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />`
 
-### Config Addition
-Add to `supabase/config.toml`:
-```toml
-[functions.backfill-filament-listings]
-verify_jwt = false
-```
+## Edge Function for Insert
+The existing `extract-filament-data` handles extraction. For the insert step, the page will use direct Supabase client inserts (admin has RLS access via `has_role`). Each selected item's `extracted_data` (merged with `admin_override_data`) gets inserted into `filaments`, then the item's `status` and `inserted_filament_id` are updated.
 
-### Files Modified
-| File | Change |
-|------|--------|
-| `supabase/functions/backfill-filament-listings/index.ts` | New Edge Function |
-| `supabase/config.toml` | Add function entry |
+## Key Technical Details
+- Brand selector uses `supabase.from('brands').select('id, name, logo_url')` with search
+- Config check: `supabase.from('brand_scraping_configs').select('adapter_key').eq('brand_id', selectedBrandId)`
+- Extraction invoke: `supabase.functions.invoke('extract-filament-data', { body: { job_id, source_url, adapter_key } })`
+- Job history: `supabase.from('filament_onboarding_jobs').select('*').order('created_at', { ascending: false }).limit(20)`
+- Items load: `supabase.from('filament_onboarding_items').select('*').eq('job_id', jobId)`
+- Sticky bottom bar with selection count + import button using `position: sticky; bottom: 0`
 
