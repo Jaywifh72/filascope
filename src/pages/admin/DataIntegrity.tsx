@@ -14,6 +14,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { PriceSourceAudit } from '@/components/admin/data-integrity/PriceSourceAudit';
+import { TableUsageAudit } from '@/components/admin/data-integrity/TableUsageAudit';
 
 // ── Helpers ──
 
@@ -1071,6 +1072,12 @@ export default function DataIntegrity() {
 
       {/* ── Section 7: Affiliate Config Audit ── */}
       <AffiliateConfigAuditSection />
+
+      {/* ── Section 8: Table Usage Audit ── */}
+      <section className="space-y-3">
+        <SectionHeader title="Table Usage Audit" />
+        <TableUsageAudit />
+      </section>
     </div>
   );
 }
