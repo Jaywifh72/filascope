@@ -14,6 +14,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { PriceSourceAudit } from '@/components/admin/data-integrity/PriceSourceAudit';
+import { TableUsageAudit } from '@/components/admin/data-integrity/TableUsageAudit';
 
 // ── Helpers ──
 
