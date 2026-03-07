@@ -300,6 +300,131 @@ function useRegionalCoverage() {
   });
 }
 
+// ── Exchange Rates Card (inside Table Coverage grid) ──
+
+const COMPARE_PAIRS = ['EUR', 'GBP', 'CAD', 'AUD', 'JPY'] as const;
+
+function ExchangeRatesCard() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['data-integrity', 'exchange-rates-audit'],
+    queryFn: async () => {
+      const [erRes, cerRes] = await Promise.all([
+        supabase.from('exchange_rates').select('currency_code, rate_to_usd, updated_at'),
+        supabase.from('currency_exchange_rates').select('base_currency, target_currency, rate, fetched_at')
+          .eq('base_currency', 'USD'),
+      ]);
+
+      const erRows = erRes.data || [];
+      const cerRows = cerRes.data || [];
+
+      const erMap = new Map(erRows.map((r: any) => [r.currency_code, r]));
+      const cerMap = new Map(cerRows.map((r: any) => [r.target_currency, r]));
+
+      const erLatest = erRows.length > 0
+        ? Math.max(...erRows.map((r: any) => new Date(r.updated_at || 0).getTime()))
+        : 0;
+      const cerLatest = cerRows.length > 0
+        ? Math.max(...cerRows.map((r: any) => new Date(r.fetched_at || 0).getTime()))
+        : 0;
+
+      const now = Date.now();
+      const staleThreshold = 24 * 60 * 60 * 1000;
+      const erStale = erLatest > 0 && (now - erLatest) > staleThreshold;
+      const cerStale = cerLatest > 0 && (now - cerLatest) > staleThreshold;
+
+      // Compare rates: exchange_rates stores rate_to_usd (i.e. 1 USD = X foreign)
+      // currency_exchange_rates stores rate where base=USD, so rate = 1 USD → X target
+      const conflicts: { currency: string; erRate: number; cerRate: number; diffPct: number }[] = [];
+      for (const cur of COMPARE_PAIRS) {
+        const er = erMap.get(cur);
+        const cer = cerMap.get(cur);
+        if (!er || !cer) continue;
+        const erRate = er.rate_to_usd as number;
+        const cerRate = cer.rate as number;
+        if (erRate > 0 && cerRate > 0) {
+          const diffPct = Math.abs((erRate - cerRate) / erRate) * 100;
+          if (diffPct > 1) {
+            conflicts.push({ currency: cur, erRate, cerRate, diffPct: Math.round(diffPct * 10) / 10 });
+          }
+        }
+      }
+
+      return {
+        erCount: erRows.length,
+        cerCount: cerRows.length,
+        erLatest,
+        cerLatest,
+        erStale,
+        cerStale,
+        conflicts,
+      };
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Exchange Rates</CardTitle>
+        </CardHeader>
+        <CardContent><p className="text-xs text-muted-foreground">Loading…</p></CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) return null;
+
+  const formatAge = (ts: number) => {
+    if (!ts) return 'N/A';
+    const mins = Math.floor((Date.now() - ts) / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            Exchange Rates
+            {(data.erStale || data.cerStale) && (
+              <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Stale Rates</Badge>
+            )}
+            {data.conflicts.length > 0 && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-500 text-yellow-500">
+                {data.conflicts.length} mismatch{data.conflicts.length > 1 ? 'es' : ''}
+              </Badge>
+            )}
+          </CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-1">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">exchange_rates</span>
+          <span className="font-mono font-semibold">{data.erCount} rows · {formatAge(data.erLatest)}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">currency_exchange_rates</span>
+          <span className="font-mono font-semibold">{data.cerCount} rows · {formatAge(data.cerLatest)}</span>
+        </div>
+        {data.conflicts.length > 0 && (
+          <div className="pt-1 space-y-0.5">
+            {data.conflicts.map((c) => (
+              <div key={c.currency} className="flex justify-between text-xs text-destructive">
+                <span>USD→{c.currency}</span>
+                <span className="font-mono">{c.erRate.toFixed(4)} vs {c.cerRate.toFixed(4)} ({c.diffPct}%)</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Section 6: Store/Retailer Overlap ──
 
 function StoreRetailerOverlapSection() {
@@ -857,6 +982,7 @@ export default function DataIntegrity() {
                 </div>
               </CardContent>
             </Card>
+            <ExchangeRatesCard />
           </div>
         ) : null}
       </section>
