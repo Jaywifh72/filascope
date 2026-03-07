@@ -83,7 +83,7 @@ export function useFilamentListings(
       }
 
       // Transform and add affiliate URLs
-      return (data || []).map((listing: any) => {
+      const listings = (data || []).map((listing: any) => {
         const retailer = listing.retailers;
         const affiliateUrl = listing.affiliate_url || 
           getAffiliateUrl(listing.product_url, retailer?.name || "");
@@ -104,14 +104,100 @@ export function useFilamentListings(
           stock_level: listing.stock_level,
           product_url: listing.product_url,
           affiliate_url: affiliateUrl,
-          price_per_kg: null, // Computed client-side if needed
+          price_per_kg: null,
           is_primary: listing.is_primary,
           last_scraped_at: listing.last_scraped_at,
           scrape_status: listing.scrape_status,
         };
       });
+
+      // If real listings exist, use them
+      if (listings.length > 0) return listings;
+
+      // Fallback: construct synthetic listings from filaments table
+      return buildSyntheticListings(filamentId, region, currency, getAffiliateUrl);
     },
     enabled: !!filamentId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
+}
+
+const REGION_PRICE_MAP: Record<string, { priceCol: string; urlCol: string; currency: string }> = {
+  US: { priceCol: "variant_price", urlCol: "product_url", currency: "USD" },
+  AU: { priceCol: "price_aud", urlCol: "product_url_au", currency: "AUD" },
+  CA: { priceCol: "price_cad", urlCol: "product_url_ca", currency: "CAD" },
+  EU: { priceCol: "price_eur", urlCol: "product_url_eu", currency: "EUR" },
+  UK: { priceCol: "price_gbp", urlCol: "product_url_uk", currency: "GBP" },
+  JP: { priceCol: "price_jpy", urlCol: "product_url_jp", currency: "JPY" },
+};
+
+async function buildSyntheticListings(
+  filamentId: string,
+  userRegion: string,
+  userCurrency: string,
+  getAffiliateUrl: (url: string, vendor: string) => string | null
+): Promise<FilamentListing[]> {
+  const { data: filament, error } = await supabase
+    .from("filaments")
+    .select(`
+      id, vendor, product_title, msrp,
+      variant_price, variant_compare_at_price, product_url,
+      price_aud, product_url_au,
+      price_cad, product_url_ca,
+      price_eur, product_url_eu,
+      price_gbp, product_url_uk,
+      price_jpy, product_url_jp,
+      primary_region
+    `)
+    .eq("id", filamentId)
+    .single();
+
+  if (error || !filament) return [];
+
+  const vendor = filament.vendor || "Unknown";
+  const listings: FilamentListing[] = [];
+
+  // Build a listing for each region that has both price and URL
+  for (const [regionCode, mapping] of Object.entries(REGION_PRICE_MAP)) {
+    const price = (filament as any)[mapping.priceCol] as number | null;
+    const url = (filament as any)[mapping.urlCol] as string | null;
+
+    if (price == null || !url) continue;
+
+    const compareAt = regionCode === "US" ? filament.variant_compare_at_price : null;
+    const isPrimary = filament.primary_region
+      ? regionCode === filament.primary_region
+      : regionCode === "US";
+
+    const affiliateUrl = getAffiliateUrl(url, vendor);
+
+    listings.push({
+      listing_id: `synthetic-${filament.id}-${regionCode}`,
+      filament_id: filament.id,
+      retailer_id: `synthetic-${vendor.toLowerCase().replace(/\s+/g, "-")}`,
+      retailer_name: vendor,
+      retailer_slug: vendor.toLowerCase().replace(/\s+/g, "-"),
+      retailer_logo: null,
+      retailer_trust_score: null,
+      current_price: price,
+      compare_at_price: compareAt ?? null,
+      currency: mapping.currency,
+      region: regionCode,
+      available: true,
+      stock_level: null,
+      product_url: url,
+      affiliate_url: affiliateUrl,
+      price_per_kg: null,
+      is_primary: isPrimary,
+      last_scraped_at: null,
+      scrape_status: null,
+    });
+  }
+
+  // Filter to user's requested region/currency, or return all if no exact match
+  const regionMatch = listings.filter(
+    (l) => l.region === userRegion && l.currency === userCurrency
+  );
+
+  return regionMatch.length > 0 ? regionMatch : listings;
 }
