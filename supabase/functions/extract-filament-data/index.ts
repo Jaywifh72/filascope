@@ -91,6 +91,24 @@ function adaptSunlu(
   // Parse specs from body_html
   const specs = parseSpecsFromHtml(product.body_html || "", config.spec_extraction || null);
 
+  // Fallback weight extraction from variant/product titles
+  if (specs.netWeight == null) {
+    // Try first variant title
+    const firstVariantTitle = product.variants?.[0]?.title || "";
+    const variantWeight = extractWeightFromText(firstVariantTitle);
+    if (variantWeight != null) {
+      specs.netWeight = variantWeight;
+      specs.weightSource = "variant_title";
+    } else {
+      // Try product title
+      const titleWeight = extractWeightFromText(product.title || "");
+      if (titleWeight != null) {
+        specs.netWeight = titleWeight;
+        specs.weightSource = "product_title";
+      }
+    }
+  }
+
   // Build regional URLs from config
   const regionalUrls = config.regional_url_pattern || {};
   const buildRegionalUrl = (region: string): string | null => {
