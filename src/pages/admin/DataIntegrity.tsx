@@ -857,6 +857,7 @@ export default function DataIntegrity() {
                 </div>
               </CardContent>
             </Card>
+            <ExchangeRatesCard />
           </div>
         ) : null}
       </section>
