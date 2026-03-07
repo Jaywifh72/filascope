@@ -59,6 +59,53 @@ interface RpcGroupItem {
   representative: Record<string, unknown>;
 }
 
+const KNOWN_ACRONYMS = new Set([
+  "PLA", "PLA+", "PETG", "ABS", "ASA", "TPU", "TPE", "PC", "PEI", "PA",
+  "PA6", "PA12", "PEEK", "HIPS", "PVA", "PCTG", "PP", "POM", "CF", "GF",
+  "HF", "HS", "HT", "FR", "LW",
+]);
+
+function smartTitleCase(word: string): string {
+  if (KNOWN_ACRONYMS.has(word.toUpperCase())) return word.toUpperCase();
+  if (word.length === 0) return word;
+  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+}
+
+function normalizeGroupName(rawName: string, brandName: string): string {
+  let name = rawName.trim();
+
+  // Step 3: Clean redundant patterns like "Matte MATTE-PLA" or "Rock ROCK-PLA" or "Professional PLA-PROFESSIONAL"
+  // Pattern A: "{Word} {WORD}-{MATERIAL}" where WORD matches Word (case-insensitive)
+  const patternA = /^(\S+)\s+(\S+)-(\S+)$/i;
+  const matchA = name.match(patternA);
+  if (matchA) {
+    const [, titlePart, left, right] = matchA;
+    if (titlePart.toLowerCase() === left.toLowerCase()) {
+      // "Matte MATTE-PLA" → "Matte PLA"
+      name = `${smartTitleCase(titlePart)} ${smartTitleCase(right)}`;
+    } else if (titlePart.toLowerCase() === right.toLowerCase()) {
+      // "Professional PLA-PROFESSIONAL" → "Professional PLA"
+      name = `${smartTitleCase(titlePart)} ${smartTitleCase(left)}`;
+    }
+  }
+
+  // Step 4: Apply smart title-casing to each word
+  name = name.split(/\s+/).map(w => {
+    // Handle hyphenated words like "ABS-FR"
+    if (w.includes("-")) {
+      return w.split("-").map(smartTitleCase).join("-");
+    }
+    return smartTitleCase(w);
+  }).join(" ");
+
+  // Step 1 & 2: Ensure brand prefix
+  if (!name.toLowerCase().startsWith(brandName.toLowerCase())) {
+    name = `${brandName} ${name}`;
+  }
+
+  return name;
+}
+
 function mapRpcToGroupedProducts(
   items: RpcGroupItem[],
   allVariants: Filament[],
@@ -74,9 +121,11 @@ function mapRpcToGroupedProducts(
     const rep = item.representative as unknown as Filament;
 
     // Determine display name
-    const baseName = item.product_line_id
+    const rawName = item.product_line_id
       ? formatProductLineIdForDisplay(item.product_line_id, rep.product_title)
       : rep.display_name || rep.product_title || "";
+
+    const baseName = normalizeGroupName(rawName, brandName);
 
     // Collect variant filaments from the map
     const variants: Filament[] = [];
