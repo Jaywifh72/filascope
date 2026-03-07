@@ -1698,6 +1698,7 @@ export type Database = {
           price_diff: Json | null
           price_eur: number | null
           price_gbp: number | null
+          price_jpy: number | null
           price_usd: number | null
           product_handle: string | null
           status: string
@@ -1728,6 +1729,7 @@ export type Database = {
           price_diff?: Json | null
           price_eur?: number | null
           price_gbp?: number | null
+          price_jpy?: number | null
           price_usd?: number | null
           product_handle?: string | null
           status?: string
@@ -1758,6 +1760,7 @@ export type Database = {
           price_diff?: Json | null
           price_eur?: number | null
           price_gbp?: number | null
+          price_jpy?: number | null
           price_usd?: number | null
           product_handle?: string | null
           status?: string
