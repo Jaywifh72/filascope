@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -279,6 +281,7 @@ function useRegionalCoverage() {
 // ── Main Page ──
 
 export default function DataIntegrity() {
+  const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const { data: coverage, isLoading: coverageLoading, dataUpdatedAt: coverageUpdatedAt } = useTableCoverage();
@@ -421,19 +424,74 @@ export default function DataIntegrity() {
                 { label: 'Unique products', value: coverage.prp.uniqueProducts },
               ]}
             />
-            <StatCard
-              title="brand_sync_items"
-              coveragePct={coverage.bsi.total > 0 ? Math.round((coverage.bsi.imported / coverage.bsi.total) * 100) : 100}
-              stats={[
-                { label: 'Total synced', value: coverage.bsi.total },
-                { label: 'Imported to filaments', value: coverage.bsi.imported },
-                { label: 'New (pending review)', value: coverage.bsi.new },
-                { label: 'Price changed', value: coverage.bsi.priceChanged },
-                { label: 'Matched', value: coverage.bsi.matched },
-                { label: 'Skipped', value: coverage.bsi.skipped },
-                { label: 'Errors', value: coverage.bsi.error },
-              ]}
-            />
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <CoverageIndicator pct={coverage.bsi.total > 0 ? Math.round((coverage.bsi.imported / coverage.bsi.total) * 100) : 100} />
+                    brand_sync_items
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total synced</span>
+                  <span className="font-mono font-semibold">{coverage.bsi.total.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-muted-foreground inline-flex items-center gap-1 cursor-help">
+                          Imported to filaments <Info className="w-3 h-3" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[220px]">
+                        <p className="text-xs">Items are imported when approved in Brand Catalog Sync and the Import function is run.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <span className="font-mono font-semibold">{coverage.bsi.imported.toLocaleString()}</span>
+                </div>
+                <div
+                  className="flex justify-between text-sm cursor-pointer rounded px-1 -mx-1 hover:bg-accent transition-colors"
+                  onClick={() => navigate('/admin/filament-onboarding')}
+                  role="link"
+                >
+                  <span className="text-muted-foreground hover:text-foreground">New (pending review)</span>
+                  <span className="font-mono font-semibold">{coverage.bsi.new.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Price changed</span>
+                  <span className="font-mono font-semibold">{coverage.bsi.priceChanged.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Matched</span>
+                  <span className="font-mono font-semibold">{coverage.bsi.matched.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Skipped</span>
+                  <span className="font-mono font-semibold">{coverage.bsi.skipped.toLocaleString()}</span>
+                </div>
+                {coverage.bsi.error > 0 ? (
+                  <div
+                    className="flex justify-between text-sm cursor-pointer rounded px-1 -mx-1 hover:bg-destructive/10 transition-colors"
+                    onClick={() => navigate('/admin/filament-onboarding')}
+                    role="link"
+                  >
+                    <span className="text-destructive inline-flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" /> Errors
+                    </span>
+                    <span className="font-mono font-semibold text-destructive">{coverage.bsi.error.toLocaleString()}</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Errors</span>
+                    <span className="font-mono font-semibold">{coverage.bsi.error.toLocaleString()}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             <StatCard
               title="price_history"
               stats={[
