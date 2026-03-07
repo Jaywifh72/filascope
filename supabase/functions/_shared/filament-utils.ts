@@ -240,22 +240,83 @@ export const COLOR_HEX_MAP: Record<string, string> = {
 // ============================================================
 
 export const COLOR_FAMILY_MAP: Record<string, string> = {
-  "white": "White", "bone": "White", "ceramic": "White", "ivory": "White", "cream": "White",
-  "black": "Black", "charcoal": "Black", "midnight": "Black",
-  "red": "Red", "cherry": "Red", "maroon": "Red", "crimson": "Red",
-  "blue": "Blue", "navy": "Blue", "sky": "Blue", "klein": "Blue", "cobalt": "Blue", "royal": "Blue",
-  "green": "Green", "grass": "Green", "olive": "Green", "mint": "Green", "lime": "Green", "teal": "Green",
-  "yellow": "Yellow", "lemon": "Yellow",
-  "orange": "Orange", "tangerine": "Orange", "coral": "Orange",
-  "pink": "Pink", "rose": "Pink", "salmon": "Pink", "magenta": "Pink",
-  "purple": "Purple", "violet": "Purple", "lavender": "Purple", "plum": "Purple",
-  "brown": "Brown", "coffee": "Brown", "chestnut": "Brown", "oak": "Brown", "chocolate": "Brown",
-  "grey": "Grey", "gray": "Grey", "silver": "Grey",
-  "gold": "Gold",
-  "transparent": "Transparent", "clear": "Transparent",
-  "natural": "Natural", "beige": "Natural",
-  "cyan": "Blue",
-  "peach": "Orange",
+  // Whites
+  white: "White", "bone white": "White", "ceramic white": "White",
+  "snow white": "White", "pearl white": "White", "cloudy white": "White",
+  "warm white": "White", "cool white": "White", ivory: "White",
+
+  // Blacks
+  black: "Black", "roasted chestnut black": "Black", charcoal: "Black",
+  midnight: "Black",
+
+  // Greys
+  grey: "Grey", gray: "Grey", "slate grey": "Grey", "slate gray": "Grey",
+  slate: "Grey", "stone grey": "Grey", "stone gray": "Grey",
+  "warm grey": "Grey", "warm gray": "Grey", "cool grey": "Grey",
+  "cool gray": "Grey", "dark grey": "Grey", "dark gray": "Grey",
+  "light grey": "Grey", "light gray": "Grey", ash: "Grey",
+
+  // Reds
+  red: "Red", "cherry red": "Red", cherry: "Red", crimson: "Red",
+  burgundy: "Red", "wine red": "Red", wine: "Red", maroon: "Red",
+  "neon red": "Red",
+
+  // Oranges
+  orange: "Orange", tangerine: "Orange", "burnt orange": "Orange",
+  "neon orange": "Orange", apricot: "Orange", coral: "Orange",
+
+  // Yellows
+  yellow: "Yellow", "lemon yellow": "Yellow", lemon: "Yellow",
+  "vivid yellow": "Yellow", amber: "Yellow", mustard: "Yellow",
+  "neon yellow": "Yellow",
+
+  // Greens
+  green: "Green", "grass green": "Green", "mint green": "Green",
+  mint: "Green", "olive green": "Green", olive: "Green",
+  "forest green": "Green", "dark green": "Green", lime: "Green",
+  "lime green": "Green", "sage green": "Green", sage: "Green",
+  "army green": "Green", emerald: "Green", "neon green": "Green",
+  teal: "Green",
+
+  // Blues
+  blue: "Blue", "klein blue": "Blue", "sky blue": "Blue",
+  "light blue": "Blue", "baby blue": "Blue", "ocean blue": "Blue",
+  "navy blue": "Blue", navy: "Blue", "royal blue": "Blue",
+  cyan: "Blue", "dark blue": "Blue", cobalt: "Blue",
+  "powder blue": "Blue", turquoise: "Blue", aqua: "Blue",
+  "midnight blue": "Blue", "neon blue": "Blue",
+
+  // Purples
+  purple: "Purple", "lavender purple": "Purple", lavender: "Purple",
+  violet: "Purple", plum: "Purple", lilac: "Purple", mauve: "Purple",
+  indigo: "Purple", amethyst: "Purple",
+
+  // Pinks
+  pink: "Pink", "sakura pink": "Pink", sakura: "Pink",
+  "rose pink": "Pink", rose: "Pink", "pale pink": "Pink",
+  "hot pink": "Pink", magenta: "Pink", fuchsia: "Pink",
+  "neon pink": "Pink", peach: "Pink", salmon: "Pink",
+
+  // Browns
+  brown: "Brown", coffee: "Brown", chocolate: "Brown", mocha: "Brown",
+  oak: "Brown", walnut: "Brown", wood: "Brown",
+  "roasted chestnut": "Brown", caramel: "Brown",
+
+  // Beiges
+  beige: "Beige", cream: "Beige", tan: "Beige", natural: "Beige",
+
+  // Metallics
+  gold: "Gold/Silver", silver: "Gold/Silver", bronze: "Gold/Silver",
+  copper: "Gold/Silver", "rose gold": "Gold/Silver",
+
+  // Transparent
+  transparent: "Transparent", clear: "Transparent",
+  "natural/clear": "Transparent", translucent: "Transparent",
+
+  // Special
+  glow: "Other", "glow in the dark": "Other",
+  "multi-color": "Multi-Color", rainbow: "Multi-Color",
+  multicolor: "Multi-Color",
 };
 
 // ============================================================
@@ -362,9 +423,40 @@ export const COLOR_KEYWORDS = ["color", "colour"];
 export function guessColorHex(colorName: string): string | null {
   const lower = colorName.toLowerCase().trim();
   if (COLOR_HEX_MAP[lower]) return COLOR_HEX_MAP[lower];
-  for (const [key, hex] of Object.entries(COLOR_HEX_MAP)) {
-    if (lower.includes(key)) return hex;
+  // Substring match — prefer longest matching key
+  let bestKey = "";
+  for (const key of Object.keys(COLOR_HEX_MAP)) {
+    if (lower.includes(key) && key.length > bestKey.length) {
+      bestKey = key;
+    }
   }
+  if (bestKey) return COLOR_HEX_MAP[bestKey];
+
+  // Fallback: check for base color words
+  const FALLBACK_COLOR_WORDS: Record<string, string> = {
+    red: "#E53E3F",
+    blue: "#3182CE",
+    green: "#22C55E",
+    yellow: "#FACC15",
+    orange: "#F97316",
+    purple: "#8B5CF6",
+    pink: "#EC4899",
+    black: "#000000",
+    white: "#FFFFFF",
+    grey: "#9CA3AF",
+    gray: "#9CA3AF",
+    brown: "#92400E",
+    silver: "#C0C0C0",
+    gold: "#FFD700",
+    cyan: "#06B6D4",
+    teal: "#008080",
+    magenta: "#FF00FF",
+  };
+
+  for (const [word, hex] of Object.entries(FALLBACK_COLOR_WORDS)) {
+    if (lower.includes(word)) return hex;
+  }
+
   return null;
 }
 
