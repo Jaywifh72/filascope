@@ -295,21 +295,30 @@ export default function DataIntegrity() {
 
   const handleBackfill = async () => {
     setBackfillLoading(true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000);
     try {
-      const { data, error } = await supabase.functions.invoke('backfill-filament-listings');
+      const { data, error } = await supabase.functions.invoke('backfill-filament-listings', {
+        body: {},
+      });
+      clearTimeout(timeout);
       if (error) throw error;
       const created = data?.listings_created ?? data?.created ?? 0;
       const updated = data?.listings_updated ?? data?.updated ?? 0;
+      const errors = data?.errors ?? data?.error_count ?? 0;
       toast({
         title: 'Backfill complete',
-        description: `Created ${created} listings, updated ${updated} listings.`,
+        description: `Backfill complete: ${created} listings created, ${updated} updated, ${errors} errors`,
       });
-      queryClient.invalidateQueries({ queryKey: ['data-integrity', 'table-coverage'] });
-      queryClient.invalidateQueries({ queryKey: ['data-integrity', 'regional-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['data-integrity'] });
     } catch (err: any) {
+      clearTimeout(timeout);
+      const msg = err?.name === 'AbortError'
+        ? 'Request timed out after 120s'
+        : (err?.message || 'Unknown error');
       toast({
         title: 'Backfill failed',
-        description: err?.message || 'Unknown error',
+        description: `Backfill failed: ${msg}. The function processes in batches — you can safely retry.`,
         variant: 'destructive',
       });
     } finally {
@@ -348,12 +357,11 @@ export default function DataIntegrity() {
         title: 'Orphans cleaned',
         description: `Deleted ${deleted} orphan listing${deleted !== 1 ? 's' : ''}.`,
       });
-      queryClient.invalidateQueries({ queryKey: ['data-integrity', 'orphans'] });
-      queryClient.invalidateQueries({ queryKey: ['data-integrity', 'table-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['data-integrity'] });
     } catch (err: any) {
       toast({
         title: 'Cleanup failed',
-        description: err?.message || 'Unknown error',
+        description: `Cleanup failed: ${err?.message || 'Unknown error'}. You can safely retry.`,
         variant: 'destructive',
       });
     } finally {
@@ -396,10 +404,13 @@ export default function DataIntegrity() {
               ]}
               action={
                 isAdmin ? (
-                  <Button size="sm" variant="outline" onClick={handleBackfill} disabled={backfillLoading}>
-                    {backfillLoading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Database className="w-3.5 h-3.5 mr-1" />}
-                    {backfillLoading ? 'Running…' : 'Run Backfill'}
-                  </Button>
+                  <div className="flex flex-col items-end gap-1">
+                    <Button size="sm" variant="outline" onClick={handleBackfill} disabled={backfillLoading}>
+                      {backfillLoading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Database className="w-3.5 h-3.5 mr-1" />}
+                      {backfillLoading ? 'Running backfill...' : 'Run Backfill'}
+                    </Button>
+                    <span className="text-[11px] text-muted-foreground">Creates listings from filaments table prices. Safe to run multiple times.</span>
+                  </div>
                 ) : undefined
               }
             />
