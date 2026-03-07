@@ -1072,6 +1072,12 @@ export default function DataIntegrity() {
 
       {/* ── Section 7: Affiliate Config Audit ── */}
       <AffiliateConfigAuditSection />
+
+      {/* ── Section 8: Table Usage Audit ── */}
+      <section className="space-y-3">
+        <SectionHeader title="Table Usage Audit" />
+        <TableUsageAudit />
+      </section>
     </div>
   );
 }
