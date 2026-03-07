@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2, Info } from 'lucide-react';
+import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -777,6 +777,9 @@ export default function DataIntegrity() {
           })()
         ) : null}
       </section>
+
+      {/* ── Section 6: Store/Retailer Overlap Audit ── */}
+      <StoreRetailerOverlapSection />
     </div>
   );
 }
