@@ -402,8 +402,13 @@ export default function DataIntegrity() {
               title="brand_sync_items"
               coveragePct={coverage.bsi.total > 0 ? Math.round((coverage.bsi.imported / coverage.bsi.total) * 100) : 100}
               stats={[
-                { label: 'Total', value: coverage.bsi.total },
-                { label: 'Imported', value: coverage.bsi.imported },
+                { label: 'Total synced', value: coverage.bsi.total },
+                { label: 'Imported to filaments', value: coverage.bsi.imported },
+                { label: 'New (pending review)', value: coverage.bsi.new },
+                { label: 'Price changed', value: coverage.bsi.priceChanged },
+                { label: 'Matched', value: coverage.bsi.matched },
+                { label: 'Skipped', value: coverage.bsi.skipped },
+                { label: 'Errors', value: coverage.bsi.error },
               ]}
             />
             <StatCard
