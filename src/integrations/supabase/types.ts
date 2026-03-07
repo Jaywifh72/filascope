@@ -12921,6 +12921,19 @@ export type Database = {
         }
         Relationships: []
       }
+      v_canonical_prices: {
+        Row: {
+          canonical_price: number | null
+          currency_code: string | null
+          filament_id: string | null
+          last_updated_at: string | null
+          price_source: string | null
+          product_url: string | null
+          region_code: string | null
+          source_row_id: string | null
+        }
+        Relationships: []
+      }
       v_filament_listings: {
         Row: {
           affiliate_url: string | null
@@ -13487,6 +13500,19 @@ export type Database = {
         }[]
       }
       get_price_confidence: { Args: { last_verified: string }; Returns: string }
+      get_price_conflicts: {
+        Args: { p_limit?: number }
+        Returns: {
+          canonical_price: number
+          canonical_source: string
+          filament_id: string
+          flat_price: number
+          pct_diff: number
+          product_title: string
+          region_code: string
+          vendor: string
+        }[]
+      }
       get_printer_activity_stats: {
         Args: { p_printer_id: string }
         Returns: Json
@@ -13557,6 +13583,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      refresh_canonical_prices: { Args: never; Returns: undefined }
       search_filaments_paginated:
         | {
             Args: {

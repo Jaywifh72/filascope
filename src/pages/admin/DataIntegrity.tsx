@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import { PriceSourceAudit } from '@/components/admin/data-integrity/PriceSourceAudit';
 
 // ── Helpers ──
 
@@ -569,6 +570,9 @@ export default function DataIntegrity() {
           </>
         )}
       </section>
+
+      {/* ── Section 2b: Price Source Audit ── */}
+      <PriceSourceAudit />
 
       {/* ── Section 3: Orphan Detection ── */}
       <section className="space-y-3">
