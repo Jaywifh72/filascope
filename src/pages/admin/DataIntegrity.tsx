@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { PriceSourceAudit } from '@/components/admin/data-integrity/PriceSourceAudit';
 import { TableUsageAudit } from '@/components/admin/data-integrity/TableUsageAudit';
+import { PriceSourceConflicts } from '@/components/admin/data-integrity/PriceSourceConflicts';
 
 // ── Helpers ──
 
