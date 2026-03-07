@@ -101,6 +101,11 @@ function useTableCoverage() {
         bsiError,
         phTotal,
         phMinMax,
+        fpTotal,
+        pruTotal,
+        pruProductIds,
+        flatPriceCount,
+        flatUrlCount,
       ] = await Promise.all([
         supabase.from('filaments').select('*', { count: 'exact', head: true }),
         supabase.from('filaments').select('*', { count: 'exact', head: true }).not('variant_price', 'is', null),
@@ -122,6 +127,14 @@ function useTableCoverage() {
         supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }).eq('status', 'error'),
         supabase.from('price_history').select('*', { count: 'exact', head: true }),
         supabase.from('price_history').select('recorded_at').order('recorded_at', { ascending: true }).limit(1),
+        // Schema health queries
+        supabase.from('filament_properties').select('*', { count: 'exact', head: true }),
+        supabase.from('product_regional_urls').select('*', { count: 'exact', head: true }),
+        supabase.from('product_regional_urls').select('product_id'),
+        supabase.from('filaments').select('*', { count: 'exact', head: true })
+          .or('price_cad.not.is.null,price_eur.not.is.null,price_gbp.not.is.null,price_aud.not.is.null,price_jpy.not.is.null'),
+        supabase.from('filaments').select('*', { count: 'exact', head: true })
+          .or('product_url_ca.not.is.null,product_url_eu.not.is.null,product_url_uk.not.is.null,product_url_au.not.is.null,product_url_jp.not.is.null'),
       ]);
 
       const uniqueListingFilaments = new Set((listingFilamentIds.data || []).map((r: any) => r.filament_id)).size;
@@ -149,6 +162,13 @@ function useTableCoverage() {
           error: bsiError.count || 0,
         },
         priceHistory: { total: phTotal.count || 0, earliest: phMinMax.data?.[0]?.recorded_at ?? 'N/A' },
+        schemaHealth: {
+          filamentProperties: fpTotal.count || 0,
+          pruTotal: pruTotal.count || 0,
+          pruUniqueFilaments: new Set((pruProductIds.data || []).map((r: any) => r.product_id)).size,
+          flatPricePopulated: flatPriceCount.count || 0,
+          flatUrlPopulated: flatUrlCount.count || 0,
+        },
       };
     },
     staleTime: 1000 * 60 * 5,
@@ -500,6 +520,54 @@ export default function DataIntegrity() {
                 { label: 'Earliest', value: coverage.priceHistory.earliest !== 'N/A' ? new Date(coverage.priceHistory.earliest).toLocaleDateString() : 'N/A' },
               ]}
             />
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    Schema Health
+                  </CardTitle>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[280px]">
+                        <p className="text-xs">The filaments table has 148 columns. Regional prices and URLs are being migrated from flat columns to product_regional_prices and product_regional_urls tables. Coverage shown here tracks that migration progress.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">filaments table</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="font-mono font-semibold">148 columns</span>
+                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0">wide</Badge>
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">filament_properties</span>
+                  <span className="font-mono font-semibold">{coverage.schemaHealth.filamentProperties.toLocaleString()} rows</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">product_regional_prices</span>
+                  <span className="font-mono font-semibold">{coverage.prp.total.toLocaleString()} rows · {coverage.prp.uniqueProducts.toLocaleString()} filaments</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">product_regional_urls</span>
+                  <span className="font-mono font-semibold">{coverage.schemaHealth.pruTotal.toLocaleString()} rows · {coverage.schemaHealth.pruUniqueFilaments.toLocaleString()} filaments</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Flat price columns populated</span>
+                  <span className="font-mono font-semibold">{coverage.schemaHealth.flatPricePopulated.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Flat URL columns populated</span>
+                  <span className="font-mono font-semibold">{coverage.schemaHealth.flatUrlPopulated.toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ) : null}
       </section>
