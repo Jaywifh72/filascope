@@ -12,8 +12,8 @@ import { SyncResultsTabs } from '@/components/admin/brand-sync/SyncResultsTabs';
 import { FilamentPreviewDialog } from '@/components/admin/brand-sync/FilamentPreviewDialog';
 import { ImportProgressCard } from '@/components/admin/brand-sync/ImportProgressCard';
 import { SyncHistoryTable } from '@/components/admin/brand-sync/SyncHistoryTable';
-import { BrandConfigsSection } from '@/components/admin/filament-onboarding/BrandConfigsSection';
-import { BulkActionPopover } from '@/components/admin/filament-onboarding/BulkActionPopover';
+import { BrandConfigsSection } from '@/components/admin/brand-sync/BrandConfigsSection';
+import { BulkActionPopover } from '@/components/admin/brand-sync/BulkActionPopover';
 import { Ban } from 'lucide-react';
 
 const MATERIAL_OPTIONS = [
