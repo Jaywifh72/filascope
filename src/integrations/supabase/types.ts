@@ -4312,6 +4312,7 @@ export type Database = {
           color_hex: string | null
           created_at: string | null
           density_g_cm3: number | null
+          diameter_is_assumed: boolean | null
           diameter_nominal_mm: number | null
           dimensional_accuracy_score: number | null
           display_name: string | null
@@ -4464,6 +4465,7 @@ export type Database = {
           color_hex?: string | null
           created_at?: string | null
           density_g_cm3?: number | null
+          diameter_is_assumed?: boolean | null
           diameter_nominal_mm?: number | null
           dimensional_accuracy_score?: number | null
           display_name?: string | null
@@ -4616,6 +4618,7 @@ export type Database = {
           color_hex?: string | null
           created_at?: string | null
           density_g_cm3?: number | null
+          diameter_is_assumed?: boolean | null
           diameter_nominal_mm?: number | null
           dimensional_accuracy_score?: number | null
           display_name?: string | null

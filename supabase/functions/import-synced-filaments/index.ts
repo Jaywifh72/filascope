@@ -206,6 +206,7 @@ Deno.serve(async (req) => {
               bed_temp_min_c: merged.bed_temp_min_c,
               bed_temp_max_c: merged.bed_temp_max_c,
               diameter_nominal_mm: merged.diameter_nominal_mm ?? 1.75,
+              diameter_is_assumed: merged.diameter_nominal_mm == null,
               net_weight_g: merged.net_weight_g,
               product_url: merged.product_url,
               product_url_us: merged.product_url_us,

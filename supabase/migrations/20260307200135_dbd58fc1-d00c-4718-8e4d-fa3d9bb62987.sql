@@ -1,0 +1,1 @@
+ALTER TABLE public.filaments ADD COLUMN IF NOT EXISTS diameter_is_assumed boolean DEFAULT NULL;
