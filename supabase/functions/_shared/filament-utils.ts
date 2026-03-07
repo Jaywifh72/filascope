@@ -209,6 +209,7 @@ export function parseSpecsFromHtml(
   dryingTime: number | null;
   spoolOuterDiameterMm: number | null;
   spoolWidthMm: number | null;
+  spoolMaterial: string | null;
 } {
   const result = {
     diameter: null as number | null,
@@ -222,6 +223,7 @@ export function parseSpecsFromHtml(
     dryingTime: null as number | null,
     spoolOuterDiameterMm: null as number | null,
     spoolWidthMm: null as number | null,
+    spoolMaterial: null as string | null,
   };
 
   if (!bodyHtml) return result;
