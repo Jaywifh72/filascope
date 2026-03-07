@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2, Info } from 'lucide-react';
+import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -297,6 +297,123 @@ function useRegionalCoverage() {
     },
     staleTime: 1000 * 60 * 5,
   });
+}
+
+// ── Section 6: Store/Retailer Overlap ──
+
+function StoreRetailerOverlapSection() {
+  const [expanded, setExpanded] = useState(false);
+
+  const { data, isLoading, dataUpdatedAt } = useQuery({
+    queryKey: ['data-integrity', 'store-retailer-overlap'],
+    queryFn: async () => {
+      const [storesRes, retailersRes, brsRes] = await Promise.all([
+        supabase.from('stores').select('name'),
+        supabase.from('retailers').select('name'),
+        supabase.from('brand_regional_stores').select('store_name'),
+      ]);
+
+      const storeNames = new Set((storesRes.data || []).map((r: any) => (r.name || '').toLowerCase().trim()).filter(Boolean));
+      const retailerNames = new Set((retailersRes.data || []).map((r: any) => (r.name || '').toLowerCase().trim()).filter(Boolean));
+      const brsNames = new Set((brsRes.data || []).map((r: any) => (r.store_name || '').toLowerCase().trim()).filter(Boolean));
+
+      const storesOnly: string[] = [];
+      const retailersOnly: string[] = [];
+      const both: string[] = [];
+
+      storeNames.forEach((n) => {
+        if (retailerNames.has(n)) both.push(n);
+        else storesOnly.push(n);
+      });
+      retailerNames.forEach((n) => {
+        if (!storeNames.has(n)) retailersOnly.push(n);
+      });
+
+      return {
+        storesOnly: storesOnly.sort(),
+        retailersOnly: retailersOnly.sort(),
+        both: both.sort(),
+        brsCount: brsNames.size,
+      };
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  return (
+    <section className="space-y-3">
+      <SectionHeader title="Store / Retailer Overlap Audit" dataUpdatedAt={dataUpdatedAt} />
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : data ? (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-mono font-bold text-foreground">{data.storesOnly.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">Stores only</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-mono font-bold text-foreground">{data.retailersOnly.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">Retailers only</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-mono font-bold text-foreground">{data.both.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">In both</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-mono font-bold text-foreground">{data.brsCount}</p>
+                <p className="text-xs text-muted-foreground mt-1">Brand Regional Stores</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {(data.storesOnly.length > 0 || data.retailersOnly.length > 0) && (
+            <Card>
+              <button
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-accent transition-colors text-left"
+                onClick={() => setExpanded(!expanded)}
+              >
+                {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {data.storesOnly.length + data.retailersOnly.length} mismatched names
+              </button>
+              {expanded && (
+                <div className="px-0 pb-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Present In</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.storesOnly.map((n) => (
+                        <TableRow key={`s-${n}`}>
+                          <TableCell className="text-xs font-mono">{n}</TableCell>
+                          <TableCell><Badge variant="outline" className="text-xs">stores</Badge></TableCell>
+                        </TableRow>
+                      ))}
+                      {data.retailersOnly.map((n) => (
+                        <TableRow key={`r-${n}`}>
+                          <TableCell className="text-xs font-mono">{n}</TableCell>
+                          <TableCell><Badge variant="secondary" className="text-xs">retailers</Badge></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </Card>
+          )}
+        </>
+      ) : null}
+    </section>
+  );
 }
 
 // ── Main Page ──
@@ -777,6 +894,9 @@ export default function DataIntegrity() {
           })()
         ) : null}
       </section>
+
+      {/* ── Section 6: Store/Retailer Overlap Audit ── */}
+      <StoreRetailerOverlapSection />
     </div>
   );
 }
