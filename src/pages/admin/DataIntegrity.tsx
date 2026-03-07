@@ -1,16 +1,38 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from '@/hooks/use-toast';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 
 // ── Helpers ──
+
+function formatRelativeTime(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return 'Updated just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `Updated ${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  return `Updated ${hours}h ago`;
+}
+
+function SectionHeader({ title, dataUpdatedAt }: { title: string; dataUpdatedAt?: number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+      {dataUpdatedAt != null && dataUpdatedAt > 0 && (
+        <span className="text-xs text-muted-foreground">{formatRelativeTime(dataUpdatedAt)}</span>
+      )}
+    </div>
+  );
+}
 
 function CoverageIndicator({ pct }: { pct: number }) {
   const color =
@@ -22,18 +44,23 @@ function StatCard({
   title,
   stats,
   coveragePct,
+  action,
 }: {
   title: string;
   stats: { label: string; value: string | number }[];
   coveragePct?: number;
+  action?: React.ReactNode;
 }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          {coveragePct !== undefined && <CoverageIndicator pct={coveragePct} />}
-          {title}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            {coveragePct !== undefined && <CoverageIndicator pct={coveragePct} />}
+            {title}
+          </CardTitle>
+          {action}
+        </div>
       </CardHeader>
       <CardContent className="space-y-1">
         {stats.map((s) => (
@@ -222,14 +249,87 @@ function useRegionalCoverage() {
 // ── Main Page ──
 
 export default function DataIntegrity() {
-  const { data: coverage, isLoading: coverageLoading } = useTableCoverage();
+  const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  const { data: coverage, isLoading: coverageLoading, dataUpdatedAt: coverageUpdatedAt } = useTableCoverage();
   const priceCheck = usePriceCheck();
-  const { data: orphans, isLoading: orphansLoading } = useOrphans();
-  const { data: regional, isLoading: regionalLoading } = useRegionalCoverage();
+  const { data: orphans, isLoading: orphansLoading, dataUpdatedAt: orphansUpdatedAt } = useOrphans();
+  const { data: regional, isLoading: regionalLoading, dataUpdatedAt: regionalUpdatedAt } = useRegionalCoverage();
+
+  const [backfillLoading, setBackfillLoading] = useState(false);
+  const [cleanOrphansLoading, setCleanOrphansLoading] = useState(false);
 
   const matches = priceCheck.results?.filter((r) => r.match).length ?? 0;
   const mismatches = priceCheck.results?.filter((r) => !r.match).length ?? 0;
   const total = matches + mismatches;
+
+  const handleBackfill = async () => {
+    setBackfillLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('backfill-filament-listings');
+      if (error) throw error;
+      const created = data?.listings_created ?? data?.created ?? 0;
+      const updated = data?.listings_updated ?? data?.updated ?? 0;
+      toast({
+        title: 'Backfill complete',
+        description: `Created ${created} listings, updated ${updated} listings.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['data-integrity', 'table-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['data-integrity', 'regional-coverage'] });
+    } catch (err: any) {
+      toast({
+        title: 'Backfill failed',
+        description: err?.message || 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setBackfillLoading(false);
+    }
+  };
+
+  const handleCleanOrphans = async () => {
+    setCleanOrphansLoading(true);
+    try {
+      // Get orphan listing IDs first
+      const [listingIds, filamentIds] = await Promise.all([
+        supabase.from('filament_listings').select('id, filament_id'),
+        supabase.from('filaments').select('id'),
+      ]);
+      const filIdSet = new Set((filamentIds.data || []).map((r: any) => r.id));
+      const orphanIds = (listingIds.data || [])
+        .filter((r: any) => !filIdSet.has(r.filament_id))
+        .map((r: any) => r.id);
+
+      if (orphanIds.length === 0) {
+        toast({ title: 'No orphans found', description: 'All listings have valid filament references.' });
+        return;
+      }
+
+      // Delete in batches of 100
+      let deleted = 0;
+      for (let i = 0; i < orphanIds.length; i += 100) {
+        const batch = orphanIds.slice(i, i + 100);
+        const { error } = await supabase.from('filament_listings').delete().in('id', batch);
+        if (error) throw error;
+        deleted += batch.length;
+      }
+
+      toast({
+        title: 'Orphans cleaned',
+        description: `Deleted ${deleted} orphan listing${deleted !== 1 ? 's' : ''}.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['data-integrity', 'orphans'] });
+      queryClient.invalidateQueries({ queryKey: ['data-integrity', 'table-coverage'] });
+    } catch (err: any) {
+      toast({
+        title: 'Cleanup failed',
+        description: err?.message || 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setCleanOrphansLoading(false);
+    }
+  };
 
   return (
     <div className="p-6 space-y-8">
@@ -242,7 +342,7 @@ export default function DataIntegrity() {
 
       {/* ── Section 1: Table Coverage ── */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Table Coverage</h2>
+        <SectionHeader title="Table Coverage" dataUpdatedAt={coverageUpdatedAt} />
         {coverageLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : coverage ? (
@@ -264,6 +364,14 @@ export default function DataIntegrity() {
                 { label: 'Unique filaments', value: coverage.listings.uniqueFilaments },
                 { label: 'Coverage', value: `${coverage.listings.coveragePct}%` },
               ]}
+              action={
+                isAdmin ? (
+                  <Button size="sm" variant="outline" onClick={handleBackfill} disabled={backfillLoading}>
+                    {backfillLoading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Database className="w-3.5 h-3.5 mr-1" />}
+                    {backfillLoading ? 'Running…' : 'Run Backfill'}
+                  </Button>
+                ) : undefined
+              }
             />
             <StatCard
               title="product_regional_prices"
@@ -360,7 +468,7 @@ export default function DataIntegrity() {
 
       {/* ── Section 3: Orphan Detection ── */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Orphan Detection</h2>
+        <SectionHeader title="Orphan Detection" dataUpdatedAt={orphansUpdatedAt} />
         {orphansLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : orphans ? (
@@ -371,6 +479,14 @@ export default function DataIntegrity() {
               stats={[
                 { label: 'Listings missing filament', value: orphans.orphanListings },
               ]}
+              action={
+                isAdmin && orphans.orphanListings > 0 ? (
+                  <Button size="sm" variant="outline" onClick={handleCleanOrphans} disabled={cleanOrphansLoading} className="text-destructive border-destructive/30 hover:bg-destructive/10">
+                    {cleanOrphansLoading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 mr-1" />}
+                    {cleanOrphansLoading ? 'Cleaning…' : 'Clean Orphans'}
+                  </Button>
+                ) : undefined
+              }
             />
             <StatCard
               title="Unmatched Vendors"
@@ -404,7 +520,7 @@ export default function DataIntegrity() {
 
       {/* ── Section 4: Regional Coverage ── */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Regional Coverage</h2>
+        <SectionHeader title="Regional Coverage" dataUpdatedAt={regionalUpdatedAt} />
         {regionalLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : regional ? (
