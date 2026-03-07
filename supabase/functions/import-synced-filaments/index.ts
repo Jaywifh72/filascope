@@ -168,6 +168,7 @@ Deno.serve(async (req) => {
           if (merged.price_cad != null) priceUpdate.price_cad = merged.price_cad;
         if (merged.price_aud != null) priceUpdate.price_aud = merged.price_aud;
           if (merged.price_jpy != null) priceUpdate.price_jpy = merged.price_jpy;
+          if (merged.price_cny != null) priceUpdate.price_cny = merged.price_cny;
           if (merged.variant_available != null) priceUpdate.variant_available = merged.variant_available;
 
           const { error: updateErr } = await supabase
@@ -218,6 +219,8 @@ Deno.serve(async (req) => {
               price_cad: merged.price_cad,
               price_aud: merged.price_aud,
               price_jpy: merged.price_jpy,
+              price_cny: merged.price_cny,
+              product_url_cn: merged.product_url_cn,
               product_handle: merged.product_handle ?? item.product_handle,
               variant_sku: merged.variant_sku ?? item.variant_sku,
               finish_type: merged.finish_type ?? item.finish_type,
@@ -277,6 +280,7 @@ Deno.serve(async (req) => {
         { field: "price_gbp", region: "UK" },
         { field: "price_aud", region: "AU" },
         { field: "price_jpy", altField: "price_jpy", region: "JP" },
+        { field: "price_cny", altField: "price_cny", region: "CN" },
       ];
 
       const priceRows: Array<{ filament_id: string; price: number; region: string; source: string }> = [];
@@ -316,7 +320,7 @@ Deno.serve(async (req) => {
     try {
       const urlFields = [
         "product_url", "product_url_us", "product_url_eu",
-        "product_url_uk", "product_url_ca", "product_url_au", "product_url_jp",
+        "product_url_uk", "product_url_ca", "product_url_au", "product_url_jp", "product_url_cn",
       ];
 
       const urlsToCheck: string[] = [];
