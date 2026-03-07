@@ -4311,6 +4311,7 @@ export type Database = {
           color_family_id: string | null
           color_hex: string | null
           created_at: string | null
+          cross_region_source: string[] | null
           density_g_cm3: number | null
           diameter_is_assumed: boolean | null
           diameter_nominal_mm: number | null
@@ -4465,6 +4466,7 @@ export type Database = {
           color_family_id?: string | null
           color_hex?: string | null
           created_at?: string | null
+          cross_region_source?: string[] | null
           density_g_cm3?: number | null
           diameter_is_assumed?: boolean | null
           diameter_nominal_mm?: number | null
@@ -4619,6 +4621,7 @@ export type Database = {
           color_family_id?: string | null
           color_hex?: string | null
           created_at?: string | null
+          cross_region_source?: string[] | null
           density_g_cm3?: number | null
           diameter_is_assumed?: boolean | null
           diameter_nominal_mm?: number | null

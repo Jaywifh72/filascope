@@ -1,0 +1,1 @@
+ALTER TABLE public.filaments ADD COLUMN IF NOT EXISTS cross_region_source text[] DEFAULT NULL;
