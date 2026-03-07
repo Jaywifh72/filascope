@@ -570,6 +570,9 @@ export default function DataIntegrity() {
         )}
       </section>
 
+      {/* ── Section 2b: Price Source Audit ── */}
+      <PriceSourceAudit />
+
       {/* ── Section 3: Orphan Detection ── */}
       <section className="space-y-3">
         <SectionHeader title="Orphan Detection" dataUpdatedAt={orphansUpdatedAt} />
