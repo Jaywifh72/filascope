@@ -1,0 +1,1 @@
+ALTER TABLE public.filaments ADD COLUMN IF NOT EXISTS sync_source text DEFAULT NULL;

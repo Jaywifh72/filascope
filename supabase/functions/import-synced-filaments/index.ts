@@ -236,6 +236,7 @@ Deno.serve(async (req) => {
               td: merged.td_value ?? merged.td,
               variant_available: merged.variant_available ?? true,
               available_regions: merged.available_regions ?? item.available_regions,
+              sync_source: 'import-synced-filaments',
               auto_created: true,
             })
             .select("id")
