@@ -13,6 +13,7 @@ import {
 } from '../_shared/filament-schema.ts';
 import { validateScrapedProduct, type ScrapedProduct } from '../_shared/scraper-validation.ts';
 import { getColorHex, getColorFamily, extractColorFromTitle } from '../_shared/color-mapping.ts';
+import { findCrossRegionMatch } from '../_shared/cross-region-dedup.ts';
 import {
   shouldIncludeVariant,
   createFilterStats,
