@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Play, AlertTriangle, CheckCircle, XCircle, Database, Trash2, Loader2, Info, ChevronDown, ChevronRight } from 'lucide-react';
@@ -1211,6 +1211,9 @@ export default function DataIntegrity() {
         <SectionHeader title="Table Usage Audit" />
         <TableUsageAudit />
       </section>
+
+      {/* ── Section 9: Ingestion Gap Monitor ── */}
+      <IngestionGapMonitor />
     </div>
   );
 }
