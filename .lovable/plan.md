@@ -1,62 +1,59 @@
 
 
-## Generic Enrichment Fallback for Brand Sync
+# Filament Onboarding Admin Page
 
-### What this does
-Creates a reusable `enrichGenericProduct()` function that any brand sync can use as a fallback when no custom brand-specific defaults file exists. This eliminates the placeholder enrichment logic in the TEMPLATE.
+## Overview
+Create a new admin page at `/admin/filament-onboarding` with 5 sections: extraction form, results table, review/confirm bar, preview dialog, and job history. Uses the existing `AdminNewLayout` pattern with `AdminNewSidebar` navigation.
 
-### Changes
+## Files to Create
 
-**File 1: `supabase/functions/_shared/generic-brand-defaults.ts`** (new)
+### 1. `src/pages/admin/FilamentOnboarding.tsx` — Main page component
+- Section 1: Horizontal form with brand combobox (loads from `brands`), URL input, Extract button
+- Brand selector checks `brand_scraping_configs` for matching `adapter_key`; shows warning badge if none
+- Extract button creates `filament_onboarding_jobs` row, invokes `extract-filament-data` edge function
+- Section 2: Results summary bar + filter tabs (All/New/Duplicates/Errors) + data table
+- Section 5: Job history table at bottom
 
-Exports `enrichGenericProduct(productTitle, material, tdsUrl, nozzleTempMin, nozzleTempMax, bedTempMin, bedTempMax, colorName, brandSlug)` returning:
+### 2. `src/components/admin/filament-onboarding/ExtractionResultsTable.tsx`
+- Selectable table with columns: checkbox, thumbnail, color, material, display name, regional prices, SKU, status badge, actions
+- Duplicate rows get yellow tint, error rows get red tint
+- Select all checkbox in header
+- Filter by status tab
 
-```typescript
-interface GenericEnrichmentResult {
-  tdsUrl: string | null;
-  material: string | null;
-  nozzleTempMin: number | null;
-  nozzleTempMax: number | null;
-  bedTempMin: number | null;
-  bedTempMax: number | null;
-  finishType: string;
-  productLineId: string;
-  highSpeedCapable: boolean | null;
-  isAbrasive: boolean | null;
-}
-```
+### 3. `src/components/admin/filament-onboarding/OnboardingPreviewDialog.tsx`
+- Dialog showing large image, 2-column field layout
+- Editable fields: display_name, color_family, color_hex (with `react-colorful`), material, temps, prices
+- Save updates `admin_override_data` on the item
+- Mark as Skip button
 
-- **Temperatures**: `MATERIAL_DEFAULTS` map with PLA, PETG, ABS, TPU, ASA, PC, PA/Nylon, PVB, HIPS (exact values from request). Only applied when existing temp fields are null.
-- **finish_type**: Calls `guessFinishType(material, title)` from `filament-utils.ts`
-- **product_line_id**: `{brandSlug}-{material.toLowerCase()}` (or `{brandSlug}-unknown` if no material)
-- **high_speed_capable**: `true` if title matches `/high.?speed|\\bhs\\b|\\bfast\\b/i`, otherwise `null`
-- **is_nozzle_abrasive**: `true` if material contains "CF", "GF", or title matches carbon/glass fiber patterns, otherwise `null`
+### 4. `src/components/admin/filament-onboarding/JobHistoryTable.tsx`
+- Table of recent `filament_onboarding_jobs`: date, brand, URL (truncated), status badge, counts
+- Clicking a row loads that job's items into the results section
 
-**File 2: `supabase/functions/sync-brand-products/index.ts`** (edit)
+### 5. `src/components/admin/filament-onboarding/ImportConfirmDialog.tsx`
+- Confirmation dialog before bulk insert
+- Progress display during insertion
+- Inserts selected items into `filaments` table, updates item status + job counts
+- Success toast with link to brand page
 
-This file doesn't have an enrichment step — it's a base sync engine. No changes needed here per the actual code structure. The enrichment step exists in the per-brand TEMPLATE-based functions.
+## Files to Edit
 
-**File 3: `supabase/functions/sync-TEMPLATE-products/index.ts`** (edit, lines 352-378)
+### 6. `src/components/admin/AdminNewSidebar.tsx`
+- Add `PackagePlus` icon import
+- Add `{ title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus }` to Content group after TD Management
 
-Replace the placeholder enrichment block with a call to `enrichGenericProduct()`. The commented-out brand-specific import block stays as-is. Add import for `enrichGenericProduct` from `'../_shared/generic-brand-defaults.ts'`. The placeholder object (lines 367-378) becomes:
+### 7. `src/App.tsx`
+- Add lazy import: `const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));`
+- Add route: `<Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />`
 
-```typescript
-const enrichment = enrichGenericProduct(
-  product.product_title,
-  product.material,
-  product.tds_url,
-  product.nozzle_temp_min_c,
-  product.nozzle_temp_max_c,
-  product.bed_temp_min_c,
-  product.bed_temp_max_c,
-  null, // color name
-  BRAND_CONFIG.slug,
-);
-```
+## Edge Function for Insert
+The existing `extract-filament-data` handles extraction. For the insert step, the page will use direct Supabase client inserts (admin has RLS access via `has_role`). Each selected item's `extracted_data` (merged with `admin_override_data`) gets inserted into `filaments`, then the item's `status` and `inserted_filament_id` are updated.
 
-### What stays unchanged
-- All existing brand-specific defaults files (anycubic, amolen, etc.)
-- All enrichment logic in brand-specific sync functions
-- The commented-out brand-specific import block in the TEMPLATE
-- sync-brand-products/index.ts (no enrichment step exists there)
+## Key Technical Details
+- Brand selector uses `supabase.from('brands').select('id, name, logo_url')` with search
+- Config check: `supabase.from('brand_scraping_configs').select('adapter_key').eq('brand_id', selectedBrandId)`
+- Extraction invoke: `supabase.functions.invoke('extract-filament-data', { body: { job_id, source_url, adapter_key } })`
+- Job history: `supabase.from('filament_onboarding_jobs').select('*').order('created_at', { ascending: false }).limit(20)`
+- Items load: `supabase.from('filament_onboarding_items').select('*').eq('job_id', jobId)`
+- Sticky bottom bar with selection count + import button using `position: sticky; bottom: 0`
 
