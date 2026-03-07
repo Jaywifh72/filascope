@@ -624,37 +624,85 @@ export default function DataIntegrity() {
 
       {/* ── Section 4: Regional Coverage ── */}
       <section className="space-y-3">
-        <SectionHeader title="Regional Coverage" dataUpdatedAt={regionalUpdatedAt} />
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            Regional Coverage
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-[280px]">
+                  <p className="text-xs">Shows how many filaments have pricing data (flat columns on filaments table) vs actual buy links per region. Gaps mean users see a price but cannot click through to purchase.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </h2>
+          {regionalUpdatedAt != null && regionalUpdatedAt > 0 && (
+            <span className="text-xs text-muted-foreground">{formatRelativeTime(regionalUpdatedAt)}</span>
+          )}
+        </div>
         {regionalLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : regional ? (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Region</TableHead>
-                  <TableHead className="text-right">Flat Prices</TableHead>
-                  <TableHead className="text-right">Listings</TableHead>
-                  <TableHead className="text-right">Regional Prices</TableHead>
-                  <TableHead className="text-right">With URL</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {REGIONS.map((r) => {
-                  const d = regional[r];
-                  return (
-                    <TableRow key={r}>
-                      <TableCell className="font-medium">{r}</TableCell>
-                      <TableCell className="text-right font-mono">{d.flatPrice.toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono">{d.listings.toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono">{d.prp.toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono">{d.urls.toLocaleString()}</TableCell>
+          (() => {
+            const cellColor = (value: number, flatPrice: number) => {
+              if (value > 0) return 'text-green-500';
+              if (flatPrice > 0) return 'text-destructive';
+              return 'text-muted-foreground';
+            };
+            const totalWithPrice = new Set(
+              REGIONS.filter((r) => regional[r].flatPrice > 0)
+            ).size;
+            const totalWithUrl = new Set(
+              REGIONS.filter((r) => regional[r].urls > 0)
+            ).size;
+            const allPrices = REGIONS.reduce((sum, r) => sum + regional[r].flatPrice, 0);
+            const allUrls = REGIONS.reduce((sum, r) => sum + regional[r].urls, 0);
+            const globalCoverage = allPrices > 0 ? Math.round((allUrls / allPrices) * 100) : 0;
+
+            return (
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Region</TableHead>
+                      <TableHead className="text-right">Flat Prices</TableHead>
+                      <TableHead className="text-right">Listings</TableHead>
+                      <TableHead className="text-right">Regional Prices</TableHead>
+                      <TableHead className="text-right">With URL</TableHead>
+                      <TableHead className="text-right">URL Gap</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {REGIONS.map((r) => {
+                      const d = regional[r];
+                      const gapPct = d.flatPrice > 0 ? Math.round(((d.flatPrice - d.urls) / d.flatPrice) * 100) : 0;
+                      return (
+                        <TableRow key={r}>
+                          <TableCell className="font-medium">{r}</TableCell>
+                          <TableCell className="text-right font-mono">{d.flatPrice.toLocaleString()}</TableCell>
+                          <TableCell className={`text-right font-mono ${cellColor(d.listings, d.flatPrice)}`}>{d.listings.toLocaleString()}</TableCell>
+                          <TableCell className={`text-right font-mono ${cellColor(d.prp, d.flatPrice)}`}>{d.prp.toLocaleString()}</TableCell>
+                          <TableCell className={`text-right font-mono ${cellColor(d.urls, d.flatPrice)}`}>{d.urls.toLocaleString()}</TableCell>
+                          <TableCell className={`text-right font-mono font-semibold ${gapPct > 50 ? 'text-destructive' : gapPct > 0 ? 'text-yellow-500' : 'text-green-500'}`}>
+                            {d.flatPrice > 0 ? `${gapPct}%` : '—'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+                <div className="px-4 py-3 border-t border-border text-xs text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
+                  <span>Regions with prices: <strong className="text-foreground">{totalWithPrice}/{REGIONS.length}</strong></span>
+                  <span>Regions with URLs: <strong className="text-foreground">{totalWithUrl}/{REGIONS.length}</strong></span>
+                  <span>Total filaments with price: <strong className="text-foreground">{allPrices.toLocaleString()}</strong></span>
+                  <span>Total with buy URL: <strong className="text-foreground">{allUrls.toLocaleString()}</strong></span>
+                  <span>Global URL coverage: <strong className={globalCoverage >= 80 ? 'text-green-500' : globalCoverage >= 50 ? 'text-yellow-500' : 'text-destructive'}>{globalCoverage}%</strong></span>
+                </div>
+              </Card>
+            );
+          })()
         ) : null}
       </section>
     </div>
