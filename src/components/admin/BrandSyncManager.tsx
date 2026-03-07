@@ -13,8 +13,20 @@ import { useBrandSyncManager } from "@/hooks/useBrandSyncManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Slider } from "@/components/ui/slider";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PostSyncCheckPanel } from "./PostSyncCheckPanel";
 import { BRAND_SYNC_DOCS, SHARED_FILTER_RULES } from "@/config/brand-sync-docs";
+
+// Brands with custom enrichment defaults files in _shared/
+const BRANDS_WITH_CUSTOM_DEFAULTS = [
+  '3dfuel', '3dhojor', '3dxtech', 'amolen', 'anycubic', 'atomic', 'azurefilm',
+  'bambulab', 'colorfabb', 'creality', 'duramic', 'elegoo', 'eryone', 'esun',
+  'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments',
+  'geeetech', 'gizmodorks', 'hatchbox', 'ic3d', 'kingroon', 'matter3d',
+  'ninjatek', 'numakers', 'overture', 'paramount', 'polymaker', 'protopasta',
+  'prusament', 'pushplastic', 'recreus', 'sirayatech', 'sovol', 'spectrum',
+  'sunlu', 'treed', 'ultimaker', 'voxelpla', 'yousu', 'ziro',
+];
 
 // Onboarding constants
 const PROMPT_TEMPLATE = `## [Brand Name] Integration Request
