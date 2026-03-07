@@ -13364,6 +13364,10 @@ export type Database = {
           retailer_slug: string
         }[]
       }
+      get_brand_filaments_grouped: {
+        Args: { p_brand_name: string; p_material?: string; p_region?: string }
+        Returns: Json
+      }
       get_brand_region_coverage: {
         Args: never
         Returns: {
