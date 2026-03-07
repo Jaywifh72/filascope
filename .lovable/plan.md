@@ -1,59 +1,76 @@
 
 
-# Filament Onboarding Admin Page
+## Plan: Server-side brand filament grouping
 
-## Overview
-Create a new admin page at `/admin/filament-onboarding` with 5 sections: extraction form, results table, review/confirm bar, preview dialog, and job history. Uses the existing `AdminNewLayout` pattern with `AdminNewSidebar` navigation.
+### Summary
+Replace ~300 lines of client-side product grouping logic in `BrandDetail.tsx` with a server-side RPC and a new hook. The RPC mirrors the existing `search_filaments_paginated` grouping pattern (using `product_line_id`), but is optimized for the brand detail page use case.
 
-## Files to Create
+### Architecture
 
-### 1. `src/pages/admin/FilamentOnboarding.tsx` — Main page component
-- Section 1: Horizontal form with brand combobox (loads from `brands`), URL input, Extract button
-- Brand selector checks `brand_scraping_configs` for matching `adapter_key`; shows warning badge if none
-- Extract button creates `filament_onboarding_jobs` row, invokes `extract-filament-data` edge function
-- Section 2: Results summary bar + filter tabs (All/New/Duplicates/Errors) + data table
-- Section 5: Job history table at bottom
+```text
+Before:
+  BrandDetail.tsx → SELECT * FROM filaments WHERE vendor ILIKE X
+                  → client-side grouping (COLOR_WORDS, getBaseProductName, etc.)
 
-### 2. `src/components/admin/filament-onboarding/ExtractionResultsTable.tsx`
-- Selectable table with columns: checkbox, thumbnail, color, material, display name, regional prices, SKU, status badge, actions
-- Duplicate rows get yellow tint, error rows get red tint
-- Select all checkbox in header
-- Filter by status tab
+After:
+  BrandDetail.tsx → useBrandFilaments(brandSlug, region, material)
+                  → RPC get_brand_filaments_grouped(p_brand_name, p_region, p_material)
+                  → returns pre-grouped JSON with representative filament data
+```
 
-### 3. `src/components/admin/filament-onboarding/OnboardingPreviewDialog.tsx`
-- Dialog showing large image, 2-column field layout
-- Editable fields: display_name, color_family, color_hex (with `react-colorful`), material, temps, prices
-- Save updates `admin_override_data` on the item
-- Mark as Skip button
+### Changes
 
-### 4. `src/components/admin/filament-onboarding/JobHistoryTable.tsx`
-- Table of recent `filament_onboarding_jobs`: date, brand, URL (truncated), status badge, counts
-- Clicking a row loads that job's items into the results section
+#### 1. Migration: `get_brand_filaments_grouped` RPC
 
-### 5. `src/components/admin/filament-onboarding/ImportConfirmDialog.tsx`
-- Confirmation dialog before bulk insert
-- Progress display during insertion
-- Inserts selected items into `filaments` table, updates item status + job counts
-- Success toast with link to brand page
+SQL function following the same CTE pattern as `search_filaments_paginated`:
 
-## Files to Edit
+- **`filtered`** CTE: selects from `filaments` where `vendor ILIKE p_brand_name`, optionally filtered by `p_material`, excludes small samples (`net_weight_g IS NULL OR net_weight_g >= 300`)
+- **`grouped`** CTE: groups by `COALESCE(product_line_id, vendor || '::' || id::text)`, computes: variant_count, group_colors array, group_weights array, price_min/max, representative_id (first with image, then by score)
+- **`final`** CTE: joins representative_id back to `filaments` to get full filament row data for each group representative
+- Returns JSONB: `{ total, items: [ { group_key, product_line_id, base_name, material, variant_count, colors, weights, price_min, price_max, representative: { full filament object }, variant_ids: [...] } ] }`
+- Orders by material ASC, then display_name/first_title ASC
+- No pagination needed (brand pages show all products)
 
-### 6. `src/components/admin/AdminNewSidebar.tsx`
-- Add `PackagePlus` icon import
-- Add `{ title: 'Filament Onboarding', href: '/admin/filament-onboarding', icon: PackagePlus }` to Content group after TD Management
+#### 2. New hook: `src/hooks/useBrandFilaments.ts`
 
-### 7. `src/App.tsx`
-- Add lazy import: `const AdminFilamentOnboarding = lazy(() => import("./pages/admin/FilamentOnboarding"));`
-- Add route: `<Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />`
+- Calls `supabase.rpc('get_brand_filaments_grouped', { p_brand_name, p_region, p_material })`
+- Transforms RPC response into `GroupedProduct[]` compatible with existing child components
+- For the `variants` array: does a **second query** fetching full filament rows for variant IDs (needed by BrandProductsTab for color filtering). This query uses `.in('id', allVariantIds)` in batches.
+- Alternatively, to avoid the second query: the RPC can return all variant data inline (array of filament objects per group). This is more data but eliminates the need for a second round-trip. **Preferred approach**: return variant arrays inline since brand pages typically have <500 total variants per brand.
 
-## Edge Function for Insert
-The existing `extract-filament-data` handles extraction. For the insert step, the page will use direct Supabase client inserts (admin has RLS access via `has_role`). Each selected item's `extracted_data` (merged with `admin_override_data`) gets inserted into `filaments`, then the item's `status` and `inserted_filament_id` are updated.
+#### 3. Simplify `BrandDetail.tsx`
 
-## Key Technical Details
-- Brand selector uses `supabase.from('brands').select('id, name, logo_url')` with search
-- Config check: `supabase.from('brand_scraping_configs').select('adapter_key').eq('brand_id', selectedBrandId)`
-- Extraction invoke: `supabase.functions.invoke('extract-filament-data', { body: { job_id, source_url, adapter_key } })`
-- Job history: `supabase.from('filament_onboarding_jobs').select('*').order('created_at', { ascending: false }).limit(20)`
-- Items load: `supabase.from('filament_onboarding_items').select('*').eq('job_id', jobId)`
-- Sticky bottom bar with selection count + import button using `position: sticky; bottom: 0`
+**Remove** (~300 lines):
+- `COLOR_WORDS` array (lines 170-222)
+- `getBaseProductName()` function (lines 225-310)
+- `getColorFromTitle()` function (lines 313-351)
+- `getPrusamentProductLine()` function (lines 92-129)
+- `deduplicateVariantsByColor()` function (lines 438-464)
+- `groupedProducts` useMemo block (lines 467-574)
+- The raw filaments query (lines 410-424) — replaced by the hook
+
+**Keep**:
+- `getCategoryUrl()` (generates external URLs, not DB-dependent)
+- `availableMaterials` useMemo (derived from hook results)
+- `brandPriceRange`, `topRetailers`, `regionsCovered` useMemos (derived from raw filaments, but can be adapted to use grouped data)
+- All brand info queries, tab navigation, SEO, UI components
+- `AdminFiberlogySync` component
+
+**Replace**:
+- `const { data: filaments, isLoading, ... } = useQuery(...)` → `const { groupedProducts, filaments, isLoading, ... } = useBrandFilaments(brandSlug, region, selectedMaterial)`
+
+The hook will also expose `filaments` (flat array) so `BrandProductsTab`, `BrandFAQSection`, and other consumers that need variant-level data still work.
+
+### Files
+
+| File | Action |
+|------|--------|
+| New migration | Create `get_brand_filaments_grouped` RPC |
+| `src/hooks/useBrandFilaments.ts` | New hook wrapping the RPC |
+| `src/pages/BrandDetail.tsx` | Remove ~300 lines of grouping logic, use new hook |
+
+### Not changed
+- `BrandProductsTab.tsx`, `BrandOverviewTab.tsx` — same `GroupedProduct` interface, no changes needed
+- `search_filaments_paginated` — untouched
+- All admin components
 
