@@ -4406,6 +4406,7 @@ export type Database = {
           strength_index: number | null
           surface_resistivity_ohm: number | null
           sync_enabled: boolean | null
+          sync_source: string | null
           sync_status: string | null
           td_confidence: string | null
           td_matched_at: string | null
@@ -4559,6 +4560,7 @@ export type Database = {
           strength_index?: number | null
           surface_resistivity_ohm?: number | null
           sync_enabled?: boolean | null
+          sync_source?: string | null
           sync_status?: string | null
           td_confidence?: string | null
           td_matched_at?: string | null
@@ -4712,6 +4714,7 @@ export type Database = {
           strength_index?: number | null
           surface_resistivity_ohm?: number | null
           sync_enabled?: boolean | null
+          sync_source?: string | null
           sync_status?: string | null
           td_confidence?: string | null
           td_matched_at?: string | null
