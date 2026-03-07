@@ -488,3 +488,6 @@ verify_jwt = false
 
 [functions.import-synced-filaments]
 verify_jwt = false
+
+[functions.backfill-filament-listings]
+verify_jwt = false
