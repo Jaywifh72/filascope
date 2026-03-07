@@ -115,6 +115,7 @@ export function useFilamentListings(
       if (listings.length > 0) return listings;
 
       // Fallback: construct synthetic listings from filaments table
+      console.debug('[useFilamentListings] No real listings found, using synthetic fallback for:', filamentId);
       return buildSyntheticListings(filamentId, region, currency, getAffiliateUrl);
     },
     enabled: !!filamentId,
@@ -152,7 +153,14 @@ async function buildSyntheticListings(
     .eq("id", filamentId)
     .single();
 
-  if (error || !filament) return [];
+  if (error) {
+    console.warn('[useFilamentListings] Synthetic fallback failed for filament:', filamentId, error);
+    return [];
+  }
+  if (!filament) {
+    console.warn('[useFilamentListings] Filament not found for synthetic fallback:', filamentId);
+    return [];
+  }
 
   const vendor = filament.vendor || "Unknown";
   const listings: FilamentListing[] = [];
@@ -199,5 +207,7 @@ async function buildSyntheticListings(
     (l) => l.region === userRegion && l.currency === userCurrency
   );
 
-  return regionMatch.length > 0 ? regionMatch : listings;
+  const result = regionMatch.length > 0 ? regionMatch : listings;
+  console.debug('[useFilamentListings] Generated', result.length, 'synthetic listings for filament:', filamentId);
+  return result;
 }
