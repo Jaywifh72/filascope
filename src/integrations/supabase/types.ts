@@ -13603,6 +13603,22 @@ export type Database = {
       }
       get_td_coverage_stats: { Args: never; Returns: Json }
       get_td_reference_match_stats: { Args: never; Returns: Json }
+      get_three_way_price_conflicts: {
+        Args: { p_limit?: number; p_threshold_pct?: number }
+        Returns: {
+          filament_id: string
+          flat_price: number
+          flat_vs_listing_pct: number
+          flat_vs_prp_pct: number
+          listing_price: number
+          listing_vs_prp_pct: number
+          max_diff_pct: number
+          product_title: string
+          prp_price: number
+          region_code: string
+          vendor: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
