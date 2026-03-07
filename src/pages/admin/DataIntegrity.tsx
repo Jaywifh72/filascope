@@ -90,6 +90,11 @@ function useTableCoverage() {
         prpProductIds,
         bsiTotal,
         bsiImported,
+        bsiNew,
+        bsiMatched,
+        bsiPriceChanged,
+        bsiSkipped,
+        bsiError,
         phTotal,
         phMinMax,
       ] = await Promise.all([
@@ -102,6 +107,11 @@ function useTableCoverage() {
         supabase.from('product_regional_prices').select('product_id'),
         supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }),
         supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }).eq('status', 'imported'),
+        supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }).eq('status', 'new'),
+        supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }).eq('status', 'matched'),
+        supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }).eq('status', 'price_changed'),
+        supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }).eq('status', 'skipped'),
+        supabase.from('brand_sync_items').select('*', { count: 'exact', head: true }).eq('status', 'error'),
         supabase.from('price_history').select('*', { count: 'exact', head: true }),
         supabase.from('price_history').select('recorded_at').order('recorded_at', { ascending: true }).limit(1),
       ]);
@@ -114,7 +124,15 @@ function useTableCoverage() {
         filaments: { total, withPrice: filWithPrice.count || 0, withoutPrice: filWithoutPrice.count || 0 },
         listings: { total: listingsTotal.count || 0, uniqueFilaments: uniqueListingFilaments, coveragePct: total > 0 ? Math.round((uniqueListingFilaments / total) * 100) : 0 },
         prp: { total: prpTotal.count || 0, uniqueProducts: uniquePrpProducts },
-        bsi: { total: bsiTotal.count || 0, imported: bsiImported.count || 0 },
+        bsi: {
+          total: bsiTotal.count || 0,
+          imported: bsiImported.count || 0,
+          new: bsiNew.count || 0,
+          matched: bsiMatched.count || 0,
+          priceChanged: bsiPriceChanged.count || 0,
+          skipped: bsiSkipped.count || 0,
+          error: bsiError.count || 0,
+        },
         priceHistory: { total: phTotal.count || 0, earliest: phMinMax.data?.[0]?.recorded_at ?? 'N/A' },
       };
     },
@@ -384,8 +402,13 @@ export default function DataIntegrity() {
               title="brand_sync_items"
               coveragePct={coverage.bsi.total > 0 ? Math.round((coverage.bsi.imported / coverage.bsi.total) * 100) : 100}
               stats={[
-                { label: 'Total', value: coverage.bsi.total },
-                { label: 'Imported', value: coverage.bsi.imported },
+                { label: 'Total synced', value: coverage.bsi.total },
+                { label: 'Imported to filaments', value: coverage.bsi.imported },
+                { label: 'New (pending review)', value: coverage.bsi.new },
+                { label: 'Price changed', value: coverage.bsi.priceChanged },
+                { label: 'Matched', value: coverage.bsi.matched },
+                { label: 'Skipped', value: coverage.bsi.skipped },
+                { label: 'Errors', value: coverage.bsi.error },
               ]}
             />
             <StatCard
