@@ -254,11 +254,13 @@ async function brandsListing(sb:SupabaseClient): Promise<PageData> {
 }
 
 async function printerPage(slug:string,sb:SupabaseClient): Promise<PageData> {
+  const inputSlug = normSlug(decodeURIComponent(slug));
   const cols="id,printer_id,model_name,display_name,brand_id,msrp_usd,build_volume_x_mm,build_volume_y_mm,build_volume_z_mm";
   let {data}=await sb.from("printers").select(cols).eq("printer_id",slug).limit(1).maybeSingle();
-  if(!data){const r=await sb.from("printers").select(cols).ilike("printer_id",slug.replace(/-/g,"%")).limit(1).maybeSingle();data=r.data;}
+  if(!data&&inputSlug!==slug){const r=await sb.from("printers").select(cols).eq("printer_id",inputSlug).limit(1).maybeSingle();data=r.data;}
+  if(!data){const r=await sb.from("printers").select(cols).ilike("printer_id",buildPrinterIlikePattern(inputSlug)).limit(10);data=r.data?.find(p=>normSlug(p.printer_id||p.id)===inputSlug)||r.data?.[0]||null;}
   if(!data&&slug.match(/^[0-9a-f-]{36}$/i)){const r=await sb.from("printers").select(cols).eq("id",slug).limit(1).maybeSingle();data=r.data;}
-  if(!data) return fallback(`/printers/${slug}`);
+  if(!data) return fallback(`/printers/${inputSlug||slug}`);
   let bn=""; if(data.brand_id){const{data:b}=await sb.from("printer_brands").select("brand").eq("id",data.brand_id).limit(1).maybeSingle();bn=b?.brand||"";}
   const pn=data.display_name||data.model_name||"3D Printer",full=bn?`${bn} ${pn}`:pn,cs=normSlug(data.printer_id||data.id),can=`/printers/${cs}`;
   let title=`${full} — Specs & Price | FilaScope`; if(title.length>60) title=`${full} | FilaScope`;
