@@ -100,13 +100,14 @@ import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { toBrandSlug } from "@/utils/brandSlug";
+import { normalizeSlug } from "@/lib/printerSlugUtils";
 
 const PrinterDetail = () => {
   const { id } = useParams();
   const location = useLocation();
   // Derive canonical slug from the actual browser URL, normalized to lowercase-hyphenated
   const rawSlug = location.pathname.replace(/^\/printers\//, '') || id || '';
-  const canonicalPrinterSlug = rawSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-{2,}/g, '-').replace(/^-|-$/g, '');
+  const canonicalPrinterSlug = normalizeSlug(rawSlug);
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
@@ -145,6 +146,7 @@ const PrinterDetail = () => {
         series:printer_series!series_id(series_name)
       `;
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
+      const normalizedSlug = id ? normalizeSlug(id) : '';
 
       // Exact match first
       const { data, error } = await supabase
@@ -156,16 +158,16 @@ const PrinterDetail = () => {
       if (error) throw error;
       if (data) return data;
 
-      // Fallback: case-insensitive pattern match for slugs with uppercase/spaces in DB
-      if (!isUUID && id) {
+      // Fallback: normalized case-insensitive match for slugs with uppercase/spaces/special chars in DB
+      if (!isUUID && normalizedSlug) {
+        const fuzzyPattern = `%${normalizedSlug.replace(/-/g, '%')}%`;
         const { data: fuzzy, error: fuzzyErr } = await supabase
           .from("printers")
           .select(selectCols)
-          .ilike("printer_id", id.replace(/-/g, "%"))
-          .limit(1)
-          .maybeSingle();
+          .ilike("printer_id", fuzzyPattern)
+          .limit(10);
         if (fuzzyErr) throw fuzzyErr;
-        return fuzzy;
+        return fuzzy?.find((candidate) => normalizeSlug(candidate.printer_id || candidate.id) === normalizedSlug) || fuzzy?.[0] || null;
       }
 
       return null;
