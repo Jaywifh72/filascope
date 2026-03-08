@@ -254,13 +254,8 @@ async function brandsListing(sb:SupabaseClient): Promise<PageData> {
 
 async function printerPage(slug:string,sb:SupabaseClient): Promise<PageData> {
   const cols="id,printer_id,model_name,display_name,brand_id,msrp_usd,build_volume_x_mm,build_volume_y_mm,build_volume_z_mm";
-  // Try matching by normalized slug against printer_id
   let {data}=await sb.from("printers").select(cols).eq("printer_id",slug).limit(1).maybeSingle();
-  if(!data){
-    // Fallback: fetch all and match by normalized slug
-    const{data:all}=await sb.from("printers").select(cols);
-    if(all) data=all.find(p=>normSlug(p.printer_id||p.id)===normSlug(slug))||null;
-  }
+  if(!data){const r=await sb.from("printers").select(cols).ilike("printer_id",slug.replace(/-/g,"%")).limit(1).maybeSingle();data=r.data;}
   if(!data&&slug.match(/^[0-9a-f-]{36}$/i)){const r=await sb.from("printers").select(cols).eq("id",slug).limit(1).maybeSingle();data=r.data;}
   if(!data) return fallback(`/printers/${slug}`);
   let bn=""; if(data.brand_id){const{data:b}=await sb.from("printer_brands").select("brand").eq("id",data.brand_id).limit(1).maybeSingle();bn=b?.brand||"";}
