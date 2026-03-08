@@ -332,7 +332,7 @@ async function getPageData(path:string, sb:SupabaseClient, qs?:string): Promise<
   const bmm=path.match(/^\/brands\/([^/]+)\/([^/]+)$/); if(bmm) return brandMaterialPage(bmm[1],bmm[2],sb);
   const bm=path.match(/^\/brands\/(.+)$/); if(bm) return brandPage(bm[1],sb);
   if(path==="/brands") return brandsListing(sb);
-  const pm=path.match(/^\/printers\/(.+)$/); if(pm) return printerPage(pm[1],sb);
+  const pm=path.match(/^\/printers\/(.+)$/); if(pm) return printerPage(normSlug(decodeURIComponent(pm[1])),sb);
   if(path==="/printers") return printersListing(sb);
   if(path==="/deals") return dealsPage(sb);
   const gm=path.match(/^\/guides\/(.+)$/); if(gm) return guidePage(gm[1]);
