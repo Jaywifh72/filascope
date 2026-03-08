@@ -18,7 +18,7 @@ const CRAWLER_AGENTS = [
 
 const BASE_URL = "https://filascope.com";
 
-/** Normalize a printer slug: lowercase, spaces→hyphens, strip non-alphanumeric, collapse hyphens */
+/** Normalize a printer slug: lowercase, spaces to hyphens, strip non-alphanumeric, collapse hyphens */
 function normSlug(s:string):string{return s.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"").replace(/-{2,}/g,"-").replace(/^-|-$/g,"");}
 const FUNCTIONS_URL = `${Deno.env.get("SUPABASE_URL")}/functions/v1`;
 
