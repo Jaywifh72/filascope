@@ -100,13 +100,14 @@ import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { toBrandSlug } from "@/utils/brandSlug";
+import { normalizeSlug } from "@/lib/printerSlugUtils";
 
 const PrinterDetail = () => {
   const { id } = useParams();
   const location = useLocation();
   // Derive canonical slug from the actual browser URL, normalized to lowercase-hyphenated
   const rawSlug = location.pathname.replace(/^\/printers\//, '') || id || '';
-  const canonicalPrinterSlug = rawSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-{2,}/g, '-').replace(/^-|-$/g, '');
+  const canonicalPrinterSlug = normalizeSlug(rawSlug);
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
