@@ -104,8 +104,9 @@ import { toBrandSlug } from "@/utils/brandSlug";
 const PrinterDetail = () => {
   const { id } = useParams();
   const location = useLocation();
-  // Derive canonical slug from the actual browser URL (always slug-based after resolution)
-  const canonicalPrinterSlug = location.pathname.replace(/^\/printers\//, '') || id || '';
+  // Derive canonical slug from the actual browser URL, normalized to lowercase-hyphenated
+  const rawSlug = location.pathname.replace(/^\/printers\//, '') || id || '';
+  const canonicalPrinterSlug = rawSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-{2,}/g, '-').replace(/^-|-$/g, '');
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const { toast } = useToast();

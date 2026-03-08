@@ -17,6 +17,9 @@ const CRAWLER_AGENTS = [
 ];
 
 const BASE_URL = "https://filascope.com";
+
+/** Normalize a printer slug: lowercase, spaces to hyphens, strip non-alphanumeric, collapse hyphens */
+function normSlug(s:string):string{return s.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"").replace(/-{2,}/g,"-").replace(/^-|-$/g,"");}
 const FUNCTIONS_URL = `${Deno.env.get("SUPABASE_URL")}/functions/v1`;
 
 function buildOgImageUrl(p: { type: string; title: string; subtitle?: string; price?: string; image?: string }): string {
@@ -252,10 +255,11 @@ async function brandsListing(sb:SupabaseClient): Promise<PageData> {
 async function printerPage(slug:string,sb:SupabaseClient): Promise<PageData> {
   const cols="id,printer_id,model_name,display_name,brand_id,msrp_usd,build_volume_x_mm,build_volume_y_mm,build_volume_z_mm";
   let {data}=await sb.from("printers").select(cols).eq("printer_id",slug).limit(1).maybeSingle();
+  if(!data){const r=await sb.from("printers").select(cols).ilike("printer_id",slug.replace(/-/g,"%")).limit(1).maybeSingle();data=r.data;}
   if(!data&&slug.match(/^[0-9a-f-]{36}$/i)){const r=await sb.from("printers").select(cols).eq("id",slug).limit(1).maybeSingle();data=r.data;}
   if(!data) return fallback(`/printers/${slug}`);
   let bn=""; if(data.brand_id){const{data:b}=await sb.from("printer_brands").select("brand").eq("id",data.brand_id).limit(1).maybeSingle();bn=b?.brand||"";}
-  const pn=data.display_name||data.model_name||"3D Printer",full=bn?`${bn} ${pn}`:pn,cs=data.printer_id||data.id,can=`/printers/${cs}`;
+  const pn=data.display_name||data.model_name||"3D Printer",full=bn?`${bn} ${pn}`:pn,cs=normSlug(data.printer_id||data.id),can=`/printers/${cs}`;
   let title=`${full} — Specs & Price | FilaScope`; if(title.length>60) title=`${full} | FilaScope`;
   let desc=`${full}. Full specs, filament compatibility & prices.`; if(desc.length>160) desc=desc.slice(0,157)+"...";
   const ps:Record<string,unknown>={"@context":"https://schema.org","@type":"Product",name:full,description:desc,...(bn&&{brand:{"@type":"Brand",name:bn}}),sku:cs,category:"3D Printer",url:`${BASE_URL}${can}`};
@@ -403,7 +407,7 @@ const GUIDE_DATES: Record<string,{date:string;tl?:boolean;learn?:boolean}> = {
 
 async function smFilaments(sb:SupabaseClient){const e:string[]=[];let o=0;const B=1000;let m=true;while(m){const{data,error}=await sb.from("filaments").select("product_handle,id,updated_at,last_scraped_at").not("product_handle","is",null).order("id").range(o,o+B-1);if(error||!data||!data.length){m=false;break;}for(const f of data){const bd=[f.last_scraped_at,f.updated_at].filter(Boolean).sort().pop();e.push(ue(`${BASE_URL}/filament/${f.product_handle||f.id}`,w3c(bd),"daily",0.8));}m=data.length>=B;o+=B;}return wrap(e);}
 async function smBrands(sb:SupabaseClient){const e:string[]=[];let o=0;const B=1000;let m=true;while(m){const{data,error}=await sb.from("automated_brands").select("brand_slug,updated_at,last_scrape_at").eq("is_visible",true).order("brand_slug").range(o,o+B-1);if(error||!data||!data.length){m=false;break;}for(const b of data){const bd=[b.last_scrape_at,b.updated_at].filter(Boolean).sort().pop();e.push(ue(`${BASE_URL}/brands/${b.brand_slug}`,w3c(bd),"weekly",0.8));}m=data.length>=B;o+=B;}return wrap(e);}
-async function smPrinters(sb:SupabaseClient){const e:string[]=[];let o=0;const B=1000;let m=true;while(m){const{data,error}=await sb.from("printers").select("printer_id,id,updated_at").order("id").range(o,o+B-1);if(error||!data||!data.length){m=false;break;}for(const p of data)e.push(ue(`${BASE_URL}/printers/${p.printer_id||p.id}`,w3c(p.updated_at),"weekly",0.8));m=data.length>=B;o+=B;}return wrap(e);}
+async function smPrinters(sb:SupabaseClient){const e:string[]=[];let o=0;const B=1000;let m=true;while(m){const{data,error}=await sb.from("printers").select("printer_id,id,updated_at").order("id").range(o,o+B-1);if(error||!data||!data.length){m=false;break;}for(const p of data)e.push(ue(`${BASE_URL}/printers/${normSlug(p.printer_id||p.id)}`,w3c(p.updated_at),"weekly",0.8));m=data.length>=B;o+=B;}return wrap(e);}
 async function smColors(sb:SupabaseClient){const t=new Date().toISOString().split("T")[0];const e:string[]=[];const{data}=await sb.from("color_families").select("name").order("display_order",{ascending:true});if(data)for(const c of data)e.push(ue(`${BASE_URL}/colors/${c.name.toLowerCase().replace(/\s+/g,"-")}`,t,"weekly",0.7));return wrap(e);}
 function smPages(){const t=new Date().toISOString().split("T")[0];return wrap(SP_LIST.map(p=>ue(`${BASE_URL}${p.p}`,t,p.cf,p.pr)));}
 function smGuides(){const t=new Date().toISOString().split("T")[0];return wrap(Object.entries(GUIDE_DATES).map(([s,{date,tl,learn}])=>ue(`${BASE_URL}/${tl?s:learn?`learn/${s}`:`guides/${s}`}`,date||t,"monthly",0.7)));}
