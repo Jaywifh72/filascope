@@ -70,6 +70,8 @@ export function normalizeSlug(slug: string): string {
   return slug
     .toLowerCase()
     .replace(/_/g, '-')           // Convert underscores to hyphens
+    .replace(/\s+/g, '-')        // Convert spaces to hyphens
+    .replace(/[^a-z0-9-]/g, '')   // Remove non-alphanumeric except hyphens
     .replace(/-+/g, '-')          // Collapse multiple hyphens
     .replace(/^-|-$/g, '');       // Trim leading/trailing hyphens
 }
