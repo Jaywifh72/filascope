@@ -17,6 +17,9 @@ const CRAWLER_AGENTS = [
 ];
 
 const BASE_URL = "https://filascope.com";
+
+/** Normalize a printer slug: lowercase, spaces→hyphens, strip non-alphanumeric, collapse hyphens */
+function normSlug(s:string):string{return s.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"").replace(/-{2,}/g,"-").replace(/^-|-$/g,"");}
 const FUNCTIONS_URL = `${Deno.env.get("SUPABASE_URL")}/functions/v1`;
 
 function buildOgImageUrl(p: { type: string; title: string; subtitle?: string; price?: string; image?: string }): string {
