@@ -139,21 +139,36 @@ const PrinterDetail = () => {
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
     queryFn: async () => {
-      // Try by printer_id slug first, then by UUID
+      const selectCols = `
+        *,
+        brand:printer_brands!brand_id(brand, warranty_years, warranty_coverage),
+        series:printer_series!series_id(series_name)
+      `;
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
-      
+
+      // Exact match first
       const { data, error } = await supabase
         .from("printers")
-        .select(`
-          *,
-          brand:printer_brands!brand_id(brand, warranty_years, warranty_coverage),
-          series:printer_series!series_id(series_name)
-        `)
+        .select(selectCols)
         .eq(isUUID ? "id" : "printer_id", id)
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      if (data) return data;
+
+      // Fallback: case-insensitive pattern match for slugs with uppercase/spaces in DB
+      if (!isUUID && id) {
+        const { data: fuzzy, error: fuzzyErr } = await supabase
+          .from("printers")
+          .select(selectCols)
+          .ilike("printer_id", id.replace(/-/g, "%"))
+          .limit(1)
+          .maybeSingle();
+        if (fuzzyErr) throw fuzzyErr;
+        return fuzzy;
+      }
+
+      return null;
     },
   });
 

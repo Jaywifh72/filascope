@@ -168,15 +168,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Printer pages
+    // Printer pages (normalize slugs to lowercase-hyphenated)
     if (printerRes.data) {
       for (const p of printerRes.data) {
         if (p.printer_id) {
+          const slug = p.printer_id.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-{2,}/g, "-").replace(/^-|-$/g, "");
           const lastmod = p.updated_at
             ? p.updated_at.split("T")[0]
             : today;
           entries.push(
-            urlEntry(`${BASE_URL}/printers/${p.printer_id}`, lastmod, "weekly", "0.7")
+            urlEntry(`${BASE_URL}/printers/${slug}`, lastmod, "weekly", "0.7")
           );
         }
       }
