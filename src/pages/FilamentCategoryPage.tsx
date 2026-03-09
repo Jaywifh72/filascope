@@ -632,6 +632,20 @@ export default function FilamentCategoryPage() {
     staleTime: 1000 * 60 * 10,
   });
 
+  // Fetch total visible brand count (for "all filaments" page H1)
+  const { data: allBrandCount } = useQuery({
+    queryKey: ["filament-category-brand-count"],
+    enabled: !slug,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("automated_brands")
+        .select("id", { count: "exact", head: true })
+        .eq("is_visible", true);
+      return count ?? 48;
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
   // Fetch price range + top brands for FAQ generation
   const { data: materialStats } = useQuery({
     queryKey: ["filament-category-stats", slug],
