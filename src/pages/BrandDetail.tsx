@@ -188,6 +188,28 @@ const BrandDetail = () => {
     return regions.length > 0 ? regions : ['US'];
   }, [filaments]);
 
+  // Derive TD count, top material category, and color count for FAQ
+  const tdCount = useMemo(() => {
+    return filaments.filter(f => (f as any).transmission_distance != null).length;
+  }, [filaments]);
+
+  const { topMaterialCategory, topMaterialCategoryCount } = useMemo(() => {
+    if (filaments.length === 0) return { topMaterialCategory: null, topMaterialCategoryCount: 0 };
+    const counts: Record<string, number> = {};
+    for (const f of filaments) {
+      if (f.material) counts[f.material] = (counts[f.material] || 0) + 1;
+    }
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return sorted.length > 0
+      ? { topMaterialCategory: sorted[0][0], topMaterialCategoryCount: sorted[0][1] }
+      : { topMaterialCategory: null, topMaterialCategoryCount: 0 };
+  }, [filaments]);
+
+  const colorCount = useMemo(() => {
+    const colors = new Set(filaments.map(f => f.color_family).filter(Boolean));
+    return colors.size;
+  }, [filaments]);
+
   if (isLoading) {
     return <BrandDetailSkeleton />;
   }
