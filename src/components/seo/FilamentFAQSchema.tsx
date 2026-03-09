@@ -51,6 +51,9 @@ export function FilamentFAQSchema({
     bedTempMax,
     transmissionDistance,
     price,
+    color,
+    spoolWeight,
+    storeName,
   });
 
   // Schema-only Q&As (not shown in the visible accordion)
