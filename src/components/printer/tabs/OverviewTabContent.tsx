@@ -376,7 +376,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
       {/* What's in the Box / Accessories - Only show when data exists */}
       {includedAccessories.length > 0 && (
         <section className="mb-8 sm:mb-10">
-          <SectionHeader icon={Package} title="What's in the Box" />
+          <SectionHeader icon={Package} title="What's in the Box" as="h3" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             {includedAccessories.map((acc, idx) => (
               <div 

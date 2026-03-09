@@ -100,7 +100,7 @@ const SpecSection: React.FC<{
       <div className="section-header-icon">
         <Icon className="w-5 h-5 text-primary" />
       </div>
-      <h2 className="section-title">{title}</h2>
+      <h3 className="section-title">{title}</h3>
     </div>
     <div className="section-card p-5 lg:p-6">
       {children}
