@@ -399,22 +399,26 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
           <div className="mt-4 pt-4 border-t border-border/30">
             <p className="text-sm text-muted-foreground mb-3">Materials printable at this temperature:</p>
             <div className="flex flex-wrap gap-2">
-              {materialTempHints.map((hint) => (
+              {materialTempHints.map((hint) => {
+                const hintSlug = materialNameToSlug(hint.material);
+                return (
                 <Link 
                   key={hint.material}
-                  to={`/filaments?material=${encodeURIComponent(hint.material)}&printer=${encodeURIComponent(printer.model_name)}`}
+                  to={`/filaments/${hintSlug}`}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border border-border/40 bg-muted/30 transition-all duration-200",
                     "hover:scale-105 hover:shadow-md cursor-pointer",
                     hint.color
                   )}
+                  title={`Compare ${hint.material} filaments`}
                 >
                   <CheckCircle2 className="w-3 h-3" />
                   {hint.material}
                   <span className="text-muted-foreground/60">({hint.temp}°C)</span>
                   <ArrowRight className="w-3 h-3 opacity-60" />
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
