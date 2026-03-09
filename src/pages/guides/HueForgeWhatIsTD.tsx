@@ -337,7 +337,7 @@ export default function HueForgeWhatIsTD() {
             title="Related HueForge Resources"
             links={[
               { label: 'HueForge TD Database', href: '/hueforge-td-database', description: 'Search verified TD values for 500+ filaments' },
-              { label: 'Best Filaments for HueForge', href: '/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane printing' },
+              { label: 'Best Filaments for HueForge', href: '/guides/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane printing' },
               { label: 'Best White Filaments for HueForge', href: '/guides/best-white-filaments-for-hueforge', description: 'TD-ranked white filament picks for lithophanes' },
               { label: 'How to Measure Filament TD', href: '/guides/how-to-measure-filament-td', description: 'Step-by-step calibration and measurement guide' },
               { label: 'Browse All Colors', href: '/colors', description: 'Find filaments by color with TD data' },

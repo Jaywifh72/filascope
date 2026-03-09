@@ -313,7 +313,7 @@ export default function BestFilamentsForBeginners() {
             <div className="grid sm:grid-cols-2 gap-3">
               {[
                 { to: '/guides/beginners-guide', label: "Complete Beginner's Guide to Filaments" },
-                { to: '/pla-vs-petg', label: 'PLA vs PETG — When to Upgrade' },
+                { to: '/guides/pla-vs-petg', label: 'PLA vs PETG — When to Upgrade' },
                 { to: '/filament-storage-guide', label: 'How to Store Filament Properly' },
                 { to: '/filament-temperature-guide', label: 'Filament Temperature Guide' },
                 { to: '/materials/pla', label: 'PLA Material Hub — All Specs' },

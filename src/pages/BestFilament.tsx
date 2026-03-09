@@ -232,11 +232,11 @@ export default function BestFilament() {
             <h2 className="text-lg font-semibold mb-4">Explore by Category</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { to: '/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
-                { to: '/pla-vs-petg', label: 'PLA vs PETG — Full Comparison' },
+                { to: '/guides/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
+                { to: '/guides/pla-vs-petg', label: 'PLA vs PETG — Full Comparison' },
                 { to: '/filament-types', label: 'All Filament Types Explained' },
                 { to: '/cheapest-filament', label: 'Cheapest 3D Printer Filament' },
-                { to: '/best-filaments-for-hueforge', label: 'Best Filaments for HueForge' },
+                { to: '/guides/best-filaments-for-hueforge', label: 'Best Filaments for HueForge' },
                 { to: '/deals', label: 'Current Filament Deals' },
               ].map((link) => (
                 <Link key={link.to} to={link.to} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
