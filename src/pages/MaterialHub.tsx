@@ -865,7 +865,9 @@ export default function MaterialHub() {
     position: i + 1,
   }));
 
-  const faqs = getMaterialFAQs(slug ?? "", label, count, stats?.brandCount ?? 0, reference);
+  const baseFaqs = getMaterialFAQs(slug ?? "", label, count, stats?.brandCount ?? 0, reference);
+  const comparisonFaqs = getComparisonFAQs(slug ?? "", label);
+  const faqs = [...baseFaqs, ...comparisonFaqs];
 
   // Filament listing link for this material
   const filamentListingSlug = slug === "pc" ? "polycarbonate" : slug;
