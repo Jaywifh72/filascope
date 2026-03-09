@@ -11,6 +11,9 @@ interface FAQContentProps {
   bedTempMax?: number | null;
   transmissionDistance?: number | null;
   price?: number | null;
+  color?: string | null;
+  spoolWeight?: number | null;
+  storeName?: string | null;
 }
 
 interface FAQItem {
@@ -28,6 +31,9 @@ export function FAQContent({
   bedTempMax,
   transmissionDistance,
   price,
+  color,
+  spoolWeight,
+  storeName,
 }: FAQContentProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   
@@ -42,6 +48,9 @@ export function FAQContent({
     bedTempMax,
     transmissionDistance,
     price,
+    color,
+    spoolWeight,
+    storeName,
   });
   const faqs = [...staticFaqs, ...dynamicFaqs];
 

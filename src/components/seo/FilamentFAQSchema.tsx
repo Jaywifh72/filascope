@@ -15,6 +15,8 @@ interface FilamentFAQSchemaProps {
   regionName: string;
   filaScopeScore: number | null;
   compatiblePrinterCount: number | null;
+  spoolWeight?: number | null;
+  storeName?: string | null;
 }
 
 export function FilamentFAQSchema({
@@ -31,6 +33,8 @@ export function FilamentFAQSchema({
   regionName,
   filaScopeScore,
   compatiblePrinterCount,
+  spoolWeight,
+  storeName,
 }: FilamentFAQSchemaProps) {
   const brandStr = brand || '';
   const colorPart = color ? ` ${color}` : '';
@@ -47,6 +51,9 @@ export function FilamentFAQSchema({
     bedTempMax,
     transmissionDistance,
     price,
+    color,
+    spoolWeight,
+    storeName,
   });
 
   // Schema-only Q&As (not shown in the visible accordion)
