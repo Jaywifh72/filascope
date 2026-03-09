@@ -494,7 +494,7 @@ function generateMaterialCategoryFAQs(
   if (materialStats?.topBrands && materialStats.topBrands.length > 0) {
     faqs.push({
       question: `What brands make ${label} filament?`,
-      answer: `Popular ${label} filament brands include ${materialStats.topBrands.join(', ')}, and many more. FilaScope indexes ${label} filaments from 48+ manufacturers so you can compare specs and prices side by side.`,
+      answer: `FilaScope currently tracks 48+ brands across 20+ material types. Popular ${label} filament brands include ${materialStats.topBrands.join(', ')}, and many more. You can compare specs and prices side by side.`,
     });
   }
 

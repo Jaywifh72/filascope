@@ -32,7 +32,7 @@ const FAQ_DATA = [
   },
   {
     q: "Where can I find HueForge TD values for my filament?",
-    a: "FilaScope's TD Value Database is the largest public collection of filament Transmission Distance values, covering 111+ filaments across 48+ brands. You can search by brand, material type, color, or TD range. Each filament entry includes verified TD values alongside pricing, material specs, and retailer availability. Visit the TD Value Database to search for your filament.",
+    a: "Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments across 48+ brands, it is the largest public collection of filament Transmission Distance values. You can search by brand, material type, color, or TD range. Each filament entry includes verified TD values alongside pricing, material specs, and retailer availability. Visit the TD Value Database to search for your filament.",
   },
   {
     q: "What is the best filament for HueForge?",

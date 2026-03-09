@@ -139,7 +139,7 @@ const paaData = [
   {
     question: 'What filament brand has the best HueForge colors?',
     answer:
-      'Polymaker and Bambu Lab have the most comprehensive TD data coverage in the FilaScope database, with verified values across dozens of colors. eSUN, Hatchbox, and Prusament also have strong coverage. The best brand depends on color availability in your region — use this database to filter by brand and see which has verified TD values for the colors you need.',
+      'Based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments, Polymaker and Bambu Lab have the most comprehensive TD data coverage with verified values across dozens of colors. eSUN, Hatchbox, and Prusament also have strong coverage. The best brand depends on color availability in your region — use this database to filter by brand and see which has verified TD values for the colors you need.',
   },
   {
     question: 'Can I use PETG for HueForge?',
