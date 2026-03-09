@@ -839,14 +839,14 @@ export default function MaterialHub() {
     : null;
 
   const title = reference
-    ? `${label} Filament Guide — Print Settings, Specs & ${count.toLocaleString()} Products | FilaScope`
-    : `${label} Filament — Compare ${count.toLocaleString()} Products | FilaScope`;
+    ? `${label} Filament Guide — Properties, Settings & Best Uses | FilaScope`
+    : `${label} Filament Guide — What It Is & When to Use It | FilaScope`;
 
   let description: string;
   if (reference && nozzleRange) {
-    description = `${label} 3D printing filament guide. Nozzle temp ${nozzleRange}${bedRange ? `, bed ${bedRange}` : ""}. Compare ${count.toLocaleString()} ${label} filaments with specs, TD values, and pricing on FilaScope.`;
+    description = `Complete ${label} filament guide. Nozzle temp ${nozzleRange}${bedRange ? `, bed ${bedRange}` : ""}. Learn about ${label} properties, strengths, weaknesses, and best use cases for 3D printing.`;
   } else {
-    description = `Browse ${count.toLocaleString()} ${label} 3D printer filaments from ${stats?.brandCount ?? ""}+ brands. Compare specs, prices, and HueForge TD values on FilaScope.`;
+    description = `Everything you need to know about ${label} 3D printing filament — material properties, recommended settings, pros & cons, and practical usage tips.`;
   }
   if (description.length > 160) description = description.slice(0, 157) + "...";
 
@@ -878,7 +878,7 @@ export default function MaterialHub() {
       />
       {reference && (
         <ArticleSchema
-          headline={`${label} Filament — Complete Guide & ${count} Products`}
+          headline={`${label} Filament Guide — Properties, Settings & Best Uses`}
           description={description}
           datePublished="2025-01-01T00:00:00Z"
           url={`/materials/${slug}`}
@@ -908,10 +908,10 @@ export default function MaterialHub() {
 
         {/* H1 */}
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          {label} Filament — Complete Guide & {count.toLocaleString()} Products
+          {label} Filament Guide — Properties, Settings & Best Uses
         </h1>
         <p className="text-muted-foreground mb-4 max-w-2xl">
-          Browse {count.toLocaleString()} {label} filaments from {stats?.brandCount}+ brands. Compare prices, specs, and HueForge TD values to find the best {label} for your printer.
+          Everything you need to know about {label} filament — print temperatures, mechanical properties, strengths, weaknesses, and when to choose {label} over other materials.
         </p>
 
         {/* CTA: cross-link to catalog page */}
@@ -942,7 +942,7 @@ export default function MaterialHub() {
         {/* Top 5 */}
         {topFilaments && topFilaments.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">Best {label} Filaments</h2>
+            <h2 className="text-xl font-semibold mb-4">Top-Rated {label} Filaments</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {topFilaments.map((f) => (
                 <FilamentCard key={f.id} filament={f as any} />
@@ -954,7 +954,7 @@ export default function MaterialHub() {
         {/* Full product grid */}
         {products && products.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">All {label} Filaments</h2>
+            <h2 className="text-xl font-semibold mb-4">Popular {label} Filaments</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {products.map((f) => (
                 <FilamentCard key={f.id} filament={f as any} />
