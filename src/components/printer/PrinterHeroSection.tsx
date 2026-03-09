@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Box, Gauge, Thermometer, Wifi, WifiOff, Share2, Check } from "lucide-react";
+import { toBrandSlug } from "@/utils/brandSlug";
 import { toast } from "sonner";
 import { SocialProofBadges } from "./SocialProofBadges";
 import { DataQualityIndicator } from "./DataQualityIndicator";
