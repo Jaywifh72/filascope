@@ -311,8 +311,9 @@ export function ProductJsonLd({
   if (filaScopeScore != null) {
     additionalProperties.push({
       '@type': 'PropertyValue',
-      name: 'FilaScope',
+      name: 'FilaScore Quality Rating',
       value: filaScopeScore,
+      unitText: 'out of 10',
       description: 'FilaScope quality rating out of 10',
     });
   }
