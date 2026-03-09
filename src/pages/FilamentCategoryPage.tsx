@@ -152,7 +152,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   polycarbonate: {
     titleTemplate: "Polycarbonate Filaments — Compare {count}+ PC Options | FilaScope",
     descTemplate: "Compare {count}+ PC and Polycarbonate 3D printer filaments. Strongest print material with high heat tolerance. Filter by brand and printer compatibility.",
-    h1: "Polycarbonate (PC) Filaments",
+    h1: "Polycarbonate (PC) Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Polycarbonate is one of the strongest and most heat-tolerant 3D printing materials — used in bulletproof glass, eyeglass lenses, and aerospace components. It handles temperatures up to 130°C and resists impacts that shatter PLA or ABS. Printing requires an all-metal hotend, enclosure, and nozzle temperatures of 260–310°C. Compare {count}+ PC filaments with specs and pricing.",
   },
   "petg-cf": {
