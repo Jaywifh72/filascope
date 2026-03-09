@@ -301,7 +301,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
       {/* Build Volume Visualization */}
       <section className="mb-8 sm:mb-10">
-        <SectionHeader icon={Ruler} title="Build Volume & Dimensions" />
+        <SectionHeader icon={Ruler} title="Build Volume & Dimensions" as="h3" />
         <BuildVolumeCard
           width={printer.build_volume_x_mm}
           depth={printer.build_volume_y_mm}
