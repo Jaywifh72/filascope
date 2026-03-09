@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap, Package, Layers } from "lucide-react";
+import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap, Package, Layers, HelpCircle } from "lucide-react";
 import { BrandCardSkeletonGrid } from "@/components/skeletons/BrandCardSkeleton";
 import { BrandsEmptyState } from "@/components/empty-states";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
@@ -12,9 +12,10 @@ import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ItemListSchema } from "@/components/seo";
+import { ItemListSchema, FAQSection, FAQSchema } from "@/components/seo";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { toBrandSlug } from "@/utils/brandSlug";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   Select,
   SelectContent,
