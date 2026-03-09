@@ -16,20 +16,20 @@ export function BrandQuickLinks({ brand, material, filamentId }: BrandQuickLinks
     brand && brandSlug
       ? {
           href: `/brands/${brandSlug}`,
-          label: `Browse all ${brand} filaments`,
+          label: `${brand} Filaments — Full Catalog`,
           icon: Package,
         }
       : null,
     material
       ? {
           href: `/filaments/${material.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-          label: `All ${material} filaments`,
+          label: `Compare all ${material} filaments`,
           icon: ArrowRight,
         }
       : null,
     {
       href: `/compare?ids=${filamentId}`,
-      label: "Compare this filament",
+      label: "Compare this filament side-by-side",
       icon: GitCompare,
     },
   ].filter(Boolean) as { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[];

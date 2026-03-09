@@ -407,7 +407,15 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
             to={`/filaments/${materialNameToSlug(filament.material)}`}
             className="inline-flex items-center text-sm text-primary hover:underline"
           >
-            Browse all {filament.material} filaments →
+            Compare all {filament.material} filaments on FilaScope →
+          </Link>
+        )}
+        {filament.material && (
+          <Link
+            to={`/materials/${materialNameToSlug(filament.material)}`}
+            className="inline-flex items-center text-sm text-primary hover:underline"
+          >
+            {filament.material} Filament Properties & Settings Guide →
           </Link>
         )}
         {filament.vendor && (
@@ -415,7 +423,7 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
             to={`/brands/${toBrandSlug(filament.vendor)}`}
             className="inline-flex items-center text-sm text-primary hover:underline"
           >
-            See all {filament.vendor} filaments →
+            {filament.vendor} Filaments — Full Catalog & Pricing →
           </Link>
         )}
         <Link

@@ -290,9 +290,11 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
         )}
       </div>
 
-      {/* Product Title */}
+      {/* Product Title — include vendor for keyword-rich anchor text */}
       <h4 className="text-sm font-medium text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-        {filament.product_title}
+        {filament.vendor && !filament.product_title.startsWith(filament.vendor)
+          ? `${filament.vendor} ${filament.product_title}`
+          : filament.product_title}
       </h4>
 
       {/* Price with regional conversion */}
