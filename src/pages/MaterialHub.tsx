@@ -408,7 +408,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many high-speed PLA filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} high-speed PLA filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} high-speed PLA filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     "petg-cf": [
