@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, ArticleSchema, FAQSection, ItemListSchema } from '@/components/seo';
+import { BreadcrumbSchema, ArticleSchema, FAQSection, ItemListSchema, HowToSchema } from '@/components/seo';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -86,6 +86,19 @@ export default function HowToChooseFilament() {
         name="3D Printer Filament Materials Compared"
         description="Overview of the most popular FDM filament materials, ranked by ease of printing."
         items={ITEM_LIST_ITEMS}
+      />
+      <HowToSchema
+        name="How to Choose the Right 3D Printer Filament"
+        description="A step-by-step process for selecting the best 3D printer filament based on your project requirements, printer compatibility, and budget."
+        totalTime="PT10M"
+        steps={[
+          { name: 'Define Your Project Requirements', text: 'Identify what you are printing and the key properties it needs — strength, flexibility, heat resistance, or visual quality. Functional parts need PETG or Nylon; decorative prints work best with PLA.' },
+          { name: 'Check Your Printer Compatibility', text: 'Verify your printer\'s maximum nozzle temperature, heated bed capability, and whether it has an enclosure. Most printers handle PLA and PETG, but ABS, ASA, Nylon, and PC require enclosed chambers and all-metal hotends.' },
+          { name: 'Compare Filament Materials', text: 'Review material properties side by side — tensile strength, ease of printing, temperature resistance, and cost per kilogram. Use FilaScope\'s comparison tools to narrow down the best material for your use case.' },
+          { name: 'Match Material to Use Case', text: 'Select the material that best fits your application: PLA for prototyping and HueForge, PETG for outdoor and functional parts, TPU for flexible components, ASA for UV-exposed prints, and Nylon for high-strength mechanical parts.' },
+          { name: 'Choose a Trusted Brand', text: 'Pick a filament brand with tight diameter tolerances (±0.02mm), consistent color, and positive community reviews. Premium brands like Polymaker, Bambu Lab, and Prusament offer better reliability than budget alternatives.' },
+          { name: 'Verify Price and Availability', text: 'Compare prices across retailers in your region using FilaScope\'s price tracker. Factor in shipping costs and spool weight (typically 1kg) to find the best value without compromising quality.' },
+        ]}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
