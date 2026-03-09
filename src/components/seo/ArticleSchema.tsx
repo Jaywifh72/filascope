@@ -17,6 +17,7 @@ interface ArticleSchemaProps {
   articleType?: 'Article' | 'TechArticle';
   about?: AboutThing;
   proficiencyLevel?: string;
+  speakableCssSelectors?: string[];
 }
 
 export function ArticleSchema({
@@ -29,6 +30,7 @@ export function ArticleSchema({
   articleType = 'Article',
   about,
   proficiencyLevel,
+  speakableCssSelectors,
 }: ArticleSchemaProps) {
   const fullUrl = url.startsWith('http') ? url : `${BASE_URL}${url}`;
 
@@ -51,6 +53,12 @@ export function ArticleSchema({
     mainEntityOfPage: fullUrl,
     ...(about && { about }),
     ...(proficiencyLevel && { proficiencyLevel }),
+    ...(speakableCssSelectors && speakableCssSelectors.length > 0 && {
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: speakableCssSelectors,
+      },
+    }),
   });
 
   return null;

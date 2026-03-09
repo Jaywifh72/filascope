@@ -150,6 +150,11 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         datePublished={config.publishedAt}
         dateModified={config.updatedAt}
         url={`/guides/${config.slug}`}
+        speakableCssSelectors={[
+          'article > p:first-of-type',
+          '#faq [data-radix-accordion-trigger]',
+          '#faq [data-radix-accordion-content] > div',
+        ]}
       />
       {/* BreadcrumbList JSON-LD is injected by <Breadcrumbs> below */}
       {/* Single merged FAQPage schema for both FAQ + People Also Ask */}
