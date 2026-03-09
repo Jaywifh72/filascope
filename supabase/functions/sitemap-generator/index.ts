@@ -44,6 +44,26 @@ const MATERIAL_ROUTES = [
   changefreq: "weekly" as const,
 }));
 
+const CORNERSTONE_GUIDES = new Set([
+  "/guides/best-pla-filaments",
+  "/guides/best-petg-filaments",
+  "/guides/best-abs-filaments",
+  "/guides/best-filaments-for-hueforge",
+]);
+const COMPARISON_GUIDES = new Set([
+  "/guides/pla-vs-petg",
+  "/guides/silk-pla-comparison",
+  "/guides/asa-vs-abs-outdoor-printing",
+  "/guides/pla-plus-vs-pla-pro",
+  "/guides/what-is-hueforge-td",
+  "/guides/how-to-measure-filament-td",
+]);
+function guideRoutePriority(path: string): string {
+  if (CORNERSTONE_GUIDES.has(path)) return "0.9";
+  if (COMPARISON_GUIDES.has(path)) return "0.8";
+  return "0.7";
+}
+
 const GUIDE_ROUTES = [
   "/guides/best-pla-filaments",
   "/guides/best-petg-filaments",
@@ -73,7 +93,9 @@ const GUIDE_ROUTES = [
   "/guides/how-to-store-filament",
   "/guides/how-to-dry-filament",
   "/guides/food-safe-filament",
-].map((path) => ({ path, priority: "0.8", changefreq: "weekly" as const }));
+  "/guides/silk-pla-comparison",
+  "/guides/asa-vs-abs-outdoor-printing",
+].map((path) => ({ path, priority: guideRoutePriority(path), changefreq: "weekly" as const }));
 
 function urlEntry(
   loc: string,
