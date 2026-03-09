@@ -116,7 +116,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   tpu: {
     titleTemplate: "TPU Flexible Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ TPU and flexible 3D printer filaments. Find the right shore hardness for your project. Filter by brand, price, and printer compatibility.",
-    h1: "TPU & Flexible Filaments",
+    h1: "TPU & Flexible Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "TPU (Thermoplastic Polyurethane) is a rubber-like filament ideal for phone cases, gaskets, shoe insoles, and wearables — anything that needs to bend and return to shape. Shore hardness (95A being common) controls stiffness; softer grades require a direct-drive extruder. Compare {count}+ TPU filaments with shore hardness specs, brand options, and pricing.",
   },
   asa: {
