@@ -372,7 +372,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: "Is PLA+ good for HueForge?",
-        answer: `PLA+ works for HueForge, though its TD values can differ from standard PLA. FilaScope tracks TD values for PLA+ filaments to help you build accurate HueForge profiles.`,
+        answer: `PLA+ works for HueForge, though its TD values can differ from standard PLA. Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments, you can find accurate TD values for PLA+ to build precise HueForge profiles.`,
       },
       {
         question: `How many PLA+ filaments does FilaScope track?`,
