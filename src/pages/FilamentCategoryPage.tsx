@@ -182,14 +182,18 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
 };
 
 const ALL_META: CategoryMeta = {
-  titleTemplate: "3D Printer Filaments — Compare {count}+ Filaments | FilaScope",
-  descTemplate: "Browse and compare {count}+ 3D printer filaments from 48+ brands. Filter by material, price, printer compatibility, and TD value for HueForge. Updated daily.",
-  h1: "3D Printer Filament Database",
-  introTemplate: "Browse all {count}+ 3D printer filaments from 48+ brands. Filter by material, brand, price range, and printer compatibility to find your perfect filament.",
+  titleTemplate: "3D Printer Filaments — Compare {count}+ Products | FilaScope",
+  descTemplate: "Browse and compare {count}+ 3D printer filaments from {brandCount}+ brands. Filter by material, price, printer compatibility, and TD value for HueForge. Updated daily.",
+  h1: "Compare 3D Printer Filaments — {count}+ Products from {brandCount}+ Brands",
+  introTemplate: "Browse all {count}+ 3D printer filaments from {brandCount}+ brands. Filter by material, brand, price range, and printer compatibility to find your perfect filament.",
 };
 
-function applyCount(template: string, count: number): string {
-  return template.replace(/\{count\}/g, count.toLocaleString());
+function applyCount(template: string, count: number, brandCount?: number): string {
+  let result = template.replace(/\{count\}/g, count.toLocaleString());
+  if (brandCount != null) {
+    result = result.replace(/\{brandCount\}/g, String(brandCount));
+  }
+  return result;
 }
 
 const BASE_URL = "https://filascope.com";
