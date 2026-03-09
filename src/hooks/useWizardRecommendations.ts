@@ -391,7 +391,7 @@ export function useWizardRecommendations(answers: WizardAnswers) {
 
       // Build product cards
       const products: WizardProduct[] = top5.map(({ filament: f, resolved, scoreResult }) => {
-        const slug = generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
+        const slug = f.product_handle || generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
         const regionalUrl = getRegionalUrl(f as Record<string, unknown>, currency);
         const affiliateUrl = getAffiliateUrl(regionalUrl, f.vendor);
         const storeName = getStoreName(regionalUrl, f.vendor);

@@ -113,17 +113,20 @@ const { id } = useParams();
   // Use the slug-aware hook instead of inline fetch
   const { filament, loading, error: fetchError, isRedirecting, refetch } = useFilamentBySlug(id);
 
-  // Derive canonical slug from the RESOLVED filament object, not the URL pathname.
-  // location.pathname is NOT updated by history.replaceState() — using it would
-  // produce UUID-based canonicals when users land via UUID URLs.
+  // Derive canonical slug from the RESOLVED filament object.
+  // MUST match the slug used in sitemap-filaments.xml, which reads product_handle.
+  // Only fall back to generateFilamentSlug() when product_handle is missing.
   const canonicalSlug = useMemo(() => {
     if (filament) {
-      return generateFilamentSlug(
-        filament.vendor,
-        filament.material,
-        filament.product_title,
-        filament.color_family,
-      ) || filament.id;
+      // Prefer product_handle (sitemap source of truth), then generated slug, then UUID
+      return filament.product_handle
+        || generateFilamentSlug(
+            filament.vendor,
+            filament.material,
+            filament.product_title,
+            filament.color_family,
+          )
+        || filament.id;
     }
     // Fallback while loading: use pathname slug if it's not a UUID, else id param
     const pathSlug = location.pathname.replace(/^\/filament\//, '');
