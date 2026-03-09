@@ -511,11 +511,14 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
         
         {recommendedMaterials.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {recommendedMaterials.slice(0, 6).map((material: string, index: number) => (
+            {recommendedMaterials.slice(0, 6).map((material: string, index: number) => {
+              const recSlug = materialNameToSlug(material);
+              return (
               <Link
                 key={index}
-                to={`/filaments?material=${encodeURIComponent(material)}&printer=${encodeURIComponent(printer.model_name)}`}
+                to={`/filaments/${recSlug}`}
                 className="block group"
+                title={`Compare ${material} filaments compatible with ${printer.model_name}`}
               >
                 <Card className="bg-card/80 border-border/40 hover:border-teal-500/30 hover:bg-muted/70 transition-all duration-150 cursor-pointer">
                   <CardContent className="p-4">
@@ -524,16 +527,16 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
                         <Palette className="w-4 h-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-foreground">{material}</span>
-                        <p className="text-xs text-muted-foreground">Recommended</p>
-                        <p className="text-xs text-muted-foreground/70 mt-0.5">Browse {material} filaments →</p>
+                        <span className="text-sm font-medium text-foreground">{material} Filaments</span>
+                        <p className="text-xs text-muted-foreground">Recommended for this printer</p>
                       </div>
                       <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-teal-400 transition-colors duration-150 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
               </Link>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground border border-dashed border-border/50 rounded-lg">
