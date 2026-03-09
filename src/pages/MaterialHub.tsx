@@ -942,7 +942,7 @@ export default function MaterialHub() {
         {/* Top 5 */}
         {topFilaments && topFilaments.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">Best {label} Filaments</h2>
+            <h2 className="text-xl font-semibold mb-4">Top-Rated {label} Filaments</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {topFilaments.map((f) => (
                 <FilamentCard key={f.id} filament={f as any} />
