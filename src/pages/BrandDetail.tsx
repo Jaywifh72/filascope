@@ -495,6 +495,10 @@ const BrandDetail = () => {
                 isVerified={automatedBrand?.is_visible ?? false}
                 isPremium={isPremium}
                 isBudgetFriendly={isBudgetFriendly}
+                tdCount={tdCount}
+                topMaterialCategory={topMaterialCategory}
+                topMaterialCategoryCount={topMaterialCategoryCount}
+                colorCount={colorCount}
               />}
             </div>
           </>)}
