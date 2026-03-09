@@ -140,7 +140,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   "pla-plus": {
     titleTemplate: "PLA+ Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PLA+ 3D printer filaments. Improved impact resistance over standard PLA. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "PLA+ Filaments",
+    h1: "PLA+ Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "PLA+ (also called PLA Pro) delivers improved toughness and reduced brittleness over standard PLA while keeping the same easy print settings (195–230°C). It's a popular upgrade for functional prints that need more abuse resistance without the complexity of PETG or ABS. Compare {count}+ PLA+ filaments across brands with real-time pricing and specs.",
   },
   "high-speed-pla": {
