@@ -214,7 +214,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: "Is PLA filament good for HueForge lithophanes?",
-        answer: `Yes, PLA is the most popular material for HueForge lithophanes. Standard PLA has TD values ranging from 0.5–6.0mm, giving excellent control over light transmission. FilaScope tracks TD values for hundreds of PLA filaments to help you find the perfect match for your HueForge project.`,
+        answer: `Yes, PLA is the most popular material for HueForge lithophanes. Standard PLA has TD values ranging from 0.5–6.0mm, giving excellent control over light transmission. Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments, you can find the perfect PLA match for your HueForge project.`,
       },
       {
         question: "What are the strengths of PLA filament?",
