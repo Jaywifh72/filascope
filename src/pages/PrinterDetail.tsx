@@ -1118,6 +1118,9 @@ const PrinterDetail = () => {
                     </Card>
                   )}
                    
+                  {/* Placeholder for other overview content */}
+                  <OverviewTabContent printer={printer} brand={brand} accessories={accessories || []} />
+
                   {/* Recommended Filaments Section */}
                   {(() => {
                     const materialsStr = printer.official_supported_materials || '';
