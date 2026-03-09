@@ -839,14 +839,14 @@ export default function MaterialHub() {
     : null;
 
   const title = reference
-    ? `${label} Filament Guide — Print Settings, Specs & ${count.toLocaleString()} Products | FilaScope`
-    : `${label} Filament — Compare ${count.toLocaleString()} Products | FilaScope`;
+    ? `${label} Filament Guide — Properties, Settings & Best Uses | FilaScope`
+    : `${label} Filament Guide — What It Is & When to Use It | FilaScope`;
 
   let description: string;
   if (reference && nozzleRange) {
-    description = `${label} 3D printing filament guide. Nozzle temp ${nozzleRange}${bedRange ? `, bed ${bedRange}` : ""}. Compare ${count.toLocaleString()} ${label} filaments with specs, TD values, and pricing on FilaScope.`;
+    description = `Complete ${label} filament guide. Nozzle temp ${nozzleRange}${bedRange ? `, bed ${bedRange}` : ""}. Learn about ${label} properties, strengths, weaknesses, and best use cases for 3D printing.`;
   } else {
-    description = `Browse ${count.toLocaleString()} ${label} 3D printer filaments from ${stats?.brandCount ?? ""}+ brands. Compare specs, prices, and HueForge TD values on FilaScope.`;
+    description = `Everything you need to know about ${label} 3D printing filament — material properties, recommended settings, pros & cons, and practical usage tips.`;
   }
   if (description.length > 160) description = description.slice(0, 157) + "...";
 
