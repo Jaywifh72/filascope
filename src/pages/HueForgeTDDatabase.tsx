@@ -120,7 +120,7 @@ const faqData = [
   {
     question: 'How do I measure filament TD value?',
     answer:
-      'TD (Transmission Distance) is measured by printing a calibration block at known thickness and measuring light transmission. The HueForge software includes a calibration tool for this purpose. Alternatively, use FilaScope\'s pre-measured TD database with values for 500+ filaments so you don\'t need to measure yourself.',
+      'TD (Transmission Distance) is measured by printing a calibration block at known thickness and measuring light transmission. The HueForge software includes a calibration tool for this purpose. Alternatively, based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments, you can use pre-measured values so you don\'t need to measure yourself.',
   },
   {
     question: 'What is the difference between TD value and transmissivity?',
