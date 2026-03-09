@@ -365,7 +365,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
       {/* System Capabilities - Responsive grid */}
       <section className="mb-8 sm:mb-10">
-        <SectionHeader icon={CheckCircle2} title="System Capabilities" />
+        <SectionHeader icon={CheckCircle2} title="System Capabilities" as="h3" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
           {sortedCapabilities.map((cap) => (
             <CapabilityItem key={cap.label} label={cap.label} available={cap.available} />
