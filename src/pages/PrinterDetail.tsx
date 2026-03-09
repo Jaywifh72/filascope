@@ -105,8 +105,8 @@ import { normalizeSlug } from "@/lib/printerSlugUtils";
 const PrinterDetail = () => {
   const { id } = useParams();
   const location = useLocation();
-  // Derive canonical slug from the actual browser URL, normalized to lowercase-hyphenated
-  const rawSlug = location.pathname.replace(/^\/printers\//, '') || id || '';
+  // Derive canonical slug from the actual browser URL, decoded + normalized to lowercase-hyphenated
+  const rawSlug = decodeURIComponent(location.pathname.replace(/^\/printers\//, '') || id || '');
   const canonicalPrinterSlug = normalizeSlug(rawSlug);
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
