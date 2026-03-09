@@ -19,11 +19,22 @@ interface FAQSectionProps {
   maxNozzleTemp?: number;
   maxColors?: number;
   hasEnclosure?: boolean;
+  supportedMaterials?: string | null;
 }
 
 // Generate dynamic FAQs based on printer specs
 function generateFAQs(props: FAQSectionProps): FAQ[] {
-  const { printerModel, printerBrand, buildVolume, maxSpeed, maxNozzleTemp, maxColors, hasEnclosure } = props;
+  const { printerModel, printerBrand, buildVolume, maxSpeed, maxNozzleTemp, maxColors, hasEnclosure, supportedMaterials } = props;
+  
+  // Parse materials list
+  const materialsArr = supportedMaterials
+    ? supportedMaterials.split(',').map((m: string) => m.trim()).filter(Boolean)
+    : [];
+  const materialCount = materialsArr.length;
+  const materialListStr = materialsArr.join(', ') || 'PLA, PETG, ABS, and TPU';
+  const primaryMaterials = materialsArr.slice(0, 4).join(', ') || 'PLA, PETG, and ABS';
+  const highestTempMaterial = maxNozzleTemp && maxNozzleTemp >= 300 ? 'Polycarbonate and Nylon' : maxNozzleTemp && maxNozzleTemp >= 260 ? 'ABS and ASA' : 'PETG and TPU';
+  const nozzleTempRange = maxNozzleTemp ? `up to ${maxNozzleTemp}°C` : 'standard range';
   
   return [
     // Getting Started
@@ -152,6 +163,19 @@ function generateFAQs(props: FAQSectionProps): FAQ[] {
       category: 'Technical',
       question: 'Where can I find troubleshooting help?',
       answer: `<strong>Troubleshooting resources</strong> (ranked by usefulness):<ol><li><strong>User Manual</strong> - Common issues and error codes</li><li><strong>Manufacturer Website</strong> - Knowledge base, video tutorials, firmware</li><li><strong>Community Forums</strong> - Reddit, brand-specific forums (search first!)</li><li><strong>YouTube</strong> - Setup videos, common fixes, upgrade guides</li><li><strong>Direct Support</strong> - Email support for complex issues</li></ol><strong>Pro tip</strong>: Search error messages or symptoms first - 90% of issues have documented solutions in the community.`
+    },
+    // Filament Recommendations
+    {
+      id: '21',
+      category: 'Materials & Printing',
+      question: `What is the best filament for the ${printerBrand ? `${printerBrand} ` : ''}${printerModel}?`,
+      answer: `The ${printerModel} works best with ${primaryMaterials} based on its temperature range of ${nozzleTempRange}. For everyday printing, PLA from brands like Bambu Lab, Polymaker, or Hatchbox offers consistent results. For stronger functional parts, PETG is recommended. Check FilaScope's filament database to compare options filtered by compatibility with the ${printerModel}.`
+    },
+    {
+      id: '22',
+      category: 'Materials & Printing',
+      question: `What materials can the ${printerBrand ? `${printerBrand} ` : ''}${printerModel} print?`,
+      answer: `The ${printerModel} can print ${materialCount > 0 ? `${materialCount} material types: ${materialListStr}` : 'a wide range of materials including PLA, PETG, ABS, and TPU'}. ${maxNozzleTemp ? `Its maximum nozzle temperature of ${maxNozzleTemp}°C supports everything from PLA (190°C) to ${highestTempMaterial}.` : ''} ${hasEnclosure ? 'The enclosed build chamber enables high-temperature materials like ABS and ASA without warping.' : ''} FilaScope tracks 8,200+ filaments compatible with this printer.`
     }
   ];
 }

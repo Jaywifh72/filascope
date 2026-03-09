@@ -1117,10 +1117,60 @@ const PrinterDetail = () => {
                       </CardContent>
                     </Card>
                   )}
-                  
+                   
                   {/* Placeholder for other overview content */}
                   <OverviewTabContent printer={printer} brand={brand} accessories={accessories || []} />
-                  
+
+                  {/* Recommended Filaments Section */}
+                  {(() => {
+                    const materialsStr = printer.official_supported_materials || '';
+                    const materialsArr = materialsStr.split(',').map((m: string) => m.trim()).filter(Boolean);
+                    const materialCount = materialsArr.length;
+                    const materialListDisplay = materialsArr.slice(0, 6).join(', ') || 'PLA, PETG, ABS, and TPU';
+                    const highestTempMat = printer.max_nozzle_temp_c && printer.max_nozzle_temp_c >= 300
+                      ? 'Polycarbonate and Nylon'
+                      : printer.max_nozzle_temp_c && printer.max_nozzle_temp_c >= 260
+                        ? 'ABS and ASA'
+                        : 'PETG and TPU';
+                    const brandSlug = brand ? toBrandSlug(brand) : null;
+
+                    return (
+                      <section className="max-w-[1000px] mx-auto px-5 md:px-10 py-12">
+                        <h2 className="text-xl md:text-2xl font-bold text-foreground mb-4">
+                          Best Filaments for the {brand ? `${brand} ` : ''}{printer.model_name}
+                        </h2>
+                        <p className="text-muted-foreground leading-relaxed mb-8">
+                          According to FilaScope's database, the {brand ? `${brand} ` : ''}{printer.model_name} supports {materialCount > 0 ? `${materialCount} material types including ${materialListDisplay}` : 'a wide range of materials'}.
+                          {printer.max_nozzle_temp_c ? ` Based on its ${printer.max_nozzle_temp_c}°C maximum nozzle temperature, it can handle materials from standard PLA up to ${highestTempMat}.` : ''}
+                          {' '}For beginners, we recommend starting with PLA filaments. For functional parts, try PETG or ABS.
+                          {brand ? ` Browse ${brand}'s own filament line or explore` : ' Explore'} all compatible filaments on FilaScope.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {brandSlug && (
+                            <Link
+                              to={`/brands/${brandSlug}`}
+                              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors text-sm font-medium text-foreground text-center"
+                            >
+                              Browse {brand} Filaments
+                            </Link>
+                          )}
+                          <Link
+                            to="/filaments/pla"
+                            className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors text-sm font-medium text-foreground text-center"
+                          >
+                            Compare PLA Filaments
+                          </Link>
+                          <Link
+                            to="/deals"
+                            className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors text-sm font-medium text-foreground text-center"
+                          >
+                            View Filament Deals
+                          </Link>
+                        </div>
+                      </section>
+                    );
+                  })()}
+
                   {/* FAQ Section - Only on Overview tab */}
                   <FAQSection
                     printerModel={printer.model_name}
@@ -1132,6 +1182,7 @@ const PrinterDetail = () => {
                     maxNozzleTemp={printer.max_nozzle_temp_c || undefined}
                     maxColors={printer.multi_material_max_spools || undefined}
                     hasEnclosure={printer.has_enclosure || undefined}
+                    supportedMaterials={printer.official_supported_materials}
                   />
                 </>
               </div>
