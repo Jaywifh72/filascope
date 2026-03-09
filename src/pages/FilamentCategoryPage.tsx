@@ -768,7 +768,7 @@ export default function FilamentCategoryPage() {
           <>
             {/* H1 + intro */}
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              {metaConfig.h1}
+              {h1Text}
             </h1>
              <p className="text-muted-foreground mb-2 max-w-2xl leading-relaxed">{intro}</p>
              {slug && (
