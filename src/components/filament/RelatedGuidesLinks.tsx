@@ -117,7 +117,7 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
   if (brand && brandSlug) {
     links.push({
       href: `/brands/${brandSlug}`,
-      label: `Browse all ${brand} filaments`,
+      label: `${brand} Filaments — Full Catalog & Pricing`,
       icon: <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }
