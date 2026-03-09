@@ -15,6 +15,10 @@
 /pla-vs-petg /guides/pla-vs-petg 301
 /best-filaments-for-beginners /guides/best-filaments-for-beginners 301
 /best-filaments-for-hueforge /guides/best-filaments-for-hueforge 301
+/best-white-filaments /guides/best-white-filaments-for-hueforge 301
+/filament-temperature-guide /guides/filament-temperature-guide 301
+/filament-storage-guide /guides/filament-storage-guide 301
+/learn/hueforge /guides/hueforge-beginners-guide 301
 
 # SPA catch-all — MUST be last
 /* /index.html 200
