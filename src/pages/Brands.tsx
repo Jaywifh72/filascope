@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap, Package, Layers } from "lucide-react";
+import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap, Package, Layers, HelpCircle } from "lucide-react";
 import { BrandCardSkeletonGrid } from "@/components/skeletons/BrandCardSkeleton";
 import { BrandsEmptyState } from "@/components/empty-states";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
@@ -12,9 +12,10 @@ import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ItemListSchema } from "@/components/seo";
+import { ItemListSchema, FAQSection, FAQSchema } from "@/components/seo";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { toBrandSlug } from "@/utils/brandSlug";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   Select,
   SelectContent,
@@ -404,11 +405,11 @@ const Brands = () => {
     <>
       <DocumentHead
         title={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        description={`Compare ${brandCount || 48}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`}
+        description={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
         ogTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        ogDescription={`Compare ${brandCount || 48}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`}
+        ogDescription={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
         twitterTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        twitterDescription={`Compare ${brandCount || 48}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`}
+        twitterDescription={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
       />
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}
@@ -717,6 +718,95 @@ const Brands = () => {
             Data updated daily from 15+ retailers
           </p>
         </div>
+
+        {/* Compare Brands — keyword-rich editorial section */}
+        <section className="mt-16 max-w-3xl mx-auto">
+          <h2 className="text-xl font-bold text-foreground mb-4">Compare 3D Printer Filament Brands</h2>
+          <div className="prose prose-sm prose-invert max-w-none text-muted-foreground leading-relaxed space-y-3">
+            <p>
+              FilaScope tracks {brandCount || 48}+ filament manufacturers with multi-region pricing across the US, UK, EU, Canada, and Australia — updated daily from 15+ retailers. Every brand page shows product line counts, available materials, color ranges, and where applicable, verified <Link to="/td-database" className="text-primary hover:underline">HueForge TD values</Link> for lithophane printing.
+            </p>
+            <p>
+              Use the sidebar filters to narrow brands by material type (PLA, PETG, ABS, TPU), spool packaging (cardboard vs. plastic), high-speed compatibility, or price tier. You can also <Link to="/brands/compare" className="text-primary hover:underline">compare brands side-by-side</Link> on material range, pricing, and product availability, or let the <Link to="/wizard" className="text-primary hover:underline">Filament Wizard</Link> recommend a brand based on your printer and use case.
+            </p>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="mt-16 max-w-3xl mx-auto">
+          <h2 className="text-xl font-bold text-foreground mb-6">Frequently Asked Questions About 3D Filament Brands</h2>
+          <Accordion type="single" collapsible className="space-y-2">
+            {[
+              {
+                q: 'What are the best 3D printer filament brands?',
+                a: <>The top-rated brands in FilaScope's database include <Link to="/brands/bambu-lab" className="text-primary hover:underline">Bambu Lab</Link>, <Link to="/brands/polymaker" className="text-primary hover:underline">Polymaker</Link>, <Link to="/brands/prusament" className="text-primary hover:underline">Prusament</Link>, and <Link to="/brands/fillamentum" className="text-primary hover:underline">Fillamentum</Link> — each scoring consistently high on documentation, consistency, and material variety. Budget picks like <Link to="/brands/esun" className="text-primary hover:underline">eSUN</Link> and <Link to="/brands/overture" className="text-primary hover:underline">Overture</Link> deliver strong value without sacrificing quality.</>,
+              },
+              {
+                q: 'Which filament brand has the best PLA?',
+                a: <>For premium PLA, <Link to="/brands/prusament" className="text-primary hover:underline">Prusament</Link> is widely regarded for its tight ±0.02mm tolerances, while <Link to="/brands/polymaker" className="text-primary hover:underline">Polymaker's PolyLite PLA</Link> offers excellent surface quality across a huge color range. <Link to="/brands/bambu-lab" className="text-primary hover:underline">Bambu Lab PLA Basic</Link> is a strong all-rounder optimized for high-speed printing. Compare all options in the <Link to="/filaments/pla" className="text-primary hover:underline">PLA filament catalog</Link>.</>,
+              },
+              {
+                q: 'What is the cheapest reliable filament brand?',
+                a: <><Link to="/brands/esun" className="text-primary hover:underline">eSUN</Link>, <Link to="/brands/overture" className="text-primary hover:underline">Overture</Link>, and <Link to="/brands/sunlu" className="text-primary hover:underline">Sunlu</Link> consistently offer sub-$15/kg pricing with acceptable quality for hobbyist use. Use FilaScope's price filter to find <Link to="/deals" className="text-primary hover:underline">current deals</Link> across all brands.</>,
+              },
+              {
+                q: 'Which brands have HueForge TD data?',
+                a: <>FilaScope tracks HueForge Transmission Distance values for filaments from brands including <Link to="/brands/bambu-lab" className="text-primary hover:underline">Bambu Lab</Link>, <Link to="/brands/polymaker" className="text-primary hover:underline">Polymaker</Link>, <Link to="/brands/prusament" className="text-primary hover:underline">Prusament</Link>, <Link to="/brands/esun" className="text-primary hover:underline">eSUN</Link>, and others. Browse all filaments with TD data in the <Link to="/td-database" className="text-primary hover:underline">HueForge TD Database</Link>.</>,
+              },
+              {
+                q: 'Do all brands make filaments in 1.75mm diameter?',
+                a: <>The vast majority of consumer 3D printer filament brands produce 1.75mm diameter spools, which is the standard for most modern FDM printers. A few brands like <Link to="/brands/colorfabb" className="text-primary hover:underline">ColorFabb</Link> and <Link to="/brands/fillamentum" className="text-primary hover:underline">Fillamentum</Link> also offer 2.85mm variants for printers like the Ultimaker series. FilaScope's database tracks diameter availability per product.</>,
+              },
+            ].map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-border/40 rounded-lg px-4 bg-card/30">
+                <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline py-3">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground pb-3 leading-relaxed">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </section>
+
+        {/* People Also Ask */}
+        <section className="mt-12 max-w-3xl mx-auto mb-16">
+          <h2 className="text-xl font-bold text-foreground mb-6">People Also Ask</h2>
+          <Accordion type="single" collapsible className="space-y-2">
+            {[
+              {
+                q: 'Is Bambu Lab filament better than Polymaker?',
+                a: <>Both are top-tier. <Link to="/brands/bambu-lab" className="text-primary hover:underline">Bambu Lab filaments</Link> are optimized for Bambu printers with excellent high-speed performance and tight AMS compatibility. <Link to="/brands/polymaker" className="text-primary hover:underline">Polymaker</Link> offers a wider material range (50+ product lines) with specialty options like PolyFlex TPU, PolyMax PC, and PolySmooth. The best choice depends on your printer and material needs — compare them <Link to="/brands/compare" className="text-primary hover:underline">side-by-side</Link>.</>,
+              },
+              {
+                q: 'What filament brands work with Bambu Lab printers?',
+                a: <>Most 1.75mm filament brands work with Bambu Lab printers. For optimal AMS compatibility, <Link to="/brands/bambu-lab" className="text-primary hover:underline">Bambu Lab's own filaments</Link> include RFID chips for auto-detection. Third-party brands like <Link to="/brands/polymaker" className="text-primary hover:underline">Polymaker</Link>, <Link to="/brands/esun" className="text-primary hover:underline">eSUN</Link>, and <Link to="/brands/sunlu" className="text-primary hover:underline">Sunlu</Link> also work well — just ensure spool diameter fits the AMS (most standard 1kg spools do). Check our <Link to="/guides/best-filament-for-bambu-lab-p1s" className="text-primary hover:underline">best filaments for Bambu Lab P1S</Link> guide for curated picks.</>,
+              },
+            ].map((item, i) => (
+              <AccordionItem key={i} value={`paa-${i}`} className="border border-border/40 rounded-lg px-4 bg-card/30">
+                <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline py-3">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground pb-3 leading-relaxed">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </section>
+
+        {/* FAQPage JSON-LD schema */}
+        <FAQSchema faqs={[
+          { question: 'What are the best 3D printer filament brands?', answer: 'The top-rated brands in FilaScope\'s database include Bambu Lab, Polymaker, Prusament, and Fillamentum — each scoring consistently high on documentation, consistency, and material variety. Budget picks like eSUN and Overture deliver strong value without sacrificing quality.' },
+          { question: 'Which filament brand has the best PLA?', answer: 'For premium PLA, Prusament is widely regarded for its tight ±0.02mm tolerances, while Polymaker\'s PolyLite PLA offers excellent surface quality across a huge color range. Bambu Lab PLA Basic is a strong all-rounder optimized for high-speed printing.' },
+          { question: 'What is the cheapest reliable filament brand?', answer: 'eSUN, Overture, and Sunlu consistently offer sub-$15/kg pricing with acceptable quality for hobbyist use.' },
+          { question: 'Which brands have HueForge TD data?', answer: 'FilaScope tracks HueForge Transmission Distance values for filaments from brands including Bambu Lab, Polymaker, Prusament, eSUN, and others.' },
+          { question: 'Do all brands make filaments in 1.75mm diameter?', answer: 'The vast majority of consumer 3D printer filament brands produce 1.75mm diameter spools. A few brands like ColorFabb and Fillamentum also offer 2.85mm variants for printers like the Ultimaker series.' },
+          { question: 'Is Bambu Lab filament better than Polymaker?', answer: 'Both are top-tier. Bambu Lab filaments are optimized for Bambu printers with excellent high-speed performance and tight AMS compatibility. Polymaker offers a wider material range with specialty options. The best choice depends on your printer and material needs.' },
+          { question: 'What filament brands work with Bambu Lab printers?', answer: 'Most 1.75mm filament brands work with Bambu Lab printers. For optimal AMS compatibility, Bambu Lab\'s own filaments include RFID chips for auto-detection. Third-party brands like Polymaker, eSUN, and Sunlu also work well.' },
+        ]} />
+
         </div>
         </div>
       </div>
