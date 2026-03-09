@@ -66,7 +66,7 @@ export function HomeSEOContent() {
       <div className="grid md:grid-cols-2 gap-10">
         {/* What is FilaScope? */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-3">What is FilaScope?</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">Why Makers Trust FilaScope</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             FilaScope is the most comprehensive <strong className="text-foreground/80">3D printer filament comparison</strong> platform on the web.
             Our live <strong className="text-foreground/80">filament database</strong> tracks prices, specs, and&nbsp;
