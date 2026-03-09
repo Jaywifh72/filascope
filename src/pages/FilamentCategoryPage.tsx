@@ -478,7 +478,7 @@ function generateMaterialCategoryFAQs(
     const maxStr = `$${materialStats.maxPrice.toFixed(2)}`;
     faqs.push({
       question: `How much does ${label} filament cost?`,
-      answer: `${label} filament typically ranges from ${minStr} to ${maxStr} per spool in the US market. Price varies by brand, color type, and spool weight. FilaScope tracks live pricing from 48+ brands to help you find the best deal.`,
+      answer: `Based on FilaScope's real-time price tracking across 15+ stores in 5 regions, ${label} filament typically ranges from ${minStr} to ${maxStr} per spool in the US market. Price varies by brand, color type, and spool weight.`,
     });
   }
 
