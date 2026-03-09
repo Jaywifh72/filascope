@@ -885,6 +885,11 @@ export default function MaterialHub() {
           description={description}
           datePublished="2025-01-01T00:00:00Z"
           url={`/materials/${slug}`}
+          speakableCssSelectors={[
+            'article > p:first-of-type',
+            '[data-radix-accordion-trigger]',
+            '[data-radix-accordion-content] > div',
+          ]}
         />
       )}
       {reference && (
