@@ -122,7 +122,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   asa: {
     titleTemplate: "ASA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ ASA 3D printer filaments. UV-resistant and weatherproof for outdoor use. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "ASA Filaments",
+    h1: "ASA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "ASA (Acrylonitrile Styrene Acrylate) is ABS's weatherproof sibling — with superior UV and moisture resistance, making it ideal for outdoor signs, garden tools, and automotive trim. It prints similarly to ABS (230–260°C) and requires an enclosure to prevent warping. Compare {count}+ ASA filaments with specs, pricing, and compatibility data.",
   },
   "silk-pla": {
