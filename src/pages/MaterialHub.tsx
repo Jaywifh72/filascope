@@ -394,7 +394,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many silk PLA filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} silk PLA filaments from ${brandCount}+ brands with real-time pricing and TD values.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} silk PLA filaments from ${brandCount}+ brands with real-time pricing and TD values across 15+ stores.`,
       },
     ],
     "high-speed-pla": [
