@@ -44,6 +44,11 @@ const PrintersHeroSection = ({
               3D Printer Database — Compare {printerCount > 0 ? printerCount.toLocaleString() : '118'}+ Printers
             </h1>
 
+            {/* LLM-quotable definition paragraph */}
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-[520px] animate-fade-in">
+              FilaScope's 3D printer database catalogs {printerCount > 0 ? printerCount.toLocaleString() : '118'}+ printers with 25+ specification fields per model, including build volume, supported materials, nozzle temperature range, and connectivity options. Compare printer specs side by side and find compatible filaments.
+            </p>
+
             {/* Decorative tagline — visually dominant brand design, NOT the H1 */}
             <p
               aria-hidden="true"

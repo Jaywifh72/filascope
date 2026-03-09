@@ -148,6 +148,9 @@ export default function FilamentDatabase() {
           <h1 className="text-3xl font-bold mb-3">
             Compare 3D Printer Filaments — {displayTotal}+ Products from {displayBrands}+ Brands
           </h1>
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            FilaScope's filament database indexes {displayTotal}+ 3D printer filaments from {displayBrands}+ brands, with real-time pricing from 15+ stores across 5 regions. Filter by material type, brand, price, color, diameter, spool size, and HueForge TD value to find the perfect filament for your project.
+          </p>
           <p className="text-muted-foreground text-lg leading-relaxed mb-6">
             The most comprehensive 3D printer filament database. Compare{' '}
             {statsLoading ? '1,080+' : `${stats?.total.toLocaleString()}+`} filaments across{' '}
