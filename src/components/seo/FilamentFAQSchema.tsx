@@ -33,6 +33,8 @@ export function FilamentFAQSchema({
   regionName,
   filaScopeScore,
   compatiblePrinterCount,
+  spoolWeight,
+  storeName,
 }: FilamentFAQSchemaProps) {
   const brandStr = brand || '';
   const colorPart = color ? ` ${color}` : '';
