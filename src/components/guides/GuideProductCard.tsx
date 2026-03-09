@@ -123,7 +123,7 @@ export function GuideProductCard({ filament, rank, annotation }: GuideProductCar
   );
   const pros = generateWhyWePicked(filament);
   const cons = generateCons(filament);
-  const slug = generateFilamentSlug(filament.vendor, filament.material, filament.product_title, filament.color_family);
+  const slug = filament.product_handle || generateFilamentSlug(filament.vendor, filament.material, filament.product_title, filament.color_family);
   const scoreColor = getScoreNumberColor(filament.score.score);
 
   return (

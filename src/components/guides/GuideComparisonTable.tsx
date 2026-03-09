@@ -45,7 +45,7 @@ export function GuideComparisonTable({ filaments }: GuideComparisonTableProps) {
             const title = cleanFilamentDisplayName(
               (f.product_title || '').replace(new RegExp(`^${f.vendor || ''}\\s*`, 'i'), '').trim()
             );
-            const slug = generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
+            const slug = f.product_handle || generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
             const scoreColor = getScoreNumberColor(f.score.score);
             const tempRange = f.nozzle_temp_min_c && f.nozzle_temp_max_c
               ? `${f.nozzle_temp_min_c}–${f.nozzle_temp_max_c}°C`
