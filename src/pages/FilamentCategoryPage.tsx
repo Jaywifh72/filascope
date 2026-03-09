@@ -128,7 +128,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   "silk-pla": {
     titleTemplate: "Silk PLA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ Silk PLA 3D printer filaments with shimmery metallic finish. High TD values ideal for HueForge. Filter by brand, color, price, and TD value.",
-    h1: "Silk PLA Filaments",
+    h1: "Silk PLA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Silk PLA produces stunning metallic-sheen prints with a satin finish that catches the light from every angle. It shares PLA's easy printability (200–230°C) and is especially popular for HueForge multi-color lithophanes thanks to characteristically high TD values. Compare {count}+ Silk PLA filaments with color swatches, TD data, and pricing.",
   },
   nylon: {
