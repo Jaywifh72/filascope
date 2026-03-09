@@ -22,36 +22,36 @@ const UNIVERSAL_GUIDES = [
 // Material-specific comparison guides (using /guides/ prefix)
 const MATERIAL_COMPARISONS: Record<string, { href: string; label: string }[]> = {
   PLA: [
-    { href: '/guides/pla-vs-petg', label: 'PLA vs PETG: Which Should You Choose?' },
-    { href: '/guides/pla-vs-abs', label: 'PLA vs ABS: Strength & Ease Compared' },
+    { href: '/guides/pla-vs-petg', label: 'PLA vs PETG — Which Filament Is Better?' },
+    { href: '/guides/pla-vs-abs', label: 'PLA vs ABS — Strength & Ease Compared' },
     { href: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide — Print Settings for Every Material' },
   ],
   'PLA+': [
-    { href: '/guides/pla-vs-petg', label: 'PLA+ vs PETG: Which Should You Choose?' },
-    { href: '/guides/pla-plus-vs-pla-pro', label: 'PLA+ vs PLA Pro: What\'s the Difference?' },
-    { href: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide' },
+    { href: '/guides/pla-vs-petg', label: 'PLA+ vs PETG — Which Filament Is Better?' },
+    { href: '/guides/pla-plus-vs-pla-pro', label: 'PLA+ vs PLA Pro — What\'s the Difference?' },
+    { href: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide — Print Settings for Every Material' },
   ],
   PETG: [
-    { href: '/guides/pla-vs-petg', label: 'PETG vs PLA: Complete Material Comparison' },
-    { href: '/guides/petg-vs-abs', label: 'PETG vs ABS: Strength & Heat Resistance' },
-    { href: '/guides/nylon-vs-petg', label: 'Nylon vs PETG: Engineering Filament Guide' },
+    { href: '/guides/pla-vs-petg', label: 'PETG vs PLA — Complete Material Comparison' },
+    { href: '/guides/petg-vs-abs', label: 'PETG vs ABS — Strength & Heat Resistance Compared' },
+    { href: '/guides/nylon-vs-petg', label: 'Nylon vs PETG — Engineering Filament Guide' },
   ],
   ABS: [
-    { href: '/guides/pla-vs-abs', label: 'PLA vs ABS: Strength & Ease Compared' },
-    { href: '/guides/petg-vs-abs', label: 'PETG vs ABS: Which Is Better?' },
-    { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ABS vs ASA for Outdoor Printing' },
+    { href: '/guides/pla-vs-abs', label: 'PLA vs ABS — Strength & Ease Compared' },
+    { href: '/guides/petg-vs-abs', label: 'PETG vs ABS — Which Is Better?' },
+    { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ABS vs ASA — Best Filament for Outdoor Printing' },
   ],
   ASA: [
-    { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ASA vs ABS for Outdoor Printing' },
-    { href: '/guides/best-filaments-for-outdoor-use', label: 'Best Filaments for Outdoor Use' },
+    { href: '/guides/asa-vs-abs-outdoor-printing', label: 'ASA vs ABS — Best Filament for Outdoor Printing' },
+    { href: '/guides/best-filaments-for-outdoor-use', label: 'Best Filaments for Outdoor Use — 2026 Guide' },
   ],
   TPU: [
-    { href: '/guides/tpu-vs-petg', label: 'TPU vs PETG: Flexible vs Rigid Compared' },
-    { href: '/guides/best-filament-for-cosplay', label: 'Best Filaments for Cosplay & Props' },
+    { href: '/guides/tpu-vs-petg', label: 'TPU vs PETG — Flexible vs Rigid Compared' },
+    { href: '/guides/best-filament-for-cosplay', label: 'Best Filaments for Cosplay & Props — 2026 Guide' },
   ],
   NYLON: [
-    { href: '/guides/nylon-vs-petg', label: 'Nylon vs PETG: Engineering Filament Guide' },
-    { href: '/guides/best-filaments-for-functional-parts', label: 'Best Filaments for Functional Parts' },
+    { href: '/guides/nylon-vs-petg', label: 'Nylon vs PETG — Engineering Filament Guide' },
+    { href: '/guides/best-filaments-for-functional-parts', label: 'Best Filaments for Functional Parts — 2026 Guide' },
   ],
 };
 
@@ -80,7 +80,7 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
   if (materialSlug && material) {
     links.push({
       href: `/materials/${materialSlug}`,
-      label: `Learn more about ${material} filament properties and print settings`,
+      label: `${material} Filament Properties & Settings Guide`,
       icon: <Layers className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }
@@ -90,7 +90,7 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
     const year = new Date().getFullYear();
     links.push({
       href: bestOfGuide,
-      label: `Best ${material} Filaments in ${year}`,
+      label: `Best ${material} Filaments — ${year} Buyer's Guide`,
       icon: <BookOpen className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }
@@ -117,7 +117,7 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
   if (brand && brandSlug) {
     links.push({
       href: `/brands/${brandSlug}`,
-      label: `Browse all ${brand} filaments`,
+      label: `${brand} Filaments — Full Catalog & Pricing`,
       icon: <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }

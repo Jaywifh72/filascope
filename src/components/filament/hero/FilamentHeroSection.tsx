@@ -103,6 +103,7 @@ export function FilamentHeroSection({
               <Link 
                 to={`/brands/${toBrandSlug(pricingFilament.vendor || '')}`}
                 className="inline-flex items-center gap-1.5 group hover:opacity-80 transition-opacity"
+                title={`${pricingFilament.vendor} Filaments — Full Catalog & Pricing`}
               >
                 <BrandLogo
                   src={getBrandLogo(pricingFilament.vendor)}
@@ -110,6 +111,7 @@ export function FilamentHeroSection({
                   size="lg"
                   className="h-8 max-w-[180px]"
                 />
+                <span className="sr-only">{pricingFilament.vendor} Filaments</span>
                 <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
               </Link>
             </div>
