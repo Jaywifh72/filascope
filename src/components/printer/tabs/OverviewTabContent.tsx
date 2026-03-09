@@ -35,13 +35,13 @@ interface OverviewTabContentProps {
 }
 
 // Section header with icon and border
-function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+function SectionHeader({ icon: Icon, title, as: Tag = 'h2' }: { icon: React.ElementType; title: string; as?: 'h2' | 'h3' }) {
   return (
     <div className="section-header mb-4 sm:mb-6">
       <div className="section-header-icon">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <h2 className="section-title">{title}</h2>
+      <Tag className="section-title">{title}</Tag>
     </div>
   );
 }
