@@ -86,6 +86,8 @@ export function CollapsibleContentContainer({ filament, className }: Collapsible
         bedTempMax={filament.bed_temp_max_c}
         transmissionDistance={(filament as any).transmission_distance}
         price={filament.variant_price}
+        color={filament.color_family}
+        spoolWeight={(filament as any).spool_weight_g}
       />
     }
   ].filter(section => section.show);

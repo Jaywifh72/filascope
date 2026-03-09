@@ -15,6 +15,8 @@ interface FilamentFAQSchemaProps {
   regionName: string;
   filaScopeScore: number | null;
   compatiblePrinterCount: number | null;
+  spoolWeight?: number | null;
+  storeName?: string | null;
 }
 
 export function FilamentFAQSchema({
