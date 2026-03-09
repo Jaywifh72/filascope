@@ -908,10 +908,10 @@ export default function MaterialHub() {
 
         {/* H1 */}
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          {label} Filament — Complete Guide & {count.toLocaleString()} Products
+          {label} Filament Guide — Properties, Settings & Best Uses
         </h1>
         <p className="text-muted-foreground mb-4 max-w-2xl">
-          Browse {count.toLocaleString()} {label} filaments from {stats?.brandCount}+ brands. Compare prices, specs, and HueForge TD values to find the best {label} for your printer.
+          Everything you need to know about {label} filament — print temperatures, mechanical properties, strengths, weaknesses, and when to choose {label} over other materials.
         </p>
 
         {/* CTA: cross-link to catalog page */}
