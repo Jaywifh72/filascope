@@ -878,7 +878,7 @@ export default function MaterialHub() {
       />
       {reference && (
         <ArticleSchema
-          headline={`${label} Filament — Complete Guide & ${count} Products`}
+          headline={`${label} Filament Guide — Properties, Settings & Best Uses`}
           description={description}
           datePublished="2025-01-01T00:00:00Z"
           url={`/materials/${slug}`}
