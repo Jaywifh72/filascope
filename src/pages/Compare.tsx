@@ -1211,6 +1211,40 @@ const Compare = () => {
                 ))}
               </div>
             </article>
+
+            {/* FAQ Section */}
+            {(() => {
+              const compareFaqs = [
+                { question: 'How do I compare 3D printer filaments side by side?', answer: "FilaScope's comparison tool lets you select up to 4 filaments and compare them across every specification — print temperature, bed temperature, density, tensile strength, price per gram, and HueForge TD values. Select filaments from the search bar above, or start with one of the popular comparisons below." },
+                { question: 'What specs matter most when comparing filaments?', answer: 'The most important filament specs to compare depend on your use case. For general printing, focus on print temperature range, bed adhesion requirements, and price per gram. For functional parts, compare tensile strength, heat deflection temperature, and layer adhesion. For HueForge lithophanes, the TD (Transmission Distance) value is the critical metric — FilaScope is one of the only platforms that includes TD data in comparisons.' },
+                { question: 'What is the difference between PLA and PETG filament?', answer: "PLA prints at lower temperatures (190–220°C) and is easier for beginners, but has poor heat resistance (~60°C). PETG prints at 220–250°C, offers better impact resistance, UV stability, and heat tolerance (~80°C), making it better for functional or outdoor parts. PLA produces better surface detail and is more affordable. According to FilaScope's database, the average PLA filament costs $19–25/kg while PETG averages $20–28/kg." },
+                { question: 'Is PLA or PETG stronger for 3D printing?', answer: 'PETG has higher impact strength and better layer adhesion than PLA, making it stronger for functional parts. However, PLA has higher rigidity and compressive strength. For parts that need to flex without breaking, PETG is stronger. For parts that need to hold their shape under load, PLA can be better. Compare specific filaments on FilaScope to see exact tensile strength values side by side.' },
+                { question: 'Can I compare filament prices across different stores?', answer: 'Yes. FilaScope tracks real-time pricing from 15+ stores across the US, Canada, EU, UK, and Australia. When you compare filaments, you see the lowest current price for each one, plus price-per-gram calculations to fairly compare different spool sizes. Use the Deals page to find the current lowest prices across all tracked filaments.' },
+                { question: 'What is a HueForge TD value and why does it matter for comparison?', answer: "HueForge TD (Transmission Distance) measures how much light passes through a filament at a specific thickness, measured in millimeters. It's essential for creating lithophanes and HueForge art. FilaScope is one of the most comprehensive sources for TD values, tracking transmissivity data across hundreds of filaments. When comparing filaments for lithophane projects, the TD value is the single most important specification." },
+              ];
+              return (
+                <section className="mt-12 border-t border-border pt-8">
+                  <FAQSchema faqs={compareFaqs} />
+                  <h2 className="text-xl font-semibold mb-6">Filament Comparison FAQ</h2>
+                  <Accordion type="single" collapsible className="space-y-2">
+                    {compareFaqs.map((faq, i) => (
+                      <AccordionItem
+                        key={i}
+                        value={`faq-${i}`}
+                        className="border border-border rounded-lg px-4 bg-card"
+                      >
+                        <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
+                          {faq.question}
+                        </AccordionTrigger>
+                        <AccordionContent forceMount className="data-[state=closed]:hidden text-muted-foreground pb-4 leading-relaxed">
+                          {faq.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </section>
+              );
+            })()}
           </section>
         </div>
       </div>
