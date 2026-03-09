@@ -1,7 +1,8 @@
 // Filament comparison page
 import React, { useEffect, useState, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema, HowToSchema, Breadcrumbs } from "@/components/seo";
+import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema, HowToSchema, FAQSchema, Breadcrumbs } from "@/components/seo";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
