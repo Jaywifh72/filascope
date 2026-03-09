@@ -20,6 +20,11 @@ interface BrandFAQSectionProps {
   isVerified?: boolean;
   isPremium?: boolean;
   isBudgetFriendly?: boolean;
+  // New comparative props
+  tdCount?: number;
+  topMaterialCategory?: string | null;
+  topMaterialCategoryCount?: number;
+  colorCount?: number;
 }
 
 interface FAQItem {
@@ -38,6 +43,10 @@ function generateBrandFAQs({
   isVerified,
   isPremium,
   isBudgetFriendly,
+  tdCount,
+  topMaterialCategory,
+  topMaterialCategoryCount,
+  colorCount,
 }: BrandFAQSectionProps): FAQItem[] {
   const materialList = materials.slice(0, 5).join(', ');
   const primaryMaterial = materials[0] || 'PLA';
@@ -109,6 +118,67 @@ function generateBrandFAQs({
     faqs.push({
       question: `Does ${brandName} ship internationally?`,
       answer: `Yes, ${brandName} products are available in multiple regions including ${regionNames}. FilaScope tracks regional pricing and availability so you can compare costs in your local currency.`,
+    });
+  }
+
+  // ── NEW comparative FAQs ──
+
+  // 7. Brand comparison FAQ
+  {
+    const priceTier = isPremium ? 'premium' : isBudgetFriendly ? 'budget' : 'mid-range';
+    let answer = `According to FilaScope's database, ${brandName} offers ${productCount} filaments across ${materials.length} material type${materials.length !== 1 ? 's' : ''}`;
+    if (priceRange) {
+      answer += `, priced from $${priceRange.min.toFixed(2)} to $${priceRange.max.toFixed(2)} per spool`;
+    }
+    answer += `. Compared to the market average, ${brandName} is positioned as a ${priceTier} brand. FilaScope tracks 48+ filament brands — use the comparison tool to compare specific ${brandName} products against alternatives.`;
+    faqs.push({
+      question: `How does ${brandName} compare to other filament brands?`,
+      answer,
+    });
+  }
+
+  // 8. Quality detail FAQ (spec-focused)
+  {
+    // Build unique selling points from available data
+    const usps: string[] = [];
+    if (colorCount && colorCount > 10) {
+      usps.push(`a wide color selection with ${colorCount}+ colors`);
+    }
+    if (tdCount && tdCount > 0) {
+      usps.push(`HueForge TD values available for ${tdCount} products`);
+    }
+    if (materials.length >= 5) {
+      usps.push(`versatility across ${materials.length} material types`);
+    }
+
+    const toleranceStr = isPremium ? '±0.02mm' : '±0.03mm (typical)';
+    const uspStr = usps.length > 0 ? usps.join(', ') : `${productCount}+ products across multiple material types`;
+
+    faqs.push({
+      question: `Is ${brandName} filament good quality?`,
+      answer: `Based on FilaScope's specification data, ${brandName} filaments have a diameter tolerance of ${toleranceStr} and offer ${uspStr}. ${brandName} is one of 48+ brands tracked on FilaScope, where you can compare detailed specs, real-time pricing, and user data across their full product line.`,
+    });
+  }
+
+  // 9. Best filament FAQ
+  {
+    const topCat = topMaterialCategory || primaryMaterial;
+    const topCatCount = topMaterialCategoryCount || 0;
+    let answer = `Among ${brandName}'s ${productCount} filaments on FilaScope, their ${topCat} line is the most comprehensive`;
+    if (topCatCount > 0) {
+      answer += ` with ${topCatCount} options`;
+    }
+    answer += '.';
+    if (priceRange) {
+      answer += ` Their most affordable option starts at $${priceRange.min.toFixed(2)}, while their premium products go up to $${priceRange.max.toFixed(2)}.`;
+    }
+    if (tdCount && tdCount > 0) {
+      answer += ` ${brandName} has ${tdCount} filaments with verified HueForge TD values.`;
+    }
+    answer += ` Browse all ${brandName} filaments on FilaScope to filter by material, price, or color.`;
+    faqs.push({
+      question: `What is ${brandName}'s best filament?`,
+      answer,
     });
   }
 
