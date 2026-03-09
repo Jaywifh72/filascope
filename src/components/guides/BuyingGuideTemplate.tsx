@@ -346,7 +346,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         {relatedFilaments && relatedFilaments.length > 0 && (
           <section id="related-filaments" className="mb-12 scroll-mt-24">
             <h2 className="text-xl font-bold mb-4">
-              {primaryMaterial ? `Popular ${primaryMaterial} Filaments` : 'Related Filaments'}
+              {primaryMaterial ? `Top-Rated ${primaryMaterial} Filaments` : 'Top-Rated Filaments'}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {relatedFilaments.map((f) => (
