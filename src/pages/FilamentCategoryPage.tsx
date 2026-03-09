@@ -158,7 +158,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   "petg-cf": {
     titleTemplate: "PETG Carbon Fiber Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PETG-CF carbon fiber 3D printer filaments. Stiff, lightweight, and strong. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "PETG Carbon Fiber Filaments",
+    h1: "PETG Carbon Fiber Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "PETG-CF (Carbon Fiber reinforced PETG) combines PETG's chemical resistance and printability with dramatically increased stiffness from short-strand carbon fibers — ideal for lightweight structural parts, brackets, and drone frames. It requires a hardened steel nozzle (0.4mm+) to prevent wear. Compare {count}+ PETG-CF filaments with specs, pricing, and compatibility data.",
   },
   wood: {
