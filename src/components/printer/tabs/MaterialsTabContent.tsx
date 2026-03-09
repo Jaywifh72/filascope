@@ -338,20 +338,24 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
                   <div className="flex-1 h-px bg-border/30" />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {materials.map((material) => (
+                  {materials.map((material) => {
+                    const slug = materialNameToSlug(material);
+                    return (
                     <Link 
                       key={material}
-                      to={`/filaments?material=${encodeURIComponent(material)}&printer=${encodeURIComponent(printer.model_name)}`}
+                      to={`/filaments/${slug}`}
                       className={cn(
                         "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-200",
                         "hover:scale-105 hover:shadow-md cursor-pointer",
                         getCategoryColor(category)
                       )}
+                      title={`Compare ${material} filaments for ${printer.model_name}`}
                     >
-                      {material}
+                      {material} Filaments
                       <ArrowRight className="w-3 h-3 opacity-60" />
                     </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
