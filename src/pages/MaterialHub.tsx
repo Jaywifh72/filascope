@@ -14,6 +14,7 @@ import { getMaterialReference } from "@/lib/materialReferenceData";
 import { MaterialBrandComparisonTable } from "@/components/filament/MaterialBrandComparisonTable";
 import { RelatedSearchesSection } from "@/components/seo/RelatedSearchesSection";
 import { slugToMaterialName, slugToMaterialNames } from "@/lib/materialSlugUtils";
+import { MaterialComparisonSection, getComparisonFAQs } from "@/components/material/MaterialComparisonSection";
 
 // ──────────────────────────────────────────────────────────────
 // Slug → DB materials mapping
