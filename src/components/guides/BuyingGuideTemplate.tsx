@@ -111,7 +111,20 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
 
   // Derive topic label for FAQ/related headings (e.g. "PLA", "PETG")
   const topicLabel = config.faqHeadingTopic || primaryMaterial || '';
-  const allFaqs = [...config.faqs, ...(config.relatedQuestions ?? [])];
+
+  // Merge FAQ + PAA, deduplicate by keeping the version with the longer answer
+  const allFaqs = useMemo(() => {
+    const merged = [...config.faqs, ...(config.relatedQuestions ?? [])];
+    const seen = new Map<string, { question: string; answer: string }>();
+    for (const faq of merged) {
+      const key = faq.question.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const existing = seen.get(key);
+      if (!existing || faq.answer.length > existing.answer.length) {
+        seen.set(key, faq);
+      }
+    }
+    return Array.from(seen.values());
+  }, [config.faqs, config.relatedQuestions]);
 
   // Build ToC from editorial sections + fixed sections
   const tocItems: { label: string; anchor: string }[] = [
