@@ -712,9 +712,12 @@ export default function FilamentCategoryPage() {
 
   // SEO strings
   const displayCount = count || totalCount;
-  const title = applyCount(metaConfig.titleTemplate, displayCount);
-  const description = applyCount(metaConfig.descTemplate, displayCount);
-  const intro = applyCount(metaConfig.introTemplate, displayCount);
+  // Brand count: from materialStats for material pages, from allBrandCount for "all" page
+  const brandCount = slug ? (materialStats?.brandCount ?? undefined) : (allBrandCount ?? 48);
+  const title = applyCount(metaConfig.titleTemplate, displayCount, brandCount);
+  const description = applyCount(metaConfig.descTemplate, displayCount, brandCount);
+  const intro = applyCount(metaConfig.introTemplate, displayCount, brandCount);
+  const h1Text = applyCount(metaConfig.h1, displayCount, brandCount);
 
   // Breadcrumb items for visible nav
   const breadcrumbItems = slug
