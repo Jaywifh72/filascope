@@ -461,7 +461,7 @@ Deno.serve(async (req) => {
     path = path.replace(/\/+$/, "") || "/";
 
     // Sitemaps (served to all)
-    if (path === "/sitemap.xml") return new Response(smIndex(), {headers:{...corsHeaders,...SH}});
+    if (path === "/sitemap.xml") { const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!); return new Response(await smIndex(sb), {headers:{...corsHeaders,...SH}}); }
     if (path === "/sitemap-pages.xml") return new Response(smPages(), {headers:{...corsHeaders,...SH}});
     if (path === "/sitemap-guides.xml") return new Response(smGuides(), {headers:{...corsHeaders,...SH}});
     if (path === "/sitemap-materials.xml") return new Response(smPages(), {headers:{...corsHeaders,...SH}});
