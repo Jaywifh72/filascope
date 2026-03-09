@@ -170,7 +170,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   "carbon-fiber": {
     titleTemplate: "Carbon Fiber Filaments — Lightweight & Stiff | FilaScope",
     descTemplate: "Compare {count}+ carbon fiber 3D printer filaments. CF-reinforced PLA, PETG, Nylon, and ABS for lightweight, rigid structural parts. Requires hardened nozzle.",
-    h1: "Carbon Fiber 3D Printing Filaments",
+    h1: "Carbon Fiber 3D Printing Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Carbon fiber filaments combine a standard base polymer (PLA, PETG, Nylon, or ABS) with short-strand carbon fiber reinforcement, dramatically increasing stiffness and reducing weight compared to unreinforced plastics. The result is a material with an excellent strength-to-weight ratio — ideal for drone frames, RC car parts, robotic arms, structural brackets, and functional engineering components. Carbon fiber filaments are highly abrasive and will rapidly wear standard brass nozzles; a hardened steel, ruby-tipped, or tungsten carbide nozzle is essential. Print temperatures vary by base material (230–270°C) and the carbon fibers reduce stringing significantly. Compare {count}+ carbon fiber filaments from top brands below.",
   },
   "glow-in-the-dark": {
