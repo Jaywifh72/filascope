@@ -336,22 +336,28 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           </section>
         ))}
 
-        {/* Consolidated FAQ Section (FAQ + People Also Ask merged) */}
+        {/* Consolidated FAQ Section */}
         {allFaqs.length > 0 && (
           <section id="faq" className="mb-12 scroll-mt-24">
-            <h2 className="text-xl font-bold mb-4">
+            <h2 className="text-xl font-bold mb-6">
               Frequently Asked Questions{topicLabel ? ` About ${topicLabel} Filaments` : ''}
             </h2>
-            <div className="space-y-4">
+            <Accordion type="single" collapsible className="space-y-2">
               {allFaqs.map((faq, i) => (
-                <Card key={i} className="bg-card/50 border-border">
-                  <CardContent className="p-5">
-                    <h3 className="font-semibold mb-2">{faq.question}</h3>
-                    <p className="text-sm text-muted-foreground">{faq.answer}</p>
-                  </CardContent>
-                </Card>
+                <AccordionItem
+                  key={i}
+                  value={`faq-${i}`}
+                  className="border border-border rounded-lg px-4 bg-card"
+                >
+                  <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent forceMount className="data-[state=closed]:hidden text-muted-foreground pb-4 leading-relaxed">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </div>
+            </Accordion>
           </section>
         )}
 
