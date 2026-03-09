@@ -323,12 +323,14 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           </section>
         ))}
 
-        {/* FAQ Section */}
-        {config.faqs.length > 0 && (
+        {/* Consolidated FAQ Section (FAQ + People Also Ask merged) */}
+        {allFaqs.length > 0 && (
           <section id="faq" className="mb-12 scroll-mt-24">
-            <h2 className="text-xl font-bold mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-xl font-bold mb-4">
+              Frequently Asked Questions{topicLabel ? ` About ${topicLabel} Filaments` : ''}
+            </h2>
             <div className="space-y-4">
-              {config.faqs.map((faq, i) => (
+              {allFaqs.map((faq, i) => (
                 <Card key={i} className="bg-card/50 border-border">
                   <CardContent className="p-5">
                     <h3 className="font-semibold mb-2">{faq.question}</h3>
@@ -337,17 +339,6 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
                 </Card>
               ))}
             </div>
-          </section>
-        )}
-
-        {/* Related Questions — People Also Ask */}
-        {config.relatedQuestions && config.relatedQuestions.length > 0 && (
-          <section id="related-questions" className="mb-12 scroll-mt-24">
-            <RelatedQuestionsSection
-              questions={config.relatedQuestions}
-              title="People Also Ask"
-              suppressSchema
-            />
           </section>
         )}
 
