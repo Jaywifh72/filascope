@@ -449,6 +449,10 @@ export function ProductJsonLd({
         '@type': 'Brand',
         name: brand,
       },
+      manufacturer: {
+        '@type': 'Organization',
+        name: brand,
+      },
     }),
     category: printerType
       ? `3D Printer - ${printerType}`
