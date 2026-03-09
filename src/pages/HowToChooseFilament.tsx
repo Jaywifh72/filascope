@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { BreadcrumbSchema, ArticleSchema, FAQSection, ItemListSchema } from '@/components/seo';
+import { BreadcrumbSchema, ArticleSchema, FAQSection, ItemListSchema, HowToSchema } from '@/components/seo';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
