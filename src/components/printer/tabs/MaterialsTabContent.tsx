@@ -259,6 +259,37 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
   const incompatibleSystems = compatibleSystems.filter(s => !s.isCompatible);
   const compatibleSystemsList = compatibleSystems.filter(s => s.isCompatible);
 
+  // Brand info
+  const brandName = printer.brand?.brand || printer.brand_name || '';
+  const brandSlug = brandName ? toBrandSlug(brandName) : null;
+
+  // Collect all supported material names for the recommended filaments query
+  const allMaterialNames = useMemo(() => {
+    const mats: string[] = [];
+    for (const materials of displayMaterials.values()) {
+      mats.push(...materials);
+    }
+    return mats;
+  }, [displayMaterials]);
+
+  // Fetch recommended filaments for this printer
+  const { data: recommendedFilaments } = useQuery({
+    queryKey: ['printer-recommended-filaments', printer.id, allMaterialNames],
+    enabled: allMaterialNames.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('filaments')
+        .select('id, product_title, product_handle, vendor, material, variant_price, featured_image, filascope_score')
+        .in('material', allMaterialNames.slice(0, 6))
+        .not('filascope_score', 'is', null)
+        .not('product_handle', 'is', null)
+        .order('filascope_score', { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
   // Filter accessories by type
   const hotends = accessories.filter((a) => a.accessory_type === 'nozzle' || a.accessory_type === 'hotend');
   const buildPlates = accessories.filter((a) => a.accessory_type === 'build_plate');
