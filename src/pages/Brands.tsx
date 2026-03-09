@@ -405,11 +405,11 @@ const Brands = () => {
     <>
       <DocumentHead
         title={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        description={`Compare ${brandCount || 48}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`}
+        description={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
         ogTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        ogDescription={`Compare ${brandCount || 48}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`}
+        ogDescription={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
         twitterTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        twitterDescription={`Compare ${brandCount || 48}+ 3D printer filament brands with live pricing, material specifications, and verified reviews. Explore Bambu Lab, Polymaker, Prusament, eSUN, Hatchbox & more on FilaScope.`}
+        twitterDescription={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
       />
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}
