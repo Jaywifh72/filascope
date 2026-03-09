@@ -90,7 +90,7 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
     const year = new Date().getFullYear();
     links.push({
       href: bestOfGuide,
-      label: `Best ${material} Filaments in ${year}`,
+      label: `Best ${material} Filaments — ${year} Buyer's Guide`,
       icon: <BookOpen className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }
