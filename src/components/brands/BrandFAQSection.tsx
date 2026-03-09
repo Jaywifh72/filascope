@@ -90,12 +90,12 @@ function generateBrandFAQs({
     const maxStr = `$${priceRange.max.toFixed(2)}`;
     faqs.push({
       question: `How much does ${brandName} filament cost?`,
-      answer: `${brandName} filaments range from ${minStr} to ${maxStr} per spool (USD). Prices vary by material type, spool weight, and retailer. FilaScope tracks live prices across multiple stores to help you find the best deals on ${brandName} filaments.`,
+      answer: `Based on FilaScope's real-time price tracking across 15+ stores in 5 regions, ${brandName} filaments range from ${minStr} to ${maxStr} per spool (USD). Prices vary by material type, spool weight, and retailer.`,
     });
   } else if (avgPrice) {
     faqs.push({
       question: `How much does ${brandName} filament cost?`,
-      answer: `${brandName} filaments typically range around ${avgPrice} per spool. Prices vary by material type and retailer. FilaScope tracks live prices across multiple stores to help you find the best deals on ${brandName} filaments.`,
+      answer: `Based on FilaScope's real-time price tracking across 15+ stores in 5 regions, ${brandName} filaments typically range around ${avgPrice} per spool. Prices vary by material type and retailer.`,
     });
   }
 
