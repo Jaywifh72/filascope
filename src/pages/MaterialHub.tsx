@@ -376,7 +376,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many PLA+ filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} PLA+ filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} PLA+ filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     "silk-pla": [
