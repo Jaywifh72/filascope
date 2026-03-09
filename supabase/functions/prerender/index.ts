@@ -413,7 +413,10 @@ async function smBrands(sb:SupabaseClient){const e:string[]=[];let o=0;const B=1
 async function smPrinters(sb:SupabaseClient){const e:string[]=[];let o=0;const B=1000;let m=true;while(m){const{data,error}=await sb.from("printers").select("printer_id,id,updated_at").order("id").range(o,o+B-1);if(error||!data||!data.length){m=false;break;}for(const p of data){const slug=normSlug(p.printer_id||"")||normSlug(p.id);e.push(ue(`${BASE_URL}/printers/${slug}`,w3c(p.updated_at),"weekly",0.8));}m=data.length>=B;o+=B;}return wrap(e);}
 async function smColors(sb:SupabaseClient){const t=new Date().toISOString().split("T")[0];const e:string[]=[];const{data}=await sb.from("color_families").select("name").order("display_order",{ascending:true});if(data)for(const c of data)e.push(ue(`${BASE_URL}/colors/${c.name.toLowerCase().replace(/\s+/g,"-")}`,t,"weekly",0.7));return wrap(e);}
 function smPages(){const t=new Date().toISOString().split("T")[0];return wrap(SP_LIST.map(p=>ue(`${BASE_URL}${p.p}`,t,p.cf,p.pr)));}
-function smGuides(){const t=new Date().toISOString().split("T")[0];return wrap(Object.entries(GUIDE_DATES).map(([s,{date,tl,learn}])=>ue(`${BASE_URL}/${tl?s:learn?`learn/${s}`:`guides/${s}`}`,date||t,"monthly",0.7)));}
+const GUIDE_PRI_09=new Set(["best-pla-filaments","best-petg-filaments","best-abs-filaments","best-filaments-for-hueforge"]);
+const GUIDE_PRI_08=new Set(["pla-vs-petg","silk-pla-comparison","asa-vs-abs-outdoor-printing","pla-plus-vs-pla-pro","what-is-hueforge-td","how-to-measure-filament-td"]);
+function guideP(s:string){return GUIDE_PRI_09.has(s)?0.9:GUIDE_PRI_08.has(s)?0.8:0.7;}
+function smGuides(){const t=new Date().toISOString().split("T")[0];return wrap(Object.entries(GUIDE_DATES).map(([s,{date,tl,learn}])=>ue(`${BASE_URL}/${tl?s:learn?`learn/${s}`:`guides/${s}`}`,date||t,"monthly",guideP(s))));}
 function smIndex(){const subs=["sitemap-pages.xml","sitemap-filaments.xml","sitemap-brands.xml","sitemap-printers.xml","sitemap-guides.xml","sitemap-colors.xml"];return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${subs.map(s=>`  <sitemap><loc>${BASE_URL}/${s}</loc></sitemap>`).join("\n")}\n</sitemapindex>`;}
 
 function isCrawler(ua:string|null){if(!ua)return false;const l=ua.toLowerCase();return CRAWLER_AGENTS.some(b=>l.includes(b));}
