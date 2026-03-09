@@ -18,7 +18,7 @@ import { BreadcrumbSchema } from '@/components/seo/BreadcrumbSchema';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { FAQSchema } from '@/components/seo/FAQSchema';
 import { HowToSchema } from '@/components/seo/HowToSchema';
-import { RelatedQuestionsSection } from '@/components/seo/RelatedQuestionsSection';
+
 import { ItemListSchema } from '@/components/seo/ItemListSchema';
 import { generateFilamentSlug } from '@/lib/seoSlugUtils';
 import { BUYING_GUIDE_CONFIGS } from './guideConfigs';
