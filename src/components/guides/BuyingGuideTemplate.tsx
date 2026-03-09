@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   ArrowLeft, Clock, Calendar, ChevronRight,
   BookOpen, Sparkles, ShoppingBag, List, Zap
@@ -111,7 +113,20 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
 
   // Derive topic label for FAQ/related headings (e.g. "PLA", "PETG")
   const topicLabel = config.faqHeadingTopic || primaryMaterial || '';
-  const allFaqs = [...config.faqs, ...(config.relatedQuestions ?? [])];
+
+  // Merge FAQ + PAA, deduplicate by keeping the version with the longer answer
+  const allFaqs = useMemo(() => {
+    const merged = [...config.faqs, ...(config.relatedQuestions ?? [])];
+    const seen = new Map<string, { question: string; answer: string }>();
+    for (const faq of merged) {
+      const key = faq.question.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const existing = seen.get(key);
+      if (!existing || faq.answer.length > existing.answer.length) {
+        seen.set(key, faq);
+      }
+    }
+    return Array.from(seen.values());
+  }, [config.faqs, config.relatedQuestions]);
 
   // Build ToC from editorial sections + fixed sections
   const tocItems: { label: string; anchor: string }[] = [
@@ -323,22 +338,28 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           </section>
         ))}
 
-        {/* Consolidated FAQ Section (FAQ + People Also Ask merged) */}
+        {/* Consolidated FAQ Section */}
         {allFaqs.length > 0 && (
           <section id="faq" className="mb-12 scroll-mt-24">
-            <h2 className="text-xl font-bold mb-4">
+            <h2 className="text-xl font-bold mb-6">
               Frequently Asked Questions{topicLabel ? ` About ${topicLabel} Filaments` : ''}
             </h2>
-            <div className="space-y-4">
+            <Accordion type="single" collapsible className="space-y-2">
               {allFaqs.map((faq, i) => (
-                <Card key={i} className="bg-card/50 border-border">
-                  <CardContent className="p-5">
-                    <h3 className="font-semibold mb-2">{faq.question}</h3>
-                    <p className="text-sm text-muted-foreground">{faq.answer}</p>
-                  </CardContent>
-                </Card>
+                <AccordionItem
+                  key={i}
+                  value={`faq-${i}`}
+                  className="border border-border rounded-lg px-4 bg-card"
+                >
+                  <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent forceMount className="data-[state=closed]:hidden text-muted-foreground pb-4 leading-relaxed">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </div>
+            </Accordion>
           </section>
         )}
 
