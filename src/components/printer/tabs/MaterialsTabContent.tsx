@@ -1,10 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Palette, Layers, Package, Cpu, ExternalLink, TrendingUp, TrendingDown, 
   CheckCircle2, XCircle, ChevronDown, ChevronRight, Thermometer, AlertCircle, ArrowRight,
-  BookOpen
+  BookOpen, Star
 } from 'lucide-react';
+import { materialNameToSlug } from '@/lib/materialSlugUtils';
+import { toBrandSlug } from '@/utils/brandSlug';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -255,6 +259,37 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
   const incompatibleSystems = compatibleSystems.filter(s => !s.isCompatible);
   const compatibleSystemsList = compatibleSystems.filter(s => s.isCompatible);
 
+  // Brand info
+  const brandName = printer.brand?.brand || printer.brand_name || '';
+  const brandSlug = brandName ? toBrandSlug(brandName) : null;
+
+  // Collect all supported material names for the recommended filaments query
+  const allMaterialNames = useMemo(() => {
+    const mats: string[] = [];
+    for (const materials of displayMaterials.values()) {
+      mats.push(...materials);
+    }
+    return mats;
+  }, [displayMaterials]);
+
+  // Fetch recommended filaments for this printer
+  const { data: recommendedFilaments } = useQuery({
+    queryKey: ['printer-recommended-filaments', printer.id, allMaterialNames],
+    enabled: allMaterialNames.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('filaments')
+        .select('id, product_title, product_handle, vendor, material, variant_price, featured_image, filascope_score')
+        .in('material', allMaterialNames.slice(0, 6))
+        .not('filascope_score', 'is', null)
+        .not('product_handle', 'is', null)
+        .order('filascope_score', { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
   // Filter accessories by type
   const hotends = accessories.filter((a) => a.accessory_type === 'nozzle' || a.accessory_type === 'hotend');
   const buildPlates = accessories.filter((a) => a.accessory_type === 'build_plate');
@@ -303,20 +338,24 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
                   <div className="flex-1 h-px bg-border/30" />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {materials.map((material) => (
+                  {materials.map((material) => {
+                    const slug = materialNameToSlug(material);
+                    return (
                     <Link 
                       key={material}
-                      to={`/filaments?material=${encodeURIComponent(material)}&printer=${encodeURIComponent(printer.model_name)}`}
+                      to={`/filaments/${slug}`}
                       className={cn(
                         "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-200",
                         "hover:scale-105 hover:shadow-md cursor-pointer",
                         getCategoryColor(category)
                       )}
+                      title={`Compare ${material} filaments for ${printer.model_name}`}
                     >
-                      {material}
+                      {material} Filaments
                       <ArrowRight className="w-3 h-3 opacity-60" />
                     </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -360,22 +399,26 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
           <div className="mt-4 pt-4 border-t border-border/30">
             <p className="text-sm text-muted-foreground mb-3">Materials printable at this temperature:</p>
             <div className="flex flex-wrap gap-2">
-              {materialTempHints.map((hint) => (
+              {materialTempHints.map((hint) => {
+                const hintSlug = materialNameToSlug(hint.material);
+                return (
                 <Link 
                   key={hint.material}
-                  to={`/filaments?material=${encodeURIComponent(hint.material)}&printer=${encodeURIComponent(printer.model_name)}`}
+                  to={`/filaments/${hintSlug}`}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border border-border/40 bg-muted/30 transition-all duration-200",
                     "hover:scale-105 hover:shadow-md cursor-pointer",
                     hint.color
                   )}
+                  title={`Compare ${hint.material} filaments`}
                 >
                   <CheckCircle2 className="w-3 h-3" />
                   {hint.material}
                   <span className="text-muted-foreground/60">({hint.temp}°C)</span>
                   <ArrowRight className="w-3 h-3 opacity-60" />
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -468,11 +511,14 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
         
         {recommendedMaterials.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {recommendedMaterials.slice(0, 6).map((material: string, index: number) => (
+            {recommendedMaterials.slice(0, 6).map((material: string, index: number) => {
+              const recSlug = materialNameToSlug(material);
+              return (
               <Link
                 key={index}
-                to={`/filaments?material=${encodeURIComponent(material)}&printer=${encodeURIComponent(printer.model_name)}`}
+                to={`/filaments/${recSlug}`}
                 className="block group"
+                title={`Compare ${material} filaments compatible with ${printer.model_name}`}
               >
                 <Card className="bg-card/80 border-border/40 hover:border-teal-500/30 hover:bg-muted/70 transition-all duration-150 cursor-pointer">
                   <CardContent className="p-4">
@@ -481,16 +527,16 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
                         <Palette className="w-4 h-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-foreground">{material}</span>
-                        <p className="text-xs text-muted-foreground">Recommended</p>
-                        <p className="text-xs text-muted-foreground/70 mt-0.5">Browse {material} filaments →</p>
+                        <span className="text-sm font-medium text-foreground">{material} Filaments</span>
+                        <p className="text-xs text-muted-foreground">Recommended for this printer</p>
                       </div>
                       <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-teal-400 transition-colors duration-150 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
               </Link>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground border border-dashed border-border/50 rounded-lg">
@@ -504,6 +550,70 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
           </div>
         )}
       </section>
+
+      {/* Recommended Filaments for This Printer */}
+      {recommendedFilaments && recommendedFilaments.length > 0 && (
+        <section className="section-card">
+          <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Star className="w-4 h-4 text-primary" />
+            Recommended Filaments for {printer.model_name}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recommendedFilaments.map((fil: any) => (
+              <Link
+                key={fil.id}
+                to={`/filament/${fil.product_handle}`}
+                className="block group"
+                title={`${fil.vendor} ${fil.product_title} — ${fil.material} filament compatible with ${printer.model_name}`}
+              >
+                <Card className="bg-card/80 border-border/40 hover:border-primary/30 hover:bg-muted/50 transition-all duration-150 cursor-pointer">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-3">
+                      {fil.featured_image && (
+                        <img
+                          src={fil.featured_image}
+                          alt={`${fil.vendor} ${fil.product_title} filament spool`}
+                          className="w-10 h-10 rounded-md object-cover flex-shrink-0"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground block truncate">{fil.product_title}</span>
+                        <span className="text-xs text-muted-foreground">{fil.vendor} · {fil.material}</span>
+                        {fil.variant_price && (
+                          <span className="text-xs font-semibold text-primary block mt-0.5">
+                            ${fil.variant_price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Brand link */}
+      {brandName && brandSlug && (
+        <section className="section-card">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              See all filaments from this manufacturer
+            </p>
+            <Link
+              to={`/brands/${brandSlug}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline transition-colors"
+              title={`Browse all ${brandName} 3D printer filaments`}
+            >
+              More from {brandName}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Buying Guides for This Printer */}
       <section className="section-card">
