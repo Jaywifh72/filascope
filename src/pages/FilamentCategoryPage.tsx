@@ -97,8 +97,8 @@ const RELATED_PROSE: Record<string, { intro: string; links: { label: string; slu
 const CATEGORY_META: Record<string, CategoryMeta> = {
   pla: {
     titleTemplate: "PLA Filaments — Compare {count}+ Options | FilaScope",
-    descTemplate: "Compare {count}+ PLA 3D printer filaments by price, brand, TD value, and printer compatibility. Find the best PLA for your printer with real-time pricing.",
-    h1: "PLA Filaments",
+    descTemplate: "Filter, sort, and compare {count}+ PLA 3D printer filaments from {brandCount}+ brands. Real-time pricing, HueForge TD values, and printer compatibility — find the best PLA for your setup.",
+    h1: "PLA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "PLA (Polylactic Acid) is the most popular 3D printing filament, known for its ease of use, low warping, and wide color selection. It prints at 190–220°C with minimal bed adhesion issues, making it ideal for beginners and detailed decorative prints. Compare {count}+ PLA filaments below from brands like Bambu Lab, Polymaker, and eSUN — with real-time pricing, HueForge TD values, and printer compatibility data.",
   },
   petg: {
