@@ -110,7 +110,7 @@ const faqData = [
   {
     question: 'What filament should I use for HueForge?',
     answer:
-      'For HueForge projects, choose filaments with known TD (Transmission Distance) values. White PLA with TD values between 1.0–4.0mm is ideal for most lithophane-style projects. FilaScope\'s HueForge TD database tracks transmissivity data for 500+ filaments from 40+ brands to help you find the perfect match.',
+      'For HueForge projects, choose filaments with known TD (Transmission Distance) values. White PLA with TD values between 1.0–4.0mm is ideal for most lithophane-style projects. Based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments from 40+ brands, you can find the perfect match for your project.',
   },
   {
     question: 'What is the best white filament for HueForge?',
