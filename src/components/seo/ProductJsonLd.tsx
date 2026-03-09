@@ -171,7 +171,7 @@ export function ProductJsonLd({
   if (transmissionDistance) {
     additionalProperties.push({
       '@type': 'PropertyValue',
-      name: 'HueForge Transmission Distance',
+      name: 'HueForge Transmission Distance (TD)',
       value: transmissionDistance,
       unitCode: 'MMT',
       unitText: 'mm',
