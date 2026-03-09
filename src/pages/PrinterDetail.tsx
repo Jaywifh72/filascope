@@ -145,14 +145,15 @@ const PrinterDetail = () => {
         brand:printer_brands!brand_id(brand, warranty_years, warranty_coverage),
         series:printer_series!series_id(series_name)
       `;
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
-      const normalizedSlug = id ? normalizeSlug(id) : '';
+      const rawParam = id ? decodeURIComponent(id) : '';
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawParam);
+      const normalizedSlug = rawParam ? normalizeSlug(rawParam) : '';
 
       // Exact match first
       const { data, error } = await supabase
         .from("printers")
         .select(selectCols)
-        .eq(isUUID ? "id" : "printer_id", id)
+        .eq(isUUID ? "id" : "printer_id", rawParam)
         .maybeSingle();
 
       if (error) throw error;
