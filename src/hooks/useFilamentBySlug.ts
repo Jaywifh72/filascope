@@ -279,17 +279,17 @@ async function searchByComponents(
 }
 
 /**
- * Get the SEO-friendly URL for a filament
+ * Get the SEO-friendly URL for a filament.
+ * Prefers product_handle (sitemap source of truth) to keep canonical aligned.
  */
 export function getFilamentSeoUrl(filament: Filament): string {
-  // Always generate vendor-prefixed slug to avoid collisions
-  // product_handle alone (e.g., "petg") may be shared across brands
-  const slug = generateFilamentSlug(
-    filament.vendor,
-    filament.material,
-    filament.product_title,
-    filament.color_family
-  );
+  const slug = filament.product_handle
+    || generateFilamentSlug(
+        filament.vendor,
+        filament.material,
+        filament.product_title,
+        filament.color_family
+      );
   
   return `/filament/${slug || filament.id}`;
 }
