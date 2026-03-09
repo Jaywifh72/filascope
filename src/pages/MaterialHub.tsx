@@ -386,7 +386,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: "Is silk PLA good for HueForge lithophanes?",
-        answer: `Yes — silk PLA typically has high TD values (often 5.0+mm), making it highly translucent. It's excellent for highlight and accent layers in HueForge stacks. FilaScope tracks TD values for hundreds of silk PLA filaments for precise HueForge profiling.`,
+        answer: `Yes — silk PLA typically has high TD values (often 5.0+mm), making it highly translucent. It's excellent for highlight and accent layers in HueForge stacks. Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments, you can find precise silk PLA TD values for HueForge profiling.`,
       },
       {
         question: "Can silk PLA be used for functional parts?",
