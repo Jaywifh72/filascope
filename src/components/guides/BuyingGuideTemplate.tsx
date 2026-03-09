@@ -399,7 +399,9 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         {/* Related Guides */}
         {relatedConfigs.length > 0 && (
           <section id="related-guides" className="mb-12 scroll-mt-24">
-            <h2 className="text-xl font-bold mb-4">Related Guides</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {topicLabel ? `Related ${topicLabel} Guides` : 'More Filament Guides'}
+            </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {relatedConfigs.map(related => (
                 <a key={related.slug} href={`/guides/${related.slug}`} className="group block">

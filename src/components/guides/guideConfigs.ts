@@ -47,6 +47,8 @@ export interface GuideConfig {
   howTo?: { name: string; description: string; steps: { name: string; text: string }[] };
   relatedQuestions?: FAQItem[];
   rankAnnotations?: Record<number, RankAnnotation>;
+  /** Topic label used in FAQ and related-guides H2 headings, e.g. "PLA" → "Frequently Asked Questions About PLA Filaments" */
+  faqHeadingTopic?: string;
 }
 
 export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
