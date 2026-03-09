@@ -109,6 +109,10 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
     { name: config.title, url: `https://filascope.com/guides/${config.slug}` },
   ];
 
+  // Derive topic label for FAQ/related headings (e.g. "PLA", "PETG")
+  const topicLabel = config.faqHeadingTopic || primaryMaterial || '';
+  const allFaqs = [...config.faqs, ...(config.relatedQuestions ?? [])];
+
   // Build ToC from editorial sections + fixed sections
   const tocItems: { label: string; anchor: string }[] = [
     ...beforeSections.map(s => ({ label: s.heading, anchor: slugify(s.heading) })),
@@ -116,9 +120,8 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
     ...(config.layout === 'vs-comparison' ? [{ label: 'Side-by-Side Comparison', anchor: 'comparison' }] : []),
     ...(config.layout === 'editorial' ? [{ label: 'Our Top Picks for Beginners', anchor: 'picks' }] : []),
     ...afterSections.map(s => ({ label: s.heading, anchor: slugify(s.heading) })),
-    ...(config.faqs.length > 0 ? [{ label: 'Frequently Asked Questions', anchor: 'faq' }] : []),
-    ...(config.relatedQuestions?.length ? [{ label: 'People Also Ask', anchor: 'related-questions' }] : []),
-    ...(relatedConfigs.length > 0 ? [{ label: 'Related Guides', anchor: 'related-guides' }] : []),
+    ...(allFaqs.length > 0 ? [{ label: `Frequently Asked Questions${topicLabel ? ` About ${topicLabel} Filaments` : ''}`, anchor: 'faq' }] : []),
+    ...(relatedConfigs.length > 0 ? [{ label: topicLabel ? `Related ${topicLabel} Guides` : 'More Filament Guides', anchor: 'related-guides' }] : []),
   ];
 
   const updatedLabel = new Date(config.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
