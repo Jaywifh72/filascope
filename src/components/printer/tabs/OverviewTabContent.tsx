@@ -314,7 +314,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Print Speed Visualization */}
           <div>
-            <SectionHeader icon={Zap} title="Print Speed" />
+            <SectionHeader icon={Zap} title="Print Speed" as="h3" />
             <SpeedGauge speed={maxSpeed} />
           </div>
           
