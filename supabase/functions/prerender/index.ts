@@ -417,7 +417,39 @@ const GUIDE_PRI_09=new Set(["best-pla-filaments","best-petg-filaments","best-abs
 const GUIDE_PRI_08=new Set(["pla-vs-petg","silk-pla-comparison","asa-vs-abs-outdoor-printing","pla-plus-vs-pla-pro","what-is-hueforge-td","how-to-measure-filament-td"]);
 function guideP(s:string){return GUIDE_PRI_09.has(s)?0.9:GUIDE_PRI_08.has(s)?0.8:0.7;}
 function smGuides(){const t=new Date().toISOString().split("T")[0];return wrap(Object.entries(GUIDE_DATES).map(([s,{date}])=>ue(`${BASE_URL}/guides/${s}`,date||t,"monthly",guideP(s))));}
-async function smIndex(sb:SupabaseClient){const t=new Date().toISOString().split("T")[0];const maxGuide=Object.values(GUIDE_DATES).map(g=>g.date||"").filter(Boolean).sort().pop()||t;const[fR,bR,pR]= await Promise.all([sb.from("filaments").select("updated_at,last_scraped_at").order("updated_at",{ascending:false}).limit(1).single(),sb.from("automated_brands").select("updated_at,last_scrape_at").eq("is_visible",true).order("updated_at",{ascending:false}).limit(1).single(),sb.from("printers").select("updated_at").order("updated_at",{ascending:false}).limit(1).single()]);const fD=w3c([fR.data?.last_scraped_at,fR.data?.updated_at].filter(Boolean).sort().pop());const bD=w3c([bR.data?.last_scrape_at,bR.data?.updated_at].filter(Boolean).sort().pop());const pD=w3c(pR.data?.updated_at);const subs:[string,string][]=[ ["sitemap-pages.xml",t],["sitemap-filaments.xml",fD||t],["sitemap-brands.xml",bD||t],["sitemap-printers.xml",pD||t],["sitemap-guides.xml",maxGuide],["sitemap-colors.xml",t] ];return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${subs.map(([s,d])=>`  <sitemap>\n    <loc>${BASE_URL}/${s}</loc>\n    <lastmod>${d}</lastmod>\n  </sitemap>`).join("\n")}\n</sitemapindex>`;}
+async function smIndex(sb:SupabaseClient){
+  const t=new Date().toISOString().split("T")[0];
+  const maxGuide=Object.values(GUIDE_DATES).map(g=>g.date||"").filter(Boolean).sort().pop()||t;
+
+  const [
+    fUpdatedR,
+    fScrapedR,
+    bUpdatedR,
+    bScrapedR,
+    pUpdatedR,
+  ]=await Promise.all([
+    sb.from("filaments").select("updated_at").not("updated_at","is",null).order("updated_at",{ascending:false}).limit(1).single(),
+    sb.from("filaments").select("last_scraped_at").not("last_scraped_at","is",null).order("last_scraped_at",{ascending:false}).limit(1).single(),
+    sb.from("automated_brands").select("updated_at").eq("is_visible",true).not("updated_at","is",null).order("updated_at",{ascending:false}).limit(1).single(),
+    sb.from("automated_brands").select("last_scrape_at").eq("is_visible",true).not("last_scrape_at","is",null).order("last_scrape_at",{ascending:false}).limit(1).single(),
+    sb.from("printers").select("updated_at").not("updated_at","is",null).order("updated_at",{ascending:false}).limit(1).single(),
+  ]);
+
+  const fD=w3c([fUpdatedR.data?.updated_at,fScrapedR.data?.last_scraped_at].filter(Boolean).sort().pop());
+  const bD=w3c([bUpdatedR.data?.updated_at,bScrapedR.data?.last_scrape_at].filter(Boolean).sort().pop());
+  const pD=w3c(pUpdatedR.data?.updated_at);
+
+  const subs:[string,string][]=[
+    ["sitemap-pages.xml",t],
+    ["sitemap-filaments.xml",fD||t],
+    ["sitemap-brands.xml",bD||t],
+    ["sitemap-printers.xml",pD||t],
+    ["sitemap-guides.xml",maxGuide],
+    ["sitemap-colors.xml",t],
+  ];
+
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${subs.map(([s,d])=>`  <sitemap>\n    <loc>${BASE_URL}/${s}</loc>\n    <lastmod>${d}</lastmod>\n  </sitemap>`).join("\n")}\n</sitemapindex>`;
+}
 
 function isCrawler(ua:string|null){if(!ua)return false;const l=ua.toLowerCase();return CRAWLER_AGENTS.some(b=>l.includes(b));}
 

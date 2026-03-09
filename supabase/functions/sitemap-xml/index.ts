@@ -66,36 +66,54 @@ Deno.serve(async (req) => {
     );
 
     // Query latest update dates from DB in parallel
-    const [fR, bR, pR] = await Promise.all([
+    const [fUpdatedR, fScrapedR, bUpdatedR, bScrapedR, pR] = await Promise.all([
       sb
         .from("filaments")
-        .select("updated_at,last_scraped_at")
+        .select("updated_at")
+        .not("updated_at", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single(),
+      sb
+        .from("filaments")
+        .select("last_scraped_at")
+        .not("last_scraped_at", "is", null)
+        .order("last_scraped_at", { ascending: false })
+        .limit(1)
+        .single(),
+      sb
+        .from("automated_brands")
+        .select("updated_at")
+        .eq("is_visible", true)
+        .not("updated_at", "is", null)
         .order("updated_at", { ascending: false })
         .limit(1)
         .single(),
       sb
         .from("automated_brands")
-        .select("updated_at,last_scrape_at")
+        .select("last_scrape_at")
         .eq("is_visible", true)
-        .order("updated_at", { ascending: false })
+        .not("last_scrape_at", "is", null)
+        .order("last_scrape_at", { ascending: false })
         .limit(1)
         .single(),
       sb
         .from("printers")
         .select("updated_at")
+        .not("updated_at", "is", null)
         .order("updated_at", { ascending: false })
         .limit(1)
         .single(),
     ]);
 
     const filamentDate = w3c(
-      [fR.data?.last_scraped_at, fR.data?.updated_at]
+      [fUpdatedR.data?.updated_at, fScrapedR.data?.last_scraped_at]
         .filter(Boolean)
         .sort()
         .pop() as string | undefined
     );
     const brandDate = w3c(
-      [bR.data?.last_scrape_at, bR.data?.updated_at]
+      [bUpdatedR.data?.updated_at, bScrapedR.data?.last_scrape_at]
         .filter(Boolean)
         .sort()
         .pop() as string | undefined
