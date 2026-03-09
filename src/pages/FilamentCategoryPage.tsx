@@ -97,99 +97,103 @@ const RELATED_PROSE: Record<string, { intro: string; links: { label: string; slu
 const CATEGORY_META: Record<string, CategoryMeta> = {
   pla: {
     titleTemplate: "PLA Filaments — Compare {count}+ Options | FilaScope",
-    descTemplate: "Compare {count}+ PLA 3D printer filaments by price, brand, TD value, and printer compatibility. Find the best PLA for your printer with real-time pricing.",
-    h1: "PLA Filaments",
+    descTemplate: "Filter, sort, and compare {count}+ PLA 3D printer filaments from {brandCount}+ brands. Real-time pricing, HueForge TD values, and printer compatibility — find the best PLA for your setup.",
+    h1: "PLA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "PLA (Polylactic Acid) is the most popular 3D printing filament, known for its ease of use, low warping, and wide color selection. It prints at 190–220°C with minimal bed adhesion issues, making it ideal for beginners and detailed decorative prints. Compare {count}+ PLA filaments below from brands like Bambu Lab, Polymaker, and eSUN — with real-time pricing, HueForge TD values, and printer compatibility data.",
   },
   petg: {
     titleTemplate: "PETG Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PETG 3D printer filaments. Stronger than PLA with better heat resistance. Filter by brand, price, TD value, and printer compatibility.",
-    h1: "PETG Filaments",
+    h1: "PETG Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "PETG (Polyethylene Terephthalate Glycol) bridges the gap between PLA's ease of use and ABS's strength. It's impact-resistant, food-safe options exist, and it tolerates temperatures up to 80°C without deforming — ideal for functional enclosures, brackets, and mechanical parts. Compare {count}+ PETG filaments below with real-time pricing, regional availability, and compatibility data.",
   },
   abs: {
     titleTemplate: "ABS Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ ABS 3D printer filaments. Heat-resistant and durable for functional parts. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "ABS Filaments",
+    h1: "ABS Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "ABS (Acrylonitrile Butadiene Styrene) is a durable, heat-resistant engineering plastic used in everything from LEGO bricks to automotive parts. It resists temperatures up to 100°C but requires an enclosed printer and heated bed to prevent warping. Compare {count}+ ABS filaments with specs, pricing, and printer compatibility data.",
   },
   tpu: {
     titleTemplate: "TPU Flexible Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ TPU and flexible 3D printer filaments. Find the right shore hardness for your project. Filter by brand, price, and printer compatibility.",
-    h1: "TPU & Flexible Filaments",
+    h1: "TPU & Flexible Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "TPU (Thermoplastic Polyurethane) is a rubber-like filament ideal for phone cases, gaskets, shoe insoles, and wearables — anything that needs to bend and return to shape. Shore hardness (95A being common) controls stiffness; softer grades require a direct-drive extruder. Compare {count}+ TPU filaments with shore hardness specs, brand options, and pricing.",
   },
   asa: {
     titleTemplate: "ASA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ ASA 3D printer filaments. UV-resistant and weatherproof for outdoor use. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "ASA Filaments",
+    h1: "ASA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "ASA (Acrylonitrile Styrene Acrylate) is ABS's weatherproof sibling — with superior UV and moisture resistance, making it ideal for outdoor signs, garden tools, and automotive trim. It prints similarly to ABS (230–260°C) and requires an enclosure to prevent warping. Compare {count}+ ASA filaments with specs, pricing, and compatibility data.",
   },
   "silk-pla": {
     titleTemplate: "Silk PLA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ Silk PLA 3D printer filaments with shimmery metallic finish. High TD values ideal for HueForge. Filter by brand, color, price, and TD value.",
-    h1: "Silk PLA Filaments",
+    h1: "Silk PLA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Silk PLA produces stunning metallic-sheen prints with a satin finish that catches the light from every angle. It shares PLA's easy printability (200–230°C) and is especially popular for HueForge multi-color lithophanes thanks to characteristically high TD values. Compare {count}+ Silk PLA filaments with color swatches, TD data, and pricing.",
   },
   nylon: {
     titleTemplate: "Nylon/PA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ Nylon and PA 3D printer filaments. Strong, flexible engineering material. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "Nylon (PA) Filaments",
+    h1: "Nylon (PA) Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Nylon (PA — Polyamide) is a tough, flexible engineering material with excellent fatigue resistance and impact strength — ideal for gears, hinges, snap-fits, and functional prototypes. It's highly hygroscopic, so always dry your spool before printing and use a dry box during long prints. Compare {count}+ Nylon filaments from PA6, PA12, and carbon-fiber reinforced variants with specs and pricing.",
   },
   "pla-plus": {
     titleTemplate: "PLA+ Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PLA+ 3D printer filaments. Improved impact resistance over standard PLA. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "PLA+ Filaments",
+    h1: "PLA+ Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "PLA+ (also called PLA Pro) delivers improved toughness and reduced brittleness over standard PLA while keeping the same easy print settings (195–230°C). It's a popular upgrade for functional prints that need more abuse resistance without the complexity of PETG or ABS. Compare {count}+ PLA+ filaments across brands with real-time pricing and specs.",
   },
   "high-speed-pla": {
     titleTemplate: "High Speed PLA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ High Speed PLA filaments for fast 3D printing. Compatible with Bambu Lab, Creality K1, and more. Filter by brand and price on FilaScope.",
-    h1: "High Speed PLA Filaments",
+    h1: "High Speed PLA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "High-Speed PLA is specially formulated for printing at 200–600 mm/s on modern CoreXY printers like the Bambu Lab X1C, A1, and Creality K1 — enabling dramatically shorter print times without layer delamination. It requires higher flow rates and nozzle temperatures (220–240°C) than standard PLA. Compare {count}+ high-speed PLA filaments with printer compatibility and pricing data.",
   },
   polycarbonate: {
     titleTemplate: "Polycarbonate Filaments — Compare {count}+ PC Options | FilaScope",
     descTemplate: "Compare {count}+ PC and Polycarbonate 3D printer filaments. Strongest print material with high heat tolerance. Filter by brand and printer compatibility.",
-    h1: "Polycarbonate (PC) Filaments",
+    h1: "Polycarbonate (PC) Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Polycarbonate is one of the strongest and most heat-tolerant 3D printing materials — used in bulletproof glass, eyeglass lenses, and aerospace components. It handles temperatures up to 130°C and resists impacts that shatter PLA or ABS. Printing requires an all-metal hotend, enclosure, and nozzle temperatures of 260–310°C. Compare {count}+ PC filaments with specs and pricing.",
   },
   "petg-cf": {
     titleTemplate: "PETG Carbon Fiber Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PETG-CF carbon fiber 3D printer filaments. Stiff, lightweight, and strong. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "PETG Carbon Fiber Filaments",
+    h1: "PETG Carbon Fiber Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "PETG-CF (Carbon Fiber reinforced PETG) combines PETG's chemical resistance and printability with dramatically increased stiffness from short-strand carbon fibers — ideal for lightweight structural parts, brackets, and drone frames. It requires a hardened steel nozzle (0.4mm+) to prevent wear. Compare {count}+ PETG-CF filaments with specs, pricing, and compatibility data.",
   },
   wood: {
     titleTemplate: "Wood PLA Filaments — Realistic Texture & Finish | FilaScope",
     descTemplate: "Compare {count}+ Wood PLA 3D printer filaments. Achieve realistic wood texture and grain. Sand, stain, and paint like real wood. Find the best wood filament brand.",
-    h1: "Wood PLA Filaments",
+    h1: "Wood PLA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Wood PLA filaments blend standard PLA with 10–30% real wood particles — sawdust, bamboo, or cork — to produce prints with an authentic wooden texture and grain that can be sanded, stained, and even painted like real wood. They print at standard PLA temperatures (190–220°C) but require a larger nozzle (0.5mm+) to prevent clogging from the fiber content. Higher nozzle temperatures produce a darker, more 'burnt wood' appearance while cooler temps give a lighter finish. Wood PLA is popular for cosplay props, architectural models, decorative sculptures, furniture models, and any print where a natural organic look is desired. Compare {count}+ wood filament options below, with brand specs and pricing.",
   },
   "carbon-fiber": {
     titleTemplate: "Carbon Fiber Filaments — Lightweight & Stiff | FilaScope",
     descTemplate: "Compare {count}+ carbon fiber 3D printer filaments. CF-reinforced PLA, PETG, Nylon, and ABS for lightweight, rigid structural parts. Requires hardened nozzle.",
-    h1: "Carbon Fiber 3D Printing Filaments",
+    h1: "Carbon Fiber 3D Printing Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Carbon fiber filaments combine a standard base polymer (PLA, PETG, Nylon, or ABS) with short-strand carbon fiber reinforcement, dramatically increasing stiffness and reducing weight compared to unreinforced plastics. The result is a material with an excellent strength-to-weight ratio — ideal for drone frames, RC car parts, robotic arms, structural brackets, and functional engineering components. Carbon fiber filaments are highly abrasive and will rapidly wear standard brass nozzles; a hardened steel, ruby-tipped, or tungsten carbide nozzle is essential. Print temperatures vary by base material (230–270°C) and the carbon fibers reduce stringing significantly. Compare {count}+ carbon fiber filaments from top brands below.",
   },
   "glow-in-the-dark": {
     titleTemplate: "Glow in the Dark Filaments — Photoluminescent PLA | FilaScope",
     descTemplate: "Compare {count}+ glow in the dark 3D printer filaments. Photoluminescent PLA that charges under light and glows for 6–12 hours. Easy to print, same settings as PLA.",
-    h1: "Glow in the Dark 3D Printer Filaments",
+    h1: "Glow in the Dark 3D Printer Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Glow in the dark filaments use strontium aluminate phosphor particles embedded in a PLA base, creating prints that charge under natural or artificial light and emit a vivid glow for 6–12 hours in the dark. They print at standard PLA temperatures (190–220°C) making them beginner-friendly, and the thicker your walls and layers, the more phosphor material stores energy and the brighter and longer your glow. Popular for safety markers, cosplay costumes, night-stand accessories, gaming accessories, and Halloween decorations. Green glows are the brightest and most common; blue and purple variants have a shorter glow duration. Compare {count}+ glow filament options with brand, price, and color data.",
   },
 };
 
 const ALL_META: CategoryMeta = {
-  titleTemplate: "3D Printer Filaments — Compare {count}+ Filaments | FilaScope",
-  descTemplate: "Browse and compare {count}+ 3D printer filaments from 48+ brands. Filter by material, price, printer compatibility, and TD value for HueForge. Updated daily.",
-  h1: "3D Printer Filament Database",
-  introTemplate: "Browse all {count}+ 3D printer filaments from 48+ brands. Filter by material, brand, price range, and printer compatibility to find your perfect filament.",
+  titleTemplate: "3D Printer Filaments — Compare {count}+ Products | FilaScope",
+  descTemplate: "Browse and compare {count}+ 3D printer filaments from {brandCount}+ brands. Filter by material, price, printer compatibility, and TD value for HueForge. Updated daily.",
+  h1: "Compare 3D Printer Filaments — {count}+ Products from {brandCount}+ Brands",
+  introTemplate: "Browse all {count}+ 3D printer filaments from {brandCount}+ brands. Filter by material, brand, price range, and printer compatibility to find your perfect filament.",
 };
 
-function applyCount(template: string, count: number): string {
-  return template.replace(/\{count\}/g, count.toLocaleString());
+function applyCount(template: string, count: number, brandCount?: number): string {
+  let result = template.replace(/\{count\}/g, count.toLocaleString());
+  if (brandCount != null) {
+    result = result.replace(/\{brandCount\}/g, String(brandCount));
+  }
+  return result;
 }
 
 const BASE_URL = "https://filascope.com";
@@ -628,6 +632,20 @@ export default function FilamentCategoryPage() {
     staleTime: 1000 * 60 * 10,
   });
 
+  // Fetch total visible brand count (for "all filaments" page H1)
+  const { data: allBrandCount } = useQuery({
+    queryKey: ["filament-category-brand-count"],
+    enabled: !slug,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("automated_brands")
+        .select("id", { count: "exact", head: true })
+        .eq("is_visible", true);
+      return count ?? 48;
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
   // Fetch price range + top brands for FAQ generation
   const { data: materialStats } = useQuery({
     queryKey: ["filament-category-stats", slug],
@@ -653,6 +671,7 @@ export default function FilamentCategoryPage() {
         minPrice: prices.length ? Math.min(...prices) : null,
         maxPrice: prices.length ? Math.max(...prices) : null,
         topBrands,
+        brandCount: Object.keys(brandCounts).length,
       };
     },
     staleTime: 1000 * 60 * 10,
@@ -693,9 +712,12 @@ export default function FilamentCategoryPage() {
 
   // SEO strings
   const displayCount = count || totalCount;
-  const title = applyCount(metaConfig.titleTemplate, displayCount);
-  const description = applyCount(metaConfig.descTemplate, displayCount);
-  const intro = applyCount(metaConfig.introTemplate, displayCount);
+  // Brand count: from materialStats for material pages, from allBrandCount for "all" page
+  const brandCount = slug ? (materialStats?.brandCount ?? undefined) : (allBrandCount ?? 48);
+  const title = applyCount(metaConfig.titleTemplate, displayCount, brandCount);
+  const description = applyCount(metaConfig.descTemplate, displayCount, brandCount);
+  const intro = applyCount(metaConfig.introTemplate, displayCount, brandCount);
+  const h1Text = applyCount(metaConfig.h1, displayCount, brandCount);
 
   // Breadcrumb items for visible nav
   const breadcrumbItems = slug
@@ -705,7 +727,7 @@ export default function FilamentCategoryPage() {
       ]
     : [{ name: "Filaments", url: "/filaments" }];
 
-  useCategorySchemas(slug, metaConfig.h1, canonical, groups, displayCount);
+  useCategorySchemas(slug, h1Text, canonical, groups, displayCount);
 
   const paaQuestions = slug ? (MATERIAL_PAA[slug] ?? []) : [];
   const baseFaqs = slug && config
@@ -746,7 +768,7 @@ export default function FilamentCategoryPage() {
           <>
             {/* H1 + intro */}
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              {metaConfig.h1}
+              {h1Text}
             </h1>
              <p className="text-muted-foreground mb-2 max-w-2xl leading-relaxed">{intro}</p>
              {slug && (

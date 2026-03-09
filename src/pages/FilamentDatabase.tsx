@@ -117,18 +117,21 @@ export default function FilamentDatabase() {
     { name: 'Filament Database', url: '/filament-database' },
   ];
 
+  const displayTotal = statsLoading ? '1,080' : stats?.total.toLocaleString();
+  const displayBrands = statsLoading ? '48' : String(stats?.brands);
+
   return (
     <div className="min-h-screen bg-background">
       <DocumentHead
-        title="3D Filament Database — Compare 1,080+ Products | FilaScope"
-        description="The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across 48+ brands. Filter by specs, price, TD value & compatibility."
+        title={`3D Filament Database — Compare ${displayTotal}+ Products | FilaScope`}
+        description={`The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across ${displayBrands}+ brands. Filter by specs, price, TD value & compatibility.`}
         ogType="website"
       />
       <BreadcrumbSchema items={breadcrumbs} />
       <WebApplicationSchema
         name="FilaScope 3D Filament Database"
         url="https://filascope.com/filament-database"
-        description="The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across 48+ brands."
+        description={`The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across ${displayBrands}+ brands.`}
         applicationCategory="UtilitiesApplication"
       />
 
@@ -143,7 +146,7 @@ export default function FilamentDatabase() {
         {/* Hero */}
         <header className="mb-10">
           <h1 className="text-3xl font-bold mb-3">
-            3D Printer Filament Database — 1,080+ Products Compared
+            Compare 3D Printer Filaments — {displayTotal}+ Products from {displayBrands}+ Brands
           </h1>
           <p className="text-muted-foreground text-lg leading-relaxed mb-6">
             The most comprehensive 3D printer filament database. Compare{' '}
