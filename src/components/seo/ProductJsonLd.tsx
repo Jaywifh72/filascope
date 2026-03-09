@@ -235,9 +235,10 @@ export function ProductJsonLd({
   if (printSpeedMax) {
     additionalProperties.push({
       '@type': 'PropertyValue',
-      name: 'Maximum Print Speed',
+      name: 'Recommended Max Print Speed',
       value: printSpeedMax,
       unitCode: 'MMT',
+      unitText: 'mm/s',
     });
   }
 
