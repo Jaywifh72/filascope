@@ -727,7 +727,7 @@ export default function FilamentCategoryPage() {
       ]
     : [{ name: "Filaments", url: "/filaments" }];
 
-  useCategorySchemas(slug, metaConfig.h1, canonical, groups, displayCount);
+  useCategorySchemas(slug, h1Text, canonical, groups, displayCount);
 
   const paaQuestions = slug ? (MATERIAL_PAA[slug] ?? []) : [];
   const baseFaqs = slug && config
