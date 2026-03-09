@@ -106,11 +106,11 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
         if (uuidError) throw uuidError;
         data = uuidData;
 
-        // If found, update URL to SEO-friendly slug without navigation
+        // If found, update URL to SEO-friendly slug without navigation.
+        // Prefer existing product_handle (sitemap source of truth) to avoid
+        // canonical/sitemap mismatches. Only generate a new slug when product_handle is missing.
         if (data) {
-          // ALWAYS use generateFilamentSlug (vendor-prefixed) to avoid collisions
-          // product_handle alone (e.g., "petg") is NOT unique across brands
-          const slug = generateFilamentSlug(
+          const slug = data.product_handle || generateFilamentSlug(
             data.vendor,
             data.material,
             data.product_title,
@@ -121,8 +121,8 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
             // Update URL for SEO without triggering navigation
             window.history.replaceState(null, '', `/filament/${slug}`);
             
-            // Update product_handle in background for future lookups
-            if (slug && data.product_handle !== slug) {
+            // Only set product_handle if it was previously null (don't overwrite curated handles)
+            if (!data.product_handle && slug) {
               updateProductHandle(data.id, slug);
             }
           }
