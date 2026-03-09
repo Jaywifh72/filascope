@@ -146,7 +146,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   "high-speed-pla": {
     titleTemplate: "High Speed PLA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ High Speed PLA filaments for fast 3D printing. Compatible with Bambu Lab, Creality K1, and more. Filter by brand and price on FilaScope.",
-    h1: "High Speed PLA Filaments",
+    h1: "High Speed PLA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "High-Speed PLA is specially formulated for printing at 200–600 mm/s on modern CoreXY printers like the Bambu Lab X1C, A1, and Creality K1 — enabling dramatically shorter print times without layer delamination. It requires higher flow rates and nozzle temperatures (220–240°C) than standard PLA. Compare {count}+ high-speed PLA filaments with printer compatibility and pricing data.",
   },
   polycarbonate: {
