@@ -24,7 +24,17 @@ interface FAQSectionProps {
 
 // Generate dynamic FAQs based on printer specs
 function generateFAQs(props: FAQSectionProps): FAQ[] {
-  const { printerModel, printerBrand, buildVolume, maxSpeed, maxNozzleTemp, maxColors, hasEnclosure } = props;
+  const { printerModel, printerBrand, buildVolume, maxSpeed, maxNozzleTemp, maxColors, hasEnclosure, supportedMaterials } = props;
+  
+  // Parse materials list
+  const materialsArr = supportedMaterials
+    ? supportedMaterials.split(',').map((m: string) => m.trim()).filter(Boolean)
+    : [];
+  const materialCount = materialsArr.length;
+  const materialListStr = materialsArr.join(', ') || 'PLA, PETG, ABS, and TPU';
+  const primaryMaterials = materialsArr.slice(0, 4).join(', ') || 'PLA, PETG, and ABS';
+  const highestTempMaterial = maxNozzleTemp && maxNozzleTemp >= 300 ? 'Polycarbonate and Nylon' : maxNozzleTemp && maxNozzleTemp >= 260 ? 'ABS and ASA' : 'PETG and TPU';
+  const nozzleTempRange = maxNozzleTemp ? `up to ${maxNozzleTemp}°C` : 'standard range';
   
   return [
     // Getting Started
