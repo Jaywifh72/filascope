@@ -60,7 +60,7 @@ export function generateDynamicFAQs({
     }
     faqs.push({
       question: `What is the TD value of ${fullName}?`,
-      answer: `${fullName} has a transmissivity distance (TD) of ${td}. ${tdDesc}`,
+      answer: `Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments, ${fullName} has a TD of ${td}. ${tdDesc}`,
     });
   } else {
     faqs.push({
