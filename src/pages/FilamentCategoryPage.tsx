@@ -134,7 +134,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   nylon: {
     titleTemplate: "Nylon/PA Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ Nylon and PA 3D printer filaments. Strong, flexible engineering material. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "Nylon (PA) Filaments",
+    h1: "Nylon (PA) Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Nylon (PA — Polyamide) is a tough, flexible engineering material with excellent fatigue resistance and impact strength — ideal for gears, hinges, snap-fits, and functional prototypes. It's highly hygroscopic, so always dry your spool before printing and use a dry box during long prints. Compare {count}+ Nylon filaments from PA6, PA12, and carbon-fiber reinforced variants with specs and pricing.",
   },
   "pla-plus": {
