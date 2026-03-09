@@ -98,7 +98,7 @@ export function generateDynamicFAQs({
   if (price != null && price > 0) {
     faqs.push({
       question: `How much does ${fullName} cost?`,
-      answer: `${fullName} is currently available from $${price.toFixed(2)}/kg. Check FilaScope for real-time pricing across multiple retailers in your region.`,
+      answer: `Based on FilaScope's real-time price tracking across 15+ stores in 5 regions, ${fullName} is currently available from $${price.toFixed(2)}/kg. Check FilaScope for pricing across multiple retailers in your region.`,
     });
   } else if (price === null || price === undefined) {
     faqs.push({
