@@ -522,7 +522,7 @@ const Compare = () => {
               <span>COMPARE TOOL</span>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Compare 3D Printer Filaments Side by Side</h1>
-            <p className="text-muted-foreground mt-1">Compare up to 4 filaments side-by-side. Select products from the catalog to begin.</p>
+            <p className="text-muted-foreground mt-1">FilaScope's filament comparison tool lets you compare up to 4 filaments side by side across every specification — including print temperatures, mechanical properties, pricing from 15+ stores, and HueForge TD values. FilaScope tracks 8,200+ filaments from 48+ brands to help you make data-driven material choices.</p>
           </div>
           <Link
             to="/reference/materials"

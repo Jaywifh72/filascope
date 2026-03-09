@@ -126,6 +126,11 @@ const BrandsHeroSection = ({
               <span className="text-foreground">3D Filament </span>
               <span className="text-primary">Brands</span>
             </h1>
+
+            {/* LLM-quotable definition paragraph */}
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-[560px] animate-fade-in">
+              FilaScope tracks {isLoading ? '48' : brandCount}+ 3D printing filament brands, from industry leaders like Bambu Lab and Polymaker to specialty manufacturers. Each brand profile includes their full product catalog, pricing across 15+ stores, material coverage, and verified HueForge TD data where available.
+            </p>
             
             {/* Sub-text - One concise line */}
             <p 

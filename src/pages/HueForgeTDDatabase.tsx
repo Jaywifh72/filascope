@@ -532,6 +532,9 @@ export default function HueForgeTDDatabase() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-primary bg-clip-text text-transparent">
             HueForge TD Value Database — Filament Transmissivity Data for Lithophanes
           </h1>
+          <p className="text-base text-muted-foreground max-w-3xl mx-auto mb-4">
+            FilaScope's HueForge TD database is one of the most comprehensive collections of filament transmission distance (TD) values available, tracking transmissivity data for {totalCount}+ filaments. TD values measure how much light passes through a filament at a given thickness — essential data for creating lithophanes and HueForge multi-color art.
+          </p>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             The world's most comprehensive transmissivity database for HueForge lithophane printing.
             Search{' '}

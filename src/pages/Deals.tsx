@@ -227,6 +227,9 @@ const Deals = () => {
             <h1 className="text-2xl md:text-4xl font-bold text-center mb-2">
               3D Printer Filament <span className="text-emerald-400">Deals & Discounts</span>
             </h1>
+            <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-2xl mx-auto mb-2">
+              FilaScope monitors real-time 3D printer filament prices from 15+ stores across the US, Canada, EU, UK, and Australia, flagging price drops and deals across 8,200+ filaments. Prices are updated daily to ensure you always find the lowest available price for your preferred filament.
+            </p>
 
             {/* Dynamic stat pills + Deal Alerts CTA */}
             <div
