@@ -954,7 +954,7 @@ export default function MaterialHub() {
         {/* Full product grid */}
         {products && products.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-4">All {label} Filaments</h2>
+            <h2 className="text-xl font-semibold mb-4">Popular {label} Filaments</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {products.map((f) => (
                 <FilamentCard key={f.id} filament={f as any} />
