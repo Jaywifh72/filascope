@@ -238,7 +238,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many PLA filaments does FilaScope track?`,
-        answer: `FilaScope currently tracks ${count.toLocaleString()} PLA filaments from ${brandCount}+ brands with real-time pricing from 15+ retailers. We also track HueForge TD values for PLA filaments to help with lithophane and color mixing projects.`,
+        answer: `According to FilaScope's database of ${count.toLocaleString()} PLA filaments from ${brandCount}+ brands, real-time pricing is tracked from 15+ retailers. We also track HueForge TD values for PLA filaments to help with lithophane and color mixing projects.`,
       },
     ],
     petg: [
