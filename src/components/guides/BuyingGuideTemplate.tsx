@@ -18,7 +18,7 @@ import { BreadcrumbSchema } from '@/components/seo/BreadcrumbSchema';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { FAQSchema } from '@/components/seo/FAQSchema';
 import { HowToSchema } from '@/components/seo/HowToSchema';
-import { RelatedQuestionsSection } from '@/components/seo/RelatedQuestionsSection';
+
 import { ItemListSchema } from '@/components/seo/ItemListSchema';
 import { generateFilamentSlug } from '@/lib/seoSlugUtils';
 import { BUYING_GUIDE_CONFIGS } from './guideConfigs';
@@ -109,6 +109,10 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
     { name: config.title, url: `https://filascope.com/guides/${config.slug}` },
   ];
 
+  // Derive topic label for FAQ/related headings (e.g. "PLA", "PETG")
+  const topicLabel = config.faqHeadingTopic || primaryMaterial || '';
+  const allFaqs = [...config.faqs, ...(config.relatedQuestions ?? [])];
+
   // Build ToC from editorial sections + fixed sections
   const tocItems: { label: string; anchor: string }[] = [
     ...beforeSections.map(s => ({ label: s.heading, anchor: slugify(s.heading) })),
@@ -116,9 +120,8 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
     ...(config.layout === 'vs-comparison' ? [{ label: 'Side-by-Side Comparison', anchor: 'comparison' }] : []),
     ...(config.layout === 'editorial' ? [{ label: 'Our Top Picks for Beginners', anchor: 'picks' }] : []),
     ...afterSections.map(s => ({ label: s.heading, anchor: slugify(s.heading) })),
-    ...(config.faqs.length > 0 ? [{ label: 'Frequently Asked Questions', anchor: 'faq' }] : []),
-    ...(config.relatedQuestions?.length ? [{ label: 'People Also Ask', anchor: 'related-questions' }] : []),
-    ...(relatedConfigs.length > 0 ? [{ label: 'Related Guides', anchor: 'related-guides' }] : []),
+    ...(allFaqs.length > 0 ? [{ label: `Frequently Asked Questions${topicLabel ? ` About ${topicLabel} Filaments` : ''}`, anchor: 'faq' }] : []),
+    ...(relatedConfigs.length > 0 ? [{ label: topicLabel ? `Related ${topicLabel} Guides` : 'More Filament Guides', anchor: 'related-guides' }] : []),
   ];
 
   const updatedLabel = new Date(config.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -320,12 +323,14 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           </section>
         ))}
 
-        {/* FAQ Section */}
-        {config.faqs.length > 0 && (
+        {/* Consolidated FAQ Section (FAQ + People Also Ask merged) */}
+        {allFaqs.length > 0 && (
           <section id="faq" className="mb-12 scroll-mt-24">
-            <h2 className="text-xl font-bold mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-xl font-bold mb-4">
+              Frequently Asked Questions{topicLabel ? ` About ${topicLabel} Filaments` : ''}
+            </h2>
             <div className="space-y-4">
-              {config.faqs.map((faq, i) => (
+              {allFaqs.map((faq, i) => (
                 <Card key={i} className="bg-card/50 border-border">
                   <CardContent className="p-5">
                     <h3 className="font-semibold mb-2">{faq.question}</h3>
@@ -337,22 +342,11 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
           </section>
         )}
 
-        {/* Related Questions — People Also Ask */}
-        {config.relatedQuestions && config.relatedQuestions.length > 0 && (
-          <section id="related-questions" className="mb-12 scroll-mt-24">
-            <RelatedQuestionsSection
-              questions={config.relatedQuestions}
-              title="People Also Ask"
-              suppressSchema
-            />
-          </section>
-        )}
-
         {/* Related Filaments */}
         {relatedFilaments && relatedFilaments.length > 0 && (
           <section id="related-filaments" className="mb-12 scroll-mt-24">
             <h2 className="text-xl font-bold mb-4">
-              {primaryMaterial ? `Popular ${primaryMaterial} Filaments` : 'Related Filaments'}
+              {primaryMaterial ? `Top-Rated ${primaryMaterial} Filaments` : 'Top-Rated Filaments'}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {relatedFilaments.map((f) => (
@@ -405,7 +399,9 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         {/* Related Guides */}
         {relatedConfigs.length > 0 && (
           <section id="related-guides" className="mb-12 scroll-mt-24">
-            <h2 className="text-xl font-bold mb-4">Related Guides</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {topicLabel ? `Related ${topicLabel} Guides` : 'More Filament Guides'}
+            </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {relatedConfigs.map(related => (
                 <a key={related.slug} href={`/guides/${related.slug}`} className="group block">
