@@ -176,7 +176,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   "glow-in-the-dark": {
     titleTemplate: "Glow in the Dark Filaments — Photoluminescent PLA | FilaScope",
     descTemplate: "Compare {count}+ glow in the dark 3D printer filaments. Photoluminescent PLA that charges under light and glows for 6–12 hours. Easy to print, same settings as PLA.",
-    h1: "Glow in the Dark 3D Printer Filaments",
+    h1: "Glow in the Dark 3D Printer Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Glow in the dark filaments use strontium aluminate phosphor particles embedded in a PLA base, creating prints that charge under natural or artificial light and emit a vivid glow for 6–12 hours in the dark. They print at standard PLA temperatures (190–220°C) making them beginner-friendly, and the thicker your walls and layers, the more phosphor material stores energy and the brighter and longer your glow. Popular for safety markers, cosplay costumes, night-stand accessories, gaming accessories, and Halloween decorations. Green glows are the brightest and most common; blue and purple variants have a shorter glow duration. Compare {count}+ glow filament options with brand, price, and color data.",
   },
 };
