@@ -35,13 +35,13 @@ interface OverviewTabContentProps {
 }
 
 // Section header with icon and border
-function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+function SectionHeader({ icon: Icon, title, as: Tag = 'h2' }: { icon: React.ElementType; title: string; as?: 'h2' | 'h3' }) {
   return (
     <div className="section-header mb-4 sm:mb-6">
       <div className="section-header-icon">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <h2 className="section-title">{title}</h2>
+      <Tag className="section-title">{title}</Tag>
     </div>
   );
 }
@@ -301,7 +301,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
       {/* Build Volume Visualization */}
       <section className="mb-8 sm:mb-10">
-        <SectionHeader icon={Ruler} title="Build Volume & Dimensions" />
+        <SectionHeader icon={Ruler} title="Build Volume & Dimensions" as="h3" />
         <BuildVolumeCard
           width={printer.build_volume_x_mm}
           depth={printer.build_volume_y_mm}
@@ -314,13 +314,13 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Print Speed Visualization */}
           <div>
-            <SectionHeader icon={Zap} title="Print Speed" />
+            <SectionHeader icon={Zap} title="Print Speed" as="h3" />
             <SpeedGauge speed={maxSpeed} />
           </div>
           
           {/* Temperature Visualization */}
           <div>
-            <SectionHeader icon={Thermometer} title="Temperature Range" />
+            <SectionHeader icon={Thermometer} title="Temperature Range" as="h3" />
             <TemperatureGauge 
               maxNozzleTemp={nozzleMax} 
               maxBedTemp={bedMax} 
@@ -365,7 +365,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
       {/* System Capabilities - Responsive grid */}
       <section className="mb-8 sm:mb-10">
-        <SectionHeader icon={CheckCircle2} title="System Capabilities" />
+        <SectionHeader icon={CheckCircle2} title="System Capabilities" as="h3" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
           {sortedCapabilities.map((cap) => (
             <CapabilityItem key={cap.label} label={cap.label} available={cap.available} />
@@ -376,7 +376,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
       {/* What's in the Box / Accessories - Only show when data exists */}
       {includedAccessories.length > 0 && (
         <section className="mb-8 sm:mb-10">
-          <SectionHeader icon={Package} title="What's in the Box" />
+          <SectionHeader icon={Package} title="What's in the Box" as="h3" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             {includedAccessories.map((acc, idx) => (
               <div 
