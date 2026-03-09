@@ -1075,6 +1075,9 @@ export default function MaterialHub() {
         {/* Related Searches for SEO */}
         <RelatedSearchesSection materialSlug={slug} materialLabel={label} />
 
+        {/* Material Comparison Section */}
+        <MaterialComparisonSection slug={slug ?? ""} label={label} />
+
         {/* FAQ */}
         <FAQSection faqs={faqs} title={`${label} Filament FAQ`} />
       </div>
