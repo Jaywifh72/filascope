@@ -110,7 +110,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   abs: {
     titleTemplate: "ABS Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ ABS 3D printer filaments. Heat-resistant and durable for functional parts. Filter by brand, price, and printer compatibility on FilaScope.",
-    h1: "ABS Filaments",
+    h1: "ABS Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "ABS (Acrylonitrile Butadiene Styrene) is a durable, heat-resistant engineering plastic used in everything from LEGO bricks to automotive parts. It resists temperatures up to 100°C but requires an enclosed printer and heated bed to prevent warping. Compare {count}+ ABS filaments with specs, pricing, and printer compatibility data.",
   },
   tpu: {
