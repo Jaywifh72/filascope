@@ -95,7 +95,7 @@ const faqData = [
   {
     question: 'Where can I find HueForge TD values for my filament?',
     answer:
-      'FilaScope maintains the world\'s largest verified HueForge TD database. Search by brand, color, or material on this page. If your filament isn\'t listed, check the HueForge community spreadsheet, ask in the HueForge Discord, or measure it yourself using a calibration print.',
+      'Based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments, this is the world\'s largest verified collection. Search by brand, color, or material on this page. If your filament isn\'t listed, check the HueForge community spreadsheet, ask in the HueForge Discord, or measure it yourself using a calibration print.',
   },
   {
     question: 'How do I measure TD values for filaments not in the database?',
@@ -110,7 +110,7 @@ const faqData = [
   {
     question: 'What filament should I use for HueForge?',
     answer:
-      'For HueForge projects, choose filaments with known TD (Transmission Distance) values. White PLA with TD values between 1.0–4.0mm is ideal for most lithophane-style projects. FilaScope\'s HueForge TD database tracks transmissivity data for 500+ filaments from 40+ brands to help you find the perfect match.',
+      'For HueForge projects, choose filaments with known TD (Transmission Distance) values. White PLA with TD values between 1.0–4.0mm is ideal for most lithophane-style projects. Based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments from 40+ brands, you can find the perfect match for your project.',
   },
   {
     question: 'What is the best white filament for HueForge?',
@@ -120,7 +120,7 @@ const faqData = [
   {
     question: 'How do I measure filament TD value?',
     answer:
-      'TD (Transmission Distance) is measured by printing a calibration block at known thickness and measuring light transmission. The HueForge software includes a calibration tool for this purpose. Alternatively, use FilaScope\'s pre-measured TD database with values for 500+ filaments so you don\'t need to measure yourself.',
+      'TD (Transmission Distance) is measured by printing a calibration block at known thickness and measuring light transmission. The HueForge software includes a calibration tool for this purpose. Alternatively, based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments, you can use pre-measured values so you don\'t need to measure yourself.',
   },
   {
     question: 'What is the difference between TD value and transmissivity?',
@@ -139,7 +139,7 @@ const paaData = [
   {
     question: 'What filament brand has the best HueForge colors?',
     answer:
-      'Polymaker and Bambu Lab have the most comprehensive TD data coverage in the FilaScope database, with verified values across dozens of colors. eSUN, Hatchbox, and Prusament also have strong coverage. The best brand depends on color availability in your region — use this database to filter by brand and see which has verified TD values for the colors you need.',
+      'Based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments, Polymaker and Bambu Lab have the most comprehensive TD data coverage with verified values across dozens of colors. eSUN, Hatchbox, and Prusament also have strong coverage. The best brand depends on color availability in your region — use this database to filter by brand and see which has verified TD values for the colors you need.',
   },
   {
     question: 'Can I use PETG for HueForge?',

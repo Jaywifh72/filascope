@@ -214,7 +214,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: "Is PLA filament good for HueForge lithophanes?",
-        answer: `Yes, PLA is the most popular material for HueForge lithophanes. Standard PLA has TD values ranging from 0.5–6.0mm, giving excellent control over light transmission. FilaScope tracks TD values for hundreds of PLA filaments to help you find the perfect match for your HueForge project.`,
+        answer: `Yes, PLA is the most popular material for HueForge lithophanes. Standard PLA has TD values ranging from 0.5–6.0mm, giving excellent control over light transmission. Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments, you can find the perfect PLA match for your HueForge project.`,
       },
       {
         question: "What are the strengths of PLA filament?",
@@ -238,7 +238,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many PLA filaments does FilaScope track?`,
-        answer: `FilaScope currently tracks ${count.toLocaleString()} PLA filaments from ${brandCount}+ brands with real-time pricing from 15+ retailers. We also track HueForge TD values for PLA filaments to help with lithophane and color mixing projects.`,
+        answer: `According to FilaScope's database of ${count.toLocaleString()} PLA filaments from ${brandCount}+ brands, real-time pricing is tracked from 15+ retailers. We also track HueForge TD values for PLA filaments to help with lithophane and color mixing projects.`,
       },
     ],
     petg: [
@@ -264,7 +264,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many PETG filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} PETG filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} PETG filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     abs: [
@@ -290,7 +290,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many ABS filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} ABS filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} ABS filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     asa: [
@@ -308,7 +308,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many ASA filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} ASA filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} ASA filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     tpu: [
@@ -326,7 +326,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many TPU filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} TPU and flexible filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} TPU and flexible filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     nylon: [
@@ -344,7 +344,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many nylon filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} nylon and PA filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} nylon and PA filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     pc: [
@@ -358,7 +358,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many PC filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} polycarbonate filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} polycarbonate filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     "pla-plus": [
@@ -372,11 +372,11 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: "Is PLA+ good for HueForge?",
-        answer: `PLA+ works for HueForge, though its TD values can differ from standard PLA. FilaScope tracks TD values for PLA+ filaments to help you build accurate HueForge profiles.`,
+        answer: `PLA+ works for HueForge, though its TD values can differ from standard PLA. Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments, you can find accurate TD values for PLA+ to build precise HueForge profiles.`,
       },
       {
         question: `How many PLA+ filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} PLA+ filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} PLA+ filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     "silk-pla": [
@@ -386,7 +386,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: "Is silk PLA good for HueForge lithophanes?",
-        answer: `Yes — silk PLA typically has high TD values (often 5.0+mm), making it highly translucent. It's excellent for highlight and accent layers in HueForge stacks. FilaScope tracks TD values for hundreds of silk PLA filaments for precise HueForge profiling.`,
+        answer: `Yes — silk PLA typically has high TD values (often 5.0+mm), making it highly translucent. It's excellent for highlight and accent layers in HueForge stacks. Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments, you can find precise silk PLA TD values for HueForge profiling.`,
       },
       {
         question: "Can silk PLA be used for functional parts?",
@@ -394,7 +394,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many silk PLA filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} silk PLA filaments from ${brandCount}+ brands with real-time pricing and TD values.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} silk PLA filaments from ${brandCount}+ brands with real-time pricing and TD values across 15+ stores.`,
       },
     ],
     "high-speed-pla": [
@@ -408,7 +408,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many high-speed PLA filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} high-speed PLA filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} high-speed PLA filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
     "petg-cf": [
@@ -422,7 +422,7 @@ function getMaterialFAQs(slug: string, label: string, count: number, brandCount:
       },
       {
         question: `How many PETG-CF filaments does FilaScope track?`,
-        answer: `FilaScope tracks ${count.toLocaleString()} PETG-CF filaments from ${brandCount}+ brands with real-time pricing.`,
+        answer: `According to FilaScope's database, it tracks ${count.toLocaleString()} PETG-CF filaments from ${brandCount}+ brands with real-time pricing across 15+ stores.`,
       },
     ],
   };

@@ -169,13 +169,13 @@ function generateFAQs(props: FAQSectionProps): FAQ[] {
       id: '21',
       category: 'Materials & Printing',
       question: `What is the best filament for the ${printerBrand ? `${printerBrand} ` : ''}${printerModel}?`,
-      answer: `The ${printerModel} works best with ${primaryMaterials} based on its temperature range of ${nozzleTempRange}. For everyday printing, PLA from brands like Bambu Lab, Polymaker, or Hatchbox offers consistent results. For stronger functional parts, PETG is recommended. Check FilaScope's filament database to compare options filtered by compatibility with the ${printerModel}.`
+      answer: `According to FilaScope's database of 8,200+ filaments from 48+ brands, the ${printerModel} works best with ${primaryMaterials} based on its temperature range of ${nozzleTempRange}. For everyday printing, PLA from brands like Bambu Lab, Polymaker, or Hatchbox offers consistent results. For stronger functional parts, PETG is recommended. Check FilaScope's filament database to compare options filtered by compatibility with the ${printerModel}.`
     },
     {
       id: '22',
       category: 'Materials & Printing',
       question: `What materials can the ${printerBrand ? `${printerBrand} ` : ''}${printerModel} print?`,
-      answer: `The ${printerModel} can print ${materialCount > 0 ? `${materialCount} material types: ${materialListStr}` : 'a wide range of materials including PLA, PETG, ABS, and TPU'}. ${maxNozzleTemp ? `Its maximum nozzle temperature of ${maxNozzleTemp}°C supports everything from PLA (190°C) to ${highestTempMaterial}.` : ''} ${hasEnclosure ? 'The enclosed build chamber enables high-temperature materials like ABS and ASA without warping.' : ''} FilaScope tracks 8,200+ filaments compatible with this printer.`
+      answer: `FilaScope's specification data shows that the ${printerModel} can print ${materialCount > 0 ? `${materialCount} material types: ${materialListStr}` : 'a wide range of materials including PLA, PETG, ABS, and TPU'}. ${maxNozzleTemp ? `Its maximum nozzle temperature of ${maxNozzleTemp}°C supports everything from PLA (190°C) to ${highestTempMaterial}.` : ''} ${hasEnclosure ? 'The enclosed build chamber enables high-temperature materials like ABS and ASA without warping.' : ''} According to FilaScope's database of 8,200+ filaments from 48+ brands, thousands of filaments are compatible with this printer.`
     }
   ];
 }

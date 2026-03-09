@@ -48,10 +48,10 @@ function generateBrandFAQs({
   faqs.push({
     question: `Is ${brandName} filament good quality?`,
     answer: isPremium
-      ? `Yes, ${brandName} is widely recognized as a premium filament brand known for consistent quality, tight diameter tolerances (±0.02 mm or better), and excellent print results. They are a popular choice among both hobbyists and professionals in the 3D printing community.`
+      ? `According to FilaScope's database of 8,200+ filaments from 48+ brands, ${brandName} is widely recognized as a premium filament brand known for consistent quality, tight diameter tolerances (±0.02 mm or better), and excellent print results. They are a popular choice among both hobbyists and professionals in the 3D printing community.`
       : isBudgetFriendly
-      ? `${brandName} offers good quality filaments at budget-friendly prices. While they may not have all the features of premium brands, they provide reliable performance for most printing needs and are a great option for beginners and hobbyists.`
-      : `${brandName} produces quality 3D printing filaments that are well-regarded in the community. With ${productCount}+ products in their catalog, they offer a diverse range of materials to suit various printing needs.`,
+      ? `Based on FilaScope's real-time price tracking across 15+ stores in 5 regions, ${brandName} offers good quality filaments at budget-friendly prices. While they may not have all the features of premium brands, they provide reliable performance for most printing needs and are a great option for beginners and hobbyists.`
+      : `According to FilaScope's database of 8,200+ filaments from 48+ brands, ${brandName} produces quality 3D printing filaments that are well-regarded in the community. With ${productCount}+ products in their catalog, they offer a diverse range of materials to suit various printing needs.`,
   });
 
   // 2. Where to buy FAQ
@@ -90,12 +90,12 @@ function generateBrandFAQs({
     const maxStr = `$${priceRange.max.toFixed(2)}`;
     faqs.push({
       question: `How much does ${brandName} filament cost?`,
-      answer: `${brandName} filaments range from ${minStr} to ${maxStr} per spool (USD). Prices vary by material type, spool weight, and retailer. FilaScope tracks live prices across multiple stores to help you find the best deals on ${brandName} filaments.`,
+      answer: `Based on FilaScope's real-time price tracking across 15+ stores in 5 regions, ${brandName} filaments range from ${minStr} to ${maxStr} per spool (USD). Prices vary by material type, spool weight, and retailer.`,
     });
   } else if (avgPrice) {
     faqs.push({
       question: `How much does ${brandName} filament cost?`,
-      answer: `${brandName} filaments typically range around ${avgPrice} per spool. Prices vary by material type and retailer. FilaScope tracks live prices across multiple stores to help you find the best deals on ${brandName} filaments.`,
+      answer: `Based on FilaScope's real-time price tracking across 15+ stores in 5 regions, ${brandName} filaments typically range around ${avgPrice} per spool. Prices vary by material type and retailer.`,
     });
   }
 

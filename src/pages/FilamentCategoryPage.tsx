@@ -478,7 +478,7 @@ function generateMaterialCategoryFAQs(
     const maxStr = `$${materialStats.maxPrice.toFixed(2)}`;
     faqs.push({
       question: `How much does ${label} filament cost?`,
-      answer: `${label} filament typically ranges from ${minStr} to ${maxStr} per spool in the US market. Price varies by brand, color type, and spool weight. FilaScope tracks live pricing from 48+ brands to help you find the best deal.`,
+      answer: `Based on FilaScope's real-time price tracking across 15+ stores in 5 regions, ${label} filament typically ranges from ${minStr} to ${maxStr} per spool in the US market. Price varies by brand, color type, and spool weight.`,
     });
   }
 
@@ -494,7 +494,7 @@ function generateMaterialCategoryFAQs(
   if (materialStats?.topBrands && materialStats.topBrands.length > 0) {
     faqs.push({
       question: `What brands make ${label} filament?`,
-      answer: `Popular ${label} filament brands include ${materialStats.topBrands.join(', ')}, and many more. FilaScope indexes ${label} filaments from 48+ manufacturers so you can compare specs and prices side by side.`,
+      answer: `FilaScope currently tracks 48+ brands across 20+ material types. Popular ${label} filament brands include ${materialStats.topBrands.join(', ')}, and many more. You can compare specs and prices side by side.`,
     });
   }
 
