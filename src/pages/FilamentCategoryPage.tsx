@@ -104,7 +104,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   petg: {
     titleTemplate: "PETG Filaments — Compare {count}+ Options | FilaScope",
     descTemplate: "Compare {count}+ PETG 3D printer filaments. Stronger than PLA with better heat resistance. Filter by brand, price, TD value, and printer compatibility.",
-    h1: "PETG Filaments",
+    h1: "PETG Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "PETG (Polyethylene Terephthalate Glycol) bridges the gap between PLA's ease of use and ABS's strength. It's impact-resistant, food-safe options exist, and it tolerates temperatures up to 80°C without deforming — ideal for functional enclosures, brackets, and mechanical parts. Compare {count}+ PETG filaments below with real-time pricing, regional availability, and compatibility data.",
   },
   abs: {
