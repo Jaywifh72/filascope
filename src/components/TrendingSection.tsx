@@ -210,9 +210,12 @@ export function TrendingSection() {
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">
-            🔥 Trending in {regionConfig.name}
-          </h2>
+          <div className="flex items-center gap-2">
+            <span aria-hidden="true" className="text-xl leading-none">🔥</span>
+            <h2 className="text-xl font-bold text-foreground">
+              Trending 3D Printer Filaments in {regionConfig.name}
+            </h2>
+          </div>
           <p className="text-sm text-muted-foreground mt-0.5">
             Based on what makers in your region are viewing this week
           </p>
