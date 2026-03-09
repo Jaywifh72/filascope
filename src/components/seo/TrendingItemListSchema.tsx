@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRegion } from '@/contexts/RegionContext';
-import { ItemListSchema } from './ItemListSchema';
+import { useJsonLd } from './useJsonLd';
 
 interface TrendingFilament {
   id: string;
@@ -72,27 +72,49 @@ function useTrendingFilamentsForSchema(regionCode: string) {
 }
 
 export function TrendingItemListSchema() {
-  const { region } = useRegion();
+  const { region, regionConfig } = useRegion();
   const { data: filaments } = useTrendingFilamentsForSchema(region);
 
-  if (!filaments || filaments.length === 0) return null;
+  const items = filaments?.slice(0, 10) ?? [];
 
-  const items = filaments.slice(0, 10).map((f, i) => ({
-    name: f.product_title,
-    url: `https://filascope.com/filament/${f.product_handle || f.id}`,
-    position: i + 1,
-    price: f.current_price ?? undefined,
-    priceCurrency: f.currency_code || 'USD',
-    brand: f.brand_name ?? undefined,
-    image: f.image_url ?? undefined,
-  }));
-
-  return (
-    <ItemListSchema
-      name="Trending 3D Printer Filaments"
-      description="The most popular 3D printer filaments ranked by value and availability"
-      itemListOrder="Descending"
-      items={items}
-    />
+  useJsonLd(
+    items.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: `Trending 3D Printer Filaments in ${regionConfig.name}`,
+          description: `The most popular 3D printer filaments this week, ranked by maker interest and engagement on FilaScope.`,
+          numberOfItems: items.length,
+          itemListOrder: 'https://schema.org/ItemListOrderDescending',
+          itemListElement: items.map((f, i) => {
+            const productUrl = `https://filascope.com/filament/${f.product_handle || f.id}`;
+            return {
+              '@type': 'ListItem',
+              position: i + 1,
+              name: f.product_title,
+              url: productUrl,
+              item: {
+                '@type': 'Product',
+                name: f.product_title,
+                url: productUrl,
+                ...(f.image_url && { image: f.image_url }),
+                ...(f.brand_name && {
+                  brand: { '@type': 'Organization', name: f.brand_name },
+                }),
+                ...(f.current_price != null && {
+                  offers: {
+                    '@type': 'Offer',
+                    price: f.current_price.toFixed(2),
+                    priceCurrency: f.currency_code || 'USD',
+                    availability: 'https://schema.org/InStock',
+                  },
+                }),
+              },
+            };
+          }),
+        }
+      : null,
   );
+
+  return null;
 }
