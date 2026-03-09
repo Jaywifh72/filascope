@@ -19,6 +19,7 @@ interface FAQSectionProps {
   maxNozzleTemp?: number;
   maxColors?: number;
   hasEnclosure?: boolean;
+  supportedMaterials?: string | null;
 }
 
 // Generate dynamic FAQs based on printer specs
