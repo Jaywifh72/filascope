@@ -320,7 +320,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
           
           {/* Temperature Visualization */}
           <div>
-            <SectionHeader icon={Thermometer} title="Temperature Range" />
+            <SectionHeader icon={Thermometer} title="Temperature Range" as="h3" />
             <TemperatureGauge 
               maxNozzleTemp={nozzleMax} 
               maxBedTemp={bedMax} 
