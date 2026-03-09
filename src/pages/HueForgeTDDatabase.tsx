@@ -95,7 +95,7 @@ const faqData = [
   {
     question: 'Where can I find HueForge TD values for my filament?',
     answer:
-      'FilaScope maintains the world\'s largest verified HueForge TD database. Search by brand, color, or material on this page. If your filament isn\'t listed, check the HueForge community spreadsheet, ask in the HueForge Discord, or measure it yourself using a calibration print.',
+      'Based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments, this is the world\'s largest verified collection. Search by brand, color, or material on this page. If your filament isn\'t listed, check the HueForge community spreadsheet, ask in the HueForge Discord, or measure it yourself using a calibration print.',
   },
   {
     question: 'How do I measure TD values for filaments not in the database?',
