@@ -80,7 +80,7 @@ export function RelatedGuidesLinks({ brand, material, filamentId, hasTransmissio
   if (materialSlug && material) {
     links.push({
       href: `/materials/${materialSlug}`,
-      label: `Learn more about ${material} filament properties and print settings`,
+      label: `${material} Filament Properties & Settings Guide`,
       icon: <Layers className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />,
     });
   }
