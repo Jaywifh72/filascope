@@ -551,6 +551,70 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
         )}
       </section>
 
+      {/* Recommended Filaments for This Printer */}
+      {recommendedFilaments && recommendedFilaments.length > 0 && (
+        <section className="section-card">
+          <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Star className="w-4 h-4 text-primary" />
+            Recommended Filaments for {printer.model_name}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recommendedFilaments.map((fil: any) => (
+              <Link
+                key={fil.id}
+                to={`/filament/${fil.product_handle}`}
+                className="block group"
+                title={`${fil.vendor} ${fil.product_title} — ${fil.material} filament compatible with ${printer.model_name}`}
+              >
+                <Card className="bg-card/80 border-border/40 hover:border-primary/30 hover:bg-muted/50 transition-all duration-150 cursor-pointer">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-3">
+                      {fil.featured_image && (
+                        <img
+                          src={fil.featured_image}
+                          alt={`${fil.vendor} ${fil.product_title} filament spool`}
+                          className="w-10 h-10 rounded-md object-cover flex-shrink-0"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground block truncate">{fil.product_title}</span>
+                        <span className="text-xs text-muted-foreground">{fil.vendor} · {fil.material}</span>
+                        {fil.variant_price && (
+                          <span className="text-xs font-semibold text-primary block mt-0.5">
+                            ${fil.variant_price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Brand link */}
+      {brandName && brandSlug && (
+        <section className="section-card">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              See all filaments from this manufacturer
+            </p>
+            <Link
+              to={`/brands/${brandSlug}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline transition-colors"
+              title={`Browse all ${brandName} 3D printer filaments`}
+            >
+              More from {brandName}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* Buying Guides for This Printer */}
       <section className="section-card">
         <SectionHeader icon={BookOpen} title="Buying Guides for This Printer" />
