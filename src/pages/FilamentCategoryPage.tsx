@@ -657,6 +657,7 @@ export default function FilamentCategoryPage() {
         minPrice: prices.length ? Math.min(...prices) : null,
         maxPrice: prices.length ? Math.max(...prices) : null,
         topBrands,
+        brandCount: Object.keys(brandCounts).length,
       };
     },
     staleTime: 1000 * 60 * 10,
