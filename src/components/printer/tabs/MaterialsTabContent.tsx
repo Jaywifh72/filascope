@@ -1,10 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Palette, Layers, Package, Cpu, ExternalLink, TrendingUp, TrendingDown, 
   CheckCircle2, XCircle, ChevronDown, ChevronRight, Thermometer, AlertCircle, ArrowRight,
-  BookOpen
+  BookOpen, Star
 } from 'lucide-react';
+import { materialNameToSlug } from '@/lib/materialSlugUtils';
+import { toBrandSlug } from '@/utils/brandSlug';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
