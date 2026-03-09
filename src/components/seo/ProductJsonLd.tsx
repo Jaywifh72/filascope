@@ -381,6 +381,7 @@ export function ProductJsonLd({
         lowPrice: Math.min(...prices).toFixed(2),
         highPrice: Math.max(...prices).toFixed(2),
         offerCount: regionalOffers.length,
+        url,
         availability: regionalOffers.some(o => o.availability !== false)
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
