@@ -164,7 +164,7 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   wood: {
     titleTemplate: "Wood PLA Filaments — Realistic Texture & Finish | FilaScope",
     descTemplate: "Compare {count}+ Wood PLA 3D printer filaments. Achieve realistic wood texture and grain. Sand, stain, and paint like real wood. Find the best wood filament brand.",
-    h1: "Wood PLA Filaments",
+    h1: "Wood PLA Filaments — Compare {count}+ Options from {brandCount}+ Brands",
     introTemplate: "Wood PLA filaments blend standard PLA with 10–30% real wood particles — sawdust, bamboo, or cork — to produce prints with an authentic wooden texture and grain that can be sanded, stained, and even painted like real wood. They print at standard PLA temperatures (190–220°C) but require a larger nozzle (0.5mm+) to prevent clogging from the fiber content. Higher nozzle temperatures produce a darker, more 'burnt wood' appearance while cooler temps give a lighter finish. Wood PLA is popular for cosplay props, architectural models, decorative sculptures, furniture models, and any print where a natural organic look is desired. Compare {count}+ wood filament options below, with brand specs and pricing.",
   },
   "carbon-fiber": {
