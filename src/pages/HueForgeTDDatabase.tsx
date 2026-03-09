@@ -1405,7 +1405,7 @@ export default function HueForgeTDDatabase() {
           title="Related HueForge Resources"
           className="max-w-7xl mx-auto px-4 py-8"
           links={[
-            { label: 'Best Filaments for HueForge', href: '/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane and multicolor printing' },
+            { label: 'Best Filaments for HueForge', href: '/guides/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane and multicolor printing' },
             { label: 'Best White Filaments', href: '/best-white-filaments', description: 'Top white filaments for HueForge base layers' },
             { label: 'What Is HueForge TD?', href: '/guides/what-is-hueforge-td', description: 'Complete beginner guide to Transmissivity Distance' },
             { label: 'How to Measure Filament TD', href: '/guides/how-to-measure-filament-td', description: 'Step-by-step calibration and measurement guide' },

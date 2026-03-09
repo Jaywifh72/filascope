@@ -59,8 +59,8 @@ const MATERIALS = [
 ];
 
 const FEATURED_LINKS = [
-  { to: '/best-filaments-for-hueforge', label: 'Best for HueForge', desc: 'TD-ranked lithophane picks' },
-  { to: '/pla-vs-petg', label: 'PLA vs PETG Guide', desc: 'Comprehensive comparison' },
+  { to: '/guides/best-filaments-for-hueforge', label: 'Best for HueForge', desc: 'TD-ranked lithophane picks' },
+  { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Guide', desc: 'Comprehensive comparison' },
   { to: '/best-white-filaments', label: 'Best White Filaments', desc: 'Ranked by TD value' },
   { to: '/deals', label: "Today's Deals", desc: 'Filaments on sale now' },
   { to: '/wizard', label: 'Filament Wizard', desc: 'Get personalized picks' },

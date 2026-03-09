@@ -276,8 +276,8 @@ export default function FilamentTypes() {
             <h2 className="text-lg font-semibold mb-4">Explore More</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { to: '/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
-                { to: '/pla-vs-petg', label: 'PLA vs PETG — Full Comparison' },
+                { to: '/guides/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
+                { to: '/guides/pla-vs-petg', label: 'PLA vs PETG — Full Comparison' },
                 { to: '/3d-printer-compatibility', label: '3D Printer Compatibility Guide' },
                 { to: '/filament-temperature-guide', label: 'Filament Temperature Guide' },
                 { to: '/best-3d-printer-filament', label: 'Best 3D Printer Filament 2026' },

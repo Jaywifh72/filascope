@@ -320,7 +320,7 @@ export default function HowToMeasureFilamentTD() {
             title="Related HueForge Resources"
             links={[
               { label: 'HueForge TD Database', href: '/hueforge-td-database', description: 'Search verified TD values — your filament may already be there' },
-              { label: 'Best Filaments for HueForge', href: '/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane printing' },
+              { label: 'Best Filaments for HueForge', href: '/guides/best-filaments-for-hueforge', description: 'TD-ranked picks for lithophane printing' },
               { label: 'What Is HueForge TD?', href: '/guides/what-is-hueforge-td', description: 'Complete beginner guide to Transmissivity Distance' },
               { label: 'Best White Filaments for HueForge', href: '/guides/best-white-filaments-for-hueforge', description: 'Top white filament picks ranked by TD' },
             ]}

@@ -257,7 +257,7 @@ export default function FilamentStorageGuide() {
             <h2 className="text-lg font-semibold mb-4">Related Guides</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { to: '/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
+                { to: '/guides/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
                 { to: '/filament-temperature-guide', label: 'Filament Temperature Guide' },
                 { to: '/diagnose', label: 'Diagnose My Print Problems' },
                 { to: '/materials/nylon', label: 'Nylon (PA) — High Moisture Risk' },

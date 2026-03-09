@@ -35,7 +35,7 @@ const TOOLS = [
     title: 'Best Filaments for HueForge',
     description:
       'Editor-curated picks of the top-performing filaments for HueForge lithophanes and multicolor prints, ranked by TD accuracy, price, and community ratings.',
-    href: '/best-filaments-for-hueforge',
+    href: '/guides/best-filaments-for-hueforge',
     cta: 'View Top Picks',
     accent: 'amber',
   },
