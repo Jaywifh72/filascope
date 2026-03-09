@@ -14,6 +14,7 @@ import { getMaterialReference } from "@/lib/materialReferenceData";
 import { MaterialBrandComparisonTable } from "@/components/filament/MaterialBrandComparisonTable";
 import { RelatedSearchesSection } from "@/components/seo/RelatedSearchesSection";
 import { slugToMaterialName, slugToMaterialNames } from "@/lib/materialSlugUtils";
+import { MaterialComparisonSection, getComparisonFAQs } from "@/components/material/MaterialComparisonSection";
 
 // ──────────────────────────────────────────────────────────────
 // Slug → DB materials mapping
@@ -864,7 +865,9 @@ export default function MaterialHub() {
     position: i + 1,
   }));
 
-  const faqs = getMaterialFAQs(slug ?? "", label, count, stats?.brandCount ?? 0, reference);
+  const baseFaqs = getMaterialFAQs(slug ?? "", label, count, stats?.brandCount ?? 0, reference);
+  const comparisonFaqs = getComparisonFAQs(slug ?? "", label);
+  const faqs = [...baseFaqs, ...comparisonFaqs];
 
   // Filament listing link for this material
   const filamentListingSlug = slug === "pc" ? "polycarbonate" : slug;
@@ -1071,6 +1074,9 @@ export default function MaterialHub() {
 
         {/* Related Searches for SEO */}
         <RelatedSearchesSection materialSlug={slug} materialLabel={label} />
+
+        {/* Material Comparison Section */}
+        <MaterialComparisonSection slug={slug ?? ""} label={label} />
 
         {/* FAQ */}
         <FAQSection faqs={faqs} title={`${label} Filament FAQ`} />
