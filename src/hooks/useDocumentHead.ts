@@ -167,11 +167,9 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
 
     // Cleanup → only revert tags that THIS call explicitly set
     return () => {
-      if (opts.title) document.title = DEFAULTS.title;
-      if (opts.description) upsertMeta('name', 'description', DEFAULTS.description);
-      // Don't reset canonical to homepage default — CanonicalLink handles the baseline
-      // Don't reset og:title/og:description/og:type to homepage defaults — 
-      // the next page's useDocumentHead call will set the correct values
+      // Don't reset title, description, or OG tags to homepage defaults —
+      // the next page's useDocumentHead call will overwrite them immediately.
+      // Reverting causes a flash of homepage meta during SPA transitions.
       if (opts.ogImage) upsertMeta('property', 'og:image', DEFAULTS.ogImage);
       if (opts.ogImageWidth) removeMeta('property', 'og:image:width');
       if (opts.ogImageHeight) removeMeta('property', 'og:image:height');
