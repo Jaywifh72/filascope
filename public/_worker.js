@@ -17,6 +17,9 @@ const PRERENDER_URL =
 const SERVE_ROBOTS_URL =
   "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots";
 
+const GENERATE_SITEMAP_URL =
+  "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/generate-sitemap";
+
 /** Lower-cased substrings that identify bot User-Agents */
 const CRAWLER_AGENTS = [
   // Search engines
