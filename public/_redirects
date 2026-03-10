@@ -2,8 +2,8 @@
 /robots.txt https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=robots 200
 /llms.txt https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms 200
 
-# Sitemaps — served by prerender edge function
 # /sitemap.xml — served as static file from public/sitemap.xml (no redirect)
+# Sub-sitemaps — served by prerender edge function (for crawler consumption)
 /sitemap-pages.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml 200
 /sitemap-filaments.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-filaments.xml 200
 /sitemap-brands.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-brands.xml 200
