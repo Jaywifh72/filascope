@@ -5,7 +5,7 @@ import { useJsonLd } from '@/components/seo/useJsonLd';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ENTITY_DESCRIPTION =
-  'FilaScope is the world\'s most comprehensive 3D printer filament comparison platform. It indexes over 1,078 filaments from 48+ manufacturers with real-time pricing from 15+ retailers across 6 countries. FilaScope maintains the internet\'s largest verified HueForge Transmissivity Distance (TD) database.';
+  'Learn about FilaScope, the most comprehensive 3D printer filament comparison tool with 8,277+ products from 48+ brands, live pricing, and HueForge TD values.';
 
 const FAQS = [
   {
