@@ -170,10 +170,8 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
       if (opts.title) document.title = DEFAULTS.title;
       if (opts.description) upsertMeta('name', 'description', DEFAULTS.description);
       // Don't reset canonical to homepage default — CanonicalLink handles the baseline
-      if (opts.ogTitle || opts.title) upsertMeta('property', 'og:title', DEFAULTS.ogTitle);
-      if (opts.ogDescription || opts.description) upsertMeta('property', 'og:description', DEFAULTS.ogDescription);
-      // Don't reset og:url to homepage default — CanonicalLink handles the baseline
-      if (opts.ogType) upsertMeta('property', 'og:type', DEFAULTS.ogType);
+      // Don't reset og:title/og:description/og:type to homepage defaults — 
+      // the next page's useDocumentHead call will set the correct values
       if (opts.ogImage) upsertMeta('property', 'og:image', DEFAULTS.ogImage);
       if (opts.ogImageWidth) removeMeta('property', 'og:image:width');
       if (opts.ogImageHeight) removeMeta('property', 'og:image:height');
@@ -181,9 +179,7 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
       if (opts.ogSiteName) upsertMeta('property', 'og:site_name', DEFAULTS.ogSiteName);
       if (opts.twitterCard) upsertMeta('name', 'twitter:card', DEFAULTS.twitterCard);
       if (opts.twitterSite) upsertMeta('name', 'twitter:site', DEFAULTS.twitterSite);
-      if (opts.twitterTitle || opts.title) upsertMeta('name', 'twitter:title', DEFAULTS.twitterTitle);
-      if (opts.twitterDescription || opts.description) upsertMeta('name', 'twitter:description', DEFAULTS.twitterDescription);
-      if (opts.twitterImage) upsertMeta('name', 'twitter:image', DEFAULTS.twitterImage);
+      // Don't reset twitter:title/twitter:description to homepage defaults
 
       // Remove optional extras only if they were set
       if (opts.keywords) removeMeta('name', 'keywords');
