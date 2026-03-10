@@ -47,7 +47,7 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About FilaScope — 3D Filament Comparison Platform</title>
+        <title>About FilaScope — The 3D Printer Filament Comparison Platform</title>
         <meta name="description" content={ENTITY_DESCRIPTION} />
         <link rel="canonical" href="https://filascope.com/about" />
       </Helmet>
