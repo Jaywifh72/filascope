@@ -464,6 +464,12 @@ const GUIDE_REDIRECTS: Record<string,string> = {
   "/learn/hueforge":`${BASE_URL}/guides/what-is-hueforge-td`,
 };
 
+// ── Static file extensions that should never be prerendered ──
+const STATIC_FILE_RE = /\.(xml|txt|json|css|js|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|map|pdf|zip)$/i;
+function isStaticFilePath(p: string): boolean {
+  return STATIC_FILE_RE.test(p) || p.startsWith("/assets/") || p === "/robots.txt" || p === "/llms.txt" || p === "/llms-full.txt";
+}
+
 // ── Main handler ──
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, {headers:corsHeaders});
@@ -471,6 +477,13 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const ua = req.headers.get("user-agent");
     const rawReqPath = url.searchParams.get("path") || "/";
+
+    // Health check endpoint
+    if (rawReqPath === "/_health" || url.pathname.endsWith("/_health")) {
+      return new Response(JSON.stringify({status:"ok",timestamp:new Date().toISOString(),version:"2.1"}), {
+        status:200, headers:{...corsHeaders,"Content-Type":"application/json","Cache-Control":"no-store"},
+      });
+    }
     
     // Test endpoint
     if (rawReqPath === "/api/prerender-test" || url.pathname.endsWith("/api/prerender-test")) {
@@ -478,6 +491,7 @@ Deno.serve(async (req) => {
       const tp = url.searchParams.get("testpath") || "/";
       const tqs = tp.includes("?") ? tp.split("?")[1] : "";
       const cp = tp.split("?")[0].replace(/\/+$/, "") || "/";
+      console.log(`[PRERENDER-TEST] path="${cp}"`);
       const td = await getPageData(cp, sb, tqs);
       const is404 = td.type === "notfound";
       return new Response(is404 ? build404Html(td) : buildHtml(td), {
@@ -491,6 +505,16 @@ Deno.serve(async (req) => {
     const queryString = qsIdx >= 0 ? rawPath.slice(qsIdx + 1) : url.search.slice(1);
     let path = qsIdx >= 0 ? rawPath.slice(0, qsIdx) : rawPath;
     path = path.replace(/\/+$/, "") || "/";
+
+    console.log(`[PRERENDER] request path="${path}" ua="${(ua||"").slice(0,80)}"`);
+
+    // Reject static file paths — these should be served directly, not prerendered
+    if (isStaticFilePath(path) && !path.startsWith("/sitemap")) {
+      console.log(`[PRERENDER] rejected static file path="${path}"`);
+      return new Response(JSON.stringify({error:"NOT_FOUND",message:`Static file paths should not be prerendered: ${path}`,hint:"Serve this file directly from your CDN/hosting."}), {
+        status:404, headers:{...corsHeaders,"Content-Type":"application/json"},
+      });
+    }
 
     // Sitemaps (served to all)
     if (path === "/sitemap.xml") { const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!); return new Response(await smIndex(sb), {headers:{...corsHeaders,...SH}}); }
@@ -510,9 +534,10 @@ Deno.serve(async (req) => {
       if (path === "/sitemap-printers.xml") return new Response(await smPrinters(sb), {headers:{...corsHeaders,...SH}});
       if (path === "/sitemap-colors.xml") return new Response(await smColors(sb), {headers:{...corsHeaders,...SH}});
       
-      console.log(`[PRERENDER] crawler="${ua}" path="${path}"`);
+      console.log(`[PRERENDER] rendering crawler="${(ua||"").slice(0,60)}" path="${path}"`);
       const pd = await getPageData(path, sb, queryString);
       const is404 = pd.type === "notfound";
+      if (is404) console.log(`[PRERENDER] 404 for path="${path}" type="${pd.type}"`);
       return new Response(is404 ? build404Html(pd) : buildHtml(pd), {
         status: is404 ? 404 : 200,
         headers: {...corsHeaders, "Content-Type": "text/html; charset=utf-8", "X-Prerender": "true",
@@ -524,7 +549,9 @@ Deno.serve(async (req) => {
     // Non-crawler → redirect to SPA
     return new Response(null, {status:302, headers:{...corsHeaders,Location:`${BASE_URL}${path}`}});
   } catch (err) {
-    console.error("Prerender error:", err);
-    return new Response("Internal Server Error", {status:500, headers:corsHeaders});
+    console.error("[PRERENDER] Unhandled error:", err);
+    return new Response(JSON.stringify({error:"INTERNAL_ERROR",message:String(err)}), {
+      status:500, headers:{...corsHeaders,"Content-Type":"application/json"},
+    });
   }
 });
