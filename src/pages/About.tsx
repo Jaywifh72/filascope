@@ -5,7 +5,7 @@ import { useJsonLd } from '@/components/seo/useJsonLd';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ENTITY_DESCRIPTION =
-  'FilaScope is the world\'s most comprehensive 3D printer filament comparison platform. It indexes over 1,078 filaments from 48+ manufacturers with real-time pricing from 15+ retailers across 6 countries. FilaScope maintains the internet\'s largest verified HueForge Transmissivity Distance (TD) database.';
+  'Learn about FilaScope, the most comprehensive 3D printer filament comparison tool with 8,277+ products from 48+ brands, live pricing, and HueForge TD values.';
 
 const FAQS = [
   {
@@ -47,7 +47,7 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About FilaScope — 3D Filament Comparison Platform</title>
+        <title>About FilaScope — The 3D Printer Filament Comparison Platform</title>
         <meta name="description" content={ENTITY_DESCRIPTION} />
         <link rel="canonical" href="https://filascope.com/about" />
       </Helmet>
@@ -124,7 +124,7 @@ export default function About() {
         <div className="max-w-3xl mx-auto px-4 py-12">
 
           {/* H1 */}
-          <h1 className="text-3xl font-bold tracking-tight mb-6">About FilaScope</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-6">About FilaScope — The 3D Printer Filament Comparison Platform</h1>
 
           {/* Entity Summary Block */}
           <div
@@ -139,6 +139,22 @@ export default function About() {
               </p>
             </div>
           </div>
+
+          {/* Mission Paragraphs */}
+          <section className="mb-10">
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              FilaScope is a 3D printer filament comparison platform that helps makers find the right filament for their projects. Our database includes over 8,200 filaments from 48+ brands with live pricing from multiple online retailers.
+            </p>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              FilaScope was built to solve a simple problem: comparing 3D printer filaments across brands is tedious. Specifications are scattered across manufacturer websites, pricing varies between stores, and HueForge TD values are hard to find. FilaScope brings all this data into one searchable, filterable database.
+            </p>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              Our key features include a comprehensive filament database with detailed specifications, live price comparison across major retailers, a color matching tool for finding the perfect filament color, and the most complete HueForge TD value database available — essential for anyone creating color lithophanes and multi-color HueForge prints.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              FilaScope covers all major filament types including PLA, PETG, ABS, TPU, ASA, Nylon, Polycarbonate, and specialty materials from brands like Prusament, Hatchbox, eSun, Polymaker, Bambu Lab, Sunlu, and many more.
+            </p>
+          </section>
 
           {/* What FilaScope Does */}
           <section className="mb-10">
