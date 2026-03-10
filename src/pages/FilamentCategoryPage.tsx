@@ -190,9 +190,9 @@ const ALL_META: CategoryMeta = {
 
 function applyCount(template: string, count: number, brandCount?: number): string {
   let result = template.replace(/\{count\}/g, count.toLocaleString());
-  if (brandCount != null) {
-    result = result.replace(/\{brandCount\}/g, String(brandCount));
-  }
+  // Always replace {brandCount} — use provided value or fallback to 48
+  const displayBrandCount = brandCount != null && brandCount > 0 ? brandCount : 48;
+  result = result.replace(/\{brandCount\}/g, String(displayBrandCount));
   return result;
 }
 
