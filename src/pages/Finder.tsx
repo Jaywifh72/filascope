@@ -45,7 +45,7 @@ import { DocumentHead } from "@/components/seo/DocumentHead";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
 import { HomeFAQSection } from "@/components/HomeFAQSection";
 import HeroSection from "@/components/HeroSection";
-import { WebSiteSchema, OrganizationSchema, TrendingItemListSchema } from "@/components/seo";
+import { TrendingItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
 import { QuickPathsPills } from "@/components/QuickPathsPills";
@@ -1054,9 +1054,7 @@ const Finder = () => {
         twitterDescription="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web."
         twitterImage="https://filascope.com/og-image.png"
       />
-      {/* JSON-LD Structured Data for Homepage */}
-      <WebSiteSchema />
-      <OrganizationSchema />
+      {/* WebSiteSchema + OrganizationSchema now rendered globally in App.tsx */}
       <TrendingItemListSchema />
       <Helmet>
         <script type="application/ld+json">{JSON.stringify({

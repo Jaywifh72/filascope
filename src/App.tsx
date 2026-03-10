@@ -53,6 +53,7 @@ import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton"
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
 import { CanonicalLink } from "./components/seo/CanonicalLink";
 import { HreflangTags } from "./components/seo/HreflangTags";
+import { WebSiteSchema, OrganizationSchema } from "./components/seo";
 import { useSchemaValidator } from "./hooks/useSchemaValidator";
 
 // Dev-only schema validation runner (tree-shaken in production)
@@ -249,6 +250,9 @@ const App = () => (
                 <CanonicalLink />
                 {/* SEO: hreflang for multi-region international SEO */}
                 <HreflangTags />
+                {/* SEO: Sitewide WebSite + Organization JSON-LD (renders once globally) */}
+                <WebSiteSchema />
+                <OrganizationSchema />
                 <GA4RouteTracker />
                 <AIReferralTracker />
                 <SchemaValidatorRunner />
