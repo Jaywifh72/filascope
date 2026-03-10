@@ -45,7 +45,7 @@ import { DocumentHead } from "@/components/seo/DocumentHead";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
 import { HomeFAQSection } from "@/components/HomeFAQSection";
 import HeroSection from "@/components/HeroSection";
-import { WebSiteSchema, OrganizationSchema, TrendingItemListSchema } from "@/components/seo";
+import { TrendingItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
 import { QuickPathsPills } from "@/components/QuickPathsPills";
