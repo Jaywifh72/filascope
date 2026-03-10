@@ -249,8 +249,7 @@ export function BrandHeroSection({
           {/* Row 1: Brand Name + Verified */}
           <div className="flex flex-col sm:flex-row items-center lg:items-start gap-2 sm:gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-              {brandName}{' '}
-              <span className="block text-base sm:text-lg font-normal text-primary/80 mt-0.5">3D Printer Filaments</span>
+              {brandName} 3D Printer Filaments
             </h1>
             {isVerified && (
               <TooltipProvider delayDuration={300}>
