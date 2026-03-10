@@ -167,26 +167,9 @@ export default {
       return env.ASSETS.fetch(request);
     }
 
-    // Intercept /sitemap.xml — proxy to generate-sitemap edge function
+    // Serve /sitemap.xml directly from static assets (public/sitemap.xml)
     if (pathname === "/sitemap.xml") {
-      try {
-        const res = await fetch(GENERATE_SITEMAP_URL, {
-          headers: { Accept: "application/xml" },
-        });
-        const body = await res.text();
-
-        return new Response(body, {
-          status: res.ok ? 200 : 500,
-          headers: {
-            "Content-Type": "application/xml; charset=utf-8",
-            "Cache-Control": "public, max-age=43200, s-maxage=43200",
-          },
-        });
-      } catch (err) {
-        console.error("[_worker.js] sitemap.xml fetch failed:", err);
-        // Fall through to static file
-        return env.ASSETS.fetch(request);
-      }
+      return env.ASSETS.fetch(request);
     }
 
     if (isStaticAsset(pathname)) {
