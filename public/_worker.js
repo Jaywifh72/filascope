@@ -79,7 +79,7 @@ function isCrawler(userAgent) {
 const STATIC_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|otf|json|xml|txt|map|mp4|webm|pdf|zip)$/i;
 
 /** Paths that should always be served as static files, bypassing prerender */
-const STATIC_PATHS = new Set(["/sitemap.xml"]);
+const STATIC_PATHS = new Set([]);
 
 function isStaticAsset(pathname) {
   return STATIC_EXTENSIONS.test(pathname) || pathname.startsWith("/assets/") || STATIC_PATHS.has(pathname);
