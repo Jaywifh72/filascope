@@ -250,6 +250,9 @@ const App = () => (
                 <CanonicalLink />
                 {/* SEO: hreflang for multi-region international SEO */}
                 <HreflangTags />
+                {/* SEO: Sitewide WebSite + Organization JSON-LD (renders once globally) */}
+                <WebSiteSchema />
+                <OrganizationSchema />
                 <GA4RouteTracker />
                 <AIReferralTracker />
                 <SchemaValidatorRunner />

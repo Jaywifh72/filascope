@@ -1054,9 +1054,7 @@ const Finder = () => {
         twitterDescription="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web."
         twitterImage="https://filascope.com/og-image.png"
       />
-      {/* JSON-LD Structured Data for Homepage */}
-      <WebSiteSchema />
-      <OrganizationSchema />
+      {/* WebSiteSchema + OrganizationSchema now rendered globally in App.tsx */}
       <TrendingItemListSchema />
       <Helmet>
         <script type="application/ld+json">{JSON.stringify({
