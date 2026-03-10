@@ -251,6 +251,9 @@ export function BrandHeroSection({
             <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
               {brandName} 3D Printer Filaments
             </h1>
+            <h2 className="text-base sm:text-lg font-normal text-primary/80 mt-0.5">
+              Browse {productLineCount} Product{productLineCount !== 1 ? 's' : ''} &amp; {variantCount.toLocaleString()} Color Variant{variantCount !== 1 ? 's' : ''}
+            </h2>
             {isVerified && (
               <TooltipProvider delayDuration={300}>
                 <Tooltip>
