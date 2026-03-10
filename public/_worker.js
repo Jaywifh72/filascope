@@ -82,7 +82,7 @@ const STATIC_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|tt
 const STATIC_PATHS = new Set(["/sitemap.xml"]);
 
 function isStaticAsset(pathname) {
-  return STATIC_EXTENSIONS.test(pathname) || pathname.startsWith("/assets/");
+  return STATIC_EXTENSIONS.test(pathname) || pathname.startsWith("/assets/") || STATIC_PATHS.has(pathname);
 }
 
 
