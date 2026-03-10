@@ -519,7 +519,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Sitemaps (served to all)
+    // Sitemaps (served to all) — /sitemap.xml is now a static file, but handle it here as fallback
     if (path === "/sitemap.xml") { const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!); return new Response(await smIndex(sb), {headers:{...corsHeaders,...SH}}); }
     if (path === "/sitemap-pages.xml") return new Response(smPages(), {headers:{...corsHeaders,...SH}});
     if (path === "/sitemap-guides.xml") return new Response(smGuides(), {headers:{...corsHeaders,...SH}});
