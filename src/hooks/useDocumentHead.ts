@@ -169,7 +169,7 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
     return () => {
       if (opts.title) document.title = DEFAULTS.title;
       if (opts.description) upsertMeta('name', 'description', DEFAULTS.description);
-      if (opts.canonical) upsertLink('canonical', DEFAULTS.canonical);
+      // Don't reset canonical to homepage default — CanonicalLink handles the baseline
       if (opts.ogTitle || opts.title) upsertMeta('property', 'og:title', DEFAULTS.ogTitle);
       if (opts.ogDescription || opts.description) upsertMeta('property', 'og:description', DEFAULTS.ogDescription);
       if (opts.ogUrl || opts.canonical) upsertMeta('property', 'og:url', DEFAULTS.ogUrl);
