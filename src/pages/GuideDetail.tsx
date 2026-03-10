@@ -301,6 +301,7 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
                 {categoryConfig.label}
               </Badge>
               <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                <span>By FilaScope Team</span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   {guide.readTime} min read
