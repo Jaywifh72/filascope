@@ -17,6 +17,9 @@ const PRERENDER_URL =
 const SERVE_ROBOTS_URL =
   "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots";
 
+const GENERATE_SITEMAP_URL =
+  "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/generate-sitemap";
+
 /** Lower-cased substrings that identify bot User-Agents */
 const CRAWLER_AGENTS = [
   // Search engines
@@ -79,7 +82,7 @@ function isCrawler(userAgent) {
 const STATIC_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|otf|json|xml|txt|map|mp4|webm|pdf|zip)$/i;
 
 /** Paths that should always be served as static files, bypassing prerender */
-const STATIC_PATHS = new Set(["/sitemap.xml"]);
+const STATIC_PATHS = new Set([]);
 
 function isStaticAsset(pathname) {
   return STATIC_EXTENSIONS.test(pathname) || pathname.startsWith("/assets/") || STATIC_PATHS.has(pathname);
@@ -162,6 +165,28 @@ export default {
     // llms-full.txt is served as a static file from public/ — no edge function proxy
     if (pathname === "/llms-full.txt") {
       return env.ASSETS.fetch(request);
+    }
+
+    // Intercept /sitemap.xml — proxy to generate-sitemap edge function
+    if (pathname === "/sitemap.xml") {
+      try {
+        const res = await fetch(GENERATE_SITEMAP_URL, {
+          headers: { Accept: "application/xml" },
+        });
+        const body = await res.text();
+
+        return new Response(body, {
+          status: res.ok ? 200 : 500,
+          headers: {
+            "Content-Type": "application/xml; charset=utf-8",
+            "Cache-Control": "public, max-age=43200, s-maxage=43200",
+          },
+        });
+      } catch (err) {
+        console.error("[_worker.js] sitemap.xml fetch failed:", err);
+        // Fall through to static file
+        return env.ASSETS.fetch(request);
+      }
     }
 
     if (isStaticAsset(pathname)) {
