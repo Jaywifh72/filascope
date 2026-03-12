@@ -1007,7 +1007,8 @@ Deno.serve(async (req) => {
     const matched = diffResults.filter((r) => r.status === "matched");
 
     // ── Step 7: Store items in brand_sync_items ──
-    const itemsToInsert = diffResults.map((r) => ({
+    // deno-lint-ignore no-explicit-any
+    const itemsToInsert: any[] = diffResults.map((r) => ({
       job_id: jobId,
       status: r.status,
       extracted_data: r.filament,
@@ -1036,12 +1037,12 @@ Deno.serve(async (req) => {
     // Also add extraction errors as items
     for (const err of extractionErrors) {
       itemsToInsert.push({
-        job_id: jobId!,
-        status: "error" as const,
-        extracted_data: { handle: err.handle } as any,
+        job_id: jobId,
+        status: "error",
+        extracted_data: { handle: err.handle },
         display_name: err.handle,
         color_name: null,
-        material_type: null as unknown as string,
+        material_type: null,
         color_hex: null,
         color_family: null,
         finish_type: null,
@@ -1053,12 +1054,12 @@ Deno.serve(async (req) => {
         price_cad: null,
         price_aud: null,
         variant_sku: null,
-        product_handle: null as unknown as string,
-        available_regions: null as unknown as string[],
+        product_handle: null,
+        available_regions: null,
         is_new: false,
         existing_filament_id: null,
         price_diff: null,
-        error_message: err.error as any,
+        error_message: err.error,
       });
     }
 
