@@ -1123,13 +1123,13 @@ Deno.serve(async (req) => {
         .update({
           status: "failed",
           completed_at: new Date().toISOString(),
-          errors: { fatal: err.message },
+          errors: { fatal: errMsg },
         })
         .eq("id", jobId);
     }
 
     return new Response(
-      JSON.stringify({ error: err.message || "Unknown error" }),
+      JSON.stringify({ error: errMsg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
