@@ -108,8 +108,9 @@ Deno.serve(async (req) => {
         } else {
           results.push({ file: filename, status: "uploaded", size: originalBytes.length });
         }
-      } catch (e) {
-        results.push({ file: filename, status: `error: ${e.message}` });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        results.push({ file: filename, status: `error: ${msg}` });
       }
     }
 
