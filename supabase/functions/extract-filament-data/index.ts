@@ -120,7 +120,7 @@ function adaptSunlu(
   // Group variants by color (option3)
   const colorGroups: Record<string, any[]> = {};
   for (const variant of product.variants) {
-    const colorKey = variant[colorOption] || variant.title;
+    const colorKey = (colorOption ? variant[colorOption] : null) || variant.title;
     if (!colorGroups[colorKey]) colorGroups[colorKey] = [];
     colorGroups[colorKey].push(variant);
   }
