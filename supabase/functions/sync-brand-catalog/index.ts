@@ -1113,8 +1113,9 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (err: any) {
-    console.error(`[sync-brand-catalog] Fatal error:`, err.message);
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[sync-brand-catalog] Fatal error:`, errMsg);
 
     if (jobId) {
       await supabase
