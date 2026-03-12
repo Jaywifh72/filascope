@@ -533,7 +533,7 @@ Deno.serve(async (req) => {
       console.warn(`[PRERENDER] static-bypass path="${path}" ua="${(ua||"").slice(0,60)}"`);
       return new Response(JSON.stringify({
         code:"STATIC_PATH_BYPASS",
-        message:`${path} is a static asset and is intentionally excluded from prerender HTML rendering.",
+        message:`${path} is a static asset and is intentionally excluded from prerender HTML rendering.`,
         requestedPath:path,
         hint:"Serve this file directly from static hosting/CDN and bypass the prerender proxy for this path.",
       }), {
