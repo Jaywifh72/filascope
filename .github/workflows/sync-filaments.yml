@@ -72,7 +72,7 @@ jobs:
           BRANDS=$(curl -s \
             "$SUPABASE_URL/rest/v1/automated_brands?scraping_enabled=eq.true&select=brand_name,brand_slug,platform_type,supported_regions,auto_create_products" \
             -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
 
           # Check if the query succeeded
           if echo "$BRANDS" | jq -e 'type == "array"' > /dev/null 2>&1; then
@@ -122,7 +122,7 @@ jobs:
           IMAGE_BRANDS=$(curl -s \
             "$SUPABASE_URL/rest/v1/automated_brands?scraping_enabled=eq.true&active_product_count=gt.0&select=brand_slug&order=products_with_images.asc.nullsfirst&limit=20" \
             -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
 
           IMAGE_SLUGS=$(echo "$IMAGE_BRANDS" | jq -c '[.[].brand_slug // empty] | unique' 2>/dev/null || echo '[]')
           if [ "$IMAGE_SLUGS" = "[]" ] || [ "$IMAGE_SLUGS" = "null" ]; then
@@ -136,7 +136,7 @@ jobs:
           TDS_BRANDS=$(curl -s \
             "$SUPABASE_URL/rest/v1/automated_brands?scraping_enabled=eq.true&products_with_tds=gt.0&select=brand_slug&limit=20" \
             -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
 
           TDS_SLUGS=$(echo "$TDS_BRANDS" | jq -c '[.[].brand_slug // empty] | unique' 2>/dev/null || echo '[]')
           if [ "$TDS_SLUGS" = "[]" ] || [ "$TDS_SLUGS" = "null" ]; then
@@ -150,7 +150,7 @@ jobs:
           REGIONAL=$(curl -s \
             "$SUPABASE_URL/rest/v1/automated_brands?scraping_enabled=eq.true&supported_regions=not.is.null&select=brand_slug,supported_regions" \
             -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
 
           REGIONAL_CONFIG=$(echo "$REGIONAL" | jq -c '[.[] | select(.supported_regions != null and (.supported_regions | length) > 0)]' 2>/dev/null || echo '[]')
           if [ "$REGIONAL_CONFIG" = "[]" ] || [ "$REGIONAL_CONFIG" = "null" ]; then
