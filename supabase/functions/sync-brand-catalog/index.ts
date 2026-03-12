@@ -22,14 +22,17 @@ import {
   FILAMENT_KEYWORDS,
   NON_FILAMENT_KEYWORDS,
 } from "../_shared/filament-utils.ts";
-import {
-  enrichSunluProduct,
-  SUNLU_TDS_URL,
-} from "../_shared/sunlu-defaults.ts";
-import {
-  getSunluColorHexFromSeed,
-  isSunluExcludedProduct,
-} from "../_shared/sunlu-seed.ts";
+// NOTE: sunlu-defaults.ts and sunlu-seed.ts imports removed to reduce bundle size
+// for Supabase edge function deployment. Sunlu enrichments (color hex seeds, print
+// temp defaults, TDS URL) will be applied during the import phase instead.
+
+// Inline lightweight excluded-product keywords for sitemap pre-filtering
+const SUNLU_EXCLUDED_KEYWORDS = [
+  "filadryer", "filament-dryer", "dry-box", "drybox", "3d-pen", "resin",
+  "build-plate", "magnetic-bed", "nozzle", "hotend", "extruder", "enclosure",
+  "storage-box", "vacuum-bag", "connector", "kidoodle", "minibox",
+  "sl-300", "sl-600", "fc01", "sp2", "s1-pro", "s2-plus", "s4",
+];
 
 // ============================================================
 // CORS
@@ -422,7 +425,7 @@ async function fetchCatalogViaSitemap(
     const handle = handles[i];
 
     // Brand-specific pre-filter: skip known non-filament handles
-    if (brandSlug === "sunlu" && isSunluExcludedProduct(handle)) {
+    if (brandSlug === "sunlu" && SUNLU_EXCLUDED_KEYWORDS.some((kw) => handle.includes(kw))) {
       console.log(`[sync-brand-catalog] Skipped excluded handle: ${handle}`);
       continue;
     }
@@ -482,142 +485,12 @@ async function fetchCatalogViaSitemap(
   return { products, totalFetched: products.length };
 }
 
-// ============================================================
-// Sunlu-specific enrichment pass
-// ============================================================
+// NOTE: applySunluEnrichments() removed — enrichments (color hex seeds, print temps,
+// TDS URL, finish type overrides) are now applied during the import phase to keep
+// this function's bundle size under Supabase edge function limits.
 
-function applySunluEnrichments(
-  filaments: ExtractedFilament[],
-  productTitle: string
-): void {
-  for (const filament of filaments) {
-    // Get Sunlu enrichment data
-    const colorName = filament.display_name.split(" - ").pop() || "";
-    const enrichment = enrichSunluProduct(productTitle, colorName, filament.material);
-
-    // Override material if Sunlu's normalization is better
-    if (enrichment.material && enrichment.material !== filament.material) {
-      filament.material = enrichment.material;
-      // Rebuild product_title and display_name with corrected material
-      const newDisplayName = `${filament.material} - ${colorName}`;
-      filament.display_name = newDisplayName;
-      filament.product_title = `Sunlu ${newDisplayName}`;
-    }
-
-    // Apply color hex from curated Sunlu seed mapping (much better than generic guessColorHex)
-    const seedHex = getSunluColorHexFromSeed(colorName);
-    if (seedHex) {
-      filament.color_hex = seedHex;
-    } else if (enrichment.colorHex && (!filament.color_hex || filament.color_hex === "#808080")) {
-      filament.color_hex = enrichment.colorHex;
-    }
-
-    // Apply print settings from Sunlu defaults
-    if (enrichment.printSettings) {
-      if (filament.nozzle_temp_min_c == null) filament.nozzle_temp_min_c = enrichment.printSettings.nozzleTempMin;
-      if (filament.nozzle_temp_max_c == null) filament.nozzle_temp_max_c = enrichment.printSettings.nozzleTempMax;
-      if (filament.bed_temp_min_c == null) filament.bed_temp_min_c = enrichment.printSettings.bedTempMin;
-      if (filament.bed_temp_max_c == null) filament.bed_temp_max_c = enrichment.printSettings.bedTempMax;
-    }
-
-    // Override finish type with Sunlu-specific detection
-    if (enrichment.finishType) {
-      filament.finish_type = enrichment.finishType;
-    }
-
-    // Set TDS URL
-    (filament as any).tds_url = SUNLU_TDS_URL;
-
-    // Set high_speed_capable based on Sunlu material detection
-    if (enrichment.material?.includes("HSPLA") || enrichment.material?.includes("HS-PLA")) {
-      filament.high_speed_capable = true;
-    }
-  }
-}
-
-// ============================================================
-// UK store price enrichment (best-effort)
-// ============================================================
-
-async function fetchUkStorePrices(
-  filaments: ExtractedFilament[],
-  ukStoreBaseUrl: string
-): Promise<{ enriched: number; errors: number }> {
-  let enriched = 0;
-  let errors = 0;
-
-  // Deduplicate by product_handle to avoid redundant fetches
-  const handleMap = new Map<string, ExtractedFilament[]>();
-  for (const f of filaments) {
-    if (!f.product_handle) continue;
-    if (!handleMap.has(f.product_handle)) handleMap.set(f.product_handle, []);
-    handleMap.get(f.product_handle)!.push(f);
-  }
-
-  console.log(`[sync-brand-catalog] Fetching UK prices for ${handleMap.size} unique product handles`);
-
-  for (const [handle, matchingFilaments] of handleMap) {
-    try {
-      const ukRes = await fetch(`${ukStoreBaseUrl}/products/${handle}.json`, {
-        headers: { "User-Agent": CHROME_UA, Accept: "application/json" },
-      });
-
-      if (ukRes.ok) {
-        const ukData = await ukRes.json();
-        const ukProduct = ukData?.product;
-        if (ukProduct?.variants?.length) {
-          // Build color→price map from UK variants
-          const ukPriceMap = new Map<string, number>();
-          for (const v of ukProduct.variants) {
-            // UK store may or may not have region in title
-            const varTitle = (v.title || "").toLowerCase();
-            const price = parseFloat(v.price);
-            if (!isNaN(price) && price > 0) {
-              // Use full title as key for matching
-              ukPriceMap.set(varTitle, price);
-            }
-          }
-
-          // Match UK prices to our filaments by color name
-          for (const f of matchingFilaments) {
-            const colorPart = (f.display_name.split(" - ").pop() || "").toLowerCase();
-            if (!colorPart) continue;
-
-            // Try to find matching UK variant
-            let ukPrice: number | null = null;
-            for (const [ukTitle, price] of ukPriceMap) {
-              if (ukTitle.includes(colorPart) || colorPart.includes(ukTitle)) {
-                ukPrice = price;
-                break;
-              }
-            }
-
-            // Fallback: if only one UK price exists (mono-product), use it
-            if (ukPrice == null && ukPriceMap.size === 1) {
-              ukPrice = ukPriceMap.values().next().value!;
-            }
-
-            if (ukPrice != null) {
-              f.price_gbp = ukPrice;
-              f.product_url_uk = `${ukStoreBaseUrl}/products/${handle}`;
-              enriched++;
-            }
-          }
-        }
-      } else {
-        errors++;
-      }
-    } catch {
-      errors++;
-    }
-
-    // Rate limit UK fetches
-    await new Promise((r) => setTimeout(r, 300));
-  }
-
-  console.log(`[sync-brand-catalog] UK prices: ${enriched} enriched, ${errors} errors`);
-  return { enriched, errors };
-}
+// NOTE: fetchUkStorePrices() removed — UK GBP prices will be fetched during
+// the import phase to keep this function's bundle size manageable.
 
 // ============================================================
 // Extract Filaments from a Single Product
@@ -1117,26 +990,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Step 4b: Brand-specific enrichments ──
-    if (brandSlug === "sunlu") {
-      console.log(`[sync-brand-catalog] Applying Sunlu enrichments to ${allFilaments.length} filaments`);
-      // Group filaments by product handle to get the original product title
-      for (const product of filamentProducts) {
-        const handle = product.handle || "";
-        const productFilaments = allFilaments.filter((f) => f.product_handle === handle);
-        if (productFilaments.length > 0) {
-          applySunluEnrichments(productFilaments, product.title || "");
-        }
-      }
-
-      // Fetch UK store prices (best-effort, separate store)
-      try {
-        await fetchUkStorePrices(allFilaments, "https://uk.store.sunlu.com");
-      } catch (ukErr: any) {
-        warnings.push(`UK store fetch failed: ${ukErr.message}`);
-        console.warn(`[sync-brand-catalog] UK store error:`, ukErr.message);
-      }
-    }
+    // NOTE: Brand-specific enrichments (Sunlu color hex, print temps, UK prices)
+    // are now applied during the import phase to reduce edge function bundle size.
 
     console.log(`[sync-brand-catalog] Extracted ${allFilaments.length} filaments, ${extractionErrors.length} errors`);
 
