@@ -18,6 +18,11 @@ on:
           - scrape-shopify
           - scrape-amazon
           - scrape-other
+          - enrich-images
+          - enrich-tds
+          - enrich-regional
+          - discover-tds
+          - quality-report
       brand:
         description: 'Specific brand (leave empty for all in selected job)'
         required: false
@@ -33,7 +38,136 @@ on:
         default: false
         type: boolean
 
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
 jobs:
+  # ============================================================================
+  # SETUP: Query database for brand lists (replaces hardcoded matrices)
+  # ============================================================================
+  setup:
+    name: Load Brand Lists
+    runs-on: ubuntu-latest
+    outputs:
+      shopify-brands: ${{ steps.brands.outputs.shopify }}
+      amazon-brands: ${{ steps.brands.outputs.amazon }}
+      other-brands: ${{ steps.brands.outputs.other }}
+      has-shopify: ${{ steps.brands.outputs.has_shopify }}
+      has-amazon: ${{ steps.brands.outputs.has_amazon }}
+      has-other: ${{ steps.brands.outputs.has_other }}
+      image-slugs: ${{ steps.enrichment.outputs.image_slugs }}
+      tds-slugs: ${{ steps.enrichment.outputs.tds_slugs }}
+      regional-config: ${{ steps.enrichment.outputs.regional_config }}
+      has-images: ${{ steps.enrichment.outputs.has_images }}
+      has-tds: ${{ steps.enrichment.outputs.has_tds }}
+      has-regional: ${{ steps.enrichment.outputs.has_regional }}
+    steps:
+      - name: Query brand lists from database
+        id: brands
+        run: |
+          echo "📋 Fetching brand lists from automated_brands..."
+
+          BRANDS=$(curl -s \
+            "$SUPABASE_URL/rest/v1/automated_brands?scraping_enabled=eq.true&select=brand_name,brand_slug,platform_type,supported_regions,auto_create_products" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          # Check if the query succeeded
+          if echo "$BRANDS" | jq -e 'type == "array"' > /dev/null 2>&1; then
+            TOTAL=$(echo "$BRANDS" | jq 'length')
+            echo "✅ Found $TOTAL enabled brands"
+          else
+            echo "❌ Failed to query brands, falling back to empty arrays"
+            BRANDS="[]"
+          fi
+
+          # Split by platform type
+          SHOPIFY=$(echo "$BRANDS" | jq -c '[.[] | select(.platform_type == "shopify") | .brand_name]')
+          AMAZON=$(echo "$BRANDS" | jq -c '[.[] | select(.platform_type == "amazon") | .brand_name]')
+          OTHER=$(echo "$BRANDS" | jq -c '[.[] | select(.platform_type != "shopify" and .platform_type != "amazon") | .brand_name]')
+
+          # If a specific brand was requested via manual dispatch, override
+          MANUAL_BRAND="${{ github.event.inputs.brand }}"
+          if [ -n "$MANUAL_BRAND" ]; then
+            echo "🎯 Manual brand override: $MANUAL_BRAND"
+            SHOPIFY="[\"$MANUAL_BRAND\"]"
+            AMAZON="[\"$MANUAL_BRAND\"]"
+            OTHER="[\"$MANUAL_BRAND\"]"
+          fi
+
+          echo "shopify=$SHOPIFY" >> $GITHUB_OUTPUT
+          echo "amazon=$AMAZON" >> $GITHUB_OUTPUT
+          echo "other=$OTHER" >> $GITHUB_OUTPUT
+
+          # Set has-* flags (GitHub Actions skips matrix jobs with empty arrays)
+          HAS_SHOPIFY=$(echo "$SHOPIFY" | jq 'length > 0')
+          HAS_AMAZON=$(echo "$AMAZON" | jq 'length > 0')
+          HAS_OTHER=$(echo "$OTHER" | jq 'length > 0')
+          echo "has_shopify=$HAS_SHOPIFY" >> $GITHUB_OUTPUT
+          echo "has_amazon=$HAS_AMAZON" >> $GITHUB_OUTPUT
+          echo "has_other=$HAS_OTHER" >> $GITHUB_OUTPUT
+
+          echo "📊 Shopify: $(echo $SHOPIFY | jq 'length') brands"
+          echo "📊 Amazon: $(echo $AMAZON | jq 'length') brands"
+          echo "📊 Other: $(echo $OTHER | jq 'length') brands"
+
+      - name: Query enrichment targets
+        id: enrichment
+        run: |
+          echo "🔍 Finding brands needing enrichment..."
+
+          # Brands that have products — sorted by fewest images (most enrichment needed)
+          IMAGE_BRANDS=$(curl -s \
+            "$SUPABASE_URL/rest/v1/automated_brands?scraping_enabled=eq.true&active_product_count=gt.0&select=brand_slug&order=products_with_images.asc.nullsfirst&limit=20" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          IMAGE_SLUGS=$(echo "$IMAGE_BRANDS" | jq -c '[.[].brand_slug // empty] | unique' 2>/dev/null || echo '[]')
+          if [ "$IMAGE_SLUGS" = "[]" ] || [ "$IMAGE_SLUGS" = "null" ]; then
+            IMAGE_SLUGS='["ninjatek","matterhackers","tecbears","fillamentum","eryone"]'
+          fi
+
+          echo "image_slugs=$IMAGE_SLUGS" >> $GITHUB_OUTPUT
+          echo "📸 Image enrichment: $(echo $IMAGE_SLUGS | jq 'length') brands"
+
+          # Brands with filaments that have TDS data
+          TDS_BRANDS=$(curl -s \
+            "$SUPABASE_URL/rest/v1/automated_brands?scraping_enabled=eq.true&products_with_tds=gt.0&select=brand_slug&limit=20" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          TDS_SLUGS=$(echo "$TDS_BRANDS" | jq -c '[.[].brand_slug // empty] | unique' 2>/dev/null || echo '[]')
+          if [ "$TDS_SLUGS" = "[]" ] || [ "$TDS_SLUGS" = "null" ]; then
+            TDS_SLUGS='["overture-3d","bambu-lab","3dxtech","3d-fuel","polymaker","prusament","colorfabb","fillamentum"]'
+          fi
+
+          echo "tds_slugs=$TDS_SLUGS" >> $GITHUB_OUTPUT
+          echo "🔬 TDS parsing: $(echo $TDS_SLUGS | jq 'length') brands"
+
+          # Brands with supported_regions for regional pricing
+          REGIONAL=$(curl -s \
+            "$SUPABASE_URL/rest/v1/automated_brands?scraping_enabled=eq.true&supported_regions=not.is.null&select=brand_slug,supported_regions" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          REGIONAL_CONFIG=$(echo "$REGIONAL" | jq -c '[.[] | select(.supported_regions != null and (.supported_regions | length) > 0)]' 2>/dev/null || echo '[]')
+          if [ "$REGIONAL_CONFIG" = "[]" ] || [ "$REGIONAL_CONFIG" = "null" ]; then
+            REGIONAL_CONFIG='[{"brand_slug":"bambu-lab","supported_regions":["EU","UK","CA","AU","JP"]},{"brand_slug":"elegoo","supported_regions":["EU","UK","CA","AU"]},{"brand_slug":"polymaker","supported_regions":["EU"]},{"brand_slug":"creality","supported_regions":["EU","UK","CA","AU"]},{"brand_slug":"anycubic","supported_regions":["EU","UK","CA","AU"]}]'
+          fi
+
+          echo "regional_config=$REGIONAL_CONFIG" >> $GITHUB_OUTPUT
+          echo "🌍 Regional pricing: $(echo $REGIONAL_CONFIG | jq 'length') brands"
+
+          # Set has-* flags
+          echo "has_images=$(echo $IMAGE_SLUGS | jq 'length > 0')" >> $GITHUB_OUTPUT
+          echo "has_tds=$(echo $TDS_SLUGS | jq 'length > 0')" >> $GITHUB_OUTPUT
+          echo "has_regional=$(echo $REGIONAL_CONFIG | jq 'length > 0')" >> $GITHUB_OUTPUT
+
+  # ============================================================================
+  # SYNC: SpoolmanDB community data
+  # ============================================================================
   sync-spoolman:
     name: Sync SpoolmanDB
     runs-on: ubuntu-latest
@@ -43,79 +177,49 @@ jobs:
         run: |
           echo "🚀 Starting SpoolmanDB sync..."
           response=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.SUPABASE_URL }}/functions/v1/sync-filaments" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "$SUPABASE_URL/functions/v1/sync-filaments" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "Content-Type: application/json" \
             -d '{"scheduled": true}')
-          
+
           http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | sed '$d')
-          
           echo "Response code: $http_code"
-          
+
           if [ "$http_code" -ne 200 ]; then
             echo "❌ SpoolmanDB sync failed"
             exit 1
           fi
-          
+
           echo "✅ SpoolmanDB sync completed"
 
+  # ============================================================================
+  # SCRAPE: Shopify brands (dynamic matrix from database)
+  # ============================================================================
   scrape-shopify:
     name: Scrape Shopify Brands
     runs-on: ubuntu-latest
-    needs: [sync-spoolman]
-    if: always() && (github.event.schedule == '0 3 * * *' || github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-shopify')
-    
+    needs: [setup, sync-spoolman]
+    if: |
+      always() &&
+      needs.setup.outputs.has-shopify == 'true' &&
+      (github.event.schedule == '0 3 * * *' || github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-shopify')
+
     strategy:
       matrix:
-        brand: [
-          # SHOPIFY BRANDS (27 total)
-          'Prusament',
-          '3D-Fuel',
-          'Polymaker',
-          'ColorFabb',
-          'Proto-Pasta',
-          'Fillamentum',
-          'Atomic Filament',
-          'Push Plastic',
-          'Fusion Filaments',
-          'NinjaTek',
-          'Recreus',
-          'Extrudr',
-          'Fiberlogy',
-          'Ultimaker',
-          'Printed Solid',
-          'Bambu Lab',
-          'Anycubic',
-          'Elegoo',
-          'Creality',
-          'Sunlu',
-          'Amolen',
-          'eSun',
-          'Eryone',
-          'VoxelPLA',
-          'Matter3D',
-          'Taulman3D',
-          'Siraya Tech'
-        ]
+        brand: ${{ fromJson(needs.setup.outputs.shopify-brands) }}
       max-parallel: 5
       fail-fast: false
-    
+
     steps:
       - name: Scrape ${{ matrix.brand }}
         id: scrape
         run: |
-          BRAND="${{ github.event.inputs.brand }}"
-          if [ -z "$BRAND" ]; then
-            BRAND="${{ matrix.brand }}"
-          fi
-          
+          BRAND="${{ matrix.brand }}"
           DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
-          
-          # Use higher limit for weekly full discovery or manual full_discovery
+
           IS_WEEKLY="${{ github.event.schedule == '0 1 * * 0' }}"
           IS_FULL="${{ github.event.inputs.full_discovery || 'false' }}"
-          
+
           if [ "$IS_WEEKLY" == "true" ] || [ "$IS_FULL" == "true" ]; then
             LIMIT=200
             echo "🔍 FULL DISCOVERY: Scraping $BRAND (Shopify) with limit $LIMIT..."
@@ -123,78 +227,64 @@ jobs:
             LIMIT=100
             echo "🔍 Scraping $BRAND (Shopify) with limit $LIMIT..."
           fi
-          
+
           response=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "$SUPABASE_URL/functions/v1/scrape-brand-data" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"vendor\": \"$BRAND\", \"limit\": $LIMIT, \"dryRun\": $DRY_RUN}")
-          
+
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
-          
+
           echo "Response code: $http_code"
-          
-          # Parse creation stats from response
+
           CREATED=$(echo "$body" | jq -r '.results.stats.created // .stats.created // 0' 2>/dev/null || echo "0")
           UPDATED=$(echo "$body" | jq -r '.results.stats.updated // .stats.updated // 0' 2>/dev/null || echo "0")
           TOTAL=$(echo "$body" | jq -r '.results.stats.total // .stats.total // 0' 2>/dev/null || echo "0")
-          
+
           echo "📊 Stats - Created: $CREATED, Updated: $UPDATED, Total: $TOTAL"
-          
-          # Set outputs for summary
           echo "brand=$BRAND" >> $GITHUB_OUTPUT
           echo "created=$CREATED" >> $GITHUB_OUTPUT
           echo "updated=$UPDATED" >> $GITHUB_OUTPUT
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
-          
+
           if [ "$http_code" -ne 200 ]; then
             echo "❌ Failed to scrape $BRAND"
             echo "::warning::Brand $BRAND scraping failed"
             exit 1
           fi
-          
+
           echo "✅ Successfully scraped $BRAND (Created: $CREATED, Updated: $UPDATED)"
 
+  # ============================================================================
+  # SCRAPE: Amazon brands (dynamic matrix, serial execution)
+  # ============================================================================
   scrape-amazon:
     name: Scrape Amazon Brands
     runs-on: ubuntu-latest
-    needs: [scrape-shopify]
-    if: always() && (github.event.schedule == '0 3 * * *' || github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-amazon')
-    
+    needs: [setup, scrape-shopify]
+    if: |
+      always() &&
+      needs.setup.outputs.has-amazon == 'true' &&
+      (github.event.schedule == '0 3 * * *' || github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-amazon')
+
     strategy:
       matrix:
-        brand: [
-          # AMAZON BRANDS (10 total)
-          'Hatchbox',
-          'Ziro',
-          'Paramount 3D',
-          'GEEETECH',
-          'TECBEARS',
-          'TTYT3D',
-          'CC3D',
-          '3D Solutech',
-          'Gizmo Dorks',
-          'PRILINE'
-        ]
-      max-parallel: 1  # Serial for Amazon rate limits
+        brand: ${{ fromJson(needs.setup.outputs.amazon-brands) }}
+      max-parallel: 1
       fail-fast: false
-    
+
     steps:
       - name: Scrape ${{ matrix.brand }} (Amazon)
         id: scrape
         run: |
-          BRAND="${{ github.event.inputs.brand }}"
-          if [ -z "$BRAND" ]; then
-            BRAND="${{ matrix.brand }}"
-          fi
-          
+          BRAND="${{ matrix.brand }}"
           DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
-          
-          # Use higher limit for weekly full discovery
+
           IS_WEEKLY="${{ github.event.schedule == '0 1 * * 0' }}"
           IS_FULL="${{ github.event.inputs.full_discovery || 'false' }}"
-          
+
           if [ "$IS_WEEKLY" == "true" ] || [ "$IS_FULL" == "true" ]; then
             LIMIT=150
             echo "🔍 FULL DISCOVERY: Scraping $BRAND via Amazon with limit $LIMIT..."
@@ -202,30 +292,28 @@ jobs:
             LIMIT=100
             echo "🔍 Scraping $BRAND via Amazon with limit $LIMIT..."
           fi
-          
-          # Respect Amazon rate limits
+
           sleep 2
-          
+
           response=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "$SUPABASE_URL/functions/v1/scrape-brand-data" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"vendor\": \"$BRAND\", \"limit\": $LIMIT, \"dryRun\": $DRY_RUN}")
-          
+
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
-          
+
           echo "Response code: $http_code"
-          
-          # Parse creation stats
+
           CREATED=$(echo "$body" | jq -r '.results.stats.created // .stats.created // 0' 2>/dev/null || echo "0")
           UPDATED=$(echo "$body" | jq -r '.results.stats.updated // .stats.updated // 0' 2>/dev/null || echo "0")
-          
+
           echo "📊 Stats - Created: $CREATED, Updated: $UPDATED"
           echo "brand=$BRAND" >> $GITHUB_OUTPUT
           echo "created=$CREATED" >> $GITHUB_OUTPUT
           echo "updated=$UPDATED" >> $GITHUB_OUTPUT
-          
+
           if [ "$http_code" -ne 200 ]; then
             echo "⚠️ $BRAND scrape may have failed (Amazon is rate-limited)"
             echo "::warning::Amazon brand $BRAND scraping failed"
@@ -233,237 +321,394 @@ jobs:
             echo "✅ Successfully scraped $BRAND (Created: $CREATED, Updated: $UPDATED)"
           fi
 
+  # ============================================================================
+  # SCRAPE: Other platforms (WooCommerce, BigCommerce, Firecrawl — dynamic)
+  # ============================================================================
   scrape-other:
     name: Scrape Other Platforms
     runs-on: ubuntu-latest
-    needs: [scrape-amazon]
-    if: always() && (github.event.schedule == '0 3 * * *' || github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-other')
-    
+    needs: [setup, scrape-amazon]
+    if: |
+      always() &&
+      needs.setup.outputs.has-other == 'true' &&
+      (github.event.schedule == '0 3 * * *' || github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-other')
+
     strategy:
       matrix:
-        brand: [
-          # WOOCOMMERCE (1)
-          'Overture 3D',
-          # BIGCOMMERCE (1)
-          '3DXTech',
-          # FIRECRAWL/CUSTOM (3)
-          'FormFutura',
-          'MatterHackers',
-          'Inland'
-        ]
+        brand: ${{ fromJson(needs.setup.outputs.other-brands) }}
       max-parallel: 2
       fail-fast: false
-    
+
     steps:
       - name: Scrape ${{ matrix.brand }}
         id: scrape
         run: |
-          BRAND="${{ github.event.inputs.brand }}"
-          if [ -z "$BRAND" ]; then
-            BRAND="${{ matrix.brand }}"
-          fi
-          
+          BRAND="${{ matrix.brand }}"
           DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
-          
-          # Use higher limit for weekly full discovery
+
           IS_WEEKLY="${{ github.event.schedule == '0 1 * * 0' }}"
           IS_FULL="${{ github.event.inputs.full_discovery || 'false' }}"
-          
+
           if [ "$IS_WEEKLY" == "true" ] || [ "$IS_FULL" == "true" ]; then
             LIMIT=200
             echo "🔍 FULL DISCOVERY: Scraping $BRAND with limit $LIMIT..."
           else
             LIMIT=100
-            echo "🔍 Scraping $BRAND (Custom/WooCommerce/BigCommerce) with limit $LIMIT..."
+            echo "🔍 Scraping $BRAND with limit $LIMIT..."
           fi
-          
+
           response=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "$SUPABASE_URL/functions/v1/scrape-brand-data" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"vendor\": \"$BRAND\", \"limit\": $LIMIT, \"dryRun\": $DRY_RUN}")
-          
+
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
-          
+
           echo "Response code: $http_code"
-          
-          # Parse creation stats
+
           CREATED=$(echo "$body" | jq -r '.results.stats.created // .stats.created // 0' 2>/dev/null || echo "0")
           UPDATED=$(echo "$body" | jq -r '.results.stats.updated // .stats.updated // 0' 2>/dev/null || echo "0")
-          
+
           echo "📊 Stats - Created: $CREATED, Updated: $UPDATED"
           echo "brand=$BRAND" >> $GITHUB_OUTPUT
           echo "created=$CREATED" >> $GITHUB_OUTPUT
           echo "updated=$UPDATED" >> $GITHUB_OUTPUT
-          
+
           if [ "$http_code" -ne 200 ]; then
             echo "❌ Failed to scrape $BRAND"
             echo "::warning::Brand $BRAND scraping failed"
             exit 1
           fi
-          
+
           echo "✅ Successfully scraped $BRAND (Created: $CREATED, Updated: $UPDATED)"
 
-  sync-regional-prices:
-    name: Sync Regional Prices
+  # ============================================================================
+  # ENRICH: Image discovery (dynamic brand list, weekly)
+  # ============================================================================
+  enrich-images:
+    name: Enrich Images - ${{ matrix.brand }}
     runs-on: ubuntu-latest
-    # Only run on weekly schedule (Sundays)
-    if: github.event.schedule == '0 1 * * 0' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'regional-prices')
-    
+    needs: [setup]
+    if: |
+      needs.setup.outputs.has-images == 'true' &&
+      (github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'enrich-images')
     strategy:
+      max-parallel: 2
       fail-fast: false
-      max-parallel: 2
-    
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-    
-    steps:
-      - name: Sync Bambu Lab regional prices
-        run: |
-          echo "🌍 Syncing Bambu Lab regional prices..."
-          curl -sS -w "\n%{http_code}" \
-            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{"brandSlug":"bambu-lab","regions":["EU","UK","CA","AU","JP"],"dryRun":false}'
-          
-      - name: Sync Elegoo regional prices
-        run: |
-          echo "🌍 Syncing Elegoo regional prices..."
-          curl -sS -w "\n%{http_code}" \
-            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{"brandSlug":"elegoo","regions":["EU","UK","CA","AU"],"dryRun":false}'
-          
-      - name: Sync Polymaker regional prices
-        run: |
-          echo "🌍 Syncing Polymaker regional prices..."
-          curl -sS -w "\n%{http_code}" \
-            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{"brandSlug":"polymaker","regions":["EU"],"dryRun":false}'
-          
-      - name: Sync Creality regional prices
-        run: |
-          echo "🌍 Syncing Creality regional prices..."
-          curl -sS -w "\n%{http_code}" \
-            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{"brandSlug":"creality","regions":["EU","UK","CA","AU"],"dryRun":false}'
-          
-      - name: Sync Anycubic regional prices
-        run: |
-          echo "🌍 Syncing Anycubic regional prices..."
-          curl -sS -w "\n%{http_code}" \
-            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{"brandSlug":"anycubic","regions":["EU","UK","CA","AU"],"dryRun":false}'
-
-  # Weekly image scraping job
-  scrape-images:
-    name: Scrape Images - ${{ matrix.brand }}
-    runs-on: ubuntu-latest
-    if: github.event.schedule == '0 1 * * 0' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'scrape-images')
-    strategy:
-      max-parallel: 2
       matrix:
-        brand: ['ninjatek', 'matterhackers', 'tecbears', 'fillamentum', 'eryone']
+        brand: ${{ fromJson(needs.setup.outputs.image-slugs) }}
     steps:
       - name: Discover images for ${{ matrix.brand }}
         run: |
-          curl -s -X POST \
-            "${{ secrets.SUPABASE_URL }}/functions/v1/discover-brand-images" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          echo "📸 Discovering images for ${{ matrix.brand }}..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "$SUPABASE_URL/functions/v1/discover-brand-images" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
-            -d '{"brand": "${{ matrix.brand }}", "dryRun": false, "limit": 100}'
+            -d '{"brand": "${{ matrix.brand }}", "dryRun": false, "limit": 100}')
 
-  # Weekly TDS parsing job - extracts specs from discovered TDS URLs
-  parse-tds:
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response code: $http_code"
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "⚠️ Image discovery may have failed for ${{ matrix.brand }}"
+            echo "::warning::Image discovery failed for ${{ matrix.brand }}"
+          else
+            FOUND=$(echo "$body" | jq -r '.imagesFound // .found // 0' 2>/dev/null || echo "0")
+            echo "✅ Images discovered for ${{ matrix.brand }}: $FOUND"
+          fi
+
+  # ============================================================================
+  # ENRICH: TDS discovery + parsing (dynamic, weekly)
+  # ============================================================================
+  discover-tds:
+    name: Discover TDS URLs
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: |
+      github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'discover-tds'
+    steps:
+      - name: Discover TDS URLs for all brands
+        run: |
+          echo "🔍 Running TDS URL discovery..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "$SUPABASE_URL/functions/v1/discover-brand-tds" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"discoverAll": true, "limit": 50}')
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response code: $http_code"
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "⚠️ TDS discovery may have failed"
+            echo "::warning::TDS URL discovery failed"
+          else
+            DISCOVERED=$(echo "$body" | jq -r '.discovered // .total // 0' 2>/dev/null || echo "0")
+            echo "✅ TDS URLs discovered: $DISCOVERED"
+          fi
+
+  enrich-tds:
     name: Parse TDS - ${{ matrix.brand }}
     runs-on: ubuntu-latest
-    if: github.event.schedule == '0 1 * * 0' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'parse-tds')
+    needs: [setup, discover-tds]
+    if: |
+      always() &&
+      needs.setup.outputs.has-tds == 'true' &&
+      (github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'enrich-tds')
     strategy:
-      max-parallel: 1  # Serial for AI rate limits
+      max-parallel: 1
       fail-fast: false
       matrix:
-        brand: ['overture-3d', 'bambu-lab', '3dxtech', '3d-fuel', 'polymaker', 'prusament', 'colorfabb', 'fillamentum']
+        brand: ${{ fromJson(needs.setup.outputs.tds-slugs) }}
     steps:
       - name: Parse TDS for ${{ matrix.brand }}
         run: |
           echo "🔬 Parsing TDS specs for ${{ matrix.brand }}..."
           response=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.SUPABASE_URL }}/functions/v1/parse-filament-tds" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            "$SUPABASE_URL/functions/v1/parse-filament-tds" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
             -d '{"brand_slug": "${{ matrix.brand }}", "limit": 25}')
-          
+
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
-          
+
           echo "Response code: $http_code"
-          
+
           PARSED=$(echo "$body" | jq -r '.parsed // 0' 2>/dev/null || echo "0")
           FAILED=$(echo "$body" | jq -r '.failed // 0' 2>/dev/null || echo "0")
-          
+
           echo "📊 Stats - Parsed: $PARSED, Failed: $FAILED"
-          
+
           if [ "$http_code" -ne 200 ]; then
             echo "⚠️ TDS parsing may have failed for ${{ matrix.brand }}"
             echo "::warning::TDS parsing failed for ${{ matrix.brand }}"
           else
             echo "✅ Successfully parsed TDS for ${{ matrix.brand }}"
           fi
-          
+
           # Rate limit between brands (60s for AI cooldown)
           sleep 60
 
+  # ============================================================================
+  # ENRICH: Regional pricing (dynamic, weekly)
+  # ============================================================================
+  enrich-regional:
+    name: Sync Regional Prices
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: |
+      needs.setup.outputs.has-regional == 'true' &&
+      (github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'enrich-regional')
+    steps:
+      - name: Sync regional prices for all configured brands
+        run: |
+          echo "🌍 Syncing regional prices..."
+
+          REGIONAL='${{ needs.setup.outputs.regional-config }}'
+
+          echo "$REGIONAL" | jq -c '.[]' | while IFS= read -r brand_config; do
+            SLUG=$(echo "$brand_config" | jq -r '.brand_slug')
+            REGIONS=$(echo "$brand_config" | jq -c '.supported_regions')
+
+            echo "🌍 Syncing $SLUG for regions: $REGIONS..."
+
+            response=$(curl -s -w "\n%{http_code}" -X POST \
+              "$SUPABASE_URL/functions/v1/sync-regional-prices" \
+              -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"brandSlug\":\"$SLUG\",\"regions\":$REGIONS,\"dryRun\":false}")
+
+            http_code=$(echo "$response" | tail -n1)
+
+            if [ "$http_code" -ne 200 ]; then
+              echo "⚠️ Regional sync may have failed for $SLUG"
+              echo "::warning::Regional price sync failed for $SLUG"
+            else
+              echo "✅ Regional prices synced for $SLUG"
+            fi
+
+            sleep 5
+          done
+
+  # ============================================================================
+  # QUALITY: Calculate scores and run health checks
+  # ============================================================================
+  quality-report:
+    name: Data Quality Report
+    runs-on: ubuntu-latest
+    needs: [scrape-shopify, scrape-amazon, scrape-other, enrich-images, enrich-tds, enrich-regional]
+    if: |
+      always() &&
+      (github.event.schedule == '0 1 * * 0' || github.event.inputs.job == 'all' || github.event.inputs.job == 'quality-report')
+    steps:
+      - name: Calculate filament scores
+        run: |
+          echo "📊 Calculating filament quality scores..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "$SUPABASE_URL/functions/v1/calculate-filament-scores" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"recalculateAll": false, "limit": 500}')
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response code: $http_code"
+          if [ "$http_code" -eq 200 ]; then
+            SCORED=$(echo "$body" | jq -r '.scored // .updated // 0' 2>/dev/null || echo "0")
+            echo "✅ Scores calculated for $SCORED filaments"
+          else
+            echo "⚠️ Score calculation may have failed"
+          fi
+
+      - name: Run health check
+        run: |
+          echo "🏥 Running weekly health check..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "$SUPABASE_URL/functions/v1/weekly-health-check" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response code: $http_code"
+          if [ "$http_code" -eq 200 ]; then
+            PASS_RATE=$(echo "$body" | jq -r '.overall_pass_rate // 0' 2>/dev/null || echo "0")
+            echo "✅ Health check pass rate: ${PASS_RATE}%"
+          fi
+
+  # ============================================================================
+  # SUMMARY: Aggregate results and alert on failures
+  # ============================================================================
   summary:
     name: Generate Summary Report
     runs-on: ubuntu-latest
-    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other, sync-regional-prices, scrape-images, parse-tds]
+    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other, enrich-images, discover-tds, enrich-tds, enrich-regional, quality-report]
     if: always()
-    
+
     steps:
       - name: Fetch sync stats from database
         id: fetch-stats
         run: |
           TODAY=$(date -u '+%Y-%m-%d')
           STATS=$(curl -s \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/brand_sync_logs?started_at=gte.${TODAY}T00:00:00Z&select=brand_slug,products_created,products_updated,products_discovered,status" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
-          
+            "$SUPABASE_URL/rest/v1/brand_sync_logs?started_at=gte.${TODAY}T00:00:00Z&select=brand_slug,products_created,products_updated,products_discovered,status" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
           TOTAL_CREATED=$(echo "$STATS" | jq '[.[].products_created // 0] | add // 0')
           TOTAL_UPDATED=$(echo "$STATS" | jq '[.[].products_updated // 0] | add // 0')
           SUCCESS_COUNT=$(echo "$STATS" | jq '[.[] | select(.status == "completed")] | length')
           FAILED_COUNT=$(echo "$STATS" | jq '[.[] | select(.status == "failed")] | length')
-          
+          FAILED_BRANDS=$(echo "$STATS" | jq -r '[.[] | select(.status == "failed") | .brand_slug] | join(", ")')
+          ZERO_DISCOVERY=$(echo "$STATS" | jq -r '[.[] | select(.products_discovered == 0 and .status == "completed") | .brand_slug] | join(", ")')
+
           echo "total_created=$TOTAL_CREATED" >> $GITHUB_OUTPUT
           echo "total_updated=$TOTAL_UPDATED" >> $GITHUB_OUTPUT
           echo "success_count=$SUCCESS_COUNT" >> $GITHUB_OUTPUT
           echo "failed_count=$FAILED_COUNT" >> $GITHUB_OUTPUT
-      
+          echo "failed_brands=$FAILED_BRANDS" >> $GITHUB_OUTPUT
+          echo "zero_discovery=$ZERO_DISCOVERY" >> $GITHUB_OUTPUT
+
       - name: Create summary
         run: |
           echo "## 📊 Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Products Created | ${{ steps.fetch-stats.outputs.total_created || 0 }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Products Updated | ${{ steps.fetch-stats.outputs.total_updated || 0 }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Successful | ${{ steps.fetch-stats.outputs.success_count || 0 }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Failed | ${{ steps.fetch-stats.outputs.failed_count || 0 }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Products Created | ${{ steps.fetch-stats.outputs.total_created }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Products Updated | ${{ steps.fetch-stats.outputs.total_updated }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Brands Successful | ${{ steps.fetch-stats.outputs.success_count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Brands Failed | ${{ steps.fetch-stats.outputs.failed_count }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
+          FAILED="${{ steps.fetch-stats.outputs.failed_brands }}"
+          if [ -n "$FAILED" ]; then
+            echo "### ❌ Failed Brands" >> $GITHUB_STEP_SUMMARY
+            echo "$FAILED" | tr ',' '\n' | while read -r brand; do
+              echo "- $brand" >> $GITHUB_STEP_SUMMARY
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          ZERO="${{ steps.fetch-stats.outputs.zero_discovery }}"
+          if [ -n "$ZERO" ]; then
+            echo "### ⚠️ Zero Products Discovered (possible scraper breakage)" >> $GITHUB_STEP_SUMMARY
+            echo "$ZERO" | tr ',' '\n' | while read -r brand; do
+              echo "- $brand" >> $GITHUB_STEP_SUMMARY
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
           echo "### Job Status" >> $GITHUB_STEP_SUMMARY
           echo "- sync-spoolman: ${{ needs.sync-spoolman.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- scrape-shopify: ${{ needs.scrape-shopify.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- scrape-amazon: ${{ needs.scrape-amazon.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- scrape-other: ${{ needs.scrape-other.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- sync-regional-prices: ${{ needs.sync-regional-prices.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- scrape-images: ${{ needs.scrape-images.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- parse-tds: ${{ needs.parse-tds.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- enrich-images: ${{ needs.enrich-images.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- discover-tds: ${{ needs.discover-tds.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- enrich-tds: ${{ needs.enrich-tds.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- enrich-regional: ${{ needs.enrich-regional.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- quality-report: ${{ needs.quality-report.result }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Alert on critical failures
+        if: steps.fetch-stats.outputs.failed_count > 3
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedCount = '${{ steps.fetch-stats.outputs.failed_count }}';
+            const failedBrands = '${{ steps.fetch-stats.outputs.failed_brands }}';
+            const zeroBrands = '${{ steps.fetch-stats.outputs.zero_discovery }}';
+
+            let body = `## Scraper Alert\n\n`;
+            body += `**${failedCount} brands failed** during today's sync.\n\n`;
+
+            if (failedBrands) {
+              body += `### Failed Brands\n`;
+              failedBrands.split(', ').forEach(b => { body += `- ${b.trim()}\n`; });
+              body += `\n`;
+            }
+
+            if (zeroBrands) {
+              body += `### Zero Discovery (possible scraper breakage)\n`;
+              zeroBrands.split(', ').forEach(b => { body += `- ${b.trim()}\n`; });
+              body += `\n`;
+            }
+
+            body += `[View workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})`;
+
+            // Check for existing open alert issues to avoid duplicates
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'scraper-alert',
+              state: 'open',
+            });
+
+            if (existingIssues.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Scraper Alert: ${failedCount} brands failed on ${new Date().toISOString().split('T')[0]}`,
+                body: body,
+                labels: ['scraper-alert'],
+              });
+              console.log('Created new scraper alert issue');
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: body,
+              });
+              console.log(`Added comment to existing issue #${existingIssues[0].number}`);
+            }
