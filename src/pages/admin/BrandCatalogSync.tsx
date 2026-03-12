@@ -26,6 +26,7 @@ export default function BrandCatalogSync() {
     importResult,
     error,
     importing,
+    scanStatusMessage,
     startScan,
     startImport,
     reset,
@@ -100,15 +101,16 @@ export default function BrandCatalogSync() {
       {phase !== 'importing' && phase !== 'complete' && !showImportConfirmation && (
         <BrandSelectorCard
           onScanStart={handleScanStart}
-          isScanning={phase === 'scanning'}
+          isScanning={phase === 'scanning' || phase === 'processing'}
         />
       )}
 
-      {/* Phase 1b: Scanning in progress */}
-      {phase === 'scanning' && (
+      {/* Phase 1b: Scanning / Processing in progress */}
+      {(phase === 'scanning' || phase === 'processing') && (
         <ScanProgressCard
           brandName={brandInfo?.name ?? 'Brand'}
           scanJob={scanJob}
+          statusMessage={scanStatusMessage}
         />
       )}
 

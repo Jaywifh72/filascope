@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Types
 // ============================================================
 
-export type Phase = 'select' | 'scanning' | 'delta' | 'importing' | 'complete';
+export type Phase = 'select' | 'scanning' | 'processing' | 'delta' | 'importing' | 'complete';
 
 export type SyncItem = {
   id: string;
@@ -87,6 +87,7 @@ export function useCatalogSync() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [scanStatusMessage, setScanStatusMessage] = useState<string>('');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Cleanup polling on unmount
@@ -112,7 +113,7 @@ export function useCatalogSync() {
     deltaStats.inDatabase = (scanJob.matched_count ?? 0) + (scanJob.changed_count ?? 0);
   }
 
-  // ── Start Scan ──
+  // ── Start Scan (Two-Phase: Fetch → Process) ──
 
   const startScan = useCallback(async (brandId: string, configId: string) => {
     setError(null);
@@ -120,116 +121,73 @@ export function useCatalogSync() {
     setScanJob(null);
     setImportResult(null);
     setPhase('scanning');
+    setScanStatusMessage('Fetching products from store...');
 
     try {
-      const { data, error: invokeErr } = await supabase.functions.invoke('sync-brand-catalog', {
+      // ── Phase 1: Fetch products from store ──
+      const { data: fetchData, error: fetchErr } = await supabase.functions.invoke('sync-brand-catalog', {
         body: { brand_id: brandId, config_id: configId },
       });
 
-      if (invokeErr) throw new Error(invokeErr.message);
+      if (fetchErr) throw new Error(fetchErr.message);
 
-      const returnedJobId = data?.job_id;
-      if (!returnedJobId) {
-        // If the function returned synchronously with results, process immediately
-        if (data?.success && data?.new_count != null) {
-          // Need to find the job ID from DB
-          const { data: latestJob } = await supabase
-            .from('brand_sync_jobs')
-            .select('*')
-            .eq('brand_id', brandId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-          if (latestJob) {
-            setJobId(latestJob.id);
-            setScanJob(latestJob as SyncJob);
-            await loadItems(latestJob.id);
-            setPhase('delta');
-            return;
-          }
-        }
-        throw new Error('No job ID returned from scan');
-      }
+      const returnedJobId = fetchData?.job_id;
+      if (!returnedJobId) throw new Error('No job ID returned from scan');
 
       setJobId(returnedJobId);
+      const products = fetchData?.products;
+      const productCount = fetchData?.product_count || products?.length || 0;
 
-      // Check if already completed (sync functions sometimes return after completion)
-      if (data?.success) {
-        setScanJob({
-          id: returnedJobId,
+      setScanStatusMessage(`Fetched ${productCount} products. Processing and comparing...`);
+      setPhase('processing');
+
+      // ── Phase 2: Classify, extract, diff ──
+      const { data: processData, error: processErr } = await supabase.functions.invoke('process-brand-sync', {
+        body: {
+          job_id: returnedJobId,
+          products: products || [],
           brand_id: brandId,
           config_id: configId,
-          status: 'completed',
-          total_store_products: data.catalog_stats?.total_store_products ?? null,
-          filament_products_found: data.catalog_stats?.filament_products_found ?? null,
-          skipped_products: data.catalog_stats?.skipped_products ?? null,
-          new_count: data.new_count ?? null,
-          changed_count: data.changed_count ?? null,
-          matched_count: data.matched_count ?? null,
-          error_count: data.error_count ?? null,
-          imported_count: null,
-          post_import_results: null,
-          started_at: null,
-          completed_at: new Date().toISOString(),
-          created_at: null,
-          warnings: data.warnings ?? null,
-        } as SyncJob);
-        await loadItems(returnedJobId);
-        setPhase('delta');
-        return;
-      }
+        },
+      });
 
-      // Start polling for async completion
-      startPolling(returnedJobId);
+      if (processErr) throw new Error(processErr.message);
+
+      // Build job summary from process results
+      setScanJob({
+        id: returnedJobId,
+        brand_id: brandId,
+        config_id: configId,
+        status: 'completed',
+        total_store_products: productCount,
+        filament_products_found: processData?.filament_products_found ?? null,
+        skipped_products: processData?.skipped_products ?? null,
+        new_count: processData?.new_count ?? null,
+        changed_count: processData?.changed_count ?? null,
+        matched_count: processData?.matched_count ?? null,
+        error_count: processData?.error_count ?? null,
+        imported_count: null,
+        post_import_results: null,
+        started_at: null,
+        completed_at: new Date().toISOString(),
+        created_at: null,
+        warnings: processData?.warnings ?? null,
+      } as SyncJob);
+
+      await loadItems(returnedJobId);
+      setPhase('delta');
     } catch (err: any) {
       const msg = err.message || 'Scan failed';
-      // Provide a clearer message for common failures
       if (msg.includes('Failed to send a request') || msg.includes('FunctionsFetchError')) {
         setError(
-          'Could not reach the sync-brand-catalog edge function. ' +
-          'It may not be deployed yet. Run: supabase functions deploy sync-brand-catalog'
+          'Could not reach an edge function. ' +
+          'Ensure sync-brand-catalog and process-brand-sync are deployed.'
         );
       } else {
         setError(msg);
       }
       setPhase('select');
     }
-  }, []);
-
-  // ── Polling ──
-
-  const startPolling = useCallback((jId: string) => {
-    if (pollRef.current) clearInterval(pollRef.current);
-
-    pollRef.current = setInterval(async () => {
-      try {
-        const { data: job } = await supabase
-          .from('brand_sync_jobs')
-          .select('*')
-          .eq('id', jId)
-          .single();
-
-        if (!job) return;
-
-        setScanJob(job as SyncJob);
-
-        if (job.status === 'completed' || job.status === 'failed') {
-          if (pollRef.current) clearInterval(pollRef.current);
-          pollRef.current = null;
-
-          if (job.status === 'completed') {
-            await loadItems(jId);
-            setPhase('delta');
-          } else {
-            setError(`Scan failed: ${JSON.stringify(job.errors || 'Unknown error')}`);
-            setPhase('select');
-          }
-        }
-      } catch {
-        // Ignore polling errors
-      }
-    }, 1500);
   }, []);
 
   // ── Load Items ──
@@ -323,6 +281,7 @@ export function useCatalogSync() {
     importResult,
     error,
     importing,
+    scanStatusMessage,
     startScan,
     startImport,
     reset,

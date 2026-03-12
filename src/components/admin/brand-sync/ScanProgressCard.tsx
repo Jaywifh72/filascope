@@ -7,6 +7,7 @@ import type { SyncJob } from '@/hooks/useCatalogSync';
 interface Props {
   brandName: string;
   scanJob: SyncJob | null;
+  statusMessage?: string;
 }
 
 function getStage(job: SyncJob | null): { label: string; detail: string; progress: number; icon: React.ReactNode } {
@@ -53,8 +54,15 @@ function getStage(job: SyncJob | null): { label: string; detail: string; progres
   };
 }
 
-export function ScanProgressCard({ brandName, scanJob }: Props) {
+export function ScanProgressCard({ brandName, scanJob, statusMessage }: Props) {
   const stage = getStage(scanJob);
+
+  // Override stage detail with live status message from hook if available
+  if (statusMessage) {
+    stage.detail = statusMessage;
+    // Show higher progress when processing (phase 2)
+    if (statusMessage.includes('Processing')) stage.progress = 70;
+  }
 
   return (
     <TooltipProvider>

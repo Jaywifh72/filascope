@@ -15,7 +15,7 @@ const STEPS = [
     label: 'Scan Store',
     icon: Search,
     tooltip: 'Discover all filament products from the brand\'s online store',
-    phases: ['select', 'scanning'] as Phase[],
+    phases: ['select', 'scanning', 'processing'] as Phase[],
   },
   {
     key: 'delta',
@@ -34,7 +34,7 @@ const STEPS = [
 ] as const;
 
 function getStepState(stepPhases: readonly Phase[], currentPhase: Phase) {
-  const phaseOrder: Phase[] = ['select', 'scanning', 'delta', 'importing', 'complete'];
+  const phaseOrder: Phase[] = ['select', 'scanning', 'processing', 'delta', 'importing', 'complete'];
   const currentIdx = phaseOrder.indexOf(currentPhase);
 
   // A step is complete if the current phase is past ALL of its phases
