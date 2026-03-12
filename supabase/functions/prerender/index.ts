@@ -494,7 +494,13 @@ Deno.serve(async (req) => {
 
     // Health check endpoint
     if (rawReqPath === "/_health" || url.pathname.endsWith("/_health")) {
-      return new Response(JSON.stringify({status:"ok",timestamp:new Date().toISOString(),version:"2.2",supportedPaths:["/_health","/","/filaments","/colors","/brands","/printers","/deals","/hueforge-td-database","/filament/:slug","/brands/:slug","/printers/:slug","/guides/:slug"]}), {
+      return new Response(JSON.stringify({
+        status:"ok",
+        timestamp:new Date().toISOString(),
+        version:"2.3",
+        supportedHtmlPaths:["/","/filaments","/colors","/hueforge-td-database","/printers","/brands","/deals","/filament/:slug","/brands/:slug","/printers/:slug","/guides/:slug"],
+        staticBypassPaths:["/sitemap.xml","/sitemap-*.xml","/robots.txt","/llms.txt","/llms-full.txt","/public/*"],
+      }), {
         status:200, headers:{...corsHeaders,"Content-Type":"application/json","Cache-Control":"no-store"},
       });
     }
