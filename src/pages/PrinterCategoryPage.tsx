@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { BreadcrumbSchema, ItemListSchema, FAQSection } from "@/components/seo";
-import { FAQSchema } from "@/components/seo/FAQSchema";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import MediumStandardPrinterCard from "@/components/printers/MediumStandardPrinterCard";
 import { PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
@@ -505,7 +504,7 @@ export default function PrinterCategoryPage() {
           }))}
         />
       )}
-      {faqItems.length > 0 && <FAQSchema faqs={faqItems} />}
+      {faqItems.length > 0 && <FAQSection faqs={faqItems} />}
 
       <div className="min-h-screen bg-background pb-16">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-24 sm:pt-28">

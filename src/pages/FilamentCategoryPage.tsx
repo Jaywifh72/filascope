@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useParams, useSearchParams, Navigate, Link } from "react-router-dom";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { useJsonLd, useJsonLdMultiple } from "@/components/seo/useJsonLd";
-import { FAQSection, FAQSchema } from "@/components/seo";
+import { FAQSection } from "@/components/seo";
 import { MATERIAL_SLUG_CONFIG } from "@/pages/MaterialHub";
 import { materialNameToSlug } from "@/lib/materialSlugUtils";
 import { useFinderQuery, DEFAULT_PAGE_SIZE } from "@/hooks/useFinderQuery";
@@ -256,47 +255,7 @@ function useCategorySchemas(
       }
     : null;
 
-  // Standalone ItemList schema (first 10 products) for rich results
-  const standaloneItemList = groups.length > 0
-    ? {
-        "@context": "https://schema.org",
-        "@type": "ItemList",
-        name: slug ? `${label} 3D Printer Filaments` : "3D Printer Filaments",
-        description: `Browse and compare ${count.toLocaleString()}+ 3D printer filaments from 49+ brands with real-time pricing and specifications.`,
-        numberOfItems: count,
-        itemListOrder: "https://schema.org/ItemListUnordered",
-        itemListElement: groups.slice(0, 10).map((g, i) => {
-          const f = g.representativeFilament;
-          const handle = f?.product_handle || f?.id;
-          return {
-            "@type": "ListItem",
-            position: i + 1,
-            name: g.baseName || f?.product_title || "Filament",
-            url: handle ? `${BASE_URL}/filament/${handle}` : `${BASE_URL}/filaments`,
-            item: {
-              "@type": "Product",
-              name: g.baseName || f?.product_title || "Filament",
-              url: handle ? `${BASE_URL}/filament/${handle}` : `${BASE_URL}/filaments`,
-              ...(f?.featured_image && { image: f.featured_image }),
-              ...(g.vendor && { brand: { "@type": "Brand", name: g.vendor } }),
-              category,
-              ...(g.priceRange?.min && {
-                offers: {
-                  "@type": "Offer",
-                  price: g.priceRange.min.toFixed(2),
-                  priceCurrency: "USD",
-                  availability: g.anyInStock
-                    ? "https://schema.org/InStock"
-                    : "https://schema.org/OutOfStock",
-                },
-              }),
-            },
-          };
-        }),
-      }
-    : null;
-
-  useJsonLdMultiple([collectionPageSchema, standaloneItemList].filter(Boolean) as Record<string, unknown>[]);
+  useJsonLdMultiple([collectionPageSchema].filter(Boolean) as Record<string, unknown>[]);
 }
 
 // ─────────────────────────────────────────────
@@ -921,7 +880,7 @@ export default function FilamentCategoryPage() {
             <article>
               <h2 className="text-2xl font-bold text-foreground mb-4">The Complete 3D Printer Filament Comparison Database</h2>
               <p className="text-muted-foreground leading-relaxed">
-                FilaScope is the most comprehensive <strong>3D printer filament comparison</strong> tool available, tracking 8,277+ filaments from 48+ brands with real-time pricing across 15+ retailers worldwide. Whether you need to <strong>compare filaments</strong> by tensile strength, print temperature, HueForge TD value, or price per kilogram, our <strong>filament database</strong> puts every datapoint at your fingertips. Each product page includes detailed <strong>filament specifications</strong> — nozzle and bed temperatures, mechanical properties, spool weight, color options, and community ratings. Prices update automatically so you always see the latest deals. Use the filters above to narrow by material, brand, price, color, or printer compatibility, or try the{' '}
+                FilaScope is the most comprehensive <strong>3D printer filament comparison</strong> tool available, tracking 8,200+ filaments from 48+ brands with real-time pricing across 15+ retailers worldwide. Whether you need to <strong>compare filaments</strong> by tensile strength, print temperature, HueForge TD value, or price per kilogram, our <strong>filament database</strong> puts every datapoint at your fingertips. Each product page includes detailed <strong>filament specifications</strong> — nozzle and bed temperatures, mechanical properties, spool weight, color options, and community ratings. Prices update automatically so you always see the latest deals. Use the filters above to narrow by material, brand, price, color, or printer compatibility, or try the{' '}
                 <a href="/wizard" className="text-primary hover:underline font-medium">guided filament finder</a> for personalized recommendations.
               </p>
             </article>
@@ -1170,29 +1129,9 @@ export default function FilamentCategoryPage() {
           </section>
         )}
 
-        {/* Single consolidated FAQPage schema for all Q&As (FAQ + PAA) */}
-        {slug && materialFaqs.length > 0 && <FAQSchema faqs={materialFaqs} />}
-
-        {slug && baseFaqs.length > 0 && (
-          <section className="mt-10 border-t border-border pt-8">
-            <h2 className="text-xl font-semibold mb-6">{`${config?.label ?? label} Filament — Frequently Asked Questions`}</h2>
-            <Accordion type="single" collapsible className="space-y-2">
-              {baseFaqs.map((faq, i) => (
-                <AccordionItem
-                  key={i}
-                  value={`faq-${i}`}
-                  className="border border-border rounded-lg px-4 bg-card"
-                >
-                  <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </section>
+        {/* Visible FAQ accordion + JSON-LD schema for all Q&As (FAQ + PAA) */}
+        {slug && materialFaqs.length > 0 && (
+          <FAQSection faqs={materialFaqs} title={`${config?.label ?? label} Filament — Frequently Asked Questions`} />
         )}
 
         {slug && paaQuestions.length > 0 && (

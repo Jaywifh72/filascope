@@ -132,6 +132,9 @@ export default function NylonvsPETG() {
             Nylon and PETG both target functional and engineering applications — but they trade off raw performance against printability. Nylon is the strongest and most wear-resistant FDM filament, while PETG offers 80% of the performance with far easier printing. This comparison helps you decide when Nylon's advantages justify its difficulty.
           </p>
           <p className="text-xs text-muted-foreground mt-2">* Nylon heat resistance varies by grade: PA6 ~80°C, PA12 ~140°C, PA6-CF ~180°C.</p>
+          <p className="text-sm text-muted-foreground mt-3">
+            This comparison uses data from FilaScope's database of 8,200+ filaments across 48+ brands, with real-time pricing from 15+ retailers.
+          </p>
         </header>
 
         <section className="mb-10">

@@ -25,7 +25,7 @@ type Mode = 'single' | 'hueforge';
 const COLOR_FINDER_FAQS = [
   {
     q: "How does FilaScope's color matching work?",
-    a: "According to FilaScope's database of 1,076+ filaments, our color matching tool compares filament colors across 48+ brands using hex codes and visual swatches. Search by color name, hex code, or use our visual color picker to find the closest matching filaments.",
+    a: "According to FilaScope's database of 1,080+ filaments, our color matching tool compares filament colors across 48+ brands using hex codes and visual swatches. Search by color name, hex code, or use our visual color picker to find the closest matching filaments.",
   },
   {
     q: "Can I match filament colors across different brands?",

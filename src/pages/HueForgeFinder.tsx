@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/hooks/useCurrency';
-import { ItemListSchema, FAQSchema, BreadcrumbSchema } from '@/components/seo';
+import { ItemListSchema, FAQSection, BreadcrumbSchema } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -153,7 +153,7 @@ export default function HueForgeFinder() {
         items={schemaItems}
       />
       
-      <FAQSchema faqs={hueforgeFaqs} />
+      <FAQSection faqs={hueforgeFaqs} />
 
       <div className="max-w-7xl mx-auto px-4 pt-4 pb-1">
         <Breadcrumbs items={[{ name: "HueForge Filament Finder", url: "/hueforge-filaments" }]} />

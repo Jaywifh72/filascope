@@ -131,6 +131,9 @@ export default function TPUvsPETG() {
           <p className="text-muted-foreground text-lg leading-relaxed">
             TPU and PETG serve fundamentally different purposes — one is flexible, the other rigid. But they're both popular choices for functional parts. This comparison covers printability, mechanical properties, and the best use cases for each material.
           </p>
+          <p className="text-sm text-muted-foreground mt-3">
+            This comparison uses data from FilaScope's database of 8,200+ filaments across 48+ brands, with real-time pricing from 15+ retailers.
+          </p>
         </header>
 
         <section className="mb-10">

@@ -557,7 +557,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     ],
     relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'best-petg-filaments', 'best-budget-filaments', 'best-filaments-for-miniatures', 'best-filaments-for-cosplay'],
     aiSnippet: {
-      summaryText: "To choose the right 3D printer filament, follow this framework: first identify your material type by use case (PLA for detail, PETG for strength, ABS for heat resistance), then match to your printer's capabilities, set your budget, and compare specific products. FilaScope's database covers 8,277+ filaments to help you decide.",
+      summaryText: "To choose the right 3D printer filament, follow this framework: first identify your material type by use case (PLA for detail, PETG for strength, ABS for heat resistance), then match to your printer's capabilities, set your budget, and compare specific products. FilaScope's database covers 8,200+ filaments to help you decide.",
       topPick: { name: 'PLA Basic', brand: 'Bambu Lab', reason: 'best starting point for new 3D printer owners' },
       runnerUp: { name: 'PolyTerra PLA', brand: 'Polymaker', reason: 'eco-friendly with the widest matte color selection' },
       budgetPick: { name: 'PLA Filament', brand: 'Hatchbox', reason: 'reliable quality under $20/kg for budget-conscious beginners' },

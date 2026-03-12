@@ -1,0 +1,51 @@
+name: Refresh Sitemaps
+
+on:
+  schedule:
+    - cron: '0 5 * * 0'  # Weekly on Sundays at 5 AM UTC
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate sitemaps
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python scripts/generate-sitemaps.py
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet public/sitemap-*.xml && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit updated sitemaps
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/sitemap-*.xml
+          git commit -m "chore: refresh sitemaps ($(date +%Y-%m-%d))"
+          git push
+
+      - name: Trigger IndexNow submission
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'indexnow.yml',
+              ref: 'main',
+            });

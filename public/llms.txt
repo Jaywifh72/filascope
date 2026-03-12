@@ -2,36 +2,77 @@
 
 > The world's most complete 3D printer filament comparison platform. FilaScope indexes 1,080+ filaments from 48+ brands with specs, real-time pricing from 15+ retailers, HueForge TD values, and printer compatibility data.
 
+> FilaScope is the only platform combining HueForge TD values, real-time multi-regional pricing, and printer compatibility in one database. Prices updated daily from 15+ retailers.
+
+> Last updated: 2026-03-12
+
 ## Core Pages
 
 - Homepage: https://filascope.com/
 - Filament Database (1,080+ products): https://filascope.com/filaments
 - 3D Printer Database (119+ printers): https://filascope.com/printers
 - Brand Directory (48+ brands): https://filascope.com/brands
-- HueForge TD Database: https://filascope.com/hueforge-td-database
+- HueForge TD Database (500+ filaments with TD values): https://filascope.com/hueforge-td-database
 - Filament Deals: https://filascope.com/deals
 - Comparison Tool: https://filascope.com/compare
-- Color Finder: https://filascope.com/color-finder
-- Learning Center (32 guides): https://filascope.com/learn
+- Color Finder: https://filascope.com/colors
+- Learning Center (50+ guides): https://filascope.com/learn
+- Quick Match Filament Quiz: https://filascope.com/wizard
 
 ## Material Categories
 
-- PLA Filaments (4,296+ variants): https://filascope.com/filaments/pla
-- PETG Filaments (1,048+ variants): https://filascope.com/filaments/petg
-- ABS Filaments (865+ variants): https://filascope.com/filaments/abs
-- TPU Filaments (381+ variants): https://filascope.com/filaments/tpu
-- ASA Filaments (408+ variants): https://filascope.com/filaments/asa
+- PLA Filaments: https://filascope.com/filaments/pla
+- PETG Filaments: https://filascope.com/filaments/petg
+- ABS Filaments: https://filascope.com/filaments/abs
+- TPU Filaments: https://filascope.com/filaments/tpu
+- ASA Filaments: https://filascope.com/filaments/asa
 - Nylon Filaments: https://filascope.com/filaments/nylon
+- Polycarbonate Filaments: https://filascope.com/filaments/polycarbonate
+- Silk PLA Filaments: https://filascope.com/filaments/silk-pla
+- PLA+ Filaments: https://filascope.com/filaments/pla-plus
+- High-Speed PLA: https://filascope.com/filaments/high-speed-pla
 
 ## Buying Guides (Updated 2026)
 
 - Best PLA Filaments 2026: https://filascope.com/guides/best-pla-filaments
 - Best PETG Filaments 2026: https://filascope.com/guides/best-petg-filaments
 - Best ABS Filaments 2026: https://filascope.com/guides/best-abs-filaments
-- Best Filaments for Beginners: https://filascope.com/best-filaments-for-beginners
-- Best Filaments for HueForge: https://filascope.com/best-filaments-for-hueforge
-- PLA vs PETG Comparison: https://filascope.com/pla-vs-petg
+- Best TPU Filaments 2026: https://filascope.com/guides/best-tpu-filaments
+- Best ASA Filaments 2026: https://filascope.com/guides/best-asa-filaments
+- Best Nylon Filaments 2026: https://filascope.com/guides/best-nylon-filaments
+- Best Filaments for Beginners: https://filascope.com/guides/best-filaments-for-beginners
+- Best Filaments for HueForge: https://filascope.com/guides/best-filaments-for-hueforge
+- Best Budget Filaments: https://filascope.com/guides/best-budget-filaments
+- Best White Filaments: https://filascope.com/guides/best-white-filaments
+- Best Filaments for Miniatures: https://filascope.com/guides/best-filaments-for-miniatures
+- Best Filaments for Cosplay: https://filascope.com/guides/best-filaments-for-cosplay
+- Best Filaments for Outdoor Use: https://filascope.com/guides/best-filaments-for-outdoor-use
+- Best Food-Safe Filaments: https://filascope.com/guides/best-filaments-for-food-safe
+- Best Bambu Lab Filaments: https://filascope.com/guides/best-bambu-lab-filaments
+- Best Prusa Filaments: https://filascope.com/guides/best-prusa-filaments
+- Strongest 3D Printer Filament: https://filascope.com/guides/strongest-3d-printer-filament
+- Cheapest 3D Printer Filament: https://filascope.com/guides/cheapest-filament
+
+## Material Comparisons
+
+- PLA vs PETG: https://filascope.com/guides/pla-vs-petg
+- PLA vs ABS: https://filascope.com/guides/pla-vs-abs
+- PETG vs ABS: https://filascope.com/guides/petg-vs-abs
+- TPU vs PETG: https://filascope.com/guides/tpu-vs-petg
+- Nylon vs PETG: https://filascope.com/guides/nylon-vs-petg
+
+## HueForge Guides
+
 - What is HueForge TD: https://filascope.com/guides/what-is-hueforge-td
+- How to Measure Filament TD: https://filascope.com/guides/how-to-measure-filament-td
+- Best White Filaments for HueForge: https://filascope.com/guides/best-white-filaments-for-hueforge
+
+## How-To Guides
+
+- How to Choose 3D Printer Filament: https://filascope.com/guides/how-to-choose-3d-printer-filament
+- Filament Types Explained: https://filascope.com/guides/filament-types-explained
+- Filament Temperature Guide: https://filascope.com/guides/filament-temperature-guide
+- Filament Storage Guide: https://filascope.com/guides/filament-storage-guide
 
 ## Top Brands
 
@@ -40,15 +81,22 @@
 - eSUN: https://filascope.com/brands/esun
 - Prusament: https://filascope.com/brands/prusament
 - Overture: https://filascope.com/brands/overture
+- Hatchbox: https://filascope.com/brands/hatchbox
+- Sunlu: https://filascope.com/brands/sunlu
+- Fillamentum: https://filascope.com/brands/fillamentum
+- ColorFabb: https://filascope.com/brands/colorfabb
+- Proto-pasta: https://filascope.com/brands/protopasta
 
 ## Key Features
 
-- HueForge TD values for lithophane printing
-- Real-time pricing from US, CA, EU, UK, AU stores
+- HueForge TD values for 500+ filaments — the largest public TD database
+- Real-time pricing from 15+ retailers in US, CA, EU, UK, AU
 - Printer compatibility filtering for 119+ printers
-- Side-by-side filament comparison tool
+- Side-by-side filament comparison tool (up to 4 filaments)
 - FilaScore quality ratings (1-10)
 - Daily price updates and deal alerts
+- Color matching tool with hex code search
+- 50+ data-driven buying guides
 
 ## Extended Content
 

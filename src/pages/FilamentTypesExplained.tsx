@@ -102,7 +102,7 @@ export default function FilamentTypesExplained() {
             From beginner-friendly PLA to aerospace-grade PEEK, there are over a dozen distinct filament materials available for FDM 3D printers — each with unique properties, print requirements, and ideal use cases. This comprehensive guide explains every major filament type, compares their strengths and limitations side by side, and helps you choose the right material for your project.
           </p>
           <p className="text-sm text-muted-foreground mt-3">
-            Last updated: February 2026 · Based on data from <Link to="/filaments" className="text-primary hover:underline">1,076+ filaments</Link> tracked on FilaScope
+            Last updated: February 2026 · Based on data from <Link to="/filaments" className="text-primary hover:underline">1,080+ filaments</Link> tracked on FilaScope
           </p>
         </header>
 

@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { name: 'Brands',    url: `${BASE_URL}/brands` },
   { name: 'Deals',     url: `${BASE_URL}/deals` },
   { name: 'Guides',    url: `${BASE_URL}/learn` },
-  { name: 'HueForge TD Database', url: `${BASE_URL}/hueforge-td` },
+  { name: 'HueForge TD Database', url: `${BASE_URL}/hueforge-td-database` },
 ] as const;
 
 interface WebSiteSchemaProps {

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { ArticleSchema, FAQSchema } from '@/components/seo';
+import { ArticleSchema, FAQSection } from '@/components/seo';
 import { HowToSchema } from '@/components/seo/HowToSchema';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Badge } from '@/components/ui/badge';
@@ -87,7 +87,7 @@ export default function FilamentTemperatureGuide() {
         totalTime="PT30M"
         steps={HOW_TO_STEPS}
       />
-      <FAQSchema faqs={FAQS} />
+      <FAQSection faqs={FAQS} />
 
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 py-6">

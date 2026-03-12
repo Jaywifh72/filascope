@@ -1,0 +1,70 @@
+name: IndexNow URL Submission
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/sitemap-*.xml'
+      - 'src/pages/**'
+      - 'src/components/guides/**'
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Mondays at 6 AM UTC
+  workflow_dispatch:
+
+jobs:
+  submit-urls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract URLs from sitemaps
+        id: urls
+        run: |
+          # Extract all <loc> URLs from sitemap XML files
+          URLS=$(grep -h '<loc>' public/sitemap-*.xml | sed 's/.*<loc>\(.*\)<\/loc>.*/\1/' | sort -u)
+          URL_COUNT=$(echo "$URLS" | wc -l)
+          echo "Found $URL_COUNT URLs across all sitemaps"
+
+          # Save to file for the submission step
+          echo "$URLS" > /tmp/urls.txt
+
+      - name: Submit to IndexNow
+        run: |
+          KEY="a3f8c2d7e1b5049f6a2c8d3e7f1b4a9c"
+          HOST="filascope.com"
+          KEY_LOCATION="https://filascope.com/${KEY}.txt"
+          API_URL="https://api.indexnow.org/indexnow"
+
+          # Read URLs and batch into groups of 10000
+          URLS=$(cat /tmp/urls.txt)
+          TOTAL=$(echo "$URLS" | wc -l)
+          echo "Submitting $TOTAL URLs to IndexNow..."
+
+          # Build JSON payload
+          URL_ARRAY=$(echo "$URLS" | jq -R -s 'split("\n") | map(select(length > 0))')
+
+          PAYLOAD=$(jq -n \
+            --arg host "$HOST" \
+            --arg key "$KEY" \
+            --arg keyLocation "$KEY_LOCATION" \
+            --argjson urlList "$URL_ARRAY" \
+            '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urlList}')
+
+          # Submit
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "IndexNow response: HTTP $HTTP_CODE"
+          if [ "$BODY" != "" ]; then
+            echo "Response body: $BODY"
+          fi
+
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "202" ]; then
+            echo "✅ Successfully submitted $TOTAL URLs to IndexNow"
+          else
+            echo "⚠️ IndexNow returned HTTP $HTTP_CODE (may still be processing)"
+          fi

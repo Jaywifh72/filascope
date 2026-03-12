@@ -1,17 +1,17 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { OrganizationSchema, FAQSchema, BreadcrumbSchema } from '@/components/seo';
+import { OrganizationSchema, FAQSection, BreadcrumbSchema } from '@/components/seo';
 import { useJsonLd } from '@/components/seo/useJsonLd';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ENTITY_DESCRIPTION =
-  'Learn about FilaScope, the most comprehensive 3D printer filament comparison tool with 8,277+ products from 48+ brands, live pricing, and HueForge TD values.';
+  'Learn about FilaScope, the most comprehensive 3D printer filament comparison tool with 8,200+ products from 48+ brands, live pricing, and HueForge TD values.';
 
 const FAQS = [
   {
     question: 'What is FilaScope?',
     answer:
-      'FilaScope is a free 3D printer filament database and comparison tool. It indexes over 1,078 filaments from 48+ manufacturers, tracking specifications, real-time pricing across 6 regions (US, CA, UK, EU, AU, JP), and HueForge Transmissivity Distance (TD) values so makers can find the right filament at the best price without opening dozens of browser tabs.',
+      'FilaScope is a free 3D printer filament database and comparison tool. It indexes over 1,080 filaments from 48+ manufacturers, tracking specifications, real-time pricing across 6 regions (US, CA, UK, EU, AU, JP), and HueForge Transmissivity Distance (TD) values so makers can find the right filament at the best price without opening dozens of browser tabs.',
   },
   {
     question: 'Is FilaScope free to use?',
@@ -111,7 +111,7 @@ export default function About() {
         ]}
       />
 
-      <FAQSchema faqs={FAQS} />
+      <FAQSection faqs={FAQS} />
 
       <BreadcrumbSchema
         items={[

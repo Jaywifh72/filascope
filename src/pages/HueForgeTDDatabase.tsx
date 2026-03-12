@@ -44,7 +44,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
+import { FAQSection, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
 import { FilamentsNeedingTdSection } from '@/components/filament/td-community/FilamentsNeedingTdSection';
 import { TdSubstituteFinder } from '@/components/hueforge/TdSubstituteFinder';
 import { LayerPreviewCompact } from '@/components/hueforge/layer-preview/LayerPreviewCompact';
@@ -494,7 +494,7 @@ export default function HueForgeTDDatabase() {
         isAccessibleForFree={true}
         license="https://filascope.com/terms"
       />
-      <FAQSchema faqs={[...faqData, ...paaData]} />
+      <FAQSection faqs={[...faqData, ...paaData]} />
       <HowToSchema
         name="How to Use TD Values for Better Lithophanes"
         description="Learn how to select the right filament transmissivity distance (TD) value for HueForge lithophane and multicolor 3D printing projects."

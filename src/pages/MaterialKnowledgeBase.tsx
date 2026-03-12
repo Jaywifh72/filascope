@@ -1,6 +1,6 @@
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, DefinedTermSetSchema, FAQSchema } from "@/components/seo";
+import { BreadcrumbSchema, DefinedTermSetSchema, FAQSection } from "@/components/seo";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { BookOpen, GitCompare, ArrowRight } from "lucide-react";
 import MaterialReference from "@/components/MaterialReference";
@@ -54,7 +54,7 @@ export default function MaterialKnowledgeBase() {
         description="Comprehensive reference for 3D printing filament material types, properties, and recommended print settings."
         terms={materialTerms}
       />
-      <FAQSchema faqs={materialFaqs} />
+      <FAQSection faqs={materialFaqs} />
 
       <div className="min-h-screen bg-background relative">
         {/* Subtle background pattern */}

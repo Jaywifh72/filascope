@@ -12,7 +12,7 @@ import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ItemListSchema, FAQSection, FAQSchema } from "@/components/seo";
+import { ItemListSchema, FAQSection } from "@/components/seo";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { toBrandSlug } from "@/utils/brandSlug";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -797,8 +797,8 @@ const Brands = () => {
           </Accordion>
         </section>
 
-        {/* FAQPage JSON-LD schema */}
-        <FAQSchema faqs={[
+        {/* Brand FAQs — visible accordion + JSON-LD */}
+        <FAQSection faqs={[
           { question: 'What are the best 3D printer filament brands?', answer: 'According to FilaScope\'s database of 8,200+ filaments from 48+ brands, the top-rated brands include Bambu Lab, Polymaker, Prusament, and Fillamentum — each scoring consistently high on documentation, consistency, and material variety. Budget picks like eSUN and Overture deliver strong value without sacrificing quality.' },
           { question: 'Which filament brand has the best PLA?', answer: 'FilaScope\'s specification data shows that for premium PLA, Prusament is widely regarded for its tight ±0.02mm tolerances, while Polymaker\'s PolyLite PLA offers excellent surface quality across a huge color range. Bambu Lab PLA Basic is a strong all-rounder optimized for high-speed printing.' },
           { question: 'What is the cheapest reliable filament brand?', answer: 'Based on FilaScope\'s real-time price tracking across 15+ stores in 5 regions, eSUN, Overture, and Sunlu consistently offer sub-$15/kg pricing with acceptable quality for hobbyist use.' },

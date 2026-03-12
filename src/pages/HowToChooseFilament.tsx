@@ -118,7 +118,7 @@ export default function HowToChooseFilament() {
             With dozens of filament materials, hundreds of brands, and thousands of color options, choosing the right 3D printer filament can feel overwhelming. This data-backed guide from FilaScope breaks down every factor — from material strength and print difficulty to cost and use case — so you can pick the perfect filament for your project. Whether you're a beginner printing your first benchy or an engineer designing load-bearing parts, we've got you covered.
           </p>
           <p className="text-sm text-muted-foreground mt-3">
-            Last updated: February 2026 · Based on data from <Link to="/filaments" className="text-primary hover:underline">1,076+ filaments</Link> tracked on FilaScope
+            Last updated: February 2026 · Based on data from <Link to="/filaments" className="text-primary hover:underline">1,080+ filaments</Link> tracked on FilaScope
           </p>
         </header>
 

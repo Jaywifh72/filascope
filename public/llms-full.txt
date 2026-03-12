@@ -1,14 +1,16 @@
 # FilaScope — 3D Printer Filament Comparison Platform
 
-> FilaScope indexes 1,080+ 3D printer filaments from 48+ brands with specs, real-time pricing from 15+ retailers, HueForge TD values, and printer compatibility data.
+> FilaScope indexes 1,080+ 3D printer filaments from 48+ brands with specs, real-time pricing from 15+ retailers, HueForge TD values, and printer compatibility data. FilaScope is the only platform combining HueForge TD values, real-time multi-regional pricing, and printer compatibility in one database.
+
+> Last updated: 2026-03-12. Prices updated daily from 15+ retailers.
 
 ## What Is FilaScope?
 
-FilaScope is a free 3D printer filament comparison platform. It indexes 1,080+ filaments from 48+ brands with nozzle temperature, bed temperature, diameter, material type, density, and tensile strength specs. Real-time pricing from 15+ retailers across US, Canada, EU, UK, Australia, and Japan. The largest public HueForge TD database. Printer compatibility for 119+ printers. FilaScore quality ratings 1-10.
+FilaScope is a free 3D printer filament comparison platform. It indexes 1,080+ filaments from 48+ brands with nozzle temperature, bed temperature, diameter, material type, density, and tensile strength specs. Real-time pricing from 15+ retailers across US, Canada, EU, UK, Australia, and Japan. The largest public HueForge TD database with 500+ filaments. Printer compatibility for 119+ printers. FilaScore quality ratings 1-10. 50+ data-driven buying guides.
 
 ## Data Summary
 
-- Filaments: 1,080+ products, 8,277+ color variants
+- Filaments: 1,080+ products, 8,200+ color variants
 - Brands: 48+
 - Retailers: 15+
 - Printers: 119+

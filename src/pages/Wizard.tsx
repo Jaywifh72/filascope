@@ -3,7 +3,7 @@ import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
 import { HowToSchema } from "@/components/seo/HowToSchema";
 import { SoftwareApplicationSchema } from "@/components/seo/SoftwareApplicationSchema";
-import { FAQSchema } from "@/components/seo/FAQSchema";
+import { FAQSection } from "@/components/seo/FAQSection";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -250,15 +250,15 @@ const Wizard = () => {
       />
       <SoftwareApplicationSchema
         name="FilaScope Quick Match — Filament Recommendation Quiz"
-        description="Answer 5 questions about your 3D printing project, printer, and budget to get personalized filament recommendations from FilaScope's database of 8,277+ filaments."
+        description="Answer 5 questions about your 3D printing project, printer, and budget to get personalized filament recommendations from FilaScope's database of 8,200+ filaments."
         url="https://filascope.com/wizard"
         applicationCategory="UtilityApplication"
         operatingSystem="Web"
         offers={{ price: "0", priceCurrency: "USD" }}
         creator={{ name: "FilaScope", url: "https://filascope.com" }}
       />
-      <FAQSchema faqs={[
-        { question: "How does FilaScope's filament quiz work?", answer: "FilaScope's Quick Match asks 5 questions about your project type, printer model, material preference, budget, and priorities. It then recommends the best-matching filaments from our database of 8,277+ options with real pricing." },
+      <FAQSection faqs={[
+        { question: "How does FilaScope's filament quiz work?", answer: "FilaScope's Quick Match asks 5 questions about your project type, printer model, material preference, budget, and priorities. It then recommends the best-matching filaments from our database of 8,200+ options with real pricing." },
         { question: "Is FilaScope's filament recommendation tool free?", answer: "Yes, FilaScope's Quick Match filament finder is completely free. No account required." },
       ]} />
       <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}>

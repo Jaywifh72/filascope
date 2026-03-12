@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DatasetSchema, FAQSchema } from '@/components/seo';
+import { DatasetSchema, FAQSection } from '@/components/seo';
 
 interface TDFilament {
   id: string;
@@ -191,7 +191,7 @@ export default function TDDatabase() {
         recordCount={filaments?.length}
       />
       
-      <FAQSchema faqs={tdFaqs} />
+      <FAQSection faqs={tdFaqs} />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Hero */}

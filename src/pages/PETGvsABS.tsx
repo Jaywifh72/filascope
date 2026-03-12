@@ -102,7 +102,7 @@ export default function PETGvsABS() {
     <div className="min-h-screen bg-background">
       <DocumentHead
         title="PETG vs ABS — Which Filament Should You Choose? | FilaScope"
-        description="PETG vs ABS compared: strength, heat resistance, print difficulty, price & fumes. Data-driven comparison from 8,277+ filaments on FilaScope."
+        description="PETG vs ABS compared: strength, heat resistance, print difficulty, price & fumes. Data-driven comparison from 8,200+ filaments on FilaScope."
         ogType="article"
       />
       <BreadcrumbSchema items={[
@@ -112,7 +112,7 @@ export default function PETGvsABS() {
       ]} />
       <ArticleSchema
         headline="PETG vs ABS — Which 3D Printer Filament Is Right for You?"
-        description="PETG vs ABS compared: strength, heat resistance, print difficulty, price & fumes. Data-driven comparison from 8,277+ filaments on FilaScope."
+        description="PETG vs ABS compared: strength, heat resistance, print difficulty, price & fumes. Data-driven comparison from 8,200+ filaments on FilaScope."
         datePublished="2026-02-28"
         dateModified="2026-02-28"
         url="/guides/petg-vs-abs"
@@ -136,7 +136,7 @@ export default function PETGvsABS() {
             PETG and ABS are both popular choices for functional and engineering 3D prints — but they trade off ease-of-use against heat resistance and post-processing options. This data-driven comparison breaks down strength, temperature tolerance, fumes, and real-world printability to help you choose the right material.
           </p>
           <p className="text-sm text-muted-foreground mt-3">
-            Last updated: February 2026 · Based on data from <Link to="/filaments" className="text-primary hover:underline">8,277+ filaments</Link> tracked on FilaScope
+            Last updated: February 2026 · Based on data from <Link to="/filaments" className="text-primary hover:underline">FilaScope's database of 8,200+ filaments</Link> across 48+ brands, with real-time pricing from 15+ retailers
           </p>
         </header>
 

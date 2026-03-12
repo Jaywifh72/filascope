@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { FAQSchema } from '@/components/seo';
+import { FAQSection } from '@/components/seo';
 
 const methodologyFaqs = [
   {
@@ -56,7 +56,7 @@ export default function ReferenceMethodology() {
         keywords="filament database methodology, TD value testing, HueForge data source, 3D printing specifications, filament data verification"
       />
       
-      <FAQSchema faqs={methodologyFaqs} />
+      <FAQSection faqs={methodologyFaqs} />
 
       <div className="max-w-5xl mx-auto px-4 py-12">
         {/* Hero Section */}

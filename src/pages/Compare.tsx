@@ -1,8 +1,7 @@
 // Filament comparison page
 import React, { useEffect, useState, useRef } from "react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
-import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema, HowToSchema, FAQSchema, Breadcrumbs } from "@/components/seo";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { BreadcrumbSchema, WebApplicationSchema, CompareActionSchema, HowToSchema, FAQSection, Breadcrumbs } from "@/components/seo";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1223,26 +1222,7 @@ const Compare = () => {
                 { question: 'What is a HueForge TD value and why does it matter for comparison?', answer: "Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments, TD (Transmission Distance) measures how much light passes through a filament at a specific thickness, measured in millimeters. It's essential for creating lithophanes and HueForge art. When comparing filaments for lithophane projects, the TD value is the single most important specification." },
               ];
               return (
-                <section className="mt-12 border-t border-border pt-8">
-                  <FAQSchema faqs={compareFaqs} />
-                  <h2 className="text-xl font-semibold mb-6">Filament Comparison FAQ</h2>
-                  <Accordion type="single" collapsible className="space-y-2">
-                    {compareFaqs.map((faq, i) => (
-                      <AccordionItem
-                        key={i}
-                        value={`faq-${i}`}
-                        className="border border-border rounded-lg px-4 bg-card"
-                      >
-                        <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
-                          {faq.question}
-                        </AccordionTrigger>
-                        <AccordionContent forceMount className="data-[state=closed]:hidden text-muted-foreground pb-4 leading-relaxed">
-                          {faq.answer}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </section>
+                <FAQSection faqs={compareFaqs} title="Filament Comparison FAQ" />
               );
             })()}
           </section>

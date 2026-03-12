@@ -87,6 +87,11 @@ def generate_pages_sitemap():
         ("/filaments/pc", "weekly", 0.7),
         ("/filaments/pva", "weekly", 0.6),
         ("/filaments/hips", "weekly", 0.6),
+        ("/filaments/silk-pla", "weekly", 0.7),
+        ("/filaments/pla-plus", "weekly", 0.7),
+        ("/filaments/high-speed-pla", "weekly", 0.7),
+        ("/filaments/polycarbonate", "weekly", 0.6),
+        ("/filaments/petg-cf", "weekly", 0.6),
         ("/brands", "weekly", 0.8),
         ("/brands/compare", "weekly", 0.7),
         ("/printers", "weekly", 0.8),
@@ -189,48 +194,62 @@ def generate_printers_sitemap():
 def generate_guides_sitemap():
     """Guide/article pages."""
     guides = [
+        # Material comparisons
         "/guides/pla-vs-petg",
         "/guides/pla-vs-abs",
         "/guides/petg-vs-abs",
         "/guides/tpu-vs-petg",
         "/guides/nylon-vs-petg",
+        # Best-of guides
         "/guides/best-filaments-for-beginners",
         "/guides/best-filaments-for-hueforge",
         "/guides/best-white-filaments-for-hueforge",
-        "/guides/how-to-choose-3d-printer-filament",
-        "/guides/3d-printer-filament-types-explained",
+        "/guides/best-filaments-for-outdoor-use",
+        "/guides/best-filaments-for-lithophanes",
+        "/guides/best-filaments-for-miniatures",
+        "/guides/best-filaments-for-cosplay",
+        "/guides/best-filaments-for-functional-parts",
+        "/guides/best-food-safe-filaments",
+        "/guides/best-budget-filaments",
+        "/guides/best-pla-filaments",
+        "/guides/best-petg-filaments",
+        "/guides/best-abs-filaments",
+        "/guides/best-tpu-filaments",
+        "/guides/best-asa-filaments",
+        "/guides/best-nylon-filaments",
+        "/guides/best-pc-filaments",
+        "/guides/best-high-speed-pla-filaments",
+        "/guides/strongest-3d-printer-filament",
+        # Printer-specific guides
+        "/guides/best-filament-for-bambu-lab-p1s",
+        "/guides/best-filament-for-bambu-lab-a1-mini",
+        "/guides/best-filament-for-bambu-lab-x1-carbon",
+        "/guides/best-filament-for-creality-ender-3-v3",
+        "/guides/best-filament-for-creality-k1-max",
+        "/guides/best-filament-for-creality-k1",
+        "/guides/best-filament-for-prusa-mk4",
+        # HueForge guides
         "/guides/what-is-hueforge-td",
         "/guides/how-to-measure-filament-td",
+        "/guides/understanding-td-values",
+        "/guides/hueforge-beginners-guide",
+        "/guides/hueforge-color-selection",
+        "/guides/best-filaments-for-hueforge-lithophanes",
+        # How-to and educational
+        "/guides/how-to-choose-3d-printer-filament",
+        "/guides/how-to-choose-filament",
+        "/guides/3d-printer-filament-types-explained",
         "/guides/filament-temperature-guide",
         "/guides/filament-storage-guide",
+        "/guides/how-to-store-filament",
+        "/guides/how-to-dry-filament",
+        "/guides/food-safe-filament",
+        "/guides/silk-pla-comparison",
+        "/guides/asa-vs-abs-outdoor-printing",
+        "/guides/pla-plus-vs-pla-pro",
         "/guides/print-settings",
         "/guides/troubleshooting",
     ]
-
-    # Also try to get dynamic guides from learn/:slug (check for a guides table)
-    try:
-        guide_rows = api_get("guides", "select=slug&limit=200")
-        for g in guide_rows:
-            slug = g.get("slug")
-            if slug:
-                path = f"/guides/{slug}"
-                if path not in guides:
-                    guides.append(path)
-    except Exception:
-        pass  # No guides table, use static list
-
-    # Also try buying_guides or similar
-    try:
-        bg_rows = api_get("buying_guides", "select=slug&limit=200")
-        for g in bg_rows:
-            slug = g.get("slug")
-            if slug:
-                path = f"/guides/{slug}"
-                if path not in guides:
-                    guides.append(path)
-    except Exception:
-        pass
-
     entries = [url_entry(f"{BASE_URL}{g}", TODAY, "monthly", 0.7) for g in guides]
     write_sitemap("sitemap-guides.xml", entries)
 
