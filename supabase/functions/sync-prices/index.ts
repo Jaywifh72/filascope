@@ -427,7 +427,7 @@ Deno.serve(async (req) => {
     // Prioritize products that haven't been synced recently
     query = query.order('last_scraped_at', { ascending: true, nullsFirst: true }).limit(limit);
     
-    const { data: products, error: queryError } = await query;
+    const { data: products, error: queryError } = await query as { data: SyncProduct[] | null; error: { message: string } | null };
     
     if (queryError) {
       console.error('Query error:', queryError);
