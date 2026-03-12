@@ -1548,6 +1548,7 @@ export type Database = {
           base_url: string
           brand_id: string
           brand_name: string
+          catalog_strategy: string | null
           created_at: string | null
           default_material_type: string | null
           id: string
@@ -1565,6 +1566,7 @@ export type Database = {
           base_url: string
           brand_id: string
           brand_name: string
+          catalog_strategy?: string | null
           created_at?: string | null
           default_material_type?: string | null
           id?: string
@@ -1582,6 +1584,7 @@ export type Database = {
           base_url?: string
           brand_id?: string
           brand_name?: string
+          catalog_strategy?: string | null
           created_at?: string | null
           default_material_type?: string | null
           id?: string

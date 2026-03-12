@@ -1,0 +1,1 @@
+ALTER TABLE brand_scraping_configs ADD COLUMN IF NOT EXISTS catalog_strategy TEXT DEFAULT 'products-json';
