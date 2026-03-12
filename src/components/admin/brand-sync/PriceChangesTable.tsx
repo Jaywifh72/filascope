@@ -2,7 +2,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
-import type { SyncItem } from '@/pages/admin/BrandCatalogSync';
+import type { SyncItem } from '@/hooks/useCatalogSync';
 
 interface Props {
   items: SyncItem[];

@@ -16,7 +16,7 @@ import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { computeQualityScore } from './NewFilamentsTable';
-import type { SyncItem } from '@/pages/admin/BrandCatalogSync';
+import type { SyncItem } from '@/hooks/useCatalogSync';
 
 interface Props {
   item: SyncItem;

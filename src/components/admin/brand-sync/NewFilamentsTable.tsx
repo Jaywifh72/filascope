@@ -2,8 +2,9 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Eye } from 'lucide-react';
-import type { SyncItem } from '@/pages/admin/BrandCatalogSync';
+import type { SyncItem } from '@/hooks/useCatalogSync';
 
 interface Props {
   items: SyncItem[];
@@ -52,6 +53,7 @@ export function NewFilamentsTable({ items, selectedItems, onToggleItem, onToggle
   const allSelected = importableIds.length > 0 && importableIds.every(id => selectedItems.has(id));
 
   return (
+    <TooltipProvider>
     <Table>
       <TableHeader>
         <TableRow>
@@ -59,23 +61,24 @@ export function NewFilamentsTable({ items, selectedItems, onToggleItem, onToggle
             <Checkbox checked={allSelected} onCheckedChange={() => onToggleAll(importableIds)} />
           </TableHead>
           <TableHead className="w-12">Image</TableHead>
-          <TableHead>Color</TableHead>
-          <TableHead>Material</TableHead>
-          <TableHead>Display Name</TableHead>
-          <TableHead className="text-right">US $</TableHead>
-          <TableHead className="text-right">EU €</TableHead>
-          <TableHead className="text-right">CA $</TableHead>
-          <TableHead className="text-right">AU $</TableHead>
-          <TableHead>SKU</TableHead>
-          <TableHead>Finish</TableHead>
-          <TableHead className="text-center">Quality</TableHead>
+          <TH tip="Color name with hex swatch from curated brand-specific mapping">Color</TH>
+          <TH tip="Material type detected from product title (e.g., PLA+, PETG, ABS)">Material</TH>
+          <TH tip="Material + Color combined display name for the filament">Display Name</TH>
+          <TH tip="US store price in USD" className="text-right">US $</TH>
+          <TH tip="European store price in EUR" className="text-right">EU €</TH>
+          <TH tip="Canadian store price in CAD" className="text-right">CA $</TH>
+          <TH tip="Australian store price in AUD" className="text-right">AU $</TH>
+          <TH tip="UK store price in GBP" className="text-right">UK £</TH>
+          <TH tip="Store SKU identifier for this variant">SKU</TH>
+          <TH tip="Surface finish type (Standard, Silk, Matte, etc.)">Finish</TH>
+          <TH tip="Data completeness score (0-100). Green ≥80, Amber ≥50, Red &lt;50" className="text-center">Quality</TH>
           <TableHead className="w-10"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={13} className="text-center text-muted-foreground py-8">No new filaments found</TableCell>
+            <TableCell colSpan={14} className="text-center text-muted-foreground py-8">No new filaments found</TableCell>
           </TableRow>
         ) : items.map(item => {
           const merged = { ...item.extracted_data, ...item.admin_override_data } as Record<string, any>;
@@ -112,6 +115,7 @@ export function NewFilamentsTable({ items, selectedItems, onToggleItem, onToggle
               <TableCell className="text-right tabular-nums">{formatPrice(item.price_eur, '€')}</TableCell>
               <TableCell className="text-right tabular-nums">{formatPrice(item.price_cad)}</TableCell>
               <TableCell className="text-right tabular-nums">{formatPrice(item.price_aud)}</TableCell>
+              <TableCell className="text-right tabular-nums">{formatPrice(item.price_gbp, '£')}</TableCell>
               <TableCell className="text-xs text-muted-foreground">{item.variant_sku ?? '—'}</TableCell>
               <TableCell className="text-xs">{item.finish_type ?? '—'}</TableCell>
               <TableCell className="text-center"><QualityBadge score={score} /></TableCell>
@@ -125,5 +129,22 @@ export function NewFilamentsTable({ items, selectedItems, onToggleItem, onToggle
         })}
       </TableBody>
     </Table>
+    </TooltipProvider>
+  );
+}
+
+/** Table header with tooltip */
+function TH({ children, tip, className }: { children: React.ReactNode; tip: string; className?: string }) {
+  return (
+    <TableHead className={className}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-help border-b border-dotted border-muted-foreground/40">{children}</span>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p className="text-xs max-w-xs">{tip}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TableHead>
   );
 }

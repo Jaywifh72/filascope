@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { NewFilamentsTable } from './NewFilamentsTable';
 import { PriceChangesTable } from './PriceChangesTable';
-import type { SyncItem } from '@/pages/admin/BrandCatalogSync';
+import type { SyncItem } from '@/hooks/useCatalogSync';
 
 interface Props {
   items: SyncItem[];

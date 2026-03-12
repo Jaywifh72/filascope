@@ -1,165 +1,135 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Loader2, AlertTriangle, ExternalLink } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Loader2, Download, AlertTriangle, Info } from 'lucide-react';
+import type { SyncItem } from '@/hooks/useCatalogSync';
+import { computeQualityScore } from './NewFilamentsTable';
 
 interface Props {
-  jobId: string;
-  brandId: string;
-  brandName: string;
-  brandSlug: string;
-  itemIds: string[];
-  onComplete: () => void;
+  items: SyncItem[];
+  selectedCount: number;
+  importing: boolean;
+  error: string | null;
+  onConfirm: () => void;
   onCancel: () => void;
 }
 
-interface ImportResult {
-  success: boolean;
-  imported: number;
-  updated_prices: number;
-  errors: number;
-  post_import: {
-    price_history_points: number;
-    urls_validated: number;
-    urls_broken: string[];
-    avg_data_quality: number;
-  };
-}
+export function ImportProgressCard({ items, selectedCount, importing, error, onConfirm, onCancel }: Props) {
+  // Compute coverage stats
+  const withPrice = items.filter(i => i.price_usd != null || i.price_eur != null).length;
+  const withColor = items.filter(i => i.color_hex && i.color_hex !== '#808080').length;
+  const withImage = items.filter(i => i.image_url).length;
+  const withTemps = items.filter(i => {
+    const ext = i.extracted_data as Record<string, any>;
+    return ext?.nozzle_temp_min_c != null;
+  }).length;
+  const avgQuality = items.length > 0
+    ? Math.round(items.reduce((sum, i) => sum + computeQualityScore({ ...i.extracted_data as Record<string, any>, ...i }), 0) / items.length)
+    : 0;
 
-export function ImportProgressCard({ jobId, brandId, brandName, brandSlug, itemIds, onComplete, onCancel }: Props) {
-  const [importing, setImporting] = useState(false);
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleImport = async () => {
-    setImporting(true);
-    setError(null);
-
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke('import-synced-filaments', {
-        body: {
-          job_id: jobId,
-          item_ids: itemIds,
-          brand_id: brandId,
-          brand_name: brandName,
-          brand_slug: brandSlug,
-        },
-      });
-
-      if (fnError) throw fnError;
-      setResult(data as ImportResult);
-      toast({
-        title: `Imported ${data.imported} filaments`,
-        description: `${data.post_import?.price_history_points ?? 0} price history points created`,
-      });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Import failed';
-      setError(msg);
-      toast({ title: 'Import Failed', description: msg, variant: 'destructive' });
-    } finally {
-      setImporting(false);
-    }
-  };
-
-  // Auto-start import on mount
-  useEffect(() => {
-    handleImport();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (importing) {
+    return (
+      <Card className="border-blue-500/30 bg-blue-500/5">
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+            <div>
+              <p className="text-sm font-medium">Importing {selectedCount} filaments...</p>
+              <p className="text-xs text-muted-foreground">
+                Creating records, generating price history, validating URLs...
+              </p>
+            </div>
+          </div>
+          <Progress value={50} className="h-2" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="border-primary/30">
-      <CardHeader>
-        <CardTitle className="text-lg">
-          {result ? 'Import Complete' : importing ? 'Importing...' : 'Import'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {importing && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">
-                Importing {itemIds.length} filaments and running post-import setup...
+    <TooltipProvider>
+      <Card className="border-primary/30">
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Download className="w-5 h-5 text-primary" />
+            <h3 className="text-base font-semibold">Import Summary</h3>
+          </div>
+
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{selectedCount}</span> new filaments will be created with the following data coverage:
+          </p>
+
+          {/* Coverage grid */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <CoverageStat label="Price" count={withPrice} total={selectedCount} tooltip="Filaments with at least one regional price" />
+            <CoverageStat label="Color Hex" count={withColor} total={selectedCount} tooltip="Filaments with a valid hex color code" />
+            <CoverageStat label="Image" count={withImage} total={selectedCount} tooltip="Filaments with a product image URL" />
+            <CoverageStat label="Temps" count={withTemps} total={selectedCount} tooltip="Filaments with nozzle/bed temperature data" />
+            <div className="flex flex-col items-center justify-center rounded-md bg-muted/50 px-3 py-2">
+              <span className="text-xs text-muted-foreground">Avg Quality</span>
+              <span className={`text-lg font-bold ${avgQuality >= 70 ? 'text-green-500' : avgQuality >= 40 ? 'text-amber-500' : 'text-red-500'}`}>
+                {avgQuality}%
               </span>
             </div>
-            <Progress value={50} className="h-2" />
           </div>
-        )}
 
-        {error && (
-          <div className="flex items-center gap-2 rounded-md border border-red-500/30 bg-red-500/5 p-3">
-            <AlertTriangle className="h-4 w-4 text-red-500" />
-            <span className="text-sm text-red-400">{error}</span>
-          </div>
-        )}
-
-        {result && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium">
-                {result.imported} filament{result.imported !== 1 ? 's' : ''} imported
-              </span>
-              {result.updated_prices > 0 && (
-                <Badge variant="secondary" className="text-xs">{result.updated_prices} prices updated</Badge>
-              )}
-              {result.errors > 0 && (
-                <Badge variant="destructive" className="text-xs">{result.errors} failed</Badge>
-              )}
+          {error && (
+            <div className="flex items-center gap-2 p-3 rounded-md border border-red-500/30 bg-red-500/5">
+              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+              <span className="text-sm text-red-400">{error}</span>
             </div>
+          )}
 
-            {result.post_import && (
-              <>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">
-                    {result.post_import.price_history_points} price history points created
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {result.post_import.urls_broken.length > 0 ? (
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  )}
-                  <span className="text-sm">
-                    {result.post_import.urls_validated} URLs validated
-                    {result.post_import.urls_broken.length > 0 && (
-                      <span className="text-amber-500 font-medium"> — {result.post_import.urls_broken.length} broken</span>
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">
-                    Avg data quality: <span className="font-medium">{result.post_import.avg_data_quality}%</span>
-                  </span>
-                </div>
-              </>
-            )}
-
-            <div className="flex gap-2 pt-2 border-t border-border/50">
-              {brandSlug && (
-                <a href={`/brands/${brandSlug}`} target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-primary hover:underline inline-flex items-center gap-1">
-                  View Brand Page <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-              <Button size="sm" onClick={onComplete}>Done</Button>
-            </div>
+          <div className="flex items-center gap-2 p-2.5 rounded-md bg-muted/50">
+            <Info className="w-4 h-4 text-muted-foreground shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Each filament will be inserted with all available fields, price history records will be created for each region,
+              and product URLs will be validated. This operation is safe to retry.
+            </p>
           </div>
-        )}
 
-        {!importing && !result && !error && (
-          <div className="flex gap-2">
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button onClick={handleImport}>Start Import</Button>
+            <Button onClick={onConfirm} className="gap-1.5">
+              <Download className="w-4 h-4" />
+              Confirm Import ({selectedCount})
+            </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
+  );
+}
+
+function CoverageStat({
+  label,
+  count,
+  total,
+  tooltip,
+}: {
+  label: string;
+  count: number;
+  total: number;
+  tooltip: string;
+}) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  const color = pct >= 90 ? 'text-green-500' : pct >= 60 ? 'text-amber-500' : 'text-red-500';
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="flex flex-col items-center justify-center rounded-md bg-muted/50 px-3 py-2 cursor-help">
+          <span className="text-xs text-muted-foreground">{label}</span>
+          <span className={`text-sm font-bold ${color}`}>
+            {count}/{total}
+          </span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p className="text-xs">{tooltip}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }

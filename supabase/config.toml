@@ -486,6 +486,9 @@ verify_jwt = false
 [functions.insert-onboarded-filaments]
 verify_jwt = false
 
+[functions.sync-brand-catalog]
+verify_jwt = false
+
 [functions.import-synced-filaments]
 verify_jwt = false
 
