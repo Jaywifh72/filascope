@@ -143,7 +143,7 @@ function adaptSunlu(
     let anyAvailable = false;
 
     for (const v of variants) {
-      const regionLabel = v[regionOption] || "";
+      const regionLabel = (regionOption ? v[regionOption] : null) || "";
       const regionCode = regionMap[regionLabel] || null;
       const price = parseFloat(v.price);
 
