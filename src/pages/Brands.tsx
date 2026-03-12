@@ -410,6 +410,7 @@ const Brands = () => {
         ogDescription={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
         twitterTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
         twitterDescription={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
+        keywords="3D filament brands, filament manufacturers, Bambu Lab filament, Polymaker, Prusament, eSUN, filament reviews, filament prices"
       />
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}

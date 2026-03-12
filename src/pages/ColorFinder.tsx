@@ -109,9 +109,10 @@ export default function ColorFinder() {
     <>
       <DocumentHead
         title="Find 3D Printer Filaments by Color — Color Matching Tool | FilaScope"
-        description="Match any color to real 3D printer filaments across 48+ brands. Search by hex code, color name, or visual picker. Perfect for HueForge lithophanes & color-matched prints."
+        description="Match any color to 3D printer filaments across 48+ brands. Search by hex code or color name. Perfect for HueForge & color-matched prints."
         ogTitle="Find 3D Printer Filaments by Color — Color Matching Tool | FilaScope"
         ogDescription="Match any color to real 3D printer filaments across 48+ brands. Search by hex code, color name, or visual picker."
+        keywords="filament color comparison, 3D printing color match, filament color finder, hex color filament, HueForge colors"
       />
       <Breadcrumbs
         items={[{ name: "Find by Color", url: "/colors" }]}

@@ -1,15 +1,14 @@
-# robots.txt and llms.txt — proxied to serve-robots edge function
-/robots.txt https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=robots 200
-/llms.txt https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/serve-robots?file=llms 200
-
-# /sitemap.xml — served as static file from public/sitemap.xml (no redirect)
-# Sub-sitemaps — served by prerender edge function (for crawler consumption)
-/sitemap-pages.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-pages.xml 200
-/sitemap-filaments.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-filaments.xml 200
-/sitemap-brands.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-brands.xml 200
-/sitemap-printers.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-printers 200
-/sitemap-guides.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-guides.xml 200
-/sitemap-colors.xml https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=/sitemap-colors.xml 200
+# Static files — explicit rules MUST be before the SPA catch-all
+# The 200! force flag ensures these static files are served even with the catch-all
+/robots.txt /robots.txt 200!
+/llms.txt /llms.txt 200!
+/sitemap.xml /sitemap.xml 200!
+/sitemap-pages.xml /sitemap-pages.xml 200!
+/sitemap-filaments.xml /sitemap-filaments.xml 200!
+/sitemap-brands.xml /sitemap-brands.xml 200!
+/sitemap-printers.xml /sitemap-printers.xml 200!
+/sitemap-guides.xml /sitemap-guides.xml 200!
+/sitemap-colors.xml /sitemap-colors.xml 200!
 
 # Guide URL migrations — old root-level → /guides/
 /pla-vs-petg /guides/pla-vs-petg 301

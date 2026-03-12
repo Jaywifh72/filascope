@@ -39,7 +39,8 @@
 
     <!-- SEO defaults — react-helmet-async adds/overrides per-page -->
     <title>FilaScope — Compare 3D Printer Filaments, Specs &amp; Prices</title>
-    <meta name="description" content="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web." />
+    <meta name="description" content="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing, HueForge TD values &amp; detailed specs. Find your perfect filament." />
+    <meta name="keywords" content="3D printer filament comparison, filament database, compare filaments, filament specs, HueForge TD values, filament prices, 3D printing" />
     <!-- canonical is set dynamically by CanonicalLink component -->
     <meta property="og:site_name" content="FilaScope" />
     <meta property="og:type" content="website" />
@@ -158,15 +159,50 @@
 
   <body>
     <noscript>
-      <div style="padding:20px;text-align:center;font-family:sans-serif;">
-        <h1>FilaScope — Compare 3D Printer Filaments</h1>
-        <p>Compare 1,076+ filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, and detailed specs. Enable JavaScript for the full interactive experience.</p>
-        <p>
-          <a href="/filaments">Browse Filaments</a> |
-          <a href="/brands">Browse Brands</a> |
-          <a href="/printers">Browse Printers</a> |
-          <a href="/guides/best-pla-filaments">Best PLA Guide</a>
-        </p>
+      <div style="padding:20px;max-width:900px;margin:0 auto;font-family:'Inter',system-ui,sans-serif;color:#e2e8f0;background:#0A0C10;">
+        <h1>FilaScope — Compare 3D Printer Filaments, Specs &amp; Prices</h1>
+        <p>FilaScope is the most comprehensive 3D printer filament comparison platform. Compare 1,076+ filaments from 49+ brands with live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. Enable JavaScript for the full interactive experience.</p>
+
+        <nav aria-label="Main navigation">
+          <h2>Browse FilaScope</h2>
+          <ul style="list-style:none;padding:0;">
+            <li><a href="/filaments" style="color:#22d3ee;">Filament Database</a> — Compare 8,277+ products from 48+ brands</li>
+            <li><a href="/colors" style="color:#22d3ee;">Color Finder</a> — Match any color to real filaments</li>
+            <li><a href="/hueforge-td-database" style="color:#22d3ee;">HueForge TD Database</a> — Filament transmissivity data for lithophanes</li>
+            <li><a href="/printers" style="color:#22d3ee;">3D Printer Database</a> — Compare 119+ printers from 17+ brands</li>
+            <li><a href="/brands" style="color:#22d3ee;">Brand Directory</a> — Explore 48+ filament manufacturers</li>
+            <li><a href="/deals" style="color:#22d3ee;">Deals</a> — Latest filament price drops and deals</li>
+            <li><a href="/compare" style="color:#22d3ee;">Compare Tool</a> — Side-by-side filament comparison</li>
+            <li><a href="/hueforge-tools" style="color:#22d3ee;">HueForge Tools</a> — TD calculator, palette builder &amp; more</li>
+          </ul>
+        </nav>
+
+        <section>
+          <h2>Filament Materials</h2>
+          <ul style="list-style:none;padding:0;">
+            <li><a href="/filaments?material=PLA" style="color:#22d3ee;">PLA Filaments</a> — 4,296+ variants</li>
+            <li><a href="/filaments?material=PETG" style="color:#22d3ee;">PETG Filaments</a> — 1,048+ variants</li>
+            <li><a href="/filaments?material=ABS" style="color:#22d3ee;">ABS Filaments</a> — 865+ variants</li>
+            <li><a href="/filaments?material=TPU" style="color:#22d3ee;">TPU Filaments</a> — 381+ variants</li>
+            <li><a href="/filaments?material=ASA" style="color:#22d3ee;">ASA Filaments</a> — 408+ variants</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Buying Guides</h2>
+          <ul style="list-style:none;padding:0;">
+            <li><a href="/guides/pla-vs-petg" style="color:#22d3ee;">PLA vs PETG Comparison</a></li>
+            <li><a href="/guides/best-filaments-for-beginners" style="color:#22d3ee;">Best Filaments for Beginners</a></li>
+            <li><a href="/guides/best-filaments-for-hueforge" style="color:#22d3ee;">Best Filaments for HueForge</a></li>
+            <li><a href="/guides/filament-temperature-guide" style="color:#22d3ee;">Filament Temperature Guide</a></li>
+            <li><a href="/guides/filament-storage-guide" style="color:#22d3ee;">Filament Storage Guide</a></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>About FilaScope</h2>
+          <p>FilaScope indexes filament specifications, pricing, and HueForge TD values from verified sources. Our database includes 1,076+ filaments from 49+ brands with live pricing from 15+ retailers across the US, Canada, EU, UK, and Australia. Data is updated daily.</p>
+        </section>
       </div>
     </noscript>
     <div id="root"></div>

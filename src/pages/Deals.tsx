@@ -183,6 +183,7 @@ const Deals = () => {
         description={totalDeals > 0 ? `Today's best 3D printer filament deals from ${uniqueBrandCount}+ brands. PLA, PETG, ABS & specialty materials. Save up to ${maxDiscount}%. Updated daily.` : metaDescription}
         ogTitle={totalDeals > 0 ? `3D Filament Deals & Discounts — ${totalDeals} Active Offers | FilaScope` : 'Today\'s Filament Deals — Best Prices on 3D Printing Materials | FilaScope'}
         ogDescription={totalDeals > 0 ? `Today's best 3D printer filament deals from ${uniqueBrandCount}+ brands. PLA, PETG, ABS & specialty materials. Save up to ${maxDiscount}%. Updated daily.` : metaDescription}
+        keywords="3D filament deals, filament discounts, cheap filament, filament sale, PLA deals, PETG deals, 3D printing deals"
       />
       <Breadcrumbs
         items={[{ name: "Deals & Discounts", url: "/deals" }]}

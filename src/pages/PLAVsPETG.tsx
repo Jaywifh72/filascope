@@ -143,6 +143,7 @@ export default function PLAVsPETG() {
         title="PLA vs PETG — 3D Filament Comparison Guide | FilaScope"
         description="PLA vs PETG compared: strength, flexibility, print settings, price & HueForge TD values. Data-driven comparison from 1,080+ filaments on FilaScope."
         ogType="article"
+        keywords="PLA vs PETG, PLA PETG comparison, filament comparison, 3D printing materials, best filament, filament strength"
       />
       <BreadcrumbSchema items={breadcrumbs} />
       <ArticleSchema

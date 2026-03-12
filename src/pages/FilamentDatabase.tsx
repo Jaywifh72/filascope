@@ -126,6 +126,7 @@ export default function FilamentDatabase() {
         title={`3D Filament Database — Compare ${displayTotal}+ Products | FilaScope`}
         description={`The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across ${displayBrands}+ brands. Filter by specs, price, TD value & compatibility.`}
         ogType="website"
+        keywords="3D printer filament database, compare filaments, filament specs, filament prices, PLA filament, PETG filament, filament comparison tool"
       />
       <BreadcrumbSchema items={breadcrumbs} />
       <WebApplicationSchema

@@ -639,6 +639,7 @@ export default function Printers() {
         description={`Compare ${printers?.length || 118}+ 3D printers from ${brands?.length || 17}+ brands. Filter by build volume, speed, features, and price. Find compatible filaments for your printer on FilaScope.`}
         ogTitle={`3D Printer Database — Compare ${printers?.length || 118}+ Printers | FilaScope`}
         ogDescription={`Compare ${printers?.length || 118}+ 3D printers from ${brands?.length || 17}+ brands. Filter by build volume, speed, features, and price. Find compatible filaments for your printer on FilaScope.`}
+        keywords="3D printer comparison, 3D printer database, compare 3D printers, printer specs, printer compatibility, Bambu Lab, Creality, Prusa"
       />
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },

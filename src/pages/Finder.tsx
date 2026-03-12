@@ -1041,9 +1041,9 @@ const Finder = () => {
       ]} />
       <DocumentHead
         title="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        description="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web."
+        description="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing, HueForge TD values & detailed specs. Find your perfect filament."
         ogTitle="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        ogDescription="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web."
+        ogDescription="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs."
         ogType="website"
         ogUrl="https://filascope.com"
         ogSiteName="FilaScope"
@@ -1051,8 +1051,9 @@ const Finder = () => {
         twitterCard="summary_large_image"
         twitterSite="@FilaScope"
         twitterTitle="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        twitterDescription="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs. The most complete filament comparison tool on the web."
+        twitterDescription="Compare 1,076+ 3D printer filaments from 49+ brands. Live pricing, HueForge TD values & detailed specs."
         twitterImage="https://filascope.com/og-image.png"
+        keywords="3D printer filament comparison, filament database, compare filaments, filament specs, HueForge TD values, filament prices, 3D printing"
       />
       {/* WebSiteSchema + OrganizationSchema now rendered globally in App.tsx */}
       <TrendingItemListSchema />
