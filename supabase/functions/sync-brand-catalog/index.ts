@@ -462,9 +462,10 @@ async function fetchCatalogViaSitemap(
         fetchErrors++;
         console.warn(`[sync-brand-catalog] HTTP ${prodRes.status} for ${handle}`);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       fetchErrors++;
-      console.warn(`[sync-brand-catalog] Failed to fetch ${handle}: ${err.message}`);
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.warn(`[sync-brand-catalog] Failed to fetch ${handle}: ${msg}`);
     }
 
     // Rate limit: 300ms between requests
@@ -835,19 +836,20 @@ Deno.serve(async (req) => {
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { data } = await userClient.auth.getClaims(token);
-      if (data?.claims?.sub) {
-        adminUserId = data.claims.sub;
+      const { data: userData } = await userClient.auth.getUser(token);
+      if (userData?.user?.id) {
+        adminUserId = userData.user.id;
         const { data: roleData } = await userClient
           .from("user_roles")
           .select("role")
-          .eq("user_id", data.claims.sub)
+          .eq("user_id", userData.user.id)
           .eq("role", "admin")
           .maybeSingle();
         if (roleData) isAuthorized = true;
       }
-    } catch (authErr: any) {
-      console.warn("[sync-brand-catalog] Auth check failed:", authErr.message);
+    } catch (authErr: unknown) {
+      const msg = authErr instanceof Error ? authErr.message : "Unknown auth error";
+      console.warn("[sync-brand-catalog] Auth check failed:", msg);
     }
   }
 
@@ -871,8 +873,9 @@ Deno.serve(async (req) => {
     if (!brandId || !configId) {
       throw new Error("Missing required fields: brand_id, config_id");
     }
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message || "Invalid request body" }), {
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Invalid request body";
+    return new Response(JSON.stringify({ error: msg }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -983,10 +986,11 @@ Deno.serve(async (req) => {
         const result = extractFilamentsFromProduct(product, config);
         allFilaments.push(...result.filaments);
         warnings.push(...result.warnings);
-      } catch (err: any) {
+      } catch (err: unknown) {
         const handle = product.handle || product.title || "unknown";
-        extractionErrors.push({ handle, error: err.message });
-        console.error(`[sync-brand-catalog] Error extracting '${handle}':`, err.message);
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        extractionErrors.push({ handle, error: msg });
+        console.error(`[sync-brand-catalog] Error extracting '${handle}':`, msg);
       }
     }
 
@@ -1003,7 +1007,8 @@ Deno.serve(async (req) => {
     const matched = diffResults.filter((r) => r.status === "matched");
 
     // ── Step 7: Store items in brand_sync_items ──
-    const itemsToInsert = diffResults.map((r) => ({
+    // deno-lint-ignore no-explicit-any
+    const itemsToInsert: any[] = diffResults.map((r) => ({
       job_id: jobId,
       status: r.status,
       extracted_data: r.filament,
@@ -1032,12 +1037,12 @@ Deno.serve(async (req) => {
     // Also add extraction errors as items
     for (const err of extractionErrors) {
       itemsToInsert.push({
-        job_id: jobId!,
-        status: "error" as const,
-        extracted_data: { handle: err.handle } as any,
+        job_id: jobId,
+        status: "error",
+        extracted_data: { handle: err.handle },
         display_name: err.handle,
         color_name: null,
-        material_type: null as unknown as string,
+        material_type: null,
         color_hex: null,
         color_family: null,
         finish_type: null,
@@ -1049,12 +1054,12 @@ Deno.serve(async (req) => {
         price_cad: null,
         price_aud: null,
         variant_sku: null,
-        product_handle: null as unknown as string,
-        available_regions: null as unknown as string[],
+        product_handle: null,
+        available_regions: null,
         is_new: false,
         existing_filament_id: null,
         price_diff: null,
-        error_message: err.error as any,
+        error_message: err.error,
       });
     }
 
@@ -1109,8 +1114,9 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (err: any) {
-    console.error(`[sync-brand-catalog] Fatal error:`, err.message);
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[sync-brand-catalog] Fatal error:`, errMsg);
 
     if (jobId) {
       await supabase
@@ -1118,13 +1124,13 @@ Deno.serve(async (req) => {
         .update({
           status: "failed",
           completed_at: new Date().toISOString(),
-          errors: { fatal: err.message },
+          errors: { fatal: errMsg },
         })
         .eq("id", jobId);
     }
 
     return new Response(
-      JSON.stringify({ error: err.message || "Unknown error" }),
+      JSON.stringify({ error: errMsg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
