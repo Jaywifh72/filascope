@@ -462,9 +462,10 @@ async function fetchCatalogViaSitemap(
         fetchErrors++;
         console.warn(`[sync-brand-catalog] HTTP ${prodRes.status} for ${handle}`);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       fetchErrors++;
-      console.warn(`[sync-brand-catalog] Failed to fetch ${handle}: ${err.message}`);
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.warn(`[sync-brand-catalog] Failed to fetch ${handle}: ${msg}`);
     }
 
     // Rate limit: 300ms between requests
