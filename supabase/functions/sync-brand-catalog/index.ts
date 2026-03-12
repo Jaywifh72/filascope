@@ -835,19 +835,20 @@ Deno.serve(async (req) => {
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { data } = await userClient.auth.getClaims(token);
-      if (data?.claims?.sub) {
-        adminUserId = data.claims.sub;
+      const { data: userData } = await userClient.auth.getUser(token);
+      if (userData?.user?.id) {
+        adminUserId = userData.user.id;
         const { data: roleData } = await userClient
           .from("user_roles")
           .select("role")
-          .eq("user_id", data.claims.sub)
+          .eq("user_id", userData.user.id)
           .eq("role", "admin")
           .maybeSingle();
         if (roleData) isAuthorized = true;
       }
-    } catch (authErr: any) {
-      console.warn("[sync-brand-catalog] Auth check failed:", authErr.message);
+    } catch (authErr: unknown) {
+      const msg = authErr instanceof Error ? authErr.message : "Unknown auth error";
+      console.warn("[sync-brand-catalog] Auth check failed:", msg);
     }
   }
 
