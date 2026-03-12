@@ -127,7 +127,7 @@ function adaptSunlu(
 
   for (const [rawColorName, variants] of Object.entries(colorGroups)) {
     // Determine material from first variant's option2
-    const materialRaw = variants[0]?.[materialOption] || config.default_material_type || "PLA";
+    const materialRaw = (materialOption ? variants[0]?.[materialOption] : null) || config.default_material_type || "PLA";
     const material = materialRaw.toUpperCase();
 
     // Strip material prefix from color name
