@@ -986,10 +986,11 @@ Deno.serve(async (req) => {
         const result = extractFilamentsFromProduct(product, config);
         allFilaments.push(...result.filaments);
         warnings.push(...result.warnings);
-      } catch (err: any) {
+      } catch (err: unknown) {
         const handle = product.handle || product.title || "unknown";
-        extractionErrors.push({ handle, error: err.message });
-        console.error(`[sync-brand-catalog] Error extracting '${handle}':`, err.message);
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        extractionErrors.push({ handle, error: msg });
+        console.error(`[sync-brand-catalog] Error extracting '${handle}':`, msg);
       }
     }
 
