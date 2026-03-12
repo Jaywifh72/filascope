@@ -337,6 +337,7 @@ function adaptGenericShopify(
       high_speed_capable: material.includes("HIGH SPEED") || material.includes("HS") || (specs.printSpeedMax !== null && specs.printSpeedMax >= 300),
       drying_temp_c: specs.dryingTemp,
       drying_time_hours: specs.dryingTime,
+      pack_quantity: 1,
       variant_available: variant.available ?? true,
       available_regions: ["US"],
     };
