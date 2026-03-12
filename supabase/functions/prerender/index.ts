@@ -530,9 +530,14 @@ Deno.serve(async (req) => {
 
     // Reject static file paths — these should be served directly, not prerendered
     if (isStaticFilePath(path)) {
-      console.log(`[PRERENDER] rejected static file path="${path}" — serve from CDN`);
-      return new Response(JSON.stringify({error:"NOT_FOUND",message:`Static file "${path}" should not be prerendered.`,hint:"Serve this file directly from your CDN/hosting. Remove any redirect rules that proxy this path to prerender.",path}), {
-        status:404, headers:{...corsHeaders,"Content-Type":"application/json"},
+      console.warn(`[PRERENDER] static-bypass path="${path}" ua="${(ua||"").slice(0,60)}"`);
+      return new Response(JSON.stringify({
+        code:"STATIC_PATH_BYPASS",
+        message:`${path} is a static asset and is intentionally excluded from prerender HTML rendering.",
+        requestedPath:path,
+        hint:"Serve this file directly from static hosting/CDN and bypass the prerender proxy for this path.",
+      }), {
+        status:400, headers:{...corsHeaders,"Content-Type":"application/json"},
       });
     }
 

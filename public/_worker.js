@@ -95,80 +95,12 @@ export default {
     const pathname = url.pathname;
     const userAgent = request.headers.get("User-Agent") || "";
 
-    // 1. Intercept /robots.txt and /llms.txt — proxy to serve-robots edge function
-    if (pathname === "/robots.txt") {
-      try {
-        const res = await fetch(SERVE_ROBOTS_URL + "?file=robots", {
-          headers: { Accept: "text/plain" },
-        });
-        const body = await res.text();
-
-        if (!res.ok || /<!doctype html|<html[\s>]/i.test(body)) {
-          throw new Error(`Unexpected robots response: ${res.status}`);
-        }
-
-        return new Response(body, {
-          status: 200,
-          headers: {
-            "Content-Type": "text/plain; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-          },
-        });
-      } catch (err) {
-        console.error("[_worker.js] robots.txt fetch failed:", err);
-        return new Response(
-          "User-agent: *\nAllow: /\nSitemap: https://filascope.com/sitemap.xml\n",
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "text/plain; charset=utf-8",
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-            },
-          }
-        );
-      }
-    }
-
-    if (pathname === "/llms.txt") {
-      try {
-        const res = await fetch(SERVE_ROBOTS_URL + "?file=llms", {
-          headers: { Accept: "text/plain" },
-        });
-        const body = await res.text();
-
-        if (!res.ok || /<!doctype html|<html[\s>]/i.test(body)) {
-          throw new Error(`Unexpected llms response: ${res.status}`);
-        }
-
-        return new Response(body, {
-          status: 200,
-          headers: {
-            "Content-Type": "text/plain; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-          },
-        });
-      } catch (err) {
-        console.error("[_worker.js] llms.txt fetch failed:", err);
-        return new Response(
-          "# FilaScope\n\nThe llms.txt endpoint is temporarily unavailable.\n",
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "text/plain; charset=utf-8",
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-            },
-          }
-        );
-      }
-    }
-
-    // llms-full.txt is served as a static file from public/ — no edge function proxy
-    if (pathname === "/llms-full.txt") {
-      return env.ASSETS.fetch(request);
-    }
-
-    // Serve /sitemap.xml directly from static assets (public/sitemap.xml)
-    if (pathname === "/sitemap.xml") {
+    // 1. Always serve machine-readable/static files directly from assets
+    if (
+      STATIC_PATHS.has(pathname) ||
+      pathname.startsWith("/sitemap-") ||
+      pathname.startsWith("/public/")
+    ) {
       return env.ASSETS.fetch(request);
     }
 

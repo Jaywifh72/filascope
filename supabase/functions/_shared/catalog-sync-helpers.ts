@@ -21,7 +21,8 @@ import {
 } from "./filament-utils.ts";
 
 // Re-export types/constants that the main function needs
-export { ScrapingConfig, ExtractedFilament, FILAMENT_KEYWORDS, NON_FILAMENT_KEYWORDS };
+export type { ScrapingConfig, ExtractedFilament };
+export { FILAMENT_KEYWORDS, NON_FILAMENT_KEYWORDS };
 
 // ============================================================
 // Constants
