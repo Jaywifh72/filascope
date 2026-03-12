@@ -28,6 +28,18 @@ interface BrandConfig {
   extraction_method: string | null;
 }
 
+interface SyncProduct {
+  id: string;
+  product_title: string | null;
+  product_url: string | null;
+  vendor: string | null;
+  net_weight_g?: number | null;
+  variant_price?: number | null;
+  msrp?: number | null;
+  current_price_usd_store?: number | null;
+  msrp_usd?: number | null;
+}
+
 interface ExtractionResult {
   success: boolean;
   price: number | null;
