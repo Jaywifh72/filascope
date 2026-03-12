@@ -873,8 +873,9 @@ Deno.serve(async (req) => {
     if (!brandId || !configId) {
       throw new Error("Missing required fields: brand_id, config_id");
     }
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message || "Invalid request body" }), {
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Invalid request body";
+    return new Response(JSON.stringify({ error: msg }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
