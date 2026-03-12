@@ -14,7 +14,7 @@ function getDateDaysAgo(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-function base64urlEncode(buf: ArrayBuffer): string {
+function base64urlEncode(buf: ArrayBuffer | Uint8Array): string {
   const bytes = new Uint8Array(buf);
   let str = "";
   for (const b of bytes) str += String.fromCharCode(b);

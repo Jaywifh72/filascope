@@ -504,7 +504,7 @@ Deno.serve(async (req) => {
           .eq('orchestration_id', runId)
           .eq('status', 'pending');
 
-        if (pendingBatches?.length > 0) {
+        if (pendingBatches && pendingBatches.length > 0) {
           console.log(`[ORCHESTRATOR] Batch 1 complete. ${pendingBatches.length} batches remaining — will be picked up by orchestrator-continue.`);
         } else {
           console.log(`[ORCHESTRATOR] All batches complete.`);

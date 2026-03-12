@@ -108,8 +108,9 @@ Deno.serve(async (req) => {
         } else {
           results.push({ file: filename, status: "uploaded", size: originalBytes.length });
         }
-      } catch (e) {
-        results.push({ file: filename, status: `error: ${e.message}` });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        results.push({ file: filename, status: `error: ${msg}` });
       }
     }
 
@@ -122,8 +123,9 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

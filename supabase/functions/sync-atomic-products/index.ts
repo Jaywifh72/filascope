@@ -48,6 +48,7 @@ const CATALOG_DROP_WARN_PERCENT = 0.20;
 interface SyncRequest {
   dryRun?: boolean;
   limit?: number;
+  triggeredBy?: string;
 }
 
 interface DiscoveredProduct {

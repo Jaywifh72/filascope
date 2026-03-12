@@ -120,14 +120,14 @@ function adaptSunlu(
   // Group variants by color (option3)
   const colorGroups: Record<string, any[]> = {};
   for (const variant of product.variants) {
-    const colorKey = variant[colorOption] || variant.title;
+    const colorKey = (colorOption ? variant[colorOption] : null) || variant.title;
     if (!colorGroups[colorKey]) colorGroups[colorKey] = [];
     colorGroups[colorKey].push(variant);
   }
 
   for (const [rawColorName, variants] of Object.entries(colorGroups)) {
     // Determine material from first variant's option2
-    const materialRaw = variants[0]?.[materialOption] || config.default_material_type || "PLA";
+    const materialRaw = (materialOption ? variants[0]?.[materialOption] : null) || config.default_material_type || "PLA";
     const material = materialRaw.toUpperCase();
 
     // Strip material prefix from color name
@@ -143,7 +143,7 @@ function adaptSunlu(
     let anyAvailable = false;
 
     for (const v of variants) {
-      const regionLabel = v[regionOption] || "";
+      const regionLabel = (regionOption ? v[regionOption] : null) || "";
       const regionCode = regionMap[regionLabel] || null;
       const price = parseFloat(v.price);
 
@@ -213,6 +213,7 @@ function adaptSunlu(
       high_speed_capable: material.includes("HIGH SPEED") || material.includes("HS") || (specs.printSpeedMax !== null && specs.printSpeedMax >= 300),
       drying_temp_c: specs.dryingTemp,
       drying_time_hours: specs.dryingTime,
+      pack_quantity: 1,
       variant_available: anyAvailable,
       available_regions: availableRegions,
     };
@@ -336,6 +337,7 @@ function adaptGenericShopify(
       high_speed_capable: material.includes("HIGH SPEED") || material.includes("HS") || (specs.printSpeedMax !== null && specs.printSpeedMax >= 300),
       drying_temp_c: specs.dryingTemp,
       drying_time_hours: specs.dryingTime,
+      pack_quantity: 1,
       variant_available: variant.available ?? true,
       available_regions: ["US"],
     };

@@ -830,6 +830,7 @@ function extractFilamentsFromProduct(
         (specs.printSpeedMax !== null && specs.printSpeedMax >= 300),
       drying_temp_c: specs.dryingTemp,
       drying_time_hours: specs.dryingTime,
+      pack_quantity: 1,
       variant_available: anyAvailable,
       available_regions: availableRegions,
     };
@@ -1177,11 +1178,11 @@ Deno.serve(async (req) => {
     for (const err of extractionErrors) {
       itemsToInsert.push({
         job_id: jobId!,
-        status: "error",
+        status: "error" as const,
         extracted_data: { handle: err.handle } as any,
         display_name: err.handle,
         color_name: null,
-        material_type: null,
+        material_type: null as unknown as string,
         color_hex: null,
         color_family: null,
         finish_type: null,
@@ -1193,12 +1194,12 @@ Deno.serve(async (req) => {
         price_cad: null,
         price_aud: null,
         variant_sku: null,
-        product_handle: null,
-        available_regions: null,
+        product_handle: null as unknown as string,
+        available_regions: null as unknown as string[],
         is_new: false,
         existing_filament_id: null,
         price_diff: null,
-        error_message: err.error,
+        error_message: err.error as any,
       });
     }
 

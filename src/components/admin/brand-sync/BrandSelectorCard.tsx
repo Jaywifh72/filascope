@@ -67,17 +67,10 @@ export function BrandSelectorCard({ onScanStart, isScanning }: Props) {
   const { data: configs } = useQuery({
     queryKey: ['scraping-configs'],
     queryFn: async () => {
-      // Try with catalog_strategy first, fall back without it
-      let result = await supabase
+      const result = await supabase
         .from('brand_scraping_configs')
-        .select('id, brand_id, brand_name, platform, base_url, catalog_strategy');
-      if (result.error) {
-        // catalog_strategy column may not exist yet — retry without it
-        result = await supabase
-          .from('brand_scraping_configs')
-          .select('id, brand_id, brand_name, platform, base_url');
-      }
-      return (result.data || []) as ScrapingConfig[];
+        .select('id, brand_id, brand_name, platform, base_url');
+      return (result.data || []) as unknown as ScrapingConfig[];
     },
   });
 
