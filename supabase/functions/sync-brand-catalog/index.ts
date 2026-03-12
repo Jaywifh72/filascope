@@ -830,6 +830,7 @@ function extractFilamentsFromProduct(
         (specs.printSpeedMax !== null && specs.printSpeedMax >= 300),
       drying_temp_c: specs.dryingTemp,
       drying_time_hours: specs.dryingTime,
+      pack_quantity: 1,
       variant_available: anyAvailable,
       available_regions: availableRegions,
     };
