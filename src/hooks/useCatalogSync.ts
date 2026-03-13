@@ -129,6 +129,219 @@ async function fetchShopifyCatalog(
   return { products: allProducts, totalFetched: allProducts.length };
 }
 
+// ============================================================
+// Per-Handle Whitelist Fetch (for stores without CORS)
+// ============================================================
+
+/**
+ * CORS proxy URL template — uses allorigins.win /get endpoint which wraps response
+ * in {contents: "...", status: {...}}. More reliable than /raw from browsers.
+ */
+const CORS_PROXY_GET = 'https://api.allorigins.win/get?url=';
+
+/**
+ * Anycubic product handle whitelist — 19 official filament product lines.
+ * Each entry has the handle and the base URL (some products are CA-only).
+ */
+const ANYCUBIC_HANDLES: Array<{ handle: string; baseUrl: string; material: string }> = [
+  // Core PLA
+  { handle: 'pla-basic-refill', baseUrl: 'https://store.anycubic.com', material: 'PLA+' },
+  { handle: 'pla-filament', baseUrl: 'https://store.anycubic.com', material: 'PLA+' },
+  { handle: 'pla-plus-filament', baseUrl: 'https://store.anycubic.com', material: 'PLA+' },
+  { handle: 'pla-plus-refill', baseUrl: 'https://store.anycubic.com', material: 'PLA+' },
+  { handle: 'high-speed-pla-filament', baseUrl: 'https://store.anycubic.com', material: 'PLA+' },
+  // Specialty PLA
+  { handle: 'silk-pla-filament', baseUrl: 'https://store.anycubic.com', material: 'PLA' },
+  { handle: 'pla-silk-dual-tri-color-filament', baseUrl: 'https://store.anycubic.com', material: 'PLA' },
+  { handle: 'pla-basic-special-color-filament', baseUrl: 'https://store.anycubic.com', material: 'PLA+' },
+  { handle: 'pla-glow', baseUrl: 'https://store.anycubic.com', material: 'PLA-Glow' },
+  { handle: 'pla-marble', baseUrl: 'https://store.anycubic.com', material: 'PLA' },
+  { handle: 'pla-galaxy', baseUrl: 'https://store.anycubic.com', material: 'PLA+' },
+  { handle: 'matte-pla-filament', baseUrl: 'https://store.anycubic.com', material: 'PLA' },
+  { handle: 'pla-metal-filament', baseUrl: 'https://store.anycubic.com', material: 'PLA' },
+  // PETG
+  { handle: 'petg-filament', baseUrl: 'https://store.anycubic.com', material: 'PETG' },
+  { handle: 'petg-filament-translucent', baseUrl: 'https://store.anycubic.com', material: 'PETG' },
+  // Engineering
+  { handle: 'abs-filament', baseUrl: 'https://store.anycubic.com', material: 'ABS' },
+  { handle: 'asa-filament', baseUrl: 'https://store.anycubic.com', material: 'ASA' },
+  { handle: 'pc-filament', baseUrl: 'https://store.anycubic.com', material: 'PC' },
+  { handle: 'tpu-filament', baseUrl: 'https://store.anycubic.com', material: 'TPU' },
+];
+
+/**
+ * Fetch a single product via CORS proxy (/get endpoint) with retry.
+ * The /get endpoint wraps the response as {contents: "...", status: {...}}.
+ */
+async function fetchProductViaProxy(
+  baseUrl: string,
+  handle: string,
+  maxRetries = 2,
+): Promise<any | null> {
+  const productUrl = `${baseUrl}/products/${handle}.json`;
+  const proxyUrl = `${CORS_PROXY_GET}${encodeURIComponent(productUrl)}`;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(proxyUrl, {
+        headers: { Accept: 'application/json' },
+      });
+
+      if (!res.ok) {
+        console.warn(`[proxy] ${handle}: HTTP ${res.status} (attempt ${attempt + 1})`);
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+          continue;
+        }
+        return null;
+      }
+
+      const wrapper = await res.json();
+
+      // /get endpoint wraps response in {contents: "...", status: {...}}
+      if (wrapper?.contents) {
+        const data = JSON.parse(wrapper.contents);
+        if (data?.product) return data.product;
+      }
+
+      // Fallback: direct JSON (in case proxy returns raw)
+      if (wrapper?.product) return wrapper.product;
+
+      console.warn(`[proxy] ${handle}: no product in response`);
+      return null;
+    } catch (err) {
+      console.warn(`[proxy] ${handle}: fetch error (attempt ${attempt + 1}):`, err);
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Fetch products using a curated whitelist of handles via CORS proxy.
+ * Used for stores like Anycubic that don't have CORS on their Shopify endpoints.
+ */
+async function fetchViaHandleWhitelist(
+  handles: Array<{ handle: string; baseUrl: string }>,
+  onProgress?: (msg: string) => void,
+): Promise<{ products: any[]; totalFetched: number; failed: string[] }> {
+  const allProducts: any[] = [];
+  const failed: string[] = [];
+
+  for (let i = 0; i < handles.length; i++) {
+    const { handle, baseUrl } = handles[i];
+    onProgress?.(`Fetching ${handle} (${i + 1}/${handles.length})...`);
+
+    const product = await fetchProductViaProxy(baseUrl, handle);
+    if (product) {
+      allProducts.push(product);
+    } else {
+      failed.push(handle);
+    }
+
+    // Rate limit: 500ms between requests to be respectful
+    if (i < handles.length - 1) {
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  return { products: allProducts, totalFetched: allProducts.length, failed };
+}
+
+// ============================================================
+// Auto-Config Creation for Known Brands
+// ============================================================
+
+/**
+ * Built-in configs for brands that need special handling.
+ * These are auto-created in brand_scraping_configs when the brand is selected.
+ */
+const KNOWN_BRAND_CONFIGS: Record<string, {
+  brand_name: string;
+  platform: string;
+  base_url: string;
+  scrape_method: string;
+  adapter_key: string;
+  catalog_strategy: string;
+  regional_url_pattern: Record<string, string>;
+  variant_mapping: Record<string, any>;
+}> = {
+  anycubic: {
+    brand_name: 'Anycubic',
+    platform: 'shopify',
+    base_url: 'https://store.anycubic.com',
+    scrape_method: 'per_handle_whitelist',
+    adapter_key: 'anycubic',
+    catalog_strategy: 'per-handle-whitelist',
+    regional_url_pattern: {
+      US: 'https://store.anycubic.com',
+      CA: 'https://ca.anycubic.com',
+      UK: 'https://uk.anycubic.com',
+      EU: 'https://eu.anycubic.com',
+      AU: 'https://www.anycubic.au',
+    },
+    variant_mapping: {
+      region_option: 'option3',
+      color_option: 'option1',
+      size_option: 'option2',
+      region_map: { US: 'US', EU: 'EU', UK: 'UK', Other: 'US' },
+      price_currency_map: { US: 'USD', EU: 'EUR', UK: 'GBP', Other: 'USD' },
+    },
+  },
+};
+
+/**
+ * Ensure a brand_scraping_configs entry exists for a known brand.
+ * Returns the config ID (existing or newly created).
+ */
+async function ensureBrandConfig(
+  supabaseClient: any,
+  brandId: string,
+  brandSlug: string,
+): Promise<string | null> {
+  // Check if config already exists
+  const { data: existing } = await supabaseClient
+    .from('brand_scraping_configs')
+    .select('id')
+    .eq('brand_id', brandId)
+    .maybeSingle();
+
+  if (existing) return existing.id;
+
+  // Check if we have a built-in config for this brand
+  const builtIn = KNOWN_BRAND_CONFIGS[brandSlug];
+  if (!builtIn) return null;
+
+  // Create the config
+  const { data: created, error: createErr } = await supabaseClient
+    .from('brand_scraping_configs')
+    .insert({
+      brand_id: brandId,
+      brand_name: builtIn.brand_name,
+      platform: builtIn.platform,
+      base_url: builtIn.base_url,
+      scrape_method: builtIn.scrape_method,
+      adapter_key: builtIn.adapter_key,
+      catalog_strategy: builtIn.catalog_strategy,
+      regional_url_pattern: builtIn.regional_url_pattern,
+      variant_mapping: builtIn.variant_mapping,
+      is_active: true,
+    })
+    .select('id')
+    .single();
+
+  if (createErr) {
+    console.error('[ensureBrandConfig] Failed to create config:', createErr.message);
+    return null;
+  }
+
+  console.log(`[ensureBrandConfig] Created config for ${brandSlug}: ${created.id}`);
+  return created.id;
+}
+
 /**
  * Slim down products by truncating body_html (saves memory).
  */
@@ -193,17 +406,6 @@ export function useCatalogSync() {
     setScanStatusMessage('Loading configuration...');
 
     try {
-      // ── Load config ──
-      const { data: configData, error: configErr } = await supabase
-        .from('brand_scraping_configs')
-        .select('*')
-        .eq('id', configId)
-        .maybeSingle();
-
-      if (configErr || !configData) throw new Error(`Config not found: ${configId}`);
-
-      const config = configData as unknown as ScrapingConfig;
-
       // ── Load brand ──
       const { data: brandData, error: brandErr } = await supabase
         .from('automated_brands')
@@ -212,6 +414,25 @@ export function useCatalogSync() {
         .maybeSingle();
 
       if (brandErr || !brandData) throw new Error(`Brand not found: ${brandId}`);
+
+      // ── Ensure config exists (auto-create for known brands) ──
+      let actualConfigId = configId;
+      if (!actualConfigId || actualConfigId === 'auto') {
+        const autoId = await ensureBrandConfig(supabase, brandId, brandData.brand_slug);
+        if (!autoId) throw new Error(`No scraping config for brand: ${brandData.brand_name}`);
+        actualConfigId = autoId;
+      }
+
+      // ── Load config ──
+      const { data: configData, error: configErr } = await supabase
+        .from('brand_scraping_configs')
+        .select('*')
+        .eq('id', actualConfigId)
+        .maybeSingle();
+
+      if (configErr || !configData) throw new Error(`Config not found: ${actualConfigId}`);
+
+      const config = configData as unknown as ScrapingConfig;
 
       // ── Get current user ID ──
       const { data: { user } } = await supabase.auth.getUser();
@@ -222,7 +443,7 @@ export function useCatalogSync() {
         .from('brand_sync_jobs')
         .insert({
           brand_id: brandId,
-          config_id: configId,
+          config_id: actualConfigId,
           status: 'syncing',
           admin_user_id: user?.id ?? null,
           started_at: new Date().toISOString(),
@@ -234,13 +455,40 @@ export function useCatalogSync() {
       const currentJobId = jobData.id;
       setJobId(currentJobId);
 
-      // ── Fetch products from store (client-side) ──
-      setScanStatusMessage('Fetching products from store...');
-      const { products: allProducts } = await fetchShopifyCatalog(
-        config.base_url,
-        10,
-        (msg) => setScanStatusMessage(msg),
-      );
+      // ── Fetch products from store (strategy-dependent) ──
+      const catalogStrategy = config.catalog_strategy || config.scrape_method || 'products-json';
+      let allProducts: any[];
+
+      if (catalogStrategy === 'per-handle-whitelist' || catalogStrategy === 'per_handle_whitelist') {
+        // Use curated whitelist with CORS proxy
+        const brandSlug = brandData.brand_slug;
+        const handles = brandSlug === 'anycubic' ? ANYCUBIC_HANDLES : [];
+
+        if (handles.length === 0) {
+          throw new Error(`No product whitelist defined for brand: ${brandData.brand_name}`);
+        }
+
+        setScanStatusMessage(`Fetching ${handles.length} products via proxy...`);
+        const result = await fetchViaHandleWhitelist(
+          handles,
+          (msg) => setScanStatusMessage(msg),
+        );
+
+        if (result.failed.length > 0) {
+          console.warn(`[scan] Failed to fetch ${result.failed.length} handles:`, result.failed);
+        }
+
+        allProducts = result.products;
+      } else {
+        // Default: standard Shopify /products.json
+        setScanStatusMessage('Fetching products from store...');
+        const result = await fetchShopifyCatalog(
+          config.base_url,
+          10,
+          (msg) => setScanStatusMessage(msg),
+        );
+        allProducts = result.products;
+      }
 
       if (allProducts.length === 0) throw new Error('No products found in store');
 
@@ -294,7 +542,7 @@ export function useCatalogSync() {
       );
 
       // ── Diff against database ──
-      const diffResults = await diffAgainstDatabase(supabase, allFilaments, brandId);
+      const diffResults = await diffAgainstDatabase(supabase, allFilaments, brandId, brandData.brand_name);
       const newCount = diffResults.filter(r => r.status === 'new').length;
       const changedCount = diffResults.filter(r => r.status === 'price_changed').length;
       const matchedCount = diffResults.filter(r => r.status === 'matched').length;

@@ -29,6 +29,9 @@ interface ScrapingConfig {
   catalog_strategy?: string;
 }
 
+// Brands with built-in support — auto-config will be created on scan
+const KNOWN_BRAND_SLUGS = ['sunlu', 'anycubic'];
+
 interface Props {
   onScanStart: (brandId: string, configId: string, brandName: string, brandSlug: string) => void;
   isScanning: boolean;
@@ -109,9 +112,14 @@ export function BrandSelectorCard({ onScanStart, isScanning }: Props) {
   const selectedBrand = useMemo(() => brands?.find(b => b.id === selectedBrandId), [brands, selectedBrandId]);
   const selectedConfig = useMemo(() => configs?.find(c => c.brand_id === selectedBrandId), [configs, selectedBrandId]);
 
+  const isKnownBrand = selectedBrand && KNOWN_BRAND_SLUGS.includes(selectedBrand.brand_slug);
+
   const handleScan = () => {
-    if (!selectedBrand || !selectedConfig) return;
-    onScanStart(selectedBrand.id, selectedConfig.id, selectedBrand.brand_name, selectedBrand.brand_slug);
+    if (!selectedBrand) return;
+    if (!selectedConfig && !isKnownBrand) return;
+    // Pass 'auto' as configId when no DB config exists but brand has built-in support
+    const configId = selectedConfig?.id || 'auto';
+    onScanStart(selectedBrand.id, configId, selectedBrand.brand_name, selectedBrand.brand_slug);
   };
 
   const platformLabel = selectedConfig?.catalog_strategy === 'per-handle-sitemap'
@@ -155,6 +163,8 @@ export function BrandSelectorCard({ onScanStart, isScanning }: Props) {
                       <CommandGroup>
                         {brands?.map(brand => {
                           const hasConfig = configs?.some(c => c.brand_id === brand.id);
+                          const isKnown = KNOWN_BRAND_SLUGS.includes(brand.brand_slug);
+                          const canScan = hasConfig || isKnown;
                           return (
                             <CommandItem
                               key={brand.id}
@@ -163,7 +173,7 @@ export function BrandSelectorCard({ onScanStart, isScanning }: Props) {
                                 setSelectedBrandId(brand.id);
                                 setOpen(false);
                               }}
-                              disabled={!hasConfig}
+                              disabled={!canScan}
                             >
                               <Check
                                 className={cn(
@@ -179,7 +189,7 @@ export function BrandSelectorCard({ onScanStart, isScanning }: Props) {
                                 <Badge variant="secondary" className="text-[10px] ml-auto">
                                   {brand.platform_type}
                                 </Badge>
-                                {!hasConfig && (
+                                {!canScan && (
                                   <span className="text-xs text-muted-foreground ml-1">(no config)</span>
                                 )}
                               </div>
@@ -241,7 +251,7 @@ export function BrandSelectorCard({ onScanStart, isScanning }: Props) {
                   <TooltipTrigger asChild>
                     <Button
                       onClick={handleScan}
-                      disabled={isScanning || !selectedConfig}
+                      disabled={isScanning || (!selectedConfig && !isKnownBrand)}
                       className="gap-2"
                     >
                       <RefreshCw className={cn('w-4 h-4', isScanning && 'animate-spin')} />

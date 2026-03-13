@@ -24,6 +24,7 @@ export interface ScrapingConfig {
   base_url: string;
   scrape_method: string;
   adapter_key: string;
+  catalog_strategy?: string;
   regional_url_pattern: Record<string, string> | null;
   variant_mapping: Record<string, any>;
   spec_extraction: Record<string, string> | null;
@@ -339,7 +340,10 @@ export function classifyProduct(product: any): ClassifyResult {
   const rawTitle = product.title || "";
   const title = rawTitle.toLowerCase();
   const productType = (product.product_type || "").toLowerCase();
-  const tags = (product.tags || []).map((t: string) => t.toLowerCase());
+  // tags can be an array (Shopify /products.json) or comma-separated string (/products/{handle}.json)
+  const rawTags = product.tags || [];
+  const tagsArray = typeof rawTags === 'string' ? rawTags.split(',').map((s: string) => s.trim()) : rawTags;
+  const tags = tagsArray.map((t: string) => t.toLowerCase());
   const optionNames = (product.options || []).map((o: any) => (o.name || "").toLowerCase());
 
   if (/^\[.+only\]/i.test(rawTitle)) return { isFilament: false, reason: "regional_clearance" };
@@ -536,32 +540,70 @@ export interface DiffResult {
 }
 
 export async function diffAgainstDatabase(
-  supabase: any, filaments: ExtractedFilament[], brandId: string
+  supabase: any, filaments: ExtractedFilament[], brandId: string, brandName?: string
 ): Promise<DiffResult[]> {
   const results: DiffResult[] = [];
 
-  const { data: existingFilaments } = await supabase
+  const selectFields = "id, variant_sku, material, display_name, product_title, color_family, product_handle, variant_price, price_eur, price_gbp, price_cad, price_aud";
+
+  // Primary: match by brand_id (automated_brands FK)
+  const { data: existingById } = await supabase
     .from("filaments")
-    .select("id, variant_sku, material, display_name, product_title, variant_price, price_eur, price_gbp, price_cad, price_aud")
+    .select(selectFields)
     .eq("brand_id", brandId).limit(1000);
 
-  const existing = existingFilaments || [];
+  let existing = existingById || [];
+
+  // Fallback: if no matches by brand_id, try matching by vendor name
+  // (existing filaments may have been imported with a different brand_id)
+  if (existing.length === 0 && brandName) {
+    const { data: existingByVendor } = await supabase
+      .from("filaments")
+      .select(selectFields)
+      .eq("vendor", brandName).limit(1000);
+    existing = existingByVendor || [];
+    if (existing.length > 0) {
+      console.log(`[diff] Found ${existing.length} existing filaments by vendor="${brandName}" (brand_id had 0 matches)`);
+    }
+  }
+
+  // Track which existing IDs have already been matched (avoid N:1 matching)
+  const matchedIds = new Set<string>();
 
   for (const filament of filaments) {
     let match: any = null;
 
+    // Strategy 1: exact variant_sku match
     if (filament.variant_sku) {
-      match = existing.find((e: any) => e.variant_sku && e.variant_sku === filament.variant_sku);
+      match = existing.find((e: any) => e.variant_sku && e.variant_sku === filament.variant_sku && !matchedIds.has(e.id));
     }
+
+    // Strategy 2: material + color in display_name/product_title
     if (!match) {
       const cp = (filament.display_name.split(" - ").pop() || "").toLowerCase();
       if (cp) {
         match = existing.find((e: any) =>
+          !matchedIds.has(e.id) &&
           e.material?.toLowerCase() === filament.material.toLowerCase() &&
           (e.display_name?.toLowerCase().includes(cp) || e.product_title?.toLowerCase().includes(cp))
         );
       }
     }
+
+    // Strategy 3: product_handle + color_family match
+    // (handles cases where existing data has null display_name/variant_sku but has handle+color)
+    if (!match && filament.product_handle) {
+      const colorPart = (filament.display_name.split(" - ").pop() || "").toLowerCase();
+      if (colorPart) {
+        match = existing.find((e: any) =>
+          !matchedIds.has(e.id) &&
+          e.product_handle === filament.product_handle &&
+          e.color_family?.toLowerCase() === colorPart
+        );
+      }
+    }
+
+    if (match) matchedIds.add(match.id);
 
     if (match) {
       const diffs: { field: string; old: number | null; new: number | null }[] = [];
