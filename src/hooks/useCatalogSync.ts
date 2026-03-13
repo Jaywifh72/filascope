@@ -398,6 +398,55 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       size_option: 'option3',
     },
   },
+  'amolen': {
+    brand_name: 'Amolen',
+    platform: 'shopify',
+    base_url: 'https://www.amolen.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'amolen',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://www.amolen.com',
+    },
+    variant_mapping: {
+      // Option order varies: most are "Color | Delivery Option", some are "Delivery Option | Color"
+      // detectOptionPositions() auto-detects from option names (no hardcoded positions needed)
+      region_map: {
+        'U.S. to U.S.': 'US',
+        'China to U.S. & Worldwide': 'US',
+        'EU to EU': 'EU',
+      },
+    },
+  },
+  'atomic-filament': {
+    brand_name: 'Atomic Filament',
+    platform: 'shopify',
+    base_url: 'https://atomicfilament.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'atomic-filament',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://atomicfilament.com',
+    },
+    variant_mapping: {
+      color_from_title: true,
+    },
+  },
+  'azurefilm': {
+    brand_name: 'AzureFilm',
+    platform: 'woocommerce',
+    base_url: 'https://azurefilm.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'azurefilm',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      EU: 'https://azurefilm.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
 };
 
 /**
@@ -576,6 +625,7 @@ export function useCatalogSync() {
           '3d-fuel': '/data/3dfuel-products.json',
           '3dhojor': '/data/3dhojor-products.json',
           '3dxtech': '/data/3dxtech-products.json',
+          'azurefilm': '/data/azurefilm-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 

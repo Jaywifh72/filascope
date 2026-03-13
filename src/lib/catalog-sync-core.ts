@@ -116,7 +116,8 @@ const NON_FILAMENT_KEYWORDS = [
 const MATERIAL_KEYWORDS_ORDERED = [
   "Silk PLA","Matte PLA","PLA Meta","PLA Galaxy","High Speed PLA",
   "PLA Transparent Series","PLA Neon Series","Wood PLA",
-  "PLA+","PLA Plus",
+  "PLA+","PLA Plus","PLA Strongman","PLA Prime","PLA Lumos","PLA Pearl",
+  "Matte HS","PLA Matte HS","PETG Hyper Speed","PET-CF","PAHT-CF","LumberLay",
   // Composite / filled materials (must come before base materials)
   "PEKK-A+CF","PEKK-A","PEEK+CF","PEEK+GF","PEI+GF","PEI 9085+CF","PEI 9085","PEI 1010",
   "PETG+CF","PETG-CF","PETG CF","PLA+CF","PLA-CF","PLA CF",
@@ -128,7 +129,7 @@ const MATERIAL_KEYWORDS_ORDERED = [
   "R-PETG","Tough PLA",
   // Base materials
   "PEEK","PEKK","PPSU","PSU","PPS","PES","PPE","TPI","PVDF","PCTG",
-  "PETG","ABS","TPU","ASA","Nylon","PA","PC","PVA","HIPS",
+  "PETG","ABS","TPU","ASA","PEBA","Nylon","PA","PC","PVA","HIPS",
   "HSPLA","HS-PLA","HS PLA","PLA",
 ];
 
@@ -166,6 +167,21 @@ const MATERIAL_NORMALIZE: Record<string, string> = {
   "pla pro":"PLA+","pla lite":"PLA","pla basic":"PLA","pla high speed":"HSPLA",
   "rapid pla":"HSPLA","crystal rainbow pla":"PLA","silk rainbow pla":"Silk PLA",
   "silk dual/tri color pla":"Silk PLA","silk magic":"Silk PLA",
+  // AzureFilm material normalizations
+  "pla strongman":"PLA+","pla prime":"PLA+","pla lumos":"PLA-Glow","pla pearl":"Silk PLA",
+  "matte hs":"Matte PLA","pla matte hs":"Matte PLA","petg hyper speed":"PETG",
+  "pet-cf":"PET-CF","paht-cf":"PA-CF","lumberlay":"Wood PLA",
+  "lumberlay pine":"Wood PLA","lumberlay bamboo":"Wood PLA","lumberlay cork":"Wood PLA",
+  "lumberlay ebony":"Wood PLA","lumberlay oak":"Wood PLA","lumberlay poplar":"Wood PLA",
+  "abs plus":"ABS","abs prime":"ABS","asa prime":"ASA",
+  "petg original hs":"PETG","pla original":"PLA","petg pastel":"PETG",
+  "pla skin":"PLA","pla pastel":"PLA","pla neon":"PLA","pla glitter":"PLA",
+  // Amolen material normalizations
+  "peba":"PEBA","pla silk":"Silk PLA","pla matte":"Matte PLA",
+  "pla glow":"PLA-Glow","pla marble":"PLA","pla crystal":"PLA",
+  "pla dual color":"PLA","pla silk dual color":"Silk PLA",
+  "silk shiny gradient":"Silk PLA","pla basic-high speed":"HSPLA",
+  "pla basic":"PLA",
 };
 
 const KNOWN_COLOR_WORDS = [
@@ -177,7 +193,7 @@ const KNOWN_COLOR_WORDS = [
   "rose","peach","cream","chocolate","bronze","copper","platinum",
 ];
 
-const REGION_KEYWORDS = ["ship","shipment","country","region","destination","shop from"];
+const REGION_KEYWORDS = ["ship","shipment","country","region","destination","shop from","delivery"];
 const MATERIAL_OPT_KEYWORDS = ["material","type","types","category"];
 const COLOR_OPT_KEYWORDS = ["color","colour"];
 
@@ -193,12 +209,14 @@ export function mapRegionToCode(rv: string | null, rm: Record<string, string>): 
   if (!rv) return null;
   for (const [k, c] of Object.entries(rm)) { if (rv.includes(k)) return c; }
   const l = rv.toLowerCase().trim();
-  if (l.includes("usa") || l.includes("united states")) return "US";
-  if (l.includes("europe") || l.includes("eu")) return "EU";
+  if (l.includes("usa") || l.includes("united states") || l.includes("u.s.")) return "US";
+  if (l.includes("europe") || l.includes("eu to eu")) return "EU";
   if (l.includes("canada") || l === "ca") return "CA";
   if (l.includes("australia") || l === "au") return "AU";
   if (l.includes("uk") || l.includes("united kingdom")) return "UK";
   if (l === "de" || l.includes("germany") || l.includes("deutschland")) return "EU";
+  if (l.includes("china to") || l.includes("worldwide")) return "US";
+  if (/\beu\b/.test(l)) return "EU";
   if (/\bus\b/.test(l)) return "US";
   return null;
 }
@@ -219,7 +237,15 @@ function cleanMaterialAggressive(raw: string): string {
 function parseMaterialFromTitle(title: string): string | null {
   const l = title.toLowerCase();
   for (const kw of MATERIAL_KEYWORDS_ORDERED) {
-    if (l.includes(kw.toLowerCase())) return MATERIAL_NORMALIZE[kw.toLowerCase()] || kw.toUpperCase();
+    const kwLower = kw.toLowerCase();
+    // Short keywords (≤3 chars like PA, PC, PLA) need word-boundary matching
+    // to prevent "PA" matching inside "pack", "PC" inside "specs", etc.
+    if (kwLower.length <= 3) {
+      const re = new RegExp(`\\b${kwLower.replace(/[+]/g, "\\+")}\\b`);
+      if (re.test(l)) return MATERIAL_NORMALIZE[kwLower] || kw.toUpperCase();
+    } else {
+      if (l.includes(kwLower)) return MATERIAL_NORMALIZE[kwLower] || kw.toUpperCase();
+    }
   }
   return null;
 }
@@ -241,6 +267,9 @@ function cleanColorName(raw: string, material: string): string {
   s = s.replace(/\d+(\.\d+)?\s*[kK][gG]/g, "").replace(/\d+[gG]\b/g, "")
     .replace(/\((AU|EU|US|UK|CA)\s*PLUG\)/gi, "").replace(/\(.*?PLUG.*?\)/gi, "")
     .replace(/\d+\*[A-Z0-9]+/gi, "").replace(/DLZ-\w+/gi, "").replace(/\(.*?\)/g, "")
+    .replace(/\bRefill\b/gi, "").replace(/\bfilament\b/gi, "")
+    .replace(/\bHyper\s*Speed\b/gi, "").replace(/\bOriginal\b/gi, "")
+    .replace(/\bHS\b/g, "").replace(/\b1\.75\s*mm\b/gi, "").replace(/\b2\.85\s*mm\b/gi, "")
     .replace(/\s*\+\s*/g, " ").replace(/\s+/g, " ").trim()
     .replace(/^[-–—]+|[-–—]+$/g, "").trim();
   return s.length > 0 ? titleCase(s) : "Default";
@@ -248,6 +277,43 @@ function cleanColorName(raw: string, material: string): string {
 
 function makeDisplayName(material: string, color: string): string {
   return !color || color === "Default" ? material : `${material} - ${color}`;
+}
+
+/** Check if a value looks like size/spec data or a shipping/region label rather than a color name */
+function looksLikeSizeSpec(value: string): boolean {
+  const l = value.toLowerCase().trim();
+  return l === "default title" || l.includes("mm") || l.includes("kg") ||
+    l.includes("ams") || l.includes("lb") || l.includes("sample") ||
+    /^\d/.test(l) || l === "default" ||
+    // Shipping/region values (Amolen "U.S. to U.S.", "China to U.S. & Worldwide", "EU to EU")
+    l.includes("u.s.") || l.includes("china to") || l.includes("worldwide") ||
+    l.includes("eu to") || l.includes("ship to") || l.includes("ship from");
+}
+
+/** Extract color from a product title by stripping material, brand, and common suffixes */
+function parseColorFromTitle(title: string, material: string): string {
+  let s = title;
+  // Strip common suffixes
+  s = s.replace(/\bAMS\s*Compatible\b/gi, "")
+    .replace(/\bFilament\b/gi, "")
+    .replace(/\b1\.75\s*mm\b/gi, "")
+    .replace(/\b2\.85\s*mm\b/gi, "")
+    .replace(/\b\d+\s*[kK][gG]\b/g, "")
+    .replace(/\b\d+\s*[gG]\b/g, "")
+    .replace(/\bPRO\b/gi, "")
+    .replace(/\bv\d+\b/gi, "");
+  // Strip material name (case insensitive)
+  const matVariants = [material, material.toUpperCase(), material.toLowerCase()];
+  for (const mv of matVariants) {
+    s = s.replace(new RegExp(`\\b${mv.replace(/[+]/g, "\\+")}\\b`, "gi"), "");
+  }
+  // Also strip base materials that might appear in title but aren't the detected material
+  for (const baseMat of ["PLA", "PETG", "ABS", "ASA", "TPU", "Nylon", "PC", "PVA", "HIPS", "PEBA"]) {
+    if (baseMat.toUpperCase() !== material.toUpperCase()) continue;
+    // Already handled above
+  }
+  s = s.replace(/\s+/g, " ").trim().replace(/^[-–—\s]+|[-–—\s]+$/g, "").trim();
+  return s.length > 0 ? titleCase(s) : "Default";
 }
 
 function guessColorHex(name: string): string | null {
@@ -391,8 +457,9 @@ export function classifyProduct(product: any): ClassifyResult {
   if (title.includes("clearance")) return { isFilament: false, reason: "clearance" };
   if (title.includes("combo") && (title.includes("mix") || title.includes("sampler")))
     return { isFilament: false, reason: "combo_sampler" };
-  if (title.includes("bundle") && (/\d+g\s*\*\s*\d+/i.test(title) || title.includes("pack")))
+  if (title.includes("bundle") && (/\d+g?\s*[*×x]\s*\d+/i.test(title) || title.includes("pack") || /\d+\s*[×x]\s*\d+/i.test(title)))
     return { isFilament: false, reason: "bundle" };
+  if (/\b12\s*kg\b/i.test(title)) return { isFilament: false, reason: "bulk_pack" };
   if (optionNames.some((n: string) => n === "price" || n === "note"))
     return { isFilament: false, reason: "service_product" };
 
@@ -401,18 +468,28 @@ export function classifyProduct(product: any): ClassifyResult {
     "hotend","hot end","build plate","pei","bed leveling","spool holder",
     "filament holder","filament connector","splicer","warranty","worry-free",
     "wash","cure","lcd","screen","upgrade","accessories","board","protection",
+    "storage kit","storage bag","vacuum bag","misc charge",
   ];
   for (const kw of HARD_EXCLUSIONS) { if (title.includes(kw)) return { isFilament: false, reason: "non_filament" }; }
   if (title.includes("resin") && !title.includes("filament")) return { isFilament: false, reason: "non_filament" };
 
   const hasRelevantOpt = optionNames.some((n: string) =>
     n.includes("color") || n.includes("material") || n.includes("ship") ||
-    n.includes("region") || n.includes("type") || n.includes("variant")
+    n.includes("region") || n.includes("type") || n.includes("variant") ||
+    n.includes("delivery") || n.includes("size")
   );
   const hasFKW = FILAMENT_KEYWORDS.some((fk) => title.includes(fk));
   if (!hasRelevantOpt && !hasFKW) return { isFilament: false, reason: "no_relevant_options" };
-  if (["3d printers","resin","printer","accessories"].includes(productType) && !hasFKW)
+  if (["3d printers","resin","printer","accessories","gift card","storage bag","bundlepack"].includes(productType) && !hasFKW)
     return { isFilament: false, reason: "non_filament" };
+  if (title.includes("sample coil") || title.includes("sample pack") ||
+      title.includes("t-shirt") || title.includes("hoodie") || title.includes("gift card"))
+    return { isFilament: false, reason: "non_filament" };
+  if (/\b\d+\s*pack\b/i.test(title) || title.includes("variety pack") || title.includes("greatest hits"))
+    return { isFilament: false, reason: "bundle" };
+  // Multi-spool sets (4KG = 4×1KG, etc.) — exclude only when weight > 2kg AND title contains "pack" or "bundle" or multi-spool indicators
+  if (/\b[4-9]\s*kg\b/i.test(title) && (title.includes("pack") || title.includes("bundle") || title.includes("package") || title.includes("set") || /\d+\s*×\s*\d+/i.test(title)))
+    return { isFilament: false, reason: "bulk_pack" };
   if (hasFKW) return { isFilament: true, reason: "title_keyword" };
   if (optionNames.some((n: string) => n.includes("material") || n.includes("color"))) {
     if (product.variants?.some((v: any) => v.grams > 500)) return { isFilament: true, reason: "option_heuristic" };
@@ -468,11 +545,24 @@ export function extractFilamentsFromProduct(
     return parseMaterialFromTitle(product.title || "") || (config.default_material_type || "PLA").toUpperCase();
   }
 
+  // Should we extract color from product title instead of variant options?
+  const colorFromTitle = !!config.variant_mapping?.color_from_title;
+
   // Group variants by material + color
   const groups: Record<string, any[]> = {};
   for (const v of product.variants) {
     const mat = getMaterial(v);
-    let rawColor = det.colorKey ? (v[det.colorKey] || v.title || "Default") : (v.title || "Default");
+    let rawColor: string;
+    if (colorFromTitle) {
+      // Color is embedded in the product title (e.g., Atomic Filament: "Army Green ASA Filament")
+      rawColor = parseColorFromTitle(product.title || "", mat);
+    } else {
+      rawColor = det.colorKey ? (v[det.colorKey] || v.title || "Default") : (v.title || "Default");
+      // If the color value looks like size specs, fall back to product title
+      if (looksLikeSizeSpec(rawColor)) {
+        rawColor = parseColorFromTitle(product.title || "", mat);
+      }
+    }
     const color = cleanColorName(rawColor, mat);
     const key = `${mat}|${color}`;
     if (!groups[key]) groups[key] = [];
