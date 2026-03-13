@@ -1,0 +1,1300 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "NinjaFlex 85A TPU Midnight Black Filament 1.75mm",
+      "handle": "ninjaflex-85a-midnight-black",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Midnight Black",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-midnight-black",
+          "option1": "Midnight Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Midnight Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 2000,
+      "title": "NinjaFlex 85A TPU Snow White Filament 1.75mm",
+      "handle": "ninjaflex-85a-snow-white",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "Snow White",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-snow-white",
+          "option1": "Snow White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Snow White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 3000,
+      "title": "NinjaFlex 85A TPU Steel Gray Filament 1.75mm",
+      "handle": "ninjaflex-85a-steel-gray",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Steel Gray",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-steel-gray",
+          "option1": "Steel Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Steel Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 4000,
+      "title": "NinjaFlex 85A TPU Fire Red Filament 1.75mm",
+      "handle": "ninjaflex-85a-fire-red",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Fire Red",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-fire-red",
+          "option1": "Fire Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Fire Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 5000,
+      "title": "NinjaFlex 85A TPU Lava Orange Filament 1.75mm",
+      "handle": "ninjaflex-85a-lava-orange",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Lava Orange",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-lava-orange",
+          "option1": "Lava Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Lava Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 6000,
+      "title": "NinjaFlex 85A TPU Sun Yellow Filament 1.75mm",
+      "handle": "ninjaflex-85a-sun-yellow",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Sun Yellow",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-sun-yellow",
+          "option1": "Sun Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sun Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 7000,
+      "title": "NinjaFlex 85A TPU Grass Green Filament 1.75mm",
+      "handle": "ninjaflex-85a-grass-green",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Grass Green",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-grass-green",
+          "option1": "Grass Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grass Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 8000,
+      "title": "NinjaFlex 85A TPU Sapphire Blue Filament 1.75mm",
+      "handle": "ninjaflex-85a-sapphire-blue",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Sapphire Blue",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-sapphire-blue",
+          "option1": "Sapphire Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sapphire Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 9000,
+      "title": "NinjaFlex 85A TPU Flamingo Pink Filament 1.75mm",
+      "handle": "ninjaflex-85a-flamingo-pink",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Flamingo Pink",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-flamingo-pink",
+          "option1": "Flamingo Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Flamingo Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 10000,
+      "title": "NinjaFlex 85A TPU Neon Glow Filament 1.75mm",
+      "handle": "ninjaflex-85a-neon-glow",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Neon Glow",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-neon-glow",
+          "option1": "Neon Glow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neon Glow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 11000,
+      "title": "NinjaFlex 85A TPU Water Translucent Filament 1.75mm",
+      "handle": "ninjaflex-85a-water-translucent",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 85A",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Water Translucent",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-85a-water-translucent",
+          "option1": "Water Translucent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Water Translucent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 12000,
+      "title": "NinjaFlex Edge 83A TPU Midnight Black Filament 1.75mm",
+      "handle": "ninjaflex-edge-83a-midnight-black",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 83A",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Midnight Black",
+          "price": "108.49",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-edge-83a-midnight-black",
+          "option1": "Midnight Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Midnight Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 13000,
+      "title": "NinjaFlex Edge 83A TPU Snow White Filament 1.75mm",
+      "handle": "ninjaflex-edge-83a-snow-white",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 83A",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Snow White",
+          "price": "108.49",
+          "compare_at_price": null,
+          "sku": "NINJATEK-ninjaflex-edge-83a-snow-white",
+          "option1": "Snow White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Snow White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 14000,
+      "title": "Chinchilla 75A TPE Midnight Black Filament 1.75mm",
+      "handle": "chinchilla-75a-midnight-black",
+      "product_type": "TPE",
+      "vendor": "NinjaTek",
+      "tags": "TPE, 75A",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Midnight Black",
+          "price": "118.14",
+          "compare_at_price": null,
+          "sku": "NINJATEK-chinchilla-75a-midnight-black",
+          "option1": "Midnight Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Midnight Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 15000,
+      "title": "Chinchilla 75A TPE Snow White Filament 1.75mm",
+      "handle": "chinchilla-75a-snow-white",
+      "product_type": "TPE",
+      "vendor": "NinjaTek",
+      "tags": "TPE, 75A",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Snow White",
+          "price": "118.14",
+          "compare_at_price": null,
+          "sku": "NINJATEK-chinchilla-75a-snow-white",
+          "option1": "Snow White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Snow White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 16000,
+      "title": "Chinchilla 75A TPE Steel Gray Filament 1.75mm",
+      "handle": "chinchilla-75a-steel-gray",
+      "product_type": "TPE",
+      "vendor": "NinjaTek",
+      "tags": "TPE, 75A",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Steel Gray",
+          "price": "118.14",
+          "compare_at_price": null,
+          "sku": "NINJATEK-chinchilla-75a-steel-gray",
+          "option1": "Steel Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Steel Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 17000,
+      "title": "Chinchilla 75A TPE Sky Blue Filament 1.75mm",
+      "handle": "chinchilla-75a-sky-blue",
+      "product_type": "TPE",
+      "vendor": "NinjaTek",
+      "tags": "TPE, 75A",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "Sky Blue",
+          "price": "118.14",
+          "compare_at_price": null,
+          "sku": "NINJATEK-chinchilla-75a-sky-blue",
+          "option1": "Sky Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sky Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 18000,
+      "title": "Cheetah 95A TPU Midnight Black Filament 1.75mm",
+      "handle": "cheetah-95a-midnight-black",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Midnight Black",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-midnight-black",
+          "option1": "Midnight Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Midnight Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 19000,
+      "title": "Cheetah 95A TPU Snow White Filament 1.75mm",
+      "handle": "cheetah-95a-snow-white",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Snow White",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-snow-white",
+          "option1": "Snow White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Snow White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 20000,
+      "title": "Cheetah 95A TPU Steel Gray Filament 1.75mm",
+      "handle": "cheetah-95a-steel-gray",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Steel Gray",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-steel-gray",
+          "option1": "Steel Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Steel Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 21000,
+      "title": "Cheetah 95A TPU Fire Red Filament 1.75mm",
+      "handle": "cheetah-95a-fire-red",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Fire Red",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-fire-red",
+          "option1": "Fire Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Fire Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 22000,
+      "title": "Cheetah 95A TPU Lava Orange Filament 1.75mm",
+      "handle": "cheetah-95a-lava-orange",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Lava Orange",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-lava-orange",
+          "option1": "Lava Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Lava Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 23000,
+      "title": "Cheetah 95A TPU Sun Yellow Filament 1.75mm",
+      "handle": "cheetah-95a-sun-yellow",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Sun Yellow",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-sun-yellow",
+          "option1": "Sun Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sun Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 24000,
+      "title": "Cheetah 95A TPU Grass Green Filament 1.75mm",
+      "handle": "cheetah-95a-grass-green",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Grass Green",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-grass-green",
+          "option1": "Grass Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grass Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 25000,
+      "title": "Cheetah 95A TPU Sapphire Blue Filament 1.75mm",
+      "handle": "cheetah-95a-sapphire-blue",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Sapphire Blue",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-sapphire-blue",
+          "option1": "Sapphire Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sapphire Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 26000,
+      "title": "Cheetah 95A TPU Flamingo Pink Filament 1.75mm",
+      "handle": "cheetah-95a-flamingo-pink",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Flamingo Pink",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-flamingo-pink",
+          "option1": "Flamingo Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Flamingo Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 27000,
+      "title": "Cheetah 95A TPU Neon Glow Filament 1.75mm",
+      "handle": "cheetah-95a-neon-glow",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Neon Glow",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-neon-glow",
+          "option1": "Neon Glow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neon Glow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 28000,
+      "title": "Cheetah 95A TPU Water Translucent Filament 1.75mm",
+      "handle": "cheetah-95a-water-translucent",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 95A",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Water Translucent",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-cheetah-95a-water-translucent",
+          "option1": "Water Translucent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Water Translucent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 29000,
+      "title": "Eel 90A Conductive TPU Midnight Black Filament 1.75mm",
+      "handle": "eel-90a-midnight-black",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 90A",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "Midnight Black",
+          "price": "174.80",
+          "compare_at_price": null,
+          "sku": "NINJATEK-eel-90a-midnight-black",
+          "option1": "Midnight Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Midnight Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 30000,
+      "title": "Armadillo 75D TPU Midnight Black Filament 1.75mm",
+      "handle": "armadillo-75d-midnight-black",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Midnight Black",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-midnight-black",
+          "option1": "Midnight Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Midnight Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 31000,
+      "title": "Armadillo 75D TPU Snow White Filament 1.75mm",
+      "handle": "armadillo-75d-snow-white",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Snow White",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-snow-white",
+          "option1": "Snow White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Snow White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 32000,
+      "title": "Armadillo 75D TPU Steel Gray Filament 1.75mm",
+      "handle": "armadillo-75d-steel-gray",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Steel Gray",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-steel-gray",
+          "option1": "Steel Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Steel Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 33000,
+      "title": "Armadillo 75D TPU Fire Red Filament 1.75mm",
+      "handle": "armadillo-75d-fire-red",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Fire Red",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-fire-red",
+          "option1": "Fire Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Fire Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 34000,
+      "title": "Armadillo 75D TPU Lava Orange Filament 1.75mm",
+      "handle": "armadillo-75d-lava-orange",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Lava Orange",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-lava-orange",
+          "option1": "Lava Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Lava Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 35000,
+      "title": "Armadillo 75D TPU Sun Yellow Filament 1.75mm",
+      "handle": "armadillo-75d-sun-yellow",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Sun Yellow",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-sun-yellow",
+          "option1": "Sun Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sun Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 36000,
+      "title": "Armadillo 75D TPU Grass Green Filament 1.75mm",
+      "handle": "armadillo-75d-grass-green",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Grass Green",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-grass-green",
+          "option1": "Grass Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grass Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 37000,
+      "title": "Armadillo 75D TPU Sapphire Blue Filament 1.75mm",
+      "handle": "armadillo-75d-sapphire-blue",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "Sapphire Blue",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-sapphire-blue",
+          "option1": "Sapphire Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sapphire Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    },
+    {
+      "id": 38000,
+      "title": "Armadillo 75D TPU Water Translucent Filament 1.75mm",
+      "handle": "armadillo-75d-water-translucent",
+      "product_type": "TPU",
+      "vendor": "NinjaTek",
+      "tags": "TPU, 75D",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Water Translucent",
+          "price": "102.46",
+          "compare_at_price": null,
+          "sku": "NINJATEK-armadillo-75d-water-translucent",
+          "option1": "Water Translucent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Water Translucent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:05:58.408Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T17:05:58.409Z",
+  "source": "ninjatek-catalog-curated",
+  "currency": "USD"
+}

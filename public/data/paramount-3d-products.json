@@ -1,0 +1,3646 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "Paramount 3D PLA White Filament 1.75mm",
+      "handle": "pla-white",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "White",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.813Z"
+    },
+    {
+      "id": 2000,
+      "title": "Paramount 3D PLA Black Filament 1.75mm",
+      "handle": "pla-black",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "Black",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 3000,
+      "title": "Paramount 3D PLA Matte Black Filament 1.75mm",
+      "handle": "pla-matte-black",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Matte Black",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-matte-black",
+          "option1": "Matte Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 4000,
+      "title": "Paramount 3D PLA Prototype Gray Filament 1.75mm",
+      "handle": "pla-prototype-gray",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Prototype Gray",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-prototype-gray",
+          "option1": "Prototype Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prototype Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 5000,
+      "title": "Paramount 3D PLA Stealth Gray Filament 1.75mm",
+      "handle": "pla-stealth-gray",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Stealth Gray",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-stealth-gray",
+          "option1": "Stealth Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Stealth Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 6000,
+      "title": "Paramount 3D PLA Steel Gray Filament 1.75mm",
+      "handle": "pla-steel-gray",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Steel Gray",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-steel-gray",
+          "option1": "Steel Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Steel Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 7000,
+      "title": "Paramount 3D PLA Battleship Gray Filament 1.75mm",
+      "handle": "pla-battleship-gray",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Battleship Gray",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-battleship-gray",
+          "option1": "Battleship Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Battleship Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 8000,
+      "title": "Paramount 3D PLA Castle Limestone Gray Filament 1.75mm",
+      "handle": "pla-castle-limestone-gray",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Castle Limestone Gray",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-castle-limestone-gray",
+          "option1": "Castle Limestone Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Castle Limestone Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 9000,
+      "title": "Paramount 3D PLA Graphite Gray Filament 1.75mm",
+      "handle": "pla-graphite-gray",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Graphite Gray",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-graphite-gray",
+          "option1": "Graphite Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Graphite Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 10000,
+      "title": "Paramount 3D PLA Game Cartridge Gray Filament 1.75mm",
+      "handle": "pla-game-cartridge-gray",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Game Cartridge Gray",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-game-cartridge-gray",
+          "option1": "Game Cartridge Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Game Cartridge Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 11000,
+      "title": "Paramount 3D PLA Enzo Red Filament 1.75mm",
+      "handle": "pla-enzo-red",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Enzo Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-enzo-red",
+          "option1": "Enzo Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Enzo Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 12000,
+      "title": "Paramount 3D PLA Iron Red Filament 1.75mm",
+      "handle": "pla-iron-red",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Iron Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-iron-red",
+          "option1": "Iron Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Iron Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 13000,
+      "title": "Paramount 3D PLA Hannibal Red Filament 1.75mm",
+      "handle": "pla-hannibal-red",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Hannibal Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-hannibal-red",
+          "option1": "Hannibal Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Hannibal Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 14000,
+      "title": "Paramount 3D PLA Harajuku Pink Filament 1.75mm",
+      "handle": "pla-harajuku-pink",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Harajuku Pink",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-harajuku-pink",
+          "option1": "Harajuku Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Harajuku Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 15000,
+      "title": "Paramount 3D PLA Caribbean Coral Filament 1.75mm",
+      "handle": "pla-caribbean-coral",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Caribbean Coral",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-caribbean-coral",
+          "option1": "Caribbean Coral",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Caribbean Coral"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 16000,
+      "title": "Paramount 3D PLA Volcano Orange Filament 1.75mm",
+      "handle": "pla-volcano-orange",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Volcano Orange",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-volcano-orange",
+          "option1": "Volcano Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Volcano Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 17000,
+      "title": "Paramount 3D PLA McLaren Orange Filament 1.75mm",
+      "handle": "pla-mclaren-orange",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "McLaren Orange",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-mclaren-orange",
+          "option1": "McLaren Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "McLaren Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 18000,
+      "title": "Paramount 3D PLA Simpson Yellow Filament 1.75mm",
+      "handle": "pla-simpson-yellow",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Simpson Yellow",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-simpson-yellow",
+          "option1": "Simpson Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Simpson Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 19000,
+      "title": "Paramount 3D PLA Egg Yolk Yellow Filament 1.75mm",
+      "handle": "pla-egg-yolk-yellow",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Egg Yolk Yellow",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-egg-yolk-yellow",
+          "option1": "Egg Yolk Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Egg Yolk Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 20000,
+      "title": "Paramount 3D PLA British Racing Green Filament 1.75mm",
+      "handle": "pla-british-racing-green",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "British Racing Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-british-racing-green",
+          "option1": "British Racing Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "British Racing Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 21000,
+      "title": "Paramount 3D PLA St Andrews Green Filament 1.75mm",
+      "handle": "pla-st-andrews-green",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "St Andrews Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-st-andrews-green",
+          "option1": "St Andrews Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "St Andrews Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 22000,
+      "title": "Paramount 3D PLA Military Green Filament 1.75mm",
+      "handle": "pla-military-green",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Military Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-military-green",
+          "option1": "Military Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 23000,
+      "title": "Paramount 3D PLA Leviathan Green Blue Filament 1.75mm",
+      "handle": "pla-leviathan-green-blue",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Leviathan Green Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-leviathan-green-blue",
+          "option1": "Leviathan Green Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Leviathan Green Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 24000,
+      "title": "Paramount 3D PLA Autobot Blue Filament 1.75mm",
+      "handle": "pla-autobot-blue",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Autobot Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-autobot-blue",
+          "option1": "Autobot Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Autobot Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 25000,
+      "title": "Paramount 3D PLA Cadet Blue Filament 1.75mm",
+      "handle": "pla-cadet-blue",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Cadet Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-cadet-blue",
+          "option1": "Cadet Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Cadet Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 26000,
+      "title": "Paramount 3D PLA Fighter Jet Blue Filament 1.75mm",
+      "handle": "pla-fighter-jet-blue",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Fighter Jet Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-fighter-jet-blue",
+          "option1": "Fighter Jet Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Fighter Jet Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 27000,
+      "title": "Paramount 3D PLA Tuxedo Midnight Blue Filament 1.75mm",
+      "handle": "pla-tuxedo-midnight-blue",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Tuxedo Midnight Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-tuxedo-midnight-blue",
+          "option1": "Tuxedo Midnight Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Tuxedo Midnight Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 28000,
+      "title": "Paramount 3D PLA Mid Century Teal Filament 1.75mm",
+      "handle": "pla-mid-century-teal",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Mid Century Teal",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-mid-century-teal",
+          "option1": "Mid Century Teal",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Mid Century Teal"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 29000,
+      "title": "Paramount 3D PLA Decepticon Purple Filament 1.75mm",
+      "handle": "pla-decepticon-purple",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "Decepticon Purple",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-decepticon-purple",
+          "option1": "Decepticon Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Decepticon Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 30000,
+      "title": "Paramount 3D PLA Black Cherry Filament 1.75mm",
+      "handle": "pla-black-cherry",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Black Cherry",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-black-cherry",
+          "option1": "Black Cherry",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Cherry"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 31000,
+      "title": "Paramount 3D PLA Gold Filament 1.75mm",
+      "handle": "pla-gold",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Gold",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-gold",
+          "option1": "Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 32000,
+      "title": "Paramount 3D PLA Silver Filament 1.75mm",
+      "handle": "pla-silver",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Silver",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-silver",
+          "option1": "Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 33000,
+      "title": "Paramount 3D PLA Universal Beige Filament 1.75mm",
+      "handle": "pla-universal-beige",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Universal Beige",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-universal-beige",
+          "option1": "Universal Beige",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Universal Beige"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 34000,
+      "title": "Paramount 3D PLA Ivory Filament 1.75mm",
+      "handle": "pla-ivory",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Ivory",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-ivory",
+          "option1": "Ivory",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Ivory"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 35000,
+      "title": "Paramount 3D PLA Fair Complexion Filament 1.75mm",
+      "handle": "pla-fair-complexion",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Fair Complexion",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-fair-complexion",
+          "option1": "Fair Complexion",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Fair Complexion"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 36000,
+      "title": "Paramount 3D PLA Dark Complexion Filament 1.75mm",
+      "handle": "pla-dark-complexion",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Dark Complexion",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-dark-complexion",
+          "option1": "Dark Complexion",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Dark Complexion"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 37000,
+      "title": "Paramount 3D PLA Deep Complexion Filament 1.75mm",
+      "handle": "pla-deep-complexion",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "Deep Complexion",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-deep-complexion",
+          "option1": "Deep Complexion",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Deep Complexion"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 38000,
+      "title": "Paramount 3D PLA Terra Cotta Filament 1.75mm",
+      "handle": "pla-terra-cotta",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Terra Cotta",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-terra-cotta",
+          "option1": "Terra Cotta",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Terra Cotta"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 39000,
+      "title": "Paramount 3D PLA Military Khaki Filament 1.75mm",
+      "handle": "pla-military-khaki",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Military Khaki",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-military-khaki",
+          "option1": "Military Khaki",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military Khaki"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 40000,
+      "title": "Paramount 3D PLA Primordial Earth Filament 1.75mm",
+      "handle": "pla-primordial-earth",
+      "product_type": "PLA",
+      "vendor": "Paramount 3D",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "Primordial Earth",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pla-primordial-earth",
+          "option1": "Primordial Earth",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Primordial Earth"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 41000,
+      "title": "Paramount 3D PETG White Filament 1.75mm",
+      "handle": "petg-white",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "White",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 42000,
+      "title": "Paramount 3D PETG Black Filament 1.75mm",
+      "handle": "petg-black",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "Black",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 43000,
+      "title": "Paramount 3D PETG Prototype Gray Filament 1.75mm",
+      "handle": "petg-prototype-gray",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "Prototype Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-prototype-gray",
+          "option1": "Prototype Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prototype Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 44000,
+      "title": "Paramount 3D PETG Stealth Gray Filament 1.75mm",
+      "handle": "petg-stealth-gray",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Stealth Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-stealth-gray",
+          "option1": "Stealth Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Stealth Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 45000,
+      "title": "Paramount 3D PETG Graphite Gray Filament 1.75mm",
+      "handle": "petg-graphite-gray",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "Graphite Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-graphite-gray",
+          "option1": "Graphite Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Graphite Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 46000,
+      "title": "Paramount 3D PETG Iron Red Filament 1.75mm",
+      "handle": "petg-iron-red",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 46001,
+          "title": "Iron Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-iron-red",
+          "option1": "Iron Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Iron Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 47000,
+      "title": "Paramount 3D PETG Hannibal Red Filament 1.75mm",
+      "handle": "petg-hannibal-red",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 47001,
+          "title": "Hannibal Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-hannibal-red",
+          "option1": "Hannibal Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Hannibal Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 48000,
+      "title": "Paramount 3D PETG Enzo Red Filament 1.75mm",
+      "handle": "petg-enzo-red",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 48001,
+          "title": "Enzo Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-enzo-red",
+          "option1": "Enzo Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Enzo Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 49000,
+      "title": "Paramount 3D PETG Harajuku Pink Filament 1.75mm",
+      "handle": "petg-harajuku-pink",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 49001,
+          "title": "Harajuku Pink",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-harajuku-pink",
+          "option1": "Harajuku Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Harajuku Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 50000,
+      "title": "Paramount 3D PETG McLaren Orange Filament 1.75mm",
+      "handle": "petg-mclaren-orange",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 50001,
+          "title": "McLaren Orange",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-mclaren-orange",
+          "option1": "McLaren Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "McLaren Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 51000,
+      "title": "Paramount 3D PETG Military Green Filament 1.75mm",
+      "handle": "petg-military-green",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 51001,
+          "title": "Military Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-military-green",
+          "option1": "Military Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 52000,
+      "title": "Paramount 3D PETG British Racing Green Filament 1.75mm",
+      "handle": "petg-british-racing-green",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 52001,
+          "title": "British Racing Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-british-racing-green",
+          "option1": "British Racing Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "British Racing Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 53000,
+      "title": "Paramount 3D PETG Autobot Blue Filament 1.75mm",
+      "handle": "petg-autobot-blue",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 53001,
+          "title": "Autobot Blue",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-autobot-blue",
+          "option1": "Autobot Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Autobot Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 54000,
+      "title": "Paramount 3D PETG Fighter Jet Blue Filament 1.75mm",
+      "handle": "petg-fighter-jet-blue",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 54001,
+          "title": "Fighter Jet Blue",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-fighter-jet-blue",
+          "option1": "Fighter Jet Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Fighter Jet Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 55000,
+      "title": "Paramount 3D PETG Mid Century Teal Filament 1.75mm",
+      "handle": "petg-mid-century-teal",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 55001,
+          "title": "Mid Century Teal",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-mid-century-teal",
+          "option1": "Mid Century Teal",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Mid Century Teal"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 56000,
+      "title": "Paramount 3D PETG Decepticon Purple Filament 1.75mm",
+      "handle": "petg-decepticon-purple",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 56001,
+          "title": "Decepticon Purple",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-decepticon-purple",
+          "option1": "Decepticon Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Decepticon Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 57000,
+      "title": "Paramount 3D PETG Black Cherry Filament 1.75mm",
+      "handle": "petg-black-cherry",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 57001,
+          "title": "Black Cherry",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-black-cherry",
+          "option1": "Black Cherry",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Cherry"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 58000,
+      "title": "Paramount 3D PETG Universal Beige Filament 1.75mm",
+      "handle": "petg-universal-beige",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 58001,
+          "title": "Universal Beige",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-universal-beige",
+          "option1": "Universal Beige",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Universal Beige"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 59000,
+      "title": "Paramount 3D PETG Military Khaki Filament 1.75mm",
+      "handle": "petg-military-khaki",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 59001,
+          "title": "Military Khaki",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-military-khaki",
+          "option1": "Military Khaki",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military Khaki"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 60000,
+      "title": "Paramount 3D PETG Military MBT Brown Filament 1.75mm",
+      "handle": "petg-military-mbt-brown",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 60001,
+          "title": "Military MBT Brown",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-military-mbt-brown",
+          "option1": "Military MBT Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military MBT Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 61000,
+      "title": "Paramount 3D PETG Primordial Earth Filament 1.75mm",
+      "handle": "petg-primordial-earth",
+      "product_type": "PETG",
+      "vendor": "Paramount 3D",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 61001,
+          "title": "Primordial Earth",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-primordial-earth",
+          "option1": "Primordial Earth",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Primordial Earth"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 62000,
+      "title": "Paramount 3D PETG-CF Steampunk Black Filament 1.75mm",
+      "handle": "petg-cf-steampunk-black",
+      "product_type": "PETG-CF",
+      "vendor": "Paramount 3D",
+      "tags": "PETG-CF",
+      "variants": [
+        {
+          "id": 62001,
+          "title": "Steampunk Black",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-petg-cf-steampunk-black",
+          "option1": "Steampunk Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Steampunk Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 63000,
+      "title": "Paramount 3D ABS White Filament 1.75mm",
+      "handle": "abs-white",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 63001,
+          "title": "White",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 64000,
+      "title": "Paramount 3D ABS Black Filament 1.75mm",
+      "handle": "abs-black",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 64001,
+          "title": "Black",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 65000,
+      "title": "Paramount 3D ABS Clear Filament 1.75mm",
+      "handle": "abs-clear",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 65001,
+          "title": "Clear",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-clear",
+          "option1": "Clear",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Clear"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 66000,
+      "title": "Paramount 3D ABS Prototype Gray Filament 1.75mm",
+      "handle": "abs-prototype-gray",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 66001,
+          "title": "Prototype Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-prototype-gray",
+          "option1": "Prototype Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prototype Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 67000,
+      "title": "Paramount 3D ABS Light Gray Filament 1.75mm",
+      "handle": "abs-light-gray",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 67001,
+          "title": "Light Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-light-gray",
+          "option1": "Light Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Light Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 68000,
+      "title": "Paramount 3D ABS Steel Gray Filament 1.75mm",
+      "handle": "abs-steel-gray",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 68001,
+          "title": "Steel Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-steel-gray",
+          "option1": "Steel Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Steel Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 69000,
+      "title": "Paramount 3D ABS Battleship Gray Filament 1.75mm",
+      "handle": "abs-battleship-gray",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 69001,
+          "title": "Battleship Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-battleship-gray",
+          "option1": "Battleship Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Battleship Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 70000,
+      "title": "Paramount 3D ABS Castle Limestone Gray Filament 1.75mm",
+      "handle": "abs-castle-limestone-gray",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 70001,
+          "title": "Castle Limestone Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-castle-limestone-gray",
+          "option1": "Castle Limestone Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Castle Limestone Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 71000,
+      "title": "Paramount 3D ABS Graphite Gray Filament 1.75mm",
+      "handle": "abs-graphite-gray",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 71001,
+          "title": "Graphite Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-graphite-gray",
+          "option1": "Graphite Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Graphite Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 72000,
+      "title": "Paramount 3D ABS Game Cartridge Gray Filament 1.75mm",
+      "handle": "abs-game-cartridge-gray",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 72001,
+          "title": "Game Cartridge Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-game-cartridge-gray",
+          "option1": "Game Cartridge Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Game Cartridge Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 73000,
+      "title": "Paramount 3D ABS Enzo Red Filament 1.75mm",
+      "handle": "abs-enzo-red",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 73001,
+          "title": "Enzo Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-enzo-red",
+          "option1": "Enzo Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Enzo Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 74000,
+      "title": "Paramount 3D ABS Iron Red Filament 1.75mm",
+      "handle": "abs-iron-red",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 74001,
+          "title": "Iron Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-iron-red",
+          "option1": "Iron Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Iron Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 75000,
+      "title": "Paramount 3D ABS Harajuku Pink Filament 1.75mm",
+      "handle": "abs-harajuku-pink",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 75001,
+          "title": "Harajuku Pink",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-harajuku-pink",
+          "option1": "Harajuku Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Harajuku Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 76000,
+      "title": "Paramount 3D ABS McLaren Orange Filament 1.75mm",
+      "handle": "abs-mclaren-orange",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 76001,
+          "title": "McLaren Orange",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-mclaren-orange",
+          "option1": "McLaren Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "McLaren Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 77000,
+      "title": "Paramount 3D ABS Simpson Yellow Filament 1.75mm",
+      "handle": "abs-simpson-yellow",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 77001,
+          "title": "Simpson Yellow",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-simpson-yellow",
+          "option1": "Simpson Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Simpson Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 78000,
+      "title": "Paramount 3D ABS British Racing Green Filament 1.75mm",
+      "handle": "abs-british-racing-green",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 78001,
+          "title": "British Racing Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-british-racing-green",
+          "option1": "British Racing Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "British Racing Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 79000,
+      "title": "Paramount 3D ABS Military Green Filament 1.75mm",
+      "handle": "abs-military-green",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 79001,
+          "title": "Military Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-military-green",
+          "option1": "Military Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 80000,
+      "title": "Paramount 3D ABS Autobot Blue Filament 1.75mm",
+      "handle": "abs-autobot-blue",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 80001,
+          "title": "Autobot Blue",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-autobot-blue",
+          "option1": "Autobot Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Autobot Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 81000,
+      "title": "Paramount 3D ABS Fighter Jet Blue Filament 1.75mm",
+      "handle": "abs-fighter-jet-blue",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 81001,
+          "title": "Fighter Jet Blue",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-fighter-jet-blue",
+          "option1": "Fighter Jet Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Fighter Jet Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 82000,
+      "title": "Paramount 3D ABS Decepticon Purple Filament 1.75mm",
+      "handle": "abs-decepticon-purple",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 82001,
+          "title": "Decepticon Purple",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-decepticon-purple",
+          "option1": "Decepticon Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Decepticon Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 83000,
+      "title": "Paramount 3D ABS Gold Filament 1.75mm",
+      "handle": "abs-gold",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 83001,
+          "title": "Gold",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-gold",
+          "option1": "Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 84000,
+      "title": "Paramount 3D ABS Gold Krugerrand Filament 1.75mm",
+      "handle": "abs-gold-krugerrand",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 84001,
+          "title": "Gold Krugerrand",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-gold-krugerrand",
+          "option1": "Gold Krugerrand",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold Krugerrand"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 85000,
+      "title": "Paramount 3D ABS Silver Filament 1.75mm",
+      "handle": "abs-silver",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 85001,
+          "title": "Silver",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-silver",
+          "option1": "Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 86000,
+      "title": "Paramount 3D ABS Universal Beige Filament 1.75mm",
+      "handle": "abs-universal-beige",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 86001,
+          "title": "Universal Beige",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-universal-beige",
+          "option1": "Universal Beige",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Universal Beige"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 87000,
+      "title": "Paramount 3D ABS Ivory Filament 1.75mm",
+      "handle": "abs-ivory",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 87001,
+          "title": "Ivory",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-ivory",
+          "option1": "Ivory",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Ivory"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 88000,
+      "title": "Paramount 3D ABS Fair Complexion Filament 1.75mm",
+      "handle": "abs-fair-complexion",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 88001,
+          "title": "Fair Complexion",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-fair-complexion",
+          "option1": "Fair Complexion",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Fair Complexion"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 89000,
+      "title": "Paramount 3D ABS Dark Complexion Filament 1.75mm",
+      "handle": "abs-dark-complexion",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 89001,
+          "title": "Dark Complexion",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-dark-complexion",
+          "option1": "Dark Complexion",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Dark Complexion"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 90000,
+      "title": "Paramount 3D ABS Terra Cotta Filament 1.75mm",
+      "handle": "abs-terra-cotta",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 90001,
+          "title": "Terra Cotta",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-terra-cotta",
+          "option1": "Terra Cotta",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Terra Cotta"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 91000,
+      "title": "Paramount 3D ABS Military Khaki Filament 1.75mm",
+      "handle": "abs-military-khaki",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 91001,
+          "title": "Military Khaki",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-military-khaki",
+          "option1": "Military Khaki",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military Khaki"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 92000,
+      "title": "Paramount 3D ABS Military MBT Brown Filament 1.75mm",
+      "handle": "abs-military-mbt-brown",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 92001,
+          "title": "Military MBT Brown",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-military-mbt-brown",
+          "option1": "Military MBT Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military MBT Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 93000,
+      "title": "Paramount 3D ABS Primordial Earth Filament 1.75mm",
+      "handle": "abs-primordial-earth",
+      "product_type": "ABS",
+      "vendor": "Paramount 3D",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 93001,
+          "title": "Primordial Earth",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-primordial-earth",
+          "option1": "Primordial Earth",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Primordial Earth"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 94000,
+      "title": "Paramount 3D ABS-CF Black Filament 1.75mm",
+      "handle": "abs-cf-black",
+      "product_type": "ABS-CF",
+      "vendor": "Paramount 3D",
+      "tags": "ABS-CF",
+      "variants": [
+        {
+          "id": 94001,
+          "title": "Black",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-abs-cf-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 95000,
+      "title": "Paramount 3D FlexPLA Black Filament 1.75mm",
+      "handle": "flexpla-black",
+      "product_type": "FlexPLA",
+      "vendor": "Paramount 3D",
+      "tags": "FlexPLA",
+      "variants": [
+        {
+          "id": 95001,
+          "title": "Black",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-flexpla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 96000,
+      "title": "Paramount 3D FlexPLA Graphite Gray Filament 1.75mm",
+      "handle": "flexpla-graphite-gray",
+      "product_type": "FlexPLA",
+      "vendor": "Paramount 3D",
+      "tags": "FlexPLA",
+      "variants": [
+        {
+          "id": 96001,
+          "title": "Graphite Gray",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-flexpla-graphite-gray",
+          "option1": "Graphite Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Graphite Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 97000,
+      "title": "Paramount 3D FlexPLA Iron Red Filament 1.75mm",
+      "handle": "flexpla-iron-red",
+      "product_type": "FlexPLA",
+      "vendor": "Paramount 3D",
+      "tags": "FlexPLA",
+      "variants": [
+        {
+          "id": 97001,
+          "title": "Iron Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-flexpla-iron-red",
+          "option1": "Iron Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Iron Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 98000,
+      "title": "Paramount 3D FlexPLA Military Green Filament 1.75mm",
+      "handle": "flexpla-military-green",
+      "product_type": "FlexPLA",
+      "vendor": "Paramount 3D",
+      "tags": "FlexPLA",
+      "variants": [
+        {
+          "id": 98001,
+          "title": "Military Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-flexpla-military-green",
+          "option1": "Military Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 99000,
+      "title": "Paramount 3D FlexPLA Military Khaki Filament 1.75mm",
+      "handle": "flexpla-military-khaki",
+      "product_type": "FlexPLA",
+      "vendor": "Paramount 3D",
+      "tags": "FlexPLA",
+      "variants": [
+        {
+          "id": 99001,
+          "title": "Military Khaki",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-flexpla-military-khaki",
+          "option1": "Military Khaki",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Military Khaki"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 100000,
+      "title": "Paramount 3D ASA Black Filament 1.75mm",
+      "handle": "asa-black",
+      "product_type": "ASA",
+      "vendor": "Paramount 3D",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 100001,
+          "title": "Black",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-asa-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 101000,
+      "title": "Paramount 3D ASA White Filament 1.75mm",
+      "handle": "asa-white",
+      "product_type": "ASA",
+      "vendor": "Paramount 3D",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 101001,
+          "title": "White",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-asa-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 102000,
+      "title": "Paramount 3D ASA Prototype Gray Filament 1.75mm",
+      "handle": "asa-prototype-gray",
+      "product_type": "ASA",
+      "vendor": "Paramount 3D",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 102001,
+          "title": "Prototype Gray",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-asa-prototype-gray",
+          "option1": "Prototype Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prototype Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 103000,
+      "title": "Paramount 3D ASA Primordial Earth Filament 1.75mm",
+      "handle": "asa-primordial-earth",
+      "product_type": "ASA",
+      "vendor": "Paramount 3D",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 103001,
+          "title": "Primordial Earth",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-asa-primordial-earth",
+          "option1": "Primordial Earth",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Primordial Earth"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 104000,
+      "title": "Paramount 3D TPU Black Filament 1.75mm",
+      "handle": "tpu-black",
+      "product_type": "TPU",
+      "vendor": "Paramount 3D",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 104001,
+          "title": "Black",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-tpu-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 105000,
+      "title": "Paramount 3D TPU White Filament 1.75mm",
+      "handle": "tpu-white",
+      "product_type": "TPU",
+      "vendor": "Paramount 3D",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 105001,
+          "title": "White",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-tpu-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 106000,
+      "title": "Paramount 3D Nylon Natural Filament 1.75mm",
+      "handle": "nylon-natural",
+      "product_type": "Nylon",
+      "vendor": "Paramount 3D",
+      "tags": "Nylon",
+      "variants": [
+        {
+          "id": 106001,
+          "title": "Natural",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-nylon-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    },
+    {
+      "id": 107000,
+      "title": "Paramount 3D PVA Natural Filament 1.75mm",
+      "handle": "pva-natural",
+      "product_type": "PVA",
+      "vendor": "Paramount 3D",
+      "tags": "PVA",
+      "variants": [
+        {
+          "id": 107001,
+          "title": "Natural",
+          "price": "49.99",
+          "compare_at_price": null,
+          "sku": "PARAMOUNT-pva-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:06:22.814Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T17:06:22.815Z",
+  "source": "paramount-3d-catalog-curated",
+  "currency": "USD"
+}

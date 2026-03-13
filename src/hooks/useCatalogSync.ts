@@ -711,6 +711,84 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       source_currency: 'USD',
     },
   },
+  'matter3d': {
+    brand_name: 'Matter3D',
+    platform: 'shopify',
+    base_url: 'https://matter3d.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'matter3d',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://matter3d.com',
+    },
+    variant_mapping: {
+      // Option order varies: some products have Color=option1/Size=option2,
+      // others have Size=option1/Color=option2
+      // detectOptionPositions() auto-detects from option names
+      source_currency: 'USD',
+    },
+  },
+  'ninjatek': {
+    brand_name: 'NinjaTek',
+    platform: 'woocommerce',
+    base_url: 'https://ninjatek.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'ninjatek',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://ninjatek.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'numakers': {
+    brand_name: 'Numakers',
+    platform: 'shopify',
+    base_url: 'https://numakers.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'numakers',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://numakers.com',
+    },
+    variant_mapping: {
+      // Numakers uses Diameter=option1, Weight=option2, Color=option3
+      color_option: 'option3',
+      source_currency: 'USD',
+    },
+  },
+  'overture': {
+    brand_name: 'Overture',
+    platform: 'shopify',
+    base_url: 'https://overture3d.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'overture',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://overture3d.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'paramount-3d': {
+    brand_name: 'Paramount 3D',
+    platform: 'wix',
+    base_url: 'https://www.paramount-3d.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'paramount-3d',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://www.paramount-3d.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
 };
 
 /**
@@ -900,6 +978,8 @@ export function useCatalogSync() {
           'geeetech': '/data/geeetech-products.json',
           'gizmo-dorks': '/data/gizmo-dorks-products.json',
           'ic3d-printers': '/data/ic3d-printers-products.json',
+          'ninjatek': '/data/ninjatek-products.json',
+          'paramount-3d': '/data/paramount-3d-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 
