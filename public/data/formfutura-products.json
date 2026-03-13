@@ -1,0 +1,4190 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "FormFutura EasyFil ePLA Black Filament 1.75mm",
+      "handle": "easyfil-epla-black",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Black",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 2000,
+      "title": "FormFutura EasyFil ePLA White Filament 1.75mm",
+      "handle": "easyfil-epla-white",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "White",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 3000,
+      "title": "FormFutura EasyFil ePLA Red Filament 1.75mm",
+      "handle": "easyfil-epla-red",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Red",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 4000,
+      "title": "FormFutura EasyFil ePLA Blue Filament 1.75mm",
+      "handle": "easyfil-epla-blue",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Blue",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 5000,
+      "title": "FormFutura EasyFil ePLA Green Filament 1.75mm",
+      "handle": "easyfil-epla-green",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Green",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 6000,
+      "title": "FormFutura EasyFil ePLA Yellow Filament 1.75mm",
+      "handle": "easyfil-epla-yellow",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Yellow",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 7000,
+      "title": "FormFutura EasyFil ePLA Orange Filament 1.75mm",
+      "handle": "easyfil-epla-orange",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Orange",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 8000,
+      "title": "FormFutura EasyFil ePLA Grey Filament 1.75mm",
+      "handle": "easyfil-epla-grey",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Grey",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 9000,
+      "title": "FormFutura EasyFil ePLA Natural Filament 1.75mm",
+      "handle": "easyfil-epla-natural",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Natural",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 10000,
+      "title": "FormFutura EasyFil ePLA Purple Filament 1.75mm",
+      "handle": "easyfil-epla-purple",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Purple",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epla-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 11000,
+      "title": "FormFutura EasyFil ePETG Black Filament 1.75mm",
+      "handle": "easyfil-epetg-black",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Black",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 12000,
+      "title": "FormFutura EasyFil ePETG White Filament 1.75mm",
+      "handle": "easyfil-epetg-white",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "White",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 13000,
+      "title": "FormFutura EasyFil ePETG Red Filament 1.75mm",
+      "handle": "easyfil-epetg-red",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Red",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 14000,
+      "title": "FormFutura EasyFil ePETG Blue Filament 1.75mm",
+      "handle": "easyfil-epetg-blue",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Blue",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 15000,
+      "title": "FormFutura EasyFil ePETG Green Filament 1.75mm",
+      "handle": "easyfil-epetg-green",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Green",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 16000,
+      "title": "FormFutura EasyFil ePETG Yellow Filament 1.75mm",
+      "handle": "easyfil-epetg-yellow",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Yellow",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 17000,
+      "title": "FormFutura EasyFil ePETG Orange Filament 1.75mm",
+      "handle": "easyfil-epetg-orange",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "Orange",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 18000,
+      "title": "FormFutura EasyFil ePETG Grey Filament 1.75mm",
+      "handle": "easyfil-epetg-grey",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Grey",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 19000,
+      "title": "FormFutura EasyFil ePETG Clear Filament 1.75mm",
+      "handle": "easyfil-epetg-clear",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Clear",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epetg-clear",
+          "option1": "Clear",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Clear"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 20000,
+      "title": "FormFutura EasyFil eABS Black Filament 1.75mm",
+      "handle": "easyfil-eabs-black",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Black",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-eabs-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 21000,
+      "title": "FormFutura EasyFil eABS White Filament 1.75mm",
+      "handle": "easyfil-eabs-white",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "White",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-eabs-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 22000,
+      "title": "FormFutura EasyFil eABS Red Filament 1.75mm",
+      "handle": "easyfil-eabs-red",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Red",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-eabs-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 23000,
+      "title": "FormFutura EasyFil eABS Blue Filament 1.75mm",
+      "handle": "easyfil-eabs-blue",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Blue",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-eabs-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 24000,
+      "title": "FormFutura EasyFil eABS Green Filament 1.75mm",
+      "handle": "easyfil-eabs-green",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Green",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-eabs-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 25000,
+      "title": "FormFutura EasyFil eABS Yellow Filament 1.75mm",
+      "handle": "easyfil-eabs-yellow",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Yellow",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-eabs-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 26000,
+      "title": "FormFutura EasyFil eABS Orange Filament 1.75mm",
+      "handle": "easyfil-eabs-orange",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Orange",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-eabs-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 27000,
+      "title": "FormFutura EasyFil eABS Grey Filament 1.75mm",
+      "handle": "easyfil-eabs-grey",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Grey",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-eabs-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 28000,
+      "title": "FormFutura EasyFil eASA Black Filament 1.75mm",
+      "handle": "easyfil-easa-black",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Black",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-easa-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 29000,
+      "title": "FormFutura EasyFil eASA White Filament 1.75mm",
+      "handle": "easyfil-easa-white",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "White",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-easa-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 30000,
+      "title": "FormFutura EasyFil eASA Red Filament 1.75mm",
+      "handle": "easyfil-easa-red",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Red",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-easa-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 31000,
+      "title": "FormFutura EasyFil eASA Blue Filament 1.75mm",
+      "handle": "easyfil-easa-blue",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Blue",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-easa-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 32000,
+      "title": "FormFutura EasyFil eASA Grey Filament 1.75mm",
+      "handle": "easyfil-easa-grey",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Grey",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-easa-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 33000,
+      "title": "FormFutura EasyFil eASA Natural Filament 1.75mm",
+      "handle": "easyfil-easa-natural",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Natural",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-easa-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 34000,
+      "title": "FormFutura EasyFil eASA Orange Filament 1.75mm",
+      "handle": "easyfil-easa-orange",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Orange",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-easa-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 35000,
+      "title": "FormFutura EasyFil ePP Natural Filament 1.75mm",
+      "handle": "easyfil-epp-natural",
+      "product_type": "PP",
+      "vendor": "FormFutura",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Natural",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epp-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 36000,
+      "title": "FormFutura EasyFil ePP Black Filament 1.75mm",
+      "handle": "easyfil-epp-black",
+      "product_type": "PP",
+      "vendor": "FormFutura",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Black",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epp-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 37000,
+      "title": "FormFutura EasyFil ePP White Filament 1.75mm",
+      "handle": "easyfil-epp-white",
+      "product_type": "PP",
+      "vendor": "FormFutura",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "White",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epp-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 38000,
+      "title": "FormFutura EasyFil ePC Natural Filament 1.75mm",
+      "handle": "easyfil-epc-natural",
+      "product_type": "PC",
+      "vendor": "FormFutura",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Natural",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epc-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 39000,
+      "title": "FormFutura EasyFil ePC Black Filament 1.75mm",
+      "handle": "easyfil-epc-black",
+      "product_type": "PC",
+      "vendor": "FormFutura",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Black",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epc-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 40000,
+      "title": "FormFutura EasyFil ePC White Filament 1.75mm",
+      "handle": "easyfil-epc-white",
+      "product_type": "PC",
+      "vendor": "FormFutura",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "White",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-easyfil-epc-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 41000,
+      "title": "FormFutura FlexiFil Black Filament 1.75mm",
+      "handle": "flexifil-black",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "Black",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-flexifil-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.262Z"
+    },
+    {
+      "id": 42000,
+      "title": "FormFutura FlexiFil White Filament 1.75mm",
+      "handle": "flexifil-white",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "White",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-flexifil-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 43000,
+      "title": "FormFutura FlexiFil Red Filament 1.75mm",
+      "handle": "flexifil-red",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "Red",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-flexifil-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 44000,
+      "title": "FormFutura FlexiFil Blue Filament 1.75mm",
+      "handle": "flexifil-blue",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Blue",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-flexifil-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 45000,
+      "title": "FormFutura FlexiFil Green Filament 1.75mm",
+      "handle": "flexifil-green",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "Green",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-flexifil-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 46000,
+      "title": "FormFutura FlexiFil Natural Filament 1.75mm",
+      "handle": "flexifil-natural",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 46001,
+          "title": "Natural",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-flexifil-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 47000,
+      "title": "FormFutura CarbonFil Black Filament 1.75mm",
+      "handle": "carbonfil-black",
+      "product_type": "PLA-CF",
+      "vendor": "FormFutura",
+      "tags": "PLA-CF",
+      "variants": [
+        {
+          "id": 47001,
+          "title": "Black",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-carbonfil-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 48000,
+      "title": "FormFutura MetalFil Classic Copper Classic Copper Filament 1.75mm",
+      "handle": "metalfil-classic-copper-classic-copper",
+      "product_type": "Metal PLA",
+      "vendor": "FormFutura",
+      "tags": "Metal PLA",
+      "variants": [
+        {
+          "id": 48001,
+          "title": "Classic Copper",
+          "price": "44.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-metalfil-classic-copper-classic-copper",
+          "option1": "Classic Copper",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Classic Copper"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 49000,
+      "title": "FormFutura MetalFil Bronze Ancient Bronze Filament 1.75mm",
+      "handle": "metalfil-bronze-ancient-bronze",
+      "product_type": "Metal PLA",
+      "vendor": "FormFutura",
+      "tags": "Metal PLA",
+      "variants": [
+        {
+          "id": 49001,
+          "title": "Ancient Bronze",
+          "price": "44.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-metalfil-bronze-ancient-bronze",
+          "option1": "Ancient Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Ancient Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 50000,
+      "title": "FormFutura StoneFil Pottery Clay Filament 1.75mm",
+      "handle": "stonefil-pottery-clay",
+      "product_type": "Stone PLA",
+      "vendor": "FormFutura",
+      "tags": "Stone PLA",
+      "variants": [
+        {
+          "id": 50001,
+          "title": "Pottery Clay",
+          "price": "44.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-stonefil-pottery-clay",
+          "option1": "Pottery Clay",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pottery Clay"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 51000,
+      "title": "FormFutura StoneFil Granite Filament 1.75mm",
+      "handle": "stonefil-granite",
+      "product_type": "Stone PLA",
+      "vendor": "FormFutura",
+      "tags": "Stone PLA",
+      "variants": [
+        {
+          "id": 51001,
+          "title": "Granite",
+          "price": "44.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-stonefil-granite",
+          "option1": "Granite",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Granite"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 52000,
+      "title": "FormFutura StoneFil Terracotta Filament 1.75mm",
+      "handle": "stonefil-terracotta",
+      "product_type": "Stone PLA",
+      "vendor": "FormFutura",
+      "tags": "Stone PLA",
+      "variants": [
+        {
+          "id": 52001,
+          "title": "Terracotta",
+          "price": "44.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-stonefil-terracotta",
+          "option1": "Terracotta",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Terracotta"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 53000,
+      "title": "FormFutura StoneFil Concrete Grey Filament 1.75mm",
+      "handle": "stonefil-concrete-grey",
+      "product_type": "Stone PLA",
+      "vendor": "FormFutura",
+      "tags": "Stone PLA",
+      "variants": [
+        {
+          "id": 53001,
+          "title": "Concrete Grey",
+          "price": "44.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-stonefil-concrete-grey",
+          "option1": "Concrete Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Concrete Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 54000,
+      "title": "FormFutura TitanX Black Filament 1.75mm",
+      "handle": "titanx-black",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 54001,
+          "title": "Black",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-titanx-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 55000,
+      "title": "FormFutura TitanX White Filament 1.75mm",
+      "handle": "titanx-white",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 55001,
+          "title": "White",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-titanx-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 56000,
+      "title": "FormFutura TitanX Red Filament 1.75mm",
+      "handle": "titanx-red",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 56001,
+          "title": "Red",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-titanx-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 57000,
+      "title": "FormFutura TitanX Blue Filament 1.75mm",
+      "handle": "titanx-blue",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 57001,
+          "title": "Blue",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-titanx-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 58000,
+      "title": "FormFutura TitanX Green Filament 1.75mm",
+      "handle": "titanx-green",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 58001,
+          "title": "Green",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-titanx-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 59000,
+      "title": "FormFutura TitanX Yellow Filament 1.75mm",
+      "handle": "titanx-yellow",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 59001,
+          "title": "Yellow",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-titanx-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 60000,
+      "title": "FormFutura TitanX Orange Filament 1.75mm",
+      "handle": "titanx-orange",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 60001,
+          "title": "Orange",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-titanx-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 61000,
+      "title": "FormFutura TitanX Grey Filament 1.75mm",
+      "handle": "titanx-grey",
+      "product_type": "ABS",
+      "vendor": "FormFutura",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 61001,
+          "title": "Grey",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-titanx-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 62000,
+      "title": "FormFutura ApolloX Black Filament 1.75mm",
+      "handle": "apollox-black",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 62001,
+          "title": "Black",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-apollox-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 63000,
+      "title": "FormFutura ApolloX White Filament 1.75mm",
+      "handle": "apollox-white",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 63001,
+          "title": "White",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-apollox-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 64000,
+      "title": "FormFutura ApolloX Red Filament 1.75mm",
+      "handle": "apollox-red",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 64001,
+          "title": "Red",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-apollox-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 65000,
+      "title": "FormFutura ApolloX Blue Filament 1.75mm",
+      "handle": "apollox-blue",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 65001,
+          "title": "Blue",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-apollox-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 66000,
+      "title": "FormFutura ApolloX Grey Filament 1.75mm",
+      "handle": "apollox-grey",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 66001,
+          "title": "Grey",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-apollox-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 67000,
+      "title": "FormFutura ApolloX Natural Filament 1.75mm",
+      "handle": "apollox-natural",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 67001,
+          "title": "Natural",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-apollox-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 68000,
+      "title": "FormFutura ApolloX Yellow Filament 1.75mm",
+      "handle": "apollox-yellow",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 68001,
+          "title": "Yellow",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-apollox-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 69000,
+      "title": "FormFutura ApolloX Orange Filament 1.75mm",
+      "handle": "apollox-orange",
+      "product_type": "ASA",
+      "vendor": "FormFutura",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 69001,
+          "title": "Orange",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-apollox-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 70000,
+      "title": "FormFutura Atlas Support Natural Filament 1.75mm",
+      "handle": "atlas-support-natural",
+      "product_type": "PVA",
+      "vendor": "FormFutura",
+      "tags": "PVA",
+      "variants": [
+        {
+          "id": 70001,
+          "title": "Natural",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-atlas-support-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 300
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 71000,
+      "title": "FormFutura Helios Support Natural Filament 1.75mm",
+      "handle": "helios-support-natural",
+      "product_type": "HIPS",
+      "vendor": "FormFutura",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 71001,
+          "title": "Natural",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-helios-support-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 72000,
+      "title": "FormFutura Helios Support Black Filament 1.75mm",
+      "handle": "helios-support-black",
+      "product_type": "HIPS",
+      "vendor": "FormFutura",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 72001,
+          "title": "Black",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-helios-support-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 73000,
+      "title": "FormFutura ReForm rPLA Black Filament 1.75mm",
+      "handle": "reform-rpla-black",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 73001,
+          "title": "Black",
+          "price": "22.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 74000,
+      "title": "FormFutura ReForm rPLA White Filament 1.75mm",
+      "handle": "reform-rpla-white",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 74001,
+          "title": "White",
+          "price": "22.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 75000,
+      "title": "FormFutura ReForm rPLA Grey Filament 1.75mm",
+      "handle": "reform-rpla-grey",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 75001,
+          "title": "Grey",
+          "price": "22.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 76000,
+      "title": "FormFutura ReForm rPLA Red Filament 1.75mm",
+      "handle": "reform-rpla-red",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 76001,
+          "title": "Red",
+          "price": "22.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 77000,
+      "title": "FormFutura ReForm rPLA Blue Filament 1.75mm",
+      "handle": "reform-rpla-blue",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 77001,
+          "title": "Blue",
+          "price": "22.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 78000,
+      "title": "FormFutura ReForm rPLA Green Filament 1.75mm",
+      "handle": "reform-rpla-green",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 78001,
+          "title": "Green",
+          "price": "22.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 79000,
+      "title": "FormFutura ReForm rPLA Off-White Filament 1.75mm",
+      "handle": "reform-rpla-off-white",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 79001,
+          "title": "Off-White",
+          "price": "22.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpla-off-white",
+          "option1": "Off-White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Off-White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 80000,
+      "title": "FormFutura ReForm rPLA Orange Filament 1.75mm",
+      "handle": "reform-rpla-orange",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 80001,
+          "title": "Orange",
+          "price": "22.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 81000,
+      "title": "FormFutura ReForm rPETG Black Filament 1.75mm",
+      "handle": "reform-rpetg-black",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 81001,
+          "title": "Black",
+          "price": "27.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpetg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 82000,
+      "title": "FormFutura ReForm rPETG White Filament 1.75mm",
+      "handle": "reform-rpetg-white",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 82001,
+          "title": "White",
+          "price": "27.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpetg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 83000,
+      "title": "FormFutura ReForm rPETG Grey Filament 1.75mm",
+      "handle": "reform-rpetg-grey",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 83001,
+          "title": "Grey",
+          "price": "27.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpetg-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 84000,
+      "title": "FormFutura ReForm rPETG Red Filament 1.75mm",
+      "handle": "reform-rpetg-red",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 84001,
+          "title": "Red",
+          "price": "27.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpetg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 85000,
+      "title": "FormFutura ReForm rPETG Blue Filament 1.75mm",
+      "handle": "reform-rpetg-blue",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 85001,
+          "title": "Blue",
+          "price": "27.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpetg-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 86000,
+      "title": "FormFutura ReForm rPETG Green Filament 1.75mm",
+      "handle": "reform-rpetg-green",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 86001,
+          "title": "Green",
+          "price": "27.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpetg-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 87000,
+      "title": "FormFutura ReForm rPETG Clear Filament 1.75mm",
+      "handle": "reform-rpetg-clear",
+      "product_type": "PETG",
+      "vendor": "FormFutura",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 87001,
+          "title": "Clear",
+          "price": "27.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-reform-rpetg-clear",
+          "option1": "Clear",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Clear"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 88000,
+      "title": "FormFutura Python Flex Black Filament 1.75mm",
+      "handle": "python-flex-black",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 88001,
+          "title": "Black",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-python-flex-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 89000,
+      "title": "FormFutura Python Flex White Filament 1.75mm",
+      "handle": "python-flex-white",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 89001,
+          "title": "White",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-python-flex-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 90000,
+      "title": "FormFutura Python Flex Red Filament 1.75mm",
+      "handle": "python-flex-red",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 90001,
+          "title": "Red",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-python-flex-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 91000,
+      "title": "FormFutura Python Flex Blue Filament 1.75mm",
+      "handle": "python-flex-blue",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 91001,
+          "title": "Blue",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-python-flex-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 92000,
+      "title": "FormFutura Python Flex Natural Filament 1.75mm",
+      "handle": "python-flex-natural",
+      "product_type": "TPU",
+      "vendor": "FormFutura",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 92001,
+          "title": "Natural",
+          "price": "39.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-python-flex-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 93000,
+      "title": "FormFutura Centaur PP Natural Filament 1.75mm",
+      "handle": "centaur-pp-natural",
+      "product_type": "PP",
+      "vendor": "FormFutura",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 93001,
+          "title": "Natural",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-centaur-pp-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 94000,
+      "title": "FormFutura Centaur PP Black Filament 1.75mm",
+      "handle": "centaur-pp-black",
+      "product_type": "PP",
+      "vendor": "FormFutura",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 94001,
+          "title": "Black",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-centaur-pp-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 95000,
+      "title": "FormFutura Centaur PP White Filament 1.75mm",
+      "handle": "centaur-pp-white",
+      "product_type": "PP",
+      "vendor": "FormFutura",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 95001,
+          "title": "White",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-centaur-pp-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 96000,
+      "title": "FormFutura Volcano PLA Black Filament 1.75mm",
+      "handle": "volcano-pla-black",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 96001,
+          "title": "Black",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-volcano-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 97000,
+      "title": "FormFutura Volcano PLA White Filament 1.75mm",
+      "handle": "volcano-pla-white",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 97001,
+          "title": "White",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-volcano-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 98000,
+      "title": "FormFutura Volcano PLA Red Filament 1.75mm",
+      "handle": "volcano-pla-red",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 98001,
+          "title": "Red",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-volcano-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 99000,
+      "title": "FormFutura Volcano PLA Blue Filament 1.75mm",
+      "handle": "volcano-pla-blue",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 99001,
+          "title": "Blue",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-volcano-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 100000,
+      "title": "FormFutura Volcano PLA Green Filament 1.75mm",
+      "handle": "volcano-pla-green",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 100001,
+          "title": "Green",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-volcano-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 101000,
+      "title": "FormFutura Volcano PLA Yellow Filament 1.75mm",
+      "handle": "volcano-pla-yellow",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 101001,
+          "title": "Yellow",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-volcano-pla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 102000,
+      "title": "FormFutura Volcano PLA Grey Filament 1.75mm",
+      "handle": "volcano-pla-grey",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 102001,
+          "title": "Grey",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-volcano-pla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 103000,
+      "title": "FormFutura Volcano PLA Orange Filament 1.75mm",
+      "handle": "volcano-pla-orange",
+      "product_type": "PLA",
+      "vendor": "FormFutura",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 103001,
+          "title": "Orange",
+          "price": "24.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-volcano-pla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 104000,
+      "title": "FormFutura Galaxy PLA Black Filament 1.75mm",
+      "handle": "galaxy-pla-black",
+      "product_type": "Glitter PLA",
+      "vendor": "FormFutura",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 104001,
+          "title": "Black",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-galaxy-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 105000,
+      "title": "FormFutura Galaxy PLA Blue Filament 1.75mm",
+      "handle": "galaxy-pla-blue",
+      "product_type": "Glitter PLA",
+      "vendor": "FormFutura",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 105001,
+          "title": "Blue",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-galaxy-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 106000,
+      "title": "FormFutura Galaxy PLA Green Filament 1.75mm",
+      "handle": "galaxy-pla-green",
+      "product_type": "Glitter PLA",
+      "vendor": "FormFutura",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 106001,
+          "title": "Green",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-galaxy-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 107000,
+      "title": "FormFutura Galaxy PLA Red Filament 1.75mm",
+      "handle": "galaxy-pla-red",
+      "product_type": "Glitter PLA",
+      "vendor": "FormFutura",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 107001,
+          "title": "Red",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-galaxy-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 108000,
+      "title": "FormFutura Galaxy PLA Purple Filament 1.75mm",
+      "handle": "galaxy-pla-purple",
+      "product_type": "Glitter PLA",
+      "vendor": "FormFutura",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 108001,
+          "title": "Purple",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-galaxy-pla-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 109000,
+      "title": "FormFutura Galaxy PLA Silver Filament 1.75mm",
+      "handle": "galaxy-pla-silver",
+      "product_type": "Glitter PLA",
+      "vendor": "FormFutura",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 109001,
+          "title": "Silver",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-galaxy-pla-silver",
+          "option1": "Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 110000,
+      "title": "FormFutura Silk Gloss PLA Gold Filament 1.75mm",
+      "handle": "silk-gloss-pla-gold",
+      "product_type": "Silk PLA",
+      "vendor": "FormFutura",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 110001,
+          "title": "Gold",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-silk-gloss-pla-gold",
+          "option1": "Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 111000,
+      "title": "FormFutura Silk Gloss PLA Silver Filament 1.75mm",
+      "handle": "silk-gloss-pla-silver",
+      "product_type": "Silk PLA",
+      "vendor": "FormFutura",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 111001,
+          "title": "Silver",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-silk-gloss-pla-silver",
+          "option1": "Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 112000,
+      "title": "FormFutura Silk Gloss PLA Copper Filament 1.75mm",
+      "handle": "silk-gloss-pla-copper",
+      "product_type": "Silk PLA",
+      "vendor": "FormFutura",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 112001,
+          "title": "Copper",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-silk-gloss-pla-copper",
+          "option1": "Copper",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Copper"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 113000,
+      "title": "FormFutura Silk Gloss PLA Bronze Filament 1.75mm",
+      "handle": "silk-gloss-pla-bronze",
+      "product_type": "Silk PLA",
+      "vendor": "FormFutura",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 113001,
+          "title": "Bronze",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-silk-gloss-pla-bronze",
+          "option1": "Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 114000,
+      "title": "FormFutura Silk Gloss PLA Red Filament 1.75mm",
+      "handle": "silk-gloss-pla-red",
+      "product_type": "Silk PLA",
+      "vendor": "FormFutura",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 114001,
+          "title": "Red",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-silk-gloss-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 115000,
+      "title": "FormFutura Silk Gloss PLA Blue Filament 1.75mm",
+      "handle": "silk-gloss-pla-blue",
+      "product_type": "Silk PLA",
+      "vendor": "FormFutura",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 115001,
+          "title": "Blue",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-silk-gloss-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 116000,
+      "title": "FormFutura Silk Gloss PLA Green Filament 1.75mm",
+      "handle": "silk-gloss-pla-green",
+      "product_type": "Silk PLA",
+      "vendor": "FormFutura",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 116001,
+          "title": "Green",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-silk-gloss-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 117000,
+      "title": "FormFutura Silk Gloss PLA White Filament 1.75mm",
+      "handle": "silk-gloss-pla-white",
+      "product_type": "Silk PLA",
+      "vendor": "FormFutura",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 117001,
+          "title": "White",
+          "price": "29.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-silk-gloss-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 118000,
+      "title": "FormFutura PCTG Black Filament 1.75mm",
+      "handle": "pctg-black",
+      "product_type": "PCTG",
+      "vendor": "FormFutura",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 118001,
+          "title": "Black",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-pctg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 119000,
+      "title": "FormFutura PCTG White Filament 1.75mm",
+      "handle": "pctg-white",
+      "product_type": "PCTG",
+      "vendor": "FormFutura",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 119001,
+          "title": "White",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-pctg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 120000,
+      "title": "FormFutura PCTG Clear Filament 1.75mm",
+      "handle": "pctg-clear",
+      "product_type": "PCTG",
+      "vendor": "FormFutura",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 120001,
+          "title": "Clear",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-pctg-clear",
+          "option1": "Clear",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Clear"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 121000,
+      "title": "FormFutura PCTG Grey Filament 1.75mm",
+      "handle": "pctg-grey",
+      "product_type": "PCTG",
+      "vendor": "FormFutura",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 121001,
+          "title": "Grey",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-pctg-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 122000,
+      "title": "FormFutura PCTG Red Filament 1.75mm",
+      "handle": "pctg-red",
+      "product_type": "PCTG",
+      "vendor": "FormFutura",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 122001,
+          "title": "Red",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-pctg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    },
+    {
+      "id": 123000,
+      "title": "FormFutura PCTG Blue Filament 1.75mm",
+      "handle": "pctg-blue",
+      "product_type": "PCTG",
+      "vendor": "FormFutura",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 123001,
+          "title": "Blue",
+          "price": "34.95",
+          "compare_at_price": null,
+          "sku": "FORMFUTURA-pctg-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:13.263Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T14:56:13.263Z",
+  "source": "formfutura-catalog-curated",
+  "currency": "EUR"
+}

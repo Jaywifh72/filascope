@@ -563,6 +563,66 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       source_currency: 'EUR',
     },
   },
+  'fillamentum': {
+    brand_name: 'Fillamentum',
+    platform: 'shopify',
+    base_url: 'https://shop.fillamentum.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'fillamentum',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      EU: 'https://shop.fillamentum.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
+  'flsun': {
+    brand_name: 'FLSUN',
+    platform: 'shopify',
+    base_url: 'https://us.store.flsun3d.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'flsun',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://us.store.flsun3d.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'formfutura': {
+    brand_name: 'FormFutura',
+    platform: 'odoo',
+    base_url: 'https://www.formfutura.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'formfutura',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      EU: 'https://www.formfutura.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
+  'fusion-filaments': {
+    brand_name: 'Fusion Filaments',
+    platform: 'odoo',
+    base_url: 'https://www.fusionfilaments.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'fusion-filaments',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://www.fusionfilaments.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
 };
 
 /**
@@ -747,6 +807,8 @@ export function useCatalogSync() {
           'esun': '/data/esun-products.json',
           'extrudr': '/data/extrudr-products.json',
           'fiberlogy': '/data/fiberlogy-products.json',
+          'formfutura': '/data/formfutura-products.json',
+          'fusion-filaments': '/data/fusion-filaments-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 

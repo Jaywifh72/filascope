@@ -1,0 +1,3374 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "Fusion Filaments PLA Black Filament 1.75mm",
+      "handle": "pla-black",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Black",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 2000,
+      "title": "Fusion Filaments PLA White Filament 1.75mm",
+      "handle": "pla-white",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "White",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 3000,
+      "title": "Fusion Filaments PLA Red Filament 1.75mm",
+      "handle": "pla-red",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Red",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 4000,
+      "title": "Fusion Filaments PLA Blue Filament 1.75mm",
+      "handle": "pla-blue",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Blue",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 5000,
+      "title": "Fusion Filaments PLA Green Filament 1.75mm",
+      "handle": "pla-green",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Green",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 6000,
+      "title": "Fusion Filaments PLA Yellow Filament 1.75mm",
+      "handle": "pla-yellow",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Yellow",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 7000,
+      "title": "Fusion Filaments PLA Orange Filament 1.75mm",
+      "handle": "pla-orange",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Orange",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 8000,
+      "title": "Fusion Filaments PLA Grey Filament 1.75mm",
+      "handle": "pla-grey",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Grey",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 9000,
+      "title": "Fusion Filaments PLA Purple Filament 1.75mm",
+      "handle": "pla-purple",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Purple",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 10000,
+      "title": "Fusion Filaments PLA Pink Filament 1.75mm",
+      "handle": "pla-pink",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Pink",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-pink",
+          "option1": "Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 11000,
+      "title": "Fusion Filaments PLA Brown Filament 1.75mm",
+      "handle": "pla-brown",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Brown",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 12000,
+      "title": "Fusion Filaments PLA Natural Filament 1.75mm",
+      "handle": "pla-natural",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Natural",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 13000,
+      "title": "Fusion Filaments PLA Navy Blue Filament 1.75mm",
+      "handle": "pla-navy-blue",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Navy Blue",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-navy-blue",
+          "option1": "Navy Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Navy Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 14000,
+      "title": "Fusion Filaments PLA Light Blue Filament 1.75mm",
+      "handle": "pla-light-blue",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Light Blue",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-light-blue",
+          "option1": "Light Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Light Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 15000,
+      "title": "Fusion Filaments PLA Lime Green Filament 1.75mm",
+      "handle": "pla-lime-green",
+      "product_type": "PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Lime Green",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pla-lime-green",
+          "option1": "Lime Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Lime Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 16000,
+      "title": "Fusion Filaments HT-PLA Black Filament 1.75mm",
+      "handle": "ht-pla-black",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Black",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 17000,
+      "title": "Fusion Filaments HT-PLA White Filament 1.75mm",
+      "handle": "ht-pla-white",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "White",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 18000,
+      "title": "Fusion Filaments HT-PLA Red Filament 1.75mm",
+      "handle": "ht-pla-red",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Red",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 19000,
+      "title": "Fusion Filaments HT-PLA Blue Filament 1.75mm",
+      "handle": "ht-pla-blue",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Blue",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 20000,
+      "title": "Fusion Filaments HT-PLA Green Filament 1.75mm",
+      "handle": "ht-pla-green",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Green",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 21000,
+      "title": "Fusion Filaments HT-PLA Yellow Filament 1.75mm",
+      "handle": "ht-pla-yellow",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Yellow",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 22000,
+      "title": "Fusion Filaments HT-PLA Orange Filament 1.75mm",
+      "handle": "ht-pla-orange",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Orange",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 23000,
+      "title": "Fusion Filaments HT-PLA Grey Filament 1.75mm",
+      "handle": "ht-pla-grey",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Grey",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 24000,
+      "title": "Fusion Filaments HT-PLA Purple Filament 1.75mm",
+      "handle": "ht-pla-purple",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Purple",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 25000,
+      "title": "Fusion Filaments HT-PLA Pink Filament 1.75mm",
+      "handle": "ht-pla-pink",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Pink",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-pink",
+          "option1": "Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 26000,
+      "title": "Fusion Filaments HT-PLA Brown Filament 1.75mm",
+      "handle": "ht-pla-brown",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Brown",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 27000,
+      "title": "Fusion Filaments HT-PLA Natural Filament 1.75mm",
+      "handle": "ht-pla-natural",
+      "product_type": "HT-PLA",
+      "vendor": "Fusion Filaments",
+      "tags": "HT-PLA",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Natural",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pla-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 28000,
+      "title": "Fusion Filaments HT-PET Black Filament 1.75mm",
+      "handle": "ht-pet-black",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Black",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 29000,
+      "title": "Fusion Filaments HT-PET White Filament 1.75mm",
+      "handle": "ht-pet-white",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "White",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 30000,
+      "title": "Fusion Filaments HT-PET Red Filament 1.75mm",
+      "handle": "ht-pet-red",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 31000,
+      "title": "Fusion Filaments HT-PET Blue Filament 1.75mm",
+      "handle": "ht-pet-blue",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Blue",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 32000,
+      "title": "Fusion Filaments HT-PET Green Filament 1.75mm",
+      "handle": "ht-pet-green",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 33000,
+      "title": "Fusion Filaments HT-PET Yellow Filament 1.75mm",
+      "handle": "ht-pet-yellow",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Yellow",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 34000,
+      "title": "Fusion Filaments HT-PET Orange Filament 1.75mm",
+      "handle": "ht-pet-orange",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Orange",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 35000,
+      "title": "Fusion Filaments HT-PET Grey Filament 1.75mm",
+      "handle": "ht-pet-grey",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Grey",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 36000,
+      "title": "Fusion Filaments HT-PET Purple Filament 1.75mm",
+      "handle": "ht-pet-purple",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Purple",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 37000,
+      "title": "Fusion Filaments HT-PET Clear Filament 1.75mm",
+      "handle": "ht-pet-clear",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "Clear",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-clear",
+          "option1": "Clear",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Clear"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 38000,
+      "title": "Fusion Filaments HT-PET Navy Blue Filament 1.75mm",
+      "handle": "ht-pet-navy-blue",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Navy Blue",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-navy-blue",
+          "option1": "Navy Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Navy Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 39000,
+      "title": "Fusion Filaments HT-PET Brown Filament 1.75mm",
+      "handle": "ht-pet-brown",
+      "product_type": "PETG",
+      "vendor": "Fusion Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Brown",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-ht-pet-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 40000,
+      "title": "Fusion Filaments EasyASA Black Filament 1.75mm",
+      "handle": "easy-asa-black",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "Black",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 41000,
+      "title": "Fusion Filaments EasyASA White Filament 1.75mm",
+      "handle": "easy-asa-white",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "White",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 42000,
+      "title": "Fusion Filaments EasyASA Red Filament 1.75mm",
+      "handle": "easy-asa-red",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 43000,
+      "title": "Fusion Filaments EasyASA Blue Filament 1.75mm",
+      "handle": "easy-asa-blue",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "Blue",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 44000,
+      "title": "Fusion Filaments EasyASA Green Filament 1.75mm",
+      "handle": "easy-asa-green",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 45000,
+      "title": "Fusion Filaments EasyASA Yellow Filament 1.75mm",
+      "handle": "easy-asa-yellow",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "Yellow",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 46000,
+      "title": "Fusion Filaments EasyASA Orange Filament 1.75mm",
+      "handle": "easy-asa-orange",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 46001,
+          "title": "Orange",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 47000,
+      "title": "Fusion Filaments EasyASA Grey Filament 1.75mm",
+      "handle": "easy-asa-grey",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 47001,
+          "title": "Grey",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 48000,
+      "title": "Fusion Filaments EasyASA Purple Filament 1.75mm",
+      "handle": "easy-asa-purple",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 48001,
+          "title": "Purple",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 49000,
+      "title": "Fusion Filaments EasyASA Brown Filament 1.75mm",
+      "handle": "easy-asa-brown",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 49001,
+          "title": "Brown",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-easy-asa-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 50000,
+      "title": "Fusion Filaments Hi-Temp ASA Black Filament 1.75mm",
+      "handle": "hi-temp-asa-black",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 50001,
+          "title": "Black",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-asa-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 51000,
+      "title": "Fusion Filaments Hi-Temp ASA White Filament 1.75mm",
+      "handle": "hi-temp-asa-white",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 51001,
+          "title": "White",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-asa-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 52000,
+      "title": "Fusion Filaments Hi-Temp ASA Red Filament 1.75mm",
+      "handle": "hi-temp-asa-red",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 52001,
+          "title": "Red",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-asa-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 53000,
+      "title": "Fusion Filaments Hi-Temp ASA Blue Filament 1.75mm",
+      "handle": "hi-temp-asa-blue",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 53001,
+          "title": "Blue",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-asa-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 54000,
+      "title": "Fusion Filaments Hi-Temp ASA Green Filament 1.75mm",
+      "handle": "hi-temp-asa-green",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 54001,
+          "title": "Green",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-asa-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 55000,
+      "title": "Fusion Filaments Hi-Temp ASA Yellow Filament 1.75mm",
+      "handle": "hi-temp-asa-yellow",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 55001,
+          "title": "Yellow",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-asa-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 56000,
+      "title": "Fusion Filaments Hi-Temp ASA Orange Filament 1.75mm",
+      "handle": "hi-temp-asa-orange",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 56001,
+          "title": "Orange",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-asa-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 57000,
+      "title": "Fusion Filaments Hi-Temp ASA Grey Filament 1.75mm",
+      "handle": "hi-temp-asa-grey",
+      "product_type": "ASA",
+      "vendor": "Fusion Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 57001,
+          "title": "Grey",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-asa-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 58000,
+      "title": "Fusion Filaments ABS Matte Black Filament 1.75mm",
+      "handle": "abs-matte-black",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 58001,
+          "title": "Black",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 59000,
+      "title": "Fusion Filaments ABS Matte White Filament 1.75mm",
+      "handle": "abs-matte-white",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 59001,
+          "title": "White",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 60000,
+      "title": "Fusion Filaments ABS Matte Red Filament 1.75mm",
+      "handle": "abs-matte-red",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 60001,
+          "title": "Red",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 61000,
+      "title": "Fusion Filaments ABS Matte Blue Filament 1.75mm",
+      "handle": "abs-matte-blue",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 61001,
+          "title": "Blue",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 62000,
+      "title": "Fusion Filaments ABS Matte Green Filament 1.75mm",
+      "handle": "abs-matte-green",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 62001,
+          "title": "Green",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 63000,
+      "title": "Fusion Filaments ABS Matte Yellow Filament 1.75mm",
+      "handle": "abs-matte-yellow",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 63001,
+          "title": "Yellow",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 64000,
+      "title": "Fusion Filaments ABS Matte Orange Filament 1.75mm",
+      "handle": "abs-matte-orange",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 64001,
+          "title": "Orange",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 65000,
+      "title": "Fusion Filaments ABS Matte Grey Filament 1.75mm",
+      "handle": "abs-matte-grey",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 65001,
+          "title": "Grey",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 66000,
+      "title": "Fusion Filaments ABS Matte Purple Filament 1.75mm",
+      "handle": "abs-matte-purple",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 66001,
+          "title": "Purple",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 67000,
+      "title": "Fusion Filaments ABS Matte Pink Filament 1.75mm",
+      "handle": "abs-matte-pink",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 67001,
+          "title": "Pink",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-pink",
+          "option1": "Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 68000,
+      "title": "Fusion Filaments ABS Matte Brown Filament 1.75mm",
+      "handle": "abs-matte-brown",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 68001,
+          "title": "Brown",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 69000,
+      "title": "Fusion Filaments ABS Matte Natural Filament 1.75mm",
+      "handle": "abs-matte-natural",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 69001,
+          "title": "Natural",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-matte-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 70000,
+      "title": "Fusion Filaments ABS Gloss Black Filament 1.75mm",
+      "handle": "abs-gloss-black",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 70001,
+          "title": "Black",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 71000,
+      "title": "Fusion Filaments ABS Gloss White Filament 1.75mm",
+      "handle": "abs-gloss-white",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 71001,
+          "title": "White",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 72000,
+      "title": "Fusion Filaments ABS Gloss Red Filament 1.75mm",
+      "handle": "abs-gloss-red",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 72001,
+          "title": "Red",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 73000,
+      "title": "Fusion Filaments ABS Gloss Blue Filament 1.75mm",
+      "handle": "abs-gloss-blue",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 73001,
+          "title": "Blue",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 74000,
+      "title": "Fusion Filaments ABS Gloss Green Filament 1.75mm",
+      "handle": "abs-gloss-green",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 74001,
+          "title": "Green",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 75000,
+      "title": "Fusion Filaments ABS Gloss Yellow Filament 1.75mm",
+      "handle": "abs-gloss-yellow",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 75001,
+          "title": "Yellow",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 76000,
+      "title": "Fusion Filaments ABS Gloss Orange Filament 1.75mm",
+      "handle": "abs-gloss-orange",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 76001,
+          "title": "Orange",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 77000,
+      "title": "Fusion Filaments ABS Gloss Grey Filament 1.75mm",
+      "handle": "abs-gloss-grey",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 77001,
+          "title": "Grey",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 78000,
+      "title": "Fusion Filaments ABS Gloss Purple Filament 1.75mm",
+      "handle": "abs-gloss-purple",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 78001,
+          "title": "Purple",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 79000,
+      "title": "Fusion Filaments ABS Gloss Pink Filament 1.75mm",
+      "handle": "abs-gloss-pink",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 79001,
+          "title": "Pink",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-pink",
+          "option1": "Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 80000,
+      "title": "Fusion Filaments ABS Gloss Brown Filament 1.75mm",
+      "handle": "abs-gloss-brown",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 80001,
+          "title": "Brown",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 81000,
+      "title": "Fusion Filaments ABS Gloss Natural Filament 1.75mm",
+      "handle": "abs-gloss-natural",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 81001,
+          "title": "Natural",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "FUSION-abs-gloss-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 82000,
+      "title": "Fusion Filaments Hi-Temp Matte ABS Black Filament 1.75mm",
+      "handle": "hi-temp-matte-abs-black",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 82001,
+          "title": "Black",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-matte-abs-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 83000,
+      "title": "Fusion Filaments Hi-Temp Matte ABS White Filament 1.75mm",
+      "handle": "hi-temp-matte-abs-white",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 83001,
+          "title": "White",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-matte-abs-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 84000,
+      "title": "Fusion Filaments Hi-Temp Matte ABS Red Filament 1.75mm",
+      "handle": "hi-temp-matte-abs-red",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 84001,
+          "title": "Red",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-matte-abs-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 85000,
+      "title": "Fusion Filaments Hi-Temp Matte ABS Blue Filament 1.75mm",
+      "handle": "hi-temp-matte-abs-blue",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 85001,
+          "title": "Blue",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-matte-abs-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 86000,
+      "title": "Fusion Filaments Hi-Temp Matte ABS Green Filament 1.75mm",
+      "handle": "hi-temp-matte-abs-green",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 86001,
+          "title": "Green",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-matte-abs-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 87000,
+      "title": "Fusion Filaments Hi-Temp Matte ABS Grey Filament 1.75mm",
+      "handle": "hi-temp-matte-abs-grey",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 87001,
+          "title": "Grey",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-matte-abs-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 88000,
+      "title": "Fusion Filaments Hi-Temp Matte ABS Orange Filament 1.75mm",
+      "handle": "hi-temp-matte-abs-orange",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 88001,
+          "title": "Orange",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-matte-abs-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 89000,
+      "title": "Fusion Filaments Hi-Temp Matte ABS Yellow Filament 1.75mm",
+      "handle": "hi-temp-matte-abs-yellow",
+      "product_type": "ABS",
+      "vendor": "Fusion Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 89001,
+          "title": "Yellow",
+          "price": "32.99",
+          "compare_at_price": null,
+          "sku": "FUSION-hi-temp-matte-abs-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 90000,
+      "title": "Fusion Filaments PCTG Black Filament 1.75mm",
+      "handle": "pctg-black",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 90001,
+          "title": "Black",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 91000,
+      "title": "Fusion Filaments PCTG White Filament 1.75mm",
+      "handle": "pctg-white",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 91001,
+          "title": "White",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 92000,
+      "title": "Fusion Filaments PCTG Red Filament 1.75mm",
+      "handle": "pctg-red",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 92001,
+          "title": "Red",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 93000,
+      "title": "Fusion Filaments PCTG Blue Filament 1.75mm",
+      "handle": "pctg-blue",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 93001,
+          "title": "Blue",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 94000,
+      "title": "Fusion Filaments PCTG Green Filament 1.75mm",
+      "handle": "pctg-green",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 94001,
+          "title": "Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 95000,
+      "title": "Fusion Filaments PCTG Yellow Filament 1.75mm",
+      "handle": "pctg-yellow",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 95001,
+          "title": "Yellow",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 96000,
+      "title": "Fusion Filaments PCTG Orange Filament 1.75mm",
+      "handle": "pctg-orange",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 96001,
+          "title": "Orange",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 97000,
+      "title": "Fusion Filaments PCTG Grey Filament 1.75mm",
+      "handle": "pctg-grey",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 97001,
+          "title": "Grey",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 98000,
+      "title": "Fusion Filaments PCTG Clear Filament 1.75mm",
+      "handle": "pctg-clear",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 98001,
+          "title": "Clear",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-clear",
+          "option1": "Clear",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Clear"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    },
+    {
+      "id": 99000,
+      "title": "Fusion Filaments PCTG Purple Filament 1.75mm",
+      "handle": "pctg-purple",
+      "product_type": "PCTG",
+      "vendor": "Fusion Filaments",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 99001,
+          "title": "Purple",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "FUSION-pctg-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:56:14.561Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T14:56:14.562Z",
+  "source": "fusion-filaments-catalog-curated",
+  "currency": "USD"
+}
