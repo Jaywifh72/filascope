@@ -447,6 +447,63 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       source_currency: 'EUR',
     },
   },
+  'colorfabb': {
+    brand_name: 'colorFabb',
+    platform: 'magento',
+    base_url: 'https://colorfabb.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'colorfabb',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      EU: 'https://colorfabb.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
+  'creality': {
+    brand_name: 'Creality',
+    platform: 'custom',
+    base_url: 'https://store.creality.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'creality',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://store.creality.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+    },
+  },
+  'duramic-3d': {
+    brand_name: 'Duramic 3D',
+    platform: 'shopify',
+    base_url: 'https://duramic3d.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'duramic-3d',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://duramic3d.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+    },
+  },
+  'elegoo': {
+    brand_name: 'Elegoo',
+    platform: 'shopify',
+    base_url: 'https://us.elegoo.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'elegoo',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://us.elegoo.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+    },
+  },
 };
 
 /**
@@ -626,6 +683,8 @@ export function useCatalogSync() {
           '3dhojor': '/data/3dhojor-products.json',
           '3dxtech': '/data/3dxtech-products.json',
           'azurefilm': '/data/azurefilm-products.json',
+          'colorfabb': '/data/colorfabb-products.json',
+          'creality': '/data/creality-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 

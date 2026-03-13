@@ -30,7 +30,7 @@ interface ScrapingConfig {
 }
 
 // Brands with built-in support — auto-config will be created on scan
-const KNOWN_BRAND_SLUGS = ['sunlu', 'anycubic', 'bambu-lab', '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'atomic-filament', 'azurefilm'];
+const KNOWN_BRAND_SLUGS = ['sunlu', 'anycubic', 'bambu-lab', '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'atomic-filament', 'azurefilm', 'colorfabb', 'creality', 'duramic-3d', 'elegoo'];
 
 interface Props {
   onScanStart: (brandId: string, configId: string, brandName: string, brandSlug: string) => void;

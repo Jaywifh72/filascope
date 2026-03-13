@@ -1,0 +1,4353 @@
+{
+  "products": [
+    {
+      "id": 3301100002,
+      "title": "Creality HP ASA 3D Printing Filament",
+      "handle": "creality-hp-asa-3d-printing-filament",
+      "product_type": "ASA",
+      "vendor": "Creality",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 3301100002,
+          "title": "Variant 3301100002",
+          "price": "22.99",
+          "compare_at_price": null,
+          "sku": "3301100002",
+          "option1": "Variant 3301100002",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301100002"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/ASA.png?v=1762200424",
+          "alt": "Creality HP ASA 3D Printing Filament"
+        }
+      ],
+      "body_html": "Exceptional UV Resistance High Temperature Resistance Durable and Impact-resistant Print Speed Up to 200mm/s",
+      "published_at": "2026-03-13T06:52:31.248Z"
+    },
+    {
+      "id": 3301120004,
+      "title": "CR-Silk 1.75mm PLA 3D Printing Filament 1kg",
+      "handle": "cr-silk-1-75mm-pla-3d-printing-filament-1kg",
+      "product_type": "Silk PLA",
+      "vendor": "Creality",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 3301120004,
+          "title": "Variant 3301120004",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120004",
+          "option1": "Variant 3301120004",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120003,
+          "title": "Variant 3301120003",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120003",
+          "option1": "Variant 3301120003",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120002,
+          "title": "Variant 3301120002",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120002",
+          "option1": "Variant 3301120002",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120006,
+          "title": "Variant 3301120006",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120006",
+          "option1": "Variant 3301120006",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120005,
+          "title": "Variant 3301120005",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120005",
+          "option1": "Variant 3301120005",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120001,
+          "title": "Variant 3301120001",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120001",
+          "option1": "Variant 3301120001",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120007,
+          "title": "Variant 3301120007",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120007",
+          "option1": "Variant 3301120007",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120014,
+          "title": "Variant 3301120014",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "3301120014",
+          "option1": "Variant 3301120014",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120013,
+          "title": "Variant 3301120013",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120013",
+          "option1": "Variant 3301120013",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120012,
+          "title": "Variant 3301120012",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "3301120012",
+          "option1": "Variant 3301120012",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120011,
+          "title": "Variant 3301120011",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301120011",
+          "option1": "Variant 3301120011",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301120009,
+          "title": "Variant 3301120009",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "3301120009",
+          "option1": "Variant 3301120009",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301120004",
+            "Variant 3301120003",
+            "Variant 3301120002",
+            "Variant 3301120006",
+            "Variant 3301120005",
+            "Variant 3301120001",
+            "Variant 3301120007",
+            "Variant 3301120014",
+            "Variant 3301120013",
+            "Variant 3301120012",
+            "Variant 3301120011",
+            "Variant 3301120009"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/CR-Silk_1.png?v=1762200446",
+          "alt": "CR-Silk 1.75mm PLA 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "Get high-gloss, silk-textured 3D prints with Creality CR-Silk PLA filament. Smooth feeding, metallic colors, and wide compatibility for stunning visual ...",
+      "published_at": "2026-03-13T06:52:34.334Z"
+    },
+    {
+      "id": 4004090127,
+      "title": "Epoxy Resin Build Plate-235×235mm",
+      "handle": "epoxy-resin-build-plate-235-235mm",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090127,
+          "title": "Variant 4004090127",
+          "price": "14.52",
+          "compare_at_price": null,
+          "sku": "4004090127",
+          "option1": "Variant 4004090127",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090127"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/16.png?v=1762200468",
+          "alt": "Epoxy Resin Build Plate-235×235mm"
+        }
+      ],
+      "body_html": "Excellent Adhesion High Flatness High Strength and Wear Resistance Compatible Models: Ender-3 V3_Ender-3 V3 SE_Ender-3 V3 KE_CR-10 SE_Ender-3 S1_Ender-3...",
+      "published_at": "2026-03-13T06:52:39.728Z"
+    },
+    {
+      "id": 48000,
+      "title": "CR-Laser Falcon Laser Module Replacement Goggles",
+      "handle": "cr-laser-falcon-laser-module-replacement-goggles",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 69192,
+          "title": "Default",
+          "price": null,
+          "sku": "",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.crealityfalcon.com/cdn/shop/files/CR-Laser_Falcon_Laser_Module_Replacement_Goggles_1024x1024.png?v=1762439476",
+          "alt": "CR-Laser Falcon Laser Module Replacement Goggles"
+        }
+      ],
+      "body_html": "CR-Laser Falcon &amp;amp; Laser Module 5W / 10W",
+      "published_at": "2026-03-13T06:52:42.622Z"
+    },
+    {
+      "id": 4004090110,
+      "title": "Spring Steel Platform Plate Kit for Ender-3V3 SE",
+      "handle": "spring-steel-platform-plate-kit",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090110,
+          "title": "Variant 4004090110",
+          "price": "10.11",
+          "compare_at_price": null,
+          "sku": "4004090110",
+          "option1": "Variant 4004090110",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090110"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/24680751ec7c144b45ccd92026ef1960_bb542f5a-59cf-4773-85bd-7c0f4d7517e7.jpg?v=1739959886",
+          "alt": "Spring Steel Platform Plate Kit for Ender-3V3 SE"
+        }
+      ],
+      "body_html": "Upgrade your Ender-3V3 SE with the Spring Steel Platform Plate Kit. Sized 235x235x2.2mm in black. Compatible model: Ender-3V3 SE. ",
+      "published_at": "2026-03-13T06:52:47.854Z"
+    },
+    {
+      "id": 4001050089,
+      "title": "K2 Plus Display Kit",
+      "handle": "display-kit",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001050089,
+          "title": "Variant 4001050089",
+          "price": "37.3",
+          "compare_at_price": null,
+          "sku": "4001050089",
+          "option1": "Variant 4001050089",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4001050089"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/64a81fa8a22c684a7fde8920a6bccb6e.png?v=1762200485",
+          "alt": "K2 Plus Display Kit"
+        }
+      ],
+      "body_html": "",
+      "published_at": "2026-03-13T06:52:50.672Z"
+    },
+    {
+      "id": 35000,
+      "title": "Walnut Plywood Sheets for Laser Engraver and Cutter Pack of 6-10pcs",
+      "handle": "falcon-series-walnut-plywood-sheets",
+      "product_type": "Wood PLA",
+      "vendor": "Creality",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 16800,
+          "title": "Default",
+          "price": null,
+          "sku": "",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.crealityfalcon.com/cdn/shop/files/1_61e6920f-8633-4a52-b129-a5ebf9accda6_1024x1024.jpg?v=1762439478",
+          "alt": "Walnut Plywood Sheets for Laser Engraver and Cutter Pack of 6-10pcs"
+        }
+      ],
+      "body_html": "",
+      "published_at": "2026-03-13T06:52:53.321Z"
+    },
+    {
+      "id": 3301060015,
+      "title": "Hyper Series PLA Carbon Fibre 3D Printing Filament 1kg",
+      "handle": "hyper-pla-cf",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 3301060015,
+          "title": "Variant 3301060015",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301060015",
+          "option1": "Variant 3301060015",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301060019,
+          "title": "Variant 3301060019",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301060019",
+          "option1": "Variant 3301060019",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301060017,
+          "title": "Variant 3301060017",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301060017",
+          "option1": "Variant 3301060017",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301060018,
+          "title": "Variant 3301060018",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301060018",
+          "option1": "Variant 3301060018",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301060016,
+          "title": "Variant 3301060016",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301060016",
+          "option1": "Variant 3301060016",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301060015",
+            "Variant 3301060019",
+            "Variant 3301060017",
+            "Variant 3301060018",
+            "Variant 3301060016"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/Hyper_Series_PLA_Carbon_Fibre_1.png?v=1762200491",
+          "alt": "Hyper Series PLA Carbon Fibre 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "High strength carbon fiber filament with excellent layer adhesion, matte finish, and print speeds up to 300mm/s. Compatible with K1C/K1 Max.",
+      "published_at": "2026-03-13T06:52:56.398Z"
+    },
+    {
+      "id": 4008030067,
+      "title": "Creality Glue Stick For Build Plate",
+      "handle": "creality-glue-stick-for-build-plate",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4008030067,
+          "title": "Variant 4008030067",
+          "price": "8.99",
+          "compare_at_price": null,
+          "sku": "4008030067",
+          "option1": "Variant 4008030067",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4008030067"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/28.png?v=1762200492",
+          "alt": "Creality Glue Stick For Build Plate"
+        }
+      ],
+      "body_html": "Maintained constant adhesion without worrying about models falling off or warping. Capacity: 21g Application: PLA/ABS/PETG/PC/PA/TPU",
+      "published_at": "2026-03-13T06:52:58.387Z"
+    },
+    {
+      "id": 3301040032,
+      "title": "HP-TPU 3D Printer Filament 1.75mm 1kg",
+      "handle": "hp-tpu-fdm-3d-printer-filament-1-75mm-1kg",
+      "product_type": "TPU",
+      "vendor": "Creality",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 3301040032,
+          "title": "Variant 3301040032",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "3301040032",
+          "option1": "Variant 3301040032",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301040031,
+          "title": "Variant 3301040031",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "3301040031",
+          "option1": "Variant 3301040031",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301040032",
+            "Variant 3301040031"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/HP-TPU_2.png?v=1762200498",
+          "alt": "HP-TPU 3D Printer Filament 1.75mm 1kg"
+        }
+      ],
+      "body_html": "Explore a new tactile experience with HP-TPU FDM 3D Printer Filament. High flexibility, no clogging, high speed, and toughness. Consistent filament diam...",
+      "published_at": "2026-03-13T06:53:01.833Z"
+    },
+    {
+      "id": 3301010402,
+      "title": "Hyper PLA RFID 3D Printing Filament 1kg",
+      "handle": "hyper-pla-rfid-3d-printing-filament-1kg",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 3301010402,
+          "title": "Variant 3301010402",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010402",
+          "option1": "Variant 3301010402",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010404,
+          "title": "Variant 3301010404",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010404",
+          "option1": "Variant 3301010404",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010405,
+          "title": "Variant 3301010405",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010405",
+          "option1": "Variant 3301010405",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010406,
+          "title": "Variant 3301010406",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010406",
+          "option1": "Variant 3301010406",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010459,
+          "title": "Variant 3301010459",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010459",
+          "option1": "Variant 3301010459",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010460,
+          "title": "Variant 3301010460",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010460",
+          "option1": "Variant 3301010460",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010461,
+          "title": "Variant 3301010461",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010461",
+          "option1": "Variant 3301010461",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010462,
+          "title": "Variant 3301010462",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010462",
+          "option1": "Variant 3301010462",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010463,
+          "title": "Variant 3301010463",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010463",
+          "option1": "Variant 3301010463",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010464,
+          "title": "Variant 3301010464",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010464",
+          "option1": "Variant 3301010464",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010465,
+          "title": "Variant 3301010465",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010465",
+          "option1": "Variant 3301010465",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010466,
+          "title": "Variant 3301010466",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010466",
+          "option1": "Variant 3301010466",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010467,
+          "title": "Variant 3301010467",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010467",
+          "option1": "Variant 3301010467",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010468,
+          "title": "Variant 3301010468",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010468",
+          "option1": "Variant 3301010468",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010469,
+          "title": "Variant 3301010469",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010469",
+          "option1": "Variant 3301010469",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301010402",
+            "Variant 3301010404",
+            "Variant 3301010405",
+            "Variant 3301010406",
+            "Variant 3301010459",
+            "Variant 3301010460",
+            "Variant 3301010461",
+            "Variant 3301010462",
+            "Variant 3301010463",
+            "Variant 3301010464",
+            "Variant 3301010465",
+            "Variant 3301010466",
+            "Variant 3301010467",
+            "Variant 3301010468",
+            "Variant 3301010469"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/100.png?v=1768974417",
+          "alt": "Hyper PLA RFID 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "Discover Hyper PLA RFID 3D Printing Filament 1kg! Perfect for K2 Plus with RFID detection, high-speed, and precise printing. ",
+      "published_at": "2026-03-13T06:53:04.611Z"
+    },
+    {
+      "id": 3301010400,
+      "title": "4KG Value Pack Hyper PLA 3D Printing Filament",
+      "handle": "4kg-value-pack-hyper-pla-3d-printing-filament",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 3301010400,
+          "title": "Variant 3301010400",
+          "price": "62.99",
+          "compare_at_price": null,
+          "sku": "3301010400",
+          "option1": "Variant 3301010400",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301010400"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/Hyper_Series_PLA_4.png?v=1762200506",
+          "alt": "4KG Value Pack Hyper PLA 3D Printing Filament"
+        }
+      ],
+      "body_html": "10x Faster Printing, Speed Up Your Creativity Keep Precision While Keeping Ultra-high Speed Higher Toughness for Stronger Models Uniform Wire Diameter, ...",
+      "published_at": "2026-03-13T06:53:06.921Z"
+    },
+    {
+      "id": 31000,
+      "title": "Falcon2 Replace Protective Lens",
+      "handle": "falcon2-replace-protective-lens",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3008,
+          "title": "Default",
+          "price": null,
+          "sku": "",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.crealityfalcon.com/cdn/shop/files/1Falcon2ReplaceProtectiveLens_1024x1024.jpg?v=1762439472",
+          "alt": "Falcon2 Replace Protective Lens"
+        }
+      ],
+      "body_html": "Applicable for Creality Falcon2 series",
+      "published_at": "2026-03-13T06:53:08.992Z"
+    },
+    {
+      "id": 3301010426,
+      "title": "Hyper Rainbow PLA 3D Printing Filament 1kg",
+      "handle": "hyper-rainbow-pla-3d-printing-filament-1kg",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3301010426,
+          "title": "Variant 3301010426",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010426",
+          "option1": "Variant 3301010426",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010424,
+          "title": "Variant 3301010424",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010424",
+          "option1": "Variant 3301010424",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010425,
+          "title": "Variant 3301010425",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010425",
+          "option1": "Variant 3301010425",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301010426",
+            "Variant 3301010424",
+            "Variant 3301010425"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/Hyper_Rainbow_PLA_2.png?v=1762200528",
+          "alt": "Hyper Rainbow PLA 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "Featuring a unique appearance with multiple gradient styles, creating a vivid and multidimensional 3D printing effect. Up to 300mm/s printing speeds tha...",
+      "published_at": "2026-03-13T06:53:13.470Z"
+    },
+    {
+      "id": 4004090102,
+      "title": "Double-sided Build Plate Kit 235*235mm",
+      "handle": "double-sided-build-plate-kit-235-235mm",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090102,
+          "title": "Variant 4004090102",
+          "price": "31.99",
+          "compare_at_price": null,
+          "sku": "4004090102",
+          "option1": "Variant 4004090102",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090102"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/f949d67063e3e8d1cb3265e2613e0ce3_6923d793-423a-4839-b5bd-07192441600f.jpg?v=1762200558",
+          "alt": "Double-sided Build Plate Kit 235*235mm"
+        }
+      ],
+      "body_html": "Cost-effective Strong Adhesion Excellent Flatness",
+      "published_at": "2026-03-13T06:53:18.016Z"
+    },
+    {
+      "id": 3301070013,
+      "title": "Hyper PC Filament 1.75mm 1KG",
+      "handle": "hyper-pc-filament-1-75mm-1kg",
+      "product_type": "PC",
+      "vendor": "Creality",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 3301070013,
+          "title": "Variant 3301070013",
+          "price": "22.99",
+          "compare_at_price": null,
+          "sku": "3301070013",
+          "option1": "Variant 3301070013",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301070013"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/PC.png?v=1762200562",
+          "alt": "Hyper PC Filament 1.75mm 1KG"
+        }
+      ],
+      "body_html": "Discover Hyper PC Filament 1.75mm 1KG! Enjoy good impact resistance, high heat tolerance, and a crystal-clear finish. Easy to print with less warping.",
+      "published_at": "2026-03-13T06:53:20.702Z"
+    },
+    {
+      "id": 3301010335,
+      "title": "Hyper Series PLA 3D Printing Filament 1kg",
+      "handle": "hyper-series-pla-3d-printing-filament-1kg",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 3301010335,
+          "title": "Variant 3301010335",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010335",
+          "option1": "Variant 3301010335",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010343,
+          "title": "Variant 3301010343",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010343",
+          "option1": "Variant 3301010343",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010340,
+          "title": "Variant 3301010340",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010340",
+          "option1": "Variant 3301010340",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010342,
+          "title": "Variant 3301010342",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010342",
+          "option1": "Variant 3301010342",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010400,
+          "title": "Variant 3301010400",
+          "price": "62.99",
+          "compare_at_price": null,
+          "sku": "3301010400",
+          "option1": "Variant 3301010400",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010341,
+          "title": "Variant 3301010341",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010341",
+          "option1": "Variant 3301010341",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010380,
+          "title": "Variant 3301010380",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010380",
+          "option1": "Variant 3301010380",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010378,
+          "title": "Variant 3301010378",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010378",
+          "option1": "Variant 3301010378",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010381,
+          "title": "Variant 3301010381",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010381",
+          "option1": "Variant 3301010381",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010382,
+          "title": "Variant 3301010382",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010382",
+          "option1": "Variant 3301010382",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010379,
+          "title": "Variant 3301010379",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010379",
+          "option1": "Variant 3301010379",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010410,
+          "title": "Variant 3301010410",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010410",
+          "option1": "Variant 3301010410",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010414,
+          "title": "Variant 3301010414",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010414",
+          "option1": "Variant 3301010414",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010413,
+          "title": "Variant 3301010413",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010413",
+          "option1": "Variant 3301010413",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010415,
+          "title": "Variant 3301010415",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010415",
+          "option1": "Variant 3301010415",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010412,
+          "title": "Variant 3301010412",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "3301010412",
+          "option1": "Variant 3301010412",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301010335",
+            "Variant 3301010343",
+            "Variant 3301010340",
+            "Variant 3301010342",
+            "Variant 3301010400",
+            "Variant 3301010341",
+            "Variant 3301010380",
+            "Variant 3301010378",
+            "Variant 3301010381",
+            "Variant 3301010382",
+            "Variant 3301010379",
+            "Variant 3301010410",
+            "Variant 3301010414",
+            "Variant 3301010413",
+            "Variant 3301010415",
+            "Variant 3301010412"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/102.png?v=1768970723",
+          "alt": "Hyper Series PLA 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "Print 10x faster with Hyper PLA. High toughness, uniform diameter, and neat winding. Eco-friendly packaging. Perfect for prototyping, figurines, and mac...",
+      "published_at": "2026-03-13T06:53:22.735Z"
+    },
+    {
+      "id": 3301130001,
+      "title": "CR-Wood Printing Filament 1.75mm 1KG",
+      "handle": "cr-wood-printing-filament-1-75mm-1kg",
+      "product_type": "Wood PLA",
+      "vendor": "Creality",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 3301130001,
+          "title": "Variant 3301130001",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "3301130001",
+          "option1": "Variant 3301130001",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301130001"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/wood.png?v=1762200585",
+          "alt": "CR-Wood Printing Filament 1.75mm 1KG"
+        }
+      ],
+      "body_html": "xperience exquisite wood texture with CR-Wood Filament. Stable printing, low shrinkage. Environmentally friendly, warp-free, and clog-free. Neat winding...",
+      "published_at": "2026-03-13T06:53:26.823Z"
+    },
+    {
+      "id": 4004090131,
+      "title": "Dual-Sided Printing PET \"Phantom\" Platform Board（Without soft magnetic sticker ）",
+      "handle": "dual-sided-printing-pet-phantom-platform-board-without-soft-magnetic-sticker",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090131,
+          "title": "Variant 4004090131",
+          "price": "14.52",
+          "compare_at_price": null,
+          "sku": "4004090131",
+          "option1": "Variant 4004090131",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        },
+        {
+          "id": 4004090132,
+          "title": "Variant 4004090132",
+          "price": "14.52",
+          "compare_at_price": null,
+          "sku": "4004090132",
+          "option1": "Variant 4004090132",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090131",
+            "Variant 4004090132"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/fd23907a2652187cf212dcf6f420b61e_fdb07760-8146-463c-bc7e-ac7bfcb3b945.jpg?v=1762200593",
+          "alt": "Dual-Sided Printing PET \"Phantom\" Platform Board（Without soft magnetic sticker ）"
+        }
+      ],
+      "body_html": "Explore the dual-sided PET \"Phantom\" platform board, offering high adhesion, stable molding, and easy demolding. Enjoy quick installation and precise po...",
+      "published_at": "2026-03-13T06:53:29.306Z"
+    },
+    {
+      "id": 50000,
+      "title": "12×12x1/8&#39;&#39; Intelligent Recognition Basswood Plywood Sheets - 10pcs",
+      "handle": "8-8-1-8-laser-module-basswood-plywood-sheets-10pcs",
+      "product_type": "Wood PLA",
+      "vendor": "Creality",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 95011,
+          "title": "Default",
+          "price": null,
+          "sku": "",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.crealityfalcon.com/cdn/shop/files/08153477-2a68-4f03-a27b-c9d9cb3d2abe_1024x1024.jpg?v=1755745049",
+          "alt": "12×12x1/8&#39;&#39; Intelligent Recognition Basswood Plywood Sheets - 10pcs"
+        }
+      ],
+      "body_html": "",
+      "published_at": "2026-03-13T06:53:30.973Z"
+    },
+    {
+      "id": 53000,
+      "title": "Filter Replacement for Smoke Purifier",
+      "handle": "filter-replacement-for-creality-falcon-smoke-purifier",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 76742,
+          "title": "Default",
+          "price": null,
+          "sku": "",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.crealityfalcon.com/cdn/shop/files/smoker_purifier_filter_cartridge_1024x1024.png?v=1762439504",
+          "alt": "Filter Replacement for Smoke Purifier"
+        }
+      ],
+      "body_html": "Back in Stock on Dec. 27th",
+      "published_at": "2026-03-13T06:53:33.918Z"
+    },
+    {
+      "id": 3301010397,
+      "title": "(NEW) Ender Fast 1.75mm PLA 3D Printing Filament",
+      "handle": "ender-fast-1-75mm-pla-3d-printing-filament",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3301010397,
+          "title": "Variant 3301010397",
+          "price": "14.99",
+          "compare_at_price": null,
+          "sku": "3301010397",
+          "option1": "Variant 3301010397",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010398,
+          "title": "Variant 3301010398",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "3301010398",
+          "option1": "Variant 3301010398",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010432,
+          "title": "Variant 3301010432",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "3301010432",
+          "option1": "Variant 3301010432",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301010397",
+            "Variant 3301010398",
+            "Variant 3301010432"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/Ender_Fast_1.png?v=1762200612",
+          "alt": "(NEW) Ender Fast 1.75mm PLA 3D Printing Filament"
+        }
+      ],
+      "body_html": "Excellent Fluidity, Superior Surface Finis 300mm/s, Fast and Stable Coloful Choice to Spark Your Creativity Eco-friendly Paper-wrapped Spools Excellent ...",
+      "published_at": "2026-03-13T06:53:41.956Z"
+    },
+    {
+      "id": 4004090132,
+      "title": "Dual-Sided Printing PET \" Stars” Platform Board（Without soft magnetic sticker ）",
+      "handle": "dual-sided-printing-pet-stars-platform-board-without-soft-magnetic-sticker",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090132,
+          "title": "Variant 4004090132",
+          "price": "14.99",
+          "compare_at_price": null,
+          "sku": "4004090132",
+          "option1": "Variant 4004090132",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        },
+        {
+          "id": 4004090131,
+          "title": "Variant 4004090131",
+          "price": "14.99",
+          "compare_at_price": null,
+          "sku": "4004090131",
+          "option1": "Variant 4004090131",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090132",
+            "Variant 4004090131"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/11598ac9080b5938d5d080b4ac6e02d9_245fd9df-951a-4051-b9be-899c5e394600.jpg?v=1762200620",
+          "alt": "Dual-Sided Printing PET \" Stars” Platform Board（Without soft magnetic sticker ）"
+        }
+      ],
+      "body_html": "Discover the dual-sided PET \"Stars\" platform board, featuring high adhesion, stable molding, and quick installation for precise positioning, enhancing a...",
+      "published_at": "2026-03-13T06:53:45.342Z"
+    },
+    {
+      "id": 4004090128,
+      "title": "Epoxy Resin Build Plate-310*315mm",
+      "handle": "epoxy-resin-build-plate-310-315mm",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090128,
+          "title": "Variant 4004090128",
+          "price": "24.71",
+          "compare_at_price": null,
+          "sku": "4004090128",
+          "option1": "Variant 4004090128",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090128"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/81c14c5a4ae3df76e1b7d41ce58f7946.png?v=1754361122",
+          "alt": "Epoxy Resin Build Plate-310*315mm"
+        }
+      ],
+      "body_html": "Epoxy resin build plate compatible with K1 Max and Ender-3 V3 Plus, features excellent adhesion, high flatness, high strength and wear resistance.",
+      "published_at": "2026-03-13T06:53:48.442Z"
+    },
+    {
+      "id": 4008060271,
+      "title": "Mechanical Planetarium Kit-007",
+      "handle": "mechanical-planetarium-kit-007",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4008060271,
+          "title": "Variant 4008060271",
+          "price": "9.9",
+          "compare_at_price": null,
+          "sku": "4008060271",
+          "option1": "Variant 4008060271",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4008060271"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/689f574af1fb4f495d9cd2765ebdbe3b-Photoroom.png?v=1762200631",
+          "alt": "Mechanical Planetarium Kit-007"
+        }
+      ],
+      "body_html": "Create your own Mechanical Planetarium Kit-007! Includes all non-3D printed parts like TT motor and screws. Ideal for indoor use—keep small parts away f...",
+      "published_at": "2026-03-13T06:53:50.521Z"
+    },
+    {
+      "id": 4007010149,
+      "title": "CR-Laser Falcon Replace Protective Lens",
+      "handle": "cr-laser-falcon-replace-protective-lens",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4007010149,
+          "title": "Variant 4007010149",
+          "price": "59.99",
+          "compare_at_price": null,
+          "sku": "4007010149",
+          "option1": "Variant 4007010149",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4007010149"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/48043b45aad65a2b877dcb3cb13fe15f_2e7d808a-d637-4096-b94d-84bb3376ee98.jpg?v=1762200632",
+          "alt": "CR-Laser Falcon Replace Protective Lens"
+        }
+      ],
+      "body_html": "",
+      "published_at": "2026-03-13T06:53:52.399Z"
+    },
+    {
+      "id": 3301010395,
+      "title": "Ender Fast 1.75mm PLA 3D Printing Filament Pack 2KG",
+      "handle": "ender-fast-1-75mm-pla-3d-printing-filament-pack-2kg",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3301010395,
+          "title": "Variant 3301010395",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "3301010395",
+          "option1": "Variant 3301010395",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010396,
+          "title": "Variant 3301010396",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "3301010396",
+          "option1": "Variant 3301010396",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        },
+        {
+          "id": 3301010399,
+          "title": "Variant 3301010399",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "3301010399",
+          "option1": "Variant 3301010399",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301010395",
+            "Variant 3301010396",
+            "Variant 3301010399"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/Ender_Fast_2_1.png?v=1762200639",
+          "alt": "Ender Fast 1.75mm PLA 3D Printing Filament Pack 2KG"
+        }
+      ],
+      "body_html": "Ender Fast PLA 3D Printing Filament btter filament plan. excellent fluidity.",
+      "published_at": "2026-03-13T06:53:55.606Z"
+    },
+    {
+      "id": 4004090129,
+      "title": "K2 Plus PEI Frosted Build Plate",
+      "handle": "k2-plus-pei-frosted-build-plate",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090129,
+          "title": "Variant 4004090129",
+          "price": "26.25",
+          "compare_at_price": null,
+          "sku": "4004090129",
+          "option1": "Variant 4004090129",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090129"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/63_1.png?v=1762200640",
+          "alt": "K2 Plus PEI Frosted Build Plate"
+        }
+      ],
+      "body_html": "The K2 Plus PEI Frosted Build Plate offers ultra-high adhesion, excellent heat resistance, and easy model removal. Ideal for PLA, ABS, PETG, TPU, PC, PA...",
+      "published_at": "2026-03-13T06:53:58.930Z"
+    },
+    {
+      "id": 3302040027,
+      "title": "ABS-Like Resin 2.0",
+      "handle": "abs-like-resin-2-0",
+      "product_type": "ABS",
+      "vendor": "Creality",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 3302040027,
+          "title": "Variant 3302040027",
+          "price": "10.99",
+          "compare_at_price": null,
+          "sku": "3302040027",
+          "option1": "Variant 3302040027",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3302040026,
+          "title": "Variant 3302040026",
+          "price": "10.99",
+          "compare_at_price": null,
+          "sku": "3302040026",
+          "option1": "Variant 3302040026",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        },
+        {
+          "id": 3302040025,
+          "title": "Variant 3302040025",
+          "price": "10.99",
+          "compare_at_price": null,
+          "sku": "3302040025",
+          "option1": "Variant 3302040025",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        },
+        {
+          "id": 3302040024,
+          "title": "Variant 3302040024",
+          "price": "10.99",
+          "compare_at_price": null,
+          "sku": "3302040024",
+          "option1": "Variant 3302040024",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3302040023,
+          "title": "Variant 3302040023",
+          "price": "10.99",
+          "compare_at_price": null,
+          "sku": "3302040023",
+          "option1": "Variant 3302040023",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3302040027",
+            "Variant 3302040026",
+            "Variant 3302040025",
+            "Variant 3302040024",
+            "Variant 3302040023"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/ABS-Like_Resin_2.0_3.png?v=1739610247",
+          "alt": "ABS-Like Resin 2.0"
+        }
+      ],
+      "body_html": "Discover ABS-Like Resin 2.0, featuring high precision, light odor, and easy cleaning. Compatible with Halot-Mage S, Halot R6, and Halot-Mage Pro in vari...",
+      "published_at": "2026-03-13T06:54:01.687Z"
+    },
+    {
+      "id": 4005010064,
+      "title": "Creality Filament Dry Box 2.0",
+      "handle": "creality-filament-dry-box-2-0",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4005010064,
+          "title": "Variant 4005010064",
+          "price": "35.99",
+          "compare_at_price": null,
+          "sku": "4005010064",
+          "option1": "Variant 4005010064",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4005010064"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/4005010064_5e518e44-a8c8-4e02-b9d4-f08527cc9f9a.png?v=1762200647",
+          "alt": "Creality Filament Dry Box 2.0"
+        }
+      ],
+      "body_html": "Quick-heating dry box with 360° air circulation and real-time humidity monitoring. Suitable for PLA, ABS, PETG, TPU, and more. Prevents clogs and improv...",
+      "published_at": "2026-03-13T06:54:13.257Z"
+    },
+    {
+      "id": 2024112903,
+      "title": "4 Pack Hyper PLA RFID for 4-Color Printing",
+      "handle": "4-pack-hyper-pla-rfid-3d-printing-filament-1kg",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 2024112903,
+          "title": "Variant 2024112903-US",
+          "price": "65.99",
+          "compare_at_price": null,
+          "sku": "2024112903-US",
+          "option1": "Variant 2024112903-US",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 2024112903-US"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "Smart RFID Tagging for Hyper PLA: Creality CFS auto-recognizes RFID consumables, optimizing settings, tracking filament/usage to boost efficiency. Faste...",
+      "published_at": "2026-03-13T06:54:15.580Z"
+    },
+    {
+      "id": 3301010337,
+      "title": "Ender-PLA Filament 2KG Value Pack",
+      "handle": "ender-pla-value-pack-2-spools-pack",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3301010337,
+          "title": "Variant 3301010337",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "3301010337",
+          "option1": "Variant 3301010337",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010346,
+          "title": "Variant 3301010346",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "3301010346",
+          "option1": "Variant 3301010346",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010347,
+          "title": "Variant 3301010347",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "3301010347",
+          "option1": "Variant 3301010347",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301010337",
+            "Variant 3301010346",
+            "Variant 3301010347"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/839ddc96de7e4df34d728fbca0e46890-Photoroom.png?v=1762200653",
+          "alt": "Ender-PLA Filament 2KG Value Pack"
+        }
+      ],
+      "body_html": "Print effortlessly with the Ender-PLA Filament 2KG Value Pack. Affordable, good compatibility, and simple operation. Neat winding for less tangle. Stabl...",
+      "published_at": "2026-03-13T06:54:17.424Z"
+    },
+    {
+      "id": 3301020042,
+      "title": "Hyper Series ABS 3D Printing Filament 1kg",
+      "handle": "hyper-abs",
+      "product_type": "ABS",
+      "vendor": "Creality",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 3301020042,
+          "title": "Variant 3301020042",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301020042",
+          "option1": "Variant 3301020042",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301020040,
+          "title": "Variant 3301020040",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301020040",
+          "option1": "Variant 3301020040",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301020041,
+          "title": "Variant 3301020041",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301020041",
+          "option1": "Variant 3301020041",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301020042",
+            "Variant 3301020040",
+            "Variant 3301020041"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/Hyper_Series_ABS_2.png?v=1740288262",
+          "alt": "Hyper Series ABS 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "Print 5× faster with Hyper ABS filament. Offers high impact and heat resistance, easy printing, and broad compatibility with Creality 3D printers.",
+      "published_at": "2026-03-13T06:54:20.991Z"
+    },
+    {
+      "id": 3301060002,
+      "title": "CR-PLA Carbon 3D Printing Filament 1kg",
+      "handle": "cr-pla-carbon-3d-printing-filament-1kg",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3301060002,
+          "title": "Variant 3301060002",
+          "price": "19",
+          "compare_at_price": null,
+          "sku": "3301060002",
+          "option1": "Variant 3301060002",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301060002"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/CR-PLA_Carbon.png?v=1762200665",
+          "alt": "CR-PLA Carbon 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "CR-PLA carbon fiber filament offers high hardness, durability, non-toxic material, easy feeding, and warp-free printing. Ideal for reliable 3D printing.",
+      "published_at": "2026-03-13T06:54:26.830Z"
+    },
+    {
+      "id": 3301030043,
+      "title": "Hyper Series PETG 3D Printing Filament 1kg",
+      "handle": "hyper-series-petg-3d-printing-filament-1kg",
+      "product_type": "PETG",
+      "vendor": "Creality",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 3301030043,
+          "title": "Variant 3301030043",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301030043",
+          "option1": "Variant 3301030043",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301030040,
+          "title": "Variant 3301030040",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301030040",
+          "option1": "Variant 3301030040",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301030068,
+          "title": "Variant 3301030068",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301030068",
+          "option1": "Variant 3301030068",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301030042,
+          "title": "Variant 3301030042",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301030042",
+          "option1": "Variant 3301030042",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301030072,
+          "title": "Variant 3301030072",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301030072",
+          "option1": "Variant 3301030072",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301030071,
+          "title": "Variant 3301030071",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301030071",
+          "option1": "Variant 3301030071",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301030069,
+          "title": "Variant 3301030069",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301030069",
+          "option1": "Variant 3301030069",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301030070,
+          "title": "Variant 3301030070",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "3301030070",
+          "option1": "Variant 3301030070",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301030043",
+            "Variant 3301030040",
+            "Variant 3301030068",
+            "Variant 3301030042",
+            "Variant 3301030072",
+            "Variant 3301030071",
+            "Variant 3301030069",
+            "Variant 3301030070"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/Hyper_Series_PETG_5.png?v=1760341880",
+          "alt": "Hyper Series PETG 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "Discover Hyper Series 1kg PETG 3D printing filament, offering exceptional strength and durability for various printing projects, helping you easily brin...",
+      "published_at": "2026-03-13T06:54:32.142Z"
+    },
+    {
+      "id": 4007010143,
+      "title": "Filament Vacuum Storage Kit",
+      "handle": "filament-vacuum-storage-kit",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4007010143,
+          "title": "Variant 4007010143",
+          "price": "18",
+          "compare_at_price": null,
+          "sku": "4007010143",
+          "option1": "Variant 4007010143",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4007010143"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/fa08283d8152514a65a91ea38420e298_c2099c92-3d48-4d75-a059-f802b71ce77d-Photoroom.png?v=1762200686",
+          "alt": "Filament Vacuum Storage Kit"
+        }
+      ],
+      "body_html": "Unlock unlimited 3D printing creativity with our Filament Vacuum Storage Kit. Strong suction for fast pumping, food-grade material for recycling. Experi...",
+      "published_at": "2026-03-13T06:54:34.557Z"
+    },
+    {
+      "id": 37000,
+      "title": "12×12x1/8&#39;&#39; Intelligent Recognition Basswood Plywood Sheets - 10pcs",
+      "handle": "falcon-series-basswood-plywood-sheets",
+      "product_type": "Wood PLA",
+      "vendor": "Creality",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 25885,
+          "title": "Default",
+          "price": null,
+          "sku": "",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.crealityfalcon.com/cdn/shop/files/08153477-2a68-4f03-a27b-c9d9cb3d2abe_1024x1024.jpg?v=1755745049",
+          "alt": "12×12x1/8&#39;&#39; Intelligent Recognition Basswood Plywood Sheets - 10pcs"
+        }
+      ],
+      "body_html": "",
+      "published_at": "2026-03-13T06:54:36.449Z"
+    },
+    {
+      "id": 2024120411,
+      "title": "K1 Max AI Fast Mega Filament Pack",
+      "handle": "k1-max-ai-fast-mega-filament-pack",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2024120411,
+          "title": "Variant 2024120411-US",
+          "price": "693.97",
+          "compare_at_price": null,
+          "sku": "2024120411-US",
+          "option1": "Variant 2024120411-US",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 2024120411-US"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "K1 Max Hyper PLA Filament 5 pecs 10 pecs Combo, Highly rated for value pack, Enjoy 50% off all filament in the combo, with random color.",
+      "published_at": "2026-03-13T06:54:40.766Z"
+    },
+    {
+      "id": 4004090139,
+      "title": "Creality Hi Epoxy Resin Build Plate",
+      "handle": "creality-hi-epoxy-resin-build-plate",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090139,
+          "title": "Variant 4004090139",
+          "price": "11.58",
+          "compare_at_price": null,
+          "sku": "4004090139",
+          "option1": "Variant 4004090139",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090139"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/hi.png?v=1754366430",
+          "alt": "Creality Hi Epoxy Resin Build Plate"
+        }
+      ],
+      "body_html": "Excellent Adhesion High Flatness High Strength and Wear Resistance",
+      "published_at": "2026-03-13T06:54:43.079Z"
+    },
+    {
+      "id": 3301010516,
+      "title": "Soleyin Ultra PLA 3D Printing Filament 1kg",
+      "handle": "soleyin-ultra-pla-3d-printing-filament-1kg",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3301010516,
+          "title": "Variant 3301010516",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010516",
+          "option1": "Variant 3301010516",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010515,
+          "title": "Variant 3301010515",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010515",
+          "option1": "Variant 3301010515",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010514,
+          "title": "Variant 3301010514",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010514",
+          "option1": "Variant 3301010514",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010510,
+          "title": "Variant 3301010510",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010510",
+          "option1": "Variant 3301010510",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010509,
+          "title": "Variant 3301010509",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010509",
+          "option1": "Variant 3301010509",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010508,
+          "title": "Variant 3301010508",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010508",
+          "option1": "Variant 3301010508",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010507,
+          "title": "Variant 3301010507",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010507",
+          "option1": "Variant 3301010507",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010506,
+          "title": "Variant 3301010506",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010506",
+          "option1": "Variant 3301010506",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010505,
+          "title": "Variant 3301010505",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010505",
+          "option1": "Variant 3301010505",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010503,
+          "title": "Variant 3301010503",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010503",
+          "option1": "Variant 3301010503",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010502,
+          "title": "Variant 3301010502",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010502",
+          "option1": "Variant 3301010502",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010501,
+          "title": "Variant 3301010501",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010501",
+          "option1": "Variant 3301010501",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010500,
+          "title": "Variant 3301010500",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010500",
+          "option1": "Variant 3301010500",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010512,
+          "title": "Variant 3301010512",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010512",
+          "option1": "Variant 3301010512",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010513,
+          "title": "Variant 3301010513",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010513",
+          "option1": "Variant 3301010513",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 3301010517,
+          "title": "Variant 3301010517",
+          "price": "11.99",
+          "compare_at_price": null,
+          "sku": "3301010517",
+          "option1": "Variant 3301010517",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301010516",
+            "Variant 3301010515",
+            "Variant 3301010514",
+            "Variant 3301010510",
+            "Variant 3301010509",
+            "Variant 3301010508",
+            "Variant 3301010507",
+            "Variant 3301010506",
+            "Variant 3301010505",
+            "Variant 3301010503",
+            "Variant 3301010502",
+            "Variant 3301010501",
+            "Variant 3301010500",
+            "Variant 3301010512",
+            "Variant 3301010513",
+            "Variant 3301010517"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/070173fe6635dfd90d862b064326913f.png?v=1747997564",
+          "alt": "Soleyin Ultra PLA 3D Printing Filament 1kg"
+        }
+      ],
+      "body_html": "Get high-speed, eco-friendly Soleyin Ultra PLA filament. Stunning color options, 300mm/s print speeds, and superior adhesion—perfect for every creative ...",
+      "published_at": "2026-03-13T06:54:49.235Z"
+    },
+    {
+      "id": 4001050092,
+      "title": "CFS Display Kit",
+      "handle": "cfs-display-kit",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001050092,
+          "title": "Variant 4001050092",
+          "price": "5.9",
+          "compare_at_price": null,
+          "sku": "4001050092",
+          "option1": "Variant 4001050092",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4001050092"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/163c0435d7730d712b44cbe32e955979_b2f73860-d209-4dc7-8ec7-0af2c3aecfd6.png?v=1767862098",
+          "alt": "CFS Display Kit"
+        }
+      ],
+      "body_html": "Upgrade your Creality CFS with the Display Kit. Get real-time filament status, temperature, and humidity monitoring for a seamless 3D printing experience.",
+      "published_at": "2026-03-13T06:54:52.684Z"
+    },
+    {
+      "id": 19000,
+      "title": "Creality filament-W",
+      "handle": "creality-filament-w",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 40218,
+          "title": "Variant",
+          "price": "9.41",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        },
+        {
+          "id": 25801,
+          "title": "Variant",
+          "price": "12.31",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        },
+        {
+          "id": 1001060006,
+          "title": "Variant 1001060006",
+          "price": "10.38",
+          "compare_at_price": null,
+          "sku": "1001060006",
+          "option1": "Variant 1001060006",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant",
+            "Variant",
+            "Variant 1001060006"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/fe277f3e01b8c2e891d4991a701dfbb1_134a5a67-c56b-4667-bd09-e482147a7fbe.png?v=1739970914",
+          "alt": "Creality filament-W"
+        }
+      ],
+      "body_html": "10x Faster Printing, Speed Up Your Creativity Keep Precision While Keeping Ultra-high Speed Higher Toughness for Stronger Models Uniform Wire Diameter, ...",
+      "published_at": "2026-03-13T06:54:55.546Z"
+    },
+    {
+      "id": 4004090140,
+      "title": "Creality Low Temperature Cold Printing Build Plate",
+      "handle": "creality-low-temperature-cold-printing-build-plate-235-235",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004090140,
+          "title": "Variant 4004090140",
+          "price": "23.31",
+          "compare_at_price": null,
+          "sku": "4004090140",
+          "option1": "Variant 4004090140",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        },
+        {
+          "id": 4004090141,
+          "title": "Variant 4004090141",
+          "price": "23.31",
+          "compare_at_price": null,
+          "sku": "4004090141",
+          "option1": "Variant 4004090141",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 4004090158,
+          "title": "Variant 4004090158",
+          "price": "17.99",
+          "compare_at_price": null,
+          "sku": "4004090158",
+          "option1": "Variant 4004090158",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 4004090153,
+          "title": "Variant 4004090153",
+          "price": "33.58",
+          "compare_at_price": null,
+          "sku": "4004090153",
+          "option1": "Variant 4004090153",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004090140",
+            "Variant 4004090141",
+            "Variant 4004090158",
+            "Variant 4004090153"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/74.png?v=1769584973",
+          "alt": "Creality Low Temperature Cold Printing Build Plate"
+        }
+      ],
+      "body_html": "High adhesion Low temperature printing Easy to remove mold Double-sided printing",
+      "published_at": "2026-03-13T06:54:59.748Z"
+    },
+    {
+      "id": 4004010262,
+      "title": "K2 Plus/K2 Pro/K2 Filament Cutter-5 pcs/10 pcs",
+      "handle": "k2-plus-filament-cutter-10-pcs",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4004010262,
+          "title": "Variant 4004010262",
+          "price": "23.31",
+          "compare_at_price": null,
+          "sku": "4004010262",
+          "option1": "Variant 4004010262",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 4004010276,
+          "title": "Variant 4004010276",
+          "price": "14.52",
+          "compare_at_price": null,
+          "sku": "4004010276",
+          "option1": "Variant 4004010276",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4004010262",
+            "Variant 4004010276"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/75.png?v=1762200782",
+          "alt": "K2 Plus/K2 Pro/K2 Filament Cutter-5 pcs/10 pcs"
+        }
+      ],
+      "body_html": "Fast Cut-off High Durability Quick Replacement Compatible Models： K2 Plus, K2 Pro, K2",
+      "published_at": "2026-03-13T06:55:04.869Z"
+    },
+    {
+      "id": 3301060020,
+      "title": "PPA-CF Filament 1.75mm 1KG",
+      "handle": "ppa-cf-filament-1-75mm-1kg",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3301060020,
+          "title": "Variant 3301060020",
+          "price": "75.99",
+          "compare_at_price": null,
+          "sku": "3301060020",
+          "option1": "Variant 3301060020",
+          "option2": null,
+          "option3": null,
+          "available": false,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 3301060020"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/ppa-cf.png?v=1762200784",
+          "alt": "PPA-CF Filament 1.75mm 1KG"
+        }
+      ],
+      "body_html": "High Toughness and Impact Resistance Ultra-High Heat Resistance (220°C) Ultra-Low Moisture Absorption 15% Carbon Fiber Content Ensures Greater Dimension...",
+      "published_at": "2026-03-13T06:55:10.072Z"
+    },
+    {
+      "id": 4001090035,
+      "title": "K2 Plus/K2 Pro/K2 Filament Detection Board",
+      "handle": "k2-plus-filament-detection-board",
+      "product_type": "PLA",
+      "vendor": "Creality",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001090035,
+          "title": "Variant 4001090035",
+          "price": "2.9",
+          "compare_at_price": null,
+          "sku": "4001090035",
+          "option1": "Variant 4001090035",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant 4001090035"
+          ]
+        }
+      ],
+      "images": [
+        {
+          "src": "https://cdn.shopify.com/s/files/1/0893/0603/8637/files/79.png?v=1762200787",
+          "alt": "K2 Plus/K2 Pro/K2 Filament Detection Board"
+        }
+      ],
+      "body_html": "Ensure smooth printing with the K2 Plus Filament Detection Board. Detects filament runout in real-time to prevent failed prints and improve printing eff...",
+      "published_at": "2026-03-13T06:55:12.390Z"
+    },
+    {
+      "id": 35000,
+      "title": "K1 MAX+Hyper PLA*5",
+      "handle": "k1-max-ai-fast-mega-filament-pack-1",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 5507,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 17248,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 36635,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 6215,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 59973,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 45073,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 82199,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 73852,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 94146,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 50600,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 60496,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 18103,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 73399,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 89222,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 14414,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 65181,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 97551,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 25356,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 73292,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 64093,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 76643,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 9576,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 95765,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 67690,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 70924,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 63285,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 72938,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 58505,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 65790,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 30724,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 52676,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 15568,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 69128,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 14081,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 35009,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 7775,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 17181,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 24098,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 74845,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 29520,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 37545,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 58651,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 24696,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 28498,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 93814,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 65415,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 2508,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 64328,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 69452,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 17557,
+          "title": "Variant",
+          "price": "673.97",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T06:55:14.638Z"
+    },
+    {
+      "id": 41000,
+      "title": "K1 MAX Al Fast 3D Printer+Hyper PLA*2+Dryer Plus+Build Plate Kit",
+      "handle": "k1-max-hyper-2-dryer-plus-build-plate-kit",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 33566,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 90750,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 23920,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 28128,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 14557,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 11229,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 61902,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 38534,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 8136,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 12468,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 80149,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 33587,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 43151,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 48196,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 76192,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 21023,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 19309,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 58231,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 97460,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 16242,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 70752,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 1838,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 5174,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 27881,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 46913,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 24232,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 21892,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 38762,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 30420,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 74435,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 4644,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 752,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 15041,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 59706,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 23451,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 21864,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 98524,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 25583,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 56927,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 75681,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 30486,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 46444,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 9738,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 64474,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 80229,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 22257,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 20453,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 6690,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 34689,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        },
+        {
+          "id": 60100,
+          "title": "Variant",
+          "price": "719.39",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant",
+            "Variant"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T06:55:16.727Z"
+    },
+    {
+      "id": 21000,
+      "title": "8 Pack Hyper PLA RFID (Random  Color)",
+      "handle": "8-pack-hyper-pla-rfid",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 94570,
+          "title": "Variant",
+          "price": "111.92",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "Smart RFID Tagging for Hyper PLA: Creality CFS auto-recognizes RFID consumables, optimizing settings, tracking filament/usage to boost efficiency Faster...",
+      "published_at": "2026-03-13T06:55:22.342Z"
+    },
+    {
+      "id": 21000,
+      "title": "4 Pack Hyper PLA RFID",
+      "handle": "4-pack-hyper-pla-rfid",
+      "product_type": "HSPLA",
+      "vendor": "Creality",
+      "tags": "HSPLA",
+      "variants": [
+        {
+          "id": 45976,
+          "title": "Variant",
+          "price": "65.99",
+          "compare_at_price": null,
+          "sku": "",
+          "option1": "Variant",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Variant"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "Smart RFID Tagging for Hyper PLA: Creality CFS auto-recognizes RFID consumables, optimizing settings, tracking filament/usage to boost efficiency. Faste...",
+      "published_at": "2026-03-13T06:55:26.384Z"
+    }
+  ],
+  "excluded": 1,
+  "fetchedAt": "2026-03-13T06:55:26.898Z",
+  "source": "store-creality-jsonld-scrape",
+  "currency": "USD"
+}
