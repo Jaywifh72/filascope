@@ -854,6 +854,103 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       source_currency: 'USD',
     },
   },
+  'qidi': {
+    brand_name: 'QIDI',
+    platform: 'shopify',
+    base_url: 'https://us.qidi3d.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'qidi',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://us.qidi3d.com',
+    },
+    variant_mapping: {
+      // QIDI: option1=Weight, option2=Color (with HEX codes like "Black HEX Code #070809")
+      color_option: 'option2',
+      source_currency: 'USD',
+    },
+  },
+  'recreus': {
+    brand_name: 'Recreus',
+    platform: 'shopify',
+    base_url: 'https://recreus.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'recreus',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      EU: 'https://recreus.com',
+    },
+    variant_mapping: {
+      // Recreus: option1=Color (Spanish names), option2=Peso (weight). EUR store.
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
+  'siraya-tech': {
+    brand_name: 'Siraya Tech',
+    platform: 'shopify',
+    base_url: 'https://siraya.tech',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'siraya-tech',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://siraya.tech',
+    },
+    variant_mapping: {
+      // Siraya Tech: option positions vary — auto-detect finds "Color" by name
+      // Some products: o1=Ship to, o2=Size, o3=Color; others: o1=Ship to, o2=Color, o3=Size
+      color_option: 'option3',
+      source_currency: 'USD',
+    },
+  },
+  'sovol': {
+    brand_name: 'Sovol',
+    platform: 'shopify',
+    base_url: 'https://www.sovol3d.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'sovol',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://www.sovol3d.com',
+    },
+    variant_mapping: {
+      // Sovol: option1=Ship from, option2=Sovol Filament Color, option3=Weight
+      color_option: 'option2',
+      source_currency: 'USD',
+    },
+  },
+  'spectrum-filaments': {
+    brand_name: 'Spectrum Filaments',
+    platform: 'shopify',
+    base_url: 'https://ca.spectrumfilaments.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'spectrum-filaments',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      CA: 'https://ca.spectrumfilaments.com',
+      EU: 'https://shop.spectrumfilaments.com',
+    },
+    variant_mapping: {
+      // Spectrum CA: flat products (1 product per color), color in title. Prices in CAD.
+      color_from_title: true,
+      source_currency: 'CAD',
+    },
+  },
+  'treed-filaments': {
+    brand_name: 'TreeD Filaments',
+    platform: 'custom',
+    base_url: 'https://treed-filaments.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'treed-filaments',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      EU: 'https://treed-filaments.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
 };
 
 /**
@@ -1046,6 +1143,7 @@ export function useCatalogSync() {
           'ninjatek': '/data/ninjatek-products.json',
           'paramount-3d': '/data/paramount-3d-products.json',
           'prusament': '/data/prusament-products.json',
+          'treed-filaments': '/data/treed-filaments-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 

@@ -1,0 +1,7114 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "TreeD PLA Ecogenius Osso 1.75mm",
+      "handle": "pla-ecogenius-osso",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Osso",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-osso",
+          "option1": "Osso",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Osso"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.506Z"
+    },
+    {
+      "id": 2000,
+      "title": "TreeD PLA Ecogenius White 1.75mm",
+      "handle": "pla-ecogenius-white",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "White",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 3000,
+      "title": "TreeD PLA Ecogenius Red Race 1.75mm",
+      "handle": "pla-ecogenius-red-race",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Red Race",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-red-race",
+          "option1": "Red Race",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Race"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 4000,
+      "title": "TreeD PLA Ecogenius Black Hole 1.75mm",
+      "handle": "pla-ecogenius-black-hole",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Black Hole",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 5000,
+      "title": "TreeD PLA Ecogenius Neptune Blue 1.75mm",
+      "handle": "pla-ecogenius-neptune-blue",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Neptune Blue",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-neptune-blue",
+          "option1": "Neptune Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neptune Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 6000,
+      "title": "TreeD PLA Ecogenius Natural 1.75mm",
+      "handle": "pla-ecogenius-natural",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Natural",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 7000,
+      "title": "TreeD PLA Ecogenius Yellow Treed 1.75mm",
+      "handle": "pla-ecogenius-yellow-treed",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Yellow Treed",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-yellow-treed",
+          "option1": "Yellow Treed",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Treed"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 8000,
+      "title": "TreeD PLA Ecogenius Yellow Lemon 1.75mm",
+      "handle": "pla-ecogenius-yellow-lemon",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Yellow Lemon",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-yellow-lemon",
+          "option1": "Yellow Lemon",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Lemon"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 9000,
+      "title": "TreeD PLA Ecogenius Violet 1.75mm",
+      "handle": "pla-ecogenius-violet",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Violet",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-violet",
+          "option1": "Violet",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Violet"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 10000,
+      "title": "TreeD PLA Ecogenius Alluminium 1.75mm",
+      "handle": "pla-ecogenius-alluminium",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Alluminium",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-alluminium",
+          "option1": "Alluminium",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Alluminium"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 11000,
+      "title": "TreeD PLA Ecogenius Bronze 1.75mm",
+      "handle": "pla-ecogenius-bronze",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Bronze",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-bronze",
+          "option1": "Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 12000,
+      "title": "TreeD PLA Ecogenius Anthracite Grey 1.75mm",
+      "handle": "pla-ecogenius-anthracite-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Anthracite Grey",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 13000,
+      "title": "TreeD PLA Ecogenius Green Army 1.75mm",
+      "handle": "pla-ecogenius-green-army",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Green Army",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-green-army",
+          "option1": "Green Army",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green Army"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 14000,
+      "title": "TreeD PLA Ecogenius Aquamarine 1.75mm",
+      "handle": "pla-ecogenius-aquamarine",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Aquamarine",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-aquamarine",
+          "option1": "Aquamarine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Aquamarine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 15000,
+      "title": "TreeD PLA Ecogenius Orange 1.75mm",
+      "handle": "pla-ecogenius-orange",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Orange",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 16000,
+      "title": "TreeD PLA Ecogenius Red Wine 1.75mm",
+      "handle": "pla-ecogenius-red-wine",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Red Wine",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-red-wine",
+          "option1": "Red Wine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Wine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 17000,
+      "title": "TreeD PLA Ecogenius Brown 1.75mm",
+      "handle": "pla-ecogenius-brown",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "Brown",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 18000,
+      "title": "TreeD PLA Ecogenius Industrial Grey 1.75mm",
+      "handle": "pla-ecogenius-industrial-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Industrial Grey",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-industrial-grey",
+          "option1": "Industrial Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Industrial Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 19000,
+      "title": "TreeD PLA Ecogenius Apple Green 1.75mm",
+      "handle": "pla-ecogenius-apple-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Apple Green",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 20000,
+      "title": "TreeD PLA Ecogenius Oxford Green 1.75mm",
+      "handle": "pla-ecogenius-oxford-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Oxford Green",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-ecogenius-oxford-green",
+          "option1": "Oxford Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Oxford Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 21000,
+      "title": "TreeD PLA Fusion Industrial Grey 1.75mm",
+      "handle": "pla-fusion-industrial-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Industrial Grey",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-industrial-grey",
+          "option1": "Industrial Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Industrial Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 22000,
+      "title": "TreeD PLA Fusion Alluminium 1.75mm",
+      "handle": "pla-fusion-alluminium",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Alluminium",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-alluminium",
+          "option1": "Alluminium",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Alluminium"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 23000,
+      "title": "TreeD PLA Fusion Black Hole 1.75mm",
+      "handle": "pla-fusion-black-hole",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Black Hole",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 24000,
+      "title": "TreeD PLA Fusion White 1.75mm",
+      "handle": "pla-fusion-white",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "White",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 25000,
+      "title": "TreeD PLA Fusion Natural 1.75mm",
+      "handle": "pla-fusion-natural",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Natural",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 26000,
+      "title": "TreeD PLA Fusion Red Race 1.75mm",
+      "handle": "pla-fusion-red-race",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Red Race",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-red-race",
+          "option1": "Red Race",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Race"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 27000,
+      "title": "TreeD PLA Fusion Neptune Blue 1.75mm",
+      "handle": "pla-fusion-neptune-blue",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Neptune Blue",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-neptune-blue",
+          "option1": "Neptune Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neptune Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 28000,
+      "title": "TreeD PLA Fusion Yellow Treed 1.75mm",
+      "handle": "pla-fusion-yellow-treed",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Yellow Treed",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-yellow-treed",
+          "option1": "Yellow Treed",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Treed"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 29000,
+      "title": "TreeD PLA Fusion Yellow Lemon 1.75mm",
+      "handle": "pla-fusion-yellow-lemon",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "Yellow Lemon",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-yellow-lemon",
+          "option1": "Yellow Lemon",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Lemon"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 30000,
+      "title": "TreeD PLA Fusion Violet 1.75mm",
+      "handle": "pla-fusion-violet",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Violet",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-violet",
+          "option1": "Violet",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Violet"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 31000,
+      "title": "TreeD PLA Fusion Apple Green 1.75mm",
+      "handle": "pla-fusion-apple-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Apple Green",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fusion-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 32000,
+      "title": "TreeD PLA Gonzales White 1.75mm",
+      "handle": "pla-gonzales-white",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "White",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 33000,
+      "title": "TreeD PLA Gonzales Black Hole 1.75mm",
+      "handle": "pla-gonzales-black-hole",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Black Hole",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 34000,
+      "title": "TreeD PLA Gonzales Neptune Blue 1.75mm",
+      "handle": "pla-gonzales-neptune-blue",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Neptune Blue",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-neptune-blue",
+          "option1": "Neptune Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neptune Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 35000,
+      "title": "TreeD PLA Gonzales Red Race 1.75mm",
+      "handle": "pla-gonzales-red-race",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Red Race",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-red-race",
+          "option1": "Red Race",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Race"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 36000,
+      "title": "TreeD PLA Gonzales Yellow Treed 1.75mm",
+      "handle": "pla-gonzales-yellow-treed",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Yellow Treed",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-yellow-treed",
+          "option1": "Yellow Treed",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Treed"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 37000,
+      "title": "TreeD PLA Gonzales Yellow Lemon 1.75mm",
+      "handle": "pla-gonzales-yellow-lemon",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "Yellow Lemon",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-yellow-lemon",
+          "option1": "Yellow Lemon",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Lemon"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 38000,
+      "title": "TreeD PLA Gonzales Violet 1.75mm",
+      "handle": "pla-gonzales-violet",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Violet",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-violet",
+          "option1": "Violet",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Violet"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 39000,
+      "title": "TreeD PLA Gonzales Alluminium 1.75mm",
+      "handle": "pla-gonzales-alluminium",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Alluminium",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-alluminium",
+          "option1": "Alluminium",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Alluminium"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 40000,
+      "title": "TreeD PLA Gonzales Bronze 1.75mm",
+      "handle": "pla-gonzales-bronze",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "Bronze",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-bronze",
+          "option1": "Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 41000,
+      "title": "TreeD PLA Gonzales Anthracite Grey 1.75mm",
+      "handle": "pla-gonzales-anthracite-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "Anthracite Grey",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 42000,
+      "title": "TreeD PLA Gonzales Green Army 1.75mm",
+      "handle": "pla-gonzales-green-army",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "Green Army",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-green-army",
+          "option1": "Green Army",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green Army"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 43000,
+      "title": "TreeD PLA Gonzales Aquamarine 1.75mm",
+      "handle": "pla-gonzales-aquamarine",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "Aquamarine",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-aquamarine",
+          "option1": "Aquamarine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Aquamarine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 44000,
+      "title": "TreeD PLA Gonzales Orange 1.75mm",
+      "handle": "pla-gonzales-orange",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Orange",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 45000,
+      "title": "TreeD PLA Gonzales Red Wine 1.75mm",
+      "handle": "pla-gonzales-red-wine",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "Red Wine",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-red-wine",
+          "option1": "Red Wine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Wine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 46000,
+      "title": "TreeD PLA Gonzales Brown 1.75mm",
+      "handle": "pla-gonzales-brown",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 46001,
+          "title": "Brown",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 47000,
+      "title": "TreeD PLA Gonzales Industrial Grey 1.75mm",
+      "handle": "pla-gonzales-industrial-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 47001,
+          "title": "Industrial Grey",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-industrial-grey",
+          "option1": "Industrial Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Industrial Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 48000,
+      "title": "TreeD PLA Gonzales Apple Green 1.75mm",
+      "handle": "pla-gonzales-apple-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 48001,
+          "title": "Apple Green",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 49000,
+      "title": "TreeD PLA Gonzales Oxford Green 1.75mm",
+      "handle": "pla-gonzales-oxford-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 49001,
+          "title": "Oxford Green",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-gonzales-oxford-green",
+          "option1": "Oxford Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Oxford Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 50000,
+      "title": "TreeD PLA Levigo Natural 1.75mm",
+      "handle": "pla-levigo-natural",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 50001,
+          "title": "Natural",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-levigo-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 51000,
+      "title": "TreeD PLA Shineless Black Hole 1.75mm",
+      "handle": "pla-shineless-black-hole",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 51001,
+          "title": "Black Hole",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-shineless-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 52000,
+      "title": "TreeD PLA Shineless White 1.75mm",
+      "handle": "pla-shineless-white",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 52001,
+          "title": "White",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-shineless-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 53000,
+      "title": "TreeD PLA Shogun Natural 1.75mm",
+      "handle": "pla-shogun-natural",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 53001,
+          "title": "Natural",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-shogun-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 54000,
+      "title": "TreeD PLA Fast Forward Black Hole 1.75mm",
+      "handle": "pla-fast-forward-black-hole",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 54001,
+          "title": "Black Hole",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 55000,
+      "title": "TreeD PLA Fast Forward White 1.75mm",
+      "handle": "pla-fast-forward-white",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 55001,
+          "title": "White",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 56000,
+      "title": "TreeD PLA Fast Forward Red Race 1.75mm",
+      "handle": "pla-fast-forward-red-race",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 56001,
+          "title": "Red Race",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-red-race",
+          "option1": "Red Race",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Race"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 57000,
+      "title": "TreeD PLA Fast Forward Neptune Blue 1.75mm",
+      "handle": "pla-fast-forward-neptune-blue",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 57001,
+          "title": "Neptune Blue",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-neptune-blue",
+          "option1": "Neptune Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neptune Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 58000,
+      "title": "TreeD PLA Fast Forward Yellow Treed 1.75mm",
+      "handle": "pla-fast-forward-yellow-treed",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 58001,
+          "title": "Yellow Treed",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-yellow-treed",
+          "option1": "Yellow Treed",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Treed"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 59000,
+      "title": "TreeD PLA Fast Forward Yellow Lemon 1.75mm",
+      "handle": "pla-fast-forward-yellow-lemon",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 59001,
+          "title": "Yellow Lemon",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-yellow-lemon",
+          "option1": "Yellow Lemon",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Lemon"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 60000,
+      "title": "TreeD PLA Fast Forward Violet 1.75mm",
+      "handle": "pla-fast-forward-violet",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 60001,
+          "title": "Violet",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-violet",
+          "option1": "Violet",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Violet"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 61000,
+      "title": "TreeD PLA Fast Forward Alluminium 1.75mm",
+      "handle": "pla-fast-forward-alluminium",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 61001,
+          "title": "Alluminium",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-alluminium",
+          "option1": "Alluminium",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Alluminium"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 62000,
+      "title": "TreeD PLA Fast Forward Bronze 1.75mm",
+      "handle": "pla-fast-forward-bronze",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 62001,
+          "title": "Bronze",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-bronze",
+          "option1": "Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 63000,
+      "title": "TreeD PLA Fast Forward Anthracite Grey 1.75mm",
+      "handle": "pla-fast-forward-anthracite-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 63001,
+          "title": "Anthracite Grey",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 64000,
+      "title": "TreeD PLA Fast Forward Green Army 1.75mm",
+      "handle": "pla-fast-forward-green-army",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 64001,
+          "title": "Green Army",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-green-army",
+          "option1": "Green Army",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green Army"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 65000,
+      "title": "TreeD PLA Fast Forward Aquamarine 1.75mm",
+      "handle": "pla-fast-forward-aquamarine",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 65001,
+          "title": "Aquamarine",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-aquamarine",
+          "option1": "Aquamarine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Aquamarine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 66000,
+      "title": "TreeD PLA Fast Forward Orange 1.75mm",
+      "handle": "pla-fast-forward-orange",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 66001,
+          "title": "Orange",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 67000,
+      "title": "TreeD PLA Fast Forward Red Wine 1.75mm",
+      "handle": "pla-fast-forward-red-wine",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 67001,
+          "title": "Red Wine",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-red-wine",
+          "option1": "Red Wine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Wine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 68000,
+      "title": "TreeD PLA Fast Forward Brown 1.75mm",
+      "handle": "pla-fast-forward-brown",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 68001,
+          "title": "Brown",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 69000,
+      "title": "TreeD PLA Fast Forward Industrial Grey 1.75mm",
+      "handle": "pla-fast-forward-industrial-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 69001,
+          "title": "Industrial Grey",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-industrial-grey",
+          "option1": "Industrial Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Industrial Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 70000,
+      "title": "TreeD PLA Fast Forward Apple Green 1.75mm",
+      "handle": "pla-fast-forward-apple-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 70001,
+          "title": "Apple Green",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 71000,
+      "title": "TreeD PLA Fast Forward Oxford Green 1.75mm",
+      "handle": "pla-fast-forward-oxford-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 71001,
+          "title": "Oxford Green",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-fast-forward-oxford-green",
+          "option1": "Oxford Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Oxford Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 72000,
+      "title": "TreeD PLA XRay White Marble 1.75mm",
+      "handle": "pla-xray-white-marble",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 72001,
+          "title": "White Marble",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-xray-white-marble",
+          "option1": "White Marble",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White Marble"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 73000,
+      "title": "TreeD PLA Kyotoflex Chlorophyll Green 1.75mm",
+      "handle": "pla-kyotoflex-chlorophyll-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 73001,
+          "title": "Chlorophyll Green",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-chlorophyll-green",
+          "option1": "Chlorophyll Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Chlorophyll Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 74000,
+      "title": "TreeD PLA Kyotoflex Yellow Treed 1.75mm",
+      "handle": "pla-kyotoflex-yellow-treed",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 74001,
+          "title": "Yellow Treed",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-yellow-treed",
+          "option1": "Yellow Treed",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Treed"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 75000,
+      "title": "TreeD PLA Kyotoflex Yellow Lemon 1.75mm",
+      "handle": "pla-kyotoflex-yellow-lemon",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 75001,
+          "title": "Yellow Lemon",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-yellow-lemon",
+          "option1": "Yellow Lemon",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Lemon"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 76000,
+      "title": "TreeD PLA Kyotoflex Violet 1.75mm",
+      "handle": "pla-kyotoflex-violet",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 76001,
+          "title": "Violet",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-violet",
+          "option1": "Violet",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Violet"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 77000,
+      "title": "TreeD PLA Kyotoflex Alluminium 1.75mm",
+      "handle": "pla-kyotoflex-alluminium",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 77001,
+          "title": "Alluminium",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-alluminium",
+          "option1": "Alluminium",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Alluminium"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 78000,
+      "title": "TreeD PLA Kyotoflex Bronze 1.75mm",
+      "handle": "pla-kyotoflex-bronze",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 78001,
+          "title": "Bronze",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-bronze",
+          "option1": "Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 79000,
+      "title": "TreeD PLA Kyotoflex Anthracite Grey 1.75mm",
+      "handle": "pla-kyotoflex-anthracite-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 79001,
+          "title": "Anthracite Grey",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 80000,
+      "title": "TreeD PLA Kyotoflex Green Army 1.75mm",
+      "handle": "pla-kyotoflex-green-army",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 80001,
+          "title": "Green Army",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-green-army",
+          "option1": "Green Army",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green Army"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 81000,
+      "title": "TreeD PLA Kyotoflex Aquamarine 1.75mm",
+      "handle": "pla-kyotoflex-aquamarine",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 81001,
+          "title": "Aquamarine",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-aquamarine",
+          "option1": "Aquamarine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Aquamarine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 82000,
+      "title": "TreeD PLA Kyotoflex Orange 1.75mm",
+      "handle": "pla-kyotoflex-orange",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 82001,
+          "title": "Orange",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 83000,
+      "title": "TreeD PLA Kyotoflex Red Wine 1.75mm",
+      "handle": "pla-kyotoflex-red-wine",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 83001,
+          "title": "Red Wine",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-red-wine",
+          "option1": "Red Wine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Wine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 84000,
+      "title": "TreeD PLA Kyotoflex Brown 1.75mm",
+      "handle": "pla-kyotoflex-brown",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 84001,
+          "title": "Brown",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 85000,
+      "title": "TreeD PLA Kyotoflex Industrial Grey 1.75mm",
+      "handle": "pla-kyotoflex-industrial-grey",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 85001,
+          "title": "Industrial Grey",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-industrial-grey",
+          "option1": "Industrial Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Industrial Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 86000,
+      "title": "TreeD PLA Kyotoflex Apple Green 1.75mm",
+      "handle": "pla-kyotoflex-apple-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 86001,
+          "title": "Apple Green",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 87000,
+      "title": "TreeD PLA Kyotoflex Oxford Green 1.75mm",
+      "handle": "pla-kyotoflex-oxford-green",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 87001,
+          "title": "Oxford Green",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-kyotoflex-oxford-green",
+          "option1": "Oxford Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Oxford Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 88000,
+      "title": "TreeD PLA High Temperature Black Hole 1.75mm",
+      "handle": "pla-high-temperature-black-hole",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 88001,
+          "title": "Black Hole",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-high-temperature-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 89000,
+      "title": "TreeD PLA High Temperature White 1.75mm",
+      "handle": "pla-high-temperature-white",
+      "product_type": "PLA",
+      "vendor": "TreeD Filaments",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 89001,
+          "title": "White",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-pla-high-temperature-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 90000,
+      "title": "TreeD G-PET Ruby 1.75mm",
+      "handle": "g-pet-ruby",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 90001,
+          "title": "Ruby",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-ruby",
+          "option1": "Ruby",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Ruby"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 91000,
+      "title": "TreeD G-PET Seetrought 1.75mm",
+      "handle": "g-pet-seetrought",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 91001,
+          "title": "Seetrought",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-seetrought",
+          "option1": "Seetrought",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Seetrought"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 92000,
+      "title": "TreeD G-PET White 1.75mm",
+      "handle": "g-pet-white",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 92001,
+          "title": "White",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 93000,
+      "title": "TreeD G-PET Black Hole 1.75mm",
+      "handle": "g-pet-black-hole",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 93001,
+          "title": "Black Hole",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 94000,
+      "title": "TreeD G-PET Azul 1.75mm",
+      "handle": "g-pet-azul",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 94001,
+          "title": "Azul",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-azul",
+          "option1": "Azul",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Azul"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 95000,
+      "title": "TreeD G-PET Alluminium 1.75mm",
+      "handle": "g-pet-alluminium",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 95001,
+          "title": "Alluminium",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-alluminium",
+          "option1": "Alluminium",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Alluminium"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 96000,
+      "title": "TreeD G-PET Yellow Treed 1.75mm",
+      "handle": "g-pet-yellow-treed",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 96001,
+          "title": "Yellow Treed",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-yellow-treed",
+          "option1": "Yellow Treed",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Treed"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 97000,
+      "title": "TreeD G-PET Yellow Lemon 1.75mm",
+      "handle": "g-pet-yellow-lemon",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 97001,
+          "title": "Yellow Lemon",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-yellow-lemon",
+          "option1": "Yellow Lemon",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Lemon"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 98000,
+      "title": "TreeD G-PET Violet 1.75mm",
+      "handle": "g-pet-violet",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 98001,
+          "title": "Violet",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-violet",
+          "option1": "Violet",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Violet"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 99000,
+      "title": "TreeD G-PET Bronze 1.75mm",
+      "handle": "g-pet-bronze",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 99001,
+          "title": "Bronze",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-bronze",
+          "option1": "Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 100000,
+      "title": "TreeD G-PET Anthracite Grey 1.75mm",
+      "handle": "g-pet-anthracite-grey",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 100001,
+          "title": "Anthracite Grey",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 101000,
+      "title": "TreeD G-PET Green Army 1.75mm",
+      "handle": "g-pet-green-army",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 101001,
+          "title": "Green Army",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-green-army",
+          "option1": "Green Army",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green Army"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 102000,
+      "title": "TreeD G-PET Aquamarine 1.75mm",
+      "handle": "g-pet-aquamarine",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 102001,
+          "title": "Aquamarine",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-aquamarine",
+          "option1": "Aquamarine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Aquamarine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 103000,
+      "title": "TreeD G-PET Orange 1.75mm",
+      "handle": "g-pet-orange",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 103001,
+          "title": "Orange",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 104000,
+      "title": "TreeD G-PET Red Wine 1.75mm",
+      "handle": "g-pet-red-wine",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 104001,
+          "title": "Red Wine",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-red-wine",
+          "option1": "Red Wine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Wine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 105000,
+      "title": "TreeD G-PET Brown 1.75mm",
+      "handle": "g-pet-brown",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 105001,
+          "title": "Brown",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 106000,
+      "title": "TreeD G-PET Apple Green 1.75mm",
+      "handle": "g-pet-apple-green",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 106001,
+          "title": "Apple Green",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 107000,
+      "title": "TreeD G-PET Industrial Grey 1.75mm",
+      "handle": "g-pet-industrial-grey",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 107001,
+          "title": "Industrial Grey",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-industrial-grey",
+          "option1": "Industrial Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Industrial Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 108000,
+      "title": "TreeD G-PET Oxford Green 1.75mm",
+      "handle": "g-pet-oxford-green",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 108001,
+          "title": "Oxford Green",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-g-pet-oxford-green",
+          "option1": "Oxford Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Oxford Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 109000,
+      "title": "TreeD PETG Fast Forward Seetrought 1.75mm",
+      "handle": "petg-fast-forward-seetrought",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 109001,
+          "title": "Seetrought",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-petg-fast-forward-seetrought",
+          "option1": "Seetrought",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Seetrought"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 110000,
+      "title": "TreeD PETG Fast Forward Black Hole 1.75mm",
+      "handle": "petg-fast-forward-black-hole",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 110001,
+          "title": "Black Hole",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-petg-fast-forward-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 111000,
+      "title": "TreeD PETG Fast Forward White 1.75mm",
+      "handle": "petg-fast-forward-white",
+      "product_type": "PETG",
+      "vendor": "TreeD Filaments",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 111001,
+          "title": "White",
+          "price": "32.90",
+          "compare_at_price": null,
+          "sku": "TREED-petg-fast-forward-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 112000,
+      "title": "TreeD ABS T-MAT Red Race 1.75mm",
+      "handle": "abs-t-mat-red-race",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 112001,
+          "title": "Red Race",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-t-mat-red-race",
+          "option1": "Red Race",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Race"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 113000,
+      "title": "TreeD ABS T-MAT Black Hole 1.75mm",
+      "handle": "abs-t-mat-black-hole",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 113001,
+          "title": "Black Hole",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-t-mat-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 114000,
+      "title": "TreeD ABS T-MAT White 1.75mm",
+      "handle": "abs-t-mat-white",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 114001,
+          "title": "White",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-t-mat-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 115000,
+      "title": "TreeD ABS Performance Natural 1.75mm",
+      "handle": "abs-performance-natural",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 115001,
+          "title": "Natural",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 116000,
+      "title": "TreeD ABS Performance Neptune Blue 1.75mm",
+      "handle": "abs-performance-neptune-blue",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 116001,
+          "title": "Neptune Blue",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-neptune-blue",
+          "option1": "Neptune Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neptune Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 117000,
+      "title": "TreeD ABS Performance Black Hole 1.75mm",
+      "handle": "abs-performance-black-hole",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 117001,
+          "title": "Black Hole",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 118000,
+      "title": "TreeD ABS Performance White 1.75mm",
+      "handle": "abs-performance-white",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 118001,
+          "title": "White",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 119000,
+      "title": "TreeD ABS Performance Red Race 1.75mm",
+      "handle": "abs-performance-red-race",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 119001,
+          "title": "Red Race",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-red-race",
+          "option1": "Red Race",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Race"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 120000,
+      "title": "TreeD ABS Performance Industrial Grey 1.75mm",
+      "handle": "abs-performance-industrial-grey",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 120001,
+          "title": "Industrial Grey",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-industrial-grey",
+          "option1": "Industrial Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Industrial Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 121000,
+      "title": "TreeD ABS Performance Yellow Treed 1.75mm",
+      "handle": "abs-performance-yellow-treed",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 121001,
+          "title": "Yellow Treed",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-yellow-treed",
+          "option1": "Yellow Treed",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Treed"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 122000,
+      "title": "TreeD ABS Performance Yellow Lemon 1.75mm",
+      "handle": "abs-performance-yellow-lemon",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 122001,
+          "title": "Yellow Lemon",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-yellow-lemon",
+          "option1": "Yellow Lemon",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Lemon"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 123000,
+      "title": "TreeD ABS Performance Violet 1.75mm",
+      "handle": "abs-performance-violet",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 123001,
+          "title": "Violet",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-violet",
+          "option1": "Violet",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Violet"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 124000,
+      "title": "TreeD ABS Performance Alluminium 1.75mm",
+      "handle": "abs-performance-alluminium",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 124001,
+          "title": "Alluminium",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-alluminium",
+          "option1": "Alluminium",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Alluminium"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 125000,
+      "title": "TreeD ABS Performance Bronze 1.75mm",
+      "handle": "abs-performance-bronze",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 125001,
+          "title": "Bronze",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-bronze",
+          "option1": "Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 126000,
+      "title": "TreeD ABS Performance Anthracite Grey 1.75mm",
+      "handle": "abs-performance-anthracite-grey",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 126001,
+          "title": "Anthracite Grey",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 127000,
+      "title": "TreeD ABS Performance Green Army 1.75mm",
+      "handle": "abs-performance-green-army",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 127001,
+          "title": "Green Army",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-green-army",
+          "option1": "Green Army",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green Army"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 128000,
+      "title": "TreeD ABS Performance Aquamarine 1.75mm",
+      "handle": "abs-performance-aquamarine",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 128001,
+          "title": "Aquamarine",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-aquamarine",
+          "option1": "Aquamarine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Aquamarine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 129000,
+      "title": "TreeD ABS Performance Orange 1.75mm",
+      "handle": "abs-performance-orange",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 129001,
+          "title": "Orange",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 130000,
+      "title": "TreeD ABS Performance Red Wine 1.75mm",
+      "handle": "abs-performance-red-wine",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 130001,
+          "title": "Red Wine",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-red-wine",
+          "option1": "Red Wine",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red Wine"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 131000,
+      "title": "TreeD ABS Performance Brown 1.75mm",
+      "handle": "abs-performance-brown",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 131001,
+          "title": "Brown",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 132000,
+      "title": "TreeD ABS Performance Apple Green 1.75mm",
+      "handle": "abs-performance-apple-green",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 132001,
+          "title": "Apple Green",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-performance-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 133000,
+      "title": "TreeD ABS Zx Black Hole 1.75mm",
+      "handle": "abs-zx-black-hole",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 133001,
+          "title": "Black Hole",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-zx-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 134000,
+      "title": "TreeD ABS Zx White 1.75mm",
+      "handle": "abs-zx-white",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 134001,
+          "title": "White",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-zx-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 135000,
+      "title": "TreeD ABS King Black Hole 1.75mm",
+      "handle": "abs-king-black-hole",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 135001,
+          "title": "Black Hole",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-king-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 136000,
+      "title": "TreeD ABS King White 1.75mm",
+      "handle": "abs-king-white",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 136001,
+          "title": "White",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-king-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 137000,
+      "title": "TreeD ABS Food Natural 1.75mm",
+      "handle": "abs-food-natural",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 137001,
+          "title": "Natural",
+          "price": "44.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-food-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 138000,
+      "title": "TreeD ABS Med Natural 1.75mm",
+      "handle": "abs-med-natural",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 138001,
+          "title": "Natural",
+          "price": "49.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-med-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 139000,
+      "title": "TreeD ABS ESD Black Hole 1.75mm",
+      "handle": "abs-esd-black-hole",
+      "product_type": "ABS-ESD",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS-ESD",
+      "variants": [
+        {
+          "id": 139001,
+          "title": "Black Hole",
+          "price": "79.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-esd-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 140000,
+      "title": "TreeD ABS CF Carbon Black 1.75mm",
+      "handle": "abs-cf-carbon-black",
+      "product_type": "ABS-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS-CF",
+      "variants": [
+        {
+          "id": 140001,
+          "title": "Carbon Black",
+          "price": "79.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-cf-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 141000,
+      "title": "TreeD ABS Fast Forward Natural 1.75mm",
+      "handle": "abs-fast-forward-natural",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 141001,
+          "title": "Natural",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-fast-forward-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 142000,
+      "title": "TreeD ABS Fast Forward White 1.75mm",
+      "handle": "abs-fast-forward-white",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 142001,
+          "title": "White",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-fast-forward-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 143000,
+      "title": "TreeD ABS Fast Forward Black Hole 1.75mm",
+      "handle": "abs-fast-forward-black-hole",
+      "product_type": "ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 143001,
+          "title": "Black Hole",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-abs-fast-forward-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 144000,
+      "title": "TreeD ASA Uv729 Natural 1.75mm",
+      "handle": "asa-uv729-natural",
+      "product_type": "ASA",
+      "vendor": "TreeD Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 144001,
+          "title": "Natural",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-asa-uv729-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 145000,
+      "title": "TreeD ASA Uv729 Black Hole 1.75mm",
+      "handle": "asa-uv729-black-hole",
+      "product_type": "ASA",
+      "vendor": "TreeD Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 145001,
+          "title": "Black Hole",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-asa-uv729-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 146000,
+      "title": "TreeD ASA Uv729 White 1.75mm",
+      "handle": "asa-uv729-white",
+      "product_type": "ASA",
+      "vendor": "TreeD Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 146001,
+          "title": "White",
+          "price": "34.90",
+          "compare_at_price": null,
+          "sku": "TREED-asa-uv729-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 147000,
+      "title": "TreeD Monumental Evo White Marble 1.75mm",
+      "handle": "monumental-evo-white-marble",
+      "product_type": "ASA",
+      "vendor": "TreeD Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 147001,
+          "title": "White Marble",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-monumental-evo-white-marble",
+          "option1": "White Marble",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White Marble"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 148000,
+      "title": "TreeD Clay Evo Salmon Orange 1.75mm",
+      "handle": "clay-evo-salmon-orange",
+      "product_type": "ASA",
+      "vendor": "TreeD Filaments",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 148001,
+          "title": "Salmon Orange",
+          "price": "39.90",
+          "compare_at_price": null,
+          "sku": "TREED-clay-evo-salmon-orange",
+          "option1": "Salmon Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Salmon Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 149000,
+      "title": "TreeD HIPS Stiron Black Hole 1.75mm",
+      "handle": "hips-stiron-black-hole",
+      "product_type": "HIPS",
+      "vendor": "TreeD Filaments",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 149001,
+          "title": "Black Hole",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "TREED-hips-stiron-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 150000,
+      "title": "TreeD HIPS Stiron White 1.75mm",
+      "handle": "hips-stiron-white",
+      "product_type": "HIPS",
+      "vendor": "TreeD Filaments",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 150001,
+          "title": "White",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "TREED-hips-stiron-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 151000,
+      "title": "TreeD Monumental White Marble 1.75mm",
+      "handle": "monumental-white-marble",
+      "product_type": "HIPS",
+      "vendor": "TreeD Filaments",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 151001,
+          "title": "White Marble",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-monumental-white-marble",
+          "option1": "White Marble",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White Marble"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 152000,
+      "title": "TreeD Sandy Sand 1.75mm",
+      "handle": "sandy-sand",
+      "product_type": "HIPS",
+      "vendor": "TreeD Filaments",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 152001,
+          "title": "Sand",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-sandy-sand",
+          "option1": "Sand",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sand"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 153000,
+      "title": "TreeD Clay Salmon Orange 1.75mm",
+      "handle": "clay-salmon-orange",
+      "product_type": "HIPS",
+      "vendor": "TreeD Filaments",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 153001,
+          "title": "Salmon Orange",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-clay-salmon-orange",
+          "option1": "Salmon Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Salmon Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 154000,
+      "title": "TreeD Dark Stone Slate Grey 1.75mm",
+      "handle": "dark-stone-slate-grey",
+      "product_type": "HIPS",
+      "vendor": "TreeD Filaments",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 154001,
+          "title": "Slate Grey",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-dark-stone-slate-grey",
+          "option1": "Slate Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Slate Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 155000,
+      "title": "TreeD Heritage Brick Brown 1.75mm",
+      "handle": "heritage-brick-brown",
+      "product_type": "HIPS",
+      "vendor": "TreeD Filaments",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 155001,
+          "title": "Brown",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-heritage-brick-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 156000,
+      "title": "TreeD Caementum Grey Cement 1.75mm",
+      "handle": "caementum-grey-cement",
+      "product_type": "HIPS",
+      "vendor": "TreeD Filaments",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 156001,
+          "title": "Grey Cement",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "TREED-caementum-grey-cement",
+          "option1": "Grey Cement",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey Cement"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 157000,
+      "title": "TreeD Verum T Seetrought 1.75mm",
+      "handle": "verum-t-seetrought",
+      "product_type": "PC",
+      "vendor": "TreeD Filaments",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 157001,
+          "title": "Seetrought",
+          "price": "59.90",
+          "compare_at_price": null,
+          "sku": "TREED-verum-t-seetrought",
+          "option1": "Seetrought",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Seetrought"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 158000,
+      "title": "TreeD PC P51 Seetrought 1.75mm",
+      "handle": "pc-p51-seetrought",
+      "product_type": "PC",
+      "vendor": "TreeD Filaments",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 158001,
+          "title": "Seetrought",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-pc-p51-seetrought",
+          "option1": "Seetrought",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Seetrought"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 159000,
+      "title": "TreeD PC ABS V0 Industrial Grey 1.75mm",
+      "handle": "pc-abs-v0-industrial-grey",
+      "product_type": "PC-ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "PC-ABS",
+      "variants": [
+        {
+          "id": 159001,
+          "title": "Industrial Grey",
+          "price": "69.90",
+          "compare_at_price": null,
+          "sku": "TREED-pc-abs-v0-industrial-grey",
+          "option1": "Industrial Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Industrial Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 160000,
+      "title": "TreeD PC ABS Tenax Black Hole 1.75mm",
+      "handle": "pc-abs-tenax-black-hole",
+      "product_type": "PC-ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "PC-ABS",
+      "variants": [
+        {
+          "id": 160001,
+          "title": "Black Hole",
+          "price": "64.90",
+          "compare_at_price": null,
+          "sku": "TREED-pc-abs-tenax-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 161000,
+      "title": "TreeD PC ABS Tenax White 1.75mm",
+      "handle": "pc-abs-tenax-white",
+      "product_type": "PC-ABS",
+      "vendor": "TreeD Filaments",
+      "tags": "PC-ABS",
+      "variants": [
+        {
+          "id": 161001,
+          "title": "White",
+          "price": "64.90",
+          "compare_at_price": null,
+          "sku": "TREED-pc-abs-tenax-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 162000,
+      "title": "TreeD PC PBT B-mat Black Hole 1.75mm",
+      "handle": "pc-pbt-b-mat-black-hole",
+      "product_type": "PC-PBT",
+      "vendor": "TreeD Filaments",
+      "tags": "PC-PBT",
+      "variants": [
+        {
+          "id": 162001,
+          "title": "Black Hole",
+          "price": "69.90",
+          "compare_at_price": null,
+          "sku": "TREED-pc-pbt-b-mat-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 163000,
+      "title": "TreeD PC PBT GF Anthracite Grey 1.75mm",
+      "handle": "pc-pbt-gf-anthracite-grey",
+      "product_type": "PC-PBT-GF",
+      "vendor": "TreeD Filaments",
+      "tags": "PC-PBT-GF",
+      "variants": [
+        {
+          "id": 163001,
+          "title": "Anthracite Grey",
+          "price": "89.90",
+          "compare_at_price": null,
+          "sku": "TREED-pc-pbt-gf-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 164000,
+      "title": "TreeD Structura MA Carbon Black 1.75mm",
+      "handle": "structura-ma-carbon-black",
+      "product_type": "PA",
+      "vendor": "TreeD Filaments",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 164001,
+          "title": "Carbon Black",
+          "price": "59.90",
+          "compare_at_price": null,
+          "sku": "TREED-structura-ma-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 165000,
+      "title": "TreeD PA KK Black Hole 1.75mm",
+      "handle": "pa-kk-black-hole",
+      "product_type": "PA",
+      "vendor": "TreeD Filaments",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 165001,
+          "title": "Black Hole",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-pa-kk-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 166000,
+      "title": "TreeD PA Lubratech Black Hole 1.75mm",
+      "handle": "pa-lubratech-black-hole",
+      "product_type": "PA",
+      "vendor": "TreeD Filaments",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 166001,
+          "title": "Black Hole",
+          "price": "79.90",
+          "compare_at_price": null,
+          "sku": "TREED-pa-lubratech-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 167000,
+      "title": "TreeD PA Longchain Black Hole 1.75mm",
+      "handle": "pa-longchain-black-hole",
+      "product_type": "PA",
+      "vendor": "TreeD Filaments",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 167001,
+          "title": "Black Hole",
+          "price": "69.90",
+          "compare_at_price": null,
+          "sku": "TREED-pa-longchain-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 168000,
+      "title": "TreeD PA Longchain White 1.75mm",
+      "handle": "pa-longchain-white",
+      "product_type": "PA",
+      "vendor": "TreeD Filaments",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 168001,
+          "title": "White",
+          "price": "69.90",
+          "compare_at_price": null,
+          "sku": "TREED-pa-longchain-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 169000,
+      "title": "TreeD PA HP NAT Natural 1.75mm",
+      "handle": "pa-hp-nat-natural",
+      "product_type": "PA",
+      "vendor": "TreeD Filaments",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 169001,
+          "title": "Natural",
+          "price": "79.90",
+          "compare_at_price": null,
+          "sku": "TREED-pa-hp-nat-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 170000,
+      "title": "TreeD PA HP CF 15 Carbon Black 1.75mm",
+      "handle": "pa-hp-cf-15-carbon-black",
+      "product_type": "PA-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 170001,
+          "title": "Carbon Black",
+          "price": "129.90",
+          "compare_at_price": null,
+          "sku": "TREED-pa-hp-cf-15-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 171000,
+      "title": "TreeD PA HP GS10 Carbon Black 1.75mm",
+      "handle": "pa-hp-gs10-carbon-black",
+      "product_type": "PA-GF",
+      "vendor": "TreeD Filaments",
+      "tags": "PA-GF",
+      "variants": [
+        {
+          "id": 171001,
+          "title": "Carbon Black",
+          "price": "109.90",
+          "compare_at_price": null,
+          "sku": "TREED-pa-hp-gs10-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 172000,
+      "title": "TreeD PA CF25 Carbon Black 1.75mm",
+      "handle": "pa-cf25-carbon-black",
+      "product_type": "PA-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 172001,
+          "title": "Carbon Black",
+          "price": "149.90",
+          "compare_at_price": null,
+          "sku": "TREED-pa-cf25-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 173000,
+      "title": "TreeD Carbonio CF15 Carbon Black 1.75mm",
+      "handle": "carbonio-cf15-carbon-black",
+      "product_type": "PA-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 173001,
+          "title": "Carbon Black",
+          "price": "119.90",
+          "compare_at_price": null,
+          "sku": "TREED-carbonio-cf15-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 174000,
+      "title": "TreeD Carbonio CF15 Carbon Red 1.75mm",
+      "handle": "carbonio-cf15-carbon-red",
+      "product_type": "PA-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 174001,
+          "title": "Carbon Red",
+          "price": "119.90",
+          "compare_at_price": null,
+          "sku": "TREED-carbonio-cf15-carbon-red",
+          "option1": "Carbon Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 175000,
+      "title": "TreeD Carbonio CF15 Carbon Green 1.75mm",
+      "handle": "carbonio-cf15-carbon-green",
+      "product_type": "PA-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 175001,
+          "title": "Carbon Green",
+          "price": "119.90",
+          "compare_at_price": null,
+          "sku": "TREED-carbonio-cf15-carbon-green",
+          "option1": "Carbon Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 176000,
+      "title": "TreeD Carbonio CF15 Carbon Blue 1.75mm",
+      "handle": "carbonio-cf15-carbon-blue",
+      "product_type": "PA-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 176001,
+          "title": "Carbon Blue",
+          "price": "119.90",
+          "compare_at_price": null,
+          "sku": "TREED-carbonio-cf15-carbon-blue",
+          "option1": "Carbon Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 177000,
+      "title": "TreeD Carbonio Fast Forward Carbon Black 1.75mm",
+      "handle": "carbonio-fast-forward-carbon-black",
+      "product_type": "PA-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 177001,
+          "title": "Carbon Black",
+          "price": "129.90",
+          "compare_at_price": null,
+          "sku": "TREED-carbonio-fast-forward-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 178000,
+      "title": "TreeD Fortis LL White 1.75mm",
+      "handle": "fortis-ll-white",
+      "product_type": "PP",
+      "vendor": "TreeD Filaments",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 178001,
+          "title": "White",
+          "price": "49.90",
+          "compare_at_price": null,
+          "sku": "TREED-fortis-ll-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 179000,
+      "title": "TreeD PP P-lene 4 Black Hole 1.75mm",
+      "handle": "pp-p-lene-4-black-hole",
+      "product_type": "PP",
+      "vendor": "TreeD Filaments",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 179001,
+          "title": "Black Hole",
+          "price": "44.90",
+          "compare_at_price": null,
+          "sku": "TREED-pp-p-lene-4-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 180000,
+      "title": "TreeD PP P-lene 4 White 1.75mm",
+      "handle": "pp-p-lene-4-white",
+      "product_type": "PP",
+      "vendor": "TreeD Filaments",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 180001,
+          "title": "White",
+          "price": "44.90",
+          "compare_at_price": null,
+          "sku": "TREED-pp-p-lene-4-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 181000,
+      "title": "TreeD PP P-lene 4 Natural 1.75mm",
+      "handle": "pp-p-lene-4-natural",
+      "product_type": "PP",
+      "vendor": "TreeD Filaments",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 181001,
+          "title": "Natural",
+          "price": "44.90",
+          "compare_at_price": null,
+          "sku": "TREED-pp-p-lene-4-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 182000,
+      "title": "TreeD PP P-Lene 5 White 1.75mm",
+      "handle": "pp-p-lene-5-white",
+      "product_type": "PP",
+      "vendor": "TreeD Filaments",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 182001,
+          "title": "White",
+          "price": "49.90",
+          "compare_at_price": null,
+          "sku": "TREED-pp-p-lene-5-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 183000,
+      "title": "TreeD PP P-Lene T15 White 1.75mm",
+      "handle": "pp-p-lene-t15-white",
+      "product_type": "PP",
+      "vendor": "TreeD Filaments",
+      "tags": "PP",
+      "variants": [
+        {
+          "id": 183001,
+          "title": "White",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-pp-p-lene-t15-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 184000,
+      "title": "TreeD PP GF30 Slate Grey 1.75mm",
+      "handle": "pp-gf30-slate-grey",
+      "product_type": "PP-GF",
+      "vendor": "TreeD Filaments",
+      "tags": "PP-GF",
+      "variants": [
+        {
+          "id": 184001,
+          "title": "Slate Grey",
+          "price": "79.90",
+          "compare_at_price": null,
+          "sku": "TREED-pp-gf30-slate-grey",
+          "option1": "Slate Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Slate Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 185000,
+      "title": "TreeD PP CF 18 Carbon Black 1.75mm",
+      "handle": "pp-cf-18-carbon-black",
+      "product_type": "PP-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PP-CF",
+      "variants": [
+        {
+          "id": 185001,
+          "title": "Carbon Black",
+          "price": "89.90",
+          "compare_at_price": null,
+          "sku": "TREED-pp-cf-18-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 186000,
+      "title": "TreeD PE E-lene HD White 1.75mm",
+      "handle": "pe-e-lene-hd-white",
+      "product_type": "HDPE",
+      "vendor": "TreeD Filaments",
+      "tags": "HDPE",
+      "variants": [
+        {
+          "id": 186001,
+          "title": "White",
+          "price": "44.90",
+          "compare_at_price": null,
+          "sku": "TREED-pe-e-lene-hd-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 187000,
+      "title": "TreeD PET CF 15 Carbon Black 1.75mm",
+      "handle": "pet-cf-15-carbon-black",
+      "product_type": "PET-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PET-CF",
+      "variants": [
+        {
+          "id": 187001,
+          "title": "Carbon Black",
+          "price": "99.90",
+          "compare_at_price": null,
+          "sku": "TREED-pet-cf-15-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 188000,
+      "title": "TreeD PMMA Hirma Seetrought 1.75mm",
+      "handle": "pmma-hirma-seetrought",
+      "product_type": "PMMA",
+      "vendor": "TreeD Filaments",
+      "tags": "PMMA",
+      "variants": [
+        {
+          "id": 188001,
+          "title": "Seetrought",
+          "price": "49.90",
+          "compare_at_price": null,
+          "sku": "TREED-pmma-hirma-seetrought",
+          "option1": "Seetrought",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Seetrought"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 189000,
+      "title": "TreeD Flexmark 9 TPU Black Hole 1.75mm",
+      "handle": "flexmark-9-black-hole",
+      "product_type": "TPU",
+      "vendor": "TreeD Filaments",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 189001,
+          "title": "Black Hole",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexmark-9-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 190000,
+      "title": "TreeD Flexmark 9 TPU White 1.75mm",
+      "handle": "flexmark-9-white",
+      "product_type": "TPU",
+      "vendor": "TreeD Filaments",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 190001,
+          "title": "White",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexmark-9-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 191000,
+      "title": "TreeD Flexmark 8 TPU Black Hole 1.75mm",
+      "handle": "flexmark-8-black-hole",
+      "product_type": "TPU",
+      "vendor": "TreeD Filaments",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 191001,
+          "title": "Black Hole",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexmark-8-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 192000,
+      "title": "TreeD Flexmark 8 TPU White 1.75mm",
+      "handle": "flexmark-8-white",
+      "product_type": "TPU",
+      "vendor": "TreeD Filaments",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 192001,
+          "title": "White",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexmark-8-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 193000,
+      "title": "TreeD Flexmark 7 TPU Black Hole 1.75mm",
+      "handle": "flexmark-7-black-hole",
+      "product_type": "TPU",
+      "vendor": "TreeD Filaments",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 193001,
+          "title": "Black Hole",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexmark-7-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 194000,
+      "title": "TreeD Flexmark 7 TPU White 1.75mm",
+      "handle": "flexmark-7-white",
+      "product_type": "TPU",
+      "vendor": "TreeD Filaments",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 194001,
+          "title": "White",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexmark-7-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 195000,
+      "title": "TreeD Ultraflex TPE-E Black Hole 1.75mm",
+      "handle": "ultraflex-black-hole",
+      "product_type": "TPE",
+      "vendor": "TreeD Filaments",
+      "tags": "TPE",
+      "variants": [
+        {
+          "id": 195001,
+          "title": "Black Hole",
+          "price": "59.90",
+          "compare_at_price": null,
+          "sku": "TREED-ultraflex-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 196000,
+      "title": "TreeD Ultraflex TPE-E White 1.75mm",
+      "handle": "ultraflex-white",
+      "product_type": "TPE",
+      "vendor": "TreeD Filaments",
+      "tags": "TPE",
+      "variants": [
+        {
+          "id": 196001,
+          "title": "White",
+          "price": "59.90",
+          "compare_at_price": null,
+          "sku": "TREED-ultraflex-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 197000,
+      "title": "TreeD Ultraflex+ TPE-E Black Hole 1.75mm",
+      "handle": "ultraflex-plus-black-hole",
+      "product_type": "TPE",
+      "vendor": "TreeD Filaments",
+      "tags": "TPE",
+      "variants": [
+        {
+          "id": 197001,
+          "title": "Black Hole",
+          "price": "64.90",
+          "compare_at_price": null,
+          "sku": "TREED-ultraflex-plus-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 198000,
+      "title": "TreeD Ultraflex+ TPE-E White 1.75mm",
+      "handle": "ultraflex-plus-white",
+      "product_type": "TPE",
+      "vendor": "TreeD Filaments",
+      "tags": "TPE",
+      "variants": [
+        {
+          "id": 198001,
+          "title": "White",
+          "price": "64.90",
+          "compare_at_price": null,
+          "sku": "TREED-ultraflex-plus-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 199000,
+      "title": "TreeD Flexability TPA Black Hole 1.75mm",
+      "handle": "flexability-black-hole",
+      "product_type": "TPA",
+      "vendor": "TreeD Filaments",
+      "tags": "TPA",
+      "variants": [
+        {
+          "id": 199001,
+          "title": "Black Hole",
+          "price": "59.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexability-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 200000,
+      "title": "TreeD Flexability TPA White 1.75mm",
+      "handle": "flexability-white",
+      "product_type": "TPA",
+      "vendor": "TreeD Filaments",
+      "tags": "TPA",
+      "variants": [
+        {
+          "id": 200001,
+          "title": "White",
+          "price": "59.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexability-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 201000,
+      "title": "TreeD Flexability+ TPA Black Hole 1.75mm",
+      "handle": "flexability-plus-black-hole",
+      "product_type": "TPA",
+      "vendor": "TreeD Filaments",
+      "tags": "TPA",
+      "variants": [
+        {
+          "id": 201001,
+          "title": "Black Hole",
+          "price": "64.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexability-plus-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 202000,
+      "title": "TreeD Flexability+ TPA White 1.75mm",
+      "handle": "flexability-plus-white",
+      "product_type": "TPA",
+      "vendor": "TreeD Filaments",
+      "tags": "TPA",
+      "variants": [
+        {
+          "id": 202001,
+          "title": "White",
+          "price": "64.90",
+          "compare_at_price": null,
+          "sku": "TREED-flexability-plus-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 203000,
+      "title": "TreeD Pneumatique TPU Black Hole 1.75mm",
+      "handle": "pneumatique-black-hole",
+      "product_type": "TPU",
+      "vendor": "TreeD Filaments",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 203001,
+          "title": "Black Hole",
+          "price": "49.90",
+          "compare_at_price": null,
+          "sku": "TREED-pneumatique-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 204000,
+      "title": "TreeD Pure FT TPU Osso 1.75mm",
+      "handle": "pure-ft-osso",
+      "product_type": "TPU",
+      "vendor": "TreeD Filaments",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 204001,
+          "title": "Osso",
+          "price": "59.90",
+          "compare_at_price": null,
+          "sku": "TREED-pure-ft-osso",
+          "option1": "Osso",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Osso"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 205000,
+      "title": "TreeD Elasto A TPA White 1.75mm",
+      "handle": "elasto-a-white",
+      "product_type": "TPA",
+      "vendor": "TreeD Filaments",
+      "tags": "TPA",
+      "variants": [
+        {
+          "id": 205001,
+          "title": "White",
+          "price": "54.90",
+          "compare_at_price": null,
+          "sku": "TREED-elasto-a-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 206000,
+      "title": "TreeD PEEK NAT Natural 1.75mm",
+      "handle": "peek-nat-natural",
+      "product_type": "PEEK",
+      "vendor": "TreeD Filaments",
+      "tags": "PEEK",
+      "variants": [
+        {
+          "id": 206001,
+          "title": "Natural",
+          "price": "399.90",
+          "compare_at_price": null,
+          "sku": "TREED-peek-nat-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 207000,
+      "title": "TreeD PEEK CF 15 Black Hole 1.75mm",
+      "handle": "peek-cf-15-black-hole",
+      "product_type": "PEEK-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PEEK-CF",
+      "variants": [
+        {
+          "id": 207001,
+          "title": "Black Hole",
+          "price": "449.90",
+          "compare_at_price": null,
+          "sku": "TREED-peek-cf-15-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 208000,
+      "title": "TreeD PPS GF 25 Black Hole 1.75mm",
+      "handle": "pps-gf-25-black-hole",
+      "product_type": "PPS-GF",
+      "vendor": "TreeD Filaments",
+      "tags": "PPS-GF",
+      "variants": [
+        {
+          "id": 208001,
+          "title": "Black Hole",
+          "price": "299.90",
+          "compare_at_price": null,
+          "sku": "TREED-pps-gf-25-black-hole",
+          "option1": "Black Hole",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Hole"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    },
+    {
+      "id": 209000,
+      "title": "TreeD PPS CF15 Carbon Black 1.75mm",
+      "handle": "pps-cf15-carbon-black",
+      "product_type": "PPS-CF",
+      "vendor": "TreeD Filaments",
+      "tags": "PPS-CF",
+      "variants": [
+        {
+          "id": 209001,
+          "title": "Carbon Black",
+          "price": "329.90",
+          "compare_at_price": null,
+          "sku": "TREED-pps-cf15-carbon-black",
+          "option1": "Carbon Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carbon Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T18:19:47.507Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T18:19:47.508Z",
+  "source": "treed-filaments-catalog-curated",
+  "currency": "EUR"
+}
