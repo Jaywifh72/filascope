@@ -1,0 +1,4511 @@
+{
+  "products": [
+    {
+      "id": "8011873091824",
+      "title": "PLA Basic",
+      "handle": "pla-basic-filament",
+      "body_html": "PLA is the most common material in 3D printing as it's easy to print and inexpensive. Meanwhile, its stiffness and strength can meet most printing needs. It is worth mentioning that it can biodegrade in some artificial composting conditions. Bambu PLA Basic is designed for high-speed printing. Compared to general PLA, it can easily achieve printing speeds up to 250-300 mm/s and has excellent toughness and Z-layer strength.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43115681841392",
+          "title": "Jade White / Refill / 1kg",
+          "option1": "Jade White",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115681841392",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7970a11e9efd4d7bbf844311b4d762d0/White.jpg"
+          }
+        },
+        {
+          "id": "43115681874160",
+          "title": "Orange / Refill / 1kg",
+          "option1": "Orange",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115681874160",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a921a98134db4e77ba4c082586134ff7/Orange.jpg"
+          }
+        },
+        {
+          "id": "43115681906928",
+          "title": "Blue / Refill / 1kg",
+          "option1": "Blue",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115681906928",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/549c42fa49304aa5ae018edc70de4245.jpg"
+          }
+        },
+        {
+          "id": "43115681939696",
+          "title": "Gray / Refill / 1kg",
+          "option1": "Gray",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115681939696",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/309b3d9363564c4e9c4616954e701c84.png"
+          }
+        },
+        {
+          "id": "43115681972464",
+          "title": "Beige / Refill / 1kg",
+          "option1": "Beige",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115681972464",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/75cdc1ae23ff485d8beaee878fe5008d/Beige.jpg"
+          }
+        },
+        {
+          "id": "43115682005232",
+          "title": "Silver / Refill / 1kg",
+          "option1": "Silver",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115682005232",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3c765e0b85f343a5acac4bd479df6d8f/Sliver.jpg"
+          }
+        },
+        {
+          "id": "43115682038000",
+          "title": "Yellow / Refill / 1kg",
+          "option1": "Yellow",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115682038000",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d0058bf2c9514848bd13e01daaf60cf9/Yellow.jpg"
+          }
+        },
+        {
+          "id": "43115682070768",
+          "title": "Blue Grey / Refill / 1kg",
+          "option1": "Blue Grey",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115682070768",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/73432425bbbd452eab3c1999c76d6cff.png"
+          }
+        },
+        {
+          "id": "43115682103536",
+          "title": "Pink / Refill / 1kg",
+          "option1": "Pink",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115682103536",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/f77a12ba2c544176ae9efd79c280ca9d/Pink.jpg"
+          }
+        },
+        {
+          "id": "43115682169072",
+          "title": "Brown / Refill / 1kg",
+          "option1": "Brown",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115682169072",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/af252a613983445dad5abe80c5677f61.png"
+          }
+        },
+        {
+          "id": "43115682201840",
+          "title": "Red / Refill / 1kg",
+          "option1": "Red",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115682201840",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a9c13adb72ec42869bbe50948963cafa/Red.jpg"
+          }
+        },
+        {
+          "id": "43766892298480",
+          "title": "Black / Refill / 1kg",
+          "option1": "Black",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43766892298480",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/31f2cbb9d9bc473894322fa464ea63d2.png"
+          }
+        },
+        {
+          "id": "43886297678064",
+          "title": "Jade White / Filament with spool / 1kg",
+          "option1": "Jade White",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "43886297678064",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7970a11e9efd4d7bbf844311b4d762d0/White.jpg"
+          }
+        },
+        {
+          "id": "43886297710832",
+          "title": "Black / Filament with spool / 1kg",
+          "option1": "Black",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "43886297710832",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/31f2cbb9d9bc473894322fa464ea63d2.png"
+          }
+        },
+        {
+          "id": "43886297776368",
+          "title": "Red / Filament with spool / 1kg",
+          "option1": "Red",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "43886297776368",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a9c13adb72ec42869bbe50948963cafa/Red.jpg"
+          }
+        },
+        {
+          "id": "44106878583024",
+          "title": "Blue / Filament with spool / 1kg",
+          "option1": "Blue",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44106878583024",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/549c42fa49304aa5ae018edc70de4245.jpg"
+          }
+        },
+        {
+          "id": "44138270228720",
+          "title": "Bambu Green / Filament with spool / 1kg",
+          "option1": "Bambu Green",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44138270228720",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7bb5c68af8bf4272a9ac1becb5cd477e/Bambu_Green.jpg"
+          }
+        },
+        {
+          "id": "44176652173552",
+          "title": "Gray / Filament with spool / 1kg",
+          "option1": "Gray",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44176652173552",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/309b3d9363564c4e9c4616954e701c84.png"
+          }
+        },
+        {
+          "id": "45421069598960",
+          "title": "Magenta / Refill / 1kg",
+          "option1": "Magenta",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421069598960",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/50d61704a9d64124883c9735354aa14d/Magenta.jpg"
+          }
+        },
+        {
+          "id": "45421183172848",
+          "title": "Bambu Green / Refill / 1kg",
+          "option1": "Bambu Green",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421183172848",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7bb5c68af8bf4272a9ac1becb5cd477e/Bambu_Green.jpg"
+          }
+        },
+        {
+          "id": "45421189890288",
+          "title": "Mistletoe Green / Refill / 1kg",
+          "option1": "Mistletoe Green",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421189890288",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/66f4e06bad1345619420cbb451f4c29e.png"
+          }
+        },
+        {
+          "id": "45421220069616",
+          "title": "Cyan / Refill / 1kg",
+          "option1": "Cyan",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421220069616",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/cea66355392d4cec875fb6a281d1b23a.png"
+          }
+        },
+        {
+          "id": "45421228327152",
+          "title": "Purple / Refill / 1kg",
+          "option1": "Purple",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421228327152",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a1d67c7010c14c98ab1cedba3b79a55e.jpg"
+          }
+        },
+        {
+          "id": "45421234356464",
+          "title": "Gold / Refill / 1kg",
+          "option1": "Gold",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421234356464",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/deaa615cc1ea48abbcaf4a9800ea7296/Gold.jpg"
+          }
+        },
+        {
+          "id": "45421242122480",
+          "title": "Bronze / Refill / 1kg",
+          "option1": "Bronze",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421242122480",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/4dec5d9b46ec434893d984414bea6785/Bronze.jpg"
+          }
+        },
+        {
+          "id": "46498490810608",
+          "title": "Light Gray / Refill / 1kg",
+          "option1": "Light Gray",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46498490810608",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/dd8fec641daf48aba395f4381854050b.jpg"
+          }
+        },
+        {
+          "id": "46498490843376",
+          "title": "Dark Gray / Refill / 1kg",
+          "option1": "Dark Gray",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46498490843376",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/31b905e783b34a61a449a1bccd0cde2b/pla_basic_dark_gray.jpg"
+          }
+        },
+        {
+          "id": "46741142012144",
+          "title": "Maroon Red / Refill / 1kg",
+          "option1": "Maroon Red",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741142012144",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2b000e0f1d89409f8590708c5b7ac9d7.jpg"
+          }
+        },
+        {
+          "id": "46741144043760",
+          "title": "Sunflower Yellow / Refill / 1kg",
+          "option1": "Sunflower Yellow",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741144043760",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/cba0bc5670a54a2ca758f650e0cadef3.jpg"
+          }
+        },
+        {
+          "id": "46741145321712",
+          "title": "Turquoise / Refill / 1kg",
+          "option1": "Turquoise",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741145321712",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d58beab50fb249329ef1b9c4db157d0a.jpg"
+          }
+        },
+        {
+          "id": "46741145813232",
+          "title": "Indigo Purple / Refill / 1kg",
+          "option1": "Indigo Purple",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741145813232",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/dba9abb0c0384470ae2ef48fce12ebd3.jpg"
+          }
+        },
+        {
+          "id": "46741147582704",
+          "title": "Bright Green / Refill / 1kg",
+          "option1": "Bright Green",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741147582704",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/817e47d8902a42ec9614c107eafcd46c.jpg"
+          }
+        },
+        {
+          "id": "46741149778160",
+          "title": "Cocoa Brown / Refill / 1kg",
+          "option1": "Cocoa Brown",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741149778160",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/c1819cba3bc6474bb8b91556931896b0.jpg"
+          }
+        },
+        {
+          "id": "46741151580400",
+          "title": "Hot Pink / Refill / 1kg",
+          "option1": "Hot Pink",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741151580400",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/66a39723b543411e977ec8401ed6f12a.jpg"
+          }
+        },
+        {
+          "id": "46741152792816",
+          "title": "Cobalt Blue / Refill / 1kg",
+          "option1": "Cobalt Blue",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741152792816",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3a08b41d25264b4c909f5ab4b049b44c.jpg"
+          }
+        },
+        {
+          "id": "46741154332912",
+          "title": "Pumpkin Orange / Refill / 1kg",
+          "option1": "Pumpkin Orange",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46741154332912",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/02cd259e90ee478a8ad950ebc532a7bb.jpg"
+          }
+        },
+        {
+          "id": "558065616583475201",
+          "title": "Mistletoe Green / Filament with spool / 1kg",
+          "option1": "Mistletoe Green",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "558065616583475201",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/66f4e06bad1345619420cbb451f4c29e.png"
+          }
+        },
+        {
+          "id": "558065616583475207",
+          "title": "Cyan / Filament with spool / 1kg",
+          "option1": "Cyan",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "558065616583475207",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/cea66355392d4cec875fb6a281d1b23a.png"
+          }
+        },
+        {
+          "id": "565675607147048961",
+          "title": "Sunflower Yellow / Filament with spool / 1kg",
+          "option1": "Sunflower Yellow",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "565675607147048961",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/cba0bc5670a54a2ca758f650e0cadef3.jpg"
+          }
+        },
+        {
+          "id": "565675607147048967",
+          "title": "Pumpkin Orange / Filament with spool / 1kg",
+          "option1": "Pumpkin Orange",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "565675607147048967",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/02cd259e90ee478a8ad950ebc532a7bb.jpg"
+          }
+        },
+        {
+          "id": "565675607147048973",
+          "title": "Hot Pink / Filament with spool / 1kg",
+          "option1": "Hot Pink",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "565675607147048973",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/66a39723b543411e977ec8401ed6f12a.jpg"
+          }
+        },
+        {
+          "id": "565675607147048979",
+          "title": "Indigo Purple / Filament with spool / 1kg",
+          "option1": "Indigo Purple",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "565675607147048979",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/dba9abb0c0384470ae2ef48fce12ebd3.jpg"
+          }
+        },
+        {
+          "id": "565675607147048985",
+          "title": "Cocoa Brown / Filament with spool / 1kg",
+          "option1": "Cocoa Brown",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "565675607147048985",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/c1819cba3bc6474bb8b91556931896b0.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/7970a11e9efd4d7bbf844311b4d762d0/White.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a921a98134db4e77ba4c082586134ff7/Orange.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/549c42fa49304aa5ae018edc70de4245.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/309b3d9363564c4e9c4616954e701c84.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/75cdc1ae23ff485d8beaee878fe5008d/Beige.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/3c765e0b85f343a5acac4bd479df6d8f/Sliver.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d0058bf2c9514848bd13e01daaf60cf9/Yellow.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/73432425bbbd452eab3c1999c76d6cff.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/f77a12ba2c544176ae9efd79c280ca9d/Pink.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/af252a613983445dad5abe80c5677f61.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a9c13adb72ec42869bbe50948963cafa/Red.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/31f2cbb9d9bc473894322fa464ea63d2.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/7bb5c68af8bf4272a9ac1becb5cd477e/Bambu_Green.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/50d61704a9d64124883c9735354aa14d/Magenta.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/66f4e06bad1345619420cbb451f4c29e.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/cea66355392d4cec875fb6a281d1b23a.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a1d67c7010c14c98ab1cedba3b79a55e.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/deaa615cc1ea48abbcaf4a9800ea7296/Gold.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/4dec5d9b46ec434893d984414bea6785/Bronze.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/dd8fec641daf48aba395f4381854050b.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/31b905e783b34a61a449a1bccd0cde2b/pla_basic_dark_gray.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/2b000e0f1d89409f8590708c5b7ac9d7.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/cba0bc5670a54a2ca758f650e0cadef3.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d58beab50fb249329ef1b9c4db157d0a.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/dba9abb0c0384470ae2ef48fce12ebd3.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/817e47d8902a42ec9614c107eafcd46c.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/c1819cba3bc6474bb8b91556931896b0.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/66a39723b543411e977ec8401ed6f12a.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/3a08b41d25264b4c909f5ab4b049b44c.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/02cd259e90ee478a8ad950ebc532a7bb.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8015673917680",
+      "title": "PLA Matte",
+      "handle": "pla-matte",
+      "body_html": "PLA is the most common material in 3D printing as it's easy to print and inexpensive. Meanwhile, its stiffness and strength can meet most printing needs. It is worth mentioning that it can biodegrade in some artificial composting conditions. Bambu PLA Matte is designed for matte surface, and can be printed in speed up to 250 - 300 mm/s, which is faster than regular PLA. It can also make support removal much easier.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43135539839216",
+          "title": "Matte Ivory White / Refill / 1kg",
+          "option1": "Matte Ivory White",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135539839216",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/40dfc4b889e34f97b06e2980104c6c52/Matte-Ivory-White-.png"
+          }
+        },
+        {
+          "id": "43135539871984",
+          "title": "Matte Ash Gray / Refill / 1kg",
+          "option1": "Matte Ash Gray",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135539871984",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/179b30bca747418f9a013cb0a8a17bbc/Matte-Ash-Grey.png"
+          }
+        },
+        {
+          "id": "43135539904752",
+          "title": "Matte Mandarin Orange / Refill / 1kg",
+          "option1": "Matte Mandarin Orange",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135539904752",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2d60cdd7ff1e419ab45fcb5672e88b06/Matte-Mandarin-Orange.png"
+          }
+        },
+        {
+          "id": "43135539937520",
+          "title": "Matte Sakura Pink / Refill / 1kg",
+          "option1": "Matte Sakura Pink",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135539937520",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/4a136256e904463e83d6379496bf770d/Matte-Sakura-Pink.png"
+          }
+        },
+        {
+          "id": "43135539970288",
+          "title": "Matte Lemon Yellow / Refill / 1kg",
+          "option1": "Matte Lemon Yellow",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135539970288",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/0f33185fa699431d935b5b7dfcaa2915/Matte-Lemon-Yellow.png"
+          }
+        },
+        {
+          "id": "43135540003056",
+          "title": "Matte Charcoal / Refill / 1kg",
+          "option1": "Matte Charcoal",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135540003056",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a1b596fe17af44feb9b6af51c3b6985d.png"
+          }
+        },
+        {
+          "id": "43135540035824",
+          "title": "Matte Grass Green / Refill / 1kg",
+          "option1": "Matte Grass Green",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135540035824",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/466a72ae34194f7f91a267770311e78a/Matte-Grass-Green.png"
+          }
+        },
+        {
+          "id": "43135540068592",
+          "title": "Matte Latte Brown / Refill / 1kg",
+          "option1": "Matte Latte Brown",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135540068592",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a91809bf094d446981d81f685543a4b8/Matte-Latte-Brown.png"
+          }
+        },
+        {
+          "id": "43135540101360",
+          "title": "Matte Scarlet Red / Refill / 1kg",
+          "option1": "Matte Scarlet Red",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135540101360",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/b7693e3cc1d34ad4aa381913334ecd2d/Matte-Scarlet-Red.png"
+          }
+        },
+        {
+          "id": "43135540134128",
+          "title": "Matte Ice Blue / Refill / 1kg",
+          "option1": "Matte Ice Blue",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135540134128",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6681ea227f9840dc9e4b683df4aa2948/Matte-Ice-Blue.png"
+          }
+        },
+        {
+          "id": "43135540166896",
+          "title": "Matte Lilac purple / Refill / 1kg",
+          "option1": "Matte Lilac purple",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135540166896",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7421d5d2a4af459f94b925519f9f9f0d/Matte-Lilac-purple.png"
+          }
+        },
+        {
+          "id": "43135540199664",
+          "title": "Matte Marine Blue / Refill / 1kg",
+          "option1": "Matte Marine Blue",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43135540199664",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/61cc94fa86d743bfb20f329fdd2bbd24/Matte-Marine-Blue.png"
+          }
+        },
+        {
+          "id": "43887138439408",
+          "title": "Matte Marine Blue / Filament with spool / 1kg",
+          "option1": "Matte Marine Blue",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "43887138439408",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/61cc94fa86d743bfb20f329fdd2bbd24/Matte-Marine-Blue.png"
+          }
+        },
+        {
+          "id": "43887138472176",
+          "title": "Matte Scarlet Red / Filament with spool / 1kg",
+          "option1": "Matte Scarlet Red",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "43887138472176",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/b7693e3cc1d34ad4aa381913334ecd2d/Matte-Scarlet-Red.png"
+          }
+        },
+        {
+          "id": "43887138504944",
+          "title": "Matte Charcoal / Filament with spool / 1kg",
+          "option1": "Matte Charcoal",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "43887138504944",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a1b596fe17af44feb9b6af51c3b6985d.png"
+          }
+        },
+        {
+          "id": "43887138537712",
+          "title": "Matte Ivory White / Filament with spool / 1kg",
+          "option1": "Matte Ivory White",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "43887138537712",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/40dfc4b889e34f97b06e2980104c6c52/Matte-Ivory-White-.png"
+          }
+        },
+        {
+          "id": "43887138570480",
+          "title": "Matte Ash Gray / Filament with spool / 1kg",
+          "option1": "Matte Ash Gray",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "43887138570480",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/179b30bca747418f9a013cb0a8a17bbc/Matte-Ash-Grey.png"
+          }
+        },
+        {
+          "id": "44142377402608",
+          "title": "Matte Mandarin Orange / Filament with spool / 1kg",
+          "option1": "Matte Mandarin Orange",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44142377402608",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2d60cdd7ff1e419ab45fcb5672e88b06/Matte-Mandarin-Orange.png"
+          }
+        },
+        {
+          "id": "45421259915504",
+          "title": "Matte Dark Brown / Refill / 1kg",
+          "option1": "Matte Dark Brown",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421259915504",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/be277b5f414d4dfab7db1080684ddfb5/Matte-Dark-Brown.png"
+          }
+        },
+        {
+          "id": "45421267878128",
+          "title": "Matte Dark Red / Refill / 1kg",
+          "option1": "Matte Dark Red",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421267878128",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/32dd07d0d63a4781b1f757cb10b4c54f/Matte-Dark-Red.png"
+          }
+        },
+        {
+          "id": "45421272989936",
+          "title": "Matte Dark Green / Refill / 1kg",
+          "option1": "Matte Dark Green",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421272989936",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/153bb3ac156f44729df5b9b5c4d200de/Matte-Dark-Green.png"
+          }
+        },
+        {
+          "id": "45421360218352",
+          "title": "Matte Dark Blue / Refill / 1kg",
+          "option1": "Matte Dark Blue",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45421360218352",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5b6c58d0094c456c9d81ff28908dc4ea/Matte-Dark-Blue.png"
+          }
+        },
+        {
+          "id": "45869359038704",
+          "title": "Matte Desert Tan / Refill / 1kg",
+          "option1": "Matte Desert Tan",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "45869359038704",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/27e1b0a7d0f44aa0b741ef2b379272ed/Matte-Desert-Tan.png"
+          }
+        },
+        {
+          "id": "563882858931896329",
+          "title": "Matte Bone White / Refill / 1kg",
+          "option1": "Matte Bone White",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "563882858931896329",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/17f20253468641e09ed65498310e26b2/7.jpg"
+          }
+        },
+        {
+          "id": "563882858931896335",
+          "title": "Matte Plum / Refill / 1kg",
+          "option1": "Matte Plum",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "563882858931896335",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/0396ee1531694c7199a973e19ad12a21/6.jpg"
+          }
+        },
+        {
+          "id": "563882858931896341",
+          "title": "Matte Sky Blue / Refill / 1kg",
+          "option1": "Matte Sky Blue",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "563882858931896341",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/da2acfb4820042d99bf05b96b1832312/4.jpg"
+          }
+        },
+        {
+          "id": "563882858931896347",
+          "title": "Matte Apple Green / Refill / 1kg",
+          "option1": "Matte Apple Green",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "563882858931896347",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5d7a744633fe4f61a133a86030dee9a3/2.jpg"
+          }
+        },
+        {
+          "id": "563882858931896353",
+          "title": "Matte Dark Chocolate / Refill / 1kg",
+          "option1": "Matte Dark Chocolate",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "563882858931896353",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/937243c9769645efa11c1e0c539ebf3d/3.jpg"
+          }
+        },
+        {
+          "id": "563882858931896359",
+          "title": "Matte Caramel / Refill / 1kg",
+          "option1": "Matte Caramel",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "563882858931896359",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/23575c1bb53f4eb08a499ec1d5bbddda/8.jpg"
+          }
+        },
+        {
+          "id": "563882858931896365",
+          "title": "Matte Terracotta / Refill / 1kg",
+          "option1": "Matte Terracotta",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "563882858931896365",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9c5bc08717724172bcc6c9b6f5730559/5.jpg"
+          }
+        },
+        {
+          "id": "563882858931896371",
+          "title": "Matte Nardo Gray / Refill / 1kg",
+          "option1": "Matte Nardo Gray",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "563882858931896371",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5dd5c23fefdf4dbda7b6dd51dcd1e375/1.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/40dfc4b889e34f97b06e2980104c6c52/Matte-Ivory-White-.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/179b30bca747418f9a013cb0a8a17bbc/Matte-Ash-Grey.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/2d60cdd7ff1e419ab45fcb5672e88b06/Matte-Mandarin-Orange.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/4a136256e904463e83d6379496bf770d/Matte-Sakura-Pink.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/0f33185fa699431d935b5b7dfcaa2915/Matte-Lemon-Yellow.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a1b596fe17af44feb9b6af51c3b6985d.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/466a72ae34194f7f91a267770311e78a/Matte-Grass-Green.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a91809bf094d446981d81f685543a4b8/Matte-Latte-Brown.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/b7693e3cc1d34ad4aa381913334ecd2d/Matte-Scarlet-Red.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6681ea227f9840dc9e4b683df4aa2948/Matte-Ice-Blue.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/7421d5d2a4af459f94b925519f9f9f0d/Matte-Lilac-purple.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/61cc94fa86d743bfb20f329fdd2bbd24/Matte-Marine-Blue.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/be277b5f414d4dfab7db1080684ddfb5/Matte-Dark-Brown.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/32dd07d0d63a4781b1f757cb10b4c54f/Matte-Dark-Red.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/153bb3ac156f44729df5b9b5c4d200de/Matte-Dark-Green.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/5b6c58d0094c456c9d81ff28908dc4ea/Matte-Dark-Blue.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/27e1b0a7d0f44aa0b741ef2b379272ed/Matte-Desert-Tan.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/17f20253468641e09ed65498310e26b2/7.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/0396ee1531694c7199a973e19ad12a21/6.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/da2acfb4820042d99bf05b96b1832312/4.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/5d7a744633fe4f61a133a86030dee9a3/2.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/937243c9769645efa11c1e0c539ebf3d/3.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/23575c1bb53f4eb08a499ec1d5bbddda/8.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/9c5bc08717724172bcc6c9b6f5730559/5.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/5dd5c23fefdf4dbda7b6dd51dcd1e375/1.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "542547831272378368",
+      "title": "PLA Silk+",
+      "handle": "pla-silk-upgrade",
+      "body_html": "",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "542547831280766994",
+          "title": "Gold / Filament with spool / 1 kg",
+          "option1": "Gold",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280766994",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/46aa65c617a8471da4a01cd51f2478ff.jpg"
+          }
+        },
+        {
+          "id": "542547831280767000",
+          "title": "Silver / Filament with spool / 1 kg",
+          "option1": "Silver",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767000",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/344443d48cab4e94992d9c388f585fc1.jpg"
+          }
+        },
+        {
+          "id": "542547831280767006",
+          "title": "Titan Gray / Filament with spool / 1 kg",
+          "option1": "Titan Gray",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767006",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a6e936cd3be64cec827555490f771b99.jpg"
+          }
+        },
+        {
+          "id": "542547831280767012",
+          "title": "Candy Red / Filament with spool / 1 kg",
+          "option1": "Candy Red",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767012",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d2008538df9e401e9644bfbfdf1179ac.jpg"
+          }
+        },
+        {
+          "id": "542547831280767018",
+          "title": "Candy Green / Filament with spool / 1 kg",
+          "option1": "Candy Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767018",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/1865fd2939f745ecb89e2bf1a6e22ef7.jpg"
+          }
+        },
+        {
+          "id": "542547831280767024",
+          "title": "Blue / Filament with spool / 1 kg",
+          "option1": "Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767024",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d08a4e3e041540cf9589c141a8e79a57.jpg"
+          }
+        },
+        {
+          "id": "542547831280767030",
+          "title": "Purple / Filament with spool / 1 kg",
+          "option1": "Purple",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767030",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7a6ee2f6ea6a4b0193f123ab3a751898.jpg"
+          }
+        },
+        {
+          "id": "542547831280767036",
+          "title": "Rose Gold / Filament with spool / 1 kg",
+          "option1": "Rose Gold",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767036",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7e807e841fe144a993b4bd5947d56d8b.jpg"
+          }
+        },
+        {
+          "id": "542547831280767042",
+          "title": "Baby Blue / Filament with spool / 1 kg",
+          "option1": "Baby Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767042",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/66beef322ddf42899a5f77f214b044d5.jpg"
+          }
+        },
+        {
+          "id": "542547831280767048",
+          "title": "Mint / Filament with spool / 1 kg",
+          "option1": "Mint",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767048",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6d7357a7390f4873b2d12157ee9ddd09.jpg"
+          }
+        },
+        {
+          "id": "542547831280767054",
+          "title": "Pink / Filament with spool / 1 kg",
+          "option1": "Pink",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767054",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/65f72225705a4475aae0f8ba03625a1d.jpg"
+          }
+        },
+        {
+          "id": "542547831280767060",
+          "title": "Champagne / Filament with spool / 1 kg",
+          "option1": "Champagne",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831280767060",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ce958f3221c342e991a84630752e1c1d.jpg"
+          }
+        },
+        {
+          "id": "542547831284961285",
+          "title": "White / Filament with spool / 1 kg",
+          "option1": "White",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "542547831284961285",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/742e9d01ed714b51b44963338c0593bd.jpg"
+          }
+        },
+        {
+          "id": "669699832095612930",
+          "title": "Gold / Refill / 1 kg",
+          "option1": "Gold",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "669699832095612930",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/46aa65c617a8471da4a01cd51f2478ff.jpg"
+          }
+        },
+        {
+          "id": "669699832095612936",
+          "title": "Titan Gray / Refill / 1 kg",
+          "option1": "Titan Gray",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "669699832095612936",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a6e936cd3be64cec827555490f771b99.jpg"
+          }
+        },
+        {
+          "id": "669699832099807232",
+          "title": "Silver / Refill / 1 kg",
+          "option1": "Silver",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "669699832099807232",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/344443d48cab4e94992d9c388f585fc1.jpg"
+          }
+        },
+        {
+          "id": "669699832099807238",
+          "title": "White / Refill / 1 kg",
+          "option1": "White",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "669699832099807238",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/742e9d01ed714b51b44963338c0593bd.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/46aa65c617a8471da4a01cd51f2478ff.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/344443d48cab4e94992d9c388f585fc1.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a6e936cd3be64cec827555490f771b99.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d2008538df9e401e9644bfbfdf1179ac.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/1865fd2939f745ecb89e2bf1a6e22ef7.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d08a4e3e041540cf9589c141a8e79a57.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/7a6ee2f6ea6a4b0193f123ab3a751898.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/7e807e841fe144a993b4bd5947d56d8b.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/66beef322ddf42899a5f77f214b044d5.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6d7357a7390f4873b2d12157ee9ddd09.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/65f72225705a4475aae0f8ba03625a1d.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/ce958f3221c342e991a84630752e1c1d.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/742e9d01ed714b51b44963338c0593bd.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "624467991610105856",
+      "title": "PLA Tough+",
+      "handle": "pla-tough-upgrade",
+      "body_html": "",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "624467991622688768",
+          "title": "White / Filament with Spool / 1kg",
+          "option1": "White",
+          "option2": "1kg",
+          "option3": "Filament with Spool",
+          "price": 30.99,
+          "sku": "624467991622688768",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/495f8100d89748a0bd78a3edd1571363/PLA_Tough_new.jpg"
+          }
+        },
+        {
+          "id": "624467991622688774",
+          "title": "Yellow / Filament with Spool / 1kg",
+          "option1": "Yellow",
+          "option2": "1kg",
+          "option3": "Filament with Spool",
+          "price": 30.99,
+          "sku": "624467991622688774",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(3).jpg"
+          }
+        },
+        {
+          "id": "624467991622688780",
+          "title": "Orange / Filament with Spool / 1kg",
+          "option1": "Orange",
+          "option2": "1kg",
+          "option3": "Filament with Spool",
+          "price": 30.99,
+          "sku": "624467991622688780",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6284216b491247c687bbe0ad54438faa/PLA_Tough_(5).jpg"
+          }
+        },
+        {
+          "id": "624467991622688786",
+          "title": "Gray / Filament with Spool / 1kg",
+          "option1": "Gray",
+          "option2": "1kg",
+          "option3": "Filament with Spool",
+          "price": 30.99,
+          "sku": "624467991622688786",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/fbcf9bab4663410d95709ceb729d4832/PLA_Tough_(1).jpg"
+          }
+        },
+        {
+          "id": "624467991622688792",
+          "title": "Silver / Filament with Spool / 1kg",
+          "option1": "Silver",
+          "option2": "1kg",
+          "option3": "Filament with Spool",
+          "price": 30.99,
+          "sku": "624467991622688792",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/020e0eb613d64bb794cfdea8d8b5f8b3/PLA_Tough_(2).jpg"
+          }
+        },
+        {
+          "id": "624467991622688798",
+          "title": "Cyan / Filament with Spool / 1kg",
+          "option1": "Cyan",
+          "option2": "1kg",
+          "option3": "Filament with Spool",
+          "price": 30.99,
+          "sku": "624467991622688798",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5cd2ccae43f2455b93e7df8587236d98/PLA_Tough_(4).jpg"
+          }
+        },
+        {
+          "id": "624467991622688804",
+          "title": "Black / Filament with Spool / 1kg",
+          "option1": "Black",
+          "option2": "1kg",
+          "option3": "Filament with Spool",
+          "price": 30.99,
+          "sku": "624467991622688804",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/50ca04c59cc0464e8af86ed8293cf2ab/PLA_Tough_(2).jpg"
+          }
+        },
+        {
+          "id": "659539854443044866",
+          "title": "White / Refill / 1kg",
+          "option1": "White",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 26.99,
+          "sku": "659539854443044866",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/495f8100d89748a0bd78a3edd1571363/PLA_Tough_new.jpg"
+          }
+        },
+        {
+          "id": "659539854443044872",
+          "title": "Gray / Refill / 1kg",
+          "option1": "Gray",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 26.99,
+          "sku": "659539854443044872",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/fbcf9bab4663410d95709ceb729d4832/PLA_Tough_(1).jpg"
+          }
+        },
+        {
+          "id": "659539854447239168",
+          "title": "Black / Refill / 1kg",
+          "option1": "Black",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 26.99,
+          "sku": "659539854447239168",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/50ca04c59cc0464e8af86ed8293cf2ab/PLA_Tough_(2).jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/495f8100d89748a0bd78a3edd1571363/PLA_Tough_new.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(3).jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6284216b491247c687bbe0ad54438faa/PLA_Tough_(5).jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/fbcf9bab4663410d95709ceb729d4832/PLA_Tough_(1).jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/020e0eb613d64bb794cfdea8d8b5f8b3/PLA_Tough_(2).jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/5cd2ccae43f2455b93e7df8587236d98/PLA_Tough_(4).jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/50ca04c59cc0464e8af86ed8293cf2ab/PLA_Tough_(2).jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8221474455792",
+      "title": "PLA-CF",
+      "handle": "pla-cf",
+      "body_html": "Bambu PLA-CF is a custom-blended tough PLA with carbon fibers added to improve the hardness and bending modulus while still retaining the easy printing and dimensional stability of normal PLA. The resulting prints have a matte finish with almost invisible layer lines, making them ideal for prototypes of components that have to have a premium non-glossy look.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43845906235632",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "43845906235632",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d2e469d4f653454c810ac76aca6c4cf6.jpg"
+          }
+        },
+        {
+          "id": "44083777536240",
+          "title": "Burgundy Red / Filament with spool / 1 kg",
+          "option1": "Burgundy Red",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44083777536240",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/15b97e3be198436e8ba8f7c7bf6ec910.png"
+          }
+        },
+        {
+          "id": "44083777569008",
+          "title": "Jeans Blue / Filament with spool / 1 kg",
+          "option1": "Jeans Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44083777569008",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5f2ba769905f4acb9670e708ed025839.png"
+          }
+        },
+        {
+          "id": "44083777601776",
+          "title": "Lava Gray / Filament with spool / 1 kg",
+          "option1": "Lava Gray",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44083777601776",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5b745a9c346e4205842ef99960dec7b2.png"
+          }
+        },
+        {
+          "id": "44148855570672",
+          "title": "Matcha Green / Filament with spool / 1 kg",
+          "option1": "Matcha Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44148855570672",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/1fe4624c3f0a4149a2aaf60ca3642554.png"
+          }
+        },
+        {
+          "id": "44235357094128",
+          "title": "Royal Blue / Filament with spool / 1 kg",
+          "option1": "Royal Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44235357094128",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d279be5472374d4b89a9cbe04be1f397/20250710-180051.jpg"
+          }
+        },
+        {
+          "id": "44235357126896",
+          "title": "Iris Purple / Filament with spool / 1 kg",
+          "option1": "Iris Purple",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44235357126896",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3473d73b325f40c484cee7dd573f6734.png"
+          }
+        },
+        {
+          "id": "46474926129392",
+          "title": "Black / Refill / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 40.99,
+          "sku": "46474926129392",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d2e469d4f653454c810ac76aca6c4cf6.jpg"
+          }
+        },
+        {
+          "id": "46474926555376",
+          "title": "Lava Gray / Refill / 1 kg",
+          "option1": "Lava Gray",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 40.99,
+          "sku": "46474926555376",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5b745a9c346e4205842ef99960dec7b2.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/d2e469d4f653454c810ac76aca6c4cf6.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/15b97e3be198436e8ba8f7c7bf6ec910.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/5f2ba769905f4acb9670e708ed025839.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/5b745a9c346e4205842ef99960dec7b2.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/1fe4624c3f0a4149a2aaf60ca3642554.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d279be5472374d4b89a9cbe04be1f397/20250710-180051.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/3473d73b325f40c484cee7dd573f6734.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8306225676528",
+      "title": "PLA Aero",
+      "handle": "pla-aero",
+      "body_html": "Bambu PLA Aero achieves low density and light weight by foaming at high temperatures during printing and creating small holes inside the prints.\nIt's the perfect choice for light-weight and energy-saving prints, including unmanned aerial vehicles (UAVs), aerodynamic models, and gliders.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "44189333061872",
+          "title": "White / Filament with spool / 1kg",
+          "option1": "White",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 57.99,
+          "sku": "44189333061872",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3b112ca34ea34dc5a11d7ca0725dcac0.png"
+          }
+        },
+        {
+          "id": "44189333094640",
+          "title": "Black / Filament with spool / 1kg",
+          "option1": "Black",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 57.99,
+          "sku": "44189333094640",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/e80bdfdf32f34e4094d001a055595efa.png"
+          }
+        },
+        {
+          "id": "46352156623088",
+          "title": "Gray / Filament with spool / 1kg",
+          "option1": "Gray",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 57.99,
+          "sku": "46352156623088",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6407f12c15cf4debb06de690378be64d.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/3b112ca34ea34dc5a11d7ca0725dcac0.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/e80bdfdf32f34e4094d001a055595efa.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6407f12c15cf4debb06de690378be64d.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8213299691760",
+      "title": "PLA Metal",
+      "handle": "pla-metal",
+      "body_html": "Bring a metallic finish to your 3D printing projects with Bambu PLA Metal filament. This premium material has a unique metallic look that will give your objects a professional and high-end finish.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43809123172592",
+          "title": "Oxide Green Metallic / Filament with spool / 1 kg",
+          "option1": "Oxide Green Metallic",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "43809123172592",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/14d829a49ad443e59bddde42c8f6563c.png"
+          }
+        },
+        {
+          "id": "43809123205360",
+          "title": "Cobalt Blue Metallic / Filament with spool / 1 kg",
+          "option1": "Cobalt Blue Metallic",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "43809123205360",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9887878fdd43434489672eac577a07f3.png"
+          }
+        },
+        {
+          "id": "43809123238128",
+          "title": "Copper Brown Metallic / Filament with spool / 1 kg",
+          "option1": "Copper Brown Metallic",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "43809123238128",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/168313f3cb3542a0984a00379835a607.png"
+          }
+        },
+        {
+          "id": "44106847584496",
+          "title": "Iron Gray Metallic / Filament with spool / 1 kg",
+          "option1": "Iron Gray Metallic",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44106847584496",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/1fdb0b2166d3450ea180a6c83d4acbc6.png"
+          }
+        },
+        {
+          "id": "44106847617264",
+          "title": "Iridium Gold Metallic / Filament with spool / 1 kg",
+          "option1": "Iridium Gold Metallic",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44106847617264",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a75ba62b433f4e80b419963e05ae0559.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/14d829a49ad443e59bddde42c8f6563c.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/9887878fdd43434489672eac577a07f3.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/168313f3cb3542a0984a00379835a607.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/1fdb0b2166d3450ea180a6c83d4acbc6.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a75ba62b433f4e80b419963e05ae0559.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8213301002480",
+      "title": "PLA Sparkle",
+      "handle": "pla-sparkle",
+      "body_html": "Unleash your creativity with Bambu PLA Sparkle, a shiny, sparkling PLA. Perfect for adding a touch of glamour to your prints, and stand out from the normal PLA prints.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43809130086640",
+          "title": "Alpine Green Sparkle / Filament with spool / 1 kg",
+          "option1": "Alpine Green Sparkle",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "43809130086640",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/8806b580276b46909df6385cff766b82.png"
+          }
+        },
+        {
+          "id": "43809130119408",
+          "title": "Crimson Red Sparkle / Filament with spool / 1 kg",
+          "option1": "Crimson Red Sparkle",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "43809130119408",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/faf72eb685014a1b94f4048c2388fe0a.png"
+          }
+        },
+        {
+          "id": "43809130152176",
+          "title": "Onyx Black Sparkle / Filament with spool / 1 kg",
+          "option1": "Onyx Black Sparkle",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "43809130152176",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ab419f89d31f4d9d956bc9d460abf2e0.png"
+          }
+        },
+        {
+          "id": "44106863935728",
+          "title": "Slate Gray Sparkle / Filament with spool / 1 kg",
+          "option1": "Slate Gray Sparkle",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44106863935728",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/c088bfa5936b4a35a3a421b9103c3631.png"
+          }
+        },
+        {
+          "id": "44106863968496",
+          "title": "Royal Purple Sparkle / Filament with spool / 1 kg",
+          "option1": "Royal Purple Sparkle",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44106863968496",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/c2afb75286da4c9f9c299e24f0672984.png"
+          }
+        },
+        {
+          "id": "46130440372464",
+          "title": "Classic Gold Sparkle / Filament with spool / 1 kg",
+          "option1": "Classic Gold Sparkle",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "46130440372464",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/45ba44449cfe40498a990f840858ae33.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/8806b580276b46909df6385cff766b82.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/faf72eb685014a1b94f4048c2388fe0a.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/ab419f89d31f4d9d956bc9d460abf2e0.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/c088bfa5936b4a35a3a421b9103c3631.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/c2afb75286da4c9f9c299e24f0672984.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/45ba44449cfe40498a990f840858ae33.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8524161941744",
+      "title": "PLA Galaxy",
+      "handle": "pla-galaxy",
+      "body_html": "PLA Galaxy -- where innovation meets elegance. Experience a new dimension of printing with filament infused with glass microsphere additives. This unique blend creates mesmerizing visual effects, offering dynamic reflections and a glossy, smooth finish. Elevate your prints to new heights as they gleam with unparalleled brilliance from every angle, all while maintaining the ease of printing and exceptional strength and toughness you expect from PLA Basic.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "45164872859888",
+          "title": "Brown / Filament with spool / 1 kg",
+          "option1": "Brown",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "45164872859888",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/37f0e6e45d3d4f81991230198009dfd1.jpg"
+          }
+        },
+        {
+          "id": "45164872892656",
+          "title": "Green / Filament with spool / 1 kg",
+          "option1": "Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "45164872892656",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/c07ade42987e4d12b8d662e9ac7ca2e8.jpg"
+          }
+        },
+        {
+          "id": "45164872925424",
+          "title": "Nebulae / Filament with spool / 1 kg",
+          "option1": "Nebulae",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "45164872925424",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/b9a8183bc6fe466d8237c68c2cd38a04.jpg"
+          }
+        },
+        {
+          "id": "45164872958192",
+          "title": "Purple / Filament with spool / 1 kg",
+          "option1": "Purple",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "45164872958192",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6b3d4f9560514b32baf0a5520fcaba03.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/37f0e6e45d3d4f81991230198009dfd1.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/c07ade42987e4d12b8d662e9ac7ca2e8.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/b9a8183bc6fe466d8237c68c2cd38a04.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6b3d4f9560514b32baf0a5520fcaba03.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8420629872880",
+      "title": "PLA Glow",
+      "handle": "pla-glow",
+      "body_html": "PLA Glow stands out due to its incorporation of a unique additive: luminous powder. This variant retains the familiar qualities of traditional PLA, including easy printing, high quality, and exceptional overall mechanical properties. What sets PLA Glow apart is its distinctive feature—it glows in the dark. This makes it the optimal selection for crafting luminous nameplates, logos, jewelry, and various models that require a captivating glow effect.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "44604961161456",
+          "title": "Glow Orange / Filament with spool / 1 kg",
+          "option1": "Glow Orange",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44604961161456",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/24e492c5a648473d90afeccb6123dd81.png"
+          }
+        },
+        {
+          "id": "44604961194224",
+          "title": "Glow Blue / Filament with spool / 1 kg",
+          "option1": "Glow Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44604961194224",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/471fa997fa0543c1b0dffb1ffe0f0918.png"
+          }
+        },
+        {
+          "id": "44604961226992",
+          "title": "Glow Green / Filament with spool / 1 kg",
+          "option1": "Glow Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44604961226992",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/565869eeaeea4c709e2c5bc999af0a7e.png"
+          }
+        },
+        {
+          "id": "44604961259760",
+          "title": "Glow Pink / Filament with spool / 1 kg",
+          "option1": "Glow Pink",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44604961259760",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/fd8da84c11f644aebb543fbf808e4781.png"
+          }
+        },
+        {
+          "id": "44604961292528",
+          "title": "Glow Yellow / Filament with spool / 1 kg",
+          "option1": "Glow Yellow",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44604961292528",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/dd226454d6204bdc85ae0454d80136a9.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/24e492c5a648473d90afeccb6123dd81.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/471fa997fa0543c1b0dffb1ffe0f0918.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/565869eeaeea4c709e2c5bc999af0a7e.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/fd8da84c11f644aebb543fbf808e4781.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/dd226454d6204bdc85ae0454d80136a9.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8226017837296",
+      "title": "PLA Marble",
+      "handle": "pla-marble",
+      "body_html": "Achieve a natural stone finish in your 3D printing projects with Bambu PLA Marble filament. This premium 3D printing material has a unique marble-like finish that will give your objects a natural appearance, making them stand out and look professional.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43867392868592",
+          "title": "White Marble / Filament with spool / 1 kg",
+          "option1": "White Marble",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "43867392868592",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ca48e1d56ed042b7920cba9912fe5977.png"
+          }
+        },
+        {
+          "id": "44106844307696",
+          "title": "Red Granite / Filament with spool / 1 kg",
+          "option1": "Red Granite",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 31.99,
+          "sku": "44106844307696",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/79b1d2427e4047649c730f2605f45354.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/ca48e1d56ed042b7920cba9912fe5977.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/79b1d2427e4047649c730f2605f45354.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "594048155616538624",
+      "title": "PLA Translucent",
+      "handle": "pla-translucent",
+      "body_html": "",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "594048155633315855",
+          "title": "Teal / Filament with spool / 1 kg",
+          "option1": "Teal",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315855",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/de999706468b4dc789eaa824a1620d41/teal.jpg"
+          }
+        },
+        {
+          "id": "594048155633315861",
+          "title": "Blue / Filament with spool / 1 kg",
+          "option1": "Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315861",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/0b2e1841d10641febaabd76ca2a49f05/blue.jpg"
+          }
+        },
+        {
+          "id": "594048155633315867",
+          "title": "Purple / Filament with spool / 1 kg",
+          "option1": "Purple",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315867",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/caef5b3b1d944237bb2a560d5a3755aa/purple.jpg"
+          }
+        },
+        {
+          "id": "594048155633315873",
+          "title": "Orange / Filament with spool / 1 kg",
+          "option1": "Orange",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315873",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/4dd0599950a144148ddb845464fdc523/orange.jpg"
+          }
+        },
+        {
+          "id": "594048155633315879",
+          "title": "Red / Filament with spool / 1 kg",
+          "option1": "Red",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315879",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/b97af19b96de46808b70617ef07f1661/red.jpg"
+          }
+        },
+        {
+          "id": "594048155633315885",
+          "title": "Light Jade / Filament with spool / 1 kg",
+          "option1": "Light Jade",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315885",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/bd6e1981756d4390ba3170934f39dd54/Jade_green.jpg"
+          }
+        },
+        {
+          "id": "594048155633315891",
+          "title": "Mellow Yellow / Filament with spool / 1 kg",
+          "option1": "Mellow Yellow",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315891",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/8873b26c250842ef95f31ec753706a1b/mellow_yellow.jpg"
+          }
+        },
+        {
+          "id": "594048155633315897",
+          "title": "Cherry Pink / Filament with spool / 1 kg",
+          "option1": "Cherry Pink",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315897",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/58122afc27cd4f138b3b2155f477c033/pink.jpg"
+          }
+        },
+        {
+          "id": "594048155633315903",
+          "title": "Ice Blue / Filament with spool / 1 kg",
+          "option1": "Ice Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315903",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/c7a17dc886ba43ee99f8e23b9edf67cd/light_blue.jpg"
+          }
+        },
+        {
+          "id": "594048155633315909",
+          "title": "Lavender / Filament with spool / 1 kg",
+          "option1": "Lavender",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "594048155633315909",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3a9edfa64b0a4a3cb1a1c88d71fbf238/lavender.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/de999706468b4dc789eaa824a1620d41/teal.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/0b2e1841d10641febaabd76ca2a49f05/blue.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/caef5b3b1d944237bb2a560d5a3755aa/purple.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/4dd0599950a144148ddb845464fdc523/orange.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/b97af19b96de46808b70617ef07f1661/red.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/bd6e1981756d4390ba3170934f39dd54/Jade_green.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/8873b26c250842ef95f31ec753706a1b/mellow_yellow.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/58122afc27cd4f138b3b2155f477c033/pink.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/c7a17dc886ba43ee99f8e23b9edf67cd/light_blue.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/3a9edfa64b0a4a3cb1a1c88d71fbf238/lavender.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8011872469232",
+      "title": "ABS",
+      "handle": "abs-filament",
+      "body_html": "Bambu ABS is designed to reduce warping and cracking but maintain outstanding impact resistance. In addition, it's very suitable for high-speed printing because of its good flow behavior.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43115678859504",
+          "title": "ABS Black / Refill / 1kg",
+          "option1": "ABS Black",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115678859504",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ef66b79717594fd7a32316968fbf7ac4.png"
+          }
+        },
+        {
+          "id": "43115678892272",
+          "title": "ABS White / Refill / 1kg",
+          "option1": "ABS White",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115678892272",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/dcc84bbb1ebb4feab8e7fa3c6776d603.png"
+          }
+        },
+        {
+          "id": "43115678925040",
+          "title": "ABS Red / Refill / 1kg",
+          "option1": "ABS Red",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115678925040",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a612a441405449059b5e9215e9b4845d.png"
+          }
+        },
+        {
+          "id": "43115678990576",
+          "title": "ABS Blue / Refill / 1kg",
+          "option1": "ABS Blue",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "43115678990576",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ca8b7ba4f03243d1af97c06ec01d5100.png"
+          }
+        },
+        {
+          "id": "44118341681392",
+          "title": "ABS Silver / Filament with spool / 1kg",
+          "option1": "ABS Silver",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44118341681392",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9cae91f6f14d4672bad03466e8fc0905.png"
+          }
+        },
+        {
+          "id": "44183939580144",
+          "title": "ABS Black / Filament with spool / 1kg",
+          "option1": "ABS Black",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44183939580144",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ef66b79717594fd7a32316968fbf7ac4.png"
+          }
+        },
+        {
+          "id": "44183939776752",
+          "title": "ABS White / Filament with spool / 1kg",
+          "option1": "ABS White",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44183939776752",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/dcc84bbb1ebb4feab8e7fa3c6776d603.png"
+          }
+        },
+        {
+          "id": "46130964955376",
+          "title": "ABS Bambu Green / Refill / 1kg",
+          "option1": "ABS Bambu Green",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46130964955376",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ac47548b54224e6297d49459802405a7.png"
+          }
+        },
+        {
+          "id": "46130970886384",
+          "title": "ABS Orange / Refill / 1kg",
+          "option1": "ABS Orange",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46130970886384",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/af10bba0ddcb4d129125f0b1b3f04e59.png"
+          }
+        },
+        {
+          "id": "46311953203440",
+          "title": "ABS Navy Blue / Refill / 1kg",
+          "option1": "ABS Navy Blue",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311953203440",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ffe1ffc6768f49cf958439e67f98409b.jpg"
+          }
+        },
+        {
+          "id": "46311955202288",
+          "title": "ABS Azure / Refill / 1kg",
+          "option1": "ABS Azure",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311955202288",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/24c01cdd00994022b35a676e2241c943.jpg"
+          }
+        },
+        {
+          "id": "46311956513008",
+          "title": "ABS Olive / Refill / 1kg",
+          "option1": "ABS Olive",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311956513008",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a0d6c3c3f0ce4d94a1b50c3a0c746760.jpg"
+          }
+        },
+        {
+          "id": "46311958282480",
+          "title": "ABS Tangerine Yellow / Refill / 1kg",
+          "option1": "ABS Tangerine Yellow",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311958282480",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a8fce7027f1f4ba2b9aff377ed99a5bf.jpg"
+          }
+        },
+        {
+          "id": "46541030883568",
+          "title": "ABS Silver / Refill / 1kg",
+          "option1": "ABS Silver",
+          "option2": "1kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46541030883568",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9cae91f6f14d4672bad03466e8fc0905.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/ef66b79717594fd7a32316968fbf7ac4.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/dcc84bbb1ebb4feab8e7fa3c6776d603.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a612a441405449059b5e9215e9b4845d.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/ca8b7ba4f03243d1af97c06ec01d5100.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/9cae91f6f14d4672bad03466e8fc0905.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/ac47548b54224e6297d49459802405a7.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/af10bba0ddcb4d129125f0b1b3f04e59.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/ffe1ffc6768f49cf958439e67f98409b.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/24c01cdd00994022b35a676e2241c943.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a0d6c3c3f0ce4d94a1b50c3a0c746760.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a8fce7027f1f4ba2b9aff377ed99a5bf.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8677841797360",
+      "title": "ABS-GF",
+      "handle": "abs-gf",
+      "body_html": "Bambu ABS-GF is a glass fiber-reinforced ABS filament, enhanced in both mechanical and aesthetic properties. Compared with regular ABS, ABS-GF outperforms in strength, stiffness, temperature resistance and dimentional stability, while being less prone to deformation and warping. Glass fiber imparts a smooth matte finish with micro-spot gloss, blurring layer line. With the inheritance of water resistance, wear resistance, durability and vibrant colors of regular ABS, ABS-GF is ideal for both mechanical parts and decorations.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "45758386438384",
+          "title": "White / Filament with spool / 1 kg",
+          "option1": "White",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "45758386438384",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/60c69eb3f4664444ad13f1816c7c74da.png"
+          }
+        },
+        {
+          "id": "45758386503920",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "45758386503920",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2408b10ddd994f69982c8506e1d730a8.png"
+          }
+        },
+        {
+          "id": "45758386536688",
+          "title": "Gray / Filament with spool / 1 kg",
+          "option1": "Gray",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "45758386536688",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2ec79ec301114b26a13811f7a1d54208.png"
+          }
+        },
+        {
+          "id": "45758386569456",
+          "title": "Orange / Filament with spool / 1 kg",
+          "option1": "Orange",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "45758386569456",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3091595109624a5da5d5aac0f4ffc716.png"
+          }
+        },
+        {
+          "id": "45758386602224",
+          "title": "Yellow / Filament with spool / 1 kg",
+          "option1": "Yellow",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "45758386602224",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5fab889759e040d6ba560e788d7531c5.png"
+          }
+        },
+        {
+          "id": "45758386634992",
+          "title": "Red / Filament with spool / 1 kg",
+          "option1": "Red",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "45758386634992",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/cdabf4b8ab65424798c99ac4b007245c.png"
+          }
+        },
+        {
+          "id": "45758386667760",
+          "title": "Green / Filament with spool / 1 kg",
+          "option1": "Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "45758386667760",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/61deac40ee24437fad189458a3295569.png"
+          }
+        },
+        {
+          "id": "46010148454640",
+          "title": "Blue / Filament with spool / 1 kg",
+          "option1": "Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "46010148454640",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/59e0677eca7649aeae8cbc1fb6791c47.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/60c69eb3f4664444ad13f1816c7c74da.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/2408b10ddd994f69982c8506e1d730a8.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/2ec79ec301114b26a13811f7a1d54208.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/3091595109624a5da5d5aac0f4ffc716.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/5fab889759e040d6ba560e788d7531c5.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/cdabf4b8ab65424798c99ac4b007245c.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/61deac40ee24437fad189458a3295569.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/59e0677eca7649aeae8cbc1fb6791c47.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8299950178544",
+      "title": "ASA",
+      "handle": "asa-filament",
+      "body_html": "Bambu ASA is a highly durable material that offers exceptional UV, weather, mechanical, and thermal resistance. Its unique combination of properties makes it an ideal material for printing outdoor models (plant signs, mailboxes, wind vanes, etc.) and structural parts that require long-term exposure to challenging outdoor conditions.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "44173925613808",
+          "title": "Red / Filament with spool / 1kg",
+          "option1": "Red",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "44173925613808",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9b4054cc41a34801be8ec4a8e7602edc.png"
+          }
+        },
+        {
+          "id": "44173925646576",
+          "title": "Green / Filament with spool / 1kg",
+          "option1": "Green",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "44173925646576",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/8a16887420444668817786f11d2fbd52.png"
+          }
+        },
+        {
+          "id": "44173925679344",
+          "title": "Blue / Filament with spool / 1kg",
+          "option1": "Blue",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "44173925679344",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a97e97298dd0402cbed9a33bcc29b397.jpg"
+          }
+        },
+        {
+          "id": "44173925712112",
+          "title": "Black / Filament with spool / 1kg",
+          "option1": "Black",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "44173925712112",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/578073ead4ac45f3aededbecd91cc46e.png"
+          }
+        },
+        {
+          "id": "44173925744880",
+          "title": "White / Filament with spool / 1kg",
+          "option1": "White",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "44173925744880",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/28d11722c1a1469cb1a51f43ddb41eec.png"
+          }
+        },
+        {
+          "id": "44173925777648",
+          "title": "Gray / Filament with spool / 1kg",
+          "option1": "Gray",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 38.99,
+          "sku": "44173925777648",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/f46c0c69f82f4e879b2ee646407a27d1.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/9b4054cc41a34801be8ec4a8e7602edc.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/8a16887420444668817786f11d2fbd52.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a97e97298dd0402cbed9a33bcc29b397.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/578073ead4ac45f3aededbecd91cc46e.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/28d11722c1a1469cb1a51f43ddb41eec.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/f46c0c69f82f4e879b2ee646407a27d1.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8642733867248",
+      "title": "ASA Aero",
+      "handle": "asa-aero",
+      "body_html": "Bambu ASA Aero is a self-foaming material renowned for its exceptional durability and toughness. Its heat-sensitive foaming allows for controlled model density, resulting in feather-light print models. Additionally, it boasts extraordinary resistance to temperature, water, and UV rays. With these unique properties, it is ideal for printing long-lasting outdoor models and weight-sensitive projects, such as RC planes.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "45647640101104",
+          "title": "White / Filament with spool / 1 kg",
+          "option1": "White",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 63.99,
+          "sku": "45647640101104",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/807083f9279e4ef68649dcbb243eddad.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/807083f9279e4ef68649dcbb243eddad.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8932831592688",
+      "title": "PETG HF",
+      "handle": "petg-hf",
+      "body_html": "PETG HF is a fully optimized PETG filament designed specifically for high-speed printing. With a default printing speed that is twice as fast as standard PETG filaments, PETG HF takes your printing efficiency to new heights. It effectively addresses common issues such as oozing and clumping associated with regular PETG, ensuring smoother and more reliable prints. The new matte finish not only enhances the aesthetic by smoothing out uneven gloss during speed transitions but also provides a consistently uniform look. Offering greater durability and toughness than PLA, PETG HF is the ideal choice for creating long-lasting items with an improved finish and faster production times.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "46336540770544",
+          "title": "Red / Filament with spool / 1 kg",
+          "option1": "Red",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "46336540770544",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7de1911f91d34be280040a4ef84fdbd2.jpg"
+          }
+        },
+        {
+          "id": "46336540803312",
+          "title": "Black / Refill / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46336540803312",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg"
+          }
+        },
+        {
+          "id": "46336540836080",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "46336540836080",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg"
+          }
+        },
+        {
+          "id": "46336540901616",
+          "title": "White / Filament with spool / 1 kg",
+          "option1": "White",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "46336540901616",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6f0f3ffb6bdb459f97d0f44a6d83fbf6.jpg"
+          }
+        },
+        {
+          "id": "46336540967152",
+          "title": "Blue / Filament with spool / 1 kg",
+          "option1": "Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "46336540967152",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/729f2d6de88b4001938dcf49c97c2d8c.jpg"
+          }
+        },
+        {
+          "id": "46336541032688",
+          "title": "Gray / Filament with spool / 1 kg",
+          "option1": "Gray",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "46336541032688",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/22729c93daef4e0293f50584690457d0.jpg"
+          }
+        },
+        {
+          "id": "654207551461335041",
+          "title": "Lake Blue / Filament with spool / 1 kg",
+          "option1": "Lake Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "654207551461335041",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/88d2cf2480094d6cbbba24a6751eb943.jpg"
+          }
+        },
+        {
+          "id": "659539853725208577",
+          "title": "Dark Gray / Filament with spool / 1 kg",
+          "option1": "Dark Gray",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "659539853725208577",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d96a3ffe711444f0a4d4b734f1519537.jpg"
+          }
+        },
+        {
+          "id": "659539853725208583",
+          "title": "Cream / Filament with spool / 1 kg",
+          "option1": "Cream",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "659539853725208583",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/132b2c639d284831ad3a65a5a2450ab3.jpg"
+          }
+        },
+        {
+          "id": "659539853725208589",
+          "title": "Yellow / Filament with spool / 1 kg",
+          "option1": "Yellow",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "659539853725208589",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/695dad0142ca4d0c8ca64cd2cf5eaa6f.jpg"
+          }
+        },
+        {
+          "id": "659539853725208595",
+          "title": "Lime Green / Filament with spool / 1 kg",
+          "option1": "Lime Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "659539853725208595",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3eeb673909be49ae8cb99bd18f365614.jpg"
+          }
+        },
+        {
+          "id": "659539853725208601",
+          "title": "Green / Filament with spool / 1 kg",
+          "option1": "Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "659539853725208601",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9bd37be5d1b24bfb940af905904e7145.jpg"
+          }
+        },
+        {
+          "id": "659539853725208607",
+          "title": "Forest Green / Filament with spool / 1 kg",
+          "option1": "Forest Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "659539853725208607",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/327777e6ed004cb0820532eb7e263a2d.jpg"
+          }
+        },
+        {
+          "id": "659539853725208613",
+          "title": "Orange / Filament with spool / 1 kg",
+          "option1": "Orange",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "659539853725208613",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/048a5c2661644b849a6a955ccde1a877.jpg"
+          }
+        },
+        {
+          "id": "659539853725208619",
+          "title": "Peanut Brown / Filament with spool / 1 kg",
+          "option1": "Peanut Brown",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "659539853725208619",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a27c74b9bf7741b581ac70bfcb5e82f9.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/7de1911f91d34be280040a4ef84fdbd2.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6f0f3ffb6bdb459f97d0f44a6d83fbf6.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/729f2d6de88b4001938dcf49c97c2d8c.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/22729c93daef4e0293f50584690457d0.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/88d2cf2480094d6cbbba24a6751eb943.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d96a3ffe711444f0a4d4b734f1519537.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/132b2c639d284831ad3a65a5a2450ab3.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/695dad0142ca4d0c8ca64cd2cf5eaa6f.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/3eeb673909be49ae8cb99bd18f365614.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/9bd37be5d1b24bfb940af905904e7145.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/327777e6ed004cb0820532eb7e263a2d.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/048a5c2661644b849a6a955ccde1a877.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a27c74b9bf7741b581ac70bfcb5e82f9.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8231750074608",
+      "title": "PETG-CF",
+      "handle": "petg-cf",
+      "body_html": "",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43887125266672",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "43887125266672",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/093c156eacd8427d81bdceae6f9e07cc.png"
+          }
+        },
+        {
+          "id": "44180162085104",
+          "title": "Violet Purple / Filament with spool / 1 kg",
+          "option1": "Violet Purple",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44180162085104",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d4702770b8b24ea796481285ab816c62.png"
+          }
+        },
+        {
+          "id": "44180162117872",
+          "title": "Brick Red / Filament with spool / 1 kg",
+          "option1": "Brick Red",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44180162117872",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/66bb180e5ad84cb3ad3ebad78c293c7d.png"
+          }
+        },
+        {
+          "id": "44180162150640",
+          "title": "Indigo Blue / Filament with spool / 1 kg",
+          "option1": "Indigo Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44180162150640",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/dd18987197f54eaca8cd318713c76786.png"
+          }
+        },
+        {
+          "id": "44180162183408",
+          "title": "Malachite Green / Filament with spool / 1 kg",
+          "option1": "Malachite Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44180162183408",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/cefecfa081164b9fb8092bcfa088acfc.png"
+          }
+        },
+        {
+          "id": "44326019367152",
+          "title": "Titan Gray / Filament with spool / 1 kg",
+          "option1": "Titan Gray",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 44.99,
+          "sku": "44326019367152",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/b385924c792c421f87f277db246f70e8.png"
+          }
+        },
+        {
+          "id": "46475013193968",
+          "title": "Black / Refill / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 40.99,
+          "sku": "46475013193968",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/093c156eacd8427d81bdceae6f9e07cc.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/093c156eacd8427d81bdceae6f9e07cc.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d4702770b8b24ea796481285ab816c62.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/66bb180e5ad84cb3ad3ebad78c293c7d.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/dd18987197f54eaca8cd318713c76786.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/cefecfa081164b9fb8092bcfa088acfc.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/b385924c792c421f87f277db246f70e8.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8451619389680",
+      "title": "PETG Translucent",
+      "handle": "petg-translucent",
+      "body_html": "Bambu PETG Translucent stands out with its exceptional printing characteristics, setting it apart from standard PETG materials. This specially tuned filament minimizes common issues like nozzle sticking, leakage, and clumping during the printing process, providing a hassle-free experience compared to ordinary PETG materials. The filament also exhibits water resistance, UV resistance, and resistance to temperature changes, making it an excellent choice for outdoor applications. Create with Light, Shadow and a Wide Range of Colors Bambu PETG Translucent offers 8 vibrant colors for you to choose from. Elevate your prints by seamlessly blending different colors and experimenting with various thicknesses of layers and walls. ",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "44862523146480",
+          "title": "Translucent Light Blue / Filament with spool / 1 kg",
+          "option1": "Translucent Light Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44862523146480",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg"
+          }
+        },
+        {
+          "id": "44862523244784",
+          "title": "Translucent Teal / Filament with spool / 1 kg",
+          "option1": "Translucent Teal",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "44862523244784",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ffa37db2ff474b71b142f6f3225c7ded.jpg"
+          }
+        },
+        {
+          "id": "45840017457392",
+          "title": "Clear / Filament with spool / 1 kg",
+          "option1": "Clear",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 29.99,
+          "sku": "45840017457392",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/1a74ea492a6f4b8ea23c7d84b145d316.png"
+          }
+        },
+        {
+          "id": "46081462337776",
+          "title": "Clear / Refill / 1 kg",
+          "option1": "Clear",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46081462337776",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/1a74ea492a6f4b8ea23c7d84b145d316.png"
+          }
+        },
+        {
+          "id": "46311960183024",
+          "title": "Translucent Light Blue / Refill / 1 kg",
+          "option1": "Translucent Light Blue",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311960183024",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg"
+          }
+        },
+        {
+          "id": "46311961067760",
+          "title": "Translucent Teal / Refill / 1 kg",
+          "option1": "Translucent Teal",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311961067760",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/ffa37db2ff474b71b142f6f3225c7ded.jpg"
+          }
+        },
+        {
+          "id": "46311964246256",
+          "title": "Translucent Orange / Refill / 1 kg",
+          "option1": "Translucent Orange",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311964246256",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6415b5d6fb1a473490a0eb605d9d59b0.jpg"
+          }
+        },
+        {
+          "id": "46311965098224",
+          "title": "Translucent Purple / Refill / 1 kg",
+          "option1": "Translucent Purple",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311965098224",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d437c0bf73fa4bbdadf3b3a8f139e8b0.jpg"
+          }
+        },
+        {
+          "id": "46311967850736",
+          "title": "Translucent Pink / Refill / 1 kg",
+          "option1": "Translucent Pink",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46311967850736",
+          "available": false,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3c06d1d78c3c40239fc582a8bd5a5261.jpg"
+          }
+        },
+        {
+          "id": "46334027956464",
+          "title": "Translucent Olive / Refill / 1 kg",
+          "option1": "Translucent Olive",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46334027956464",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/8534fe998fa145aeb6599bf16827cf58.jpg"
+          }
+        },
+        {
+          "id": "46352469885168",
+          "title": "Translucent Brown / Refill / 1 kg",
+          "option1": "Translucent Brown",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46352469885168",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2c6abde5b9bd4184a9a1ecf31be06500.jpg"
+          }
+        },
+        {
+          "id": "46471168164080",
+          "title": "Translucent Gray / Refill / 1 kg",
+          "option1": "Translucent Gray",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 25.99,
+          "sku": "46471168164080",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/18fb283d551c418f9246a22beec492ce.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/ffa37db2ff474b71b142f6f3225c7ded.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/1a74ea492a6f4b8ea23c7d84b145d316.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6415b5d6fb1a473490a0eb605d9d59b0.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d437c0bf73fa4bbdadf3b3a8f139e8b0.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/3c06d1d78c3c40239fc582a8bd5a5261.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/8534fe998fa145aeb6599bf16827cf58.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/2c6abde5b9bd4184a9a1ecf31be06500.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/18fb283d551c418f9246a22beec492ce.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "9097068216560",
+      "title": "TPU for AMS",
+      "handle": "tpu-for-ams",
+      "body_html": "",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "46779647295728",
+          "title": "Red / Filament with spool / 1 kg",
+          "option1": "Red",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 49.99,
+          "sku": "46779647295728",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a71f20c06c6941359cc1f8cb008b8474.jpg"
+          }
+        },
+        {
+          "id": "46779647328496",
+          "title": "Yellow / Filament with spool / 1 kg",
+          "option1": "Yellow",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 49.99,
+          "sku": "46779647328496",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/44f427a876f244cfa6fa9379cecb9b92.jpg"
+          }
+        },
+        {
+          "id": "46779647361264",
+          "title": "Blue / Filament with spool / 1 kg",
+          "option1": "Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 49.99,
+          "sku": "46779647361264",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/d4fb1dd751904e1ea09d142c68d7ec36.jpg"
+          }
+        },
+        {
+          "id": "46779647394032",
+          "title": "Neon Green / Filament with spool / 1 kg",
+          "option1": "Neon Green",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 49.99,
+          "sku": "46779647394032",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/e5506620dbeb4aa7b9e1c81c08d20d64.jpg"
+          }
+        },
+        {
+          "id": "46779647426800",
+          "title": "White / Filament with spool / 1 kg",
+          "option1": "White",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 49.99,
+          "sku": "46779647426800",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/2f9b5bd40c774fc0bc6e48885acd7e30.jpg"
+          }
+        },
+        {
+          "id": "46779647459568",
+          "title": "Gray / Filament with spool / 1 kg",
+          "option1": "Gray",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 49.99,
+          "sku": "46779647459568",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/f5462676e1b7452db52b095a08421c65.jpg"
+          }
+        },
+        {
+          "id": "46779647492336",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 49.99,
+          "sku": "46779647492336",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/f0d51ead90a849b69aff4c607379d8ed.jpg"
+          }
+        },
+        {
+          "id": "669699832674201600",
+          "title": "Black / Refill / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Refill",
+          "price": 44.99,
+          "sku": "669699832674201600",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/f0d51ead90a849b69aff4c607379d8ed.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/a71f20c06c6941359cc1f8cb008b8474.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/44f427a876f244cfa6fa9379cecb9b92.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/d4fb1dd751904e1ea09d142c68d7ec36.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/e5506620dbeb4aa7b9e1c81c08d20d64.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/2f9b5bd40c774fc0bc6e48885acd7e30.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/f5462676e1b7452db52b095a08421c65.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/f0d51ead90a849b69aff4c607379d8ed.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8011872076016",
+      "title": "PC",
+      "handle": "pc-filament",
+      "body_html": "PC (Polycarbonate) is an extremely tough and durable material for 3D printing, with good temperature and impact resistance. It is highly recommended for high strength 3D printing applications. It's also a naturally transparent thermoplastic. Bambu PC Basic is designed for less shrinkage and better dimensional stability. It's a professional level 3D printing material.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43584501842160",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 50.99,
+          "sku": "43584501842160",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/1c2f810f750a4a4cb95556c857a12a14.png"
+          }
+        },
+        {
+          "id": "43584501874928",
+          "title": "White / Filament with spool / 1 kg",
+          "option1": "White",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 50.99,
+          "sku": "43584501874928",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/0ba5c1ca13d3436db5bc30e1e96b27f2.jpg"
+          }
+        },
+        {
+          "id": "44080188588272",
+          "title": "Clear Black / Filament with spool / 1 kg",
+          "option1": "Clear Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 50.99,
+          "sku": "44080188588272",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3139f2baabf844be82cb72ef4f3615f0.png"
+          }
+        },
+        {
+          "id": "44080188621040",
+          "title": "Transparent / Filament with spool / 1 kg",
+          "option1": "Transparent",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 50.99,
+          "sku": "44080188621040",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/6bfeaa5bb9b448d4ba5209f855a1fd45.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/1c2f810f750a4a4cb95556c857a12a14.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/0ba5c1ca13d3436db5bc30e1e96b27f2.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/3139f2baabf844be82cb72ef4f3615f0.png"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/6bfeaa5bb9b448d4ba5209f855a1fd45.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8317408805104",
+      "title": "PA6-CF",
+      "handle": "pa6-cf",
+      "body_html": "Bambu PA6-CF is a carbon fiber reinforced PA6 (Nylon 6) filament. Carbon fiber reinforcement provides significantly high stiffness and strength properties in dry environments and maintains exceptional heat resistance and impact resistance.  Similar to other Bambu CF Filaments, these outstanding mechanical properties combination make it an ideal choice for printing fixtures, clamps, automotive and mechanical components and various structural and engineering parts that used in dry environments.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "44217735315696",
+          "title": "Black / Filament with spool / 0.5kg",
+          "option1": "Black",
+          "option2": "0.5kg",
+          "option3": "Filament with spool",
+          "price": 54.99,
+          "sku": "44217735315696",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3f8b8df4ab4f465db6d9b708ef8ecf1d.png"
+          }
+        },
+        {
+          "id": "44217735348464",
+          "title": "Black / Filament with spool / 1kg",
+          "option1": "Black",
+          "option2": "1kg",
+          "option3": "Filament with spool",
+          "price": 101.99,
+          "sku": "44217735348464",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3f8b8df4ab4f465db6d9b708ef8ecf1d.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/3f8b8df4ab4f465db6d9b708ef8ecf1d.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8213123334384",
+      "title": "PAHT-CF",
+      "handle": "paht-cf",
+      "body_html": "Bambu PAHT-CF is a high-temperature engineering-grade carbon-fiber reinforced aromatic nylon that is designed for applications where high strength, stiffness, and temperature resistance are required. It is easy to print, has enhanced Z-bonding, a high-degree of dimensional stability, and has been optimized to retain excellent mechanical properties when wet. Suggested uses are: functional prototypes, machining fixtures, injection molds, jigs, and low-volume production parts.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43808720716016",
+          "title": "Black / Filament with spool / 0.5 kg",
+          "option1": "Black",
+          "option2": "0.5 kg",
+          "option3": "Filament with spool",
+          "price": 63.99,
+          "sku": "43808720716016",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/da8ee1568bb047c8ba323aba59c84bc0.png"
+          }
+        },
+        {
+          "id": "43808720748784",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 120.99,
+          "sku": "43808720748784",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/da8ee1568bb047c8ba323aba59c84bc0.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/da8ee1568bb047c8ba323aba59c84bc0.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8988469428464",
+      "title": "PPA-CF",
+      "handle": "ppa-cf",
+      "body_html": "",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "46498167718128",
+          "title": "Black / Filament with spool / 0.75 kg",
+          "option1": "Black",
+          "option2": "0.75 kg",
+          "option3": "Filament with spool",
+          "price": 190.99,
+          "sku": "46498167718128",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/3c2707912a164dbf8d26a1d3b62f0cbc.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/3c2707912a164dbf8d26a1d3b62f0cbc.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8573366173936",
+      "title": "PA6-GF",
+      "handle": "pa6-gf",
+      "body_html": "Bambu PA6-GF - Glass Fiber Reinforced Nylon Bambu PA6-GF, also known as Nylon 6 with Glass Fiber, stands at the forefront of high-performance engineering plastics. Engineered to deliver exceptional strength, durability, dimensional stability. The PA6-GF is also more cost effective when compared to other top tier Engineering filaments.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "45444547805424",
+          "title": "Blue / Filament with spool / 1 kg",
+          "option1": "Blue",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 76.99,
+          "sku": "45444547805424",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/7251e7b0c57849d6a884668235e2c755.jpg"
+          }
+        },
+        {
+          "id": "45444547838192",
+          "title": "Orange / Filament with spool / 1 kg",
+          "option1": "Orange",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 76.99,
+          "sku": "45444547838192",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/943e919667e4432b83ba53c4e3131732.jpg"
+          }
+        },
+        {
+          "id": "45444547870960",
+          "title": "Yellow / Filament with spool / 1 kg",
+          "option1": "Yellow",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 76.99,
+          "sku": "45444547870960",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/5cdd66fb3220432fbe7afb3c5cb118d3.jpg"
+          }
+        },
+        {
+          "id": "45444547903728",
+          "title": "Lime / Filament with spool / 1 kg",
+          "option1": "Lime",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 76.99,
+          "sku": "45444547903728",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a45ca49d1266499c8b271006e9a0a319.jpg"
+          }
+        },
+        {
+          "id": "45444547936496",
+          "title": "Brown / Filament with spool / 1 kg",
+          "option1": "Brown",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 76.99,
+          "sku": "45444547936496",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/b0d043d7e72849f193f1bfbac25ca32e.jpg"
+          }
+        },
+        {
+          "id": "45444547969264",
+          "title": "White / Filament with spool / 1 kg",
+          "option1": "White",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 76.99,
+          "sku": "45444547969264",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/b831c50b9af24d0fbfc861440bf2fd11.jpg"
+          }
+        },
+        {
+          "id": "45444548002032",
+          "title": "Gray / Filament with spool / 1 kg",
+          "option1": "Gray",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 76.99,
+          "sku": "45444548002032",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9be99001191043b5a72da2e47ad25b51.jpg"
+          }
+        },
+        {
+          "id": "45444548034800",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 76.99,
+          "sku": "45444548034800",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/c0ccfcf3506f4422bb447011137b06ea.jpg"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/7251e7b0c57849d6a884668235e2c755.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/943e919667e4432b83ba53c4e3131732.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/5cdd66fb3220432fbe7afb3c5cb118d3.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/a45ca49d1266499c8b271006e9a0a319.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/b0d043d7e72849f193f1bfbac25ca32e.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/b831c50b9af24d0fbfc861440bf2fd11.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/9be99001191043b5a72da2e47ad25b51.jpg"
+        },
+        {
+          "src": "https://store.bblcdn.com/s5/default/c0ccfcf3506f4422bb447011137b06ea.jpg"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8252040544496",
+      "title": "PET-CF",
+      "handle": "pet-cf",
+      "body_html": "Bambu Lab CF Reinforced PET Filament: Very low moisture absorption, high dimensional stability, exceptional heat resistance. Ideal for durable parts.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "44029327671536",
+          "title": "Black / Filament with spool / 1 kg",
+          "option1": "Black",
+          "option2": "1 kg",
+          "option3": "Filament with spool",
+          "price": 108.99,
+          "sku": "44029327671536",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9afaf33071dc472e8fa3dfcb1d180207.png"
+          }
+        },
+        {
+          "id": "44090206290160",
+          "title": "Black / Filament with spool / 0.5 kg",
+          "option1": "Black",
+          "option2": "0.5 kg",
+          "option3": "Filament with spool",
+          "price": 57.99,
+          "sku": "44090206290160",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/9afaf33071dc472e8fa3dfcb1d180207.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/9afaf33071dc472e8fa3dfcb1d180207.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8994302755056",
+      "title": "PPS-CF",
+      "handle": "pps-cf",
+      "body_html": "Bambu Lab CF Reinforced PPS filament: Super heat resistant & flame retardant. Unmatched strength, stiffness, and chemical resistance for industrial use.",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "46512619127024",
+          "title": "Black / Filament with spool / 0.75kg",
+          "option1": "Black",
+          "option2": "0.75kg",
+          "option3": "Filament with spool",
+          "price": 165.99,
+          "sku": "46512619127024",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/a6da81c992134feebb407601ce257cb6.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/a6da81c992134feebb407601ce257cb6.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    },
+    {
+      "id": "8011871977712",
+      "title": "Support for PA/PET",
+      "handle": "support-for-pa-pet",
+      "body_html": "",
+      "product_type": "Filament",
+      "vendor": "Bambu Lab",
+      "tags": "filament",
+      "variants": [
+        {
+          "id": "43181727580400",
+          "title": "Green / Filament with spool / 0.5kg",
+          "option1": "Green",
+          "option2": "0.5kg",
+          "option3": "Filament with spool",
+          "price": 50.99,
+          "sku": "43181727580400",
+          "available": true,
+          "featured_image": {
+            "src": "https://store.bblcdn.com/s5/default/0b3988046cff450d9709fc02db46ae9a.png"
+          }
+        }
+      ],
+      "images": [
+        {
+          "src": "https://store.bblcdn.com/s5/default/0b3988046cff450d9709fc02db46ae9a.png"
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1
+        },
+        {
+          "name": "Weight",
+          "position": 2
+        },
+        {
+          "name": "Spool Type",
+          "position": 3
+        }
+      ],
+      "_currency": "CAD",
+      "_source": "jsonld"
+    }
+  ],
+  "failed": [
+    {
+      "handle": "pla-gradient-rainbow",
+      "error": "HTTP 404"
+    },
+    {
+      "handle": "pla-impact",
+      "error": "HTTP 404"
+    },
+    {
+      "handle": "tpu-95a",
+      "error": "HTTP 404"
+    },
+    {
+      "handle": "support-for-pla",
+      "error": "HTTP 404"
+    },
+    {
+      "handle": "pva-filament",
+      "error": "HTTP 404"
+    }
+  ],
+  "fetchedAt": "2026-03-13T03:25:28.600Z"
+}

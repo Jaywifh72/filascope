@@ -274,11 +274,14 @@ function detectOptionPositions(product: any, config: ScrapingConfig): {
     if (name.includes("material") && name.includes("color")) { colorKey = key; continue; }
     if (!regionKey && REGION_KEYWORDS.some((kw) => name.includes(kw))) regionKey = key;
     else if (!colorKey && COLOR_OPT_KEYWORDS.some((kw) => name.includes(kw))) colorKey = key;
-    else if (!materialKey && MATERIAL_OPT_KEYWORDS.some((kw) => name.includes(kw))) materialKey = key;
+    // "Spool Type" / "Spool" should NOT be treated as a material option
+    else if (!materialKey && MATERIAL_OPT_KEYWORDS.some((kw) => name.includes(kw)) && !name.includes("spool")) materialKey = key;
   }
 
   return {
-    regionKey: regionKey || fb.regionKey,
+    // Only fall back to config's region_option if it was explicitly set.
+    // Don't assume a region option exists — brands like Bambu Lab have no region variants.
+    regionKey: regionKey ?? (config.variant_mapping?.region_option || null),
     materialKey: materialKey || fb.materialKey,
     colorKey: colorKey || fb.colorKey,
   };

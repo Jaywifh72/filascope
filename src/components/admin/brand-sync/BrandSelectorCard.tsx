@@ -30,7 +30,7 @@ interface ScrapingConfig {
 }
 
 // Brands with built-in support — auto-config will be created on scan
-const KNOWN_BRAND_SLUGS = ['sunlu', 'anycubic'];
+const KNOWN_BRAND_SLUGS = ['sunlu', 'anycubic', 'bambu-lab'];
 
 interface Props {
   onScanStart: (brandId: string, configId: string, brandName: string, brandSlug: string) => void;
