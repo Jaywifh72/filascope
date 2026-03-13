@@ -366,6 +366,38 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       color_option: 'option3',
     },
   },
+  '3dhojor': {
+    brand_name: '3DHOJOR',
+    platform: 'shopify',
+    base_url: 'https://3dhojor.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: '3dhojor',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://3dhojor.com',
+    },
+    variant_mapping: {
+      region_option: 'option1',
+      size_option: 'option2',
+      color_option: 'option3',
+    },
+  },
+  '3dxtech': {
+    brand_name: '3DXTech',
+    platform: 'shopify',
+    base_url: 'https://www.3dxtech.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: '3dxtech',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://www.3dxtech.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      diameter_option: 'option2',
+      size_option: 'option3',
+    },
+  },
 };
 
 /**
@@ -542,6 +574,8 @@ export function useCatalogSync() {
         const PREFETCH_PATHS: Record<string, string> = {
           'bambu-lab': '/data/bambu-products.json',
           '3d-fuel': '/data/3dfuel-products.json',
+          '3dhojor': '/data/3dhojor-products.json',
+          '3dxtech': '/data/3dxtech-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 

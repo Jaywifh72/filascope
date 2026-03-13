@@ -116,8 +116,18 @@ const NON_FILAMENT_KEYWORDS = [
 const MATERIAL_KEYWORDS_ORDERED = [
   "Silk PLA","Matte PLA","PLA Meta","PLA Galaxy","High Speed PLA",
   "PLA Transparent Series","PLA Neon Series","Wood PLA",
-  "PLA+","PLA Plus","PETG-CF","PETG CF","PLA-CF","PLA CF",
-  "ABS-GF","PA-CF","PA-GF",
+  "PLA+","PLA Plus",
+  // Composite / filled materials (must come before base materials)
+  "PEKK-A+CF","PEKK-A","PEEK+CF","PEEK+GF","PEI+GF","PEI 9085+CF","PEI 9085","PEI 1010",
+  "PETG+CF","PETG-CF","PETG CF","PLA+CF","PLA-CF","PLA CF",
+  "ABS+CF","ABS+GF","ABS-GF","ASA+CF",
+  "PC+CF","PC-ABS","Nylon 12+CF","Nylon 12+GF","Nylon 6+CF","PA6+GF",
+  "PP+CF","PP+GF","PPA+GF","PA-CF","PA-GF",
+  "FR-ABS","FR-PC-ABS","FR-PC",
+  "ESD-TPU","ESD-PLA","ESD-ABS","ESD-PC","ESD-PETG","ESD-PEI","ESD-PEKK",
+  "R-PETG","Tough PLA",
+  // Base materials
+  "PEEK","PEKK","PPSU","PSU","PPS","PES","PPE","TPI","PVDF","PCTG",
   "PETG","ABS","TPU","ASA","Nylon","PA","PC","PVA","HIPS",
   "HSPLA","HS-PLA","HS PLA","PLA",
 ];
@@ -134,6 +144,28 @@ const MATERIAL_NORMALIZE: Record<string, string> = {
   "standard pla+":"PLA+","silk pla+":"Silk PLA","pro petg":"PETG",
   "pro abs":"ABS","pro asa":"ASA","pet-cf":"PET-CF",
   "entwined v2hemp":"Hemp-PLA","entwined v2 hemp":"Hemp-PLA",
+  // 3DXTech composite material normalizations
+  "pekk-a+cf":"PEKK-CF","pekk-a+cf15":"PEKK-CF","pekk-a":"PEKK",
+  "peek+cf":"PEEK-CF","peek+cf10":"PEEK-CF","peek+gf20":"PEEK-GF",
+  "pei+gf30":"PEI-GF","pei+gf":"PEI-GF","pei 9085+cf":"PEI-CF","pei 9085":"PEI","pei 1010":"PEI",
+  "abs+cf":"ABS-CF","abs+gf":"ABS-GF","asa+cf":"ASA-CF",
+  "pc+cf":"PC-CF","pc-abs":"PC-ABS",
+  "pp+cf":"PP-CF","pp+gf30":"PP-GF","pp+gf":"PP-GF",
+  "ppa+gf15":"PPA-GF","ppa+gf":"PPA-GF",
+  "nylon 12+cf":"Nylon-CF","nylon 12+gf30":"Nylon-GF","nylon 12+gf":"Nylon-GF",
+  "nylon 6+cf":"Nylon-CF","nylon 6-66":"Nylon",
+  "pa6+gf30":"PA6-GF","pa6+gf":"PA6-GF",
+  "petg+cf":"PETG-CF","pla+cf":"PLA-CF",
+  "fr-abs":"FR-ABS","fr-pc-abs":"FR-PC-ABS","fr-pc":"FR-PC",
+  "esd-tpu":"ESD-TPU","esd-pla":"ESD-PLA","esd-abs":"ESD-ABS",
+  "esd-pc":"ESD-PC","esd-petg":"ESD-PETG","esd-pei":"ESD-PEI","esd-pekk":"ESD-PEKK",
+  "esd-pekk-a":"ESD-PEKK","emi-abs":"EMI-ABS","emi-petg":"EMI-PETG",
+  "r-petg":"rPETG","tough pla":"Tough PLA",
+  "ppe+ps":"PPE","htn+cf":"HTN-CF",
+  // 3DHOJOR material normalizations
+  "pla pro":"PLA+","pla lite":"PLA","pla basic":"PLA","pla high speed":"HSPLA",
+  "rapid pla":"HSPLA","crystal rainbow pla":"PLA","silk rainbow pla":"Silk PLA",
+  "silk dual/tri color pla":"Silk PLA","silk magic":"Silk PLA",
 };
 
 const KNOWN_COLOR_WORDS = [
@@ -145,7 +177,7 @@ const KNOWN_COLOR_WORDS = [
   "rose","peach","cream","chocolate","bronze","copper","platinum",
 ];
 
-const REGION_KEYWORDS = ["ship","shipment","country","region","destination"];
+const REGION_KEYWORDS = ["ship","shipment","country","region","destination","shop from"];
 const MATERIAL_OPT_KEYWORDS = ["material","type","types","category"];
 const COLOR_OPT_KEYWORDS = ["color","colour"];
 
@@ -160,12 +192,13 @@ function titleCase(s: string): string {
 export function mapRegionToCode(rv: string | null, rm: Record<string, string>): string | null {
   if (!rv) return null;
   for (const [k, c] of Object.entries(rm)) { if (rv.includes(k)) return c; }
-  const l = rv.toLowerCase();
+  const l = rv.toLowerCase().trim();
   if (l.includes("usa") || l.includes("united states")) return "US";
   if (l.includes("europe") || l.includes("eu")) return "EU";
-  if (l.includes("canada")) return "CA";
-  if (l.includes("australia")) return "AU";
+  if (l.includes("canada") || l === "ca") return "CA";
+  if (l.includes("australia") || l === "au") return "AU";
   if (l.includes("uk") || l.includes("united kingdom")) return "UK";
+  if (l === "de" || l.includes("germany") || l.includes("deutschland")) return "EU";
   if (/\bus\b/.test(l)) return "US";
   return null;
 }
@@ -263,7 +296,7 @@ function detectOptionPositions(product: any, config: ScrapingConfig): {
 } {
   const fb = {
     regionKey: config.variant_mapping?.region_option || "option1",
-    materialKey: config.variant_mapping?.material_option || "option2",
+    materialKey: config.variant_mapping?.material_option || null,
     colorKey: config.variant_mapping?.color_option || "option3",
   };
   if (!product?.options?.length) return fb;
