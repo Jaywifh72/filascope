@@ -789,6 +789,71 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       source_currency: 'USD',
     },
   },
+  'polymaker': {
+    brand_name: 'Polymaker',
+    platform: 'shopify',
+    base_url: 'https://us.polymaker.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'polymaker',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://us.polymaker.com',
+      EU: 'https://eu.polymaker.com',
+    },
+    variant_mapping: {
+      // Polymaker uses: option1=Diameter/Packaging, option2=Weight, option3=Color
+      color_option: 'option3',
+      source_currency: 'USD',
+    },
+  },
+  'proto-pasta': {
+    brand_name: 'Proto-Pasta',
+    platform: 'shopify',
+    base_url: 'https://www.proto-pasta.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'proto-pasta',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://www.proto-pasta.com',
+    },
+    variant_mapping: {
+      // Proto-Pasta: color is in the product title, option1=Diameter, option2=Size
+      color_from_title: true,
+      source_currency: 'USD',
+    },
+  },
+  'prusament': {
+    brand_name: 'Prusament',
+    platform: 'custom',
+    base_url: 'https://www.prusa3d.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'prusament',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      EU: 'https://www.prusa3d.com',
+      US: 'https://www.prusa3d.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
+  'push-plastic': {
+    brand_name: 'Push Plastic',
+    platform: 'shopify',
+    base_url: 'https://www.pushplastic.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'push-plastic',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://www.pushplastic.com',
+    },
+    variant_mapping: {
+      // Push Plastic: option1=Filament Color (simple single-option structure)
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
 };
 
 /**
@@ -980,6 +1045,7 @@ export function useCatalogSync() {
           'ic3d-printers': '/data/ic3d-printers-products.json',
           'ninjatek': '/data/ninjatek-products.json',
           'paramount-3d': '/data/paramount-3d-products.json',
+          'prusament': '/data/prusament-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 

@@ -1,0 +1,2932 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "Prusament PLA Prusa Galaxy Black 1.75mm",
+      "handle": "pla-prusa-galaxy-black",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Prusa Galaxy Black",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-prusa-galaxy-black",
+          "option1": "Prusa Galaxy Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Galaxy Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 2000,
+      "title": "Prusament PLA Jet Black 1.75mm",
+      "handle": "pla-jet-black",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "Jet Black",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-jet-black",
+          "option1": "Jet Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Jet Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 3000,
+      "title": "Prusament PLA Pristine White 1.75mm",
+      "handle": "pla-pristine-white",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Pristine White",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-pristine-white",
+          "option1": "Pristine White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pristine White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 4000,
+      "title": "Prusament PLA Vanilla White 1.75mm",
+      "handle": "pla-vanilla-white",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Vanilla White",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-vanilla-white",
+          "option1": "Vanilla White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Vanilla White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 5000,
+      "title": "Prusament PLA Natural 1.75mm",
+      "handle": "pla-natural",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Natural",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 6000,
+      "title": "Prusament PLA Prusa Orange 1.75mm",
+      "handle": "pla-prusa-orange",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Prusa Orange",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-prusa-orange",
+          "option1": "Prusa Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 7000,
+      "title": "Prusament PLA Lipstick Red 1.75mm",
+      "handle": "pla-lipstick-red",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Lipstick Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-lipstick-red",
+          "option1": "Lipstick Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Lipstick Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 8000,
+      "title": "Prusament PLA Blood Red 1.75mm",
+      "handle": "pla-blood-red",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Blood Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-blood-red",
+          "option1": "Blood Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blood Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 9000,
+      "title": "Prusament PLA Pineapple Yellow 1.75mm",
+      "handle": "pla-pineapple-yellow",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Pineapple Yellow",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-pineapple-yellow",
+          "option1": "Pineapple Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pineapple Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 10000,
+      "title": "Prusament PLA Azure Blue 1.75mm",
+      "handle": "pla-azure-blue",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Azure Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-azure-blue",
+          "option1": "Azure Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Azure Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 11000,
+      "title": "Prusament PLA Chalky Blue 1.75mm",
+      "handle": "pla-chalky-blue",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Chalky Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-chalky-blue",
+          "option1": "Chalky Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Chalky Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 12000,
+      "title": "Prusament PLA Galaxy Silver 1.75mm",
+      "handle": "pla-galaxy-silver",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Galaxy Silver",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-galaxy-silver",
+          "option1": "Galaxy Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Galaxy Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 13000,
+      "title": "Prusament PLA Pearl Mouse 1.75mm",
+      "handle": "pla-pearl-mouse",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Pearl Mouse",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-pearl-mouse",
+          "option1": "Pearl Mouse",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pearl Mouse"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 14000,
+      "title": "Prusament PLA Galaxy Purple 1.75mm",
+      "handle": "pla-galaxy-purple",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Galaxy Purple",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-galaxy-purple",
+          "option1": "Galaxy Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Galaxy Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 15000,
+      "title": "Prusament PLA Galaxy Red 1.75mm",
+      "handle": "pla-galaxy-red",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Galaxy Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-galaxy-red",
+          "option1": "Galaxy Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Galaxy Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 16000,
+      "title": "Prusament PLA Galaxy Green 1.75mm",
+      "handle": "pla-galaxy-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Galaxy Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-galaxy-green",
+          "option1": "Galaxy Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Galaxy Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 17000,
+      "title": "Prusament PLA Prusa Pro Green 1.75mm",
+      "handle": "pla-prusa-pro-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "Prusa Pro Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-prusa-pro-green",
+          "option1": "Prusa Pro Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Pro Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 18000,
+      "title": "Prusament PLA Simply Green 1.75mm",
+      "handle": "pla-simply-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Simply Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-simply-green",
+          "option1": "Simply Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Simply Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 19000,
+      "title": "Prusament PLA Opal Green 1.75mm",
+      "handle": "pla-opal-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Opal Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-opal-green",
+          "option1": "Opal Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Opal Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 20000,
+      "title": "Prusament PLA Army Green 1.75mm",
+      "handle": "pla-army-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Army Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-army-green",
+          "option1": "Army Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Army Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 21000,
+      "title": "Prusament PLA Emerald Green 1.75mm",
+      "handle": "pla-emerald-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Emerald Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-emerald-green",
+          "option1": "Emerald Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Emerald Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 22000,
+      "title": "Prusament PLA Electric Green 1.75mm",
+      "handle": "pla-electric-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Electric Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-electric-green",
+          "option1": "Electric Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Electric Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 23000,
+      "title": "Prusament PLA Pistachio Green 1.75mm",
+      "handle": "pla-pistachio-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Pistachio Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-pistachio-green",
+          "option1": "Pistachio Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pistachio Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 24000,
+      "title": "Prusament PLA Gentleman's Grey 1.75mm",
+      "handle": "pla-gentleman-s-grey",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Gentleman's Grey",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-gentleman-s-grey",
+          "option1": "Gentleman's Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gentleman's Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 25000,
+      "title": "Prusament PLA Marble Grey 1.75mm",
+      "handle": "pla-marble-grey",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Marble Grey",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-marble-grey",
+          "option1": "Marble Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Marble Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 26000,
+      "title": "Prusament PLA Gravity Grey 1.75mm",
+      "handle": "pla-gravity-grey",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Gravity Grey",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-gravity-grey",
+          "option1": "Gravity Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gravity Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 27000,
+      "title": "Prusament PLA Anthracite Grey 1.75mm",
+      "handle": "pla-anthracite-grey",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Anthracite Grey",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 28000,
+      "title": "Prusament PLA Lime Green 1.75mm",
+      "handle": "pla-lime-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Lime Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-lime-green",
+          "option1": "Lime Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Lime Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 29000,
+      "title": "Prusament PLA Mystic Brown 1.75mm",
+      "handle": "pla-mystic-brown",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "Mystic Brown",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-mystic-brown",
+          "option1": "Mystic Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Mystic Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 30000,
+      "title": "Prusament PLA Mystic Green 1.75mm",
+      "handle": "pla-mystic-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Mystic Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-mystic-green",
+          "option1": "Mystic Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Mystic Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 31000,
+      "title": "Prusament PLA Noctua Beige 1.75mm",
+      "handle": "pla-noctua-beige",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Noctua Beige",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-noctua-beige",
+          "option1": "Noctua Beige",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Noctua Beige"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 32000,
+      "title": "Prusament PLA Noctua Brown 1.75mm",
+      "handle": "pla-noctua-brown",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Noctua Brown",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-noctua-brown",
+          "option1": "Noctua Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Noctua Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 33000,
+      "title": "Prusament PLA Blend Royal Blue 1.75mm",
+      "handle": "pla-blend-royal-blue",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Royal Blue",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-blend-royal-blue",
+          "option1": "Royal Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 970
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Royal Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 34000,
+      "title": "Prusament PLA Blend Ms. Pink 1.75mm",
+      "handle": "pla-blend-ms-pink",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Ms. Pink",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-blend-ms-pink",
+          "option1": "Ms. Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 970
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Ms. Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 35000,
+      "title": "Prusament PLA Blend Oh My Gold 1.75mm",
+      "handle": "pla-blend-oh-my-gold",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Oh My Gold",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-blend-oh-my-gold",
+          "option1": "Oh My Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 970
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Oh My Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 36000,
+      "title": "Prusament PLA Blend Viva La Bronze 1.75mm",
+      "handle": "pla-blend-viva-la-bronze",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Viva La Bronze",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-blend-viva-la-bronze",
+          "option1": "Viva La Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 970
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Viva La Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 37000,
+      "title": "Prusament PLA Blend Pearl White 1.75mm",
+      "handle": "pla-blend-pearl-white",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "Pearl White",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-blend-pearl-white",
+          "option1": "Pearl White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 970
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pearl White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 38000,
+      "title": "Prusament PLA Blend My Silverness 1.75mm",
+      "handle": "pla-blend-my-silverness",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "My Silverness",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-blend-my-silverness",
+          "option1": "My Silverness",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 970
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "My Silverness"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 39000,
+      "title": "Prusament PLA Recycled Motley Bluff 1.75mm",
+      "handle": "pla-recycled-motley-bluff",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Motley Bluff",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pla-recycled-motley-bluff",
+          "option1": "Motley Bluff",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Motley Bluff"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 40000,
+      "title": "Prusament rPLA Neon Green 1.75mm",
+      "handle": "rpla-neon-green",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "Neon Green",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-rpla-neon-green",
+          "option1": "Neon Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neon Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 41000,
+      "title": "Prusament rPLA Matte Black 1.75mm",
+      "handle": "rpla-matte-black",
+      "product_type": "PLA",
+      "vendor": "Prusament",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "Matte Black",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-rpla-matte-black",
+          "option1": "Matte Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 42000,
+      "title": "Prusament PETG Jet Black 1.75mm",
+      "handle": "petg-jet-black",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "Jet Black",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-jet-black",
+          "option1": "Jet Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Jet Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 43000,
+      "title": "Prusament PETG Matte Black 1.75mm",
+      "handle": "petg-matte-black",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "Matte Black",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-matte-black",
+          "option1": "Matte Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 44000,
+      "title": "Prusament PETG Signal White 1.75mm",
+      "handle": "petg-signal-white",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Signal White",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-signal-white",
+          "option1": "Signal White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Signal White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 45000,
+      "title": "Prusament PETG Clear 1.75mm",
+      "handle": "petg-clear",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "Clear",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-clear",
+          "option1": "Clear",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Clear"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 46000,
+      "title": "Prusament PETG Prusa Orange 1.75mm",
+      "handle": "petg-prusa-orange",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 46001,
+          "title": "Prusa Orange",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-prusa-orange",
+          "option1": "Prusa Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 47000,
+      "title": "Prusament PETG Lipstick Red 1.75mm",
+      "handle": "petg-lipstick-red",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 47001,
+          "title": "Lipstick Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-lipstick-red",
+          "option1": "Lipstick Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Lipstick Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 48000,
+      "title": "Prusament PETG Carmine Red 1.75mm",
+      "handle": "petg-carmine-red",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 48001,
+          "title": "Carmine Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-carmine-red",
+          "option1": "Carmine Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Carmine Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 49000,
+      "title": "Prusament PETG Yellow Gold 1.75mm",
+      "handle": "petg-yellow-gold",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 49001,
+          "title": "Yellow Gold",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-yellow-gold",
+          "option1": "Yellow Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 50000,
+      "title": "Prusament PETG Mango Yellow 1.75mm",
+      "handle": "petg-mango-yellow",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 50001,
+          "title": "Mango Yellow",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-mango-yellow",
+          "option1": "Mango Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Mango Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 51000,
+      "title": "Prusament PETG Prusa Pro Green 1.75mm",
+      "handle": "petg-prusa-pro-green",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 51001,
+          "title": "Prusa Pro Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-prusa-pro-green",
+          "option1": "Prusa Pro Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Pro Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 52000,
+      "title": "Prusament PETG Neon Green 1.75mm",
+      "handle": "petg-neon-green",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 52001,
+          "title": "Neon Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-neon-green",
+          "option1": "Neon Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Neon Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 53000,
+      "title": "Prusament PETG Jungle Green 1.75mm",
+      "handle": "petg-jungle-green",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 53001,
+          "title": "Jungle Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-jungle-green",
+          "option1": "Jungle Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Jungle Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 54000,
+      "title": "Prusament PETG Pistachio Green 1.75mm",
+      "handle": "petg-pistachio-green",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 54001,
+          "title": "Pistachio Green",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-pistachio-green",
+          "option1": "Pistachio Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pistachio Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 55000,
+      "title": "Prusament PETG Ultramarine Blue 1.75mm",
+      "handle": "petg-ultramarine-blue",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 55001,
+          "title": "Ultramarine Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-ultramarine-blue",
+          "option1": "Ultramarine Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Ultramarine Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 56000,
+      "title": "Prusament PETG Ocean Blue 1.75mm",
+      "handle": "petg-ocean-blue",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 56001,
+          "title": "Ocean Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-ocean-blue",
+          "option1": "Ocean Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Ocean Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 57000,
+      "title": "Prusament PETG Chalky Blue 1.75mm",
+      "handle": "petg-chalky-blue",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 57001,
+          "title": "Chalky Blue",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-chalky-blue",
+          "option1": "Chalky Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Chalky Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 58000,
+      "title": "Prusament PETG Urban Grey 1.75mm",
+      "handle": "petg-urban-grey",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 58001,
+          "title": "Urban Grey",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-urban-grey",
+          "option1": "Urban Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Urban Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 59000,
+      "title": "Prusament PETG Anthracite Grey 1.75mm",
+      "handle": "petg-anthracite-grey",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 59001,
+          "title": "Anthracite Grey",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-anthracite-grey",
+          "option1": "Anthracite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Anthracite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 60000,
+      "title": "Prusament PETG Terracotta Light 1.75mm",
+      "handle": "petg-terracotta-light",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 60001,
+          "title": "Terracotta Light",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-terracotta-light",
+          "option1": "Terracotta Light",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Terracotta Light"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 61000,
+      "title": "Prusament PETG Orange Transparent 1.75mm",
+      "handle": "petg-orange-transparent",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 61001,
+          "title": "Orange Transparent",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-orange-transparent",
+          "option1": "Orange Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 62000,
+      "title": "Prusament PETG Galaxy Black 1.75mm",
+      "handle": "petg-galaxy-black",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 62001,
+          "title": "Galaxy Black",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-galaxy-black",
+          "option1": "Galaxy Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Galaxy Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 63000,
+      "title": "Prusament PETG Carbon Fiber Jet Black 1.75mm",
+      "handle": "petg-cf-jet-black",
+      "product_type": "PETG-CF",
+      "vendor": "Prusament",
+      "tags": "PETG-CF",
+      "variants": [
+        {
+          "id": 63001,
+          "title": "Jet Black",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-cf-jet-black",
+          "option1": "Jet Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Jet Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 64000,
+      "title": "Prusament PETG Tungsten 75% Tungsten Grey 1.75mm",
+      "handle": "petg-tungsten-tungsten-grey",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 64001,
+          "title": "Tungsten Grey",
+          "price": "99.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-tungsten-tungsten-grey",
+          "option1": "Tungsten Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Tungsten Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 65000,
+      "title": "Prusament PETG V0 Natural 1.75mm",
+      "handle": "petg-v0-natural",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 65001,
+          "title": "Natural",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-v0-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 66000,
+      "title": "Prusament PETG V0 Jet Black 1.75mm",
+      "handle": "petg-v0-jet-black",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 66001,
+          "title": "Jet Black",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-v0-jet-black",
+          "option1": "Jet Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Jet Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 67000,
+      "title": "Prusament PETG Recycled Black 1.75mm",
+      "handle": "petg-recycled-black",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 67001,
+          "title": "Black",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-recycled-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 68000,
+      "title": "Prusament PETG Magnetite 40% Magnetite Black 1.75mm",
+      "handle": "petg-magnetite-magnetite-black",
+      "product_type": "PETG",
+      "vendor": "Prusament",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 68001,
+          "title": "Magnetite Black",
+          "price": "49.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-petg-magnetite-magnetite-black",
+          "option1": "Magnetite Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Magnetite Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 69000,
+      "title": "Prusament ASA Prusa Orange 1.75mm",
+      "handle": "asa-prusa-orange",
+      "product_type": "ASA",
+      "vendor": "Prusament",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 69001,
+          "title": "Prusa Orange",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-asa-prusa-orange",
+          "option1": "Prusa Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 70000,
+      "title": "Prusament ASA Jet Black 1.75mm",
+      "handle": "asa-jet-black",
+      "product_type": "ASA",
+      "vendor": "Prusament",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 70001,
+          "title": "Jet Black",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-asa-jet-black",
+          "option1": "Jet Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Jet Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 71000,
+      "title": "Prusament ASA Prusa Galaxy Black 1.75mm",
+      "handle": "asa-prusa-galaxy-black",
+      "product_type": "ASA",
+      "vendor": "Prusament",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 71001,
+          "title": "Prusa Galaxy Black",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-asa-prusa-galaxy-black",
+          "option1": "Prusa Galaxy Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Galaxy Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 72000,
+      "title": "Prusament ASA Urban Grey 1.75mm",
+      "handle": "asa-urban-grey",
+      "product_type": "ASA",
+      "vendor": "Prusament",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 72001,
+          "title": "Urban Grey",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-asa-urban-grey",
+          "option1": "Urban Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Urban Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 73000,
+      "title": "Prusament ASA Signal White 1.75mm",
+      "handle": "asa-signal-white",
+      "product_type": "ASA",
+      "vendor": "Prusament",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 73001,
+          "title": "Signal White",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-asa-signal-white",
+          "option1": "Signal White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Signal White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 74000,
+      "title": "Prusament ASA Prusa Pro Green 1.75mm",
+      "handle": "asa-prusa-pro-green",
+      "product_type": "ASA",
+      "vendor": "Prusament",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 74001,
+          "title": "Prusa Pro Green",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-asa-prusa-pro-green",
+          "option1": "Prusa Pro Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Pro Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 75000,
+      "title": "Prusament PVB Natural Transparent 1.75mm",
+      "handle": "pvb-natural-transparent",
+      "product_type": "PVB",
+      "vendor": "Prusament",
+      "tags": "PVB",
+      "variants": [
+        {
+          "id": 75001,
+          "title": "Natural Transparent",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pvb-natural-transparent",
+          "option1": "Natural Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 76000,
+      "title": "Prusament PVB Smoky Black Transparent 1.75mm",
+      "handle": "pvb-smoky-black-transparent",
+      "product_type": "PVB",
+      "vendor": "Prusament",
+      "tags": "PVB",
+      "variants": [
+        {
+          "id": 76001,
+          "title": "Smoky Black Transparent",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pvb-smoky-black-transparent",
+          "option1": "Smoky Black Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Smoky Black Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 77000,
+      "title": "Prusament PC Blend Jet Black 1.75mm",
+      "handle": "pc-blend-jet-black",
+      "product_type": "PC",
+      "vendor": "Prusament",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 77001,
+          "title": "Jet Black",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pc-blend-jet-black",
+          "option1": "Jet Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 970
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Jet Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 78000,
+      "title": "Prusament PC Blend Natural 1.75mm",
+      "handle": "pc-blend-natural",
+      "product_type": "PC",
+      "vendor": "Prusament",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 78001,
+          "title": "Natural",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pc-blend-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 970
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.010Z"
+    },
+    {
+      "id": 79000,
+      "title": "Prusament PC Blend Carbon Fiber Jet Black 1.75mm",
+      "handle": "pc-blend-cf-jet-black",
+      "product_type": "PC-CF",
+      "vendor": "Prusament",
+      "tags": "PC-CF",
+      "variants": [
+        {
+          "id": 79001,
+          "title": "Jet Black",
+          "price": "59.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pc-blend-cf-jet-black",
+          "option1": "Jet Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Jet Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.011Z"
+    },
+    {
+      "id": 80000,
+      "title": "Prusament PA11 Carbon Fiber Natural 1.75mm",
+      "handle": "pa11-cf-natural",
+      "product_type": "PA-CF",
+      "vendor": "Prusament",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 80001,
+          "title": "Natural",
+          "price": "69.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pa11-cf-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.011Z"
+    },
+    {
+      "id": 81000,
+      "title": "Prusament TPU 95A Prusa Orange 1.75mm",
+      "handle": "tpu-95a-prusa-orange",
+      "product_type": "TPU",
+      "vendor": "Prusament",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 81001,
+          "title": "Prusa Orange",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-tpu-95a-prusa-orange",
+          "option1": "Prusa Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Prusa Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.011Z"
+    },
+    {
+      "id": 82000,
+      "title": "Prusament Woodfill Wood 1.75mm",
+      "handle": "woodfill-wood",
+      "product_type": "Wood PLA",
+      "vendor": "Prusament",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 82001,
+          "title": "Wood",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-woodfill-wood",
+          "option1": "Wood",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Wood"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.011Z"
+    },
+    {
+      "id": 83000,
+      "title": "Prusament PP Glass Fiber Natural 1.75mm",
+      "handle": "pp-gf-natural",
+      "product_type": "PP-GF",
+      "vendor": "Prusament",
+      "tags": "PP-GF",
+      "variants": [
+        {
+          "id": 83001,
+          "title": "Natural",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pp-gf-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.011Z"
+    },
+    {
+      "id": 84000,
+      "title": "Prusament PP Carbon Fiber Black 1.75mm",
+      "handle": "pp-cf-black",
+      "product_type": "PP-CF",
+      "vendor": "Prusament",
+      "tags": "PP-CF",
+      "variants": [
+        {
+          "id": 84001,
+          "title": "Black",
+          "price": "49.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pp-cf-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.011Z"
+    },
+    {
+      "id": 85000,
+      "title": "Prusament PEI 1010 Amber 1.75mm",
+      "handle": "pei-1010-amber",
+      "product_type": "PEI",
+      "vendor": "Prusament",
+      "tags": "PEI",
+      "variants": [
+        {
+          "id": 85001,
+          "title": "Amber",
+          "price": "129.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pei-1010-amber",
+          "option1": "Amber",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Amber"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.011Z"
+    },
+    {
+      "id": 86000,
+      "title": "Prusament PC Space Grade Natural 1.75mm",
+      "handle": "pc-space-grade-natural",
+      "product_type": "PC",
+      "vendor": "Prusament",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 86001,
+          "title": "Natural",
+          "price": "89.99",
+          "compare_at_price": null,
+          "sku": "PRUSAMENT-pc-space-grade-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T17:55:23.011Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T17:55:23.011Z",
+  "source": "prusament-catalog-curated",
+  "currency": "EUR"
+}
