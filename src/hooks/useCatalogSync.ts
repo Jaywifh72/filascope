@@ -951,6 +951,54 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       source_currency: 'EUR',
     },
   },
+  'ultimaker': {
+    brand_name: 'UltiMaker',
+    platform: 'magento',
+    base_url: 'https://store.ultimaker.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'ultimaker',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://store.ultimaker.com',
+    },
+    variant_mapping: {
+      // Curated catalog: option1=Color. Includes 2.85mm (S Series) and 1.75mm (Method/Sketch).
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'voxelpla': {
+    brand_name: 'VoxelPLA',
+    platform: 'shopify',
+    base_url: 'https://voxelpla.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'voxelpla',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://voxelpla.com',
+    },
+    variant_mapping: {
+      // VoxelPLA: flat products (1 product per color), color in title. No CORS.
+      color_from_title: true,
+      source_currency: 'USD',
+    },
+  },
+  'ziro': {
+    brand_name: 'Ziro',
+    platform: 'shopify',
+    base_url: 'https://ziro3d.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'ziro',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://ziro3d.com',
+    },
+    variant_mapping: {
+      // Ziro: flat products (1 product per color), color in title. No CORS.
+      color_from_title: true,
+      source_currency: 'USD',
+    },
+  },
 };
 
 /**
@@ -1144,6 +1192,9 @@ export function useCatalogSync() {
           'paramount-3d': '/data/paramount-3d-products.json',
           'prusament': '/data/prusament-products.json',
           'treed-filaments': '/data/treed-filaments-products.json',
+          'ultimaker': '/data/ultimaker-products.json',
+          'voxelpla': '/data/voxelpla-products.json',
+          'ziro': '/data/ziro-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 

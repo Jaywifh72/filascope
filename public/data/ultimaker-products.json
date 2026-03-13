@@ -1,0 +1,3646 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "UltiMaker S Series PLA Black 2.85mm",
+      "handle": "ultimaker-s-series-pla-black",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Black",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.637Z"
+    },
+    {
+      "id": 2000,
+      "title": "UltiMaker S Series PLA White 2.85mm",
+      "handle": "ultimaker-s-series-pla-white",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "White",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 3000,
+      "title": "UltiMaker S Series PLA Silver Metallic 2.85mm",
+      "handle": "ultimaker-s-series-pla-silver-metallic",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Silver Metallic",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-silver-metallic",
+          "option1": "Silver Metallic",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver Metallic"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 4000,
+      "title": "UltiMaker S Series PLA Red 2.85mm",
+      "handle": "ultimaker-s-series-pla-red",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Red",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 5000,
+      "title": "UltiMaker S Series PLA Orange 2.85mm",
+      "handle": "ultimaker-s-series-pla-orange",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Orange",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 6000,
+      "title": "UltiMaker S Series PLA Yellow 2.85mm",
+      "handle": "ultimaker-s-series-pla-yellow",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Yellow",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 7000,
+      "title": "UltiMaker S Series PLA Green 2.85mm",
+      "handle": "ultimaker-s-series-pla-green",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Green",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 8000,
+      "title": "UltiMaker S Series PLA Blue 2.85mm",
+      "handle": "ultimaker-s-series-pla-blue",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Blue",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 9000,
+      "title": "UltiMaker S Series PLA Magenta 2.85mm",
+      "handle": "ultimaker-s-series-pla-magenta",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Magenta",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-magenta",
+          "option1": "Magenta",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Magenta"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 10000,
+      "title": "UltiMaker S Series PLA Pearl White 2.85mm",
+      "handle": "ultimaker-s-series-pla-pearl-white",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Pearl White",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-pearl-white",
+          "option1": "Pearl White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pearl White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 11000,
+      "title": "UltiMaker S Series PLA Pearl Gold 2.85mm",
+      "handle": "ultimaker-s-series-pla-pearl-gold",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Pearl Gold",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pla-pearl-gold",
+          "option1": "Pearl Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pearl Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 12000,
+      "title": "UltiMaker S Series Tough PLA Black 2.85mm",
+      "handle": "ultimaker-s-series-tough-pla-black",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Black",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-tough-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 13000,
+      "title": "UltiMaker S Series Tough PLA White 2.85mm",
+      "handle": "ultimaker-s-series-tough-pla-white",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "White",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-tough-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 14000,
+      "title": "UltiMaker S Series Tough PLA Red 2.85mm",
+      "handle": "ultimaker-s-series-tough-pla-red",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Red",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-tough-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 15000,
+      "title": "UltiMaker S Series Tough PLA Green 2.85mm",
+      "handle": "ultimaker-s-series-tough-pla-green",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Green",
+          "price": "49.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-tough-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 16000,
+      "title": "UltiMaker S Series ABS Black 2.85mm",
+      "handle": "ultimaker-s-series-abs-black",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Black",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 17000,
+      "title": "UltiMaker S Series ABS White 2.85mm",
+      "handle": "ultimaker-s-series-abs-white",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "White",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 18000,
+      "title": "UltiMaker S Series ABS Silver Metallic 2.85mm",
+      "handle": "ultimaker-s-series-abs-silver-metallic",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Silver Metallic",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-silver-metallic",
+          "option1": "Silver Metallic",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver Metallic"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 19000,
+      "title": "UltiMaker S Series ABS Red 2.85mm",
+      "handle": "ultimaker-s-series-abs-red",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Red",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 20000,
+      "title": "UltiMaker S Series ABS Orange 2.85mm",
+      "handle": "ultimaker-s-series-abs-orange",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Orange",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 21000,
+      "title": "UltiMaker S Series ABS Yellow 2.85mm",
+      "handle": "ultimaker-s-series-abs-yellow",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Yellow",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 22000,
+      "title": "UltiMaker S Series ABS Green 2.85mm",
+      "handle": "ultimaker-s-series-abs-green",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Green",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 23000,
+      "title": "UltiMaker S Series ABS Blue 2.85mm",
+      "handle": "ultimaker-s-series-abs-blue",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Blue",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 24000,
+      "title": "UltiMaker S Series ABS Grey 2.85mm",
+      "handle": "ultimaker-s-series-abs-grey",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Grey",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 25000,
+      "title": "UltiMaker S Series ABS Pearl Gold 2.85mm",
+      "handle": "ultimaker-s-series-abs-pearl-gold",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Pearl Gold",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-abs-pearl-gold",
+          "option1": "Pearl Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pearl Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 26000,
+      "title": "UltiMaker S Series PETG Black 2.85mm",
+      "handle": "ultimaker-s-series-petg-black",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Black",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 27000,
+      "title": "UltiMaker S Series PETG White 2.85mm",
+      "handle": "ultimaker-s-series-petg-white",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "White",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 28000,
+      "title": "UltiMaker S Series PETG Red 2.85mm",
+      "handle": "ultimaker-s-series-petg-red",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Red",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 29000,
+      "title": "UltiMaker S Series PETG Orange 2.85mm",
+      "handle": "ultimaker-s-series-petg-orange",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "Orange",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 30000,
+      "title": "UltiMaker S Series PETG Yellow 2.85mm",
+      "handle": "ultimaker-s-series-petg-yellow",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Yellow",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 31000,
+      "title": "UltiMaker S Series PETG Green 2.85mm",
+      "handle": "ultimaker-s-series-petg-green",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Green",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 32000,
+      "title": "UltiMaker S Series PETG Blue 2.85mm",
+      "handle": "ultimaker-s-series-petg-blue",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Blue",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 33000,
+      "title": "UltiMaker S Series PETG Grey 2.85mm",
+      "handle": "ultimaker-s-series-petg-grey",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Grey",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 34000,
+      "title": "UltiMaker S Series PETG Transparent 2.85mm",
+      "handle": "ultimaker-s-series-petg-transparent",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Transparent",
+          "price": "44.99",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-petg-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 35000,
+      "title": "UltiMaker S Series CPE Black 2.85mm",
+      "handle": "ultimaker-s-series-cpe-black",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Black",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 36000,
+      "title": "UltiMaker S Series CPE White 2.85mm",
+      "handle": "ultimaker-s-series-cpe-white",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "White",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 37000,
+      "title": "UltiMaker S Series CPE Red 2.85mm",
+      "handle": "ultimaker-s-series-cpe-red",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "Red",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 38000,
+      "title": "UltiMaker S Series CPE Yellow 2.85mm",
+      "handle": "ultimaker-s-series-cpe-yellow",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Yellow",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 39000,
+      "title": "UltiMaker S Series CPE Green 2.85mm",
+      "handle": "ultimaker-s-series-cpe-green",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Green",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 40000,
+      "title": "UltiMaker S Series CPE Blue 2.85mm",
+      "handle": "ultimaker-s-series-cpe-blue",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "Blue",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 41000,
+      "title": "UltiMaker S Series CPE Dark Grey 2.85mm",
+      "handle": "ultimaker-s-series-cpe-dark-grey",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "Dark Grey",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-dark-grey",
+          "option1": "Dark Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Dark Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 42000,
+      "title": "UltiMaker S Series CPE Transparent 2.85mm",
+      "handle": "ultimaker-s-series-cpe-transparent",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "Transparent",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 43000,
+      "title": "UltiMaker S Series CPE Light Grey 2.85mm",
+      "handle": "ultimaker-s-series-cpe-light-grey",
+      "product_type": "CPE",
+      "vendor": "UltiMaker",
+      "tags": "CPE, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "Light Grey",
+          "price": "59.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-light-grey",
+          "option1": "Light Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Light Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 44000,
+      "title": "UltiMaker S Series CPE+ Black 2.85mm",
+      "handle": "ultimaker-s-series-cpe-plus-black",
+      "product_type": "CPE+",
+      "vendor": "UltiMaker",
+      "tags": "CPE+, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Black",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-plus-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 45000,
+      "title": "UltiMaker S Series CPE+ White 2.85mm",
+      "handle": "ultimaker-s-series-cpe-plus-white",
+      "product_type": "CPE+",
+      "vendor": "UltiMaker",
+      "tags": "CPE+, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "White",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-plus-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 46000,
+      "title": "UltiMaker S Series CPE+ Transparent 2.85mm",
+      "handle": "ultimaker-s-series-cpe-plus-transparent",
+      "product_type": "CPE+",
+      "vendor": "UltiMaker",
+      "tags": "CPE+, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 46001,
+          "title": "Transparent",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cpe-plus-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 47000,
+      "title": "UltiMaker S Series Nylon Black 2.85mm",
+      "handle": "ultimaker-s-series-nylon-black",
+      "product_type": "Nylon",
+      "vendor": "UltiMaker",
+      "tags": "Nylon, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 47001,
+          "title": "Black",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-nylon-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 48000,
+      "title": "UltiMaker S Series Nylon Transparent 2.85mm",
+      "handle": "ultimaker-s-series-nylon-transparent",
+      "product_type": "Nylon",
+      "vendor": "UltiMaker",
+      "tags": "Nylon, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 48001,
+          "title": "Transparent",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-nylon-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 49000,
+      "title": "UltiMaker S Series PC Black 2.85mm",
+      "handle": "ultimaker-s-series-pc-black",
+      "product_type": "PC",
+      "vendor": "UltiMaker",
+      "tags": "PC, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 49001,
+          "title": "Black",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pc-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 50000,
+      "title": "UltiMaker S Series PC White 2.85mm",
+      "handle": "ultimaker-s-series-pc-white",
+      "product_type": "PC",
+      "vendor": "UltiMaker",
+      "tags": "PC, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 50001,
+          "title": "White",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pc-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 51000,
+      "title": "UltiMaker S Series PC Transparent 2.85mm",
+      "handle": "ultimaker-s-series-pc-transparent",
+      "product_type": "PC",
+      "vendor": "UltiMaker",
+      "tags": "PC, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 51001,
+          "title": "Transparent",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pc-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 52000,
+      "title": "UltiMaker S Series TPU 95A Black 2.85mm",
+      "handle": "ultimaker-s-series-tpu-95a-black",
+      "product_type": "TPU",
+      "vendor": "UltiMaker",
+      "tags": "TPU, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 52001,
+          "title": "Black",
+          "price": "79.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-tpu-95a-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 53000,
+      "title": "UltiMaker S Series TPU 95A White 2.85mm",
+      "handle": "ultimaker-s-series-tpu-95a-white",
+      "product_type": "TPU",
+      "vendor": "UltiMaker",
+      "tags": "TPU, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 53001,
+          "title": "White",
+          "price": "79.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-tpu-95a-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 54000,
+      "title": "UltiMaker S Series TPU 95A Red 2.85mm",
+      "handle": "ultimaker-s-series-tpu-95a-red",
+      "product_type": "TPU",
+      "vendor": "UltiMaker",
+      "tags": "TPU, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 54001,
+          "title": "Red",
+          "price": "79.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-tpu-95a-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 55000,
+      "title": "UltiMaker S Series TPU 95A Blue 2.85mm",
+      "handle": "ultimaker-s-series-tpu-95a-blue",
+      "product_type": "TPU",
+      "vendor": "UltiMaker",
+      "tags": "TPU, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 55001,
+          "title": "Blue",
+          "price": "79.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-tpu-95a-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 56000,
+      "title": "UltiMaker S Series PET CF Black 2.85mm",
+      "handle": "ultimaker-s-series-pet-cf-black",
+      "product_type": "PET-CF",
+      "vendor": "UltiMaker",
+      "tags": "PET-CF, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 56001,
+          "title": "Black",
+          "price": "139.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pet-cf-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 57000,
+      "title": "UltiMaker S Series PPS CF Black 2.85mm",
+      "handle": "ultimaker-s-series-pps-cf-black",
+      "product_type": "PPS-CF",
+      "vendor": "UltiMaker",
+      "tags": "PPS-CF, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 57001,
+          "title": "Black",
+          "price": "110.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pps-cf-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 58000,
+      "title": "UltiMaker S Series Nylon CF Slide Black 2.85mm",
+      "handle": "ultimaker-s-series-nylon-cf-slide-black",
+      "product_type": "Nylon CF",
+      "vendor": "UltiMaker",
+      "tags": "Nylon CF, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 58001,
+          "title": "Black",
+          "price": "99.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-nylon-cf-slide-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 59000,
+      "title": "UltiMaker S Series Breakaway White 2.85mm",
+      "handle": "ultimaker-s-series-breakaway-white",
+      "product_type": "Breakaway",
+      "vendor": "UltiMaker",
+      "tags": "Breakaway, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 59001,
+          "title": "White",
+          "price": "69.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-breakaway-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 60000,
+      "title": "UltiMaker S Series PVA Natural 2.85mm",
+      "handle": "ultimaker-s-series-pva-natural",
+      "product_type": "PVA",
+      "vendor": "UltiMaker",
+      "tags": "PVA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 60001,
+          "title": "Natural",
+          "price": "99.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pva-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 61000,
+      "title": "UltiMaker S Series PVA Removal Station Natural 2.85mm",
+      "handle": "ultimaker-s-series-pva-removal-natural",
+      "product_type": "PVA",
+      "vendor": "UltiMaker",
+      "tags": "PVA, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 61001,
+          "title": "Natural",
+          "price": "47.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-pva-removal-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 350
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 62000,
+      "title": "UltiMaker S Series Cleaning Filament Natural 2.85mm",
+      "handle": "ultimaker-s-series-cleaning-natural",
+      "product_type": "Cleaning",
+      "vendor": "UltiMaker",
+      "tags": "Cleaning, S Series, 2.85mm",
+      "variants": [
+        {
+          "id": 62001,
+          "title": "Natural",
+          "price": "17.95",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-s-series-cleaning-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 63000,
+      "title": "UltiMaker Method PLA Black 1.75mm",
+      "handle": "ultimaker-method-pla-black",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 63001,
+          "title": "Black",
+          "price": "65.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 64000,
+      "title": "UltiMaker Method PLA White 1.75mm",
+      "handle": "ultimaker-method-pla-white",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 64001,
+          "title": "White",
+          "price": "65.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 65000,
+      "title": "UltiMaker Method PLA Red 1.75mm",
+      "handle": "ultimaker-method-pla-red",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 65001,
+          "title": "Red",
+          "price": "65.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 66000,
+      "title": "UltiMaker Method PLA True Orange 1.75mm",
+      "handle": "ultimaker-method-pla-true-orange",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 66001,
+          "title": "True Orange",
+          "price": "65.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pla-true-orange",
+          "option1": "True Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 67000,
+      "title": "UltiMaker Method PLA True Yellow 1.75mm",
+      "handle": "ultimaker-method-pla-true-yellow",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 67001,
+          "title": "True Yellow",
+          "price": "65.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pla-true-yellow",
+          "option1": "True Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 68000,
+      "title": "UltiMaker Method PLA True Green 1.75mm",
+      "handle": "ultimaker-method-pla-true-green",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 68001,
+          "title": "True Green",
+          "price": "65.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pla-true-green",
+          "option1": "True Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 69000,
+      "title": "UltiMaker Method PLA True Blue 1.75mm",
+      "handle": "ultimaker-method-pla-true-blue",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 69001,
+          "title": "True Blue",
+          "price": "65.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pla-true-blue",
+          "option1": "True Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 70000,
+      "title": "UltiMaker Method PLA Cool Gray 1.75mm",
+      "handle": "ultimaker-method-pla-cool-gray",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 70001,
+          "title": "Cool Gray",
+          "price": "65.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pla-cool-gray",
+          "option1": "Cool Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Cool Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 71000,
+      "title": "UltiMaker Method ABS-R Black 1.75mm",
+      "handle": "ultimaker-method-abs-r-black",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 71001,
+          "title": "Black",
+          "price": "109.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-abs-r-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 72000,
+      "title": "UltiMaker Method ABS-R White 1.75mm",
+      "handle": "ultimaker-method-abs-r-white",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 72001,
+          "title": "White",
+          "price": "109.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-abs-r-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 73000,
+      "title": "UltiMaker Method ABS-R Red 1.75mm",
+      "handle": "ultimaker-method-abs-r-red",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 73001,
+          "title": "Red",
+          "price": "109.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-abs-r-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 74000,
+      "title": "UltiMaker Method ABS-R True Orange 1.75mm",
+      "handle": "ultimaker-method-abs-r-true-orange",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 74001,
+          "title": "True Orange",
+          "price": "109.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-abs-r-true-orange",
+          "option1": "True Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 75000,
+      "title": "UltiMaker Method ABS-R True Blue 1.75mm",
+      "handle": "ultimaker-method-abs-r-true-blue",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 75001,
+          "title": "True Blue",
+          "price": "109.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-abs-r-true-blue",
+          "option1": "True Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 76000,
+      "title": "UltiMaker Method ABS-R Cool Gray 1.75mm",
+      "handle": "ultimaker-method-abs-r-cool-gray",
+      "product_type": "ABS",
+      "vendor": "UltiMaker",
+      "tags": "ABS, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 76001,
+          "title": "Cool Gray",
+          "price": "109.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-abs-r-cool-gray",
+          "option1": "Cool Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Cool Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 77000,
+      "title": "UltiMaker Method ABS CF Black 1.75mm",
+      "handle": "ultimaker-method-abs-cf-black",
+      "product_type": "ABS-CF",
+      "vendor": "UltiMaker",
+      "tags": "ABS-CF, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 77001,
+          "title": "Black",
+          "price": "99.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-abs-cf-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 650
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 78000,
+      "title": "UltiMaker Method ASA Black 1.75mm",
+      "handle": "ultimaker-method-asa-black",
+      "product_type": "ASA",
+      "vendor": "UltiMaker",
+      "tags": "ASA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 78001,
+          "title": "Black",
+          "price": "72.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-asa-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 79000,
+      "title": "UltiMaker Method ASA White 1.75mm",
+      "handle": "ultimaker-method-asa-white",
+      "product_type": "ASA",
+      "vendor": "UltiMaker",
+      "tags": "ASA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 79001,
+          "title": "White",
+          "price": "72.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-asa-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 80000,
+      "title": "UltiMaker Method PETG Black 1.75mm",
+      "handle": "ultimaker-method-petg-black",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 80001,
+          "title": "Black",
+          "price": "59.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 81000,
+      "title": "UltiMaker Method PETG White 1.75mm",
+      "handle": "ultimaker-method-petg-white",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 81001,
+          "title": "White",
+          "price": "59.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 82000,
+      "title": "UltiMaker Method PETG Transparent 1.75mm",
+      "handle": "ultimaker-method-petg-transparent",
+      "product_type": "PETG",
+      "vendor": "UltiMaker",
+      "tags": "PETG, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 82001,
+          "title": "Transparent",
+          "price": "59.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-petg-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 83000,
+      "title": "UltiMaker Method PC-ABS FR Black 1.75mm",
+      "handle": "ultimaker-method-pc-abs-fr-black",
+      "product_type": "PC-ABS",
+      "vendor": "UltiMaker",
+      "tags": "PC-ABS, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 83001,
+          "title": "Black",
+          "price": "94.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pc-abs-fr-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 84000,
+      "title": "UltiMaker Method Nylon 12 CF Black 1.75mm",
+      "handle": "ultimaker-method-nylon-12-cf-black",
+      "product_type": "Nylon CF",
+      "vendor": "UltiMaker",
+      "tags": "Nylon CF, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 84001,
+          "title": "Black",
+          "price": "129.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-nylon-12-cf-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 85000,
+      "title": "UltiMaker Method PVA Natural 1.75mm",
+      "handle": "ultimaker-method-pva-natural",
+      "product_type": "PVA",
+      "vendor": "UltiMaker",
+      "tags": "PVA, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 85001,
+          "title": "Natural",
+          "price": "84.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-pva-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 300
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 86000,
+      "title": "UltiMaker Method SR-30 Natural 1.75mm",
+      "handle": "ultimaker-method-sr-30-natural",
+      "product_type": "SR-30",
+      "vendor": "UltiMaker",
+      "tags": "SR-30, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 86001,
+          "title": "Natural",
+          "price": "169.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-sr-30-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 300
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 87000,
+      "title": "UltiMaker Method RapidRinse Natural 1.75mm",
+      "handle": "ultimaker-method-rapidrinse-natural",
+      "product_type": "RapidRinse",
+      "vendor": "UltiMaker",
+      "tags": "RapidRinse, Method, 1.75mm",
+      "variants": [
+        {
+          "id": 87001,
+          "title": "Natural",
+          "price": "169.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-method-rapidrinse-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 88000,
+      "title": "UltiMaker Sketch PLA Black 1.75mm",
+      "handle": "ultimaker-sketch-pla-black",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 88001,
+          "title": "Black",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 89000,
+      "title": "UltiMaker Sketch PLA White 1.75mm",
+      "handle": "ultimaker-sketch-pla-white",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 89001,
+          "title": "White",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 90000,
+      "title": "UltiMaker Sketch PLA Red 1.75mm",
+      "handle": "ultimaker-sketch-pla-red",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 90001,
+          "title": "Red",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 91000,
+      "title": "UltiMaker Sketch PLA Orange 1.75mm",
+      "handle": "ultimaker-sketch-pla-orange",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 91001,
+          "title": "Orange",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-pla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 92000,
+      "title": "UltiMaker Sketch PLA Yellow 1.75mm",
+      "handle": "ultimaker-sketch-pla-yellow",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 92001,
+          "title": "Yellow",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-pla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 93000,
+      "title": "UltiMaker Sketch PLA Green 1.75mm",
+      "handle": "ultimaker-sketch-pla-green",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 93001,
+          "title": "Green",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 94000,
+      "title": "UltiMaker Sketch PLA Blue 1.75mm",
+      "handle": "ultimaker-sketch-pla-blue",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 94001,
+          "title": "Blue",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 95000,
+      "title": "UltiMaker Sketch Tough PLA Black 1.75mm",
+      "handle": "ultimaker-sketch-tough-pla-black",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 95001,
+          "title": "Black",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-tough-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 96000,
+      "title": "UltiMaker Sketch Tough PLA White 1.75mm",
+      "handle": "ultimaker-sketch-tough-pla-white",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, Sketch, 1.75mm",
+      "variants": [
+        {
+          "id": 96001,
+          "title": "White",
+          "price": "39.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-sketch-tough-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 97000,
+      "title": "UltiMaker Replicator+ PLA Large True Black 1.75mm",
+      "handle": "ultimaker-replicator-pla-large-true-black",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 97001,
+          "title": "True Black",
+          "price": "24.75",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-pla-large-true-black",
+          "option1": "True Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 98000,
+      "title": "UltiMaker Replicator+ PLA Large True White 1.75mm",
+      "handle": "ultimaker-replicator-pla-large-true-white",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 98001,
+          "title": "True White",
+          "price": "24.75",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-pla-large-true-white",
+          "option1": "True White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 99000,
+      "title": "UltiMaker Replicator+ PLA Large True Red 1.75mm",
+      "handle": "ultimaker-replicator-pla-large-true-red",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 99001,
+          "title": "True Red",
+          "price": "24.75",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-pla-large-true-red",
+          "option1": "True Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 100000,
+      "title": "UltiMaker Replicator+ PLA Large True Orange 1.75mm",
+      "handle": "ultimaker-replicator-pla-large-true-orange",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 100001,
+          "title": "True Orange",
+          "price": "24.75",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-pla-large-true-orange",
+          "option1": "True Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 101000,
+      "title": "UltiMaker Replicator+ PLA Large True Yellow 1.75mm",
+      "handle": "ultimaker-replicator-pla-large-true-yellow",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 101001,
+          "title": "True Yellow",
+          "price": "24.75",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-pla-large-true-yellow",
+          "option1": "True Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 102000,
+      "title": "UltiMaker Replicator+ PLA Large True Green 1.75mm",
+      "handle": "ultimaker-replicator-pla-large-true-green",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 102001,
+          "title": "True Green",
+          "price": "24.75",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-pla-large-true-green",
+          "option1": "True Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 103000,
+      "title": "UltiMaker Replicator+ PLA Large True Blue 1.75mm",
+      "handle": "ultimaker-replicator-pla-large-true-blue",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 103001,
+          "title": "True Blue",
+          "price": "24.75",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-pla-large-true-blue",
+          "option1": "True Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "True Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 104000,
+      "title": "UltiMaker Replicator+ PLA Large Cool Gray 1.75mm",
+      "handle": "ultimaker-replicator-pla-large-cool-gray",
+      "product_type": "PLA",
+      "vendor": "UltiMaker",
+      "tags": "PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 104001,
+          "title": "Cool Gray",
+          "price": "24.75",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-pla-large-cool-gray",
+          "option1": "Cool Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Cool Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 105000,
+      "title": "UltiMaker Replicator+ Tough Onyx Black 1.75mm",
+      "handle": "ultimaker-replicator-tough-onyx-black",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 105001,
+          "title": "Onyx Black",
+          "price": "51.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-tough-onyx-black",
+          "option1": "Onyx Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Onyx Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 106000,
+      "title": "UltiMaker Replicator+ Tough Stone White 1.75mm",
+      "handle": "ultimaker-replicator-tough-stone-white",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 106001,
+          "title": "Stone White",
+          "price": "51.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-tough-stone-white",
+          "option1": "Stone White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Stone White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    },
+    {
+      "id": 107000,
+      "title": "UltiMaker Replicator+ Tough Slate Gray 1.75mm",
+      "handle": "ultimaker-replicator-tough-slate-gray",
+      "product_type": "Tough PLA",
+      "vendor": "UltiMaker",
+      "tags": "Tough PLA, Replicator+, 1.75mm",
+      "variants": [
+        {
+          "id": 107001,
+          "title": "Slate Gray",
+          "price": "51.00",
+          "compare_at_price": null,
+          "sku": "ULTIMAKER-ultimaker-replicator-tough-slate-gray",
+          "option1": "Slate Gray",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 900
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Slate Gray"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T19:45:36.638Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T19:45:36.639Z",
+  "source": "ultimaker-catalog-curated",
+  "currency": "USD"
+}

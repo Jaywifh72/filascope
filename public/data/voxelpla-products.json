@@ -1,0 +1,3517 @@
+{
+  "products": [
+    {
+      "id": 9006870855898,
+      "title": "VOXEL GALAXY PETG+ HS (Pro) Aurora Green 1.75mm Filament (1kg)",
+      "handle": "voxel-galaxy-petg-hs-pro-aurora-green-1-75mm-filament-1kg",
+      "body_html": "<p><b>ONLY 200 ROLLS IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Aurora Green Galaxy PETG+ HS<span> (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-265C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!<br></p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2025-08-25T09:15:03-07:00",
+      "created_at": "2025-08-25T09:05:08-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 46813235183834,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": false,
+          "price": "35.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 9006870855898,
+          "created_at": "2025-08-25T09:05:08-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 48679797719258,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 1,
+          "updated_at": "2025-08-25T09:14:41-07:00",
+          "product_id": 9006870855898,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7343-Edit.jpg?v=1756138481",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797358810,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 2,
+          "updated_at": "2025-08-25T09:07:35-07:00",
+          "product_id": 9006870855898,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7281-Edit.jpg?v=1756138055",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679798046938,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 3,
+          "updated_at": "2025-08-25T09:07:35-07:00",
+          "product_id": 9006870855898,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7283-Edit.jpg?v=1756138055",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "id": 48679797620954,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 4,
+          "updated_at": "2025-08-25T09:07:35-07:00",
+          "product_id": 9006870855898,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7351-Edit.jpg?v=1756138055",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797326042,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 5,
+          "updated_at": "2025-08-25T09:07:35-07:00",
+          "product_id": 9006870855898,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7341-Edit.jpg?v=1756138055",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797981402,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 6,
+          "updated_at": "2025-08-25T09:07:35-07:00",
+          "product_id": 9006870855898,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7294-Edit.jpg?v=1756138055",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679798112474,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 7,
+          "updated_at": "2025-08-25T09:07:35-07:00",
+          "product_id": 9006870855898,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7296-Edit.jpg?v=1756138055",
+          "width": 2048,
+          "height": 1365
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9006870102234,
+      "title": "VOXEL GALAXY PETG+ HS (Pro) Emerald Gold 1.75mm Filament (1kg)",
+      "handle": "voxel-galaxy-petg-hs-pro-emerald-gold-1-75mm-filament-1kg",
+      "body_html": "<p><b>ONLY 200 ROLLS IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Emerald Gold Galaxy PETG+ HS<span> (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-265C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!<br></p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2025-08-25T09:15:02-07:00",
+      "created_at": "2025-08-25T09:02:34-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 46813229908186,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": false,
+          "price": "35.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 9006870102234,
+          "created_at": "2025-08-25T09:02:34-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 48679797522650,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 1,
+          "updated_at": "2025-08-25T09:14:41-07:00",
+          "product_id": 9006870102234,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7332-Edit.jpg?v=1756138481",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797555418,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 2,
+          "updated_at": "2025-08-25T09:04:40-07:00",
+          "product_id": 9006870102234,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7337-Edit.jpg?v=1756137880",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797883098,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 3,
+          "updated_at": "2025-08-25T09:04:40-07:00",
+          "product_id": 9006870102234,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7297-Edit.jpg?v=1756137880",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797915866,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 4,
+          "updated_at": "2025-08-25T09:04:40-07:00",
+          "product_id": 9006870102234,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7298-Edit.jpg?v=1756137880",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797260506,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 5,
+          "updated_at": "2025-08-25T09:04:40-07:00",
+          "product_id": 9006870102234,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7272-Edit.jpg?v=1756137880",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797784794,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 6,
+          "updated_at": "2025-08-25T09:04:40-07:00",
+          "product_id": 9006870102234,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7274-Edit.jpg?v=1756137880",
+          "width": 2048,
+          "height": 1365
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9006869020890,
+      "title": "VOXEL GALAXY PETG+ HS (Pro) Gioiello Purple 1.75mm Filament (1kg)",
+      "handle": "voxel-galaxy-petg-hs-pro-gioiello-purple-1-75mm-filament-1kg",
+      "body_html": "<p><b>ONLY 200 ROLLS IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Gioiello Purple Galaxy PETG+ HS<span> (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-265C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!<br></p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2025-08-25T09:15:00-07:00",
+      "created_at": "2025-08-25T08:57:58-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 46813221290202,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": false,
+          "price": "35.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 9006869020890,
+          "created_at": "2025-08-25T08:57:59-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 48679797391578,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 1,
+          "updated_at": "2025-08-25T09:14:41-07:00",
+          "product_id": 9006869020890,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7357-Edit.jpg?v=1756138481",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797948634,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 2,
+          "updated_at": "2025-08-25T09:01:57-07:00",
+          "product_id": 9006869020890,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7302-Edit.jpg?v=1756137717",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679798145242,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 3,
+          "updated_at": "2025-08-25T09:01:57-07:00",
+          "product_id": 9006869020890,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7306.jpg?v=1756137717",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797850330,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 4,
+          "updated_at": "2025-08-25T09:01:57-07:00",
+          "product_id": 9006869020890,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7279-Edit.jpg?v=1756137717",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797588186,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 5,
+          "updated_at": "2025-08-25T09:01:57-07:00",
+          "product_id": 9006869020890,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7278-Edit.jpg?v=1756137717",
+          "width": 2048,
+          "height": 1365
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9006865547482,
+      "title": "VOXEL GALAXY PETG+ HS (Pro) Midnight Blue 1.75mm Filament (1kg)",
+      "handle": "voxel-galaxy-petg-hs-pro-midnight-blue-1-75mm-filament-1kg",
+      "body_html": "<p><b>ONLY 200 ROLLS IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Midnight Blue Galaxy PETG+ HS<span> (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-265C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!<br></p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2025-08-25T09:14:59-07:00",
+      "created_at": "2025-08-25T08:47:56-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 46813208183002,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": false,
+          "price": "35.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 9006865547482,
+          "created_at": "2025-08-25T08:47:57-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 48679797653722,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 1,
+          "updated_at": "2025-08-25T09:14:41-07:00",
+          "product_id": 9006865547482,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7318-Edit.jpg?v=1756138481",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797424346,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 2,
+          "updated_at": "2025-08-25T08:56:48-07:00",
+          "product_id": 9006865547482,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7314-Edit.jpg?v=1756137408",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797686490,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 3,
+          "updated_at": "2025-08-25T08:56:48-07:00",
+          "product_id": 9006865547482,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7321-Edit.jpg?v=1756137408",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679798014170,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 4,
+          "updated_at": "2025-08-25T08:56:48-07:00",
+          "product_id": 9006865547482,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7303-Edit.jpg?v=1756137408",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679798178010,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 5,
+          "updated_at": "2025-08-25T08:56:48-07:00",
+          "product_id": 9006865547482,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7305.jpg?v=1756137408",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797489882,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 6,
+          "updated_at": "2025-08-25T08:56:48-07:00",
+          "product_id": 9006865547482,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7275-Edit.jpg?v=1756137408",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48679797817562,
+          "created_at": "2025-08-25T08:49:57-07:00",
+          "position": 7,
+          "updated_at": "2025-08-25T08:56:48-07:00",
+          "product_id": 9006865547482,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7277-Edit.jpg?v=1756137408",
+          "width": 2048,
+          "height": 1365
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8991860359386,
+      "title": "VOXELPLA PLA+ HS (Pro) Champagne Beige 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-hs-pro-champagne-beige-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Voxel Champagne Beige </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2025-08-08T17:18:40-07:00",
+      "created_at": "2025-08-08T17:17:18-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 46759756300506,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8991860359386,
+          "created_at": "2025-08-08T17:17:18-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 48383199805658,
+          "created_at": "2025-08-08T17:39:01-07:00",
+          "position": 1,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8991860359386,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7256-Edit_851eef13-4fd6-4cfc-a5ee-86e5e28726e2.jpg?v=1754700056",
+          "width": 2048,
+          "height": 1389
+        },
+        {
+          "id": 48383025709274,
+          "created_at": "2025-08-08T17:17:57-07:00",
+          "position": 2,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8991860359386,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7254-Edit.jpg?v=1754700056",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48383025643738,
+          "created_at": "2025-08-08T17:17:57-07:00",
+          "position": 3,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8991860359386,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7250-Edit.jpg?v=1754700056",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48383025676506,
+          "created_at": "2025-08-08T17:17:57-07:00",
+          "position": 4,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8991860359386,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7242-Edit.jpg?v=1754700056",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8991860359386,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8991855444186,
+      "title": "VOXELPLA PLA+ HS (Pro) Gunmetal Blue 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-hs-pro-gunmetal-blue-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Voxel Gunmetal Blue </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2025-08-08T17:10:28-07:00",
+      "created_at": "2025-08-08T17:07:49-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 46759744602330,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8991855444186,
+          "created_at": "2025-08-08T17:07:49-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 48382985568474,
+          "created_at": "2025-08-08T17:13:53-07:00",
+          "position": 1,
+          "updated_at": "2025-08-08T17:14:12-07:00",
+          "product_id": 8991855444186,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7262-Edit_e3c716ef-ef77-49e9-8331-12b885de6bf1.jpg?v=1754698452",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48382966759642,
+          "created_at": "2025-08-08T17:09:41-07:00",
+          "position": 2,
+          "updated_at": "2025-08-08T17:14:12-07:00",
+          "product_id": 8991855444186,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7269-Edit.jpg?v=1754698452",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48382966825178,
+          "created_at": "2025-08-08T17:09:41-07:00",
+          "position": 3,
+          "updated_at": "2025-08-08T17:14:12-07:00",
+          "product_id": 8991855444186,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7264-Edit.jpg?v=1754698452",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48382966857946,
+          "created_at": "2025-08-08T17:09:41-07:00",
+          "position": 4,
+          "updated_at": "2025-08-08T17:14:12-07:00",
+          "product_id": 8991855444186,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7267-Edit.jpg?v=1754698452",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 48382966694106,
+          "created_at": "2025-08-08T17:09:41-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:14:12-07:00",
+          "product_id": 8991855444186,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_7268-Edit.jpg?v=1754698452",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 6,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8991855444186,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8824627134682,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Dark Purple 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-hs-pro-dark-purple-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Dark Purple High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-270C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2025-03-27T13:38:00-07:00",
+      "created_at": "2025-03-27T13:36:29-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 46330400571610,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 8824627134682,
+          "created_at": "2025-03-27T13:36:30-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 45962922754266,
+          "created_at": "2025-03-27T13:37:34-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T08:48:24-08:00",
+          "product_id": 8824627134682,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_6715-Edit.jpg?v=1762447704",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 45962922852570,
+          "created_at": "2025-03-27T13:37:34-07:00",
+          "position": 2,
+          "updated_at": "2025-03-27T13:37:44-07:00",
+          "product_id": 8824627134682,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_6734-Edit.jpg?v=1743107864",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 45962922688730,
+          "created_at": "2025-03-27T13:37:34-07:00",
+          "position": 3,
+          "updated_at": "2025-03-27T13:37:44-07:00",
+          "product_id": 8824627134682,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_6725-Edit.jpg?v=1743107864",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 45962922721498,
+          "created_at": "2025-03-27T13:37:34-07:00",
+          "position": 4,
+          "updated_at": "2025-03-27T13:37:44-07:00",
+          "product_id": 8824627134682,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_6728-Edit.jpg?v=1743107864",
+          "width": 2048,
+          "height": 1365
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8537607897306,
+      "title": "VOXELPLA PLA+ HS (Pro) Wood 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-wood-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Voxel Wood </span><span>VOXELPLA+ HS PLA 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2024-11-14T22:36:48-08:00",
+      "created_at": "2024-06-11T15:29:43-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45371810808026,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8537607897306,
+          "created_at": "2024-06-11T15:29:43-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 41928996290778,
+          "created_at": "2024-06-11T15:20:32-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:36:32-08:00",
+          "product_id": 8537607897306,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1688-Edit.jpg?v=1762439792",
+          "width": 2500,
+          "height": 1667
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8635621146842,
+      "title": "VOXELPLA PLA+ HS (Pro) Magenta 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-magenta-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Magenta </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2024-08-29T13:23:06-07:00",
+      "created_at": "2024-08-29T13:21:19-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45696623837402,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8635621146842,
+          "created_at": "2024-08-29T13:21:19-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 42668135416026,
+          "created_at": "2024-08-29T14:00:05-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:37:17-08:00",
+          "product_id": 8635621146842,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_Plus_Pro_Magenta_1.75mm_Filament_1kg_2.jpg?v=1762439837",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42668147704026,
+          "created_at": "2024-08-29T14:03:01-07:00",
+          "position": 2,
+          "updated_at": "2024-08-29T14:03:35-07:00",
+          "product_id": 8635621146842,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_Plus_Pro_Magenta_1.75mm_Filament_1kg_4.jpg?v=1724965415",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 3,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8635621146842,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8635618328794,
+      "title": "VOXELPLA PLA+ HS (Pro) Witch Green 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-witch-green-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Witch Green </span><span>VOXELPLA PLA 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2024-08-29T13:20:10-07:00",
+      "created_at": "2024-08-29T13:15:30-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45696617316570,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8635618328794,
+          "created_at": "2024-08-29T13:15:30-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 42668166152410,
+          "created_at": "2024-08-29T14:06:59-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:37:16-08:00",
+          "product_id": 8635618328794,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_Plus_Pro_Witch_Green_1.75mm_Filament_1kg_2.jpg?v=1762439836",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42668175294682,
+          "created_at": "2024-08-29T14:08:39-07:00",
+          "position": 2,
+          "updated_at": "2024-08-29T14:08:59-07:00",
+          "product_id": 8635618328794,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_Plus_Pro_Witch_Green_1.75mm_Filament_1kg_3.jpg?v=1724965739",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 3,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8635618328794,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8635616919770,
+      "title": "VOXELPLA PLA+ HS (Pro) Army Green 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-army-green-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Army Green </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2024-08-29T13:14:54-07:00",
+      "created_at": "2024-08-29T13:12:52-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45696613351642,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8635616919770,
+          "created_at": "2024-08-29T13:12:52-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 42668186927322,
+          "created_at": "2024-08-29T14:12:12-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:37:16-08:00",
+          "product_id": 8635616919770,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_Plus_Pro_Army_Green_1.75mm_Filament_1kg_2.jpg?v=1762439836",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42668186960090,
+          "created_at": "2024-08-29T14:12:11-07:00",
+          "position": 2,
+          "updated_at": "2024-08-29T14:13:06-07:00",
+          "product_id": 8635616919770,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_Plus_Pro_Army_Green_1.75mm_Filament_1kg_3.jpg?v=1724965986",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 3,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8635616919770,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8635615936730,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Orange 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-hs-pro-orange",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Orange High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-270C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-08-29T13:12:15-07:00",
+      "created_at": "2024-08-29T13:10:17-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45696610140378,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 8635615936730,
+          "created_at": "2024-08-29T13:10:17-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 42668104089818,
+          "created_at": "2024-08-29T13:54:43-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:37:15-08:00",
+          "product_id": 8635615936730,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_HS_Pro_Orange_1.75mm_Filament_1kg_PETG_3.jpg?v=1762439835",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 42667848171738,
+          "created_at": "2024-08-29T13:04:33-07:00",
+          "position": 2,
+          "updated_at": "2024-08-29T13:11:38-07:00",
+          "product_id": 8635615936730,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_HS_Pro_Orange_1.75mm_Filament_1kg_PETG_1.jpg?v=1724962298",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 3,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8635615936730,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8635614560474,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Yellow 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-hs-pro-yellow",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Yellow High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-270C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-08-29T13:09:00-07:00",
+      "created_at": "2024-08-29T13:07:06-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45696604831962,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 8635614560474,
+          "created_at": "2024-08-29T13:07:06-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 42668115394778,
+          "created_at": "2024-08-29T13:57:15-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:37:15-08:00",
+          "product_id": 8635614560474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_HS_Pro_Yellow_1.75mm_Filament_1kg_PETG.jpg?v=1762439835",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42668115427546,
+          "created_at": "2024-08-29T13:57:15-07:00",
+          "position": 2,
+          "updated_at": "2024-08-29T13:58:03-07:00",
+          "product_id": 8635614560474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_HS_Pro_Yellow_1.75mm_Filament_1kg_PETG_1.jpg?v=1724965083",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 3,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8635614560474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8537604227290,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Green 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-pro-green-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Green High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-280C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA for orders $75 or more!<br></p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-06-11T15:47:20-07:00",
+      "created_at": "2024-06-11T15:23:29-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45371802484954,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 8537604227290,
+          "created_at": "2024-06-11T15:23:29-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 41928902213850,
+          "created_at": "2024-06-11T15:20:32-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:36:30-08:00",
+          "product_id": 8537604227290,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1687-Edit.jpg?v=1762439790",
+          "width": 2500,
+          "height": 1666
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8537605996762,
+      "title": "VOXELPLA PLA+ HS (Pro) Dark Purple 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-royal-purple-1-75mm-filament-1kg-3kg-and-5kg-copy",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Voxel Dark Purple </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2024-06-11T15:27:06-07:00",
+      "created_at": "2024-06-11T15:26:27-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45371806712026,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8537605996762,
+          "created_at": "2024-06-11T15:26:27-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 41928947237082,
+          "created_at": "2024-06-11T15:20:32-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:36:31-08:00",
+          "product_id": 8537605996762,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1698-Edit.jpg?v=1762439791",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42088517697754,
+          "created_at": "2024-06-27T17:30:09-07:00",
+          "position": 2,
+          "updated_at": "2024-06-27T17:30:11-07:00",
+          "product_id": 8537605996762,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1769.jpg?v=1719534611",
+          "width": 2500,
+          "height": 1812
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 3,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8537605996762,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8537604817114,
+      "title": "VOXELPLA PLA+ HS (Pro) Sky Blue 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-sky-blue-1-75mm-filament-1kg-3kg-and-5kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Voxel Sky Blue </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2024-06-11T15:25:46-07:00",
+      "created_at": "2024-06-11T15:24:36-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45371804385498,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8537604817114,
+          "created_at": "2024-06-11T15:24:36-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 41928919679194,
+          "created_at": "2024-06-11T15:20:32-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:36:31-08:00",
+          "product_id": 8537604817114,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1694-Edit.jpg?v=1762439791",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42088519303386,
+          "created_at": "2024-06-27T17:30:09-07:00",
+          "position": 2,
+          "updated_at": "2024-06-27T17:30:11-07:00",
+          "product_id": 8537604817114,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1762-Edit.jpg?v=1719534611",
+          "width": 2500,
+          "height": 1973
+        },
+        {
+          "id": 42088519270618,
+          "created_at": "2024-06-27T17:30:09-07:00",
+          "position": 3,
+          "updated_at": "2024-06-27T17:30:11-07:00",
+          "product_id": 8537604817114,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1763-Edit.jpg?v=1719534611",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 4,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8537604817114,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8537603408090,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Silver 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-pro-silver-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Silver High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-280C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-06-11T15:22:29-07:00",
+      "created_at": "2024-06-11T15:21:49-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45371800879322,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 8537603408090,
+          "created_at": "2024-06-11T15:21:49-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 41928878948570,
+          "created_at": "2024-06-11T15:20:32-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:36:29-08:00",
+          "product_id": 8537603408090,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1702-Edit.jpg?v=1762439789",
+          "width": 2500,
+          "height": 1667
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8537602031834,
+      "title": "VOXELPETG+ HS (Pro) Crystal Clear 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-pro-crystal-clear-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - <span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (Mix and match any colors)</b></p>\n<p>Color: Crystal Clear High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-280C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-06-11T15:21:28-07:00",
+      "created_at": "2024-06-11T15:18:53-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 45371796717786,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 8537602031834,
+          "created_at": "2024-06-11T15:18:53-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 41928855126234,
+          "created_at": "2024-06-11T15:20:32-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:36:28-08:00",
+          "product_id": 8537602031834,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1689-Edit.jpg?v=1762439788",
+          "width": 2500,
+          "height": 1667
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8173155516634,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Black 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-pro-black-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Black High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-280C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!<br></p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-01-05T21:45:04-08:00",
+      "created_at": "2024-01-05T21:28:45-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44686767620314,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 8173155516634,
+          "created_at": "2024-03-19T10:48:00-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 40573365420250,
+          "created_at": "2024-01-05T21:41:34-08:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:35:02-08:00",
+          "product_id": 8173155516634,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXEL_BLACK_PETG.jpg?v=1762439702",
+          "width": 2500,
+          "height": 1666
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8173149520090,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Grey 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-pro-grey-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Grey High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-280C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-01-05T21:28:28-08:00",
+      "created_at": "2024-01-05T21:19:05-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44389646729434,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8173149520090,
+          "created_at": "2024-01-05T21:19:05-08:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 40573329932506,
+          "created_at": "2024-01-05T21:28:22-08:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:35:01-08:00",
+          "product_id": 8173149520090,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXEL_GREY_PETG.jpg?v=1762439701",
+          "width": 2500,
+          "height": 1667
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8173149323482,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Red 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-pro-red-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Red High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-280C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250-machine print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-01-05T21:18:36-08:00",
+      "created_at": "2024-01-05T21:17:27-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44389646106842,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1225,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8173149323482,
+          "created_at": "2024-01-05T21:17:27-08:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 40573316399322,
+          "created_at": "2024-01-05T21:17:59-08:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:35:01-08:00",
+          "product_id": 8173149323482,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXEL_PETG_RED.jpg?v=1762439701",
+          "width": 2500,
+          "height": 1667
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8173146013914,
+      "title": "VOXELPETG+ HS (Pro) White 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-pro-white-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: White High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-280C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-01-05T20:42:09-08:00",
+      "created_at": "2024-01-05T20:41:22-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44389632049370,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8173146013914,
+          "created_at": "2024-01-05T20:41:22-08:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 40573269278938,
+          "created_at": "2024-01-05T20:41:41-08:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:34:59-08:00",
+          "product_id": 8173146013914,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_PETG_PLUS_White_2.jpg?v=1762439699",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573269311706,
+          "created_at": "2024-01-05T20:41:41-08:00",
+          "position": 2,
+          "updated_at": "2024-01-14T11:38:12-08:00",
+          "product_id": 8173146013914,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_PETG_PLUS_White.jpg?v=1705261092",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573269344474,
+          "created_at": "2024-01-05T20:41:41-08:00",
+          "position": 3,
+          "updated_at": "2024-01-14T11:38:20-08:00",
+          "product_id": 8173146013914,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_PETG_PLUS_White_1.jpg?v=1705261100",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 4,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8173146013914,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8173145194714,
+      "title": "(PRE-ORDER) VOXELPETG+ HS (Pro) Blue 1.75mm Filament (1kg) (PETG+)",
+      "handle": "voxelpetg-pro-blue-1-75mm-filament-1kg-petg",
+      "body_html": "<p><b>PRE ORDER - SHIPS MARCH 27TH - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Blue High-Speed <span>VOXELPETG+ (PRO) PETG 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 230-280C</p>\n<p>Bed Temp: 70-85C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPETG+ PETG (PRO)</span> Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All <span>VOXELPETG+</span> is engineered with reliability, quality, and strength as its top priority. We run <span>VOXELPETG+ PETG</span> (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our <span>PETG+</span> (pro) lineup contains special additives to make it more robust and reliable than standard PETG. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>\n<p>All 3D Printing accessories we sell are made using VOXELPLA+ and VOXELPETG+ in Southern California, USA.</p>",
+      "published_at": "2024-01-05T20:40:28-08:00",
+      "created_at": "2024-01-05T20:31:23-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44389625626842,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": null,
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8173145194714,
+          "created_at": "2024-01-05T20:31:23-08:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 40573264363738,
+          "created_at": "2024-01-05T20:37:02-08:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:34:59-08:00",
+          "product_id": 8173145194714,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_PETG_PLUS_Blue_1.jpg?v=1762439699",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573266198746,
+          "created_at": "2024-01-05T20:38:55-08:00",
+          "position": 2,
+          "updated_at": "2024-01-05T20:59:42-08:00",
+          "product_id": 8173145194714,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/DimensionDnDSharpDice-347.jpg?v=1704517182",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 40573264298202,
+          "created_at": "2024-01-05T20:37:02-08:00",
+          "position": 3,
+          "updated_at": "2024-01-14T11:38:55-08:00",
+          "product_id": 8173145194714,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_PETG_PLUS_Blue.jpg?v=1705261135",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 40573264330970,
+          "created_at": "2024-01-05T20:37:02-08:00",
+          "position": 4,
+          "updated_at": "2024-01-14T11:39:12-08:00",
+          "product_id": 8173145194714,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPETG_PETG_PLUS_Blue_2.jpg?v=1705261152",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8173145194714,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8173144637658,
+      "title": "VOXELPLA PLA+ HS (Pro) Gold 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-gold-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Gold <span>VOXELPLA+ HS (PRO) PLA 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below. <br></p>",
+      "published_at": "2024-01-05T20:29:08-08:00",
+      "created_at": "2024-01-05T20:27:58-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44541137453274,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8173144637658,
+          "created_at": "2024-02-17T10:16:33-08:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 40573307388122,
+          "created_at": "2024-01-05T21:09:00-08:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:34:58-08:00",
+          "product_id": 8173144637658,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Gold.jpg?v=1762439698",
+          "width": 2500,
+          "height": 1718
+        },
+        {
+          "id": 40573252370650,
+          "created_at": "2024-01-05T20:28:19-08:00",
+          "position": 2,
+          "updated_at": "2024-01-14T11:39:27-08:00",
+          "product_id": 8173144637658,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Gold_3.jpg?v=1705261167",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573307420890,
+          "created_at": "2024-01-05T21:09:00-08:00",
+          "position": 3,
+          "updated_at": "2024-01-14T11:37:50-08:00",
+          "product_id": 8173144637658,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Gold_2.jpg?v=1705261070",
+          "width": 2500,
+          "height": 2050
+        },
+        {
+          "id": 40573307355354,
+          "created_at": "2024-01-05T21:09:00-08:00",
+          "position": 4,
+          "updated_at": "2024-01-14T11:37:43-08:00",
+          "product_id": 8173144637658,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Gold_1.jpg?v=1705261063",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8173144637658,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8173144342746,
+      "title": "VOXELPLA PLA+ HS (Pro) VOXEL Phantom Blue 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-voxel-blue-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: VOXEL Phantom Blue <span>VOXELPLA+ HS (PRO) PLA 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below. </p>",
+      "published_at": "2024-01-05T20:25:41-08:00",
+      "created_at": "2024-01-05T20:23:59-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44541135945946,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8173144342746,
+          "created_at": "2024-02-17T10:15:43-08:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 40573247488218,
+          "created_at": "2024-01-05T20:24:27-08:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:34:58-08:00",
+          "product_id": 8173144342746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_VOXEL_Blue_2.jpg?v=1762439698",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573247389914,
+          "created_at": "2024-01-05T20:24:27-08:00",
+          "position": 2,
+          "updated_at": "2024-01-14T11:40:05-08:00",
+          "product_id": 8173144342746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_VOXEL_Blue_3.jpg?v=1705261205",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573247455450,
+          "created_at": "2024-01-05T20:24:27-08:00",
+          "position": 3,
+          "updated_at": "2024-01-14T11:39:51-08:00",
+          "product_id": 8173144342746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_VOXEL_Blue_1.jpg?v=1705261191",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573247520986,
+          "created_at": "2024-01-05T20:24:27-08:00",
+          "position": 4,
+          "updated_at": "2024-01-14T11:39:43-08:00",
+          "product_id": 8173144342746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_VOXEL_Blue.jpg?v=1705261183",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8173144342746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8173143326938,
+      "title": "VOXELPLA PLA+ HS (Pro) Pink 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-pink-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Pink <span>VOXELPLA+ HS (PRO) PLA 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below. <br></p>",
+      "published_at": "2024-01-05T20:17:47-08:00",
+      "created_at": "2024-01-05T20:12:51-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44541133881562,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8173143326938,
+          "created_at": "2024-02-17T10:14:47-08:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 40573235527898,
+          "created_at": "2024-01-05T20:16:21-08:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:34:57-08:00",
+          "product_id": 8173143326938,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Pink.jpg?v=1762439697",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573235593434,
+          "created_at": "2024-01-05T20:16:21-08:00",
+          "position": 2,
+          "updated_at": "2024-01-14T11:40:20-08:00",
+          "product_id": 8173143326938,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Pink_1.jpg?v=1705261220",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 40573228089562,
+          "created_at": "2024-01-05T20:13:58-08:00",
+          "position": 3,
+          "updated_at": "2024-01-14T11:40:52-08:00",
+          "product_id": 8173143326938,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Pink_4.jpg?v=1705261252",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573228155098,
+          "created_at": "2024-01-05T20:13:59-08:00",
+          "position": 4,
+          "updated_at": "2024-01-14T11:40:42-08:00",
+          "product_id": 8173143326938,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Pink_3.jpg?v=1705261242",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 40573228122330,
+          "created_at": "2024-01-05T20:13:59-08:00",
+          "position": 5,
+          "updated_at": "2024-01-14T11:40:26-08:00",
+          "product_id": 8173143326938,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/VOXELPLA_PLA_PLUS_Pink_2.jpg?v=1705261226",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 6,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8173143326938,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8022360424666,
+      "title": "VOXELPLA PLA+ HS (Pro) Silver 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-silver-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - <span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Silver <span>VOXELPLA PLA+ HS 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below. <br></p>",
+      "published_at": "2023-07-17T17:15:08-07:00",
+      "created_at": "2023-07-17T17:13:32-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44002575024346,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8022360424666,
+          "created_at": "2023-07-17T17:13:32-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 39870129570010,
+          "created_at": "2023-07-17T17:14:04-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:34:10-08:00",
+          "product_id": 8022360424666,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_0959-Edit.jpg?v=1762439650",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39893298905306,
+          "created_at": "2023-07-24T17:48:58-07:00",
+          "position": 2,
+          "updated_at": "2023-07-24T17:49:01-07:00",
+          "product_id": 8022360424666,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1038-Edit.png?v=1690246141",
+          "width": 4519,
+          "height": 3013
+        },
+        {
+          "id": 39870129406170,
+          "created_at": "2023-07-17T17:14:04-07:00",
+          "position": 3,
+          "updated_at": "2023-07-24T17:49:01-07:00",
+          "product_id": 8022360424666,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_0979-Edit.jpg?v=1690246141",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870129766618,
+          "created_at": "2023-07-17T17:14:04-07:00",
+          "position": 4,
+          "updated_at": "2023-07-24T17:49:01-07:00",
+          "product_id": 8022360424666,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_0970-2-Edit.jpg?v=1690246141",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39893298872538,
+          "created_at": "2023-07-24T17:48:58-07:00",
+          "position": 5,
+          "updated_at": "2023-07-24T17:49:01-07:00",
+          "product_id": 8022360424666,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1041-Edit-Edit.png?v=1690246141",
+          "width": 3277,
+          "height": 2185
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 6,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8022360424666,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8022360064218,
+      "title": "VOXELPLA PLA+ HS (Pro) Brown 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-brown-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Brown <span>VOXELPLA PLA 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Natively Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>",
+      "published_at": "2023-07-17T17:09:59-07:00",
+      "created_at": "2023-07-17T17:08:16-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44002574631130,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8022360064218,
+          "created_at": "2023-07-17T17:08:16-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 39870113775834,
+          "created_at": "2023-07-17T17:08:50-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:34:08-08:00",
+          "product_id": 8022360064218,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_0980-Edit.jpg?v=1762439648",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870113710298,
+          "created_at": "2023-07-17T17:08:50-07:00",
+          "position": 2,
+          "updated_at": "2023-07-17T17:09:00-07:00",
+          "product_id": 8022360064218,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_0987-Edit.jpg?v=1689638940",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870113808602,
+          "created_at": "2023-07-17T17:08:49-07:00",
+          "position": 3,
+          "updated_at": "2023-07-17T17:09:00-07:00",
+          "product_id": 8022360064218,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1006-Edit.jpg?v=1689638940",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870113841370,
+          "created_at": "2023-07-17T17:08:49-07:00",
+          "position": 4,
+          "updated_at": "2023-07-17T17:09:00-07:00",
+          "product_id": 8022360064218,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_0999-Edit.jpg?v=1689638940",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870113743066,
+          "created_at": "2023-07-17T17:08:49-07:00",
+          "position": 5,
+          "updated_at": "2023-07-17T17:09:00-07:00",
+          "product_id": 8022360064218,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_0994-Edit.jpg?v=1689638940",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 6,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8022360064218,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8022359441626,
+      "title": "VOXELPLA PLA+ HS (Pro) Yellow 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-yellow-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Yellow <span>VOXELPLA PLA+ HS 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm ; <strong>Bambu Lab AMS / AMS Lite Compatible</strong></span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>",
+      "published_at": "2023-07-17T17:04:41-07:00",
+      "created_at": "2023-07-17T17:02:12-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44002570535130,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 8022359441626,
+          "created_at": "2023-07-17T17:02:12-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 39870089298138,
+          "created_at": "2023-07-17T17:03:33-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:34:08-08:00",
+          "product_id": 8022359441626,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1016-Edit.jpg?v=1762439648",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870089265370,
+          "created_at": "2023-07-17T17:03:33-07:00",
+          "position": 2,
+          "updated_at": "2023-07-17T17:04:33-07:00",
+          "product_id": 8022359441626,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1037-Edit.jpg?v=1689638673",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870089199834,
+          "created_at": "2023-07-17T17:03:33-07:00",
+          "position": 3,
+          "updated_at": "2023-07-17T17:04:33-07:00",
+          "product_id": 8022359441626,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1023-Edit.jpg?v=1689638673",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870089134298,
+          "created_at": "2023-07-17T17:03:33-07:00",
+          "position": 4,
+          "updated_at": "2023-07-17T17:04:33-07:00",
+          "product_id": 8022359441626,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1033-Edit.jpg?v=1689638673",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 39870089232602,
+          "created_at": "2023-07-17T17:03:33-07:00",
+          "position": 5,
+          "updated_at": "2023-07-17T17:04:33-07:00",
+          "product_id": 8022359441626,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/IMG_1031-Edit.jpg?v=1689638673",
+          "width": 2048,
+          "height": 1365
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 6,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 8022359441626,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7958464921818,
+      "title": "VOXELPLA PLA+ HS (Pro) Lavender Purple 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-lavender-purple-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Lavender Purple </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price. </p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below. <br></p>",
+      "published_at": "2023-04-19T09:56:20-07:00",
+      "created_at": "2023-04-02T21:58:41-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 43837110386906,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7958464921818,
+          "created_at": "2023-04-02T21:58:41-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 39384025497818,
+          "created_at": "2023-04-02T21:59:09-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:33:55-08:00",
+          "product_id": 7958464921818,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0047-Edit.png?v=1762439635",
+          "width": 4774,
+          "height": 3183
+        },
+        {
+          "id": 39384025628890,
+          "created_at": "2023-04-02T21:59:09-07:00",
+          "position": 2,
+          "updated_at": "2023-04-02T21:59:12-07:00",
+          "product_id": 7958464921818,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0063-Edit.png?v=1680497952",
+          "width": 4315,
+          "height": 2877
+        },
+        {
+          "id": 39384025563354,
+          "created_at": "2023-04-02T21:59:09-07:00",
+          "position": 3,
+          "updated_at": "2023-04-02T21:59:12-07:00",
+          "product_id": 7958464921818,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0052-Edit.png?v=1680497952",
+          "width": 4434,
+          "height": 2956
+        },
+        {
+          "id": 39384025465050,
+          "created_at": "2023-04-02T21:59:09-07:00",
+          "position": 4,
+          "updated_at": "2023-04-02T21:59:12-07:00",
+          "product_id": 7958464921818,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0056-Edit.png?v=1680497952",
+          "width": 3055,
+          "height": 2037
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7958464921818,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7958460793050,
+      "title": "VOXELPLA PLA+ HS (Pro) Ice Clear 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-ice-clear-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Ice Clear <span>VOXELPLA PLA+ HS 3D Printing Filament</span></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; Bambu Lab AMS Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!<br></p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>",
+      "published_at": "2023-04-19T09:56:04-07:00",
+      "created_at": "2023-04-02T21:56:14-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 43837104226522,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7958460793050,
+          "created_at": "2023-04-02T21:56:15-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 39384012783834,
+          "created_at": "2023-04-02T21:56:47-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:33:54-08:00",
+          "product_id": 7958460793050,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_9980.png?v=1762439634",
+          "width": 4128,
+          "height": 2752
+        },
+        {
+          "id": 39384012751066,
+          "created_at": "2023-04-02T21:56:47-07:00",
+          "position": 2,
+          "updated_at": "2023-04-02T21:56:55-07:00",
+          "product_id": 7958460793050,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0026-Edit.png?v=1680497815",
+          "width": 4127,
+          "height": 2751
+        },
+        {
+          "id": 39384012718298,
+          "created_at": "2023-04-02T21:56:47-07:00",
+          "position": 3,
+          "updated_at": "2023-04-02T21:56:55-07:00",
+          "product_id": 7958460793050,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0003.png?v=1680497815",
+          "width": 4774,
+          "height": 3183
+        },
+        {
+          "id": 39384012652762,
+          "created_at": "2023-04-02T21:56:47-07:00",
+          "position": 4,
+          "updated_at": "2023-04-02T21:56:55-07:00",
+          "product_id": 7958460793050,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_9992-Edit.png?v=1680497815",
+          "width": 3067,
+          "height": 2045
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7958460793050,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7958455812314,
+      "title": "VOXELPLA PLA+ HS (Pro) Fire Orange 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-fire-orange-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Fire Orange <span>VOXELPLA PLA+ HS 3D Printing Filament</span></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>",
+      "published_at": "2023-04-19T09:55:48-07:00",
+      "created_at": "2023-04-02T21:53:20-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 43837094920410,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7958455812314,
+          "created_at": "2023-04-02T21:53:20-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 39384000889050,
+          "created_at": "2023-04-02T21:54:42-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:33:53-08:00",
+          "product_id": 7958455812314,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0004-Edit.png?v=1762439633",
+          "width": 4791,
+          "height": 3194
+        },
+        {
+          "id": 39384000823514,
+          "created_at": "2023-04-02T21:54:42-07:00",
+          "position": 2,
+          "updated_at": "2023-04-02T21:55:02-07:00",
+          "product_id": 7958455812314,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0024-Edit.png?v=1680497702",
+          "width": 2953,
+          "height": 1969
+        },
+        {
+          "id": 39384000921818,
+          "created_at": "2023-04-02T21:54:42-07:00",
+          "position": 3,
+          "updated_at": "2023-04-02T21:55:02-07:00",
+          "product_id": 7958455812314,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0017.png?v=1680497702",
+          "width": 4519,
+          "height": 3013
+        },
+        {
+          "id": 39384001085658,
+          "created_at": "2023-04-02T21:54:42-07:00",
+          "position": 4,
+          "updated_at": "2023-04-02T21:55:02-07:00",
+          "product_id": 7958455812314,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0025-Edit.png?v=1680497702",
+          "width": 3157,
+          "height": 2105
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7958455812314,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7958463021274,
+      "title": "VOXELPLA PLA+ HS (Pro) Forest Green 1.75mm Filament (1kg)",
+      "handle": "voxelpla-pla-plus-pro-forest-green-1-75mm-filament-1kg",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Forest Green </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>",
+      "published_at": "2023-04-02T21:58:12-07:00",
+      "created_at": "2023-04-02T21:57:36-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 43837107568858,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7958463021274,
+          "created_at": "2023-04-02T21:57:36-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 39384019730650,
+          "created_at": "2023-04-02T21:58:01-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:33:53-08:00",
+          "product_id": 7958463021274,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0032.png?v=1762439633",
+          "width": 3685,
+          "height": 2457
+        },
+        {
+          "id": 39384019501274,
+          "created_at": "2023-04-02T21:58:01-07:00",
+          "position": 2,
+          "updated_at": "2023-04-02T21:58:04-07:00",
+          "product_id": 7958463021274,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0045-Edit.png?v=1680497884",
+          "width": 2783,
+          "height": 1855
+        },
+        {
+          "id": 39384019599578,
+          "created_at": "2023-04-02T21:58:01-07:00",
+          "position": 3,
+          "updated_at": "2023-04-02T21:58:04-07:00",
+          "product_id": 7958463021274,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0037-Edit.png?v=1680497884",
+          "width": 4298,
+          "height": 2865
+        },
+        {
+          "id": 39384019665114,
+          "created_at": "2023-04-02T21:58:01-07:00",
+          "position": 4,
+          "updated_at": "2023-04-02T21:58:04-07:00",
+          "product_id": 7958463021274,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0039-Edit.png?v=1680497884",
+          "width": 4179,
+          "height": 2786
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 5,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7958463021274,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7738018070746,
+      "title": "VOXELPLA PLA+ HS (Pro) Cool White 1.75mm Filament (1kg)",
+      "handle": "voxel-pla-pro-1-75mm-white-filament",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Cool White <span>VOXELPLA PLA+ HS 3D Printing Filament</span></p>\n<p>Diameter: 1.75mm <span>± 0.03mm; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below.<br></p>",
+      "published_at": "2022-08-17T12:11:07-07:00",
+      "created_at": "2022-08-17T12:11:08-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 43121052418266,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1179,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7738018070746,
+          "created_at": "2022-08-17T12:11:08-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 37725110108378,
+          "created_at": "2022-08-27T12:33:24-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:33:15-08:00",
+          "product_id": 7738018070746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0153.png?v=1762439595",
+          "width": 4657,
+          "height": 3105
+        },
+        {
+          "id": 37765895028954,
+          "created_at": "2022-09-01T13:12:12-07:00",
+          "position": 2,
+          "updated_at": "2022-09-01T13:13:51-07:00",
+          "product_id": 7738018070746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/2WhitePLA1.75mmTestPrint.jpg?v=1662063231",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 37765895127258,
+          "created_at": "2022-09-01T13:12:12-07:00",
+          "position": 3,
+          "updated_at": "2022-09-01T13:13:51-07:00",
+          "product_id": 7738018070746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/WhitePLA1.75mmTestPrint.jpg?v=1662063231",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 37725110993114,
+          "created_at": "2022-08-27T12:33:39-07:00",
+          "position": 4,
+          "updated_at": "2022-09-01T13:13:51-07:00",
+          "product_id": 7738018070746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/White1.png?v=1662063231",
+          "width": 4894,
+          "height": 3263
+        },
+        {
+          "id": 37725110010074,
+          "created_at": "2022-08-27T12:33:06-07:00",
+          "position": 5,
+          "updated_at": "2022-09-01T13:13:51-07:00",
+          "product_id": 7738018070746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/white4.png?v=1662063231",
+          "width": 4820,
+          "height": 3213
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 6,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7738018070746,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7738017743066,
+      "title": "VOXELPLA PLA+ HS (Pro) Voxel Royal Blue 1.75mm Filament (1kg)",
+      "handle": "voxel-pla-pro-1-75mm-blue-filament",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Voxel Royal Blue <span>VOXELPLA PLA 1.75mm Filament</span></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below. </p>",
+      "published_at": "2022-08-17T12:10:31-07:00",
+      "created_at": "2022-08-17T12:10:31-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 43121052123354,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7738017743066,
+          "created_at": "2022-08-17T12:10:31-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 37652964278490,
+          "created_at": "2022-08-19T12:34:19-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:33:14-08:00",
+          "product_id": 7738017743066,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/Blue2.png?v=1762439594",
+          "width": 4962,
+          "height": 3308
+        },
+        {
+          "id": 37766001328346,
+          "created_at": "2022-09-01T13:30:02-07:00",
+          "position": 2,
+          "updated_at": "2022-09-01T13:30:50-07:00",
+          "product_id": 7738017743066,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/TestPrintofBluePLA1.75mm.jpg?v=1662064250",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 37766001295578,
+          "created_at": "2022-09-01T13:30:02-07:00",
+          "position": 3,
+          "updated_at": "2022-09-01T13:30:50-07:00",
+          "product_id": 7738017743066,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/2TestPrintofBluePLA1.75mm.jpg?v=1662064250",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 37766001361114,
+          "created_at": "2022-09-01T13:30:02-07:00",
+          "position": 4,
+          "updated_at": "2022-09-01T13:30:50-07:00",
+          "product_id": 7738017743066,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/3testPrintofBluePLA1.75mm.jpg?v=1662064250",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 37652964311258,
+          "created_at": "2022-08-19T12:34:19-07:00",
+          "position": 5,
+          "updated_at": "2022-09-01T13:30:50-07:00",
+          "product_id": 7738017743066,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/Blue1.png?v=1662064250",
+          "width": 5183,
+          "height": 3455
+        },
+        {
+          "id": 37652964081882,
+          "created_at": "2022-08-19T12:34:19-07:00",
+          "position": 6,
+          "updated_at": "2022-09-01T13:30:50-07:00",
+          "product_id": 7738017743066,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/Blue3.png?v=1662064250",
+          "width": 4911,
+          "height": 3274
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 7,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7738017743066,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7738017579226,
+      "title": "VOXELPLA PLA+ HS (Pro) Fire Engine Red 1.75mm Filament (1kg)",
+      "handle": "voxel-pla-pro-1-75mm-red-filament",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p>Color: Fire Engine Red <span>VOXELPLA+ HS PLA 1.75mm Filament</span></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 250 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below.</p>",
+      "published_at": "2022-08-17T12:09:39-07:00",
+      "created_at": "2022-08-17T12:09:39-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 43121050452186,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7738017579226,
+          "created_at": "2022-08-17T12:09:39-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 37637038440666,
+          "created_at": "2022-08-17T12:10:01-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:33:13-08:00",
+          "product_id": 7738017579226,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_9816-Edit.png?v=1762439593",
+          "width": 3000,
+          "height": 2000
+        },
+        {
+          "id": 37766044549338,
+          "created_at": "2022-09-01T13:37:04-07:00",
+          "position": 2,
+          "updated_at": "2022-09-01T13:39:30-07:00",
+          "product_id": 7738017579226,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/4TestPrintofRedPLA1.75mm.jpg?v=1662064770",
+          "width": 2500,
+          "height": 2500
+        },
+        {
+          "id": 37637038506202,
+          "created_at": "2022-08-17T12:10:01-07:00",
+          "position": 3,
+          "updated_at": "2022-09-01T13:39:30-07:00",
+          "product_id": 7738017579226,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_9846-Edit.png?v=1662064770",
+          "width": 3000,
+          "height": 2000
+        },
+        {
+          "id": 37766044582106,
+          "created_at": "2022-09-01T13:37:04-07:00",
+          "position": 4,
+          "updated_at": "2022-09-01T13:37:28-07:00",
+          "product_id": 7738017579226,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/3TestPrintofRedPLA1.75mm.jpg?v=1662064648",
+          "width": 2500,
+          "height": 2500
+        },
+        {
+          "id": 37637038571738,
+          "created_at": "2022-08-17T12:10:01-07:00",
+          "position": 5,
+          "updated_at": "2022-09-01T13:37:28-07:00",
+          "product_id": 7738017579226,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_9856-Edit.png?v=1662064648",
+          "width": 3000,
+          "height": 2000
+        },
+        {
+          "id": 37766044319962,
+          "created_at": "2022-09-01T13:37:04-07:00",
+          "position": 6,
+          "updated_at": "2022-09-01T13:37:28-07:00",
+          "product_id": 7738017579226,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/2TestPrintofRedPLA1.75mm.jpg?v=1662064648",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 37766044352730,
+          "created_at": "2022-09-01T13:37:05-07:00",
+          "position": 7,
+          "updated_at": "2022-09-01T13:37:06-07:00",
+          "product_id": 7738017579226,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/TestPrintofRedPLA1.75mm.jpg?v=1662064626",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 8,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7738017579226,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7738017120474,
+      "title": "VOXELPLA PLA+ HS (Pro) Voxel Grey 1.75mm Filament (1kg)",
+      "handle": "voxel-pla-pro-1-75mm-grey-filament",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE US SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Voxel Grey </span><span>VOXELPLA PLA+ HS 1.75mm Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA for orders $75 or more!<br></p>\n<p><span>VOXELPLA PLA + (pro) Filament for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheets below. </p>",
+      "published_at": "2022-08-17T12:08:07-07:00",
+      "created_at": "2022-08-17T12:08:07-07:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44137663725786,
+          "title": "1kg Spool",
+          "option1": "1kg Spool",
+          "option2": null,
+          "option3": null,
+          "sku": "",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7738017120474,
+          "created_at": "2023-10-11T08:45:52-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 37637030117594,
+          "created_at": "2022-08-17T12:08:40-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:33:13-08:00",
+          "product_id": 7738017120474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_9883-Edit.png?v=1762439593",
+          "width": 5147,
+          "height": 3431
+        },
+        {
+          "id": 37766035275994,
+          "created_at": "2022-09-01T13:35:33-07:00",
+          "position": 2,
+          "updated_at": "2022-09-01T13:38:56-07:00",
+          "product_id": 7738017120474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/2TestPrintofGreyPLA1.75mm.jpg?v=1662064736",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 37637030052058,
+          "created_at": "2022-08-17T12:08:40-07:00",
+          "position": 3,
+          "updated_at": "2022-09-01T13:38:56-07:00",
+          "product_id": 7738017120474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_9891-Edit.png?v=1662064736",
+          "width": 5013,
+          "height": 3342
+        },
+        {
+          "id": 37637030084826,
+          "created_at": "2022-08-17T12:08:40-07:00",
+          "position": 4,
+          "updated_at": "2022-09-01T13:38:56-07:00",
+          "product_id": 7738017120474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_9902-2.png?v=1662064736",
+          "width": 4718,
+          "height": 3145
+        },
+        {
+          "id": 37766035243226,
+          "created_at": "2022-09-01T13:35:33-07:00",
+          "position": 5,
+          "updated_at": "2022-09-01T13:35:35-07:00",
+          "product_id": 7738017120474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/TestPrintofGreyPLA1.75mm.jpg?v=1662064535",
+          "width": 2500,
+          "height": 1666
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 6,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7738017120474,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Size",
+          "position": 1,
+          "values": [
+            "1kg Spool"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7556181065946,
+      "title": "VOXELPLA PLA+ HS (Pro) Voxel Black 1.75mm Filament (1kg)",
+      "handle": "voxel-pla-pro-1-75mm-black-filament",
+      "body_html": "<p><b>IN STOCK - SHIP SAME DAY - </b><b><span style=\"text-decoration: underline;\">FREE SHIPPING</span> ON ORDERS $75+ (MIX AND MATCH ANY PRODUCTS)</b></p>\n<p><span>Color: Voxel Black </span><span>VOXELPLA PLA+ HS 3D Printing Filament</span><br></p>\n<p><span>Diameter: 1.75mm </span><span>± 0.03mm ; Bambu Lab AMS / AMS Lite Compatible</span></p>\n<p>Hotend Temp: 200-220C</p>\n<p>Bed Temp: 45-60C</p>\n<p>Free Shipping in the USA on orders $75 or more!</p>\n<p><span>VOXELPLA PLA + (pro) for FDM 3D printer is perfect for everyone. The best and most reliable filament at an affordable price.</span></p>\n<p>All VOXELPLA plus is engineered with reliability, quality, and strength as its top priority. We run VOXELPLA PLA+ (pro) exclusively on our 150 machines print farm to ensure the utmost quality and reliability in real-life production settings. Our PLA+ (pro) lineup contains special additives to make it more robust and reliable than standard PLA. The strength test results and methodology is included in the Safety and Technical Date Sheet below.</p>",
+      "published_at": "2022-02-25T18:06:30-08:00",
+      "created_at": "2022-02-25T18:06:29-08:00",
+      "updated_at": "2026-03-13T12:45:36-07:00",
+      "vendor": "voxelpla",
+      "product_type": "",
+      "tags": [],
+      "variants": [
+        {
+          "id": 44137662120154,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "BLACK-1kg",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "24.00",
+          "grams": 1134,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 7556181065946,
+          "created_at": "2023-10-11T08:44:39-07:00",
+          "updated_at": "2026-03-13T12:45:36-07:00"
+        }
+      ],
+      "images": [
+        {
+          "id": 37637018288346,
+          "created_at": "2022-08-17T12:06:53-07:00",
+          "position": 1,
+          "updated_at": "2025-11-06T06:32:49-08:00",
+          "product_id": 7556181065946,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0065-Edit.png?v=1762439569",
+          "width": 4766,
+          "height": 3336
+        },
+        {
+          "id": 37765933531354,
+          "created_at": "2022-09-01T13:18:47-07:00",
+          "position": 2,
+          "updated_at": "2022-09-01T13:18:54-07:00",
+          "product_id": 7556181065946,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/TestPrintofBlackPLA1.75mm.jpg?v=1662063534",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 37765933596890,
+          "created_at": "2022-09-01T13:18:47-07:00",
+          "position": 3,
+          "updated_at": "2022-09-01T13:18:54-07:00",
+          "product_id": 7556181065946,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/2TestPrintofBlackPLA1.75mm.jpg?v=1662063534",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 37637017960666,
+          "created_at": "2022-08-17T12:06:53-07:00",
+          "position": 4,
+          "updated_at": "2022-09-01T13:18:54-07:00",
+          "product_id": 7556181065946,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0110-Edit.png?v=1662063534",
+          "width": 4526,
+          "height": 3017
+        },
+        {
+          "id": 37637018386650,
+          "created_at": "2022-08-17T12:06:53-07:00",
+          "position": 5,
+          "updated_at": "2022-09-01T13:18:54-07:00",
+          "product_id": 7556181065946,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/IMG_0087-2-Edit.png?v=1662063534",
+          "width": 5056,
+          "height": 3371
+        },
+        {
+          "id": 37766011683034,
+          "created_at": "2022-09-01T13:32:00-07:00",
+          "position": 6,
+          "updated_at": "2022-09-01T13:32:02-07:00",
+          "product_id": 7556181065946,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/3TestPrintofBlackPLA1.75mm.jpg?v=1662064322",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 37766011715802,
+          "created_at": "2022-09-01T13:32:00-07:00",
+          "position": 7,
+          "updated_at": "2022-09-01T13:32:02-07:00",
+          "product_id": 7556181065946,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/products/4TestPrintofBlackPLA1.75mm.jpg?v=1662064322",
+          "width": 2500,
+          "height": 1667
+        },
+        {
+          "id": 42141438771418,
+          "created_at": "2024-07-03T18:17:43-07:00",
+          "position": 8,
+          "updated_at": "2025-08-08T17:40:56-07:00",
+          "product_id": 7556181065946,
+          "variant_ids": [],
+          "src": "https://cdn.shopify.com/s/files/1/0632/8614/9338/files/AMS_Compatible_Out_of_the_Box.png?v=1754700056",
+          "width": 2500,
+          "height": 2500
+        }
+      ],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    }
+  ],
+  "excluded": 26,
+  "fetchedAt": "2026-03-13T19:45:38.503Z",
+  "source": "voxelpla-shopify-products-json",
+  "currency": "USD"
+}
