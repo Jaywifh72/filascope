@@ -29,6 +29,7 @@ export default function BrandCatalogSync() {
     scanStatusMessage,
     startScan,
     startImport,
+    retryFailedItem,
     reset,
   } = useCatalogSync();
 
@@ -154,6 +155,7 @@ export default function BrandCatalogSync() {
           result={importResult}
           brandSlug={brandInfo?.slug ?? ''}
           onReset={handleReset}
+          onRetry={retryFailedItem}
         />
       )}
 

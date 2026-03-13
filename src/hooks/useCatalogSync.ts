@@ -74,10 +74,23 @@ export interface DeltaStats {
   errorCount: number;
 }
 
+export interface ImportError {
+  itemId: string;
+  displayName: string;
+  severity: 'critical' | 'warning' | 'info';
+  message: string;
+  explanation: string;
+  resolution: string;
+  resolutionType: 'auto-retry-update' | 'auto-retry-insert' | 'auto-retry-price-history' | 'manual' | 'none';
+  existingFilamentId?: string;
+  syncItemId?: string;
+}
+
 export interface ImportResult {
   imported: number;
   updatedPrices: number;
   errors: number;
+  errorDetails: ImportError[];
   priceHistoryCount: number;
   avgQualityScore: number;
   urlsBroken: string[];
@@ -623,6 +636,81 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       source_currency: 'USD',
     },
   },
+  'geeetech': {
+    brand_name: 'Geeetech',
+    platform: 'custom',
+    base_url: 'https://www.geeetech.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'geeetech',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://www.geeetech.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'gizmo-dorks': {
+    brand_name: 'Gizmo Dorks',
+    platform: 'bigcommerce',
+    base_url: 'https://gizmodorks.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'gizmo-dorks',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://gizmodorks.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'hatchbox': {
+    brand_name: 'Hatchbox',
+    platform: 'shopify',
+    base_url: 'https://www.hatchbox3d.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'hatchbox',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://www.hatchbox3d.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'ic3d-printers': {
+    brand_name: 'IC3D Printers',
+    platform: 'custom',
+    base_url: 'https://www.ic3dprinters.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'ic3d-printers',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://www.ic3dprinters.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'kingroon': {
+    brand_name: 'Kingroon',
+    platform: 'shopify',
+    base_url: 'https://kingroon.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'kingroon',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://kingroon.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
 };
 
 /**
@@ -809,6 +897,9 @@ export function useCatalogSync() {
           'fiberlogy': '/data/fiberlogy-products.json',
           'formfutura': '/data/formfutura-products.json',
           'fusion-filaments': '/data/fusion-filaments-products.json',
+          'geeetech': '/data/geeetech-products.json',
+          'gizmo-dorks': '/data/gizmo-dorks-products.json',
+          'ic3d-printers': '/data/ic3d-printers-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 
@@ -1104,6 +1195,95 @@ export function useCatalogSync() {
   //   4. Compute data quality scores
   //   5. Update job with post-import results
 
+  // ── Error classifier for import errors ──
+  function classifyImportError(
+    displayName: string,
+    itemId: string,
+    rawMessage: string,
+    context: 'insert' | 'update' | 'price-history',
+    existingFilamentId?: string,
+  ): ImportError {
+    const lower = rawMessage.toLowerCase();
+
+    // Network errors (fetch failures, timeouts)
+    if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('load failed') || lower.includes('timeout')) {
+      return {
+        itemId, displayName,
+        severity: 'critical',
+        message: rawMessage,
+        explanation: 'Network error — the request to the database failed. This is usually a transient connectivity issue.',
+        resolution: context === 'update' ? 'Retry the price update.' : 'Retry the import.',
+        resolutionType: context === 'update' ? 'auto-retry-update' : context === 'insert' ? 'auto-retry-insert' : 'auto-retry-price-history',
+        existingFilamentId,
+        syncItemId: itemId,
+      };
+    }
+
+    if (context === 'price-history') {
+      return {
+        itemId, displayName,
+        severity: 'warning',
+        message: rawMessage,
+        explanation: 'Price history records could not be saved. The filament was imported but historical pricing is missing.',
+        resolution: 'Re-run the scan to regenerate price history records.',
+        resolutionType: 'auto-retry-price-history',
+      };
+    }
+
+    if (lower.includes('duplicate key') || lower.includes('unique constraint') || lower.includes('unique_')) {
+      return {
+        itemId, displayName,
+        severity: 'critical',
+        message: rawMessage,
+        explanation: 'A filament with this SKU or product handle already exists in the database.',
+        resolution: 'Retry as a price update instead of a new insert.',
+        resolutionType: context === 'insert' ? 'auto-retry-update' : 'auto-retry-update',
+        existingFilamentId,
+        syncItemId: itemId,
+      };
+    }
+
+    if (lower.includes('not-null') || lower.includes('null value') || lower.includes('violates not')) {
+      return {
+        itemId, displayName,
+        severity: 'critical',
+        message: rawMessage,
+        explanation: 'A required field (e.g., vendor, material, display_name) is missing from the extracted data.',
+        resolution: 'Go back to Review Delta, find this filament, and add the missing field via admin override.',
+        resolutionType: 'manual',
+        syncItemId: itemId,
+      };
+    }
+
+    if (lower.includes('check constraint') || lower.includes('violates check')) {
+      return {
+        itemId, displayName,
+        severity: 'critical',
+        message: rawMessage,
+        explanation: 'A field value is outside the valid range (e.g., negative price, temperature out of bounds).',
+        resolution: 'Check the extracted prices and temperatures — the source data may be malformed.',
+        resolutionType: 'manual',
+        syncItemId: itemId,
+      };
+    }
+
+    // Generic fallback
+    return {
+      itemId, displayName,
+      severity: 'critical',
+      message: rawMessage,
+      explanation: context === 'update'
+        ? 'The price update on this existing filament was rejected by the database.'
+        : 'The database rejected this filament insert.',
+      resolution: context === 'update'
+        ? 'Retry the price update.'
+        : 'Check Supabase logs for the full error, or retry the import.',
+      resolutionType: context === 'update' ? 'auto-retry-update' : 'manual',
+      existingFilamentId,
+      syncItemId: itemId,
+    };
+  }
+
   const startImport = useCallback(async (
     itemIds: string[],
     brandId: string,
@@ -1136,7 +1316,7 @@ export function useCatalogSync() {
 
       if (eligibleItems.length === 0) {
         setImportResult({
-          imported: 0, updatedPrices: 0, errors: 0,
+          imported: 0, updatedPrices: 0, errors: 0, errorDetails: [],
           priceHistoryCount: 0, avgQualityScore: 0, urlsBroken: [],
         });
         setPhase('complete');
@@ -1150,7 +1330,7 @@ export function useCatalogSync() {
       let updatedPrices = 0;
       let errorCount = 0;
       const insertedFilaments: Array<{ id: string; itemId: string; data: Record<string, any> }> = [];
-      const importErrors: string[] = [];
+      const importErrorDetails: ImportError[] = [];
 
       for (const item of eligibleItems) {
         const extracted = (item.extracted_data || {}) as Record<string, any>;
@@ -1257,9 +1437,15 @@ export function useCatalogSync() {
           }
         } catch (err: any) {
           errorCount++;
-          const msg = `${item.display_name}: ${err.message}`;
-          importErrors.push(msg);
-          console.error(`[import] ❌ ${msg}`);
+          const classified = classifyImportError(
+            item.display_name,
+            item.id,
+            err.message,
+            item.status === 'price_changed' ? 'update' : 'insert',
+            item.existing_filament_id || undefined,
+          );
+          importErrorDetails.push(classified);
+          console.error(`[import] ❌ [${classified.severity}] ${item.display_name}: ${err.message}`);
 
           await supabase
             .from('brand_sync_items')
@@ -1307,6 +1493,12 @@ export function useCatalogSync() {
             const { error: phErr } = await supabase.from('price_history').insert(chunk);
             if (phErr) {
               postErrors.push(`Price history batch ${i}: ${phErr.message}`);
+              importErrorDetails.push(classifyImportError(
+                `Price history batch ${Math.floor(i / 200) + 1}`,
+                '',
+                phErr.message,
+                'price-history',
+              ));
             } else {
               priceHistoryCount += chunk.length;
             }
@@ -1315,6 +1507,12 @@ export function useCatalogSync() {
         console.log(`[import] 📊 ${priceHistoryCount} price history records created`);
       } catch (e: any) {
         postErrors.push(`Price history: ${e.message}`);
+        importErrorDetails.push(classifyImportError(
+          'Price history',
+          '',
+          e.message,
+          'price-history',
+        ));
       }
 
       // ── STEP 4: Data Quality Scores ──
@@ -1362,6 +1560,7 @@ export function useCatalogSync() {
         imported: insertedCount,
         updatedPrices,
         errors: errorCount,
+        errorDetails: importErrorDetails,
         priceHistoryCount,
         avgQualityScore: avgQuality,
         urlsBroken: [],
@@ -1379,6 +1578,142 @@ export function useCatalogSync() {
   }, [jobId]);
 
   // ── Reset ──
+
+  // ── Retry a failed import item ──
+  const retryFailedItem = useCallback(async (errorItem: ImportError): Promise<boolean> => {
+    try {
+      if (errorItem.resolutionType === 'auto-retry-update') {
+        // Try to find the existing filament by product_handle match and update its prices
+        const { data: syncItem } = await supabase
+          .from('brand_sync_items')
+          .select('*')
+          .eq('id', errorItem.syncItemId)
+          .single();
+
+        if (!syncItem) return false;
+
+        const extracted = (syncItem.extracted_data || {}) as Record<string, any>;
+        const overrides = (syncItem.admin_override_data || {}) as Record<string, any>;
+        const merged = { ...extracted, ...overrides };
+
+        // Find existing filament by handle or SKU
+        let existingId = errorItem.existingFilamentId || syncItem.existing_filament_id;
+        if (!existingId) {
+          const { data: existing } = await supabase
+            .from('filaments')
+            .select('id')
+            .eq('product_handle', syncItem.product_handle)
+            .limit(1)
+            .maybeSingle();
+          existingId = existing?.id;
+        }
+
+        if (existingId) {
+          // UPDATE existing
+          const priceUpdate: Record<string, any> = {
+            updated_at: new Date().toISOString(),
+            last_scraped_at: new Date().toISOString(),
+          };
+          if (merged.price_usd != null) priceUpdate.variant_price = merged.price_usd;
+          if (merged.price_eur != null) priceUpdate.price_eur = merged.price_eur;
+          if (merged.price_gbp != null) priceUpdate.price_gbp = merged.price_gbp;
+          if (merged.price_cad != null) priceUpdate.price_cad = merged.price_cad;
+          if (merged.price_aud != null) priceUpdate.price_aud = merged.price_aud;
+          if (merged.price_jpy != null) priceUpdate.price_jpy = merged.price_jpy;
+          if (merged.price_cny != null) priceUpdate.price_cny = merged.price_cny;
+          if (merged.variant_available != null) priceUpdate.variant_available = merged.variant_available;
+
+          const { error: updateErr } = await supabase
+            .from('filaments')
+            .update(priceUpdate)
+            .eq('id', existingId);
+
+          if (updateErr) return false;
+
+          await supabase
+            .from('brand_sync_items')
+            .update({ status: 'imported', error_message: null, inserted_filament_id: existingId })
+            .eq('id', errorItem.syncItemId);
+
+          console.log(`[retry] ✅ Updated prices for: ${errorItem.displayName}`);
+        } else {
+          // No existing filament found — cannot retry as update
+          return false;
+        }
+      } else if (errorItem.resolutionType === 'auto-retry-insert') {
+        // Re-attempt the insert
+        const { data: syncItem } = await supabase
+          .from('brand_sync_items')
+          .select('*')
+          .eq('id', errorItem.syncItemId)
+          .single();
+
+        if (!syncItem) return false;
+
+        const extracted = (syncItem.extracted_data || {}) as Record<string, any>;
+        const overrides = (syncItem.admin_override_data || {}) as Record<string, any>;
+        const merged = { ...extracted, ...overrides };
+
+        const { data: filament, error: insertErr } = await supabase
+          .from('filaments')
+          .insert({
+            vendor: merged.vendor,
+            brand_id: merged.brand_id,
+            material: merged.material ?? syncItem.material_type,
+            product_title: merged.product_title ?? syncItem.display_name,
+            display_name: merged.display_name ?? syncItem.display_name,
+            color_family: merged.color_family ?? syncItem.color_family,
+            color_hex: merged.color_hex ?? syncItem.color_hex,
+            featured_image: merged.featured_image ?? syncItem.image_url,
+            variant_image: merged.variant_image ?? syncItem.variant_image_url,
+            diameter_nominal_mm: merged.diameter_nominal_mm ?? 1.75,
+            variant_price: merged.price_usd,
+            price_eur: merged.price_eur,
+            product_handle: merged.product_handle ?? syncItem.product_handle,
+            variant_sku: merged.variant_sku ?? syncItem.variant_sku,
+            variant_available: merged.variant_available ?? true,
+            sync_source: 'catalog-sync-retry',
+            auto_created: true,
+          })
+          .select('id')
+          .single();
+
+        if (insertErr) return false;
+
+        await supabase
+          .from('brand_sync_items')
+          .update({ status: 'imported', error_message: null, inserted_filament_id: filament?.id })
+          .eq('id', errorItem.syncItemId);
+
+        console.log(`[retry] ✅ Inserted: ${errorItem.displayName}`);
+      } else {
+        return false;
+      }
+
+      // Update local state: remove the fixed error from importResult
+      setImportResult(prev => {
+        if (!prev) return prev;
+        const newDetails = prev.errorDetails.filter(e => e.itemId !== errorItem.itemId || e.message !== errorItem.message);
+        const removedCritical = errorItem.severity === 'critical' ? 1 : 0;
+        return {
+          ...prev,
+          errors: Math.max(0, prev.errors - removedCritical),
+          errorDetails: newDetails,
+          updatedPrices: errorItem.resolutionType === 'auto-retry-update'
+            ? prev.updatedPrices + 1
+            : prev.updatedPrices,
+          imported: errorItem.resolutionType === 'auto-retry-insert'
+            ? prev.imported + 1
+            : prev.imported,
+        };
+      });
+
+      return true;
+    } catch (e) {
+      console.error(`[retry] Failed:`, e);
+      return false;
+    }
+  }, []);
 
   const reset = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -1403,6 +1738,7 @@ export function useCatalogSync() {
     scanStatusMessage,
     startScan,
     startImport,
+    retryFailedItem,
     reset,
   };
 }

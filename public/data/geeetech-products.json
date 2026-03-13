@@ -1,0 +1,4054 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "Geeetech PLA Black Filament 1.75mm",
+      "handle": "pla-black",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Black",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.046Z"
+    },
+    {
+      "id": 2000,
+      "title": "Geeetech PLA White Filament 1.75mm",
+      "handle": "pla-white",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "White",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.046Z"
+    },
+    {
+      "id": 3000,
+      "title": "Geeetech PLA Grey Filament 1.75mm",
+      "handle": "pla-grey",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Grey",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 4000,
+      "title": "Geeetech PLA Red Filament 1.75mm",
+      "handle": "pla-red",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Red",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 5000,
+      "title": "Geeetech PLA Blue Filament 1.75mm",
+      "handle": "pla-blue",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Blue",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 6000,
+      "title": "Geeetech PLA Green Filament 1.75mm",
+      "handle": "pla-green",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Green",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 7000,
+      "title": "Geeetech PLA Yellow Filament 1.75mm",
+      "handle": "pla-yellow",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Yellow",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 8000,
+      "title": "Geeetech PLA Orange Filament 1.75mm",
+      "handle": "pla-orange",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Orange",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 9000,
+      "title": "Geeetech PLA Purple Filament 1.75mm",
+      "handle": "pla-purple",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Purple",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 10000,
+      "title": "Geeetech PLA Pink Filament 1.75mm",
+      "handle": "pla-pink",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Pink",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-pink",
+          "option1": "Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 11000,
+      "title": "Geeetech PLA Silver Filament 1.75mm",
+      "handle": "pla-silver",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Silver",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-silver",
+          "option1": "Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 12000,
+      "title": "Geeetech PLA Transparent Filament 1.75mm",
+      "handle": "pla-transparent",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Transparent",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 13000,
+      "title": "Geeetech PLA Warm White Filament 1.75mm",
+      "handle": "pla-warm-white",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Warm White",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-warm-white",
+          "option1": "Warm White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Warm White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 14000,
+      "title": "Geeetech PLA Water Blue Filament 1.75mm",
+      "handle": "pla-water-blue",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Water Blue",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-water-blue",
+          "option1": "Water Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Water Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 15000,
+      "title": "Geeetech PLA Apple Green Filament 1.75mm",
+      "handle": "pla-apple-green",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Apple Green",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 16000,
+      "title": "Geeetech PLA Brown Filament 1.75mm",
+      "handle": "pla-brown",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Brown",
+          "price": "10.79",
+          "compare_at_price": null,
+          "sku": "GEEETECH-pla-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 17000,
+      "title": "Geeetech Matte PLA Matte Black Filament 1.75mm",
+      "handle": "matte-pla-matte-black",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "Matte Black",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-black",
+          "option1": "Matte Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 18000,
+      "title": "Geeetech Matte PLA Matte White Filament 1.75mm",
+      "handle": "matte-pla-matte-white",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Matte White",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-white",
+          "option1": "Matte White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 19000,
+      "title": "Geeetech Matte PLA Matte Grey Filament 1.75mm",
+      "handle": "matte-pla-matte-grey",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Matte Grey",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-grey",
+          "option1": "Matte Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 20000,
+      "title": "Geeetech Matte PLA Matte Green Filament 1.75mm",
+      "handle": "matte-pla-matte-green",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Matte Green",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-green",
+          "option1": "Matte Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 21000,
+      "title": "Geeetech Matte PLA Matte Orange Filament 1.75mm",
+      "handle": "matte-pla-matte-orange",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Matte Orange",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-orange",
+          "option1": "Matte Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 22000,
+      "title": "Geeetech Matte PLA Matte Brown Filament 1.75mm",
+      "handle": "matte-pla-matte-brown",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Matte Brown",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-brown",
+          "option1": "Matte Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 23000,
+      "title": "Geeetech Matte PLA Matte Olive Green Filament 1.75mm",
+      "handle": "matte-pla-matte-olive-green",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Matte Olive Green",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-olive-green",
+          "option1": "Matte Olive Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Olive Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 24000,
+      "title": "Geeetech Matte PLA Matte Skin Filament 1.75mm",
+      "handle": "matte-pla-matte-skin",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Matte Skin",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-skin",
+          "option1": "Matte Skin",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Skin"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 25000,
+      "title": "Geeetech Matte PLA Matte Terracotta Filament 1.75mm",
+      "handle": "matte-pla-matte-terracotta",
+      "product_type": "Matte PLA",
+      "vendor": "Geeetech",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Matte Terracotta",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-matte-pla-matte-terracotta",
+          "option1": "Matte Terracotta",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matte Terracotta"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 26000,
+      "title": "Geeetech Silk PLA Gold Filament 1.75mm",
+      "handle": "silk-pla-gold",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Gold",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-gold",
+          "option1": "Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 27000,
+      "title": "Geeetech Silk PLA Silver Filament 1.75mm",
+      "handle": "silk-pla-silver",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Silver",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-silver",
+          "option1": "Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 28000,
+      "title": "Geeetech Silk PLA Copper Filament 1.75mm",
+      "handle": "silk-pla-copper",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Copper",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-copper",
+          "option1": "Copper",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Copper"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 29000,
+      "title": "Geeetech Silk PLA White Filament 1.75mm",
+      "handle": "silk-pla-white",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "White",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 30000,
+      "title": "Geeetech Silk PLA Green Filament 1.75mm",
+      "handle": "silk-pla-green",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Green",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 31000,
+      "title": "Geeetech Silk PLA Magenta Filament 1.75mm",
+      "handle": "silk-pla-magenta",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Magenta",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-magenta",
+          "option1": "Magenta",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Magenta"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 32000,
+      "title": "Geeetech Silk PLA Black Filament 1.75mm",
+      "handle": "silk-pla-black",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Black",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 33000,
+      "title": "Geeetech Silk PLA Blue Filament 1.75mm",
+      "handle": "silk-pla-blue",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Blue",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 34000,
+      "title": "Geeetech Silk PLA Red Filament 1.75mm",
+      "handle": "silk-pla-red",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Red",
+          "price": "12.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 35000,
+      "title": "Geeetech Silk PLA Rainbow Rainbow Filament 1.75mm",
+      "handle": "silk-pla-rainbow-rainbow",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Rainbow",
+          "price": "15.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-rainbow-rainbow",
+          "option1": "Rainbow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Rainbow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 36000,
+      "title": "Geeetech Silk PLA Rainbow Rainbow Light Color Filament 1.75mm",
+      "handle": "silk-pla-rainbow-rainbow-light-color",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Rainbow Light Color",
+          "price": "15.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-rainbow-rainbow-light-color",
+          "option1": "Rainbow Light Color",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Rainbow Light Color"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 37000,
+      "title": "Geeetech Silk PLA Dual Color Gold+Silver Filament 1.75mm",
+      "handle": "silk-pla-dual-gold-silver",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "Gold+Silver",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-gold-silver",
+          "option1": "Gold+Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold+Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 38000,
+      "title": "Geeetech Silk PLA Dual Color Gold+Red Filament 1.75mm",
+      "handle": "silk-pla-dual-gold-red",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Gold+Red",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-gold-red",
+          "option1": "Gold+Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold+Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 39000,
+      "title": "Geeetech Silk PLA Dual Color Gold+Purple Filament 1.75mm",
+      "handle": "silk-pla-dual-gold-purple",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Gold+Purple",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-gold-purple",
+          "option1": "Gold+Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold+Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 40000,
+      "title": "Geeetech Silk PLA Dual Color Gold+Copper Filament 1.75mm",
+      "handle": "silk-pla-dual-gold-copper",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "Gold+Copper",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-gold-copper",
+          "option1": "Gold+Copper",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold+Copper"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 41000,
+      "title": "Geeetech Silk PLA Dual Color Gold+Black Filament 1.75mm",
+      "handle": "silk-pla-dual-gold-black",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "Gold+Black",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-gold-black",
+          "option1": "Gold+Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold+Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 42000,
+      "title": "Geeetech Silk PLA Dual Color Black+Red Filament 1.75mm",
+      "handle": "silk-pla-dual-black-red",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "Black+Red",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-black-red",
+          "option1": "Black+Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black+Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 43000,
+      "title": "Geeetech Silk PLA Dual Color Green+Red Filament 1.75mm",
+      "handle": "silk-pla-dual-green-red",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "Green+Red",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-green-red",
+          "option1": "Green+Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green+Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 44000,
+      "title": "Geeetech Silk PLA Dual Color Blue+Green Filament 1.75mm",
+      "handle": "silk-pla-dual-blue-green",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Blue+Green",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-blue-green",
+          "option1": "Blue+Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue+Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 45000,
+      "title": "Geeetech Silk PLA Dual Color Yellow+Green Filament 1.75mm",
+      "handle": "silk-pla-dual-yellow-green",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "Yellow+Green",
+          "price": "13.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-dual-yellow-green",
+          "option1": "Yellow+Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow+Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 46000,
+      "title": "Geeetech Silk PLA Tricolor Red+Gold+Purple Filament 1.75mm",
+      "handle": "silk-pla-tricolor-red-gold-purple",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 46001,
+          "title": "Red+Gold+Purple",
+          "price": "14.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-tricolor-red-gold-purple",
+          "option1": "Red+Gold+Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red+Gold+Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 47000,
+      "title": "Geeetech Silk PLA Tricolor Red+Blue+Green Filament 1.75mm",
+      "handle": "silk-pla-tricolor-red-blue-green",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 47001,
+          "title": "Red+Blue+Green",
+          "price": "14.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-tricolor-red-blue-green",
+          "option1": "Red+Blue+Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red+Blue+Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 48000,
+      "title": "Geeetech Silk PLA Tricolor Red+Gold+Black Filament 1.75mm",
+      "handle": "silk-pla-tricolor-red-gold-black",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 48001,
+          "title": "Red+Gold+Black",
+          "price": "14.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-tricolor-red-gold-black",
+          "option1": "Red+Gold+Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red+Gold+Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 49000,
+      "title": "Geeetech Silk PLA Tricolor Blue+Purple+Black Filament 1.75mm",
+      "handle": "silk-pla-tricolor-blue-purple-black",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 49001,
+          "title": "Blue+Purple+Black",
+          "price": "14.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-tricolor-blue-purple-black",
+          "option1": "Blue+Purple+Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue+Purple+Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 50000,
+      "title": "Geeetech Silk PLA Tricolor Gold+Silver+Copper Filament 1.75mm",
+      "handle": "silk-pla-tricolor-gold-silver-copper",
+      "product_type": "Silk PLA",
+      "vendor": "Geeetech",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 50001,
+          "title": "Gold+Silver+Copper",
+          "price": "14.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-silk-pla-tricolor-gold-silver-copper",
+          "option1": "Gold+Silver+Copper",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold+Silver+Copper"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 51000,
+      "title": "Geeetech High Speed PLA Black Filament 1.75mm",
+      "handle": "hs-pla-black",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 51001,
+          "title": "Black",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 52000,
+      "title": "Geeetech High Speed PLA White Filament 1.75mm",
+      "handle": "hs-pla-white",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 52001,
+          "title": "White",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 53000,
+      "title": "Geeetech High Speed PLA Red Filament 1.75mm",
+      "handle": "hs-pla-red",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 53001,
+          "title": "Red",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 54000,
+      "title": "Geeetech High Speed PLA Blue Filament 1.75mm",
+      "handle": "hs-pla-blue",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 54001,
+          "title": "Blue",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 55000,
+      "title": "Geeetech High Speed PLA Green Filament 1.75mm",
+      "handle": "hs-pla-green",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 55001,
+          "title": "Green",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 56000,
+      "title": "Geeetech High Speed PLA Apple Green Filament 1.75mm",
+      "handle": "hs-pla-apple-green",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 56001,
+          "title": "Apple Green",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 57000,
+      "title": "Geeetech High Speed PLA Brown Filament 1.75mm",
+      "handle": "hs-pla-brown",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 57001,
+          "title": "Brown",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 58000,
+      "title": "Geeetech High Speed PLA Transparent Filament 1.75mm",
+      "handle": "hs-pla-transparent",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 58001,
+          "title": "Transparent",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 59000,
+      "title": "Geeetech High Speed PLA Purple Filament 1.75mm",
+      "handle": "hs-pla-purple",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 59001,
+          "title": "Purple",
+          "price": "12.59",
+          "compare_at_price": null,
+          "sku": "GEEETECH-hs-pla-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 60000,
+      "title": "Geeetech Sparkly PLA Sparkly Blue Filament 1.75mm",
+      "handle": "sparkly-pla-sparkly-blue",
+      "product_type": "Glitter PLA",
+      "vendor": "Geeetech",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 60001,
+          "title": "Sparkly Blue",
+          "price": "15.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-sparkly-pla-sparkly-blue",
+          "option1": "Sparkly Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sparkly Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 61000,
+      "title": "Geeetech Sparkly PLA Sparkly Purple Filament 1.75mm",
+      "handle": "sparkly-pla-sparkly-purple",
+      "product_type": "Glitter PLA",
+      "vendor": "Geeetech",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 61001,
+          "title": "Sparkly Purple",
+          "price": "15.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-sparkly-pla-sparkly-purple",
+          "option1": "Sparkly Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sparkly Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 62000,
+      "title": "Geeetech Sparkly PLA Sparkly Silver Filament 1.75mm",
+      "handle": "sparkly-pla-sparkly-silver",
+      "product_type": "Glitter PLA",
+      "vendor": "Geeetech",
+      "tags": "Glitter PLA",
+      "variants": [
+        {
+          "id": 62001,
+          "title": "Sparkly Silver",
+          "price": "15.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-sparkly-pla-sparkly-silver",
+          "option1": "Sparkly Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Sparkly Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 63000,
+      "title": "Geeetech Luminous PLA Luminous Green Filament 1.75mm",
+      "handle": "luminous-pla-luminous-green",
+      "product_type": "Glow PLA",
+      "vendor": "Geeetech",
+      "tags": "Glow PLA",
+      "variants": [
+        {
+          "id": 63001,
+          "title": "Luminous Green",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-luminous-pla-luminous-green",
+          "option1": "Luminous Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Luminous Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 64000,
+      "title": "Geeetech Luminous PLA Luminous Blue Filament 1.75mm",
+      "handle": "luminous-pla-luminous-blue",
+      "product_type": "Glow PLA",
+      "vendor": "Geeetech",
+      "tags": "Glow PLA",
+      "variants": [
+        {
+          "id": 64001,
+          "title": "Luminous Blue",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-luminous-pla-luminous-blue",
+          "option1": "Luminous Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Luminous Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 65000,
+      "title": "Geeetech Luminous PLA Luminous Orange Filament 1.75mm",
+      "handle": "luminous-pla-luminous-orange",
+      "product_type": "Glow PLA",
+      "vendor": "Geeetech",
+      "tags": "Glow PLA",
+      "variants": [
+        {
+          "id": 65001,
+          "title": "Luminous Orange",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-luminous-pla-luminous-orange",
+          "option1": "Luminous Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Luminous Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 66000,
+      "title": "Geeetech Luminous PLA Luminous Yellow Filament 1.75mm",
+      "handle": "luminous-pla-luminous-yellow",
+      "product_type": "Glow PLA",
+      "vendor": "Geeetech",
+      "tags": "Glow PLA",
+      "variants": [
+        {
+          "id": 66001,
+          "title": "Luminous Yellow",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-luminous-pla-luminous-yellow",
+          "option1": "Luminous Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Luminous Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 67000,
+      "title": "Geeetech Luminous PLA Luminous White Filament 1.75mm",
+      "handle": "luminous-pla-luminous-white",
+      "product_type": "Glow PLA",
+      "vendor": "Geeetech",
+      "tags": "Glow PLA",
+      "variants": [
+        {
+          "id": 67001,
+          "title": "Luminous White",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-luminous-pla-luminous-white",
+          "option1": "Luminous White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Luminous White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 68000,
+      "title": "Geeetech Luminous PLA Luminous Purple Filament 1.75mm",
+      "handle": "luminous-pla-luminous-purple",
+      "product_type": "Glow PLA",
+      "vendor": "Geeetech",
+      "tags": "Glow PLA",
+      "variants": [
+        {
+          "id": 68001,
+          "title": "Luminous Purple",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-luminous-pla-luminous-purple",
+          "option1": "Luminous Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Luminous Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 69000,
+      "title": "Geeetech Luminous PLA Luminous Rose Red Filament 1.75mm",
+      "handle": "luminous-pla-luminous-rose-red",
+      "product_type": "Glow PLA",
+      "vendor": "Geeetech",
+      "tags": "Glow PLA",
+      "variants": [
+        {
+          "id": 69001,
+          "title": "Luminous Rose Red",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-luminous-pla-luminous-rose-red",
+          "option1": "Luminous Rose Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Luminous Rose Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 70000,
+      "title": "Geeetech Luminous PLA Luminous Multicolor Filament 1.75mm",
+      "handle": "luminous-pla-luminous-multicolor",
+      "product_type": "Glow PLA",
+      "vendor": "Geeetech",
+      "tags": "Glow PLA",
+      "variants": [
+        {
+          "id": 70001,
+          "title": "Luminous Multicolor",
+          "price": "15.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-luminous-pla-luminous-multicolor",
+          "option1": "Luminous Multicolor",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Luminous Multicolor"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 71000,
+      "title": "Geeetech Marble PLA Marble Grey Filament 1.75mm",
+      "handle": "marble-pla-marble-grey",
+      "product_type": "Marble PLA",
+      "vendor": "Geeetech",
+      "tags": "Marble PLA",
+      "variants": [
+        {
+          "id": 71001,
+          "title": "Marble Grey",
+          "price": "14.50",
+          "compare_at_price": null,
+          "sku": "GEEETECH-marble-pla-marble-grey",
+          "option1": "Marble Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Marble Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 72000,
+      "title": "Geeetech Gradient Color PLA Gradient Multicolor Filament 1.75mm",
+      "handle": "gradient-pla-gradient-multicolor",
+      "product_type": "PLA",
+      "vendor": "Geeetech",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 72001,
+          "title": "Gradient Multicolor",
+          "price": "14.50",
+          "compare_at_price": null,
+          "sku": "GEEETECH-gradient-pla-gradient-multicolor",
+          "option1": "Gradient Multicolor",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gradient Multicolor"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 73000,
+      "title": "Geeetech Carbon Fiber PLA Black Filament 1.75mm",
+      "handle": "cf-pla-black",
+      "product_type": "PLA-CF",
+      "vendor": "Geeetech",
+      "tags": "PLA-CF",
+      "variants": [
+        {
+          "id": 73001,
+          "title": "Black",
+          "price": "13.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-cf-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 74000,
+      "title": "Geeetech Carbon Fiber PLA Blue Filament 1.75mm",
+      "handle": "cf-pla-blue",
+      "product_type": "PLA-CF",
+      "vendor": "Geeetech",
+      "tags": "PLA-CF",
+      "variants": [
+        {
+          "id": 74001,
+          "title": "Blue",
+          "price": "13.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-cf-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 75000,
+      "title": "Geeetech Carbon Fiber PLA Brick Red Filament 1.75mm",
+      "handle": "cf-pla-brick-red",
+      "product_type": "PLA-CF",
+      "vendor": "Geeetech",
+      "tags": "PLA-CF",
+      "variants": [
+        {
+          "id": 75001,
+          "title": "Brick Red",
+          "price": "13.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-cf-pla-brick-red",
+          "option1": "Brick Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brick Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 76000,
+      "title": "Geeetech Carbon Fiber PLA Matcha Green Filament 1.75mm",
+      "handle": "cf-pla-matcha-green",
+      "product_type": "PLA-CF",
+      "vendor": "Geeetech",
+      "tags": "PLA-CF",
+      "variants": [
+        {
+          "id": 76001,
+          "title": "Matcha Green",
+          "price": "13.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-cf-pla-matcha-green",
+          "option1": "Matcha Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Matcha Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 77000,
+      "title": "Geeetech Wood PLA Wood Filament 1.75mm",
+      "handle": "wood-pla-wood",
+      "product_type": "Wood PLA",
+      "vendor": "Geeetech",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 77001,
+          "title": "Wood",
+          "price": "15.75",
+          "compare_at_price": null,
+          "sku": "GEEETECH-wood-pla-wood",
+          "option1": "Wood",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Wood"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 78000,
+      "title": "Geeetech Wood PLA Black Walnut Filament 1.75mm",
+      "handle": "wood-pla-black-walnut",
+      "product_type": "Wood PLA",
+      "vendor": "Geeetech",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 78001,
+          "title": "Black Walnut",
+          "price": "15.75",
+          "compare_at_price": null,
+          "sku": "GEEETECH-wood-pla-black-walnut",
+          "option1": "Black Walnut",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black Walnut"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 79000,
+      "title": "Geeetech Wood PLA Ebony Filament 1.75mm",
+      "handle": "wood-pla-ebony",
+      "product_type": "Wood PLA",
+      "vendor": "Geeetech",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 79001,
+          "title": "Ebony",
+          "price": "15.75",
+          "compare_at_price": null,
+          "sku": "GEEETECH-wood-pla-ebony",
+          "option1": "Ebony",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Ebony"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 80000,
+      "title": "Geeetech Wood PLA Rose Filament 1.75mm",
+      "handle": "wood-pla-rose",
+      "product_type": "Wood PLA",
+      "vendor": "Geeetech",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 80001,
+          "title": "Rose",
+          "price": "15.75",
+          "compare_at_price": null,
+          "sku": "GEEETECH-wood-pla-rose",
+          "option1": "Rose",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Rose"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 81000,
+      "title": "Geeetech PETG Black Filament 1.75mm",
+      "handle": "petg-black",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 81001,
+          "title": "Black",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 82000,
+      "title": "Geeetech PETG White Filament 1.75mm",
+      "handle": "petg-white",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 82001,
+          "title": "White",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 83000,
+      "title": "Geeetech PETG Grey Filament 1.75mm",
+      "handle": "petg-grey",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 83001,
+          "title": "Grey",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 84000,
+      "title": "Geeetech PETG Red Filament 1.75mm",
+      "handle": "petg-red",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 84001,
+          "title": "Red",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 85000,
+      "title": "Geeetech PETG Blue Filament 1.75mm",
+      "handle": "petg-blue",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 85001,
+          "title": "Blue",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 86000,
+      "title": "Geeetech PETG Green Filament 1.75mm",
+      "handle": "petg-green",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 86001,
+          "title": "Green",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 87000,
+      "title": "Geeetech PETG Orange Filament 1.75mm",
+      "handle": "petg-orange",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 87001,
+          "title": "Orange",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 88000,
+      "title": "Geeetech PETG Transparent Filament 1.75mm",
+      "handle": "petg-transparent",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 88001,
+          "title": "Transparent",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 89000,
+      "title": "Geeetech PETG Pink Filament 1.75mm",
+      "handle": "petg-pink",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 89001,
+          "title": "Pink",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-pink",
+          "option1": "Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 90000,
+      "title": "Geeetech PETG Brown Filament 1.75mm",
+      "handle": "petg-brown",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 90001,
+          "title": "Brown",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 91000,
+      "title": "Geeetech PETG Skin Filament 1.75mm",
+      "handle": "petg-skin",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 91001,
+          "title": "Skin",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-skin",
+          "option1": "Skin",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Skin"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 92000,
+      "title": "Geeetech PETG Yellow Filament 1.75mm",
+      "handle": "petg-yellow",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 92001,
+          "title": "Yellow",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 93000,
+      "title": "Geeetech PETG Purple Filament 1.75mm",
+      "handle": "petg-purple",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 93001,
+          "title": "Purple",
+          "price": "10.49",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 94000,
+      "title": "Geeetech PETG Metallic Metallic Pink Filament 1.75mm",
+      "handle": "petg-metallic-metallic-pink",
+      "product_type": "PETG",
+      "vendor": "Geeetech",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 94001,
+          "title": "Metallic Pink",
+          "price": "14.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-petg-metallic-metallic-pink",
+          "option1": "Metallic Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Metallic Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 95000,
+      "title": "Geeetech ABS+ Black Filament 1.75mm",
+      "handle": "abs-plus-black",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 95001,
+          "title": "Black",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 96000,
+      "title": "Geeetech ABS+ White Filament 1.75mm",
+      "handle": "abs-plus-white",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 96001,
+          "title": "White",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 97000,
+      "title": "Geeetech ABS+ Red Filament 1.75mm",
+      "handle": "abs-plus-red",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 97001,
+          "title": "Red",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 98000,
+      "title": "Geeetech ABS+ Blue Filament 1.75mm",
+      "handle": "abs-plus-blue",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 98001,
+          "title": "Blue",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 99000,
+      "title": "Geeetech ABS+ Green Filament 1.75mm",
+      "handle": "abs-plus-green",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 99001,
+          "title": "Green",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 100000,
+      "title": "Geeetech ABS+ Grey Filament 1.75mm",
+      "handle": "abs-plus-grey",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 100001,
+          "title": "Grey",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 101000,
+      "title": "Geeetech ABS+ Orange Filament 1.75mm",
+      "handle": "abs-plus-orange",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 101001,
+          "title": "Orange",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 102000,
+      "title": "Geeetech ABS+ Purple Filament 1.75mm",
+      "handle": "abs-plus-purple",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 102001,
+          "title": "Purple",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 103000,
+      "title": "Geeetech ABS+ Apple Green Filament 1.75mm",
+      "handle": "abs-plus-apple-green",
+      "product_type": "ABS",
+      "vendor": "Geeetech",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 103001,
+          "title": "Apple Green",
+          "price": "10.69",
+          "compare_at_price": null,
+          "sku": "GEEETECH-abs-plus-apple-green",
+          "option1": "Apple Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Apple Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 104000,
+      "title": "Geeetech TPU Black Filament 1.75mm",
+      "handle": "tpu-black",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 104001,
+          "title": "Black",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 105000,
+      "title": "Geeetech TPU White Filament 1.75mm",
+      "handle": "tpu-white",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 105001,
+          "title": "White",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 106000,
+      "title": "Geeetech TPU Orange Filament 1.75mm",
+      "handle": "tpu-orange",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 106001,
+          "title": "Orange",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 107000,
+      "title": "Geeetech TPU Grey Filament 1.75mm",
+      "handle": "tpu-grey",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 107001,
+          "title": "Grey",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 108000,
+      "title": "Geeetech TPU Transparent Filament 1.75mm",
+      "handle": "tpu-transparent",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 108001,
+          "title": "Transparent",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 109000,
+      "title": "Geeetech TPU Transparent Red Filament 1.75mm",
+      "handle": "tpu-transparent-red",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 109001,
+          "title": "Transparent Red",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-transparent-red",
+          "option1": "Transparent Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 110000,
+      "title": "Geeetech TPU Transparent Blue Filament 1.75mm",
+      "handle": "tpu-transparent-blue",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 110001,
+          "title": "Transparent Blue",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-transparent-blue",
+          "option1": "Transparent Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 111000,
+      "title": "Geeetech TPU Transparent Purple Filament 1.75mm",
+      "handle": "tpu-transparent-purple",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 111001,
+          "title": "Transparent Purple",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-transparent-purple",
+          "option1": "Transparent Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 112000,
+      "title": "Geeetech TPU Transparent Yellow Filament 1.75mm",
+      "handle": "tpu-transparent-yellow",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 112001,
+          "title": "Transparent Yellow",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-transparent-yellow",
+          "option1": "Transparent Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 113000,
+      "title": "Geeetech TPU Transparent Brown Filament 1.75mm",
+      "handle": "tpu-transparent-brown",
+      "product_type": "TPU",
+      "vendor": "Geeetech",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 113001,
+          "title": "Transparent Brown",
+          "price": "16.89",
+          "compare_at_price": null,
+          "sku": "GEEETECH-tpu-transparent-brown",
+          "option1": "Transparent Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 114000,
+      "title": "Geeetech ASA Black Filament 1.75mm",
+      "handle": "asa-black",
+      "product_type": "ASA",
+      "vendor": "Geeetech",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 114001,
+          "title": "Black",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-asa-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 115000,
+      "title": "Geeetech ASA White Filament 1.75mm",
+      "handle": "asa-white",
+      "product_type": "ASA",
+      "vendor": "Geeetech",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 115001,
+          "title": "White",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-asa-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 116000,
+      "title": "Geeetech ASA Green Filament 1.75mm",
+      "handle": "asa-green",
+      "product_type": "ASA",
+      "vendor": "Geeetech",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 116001,
+          "title": "Green",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-asa-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 117000,
+      "title": "Geeetech ASA Blue Filament 1.75mm",
+      "handle": "asa-blue",
+      "product_type": "ASA",
+      "vendor": "Geeetech",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 117001,
+          "title": "Blue",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-asa-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 118000,
+      "title": "Geeetech ASA Orange Filament 1.75mm",
+      "handle": "asa-orange",
+      "product_type": "ASA",
+      "vendor": "Geeetech",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 118001,
+          "title": "Orange",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-asa-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    },
+    {
+      "id": 119000,
+      "title": "Geeetech ASA Purple Filament 1.75mm",
+      "handle": "asa-purple",
+      "product_type": "ASA",
+      "vendor": "Geeetech",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 119001,
+          "title": "Purple",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "GEEETECH-asa-purple",
+          "option1": "Purple",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Purple"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:12:58.047Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T16:12:58.047Z",
+  "source": "geeetech-catalog-curated",
+  "currency": "USD"
+}

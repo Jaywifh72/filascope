@@ -1,0 +1,1538 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "IC3D Impact Modified PLA Black Filament 1.75mm",
+      "handle": "impact-modified-pla-black",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Black",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-impact-modified-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 2000,
+      "title": "IC3D Impact Modified PLA White Filament 1.75mm",
+      "handle": "impact-modified-pla-white",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "White",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-impact-modified-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 3000,
+      "title": "IC3D Impact Modified PLA Red Filament 1.75mm",
+      "handle": "impact-modified-pla-red",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Red",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-impact-modified-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 4000,
+      "title": "IC3D Impact Modified PLA Blue Filament 1.75mm",
+      "handle": "impact-modified-pla-blue",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Blue",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-impact-modified-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 5000,
+      "title": "IC3D Impact Modified PLA Grey Filament 1.75mm",
+      "handle": "impact-modified-pla-grey",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Grey",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-impact-modified-pla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 6000,
+      "title": "IC3D Impact Modified PLA Natural Filament 1.75mm",
+      "handle": "impact-modified-pla-natural",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Natural",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-impact-modified-pla-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 7000,
+      "title": "IC3D Matte Impact Modified PLA Black Filament 1.75mm",
+      "handle": "matte-impact-modified-pla-black",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Black",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-matte-impact-modified-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 8000,
+      "title": "IC3D Matte Impact Modified PLA White Filament 1.75mm",
+      "handle": "matte-impact-modified-pla-white",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "White",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-matte-impact-modified-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 9000,
+      "title": "IC3D Matte Impact Modified PLA Green Filament 1.75mm",
+      "handle": "matte-impact-modified-pla-green",
+      "product_type": "PLA",
+      "vendor": "IC3D Printers",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Green",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-matte-impact-modified-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 10000,
+      "title": "IC3D ABS Black Filament 1.75mm",
+      "handle": "abs-black",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Black",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 11000,
+      "title": "IC3D ABS White Filament 1.75mm",
+      "handle": "abs-white",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "White",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 12000,
+      "title": "IC3D ABS Red Filament 1.75mm",
+      "handle": "abs-red",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Red",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 13000,
+      "title": "IC3D ABS Blue Filament 1.75mm",
+      "handle": "abs-blue",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Blue",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 14000,
+      "title": "IC3D ABS Green Filament 1.75mm",
+      "handle": "abs-green",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Green",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 15000,
+      "title": "IC3D ABS Yellow Filament 1.75mm",
+      "handle": "abs-yellow",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Yellow",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 16000,
+      "title": "IC3D ABS Orange Filament 1.75mm",
+      "handle": "abs-orange",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Orange",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 17000,
+      "title": "IC3D ABS Grey Filament 1.75mm",
+      "handle": "abs-grey",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "Grey",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 18000,
+      "title": "IC3D ABS Natural Filament 1.75mm",
+      "handle": "abs-natural",
+      "product_type": "ABS",
+      "vendor": "IC3D Printers",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Natural",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-abs-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 19000,
+      "title": "IC3D PETG Black Filament 1.75mm",
+      "handle": "petg-black",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Black",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 20000,
+      "title": "IC3D PETG White Filament 1.75mm",
+      "handle": "petg-white",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "White",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 21000,
+      "title": "IC3D PETG Red Filament 1.75mm",
+      "handle": "petg-red",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Red",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-petg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 22000,
+      "title": "IC3D PETG Blue Filament 1.75mm",
+      "handle": "petg-blue",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Blue",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-petg-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 23000,
+      "title": "IC3D PETG Bright Green Filament 1.75mm",
+      "handle": "petg-bright-green",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Bright Green",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-petg-bright-green",
+          "option1": "Bright Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bright Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 24000,
+      "title": "IC3D PETG Yellow Filament 1.75mm",
+      "handle": "petg-yellow",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Yellow",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-petg-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 25000,
+      "title": "IC3D PETG Grey Filament 1.75mm",
+      "handle": "petg-grey",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Grey",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-petg-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 26000,
+      "title": "IC3D PETG Natural Filament 1.75mm",
+      "handle": "petg-natural",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Natural",
+          "price": "34.99",
+          "compare_at_price": null,
+          "sku": "IC3D-petg-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 27000,
+      "title": "IC3D Recycled PETG Black Filament 1.75mm",
+      "handle": "recycled-petg-black",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Black",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 28000,
+      "title": "IC3D Recycled PETG White Filament 1.75mm",
+      "handle": "recycled-petg-white",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "White",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 29000,
+      "title": "IC3D Recycled PETG Natural Filament 1.75mm",
+      "handle": "recycled-petg-natural",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "Natural",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 30000,
+      "title": "IC3D Recycled PETG Red Filament 1.75mm",
+      "handle": "recycled-petg-red",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Red",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 31000,
+      "title": "IC3D Recycled PETG Blue Razz Filament 1.75mm",
+      "handle": "recycled-petg-blue-razz",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Blue Razz",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-blue-razz",
+          "option1": "Blue Razz",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue Razz"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 32000,
+      "title": "IC3D Recycled PETG Cherry Filament 1.75mm",
+      "handle": "recycled-petg-cherry",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Cherry",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-cherry",
+          "option1": "Cherry",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Cherry"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 33000,
+      "title": "IC3D Recycled PETG Grape Filament 1.75mm",
+      "handle": "recycled-petg-grape",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Grape",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-grape",
+          "option1": "Grape",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grape"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 34000,
+      "title": "IC3D Recycled PETG Honey Filament 1.75mm",
+      "handle": "recycled-petg-honey",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Honey",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-honey",
+          "option1": "Honey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Honey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 35000,
+      "title": "IC3D Recycled PETG Watermelon Filament 1.75mm",
+      "handle": "recycled-petg-watermelon",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Watermelon",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "IC3D-recycled-petg-watermelon",
+          "option1": "Watermelon",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Watermelon"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 36000,
+      "title": "IC3D Matte Recycled PETG Black Filament 1.75mm",
+      "handle": "matte-recycled-petg-black",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Black",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "IC3D-matte-recycled-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 37000,
+      "title": "IC3D Matte Recycled PETG White Filament 1.75mm",
+      "handle": "matte-recycled-petg-white",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "White",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "IC3D-matte-recycled-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 38000,
+      "title": "IC3D Matte Recycled PETG Drifting Fog Filament 1.75mm",
+      "handle": "matte-recycled-petg-drifting-fog",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Drifting Fog",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "IC3D-matte-recycled-petg-drifting-fog",
+          "option1": "Drifting Fog",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Drifting Fog"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 39000,
+      "title": "IC3D Matte Recycled PETG Balanced Beige Filament 1.75mm",
+      "handle": "matte-recycled-petg-balanced-beige",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Balanced Beige",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "IC3D-matte-recycled-petg-balanced-beige",
+          "option1": "Balanced Beige",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Balanced Beige"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 40000,
+      "title": "IC3D Matte Recycled PETG Graphite Grey Filament 1.75mm",
+      "handle": "matte-recycled-petg-graphite-grey",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "Graphite Grey",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "IC3D-matte-recycled-petg-graphite-grey",
+          "option1": "Graphite Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Graphite Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 41000,
+      "title": "IC3D Carbon Fiber PETG Black Filament 1.75mm",
+      "handle": "cf-petg-black",
+      "product_type": "PETG-CF",
+      "vendor": "IC3D Printers",
+      "tags": "PETG-CF",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "Black",
+          "price": "49.99",
+          "compare_at_price": null,
+          "sku": "IC3D-cf-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 42000,
+      "title": "IC3D UV-PETG Black Filament 1.75mm",
+      "handle": "uv-petg-black",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "Black",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "IC3D-uv-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 43000,
+      "title": "IC3D UV-PETG White Filament 1.75mm",
+      "handle": "uv-petg-white",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "White",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "IC3D-uv-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 44000,
+      "title": "IC3D UV-PETG Natural Filament 1.75mm",
+      "handle": "uv-petg-natural",
+      "product_type": "PETG",
+      "vendor": "IC3D Printers",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Natural",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "IC3D-uv-petg-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    },
+    {
+      "id": 45000,
+      "title": "IC3D PolyHex Hi-Temp PETG Natural Filament 1.75mm",
+      "handle": "polyhex-natural",
+      "product_type": "HT-PETG",
+      "vendor": "IC3D Printers",
+      "tags": "HT-PETG",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "Natural",
+          "price": "48.95",
+          "compare_at_price": null,
+          "sku": "IC3D-polyhex-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T16:13:06.515Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T16:13:06.515Z",
+  "source": "ic3d-printers-catalog-curated",
+  "currency": "USD"
+}
