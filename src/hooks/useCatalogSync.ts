@@ -504,6 +504,65 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       color_option: 'option1',
     },
   },
+  'eryone': {
+    brand_name: 'Eryone',
+    platform: 'shopify',
+    base_url: 'https://eryone3d.com',
+    scrape_method: 'shopify_products_json',
+    adapter_key: 'eryone',
+    catalog_strategy: 'products-json',
+    regional_url_pattern: {
+      US: 'https://eryone3d.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+    },
+  },
+  'esun': {
+    brand_name: 'eSun',
+    platform: 'ueeshop',
+    base_url: 'https://esun3dstore.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'esun',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://esun3dstore.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'USD',
+    },
+  },
+  'extrudr': {
+    brand_name: 'Extrudr',
+    platform: 'saleor',
+    base_url: 'https://www.extrudr.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'extrudr',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      EU: 'https://www.extrudr.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
+  'fiberlogy': {
+    brand_name: 'Fiberlogy',
+    platform: 'shoper',
+    base_url: 'https://fiberlogy.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: 'fiberlogy',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      EU: 'https://fiberlogy.com',
+    },
+    variant_mapping: {
+      color_option: 'option1',
+      source_currency: 'EUR',
+    },
+  },
 };
 
 /**
@@ -685,6 +744,9 @@ export function useCatalogSync() {
           'azurefilm': '/data/azurefilm-products.json',
           'colorfabb': '/data/colorfabb-products.json',
           'creality': '/data/creality-products.json',
+          'esun': '/data/esun-products.json',
+          'extrudr': '/data/extrudr-products.json',
+          'fiberlogy': '/data/fiberlogy-products.json',
         };
         const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 

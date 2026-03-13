@@ -1,0 +1,3306 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "Fiberlogy Easy PLA Black Filament 1.75mm",
+      "handle": "easy-pla-black",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Black",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 2000,
+      "title": "Fiberlogy Easy PLA White Filament 1.75mm",
+      "handle": "easy-pla-white",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "White",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 3000,
+      "title": "Fiberlogy Easy PLA Grey Filament 1.75mm",
+      "handle": "easy-pla-grey",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Grey",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 4000,
+      "title": "Fiberlogy Easy PLA Red Filament 1.75mm",
+      "handle": "easy-pla-red",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Red",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 5000,
+      "title": "Fiberlogy Easy PLA Blue Filament 1.75mm",
+      "handle": "easy-pla-blue",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Blue",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 6000,
+      "title": "Fiberlogy Easy PLA Green Filament 1.75mm",
+      "handle": "easy-pla-green",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Green",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 7000,
+      "title": "Fiberlogy Easy PLA Yellow Filament 1.75mm",
+      "handle": "easy-pla-yellow",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Yellow",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 8000,
+      "title": "Fiberlogy Easy PLA Orange Filament 1.75mm",
+      "handle": "easy-pla-orange",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Orange",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 9000,
+      "title": "Fiberlogy Easy PLA Pink Filament 1.75mm",
+      "handle": "easy-pla-pink",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Pink",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-pink",
+          "option1": "Pink",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pink"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 10000,
+      "title": "Fiberlogy Easy PLA Navy Blue Filament 1.75mm",
+      "handle": "easy-pla-navy-blue",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Navy Blue",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-navy-blue",
+          "option1": "Navy Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Navy Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 11000,
+      "title": "Fiberlogy Easy PLA Beige Filament 1.75mm",
+      "handle": "easy-pla-beige",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Beige",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-beige",
+          "option1": "Beige",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Beige"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 12000,
+      "title": "Fiberlogy Easy PLA Brown Filament 1.75mm",
+      "handle": "easy-pla-brown",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Brown",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-brown",
+          "option1": "Brown",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Brown"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 13000,
+      "title": "Fiberlogy Easy PLA Vertigo (Transparent) Filament 1.75mm",
+      "handle": "easy-pla-vertigo-transparent",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Vertigo (Transparent)",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-vertigo-transparent",
+          "option1": "Vertigo (Transparent)",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Vertigo (Transparent)"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 14000,
+      "title": "Fiberlogy Easy PLA Natural (Transparent) Filament 1.75mm",
+      "handle": "easy-pla-natural-transparent",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Natural (Transparent)",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-natural-transparent",
+          "option1": "Natural (Transparent)",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural (Transparent)"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 15000,
+      "title": "Fiberlogy Easy PLA Refill 1.75mm Black Filament 1.75mm",
+      "handle": "easy-pla-refill-black",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Black",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-refill-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 16000,
+      "title": "Fiberlogy Easy PLA Refill 1.75mm White Filament 1.75mm",
+      "handle": "easy-pla-refill-white",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "White",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-refill-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 17000,
+      "title": "Fiberlogy Easy PLA Refill 1.75mm Grey Filament 1.75mm",
+      "handle": "easy-pla-refill-grey",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "Grey",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-refill-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 18000,
+      "title": "Fiberlogy Easy PLA Refill 1.75mm Red Filament 1.75mm",
+      "handle": "easy-pla-refill-red",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Red",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-refill-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 19000,
+      "title": "Fiberlogy Easy PLA Refill 1.75mm Blue Filament 1.75mm",
+      "handle": "easy-pla-refill-blue",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Blue",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-refill-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 20000,
+      "title": "Fiberlogy Easy PLA Refill 1.75mm Green Filament 1.75mm",
+      "handle": "easy-pla-refill-green",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Green",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-refill-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 21000,
+      "title": "Fiberlogy Easy PLA Refill 1.75mm Yellow Filament 1.75mm",
+      "handle": "easy-pla-refill-yellow",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Yellow",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-refill-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 22000,
+      "title": "Fiberlogy Easy PLA Refill 1.75mm Orange Filament 1.75mm",
+      "handle": "easy-pla-refill-orange",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Orange",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-pla-refill-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 23000,
+      "title": "Fiberlogy Easy PETG Black Filament 1.75mm",
+      "handle": "easy-petg-black",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Black",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 24000,
+      "title": "Fiberlogy Easy PETG White Filament 1.75mm",
+      "handle": "easy-petg-white",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "White",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 25000,
+      "title": "Fiberlogy Easy PETG Grey Filament 1.75mm",
+      "handle": "easy-petg-grey",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Grey",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 26000,
+      "title": "Fiberlogy Easy PETG Red Filament 1.75mm",
+      "handle": "easy-petg-red",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Red",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 27000,
+      "title": "Fiberlogy Easy PETG Blue Filament 1.75mm",
+      "handle": "easy-petg-blue",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Blue",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 28000,
+      "title": "Fiberlogy Easy PETG Green Filament 1.75mm",
+      "handle": "easy-petg-green",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Green",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 29000,
+      "title": "Fiberlogy Easy PETG Orange Filament 1.75mm",
+      "handle": "easy-petg-orange",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "Orange",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 30000,
+      "title": "Fiberlogy Easy PETG Yellow Filament 1.75mm",
+      "handle": "easy-petg-yellow",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Yellow",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 31000,
+      "title": "Fiberlogy Easy PETG Transparent Filament 1.75mm",
+      "handle": "easy-petg-transparent",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Transparent",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 32000,
+      "title": "Fiberlogy Easy PETG Navy Blue Filament 1.75mm",
+      "handle": "easy-petg-navy-blue",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Navy Blue",
+          "price": "15.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-navy-blue",
+          "option1": "Navy Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Navy Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 33000,
+      "title": "Fiberlogy Easy PET-G Refill 1.75mm Black Filament 1.75mm",
+      "handle": "easy-petg-refill-black",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Black",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-refill-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 34000,
+      "title": "Fiberlogy Easy PET-G Refill 1.75mm White Filament 1.75mm",
+      "handle": "easy-petg-refill-white",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "White",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-refill-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 35000,
+      "title": "Fiberlogy Easy PET-G Refill 1.75mm Grey Filament 1.75mm",
+      "handle": "easy-petg-refill-grey",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 35001,
+          "title": "Grey",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-refill-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 36000,
+      "title": "Fiberlogy Easy PET-G Refill 1.75mm Red Filament 1.75mm",
+      "handle": "easy-petg-refill-red",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 36001,
+          "title": "Red",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-refill-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 37000,
+      "title": "Fiberlogy Easy PET-G Refill 1.75mm Blue Filament 1.75mm",
+      "handle": "easy-petg-refill-blue",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 37001,
+          "title": "Blue",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-refill-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 38000,
+      "title": "Fiberlogy Easy PET-G Refill 1.75mm Green Filament 1.75mm",
+      "handle": "easy-petg-refill-green",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 38001,
+          "title": "Green",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-refill-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 39000,
+      "title": "Fiberlogy Easy PET-G Refill 1.75mm Transparent Filament 1.75mm",
+      "handle": "easy-petg-refill-transparent",
+      "product_type": "PETG",
+      "vendor": "Fiberlogy",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 39001,
+          "title": "Transparent",
+          "price": "13.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-petg-refill-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 40000,
+      "title": "Fiberlogy Easy ABS Black Filament 1.75mm",
+      "handle": "easy-abs-black",
+      "product_type": "ABS",
+      "vendor": "Fiberlogy",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 40001,
+          "title": "Black",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-abs-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 41000,
+      "title": "Fiberlogy Easy ABS White Filament 1.75mm",
+      "handle": "easy-abs-white",
+      "product_type": "ABS",
+      "vendor": "Fiberlogy",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 41001,
+          "title": "White",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-abs-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.954Z"
+    },
+    {
+      "id": 42000,
+      "title": "Fiberlogy Easy ABS Grey Filament 1.75mm",
+      "handle": "easy-abs-grey",
+      "product_type": "ABS",
+      "vendor": "Fiberlogy",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 42001,
+          "title": "Grey",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-abs-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 43000,
+      "title": "Fiberlogy Easy ABS Red Filament 1.75mm",
+      "handle": "easy-abs-red",
+      "product_type": "ABS",
+      "vendor": "Fiberlogy",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 43001,
+          "title": "Red",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-abs-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 44000,
+      "title": "Fiberlogy Easy ABS Blue Filament 1.75mm",
+      "handle": "easy-abs-blue",
+      "product_type": "ABS",
+      "vendor": "Fiberlogy",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 44001,
+          "title": "Blue",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-abs-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 45000,
+      "title": "Fiberlogy Easy ABS Green Filament 1.75mm",
+      "handle": "easy-abs-green",
+      "product_type": "ABS",
+      "vendor": "Fiberlogy",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 45001,
+          "title": "Green",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-abs-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 46000,
+      "title": "Fiberlogy Easy ABS Natural Filament 1.75mm",
+      "handle": "easy-abs-natural",
+      "product_type": "ABS",
+      "vendor": "Fiberlogy",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 46001,
+          "title": "Natural",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-abs-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 47000,
+      "title": "Fiberlogy Easy ASA Black Filament 1.75mm",
+      "handle": "easy-asa-black",
+      "product_type": "ASA",
+      "vendor": "Fiberlogy",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 47001,
+          "title": "Black",
+          "price": "18.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-asa-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 48000,
+      "title": "Fiberlogy Easy ASA White Filament 1.75mm",
+      "handle": "easy-asa-white",
+      "product_type": "ASA",
+      "vendor": "Fiberlogy",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 48001,
+          "title": "White",
+          "price": "18.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-asa-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 49000,
+      "title": "Fiberlogy Easy ASA Grey Filament 1.75mm",
+      "handle": "easy-asa-grey",
+      "product_type": "ASA",
+      "vendor": "Fiberlogy",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 49001,
+          "title": "Grey",
+          "price": "18.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-asa-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 50000,
+      "title": "Fiberlogy Easy ASA Red Filament 1.75mm",
+      "handle": "easy-asa-red",
+      "product_type": "ASA",
+      "vendor": "Fiberlogy",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 50001,
+          "title": "Red",
+          "price": "18.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-asa-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 51000,
+      "title": "Fiberlogy Easy ASA Blue Filament 1.75mm",
+      "handle": "easy-asa-blue",
+      "product_type": "ASA",
+      "vendor": "Fiberlogy",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 51001,
+          "title": "Blue",
+          "price": "18.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-asa-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 52000,
+      "title": "Fiberlogy Easy ASA Natural Filament 1.75mm",
+      "handle": "easy-asa-natural",
+      "product_type": "ASA",
+      "vendor": "Fiberlogy",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 52001,
+          "title": "Natural",
+          "price": "18.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-easy-asa-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 53000,
+      "title": "Fiberlogy Impact PLA Black Filament 1.75mm",
+      "handle": "impact-pla-black",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 53001,
+          "title": "Black",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-impact-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 54000,
+      "title": "Fiberlogy Impact PLA White Filament 1.75mm",
+      "handle": "impact-pla-white",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 54001,
+          "title": "White",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-impact-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 55000,
+      "title": "Fiberlogy Impact PLA Grey Filament 1.75mm",
+      "handle": "impact-pla-grey",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 55001,
+          "title": "Grey",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-impact-pla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 56000,
+      "title": "Fiberlogy Impact PLA Red Filament 1.75mm",
+      "handle": "impact-pla-red",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 56001,
+          "title": "Red",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-impact-pla-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 57000,
+      "title": "Fiberlogy Impact PLA Blue Filament 1.75mm",
+      "handle": "impact-pla-blue",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 57001,
+          "title": "Blue",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-impact-pla-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 58000,
+      "title": "Fiberlogy Impact PLA Green Filament 1.75mm",
+      "handle": "impact-pla-green",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 58001,
+          "title": "Green",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-impact-pla-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 59000,
+      "title": "Fiberlogy Impact PLA Orange Filament 1.75mm",
+      "handle": "impact-pla-orange",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 59001,
+          "title": "Orange",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-impact-pla-orange",
+          "option1": "Orange",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Orange"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 60000,
+      "title": "Fiberlogy Impact PLA Yellow Filament 1.75mm",
+      "handle": "impact-pla-yellow",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 60001,
+          "title": "Yellow",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-impact-pla-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 61000,
+      "title": "Fiberlogy HD PLA Black Filament 1.75mm",
+      "handle": "hd-pla-black",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 61001,
+          "title": "Black",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-hd-pla-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 62000,
+      "title": "Fiberlogy HD PLA White Filament 1.75mm",
+      "handle": "hd-pla-white",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 62001,
+          "title": "White",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-hd-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 63000,
+      "title": "Fiberlogy HD PLA Grey Filament 1.75mm",
+      "handle": "hd-pla-grey",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 63001,
+          "title": "Grey",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-hd-pla-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 64000,
+      "title": "Fiberlogy HD PLA Natural Filament 1.75mm",
+      "handle": "hd-pla-natural",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 64001,
+          "title": "Natural",
+          "price": "19.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-hd-pla-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 65000,
+      "title": "Fiberlogy Antibacterial PLA White Filament 1.75mm",
+      "handle": "antibacterial-pla-white",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 65001,
+          "title": "White",
+          "price": "22.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-antibacterial-pla-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 66000,
+      "title": "Fiberlogy Antibacterial PLA Natural Filament 1.75mm",
+      "handle": "antibacterial-pla-natural",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 66001,
+          "title": "Natural",
+          "price": "22.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-antibacterial-pla-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 67000,
+      "title": "Fiberlogy FiberFlex 40D Black Filament 1.75mm",
+      "handle": "fiberflex-40d-black",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 67001,
+          "title": "Black",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-40d-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 68000,
+      "title": "Fiberlogy FiberFlex 40D White Filament 1.75mm",
+      "handle": "fiberflex-40d-white",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 68001,
+          "title": "White",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-40d-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 69000,
+      "title": "Fiberlogy FiberFlex 40D Grey Filament 1.75mm",
+      "handle": "fiberflex-40d-grey",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 69001,
+          "title": "Grey",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-40d-grey",
+          "option1": "Grey",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Grey"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 70000,
+      "title": "Fiberlogy FiberFlex 40D Red Filament 1.75mm",
+      "handle": "fiberflex-40d-red",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 70001,
+          "title": "Red",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-40d-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 71000,
+      "title": "Fiberlogy FiberFlex 40D Blue Filament 1.75mm",
+      "handle": "fiberflex-40d-blue",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 71001,
+          "title": "Blue",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-40d-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 72000,
+      "title": "Fiberlogy FiberFlex 40D Green Filament 1.75mm",
+      "handle": "fiberflex-40d-green",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 72001,
+          "title": "Green",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-40d-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 73000,
+      "title": "Fiberlogy FiberFlex 40D Yellow Filament 1.75mm",
+      "handle": "fiberflex-40d-yellow",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 73001,
+          "title": "Yellow",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-40d-yellow",
+          "option1": "Yellow",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Yellow"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 74000,
+      "title": "Fiberlogy FiberFlex 40D Transparent Filament 1.75mm",
+      "handle": "fiberflex-40d-transparent",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 74001,
+          "title": "Transparent",
+          "price": "24.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-40d-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 75000,
+      "title": "Fiberlogy FiberFlex 30D Black Filament 1.75mm",
+      "handle": "fiberflex-30d-black",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 75001,
+          "title": "Black",
+          "price": "26.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-30d-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 76000,
+      "title": "Fiberlogy FiberFlex 30D White Filament 1.75mm",
+      "handle": "fiberflex-30d-white",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 76001,
+          "title": "White",
+          "price": "26.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-30d-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 77000,
+      "title": "Fiberlogy FiberFlex 30D Transparent Filament 1.75mm",
+      "handle": "fiberflex-30d-transparent",
+      "product_type": "TPU",
+      "vendor": "Fiberlogy",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 77001,
+          "title": "Transparent",
+          "price": "26.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberflex-30d-transparent",
+          "option1": "Transparent",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Transparent"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 78000,
+      "title": "Fiberlogy Nylon PA12 Natural Filament 1.75mm",
+      "handle": "nylon-pa12-natural",
+      "product_type": "PA",
+      "vendor": "Fiberlogy",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 78001,
+          "title": "Natural",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-nylon-pa12-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 79000,
+      "title": "Fiberlogy Nylon PA12 Black Filament 1.75mm",
+      "handle": "nylon-pa12-black",
+      "product_type": "PA",
+      "vendor": "Fiberlogy",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 79001,
+          "title": "Black",
+          "price": "29.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-nylon-pa12-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 80000,
+      "title": "Fiberlogy Nylon PA12+CF15 Black Filament 1.75mm",
+      "handle": "nylon-pa12-cf15-black",
+      "product_type": "PA-CF",
+      "vendor": "Fiberlogy",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 80001,
+          "title": "Black",
+          "price": "44.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-nylon-pa12-cf15-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 500
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 81000,
+      "title": "Fiberlogy HIPS Natural Filament 1.75mm",
+      "handle": "hips-natural",
+      "product_type": "HIPS",
+      "vendor": "Fiberlogy",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 81001,
+          "title": "Natural",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-hips-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 82000,
+      "title": "Fiberlogy HIPS Black Filament 1.75mm",
+      "handle": "hips-black",
+      "product_type": "HIPS",
+      "vendor": "Fiberlogy",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 82001,
+          "title": "Black",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-hips-black",
+          "option1": "Black",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 83000,
+      "title": "Fiberlogy HIPS White Filament 1.75mm",
+      "handle": "hips-white",
+      "product_type": "HIPS",
+      "vendor": "Fiberlogy",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 83001,
+          "title": "White",
+          "price": "16.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-hips-white",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 84000,
+      "title": "Fiberlogy FiberSilk Metallic PLA Gold Filament 1.75mm",
+      "handle": "fibersilk-metallic-gold",
+      "product_type": "Silk PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 84001,
+          "title": "Gold",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersilk-metallic-gold",
+          "option1": "Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 85000,
+      "title": "Fiberlogy FiberSilk Metallic PLA Silver Filament 1.75mm",
+      "handle": "fibersilk-metallic-silver",
+      "product_type": "Silk PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 85001,
+          "title": "Silver",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersilk-metallic-silver",
+          "option1": "Silver",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Silver"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 86000,
+      "title": "Fiberlogy FiberSilk Metallic PLA Copper Filament 1.75mm",
+      "handle": "fibersilk-metallic-copper",
+      "product_type": "Silk PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 86001,
+          "title": "Copper",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersilk-metallic-copper",
+          "option1": "Copper",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Copper"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 87000,
+      "title": "Fiberlogy FiberSilk Metallic PLA Bronze Filament 1.75mm",
+      "handle": "fibersilk-metallic-bronze",
+      "product_type": "Silk PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 87001,
+          "title": "Bronze",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersilk-metallic-bronze",
+          "option1": "Bronze",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Bronze"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 88000,
+      "title": "Fiberlogy FiberSilk Metallic PLA Blue Filament 1.75mm",
+      "handle": "fibersilk-metallic-blue",
+      "product_type": "Silk PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 88001,
+          "title": "Blue",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersilk-metallic-blue",
+          "option1": "Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 89000,
+      "title": "Fiberlogy FiberSilk Metallic PLA Green Filament 1.75mm",
+      "handle": "fibersilk-metallic-green",
+      "product_type": "Silk PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 89001,
+          "title": "Green",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersilk-metallic-green",
+          "option1": "Green",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Green"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 90000,
+      "title": "Fiberlogy FiberSilk Metallic PLA Red Filament 1.75mm",
+      "handle": "fibersilk-metallic-red",
+      "product_type": "Silk PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 90001,
+          "title": "Red",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersilk-metallic-red",
+          "option1": "Red",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Red"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 91000,
+      "title": "Fiberlogy FiberSilk Metallic PLA Rose Gold Filament 1.75mm",
+      "handle": "fibersilk-metallic-rose-gold",
+      "product_type": "Silk PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 91001,
+          "title": "Rose Gold",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersilk-metallic-rose-gold",
+          "option1": "Rose Gold",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Rose Gold"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 92000,
+      "title": "Fiberlogy FiberSatin PLA Pearl White Filament 1.75mm",
+      "handle": "fibersatin-pearl-white",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 92001,
+          "title": "Pearl White",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersatin-pearl-white",
+          "option1": "Pearl White",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Pearl White"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 93000,
+      "title": "Fiberlogy FiberSatin PLA Cream Filament 1.75mm",
+      "handle": "fibersatin-cream",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 93001,
+          "title": "Cream",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersatin-cream",
+          "option1": "Cream",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Cream"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 94000,
+      "title": "Fiberlogy FiberSatin PLA Graphite Filament 1.75mm",
+      "handle": "fibersatin-graphite",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 94001,
+          "title": "Graphite",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersatin-graphite",
+          "option1": "Graphite",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Graphite"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 95000,
+      "title": "Fiberlogy FiberSatin PLA Navy Blue Filament 1.75mm",
+      "handle": "fibersatin-navy-blue",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 95001,
+          "title": "Navy Blue",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersatin-navy-blue",
+          "option1": "Navy Blue",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Navy Blue"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 96000,
+      "title": "Fiberlogy FiberSatin PLA Burgundy Filament 1.75mm",
+      "handle": "fibersatin-burgundy",
+      "product_type": "PLA",
+      "vendor": "Fiberlogy",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 96001,
+          "title": "Burgundy",
+          "price": "21.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fibersatin-burgundy",
+          "option1": "Burgundy",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 850
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Burgundy"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    },
+    {
+      "id": 97000,
+      "title": "Fiberlogy FiberWood PLA Natural Filament 1.75mm",
+      "handle": "fiberwood-natural",
+      "product_type": "Wood PLA",
+      "vendor": "Fiberlogy",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 97001,
+          "title": "Natural",
+          "price": "23.90",
+          "compare_at_price": null,
+          "sku": "FIBERLOGY-fiberwood-natural",
+          "option1": "Natural",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 750
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Natural"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:20:59.955Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T14:20:59.955Z",
+  "source": "fiberlogy-catalog-curated",
+  "currency": "EUR"
+}

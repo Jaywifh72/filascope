@@ -1,0 +1,1164 @@
+{
+  "products": [
+    {
+      "id": 1000,
+      "title": "eSUN PLA+ Filament 1.75mm",
+      "handle": "pla-pro-product",
+      "product_type": "PLA+",
+      "vendor": "eSun",
+      "tags": "PLA+",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Default",
+          "price": "22.99",
+          "compare_at_price": null,
+          "sku": "ESUN-pla-pro-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.753Z"
+    },
+    {
+      "id": 2000,
+      "title": "eSUN PLA Basic Filament 1.75mm",
+      "handle": "pla-basic-product",
+      "product_type": "PLA",
+      "vendor": "eSun",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "Default",
+          "price": "18.99",
+          "compare_at_price": null,
+          "sku": "ESUN-pla-basic-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 3000,
+      "title": "eSUN PETG Filament 1.75mm",
+      "handle": "petg-product",
+      "product_type": "PETG",
+      "vendor": "eSun",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Default",
+          "price": "22.99",
+          "compare_at_price": null,
+          "sku": "ESUN-petg-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 4000,
+      "title": "eSUN PETG Basic Filament 1.75mm",
+      "handle": "epetg-lite-product",
+      "product_type": "PETG",
+      "vendor": "eSun",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 4001,
+          "title": "Default",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epetg-lite-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 5000,
+      "title": "eSUN eSilk PLA Filament 1.75mm",
+      "handle": "esilk-pla-product",
+      "product_type": "Silk PLA",
+      "vendor": "eSun",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 5001,
+          "title": "Default",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "ESUN-esilk-pla-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 6000,
+      "title": "eSUN ePLA-Matte Filament 1.75mm",
+      "handle": "epla-matte-product",
+      "product_type": "Matte PLA",
+      "vendor": "eSun",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 6001,
+          "title": "Default",
+          "price": "23.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epla-matte-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 7000,
+      "title": "eSUN eMarble PLA Filament 1.75mm",
+      "handle": "emarble-product",
+      "product_type": "Marble PLA",
+      "vendor": "eSun",
+      "tags": "Marble PLA",
+      "variants": [
+        {
+          "id": 7001,
+          "title": "Default",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "ESUN-emarble-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 8000,
+      "title": "eSUN Luminous PLA Rainbow Filament 1.75mm",
+      "handle": "luminous-pla-rainbow-product",
+      "product_type": "PLA-Glow",
+      "vendor": "eSun",
+      "tags": "PLA-Glow",
+      "variants": [
+        {
+          "id": 8001,
+          "title": "Default",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "ESUN-luminous-pla-rainbow-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 9000,
+      "title": "eSUN ePLA-Silk Candy Filament 1.75mm",
+      "handle": "epla-silk-candy-product",
+      "product_type": "Silk PLA",
+      "vendor": "eSun",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 9001,
+          "title": "Default",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epla-silk-candy-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 10000,
+      "title": "eSUN eSilk PLA Mystic Filament 1.75mm",
+      "handle": "esilk-pla-mystic-product",
+      "product_type": "Silk PLA",
+      "vendor": "eSun",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 10001,
+          "title": "Default",
+          "price": "27.99",
+          "compare_at_price": null,
+          "sku": "ESUN-esilk-pla-mystic-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 11000,
+      "title": "eSUN ePLA-Matte Refilament 1.75mm",
+      "handle": "epla-matte-refilament-product",
+      "product_type": "Matte PLA",
+      "vendor": "eSun",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 11001,
+          "title": "Default",
+          "price": "21.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epla-matte-refilament-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 12000,
+      "title": "eSUN eSilk PLA Magic Filament 1.75mm",
+      "handle": "esilk-pla-magic-product",
+      "product_type": "Silk PLA",
+      "vendor": "eSun",
+      "tags": "Silk PLA",
+      "variants": [
+        {
+          "id": 12001,
+          "title": "Default",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "ESUN-esilk-pla-magic-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 13000,
+      "title": "eSUN PETG UV Color Change Filament 1.75mm",
+      "handle": "petg-uv-color-change-product",
+      "product_type": "PETG",
+      "vendor": "eSun",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 13001,
+          "title": "Default",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "ESUN-petg-uv-color-change-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 14000,
+      "title": "eSUN PLA Cast Filament 1.75mm",
+      "handle": "pla-cast-product",
+      "product_type": "PLA",
+      "vendor": "eSun",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 14001,
+          "title": "Default",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "ESUN-pla-cast-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 15000,
+      "title": "eSUN PLA+ Refilament 1.75mm",
+      "handle": "pla-refilament-product",
+      "product_type": "PLA+",
+      "vendor": "eSun",
+      "tags": "PLA+",
+      "variants": [
+        {
+          "id": 15001,
+          "title": "Default",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "ESUN-pla-refilament-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 16000,
+      "title": "eSUN ePLA-ST Filament 1.75mm",
+      "handle": "epla-st-product",
+      "product_type": "PLA-ST",
+      "vendor": "eSun",
+      "tags": "PLA-ST",
+      "variants": [
+        {
+          "id": 16001,
+          "title": "Default",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epla-st-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 17000,
+      "title": "eSUN ePA Nylon Filament 1.75mm",
+      "handle": "epa-product",
+      "product_type": "PA",
+      "vendor": "eSun",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 17001,
+          "title": "Default",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epa-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 18000,
+      "title": "eSUN ePA-CF Carbon Fiber Nylon Filament 1.75mm",
+      "handle": "epa-cf-product",
+      "product_type": "PA-CF",
+      "vendor": "eSun",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 18001,
+          "title": "Default",
+          "price": "49.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epa-cf-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 19000,
+      "title": "eSUN eASA Filament 1.75mm",
+      "handle": "easa-product",
+      "product_type": "ASA",
+      "vendor": "eSun",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 19001,
+          "title": "Default",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "ESUN-easa-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 20000,
+      "title": "eSUN ABS-ESD Filament 1.75mm",
+      "handle": "abs-esd-product",
+      "product_type": "ABS-ESD",
+      "vendor": "eSun",
+      "tags": "ABS-ESD",
+      "variants": [
+        {
+          "id": 20001,
+          "title": "Default",
+          "price": "35.99",
+          "compare_at_price": null,
+          "sku": "ESUN-abs-esd-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 21000,
+      "title": "eSUN PET-FR Filament 1.75mm",
+      "handle": "pet-fr-product",
+      "product_type": "PET",
+      "vendor": "eSun",
+      "tags": "PET",
+      "variants": [
+        {
+          "id": 21001,
+          "title": "Default",
+          "price": "39.99",
+          "compare_at_price": null,
+          "sku": "ESUN-pet-fr-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 22000,
+      "title": "eSUN eTPU-95A Filament 1.75mm",
+      "handle": "etpu-95a-product",
+      "product_type": "TPU",
+      "vendor": "eSun",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 22001,
+          "title": "Default",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "ESUN-etpu-95a-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 23000,
+      "title": "eSUN TPU-64D Filament 1.75mm",
+      "handle": "tpu64d-product",
+      "product_type": "TPU",
+      "vendor": "eSun",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 23001,
+          "title": "Default",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "ESUN-tpu64d-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 24000,
+      "title": "eSUN Elastic TPE-83A Filament 1.75mm",
+      "handle": "elastic-tpe-83a-product",
+      "product_type": "TPE",
+      "vendor": "eSun",
+      "tags": "TPE",
+      "variants": [
+        {
+          "id": 24001,
+          "title": "Default",
+          "price": "35.99",
+          "compare_at_price": null,
+          "sku": "ESUN-elastic-tpe-83a-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 25000,
+      "title": "eSUN PEBA-90A Filament 1.75mm",
+      "handle": "peba-product",
+      "product_type": "PEBA",
+      "vendor": "eSun",
+      "tags": "PEBA",
+      "variants": [
+        {
+          "id": 25001,
+          "title": "Default",
+          "price": "45.99",
+          "compare_at_price": null,
+          "sku": "ESUN-peba-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 26000,
+      "title": "eSUN PEBA-85A Filament 1.75mm",
+      "handle": "peba-85a-product",
+      "product_type": "PEBA",
+      "vendor": "eSun",
+      "tags": "PEBA",
+      "variants": [
+        {
+          "id": 26001,
+          "title": "Default",
+          "price": "45.99",
+          "compare_at_price": null,
+          "sku": "ESUN-peba-85a-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 27000,
+      "title": "eSUN PEBA-LW Filament 1.75mm",
+      "handle": "peba-lw-product",
+      "product_type": "PEBA",
+      "vendor": "eSun",
+      "tags": "PEBA",
+      "variants": [
+        {
+          "id": 27001,
+          "title": "Default",
+          "price": "49.99",
+          "compare_at_price": null,
+          "sku": "ESUN-peba-lw-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 28000,
+      "title": "eSUN PVA Filament 1.75mm",
+      "handle": "pva-product",
+      "product_type": "PVA",
+      "vendor": "eSun",
+      "tags": "PVA",
+      "variants": [
+        {
+          "id": 28001,
+          "title": "Default",
+          "price": "49.99",
+          "compare_at_price": null,
+          "sku": "ESUN-pva-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 29000,
+      "title": "eSUN ePLA-LW Lightweight Filament 1.75mm",
+      "handle": "epla-lw-product",
+      "product_type": "LW-PLA",
+      "vendor": "eSun",
+      "tags": "LW-PLA",
+      "variants": [
+        {
+          "id": 29001,
+          "title": "Default",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epla-lw-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 30000,
+      "title": "eSUN HIPS Filament 1.75mm",
+      "handle": "hips-product",
+      "product_type": "HIPS",
+      "vendor": "eSun",
+      "tags": "HIPS",
+      "variants": [
+        {
+          "id": 30001,
+          "title": "Default",
+          "price": "25.99",
+          "compare_at_price": null,
+          "sku": "ESUN-hips-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 31000,
+      "title": "eSUN eClean Filament 1.75mm",
+      "handle": "eclean-product",
+      "product_type": "PLA",
+      "vendor": "eSun",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 31001,
+          "title": "Default",
+          "price": "19.99",
+          "compare_at_price": null,
+          "sku": "ESUN-eclean-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 32000,
+      "title": "eSUN ePA12-CF Filament 1.75mm",
+      "handle": "epa12-cf-product",
+      "product_type": "PA-CF",
+      "vendor": "eSun",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 32001,
+          "title": "Default",
+          "price": "55.99",
+          "compare_at_price": null,
+          "sku": "ESUN-epa12-cf-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 33000,
+      "title": "eSUN PET Filament 1.75mm",
+      "handle": "pet-product",
+      "product_type": "PET",
+      "vendor": "eSun",
+      "tags": "PET",
+      "variants": [
+        {
+          "id": 33001,
+          "title": "Default",
+          "price": "29.99",
+          "compare_at_price": null,
+          "sku": "ESUN-pet-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    },
+    {
+      "id": 34000,
+      "title": "eSUN PETG-Matte Filament 1.75mm",
+      "handle": "petg-matte-product",
+      "product_type": "Matte PETG",
+      "vendor": "eSun",
+      "tags": "Matte PETG",
+      "variants": [
+        {
+          "id": 34001,
+          "title": "Default",
+          "price": "24.99",
+          "compare_at_price": null,
+          "sku": "ESUN-petg-matte-product",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1000
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:13:50.754Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T14:13:50.754Z",
+  "source": "esun-catalog-curated",
+  "currency": "USD"
+}

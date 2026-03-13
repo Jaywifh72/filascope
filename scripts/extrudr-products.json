@@ -1,0 +1,1096 @@
+{
+  "products": [
+    {
+      "id": 100,
+      "title": "Extrudr BioFusion",
+      "handle": "biofusion",
+      "product_type": "PLA",
+      "vendor": "Extrudr",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-biofusion",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:33.731Z"
+    },
+    {
+      "id": 200,
+      "title": "Extrudr DuraPro ABS",
+      "handle": "durapro-abs",
+      "product_type": "ABS",
+      "vendor": "Extrudr",
+      "tags": "ABS",
+      "variants": [
+        {
+          "id": 101,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-abs",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:36.816Z"
+    },
+    {
+      "id": 300,
+      "title": "Extrudr DuraPro ABS CF",
+      "handle": "durapro-abs-cf",
+      "product_type": "ABS-CF",
+      "vendor": "Extrudr",
+      "tags": "ABS-CF",
+      "variants": [
+        {
+          "id": 201,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-abs-cf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:38.339Z"
+    },
+    {
+      "id": 400,
+      "title": "Extrudr DuraPro ASA",
+      "handle": "durapro-asa",
+      "product_type": "ASA",
+      "vendor": "Extrudr",
+      "tags": "ASA",
+      "variants": [
+        {
+          "id": 301,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-asa",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:43.100Z"
+    },
+    {
+      "id": 500,
+      "title": "Extrudr DuraPro ASA CF",
+      "handle": "durapro-asa-cf",
+      "product_type": "ASA-CF",
+      "vendor": "Extrudr",
+      "tags": "ASA-CF",
+      "variants": [
+        {
+          "id": 401,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-asa-cf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:44.376Z"
+    },
+    {
+      "id": 600,
+      "title": "Extrudr DuraPro ASA GF",
+      "handle": "durapro-asa-gf",
+      "product_type": "ASA-GF",
+      "vendor": "Extrudr",
+      "tags": "ASA-GF",
+      "variants": [
+        {
+          "id": 501,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-asa-gf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:45.769Z"
+    },
+    {
+      "id": 700,
+      "title": "Extrudr DuraPro PA12",
+      "handle": "durapro-pa12",
+      "product_type": "PA",
+      "vendor": "Extrudr",
+      "tags": "PA",
+      "variants": [
+        {
+          "id": 601,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-pa12",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:47.180Z"
+    },
+    {
+      "id": 800,
+      "title": "Extrudr DuraPro PA12 CF",
+      "handle": "durapro-pa12-cf",
+      "product_type": "PA-CF",
+      "vendor": "Extrudr",
+      "tags": "PA-CF",
+      "variants": [
+        {
+          "id": 701,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-pa12-cf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:48.514Z"
+    },
+    {
+      "id": 900,
+      "title": "Extrudr DuraPro PC FR V0",
+      "handle": "durapro-pc-fr-v0",
+      "product_type": "PC",
+      "vendor": "Extrudr",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 801,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-pc-fr-v0",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:50.008Z"
+    },
+    {
+      "id": 1000,
+      "title": "Extrudr DuraPro PC/PBT",
+      "handle": "durapro-pc-pbt",
+      "product_type": "PC",
+      "vendor": "Extrudr",
+      "tags": "PC",
+      "variants": [
+        {
+          "id": 901,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-pc-pbt",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:51.567Z"
+    },
+    {
+      "id": 1100,
+      "title": "Extrudr DuraPro PC/PBT CF",
+      "handle": "durapro-pc-pbt-cf",
+      "product_type": "PC-CF",
+      "vendor": "Extrudr",
+      "tags": "PC-CF",
+      "variants": [
+        {
+          "id": 1001,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-durapro-pc-pbt-cf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:53.048Z"
+    },
+    {
+      "id": 1200,
+      "title": "Extrudr FLAX",
+      "handle": "flax",
+      "product_type": "PLA",
+      "vendor": "Extrudr",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1101,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-flax",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:54.473Z"
+    },
+    {
+      "id": 1300,
+      "title": "Extrudr FLEX Hard",
+      "handle": "flex-hard",
+      "product_type": "TPU",
+      "vendor": "Extrudr",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 1201,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-flex-hard",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:14:57.414Z"
+    },
+    {
+      "id": 1400,
+      "title": "Extrudr FLEX Hard CF",
+      "handle": "flex-hard-cf",
+      "product_type": "TPU-CF",
+      "vendor": "Extrudr",
+      "tags": "TPU-CF",
+      "variants": [
+        {
+          "id": 1301,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-flex-hard-cf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:02.338Z"
+    },
+    {
+      "id": 1500,
+      "title": "Extrudr FLEX Medium",
+      "handle": "flex-medium",
+      "product_type": "TPU",
+      "vendor": "Extrudr",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 1401,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-flex-medium",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:03.802Z"
+    },
+    {
+      "id": 1600,
+      "title": "Extrudr FLEX Medium ESD",
+      "handle": "flex-medium-esd",
+      "product_type": "TPU",
+      "vendor": "Extrudr",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 1501,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-flex-medium-esd",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:05.205Z"
+    },
+    {
+      "id": 1700,
+      "title": "Extrudr FLEX Medium MATT",
+      "handle": "flex-medium-matt",
+      "product_type": "TPU",
+      "vendor": "Extrudr",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 1601,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-flex-medium-matt",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:06.745Z"
+    },
+    {
+      "id": 1800,
+      "title": "Extrudr FLEX Semisoft",
+      "handle": "flex-semisoft",
+      "product_type": "TPU",
+      "vendor": "Extrudr",
+      "tags": "TPU",
+      "variants": [
+        {
+          "id": 1701,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-flex-semisoft",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:08.274Z"
+    },
+    {
+      "id": 1900,
+      "title": "Extrudr GreenTEC",
+      "handle": "greentec",
+      "product_type": "PLA",
+      "vendor": "Extrudr",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1801,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-greentec",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:10.623Z"
+    },
+    {
+      "id": 2000,
+      "title": "Extrudr GreenTEC Pro",
+      "handle": "greentec-pro",
+      "product_type": "PLA",
+      "vendor": "Extrudr",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 1901,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-greentec-pro",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:11.898Z"
+    },
+    {
+      "id": 2100,
+      "title": "Extrudr GreenTEC Pro CF",
+      "handle": "greentec-pro-cf",
+      "product_type": "PLA-CF",
+      "vendor": "Extrudr",
+      "tags": "PLA-CF",
+      "variants": [
+        {
+          "id": 2001,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-greentec-pro-cf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:13.156Z"
+    },
+    {
+      "id": 2200,
+      "title": "Extrudr PCTG",
+      "handle": "pctg",
+      "product_type": "PCTG",
+      "vendor": "Extrudr",
+      "tags": "PCTG",
+      "variants": [
+        {
+          "id": 2101,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-pctg",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:14.399Z"
+    },
+    {
+      "id": 2300,
+      "title": "Extrudr PEARL",
+      "handle": "pearl",
+      "product_type": "PLA",
+      "vendor": "Extrudr",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2201,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-pearl",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:15.631Z"
+    },
+    {
+      "id": 2400,
+      "title": "Extrudr PETG",
+      "handle": "petg",
+      "product_type": "PETG",
+      "vendor": "Extrudr",
+      "tags": "PETG",
+      "variants": [
+        {
+          "id": 2301,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-petg",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:16.938Z"
+    },
+    {
+      "id": 2500,
+      "title": "Extrudr PLA Basic",
+      "handle": "pla-basic",
+      "product_type": "PLA",
+      "vendor": "Extrudr",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2401,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-pla-basic",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:18.199Z"
+    },
+    {
+      "id": 2600,
+      "title": "Extrudr PLA Basic CF",
+      "handle": "pla-basic-cf",
+      "product_type": "PLA-CF",
+      "vendor": "Extrudr",
+      "tags": "PLA-CF",
+      "variants": [
+        {
+          "id": 2501,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-pla-basic-cf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:19.452Z"
+    },
+    {
+      "id": 2700,
+      "title": "Extrudr PLA Basic CMYK",
+      "handle": "pla-basic-cmyk",
+      "product_type": "PLA",
+      "vendor": "Extrudr",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2601,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-pla-basic-cmyk",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:20.660Z"
+    },
+    {
+      "id": 2800,
+      "title": "Extrudr PLA HS",
+      "handle": "pla-hs",
+      "product_type": "PLA",
+      "vendor": "Extrudr",
+      "tags": "PLA",
+      "variants": [
+        {
+          "id": 2701,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-pla-hs",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:21.891Z"
+    },
+    {
+      "id": 2900,
+      "title": "Extrudr PLA NX2 MATT",
+      "handle": "pla-nx2-matt",
+      "product_type": "Matte PLA",
+      "vendor": "Extrudr",
+      "tags": "Matte PLA",
+      "variants": [
+        {
+          "id": 2801,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-pla-nx2-matt",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:23.111Z"
+    },
+    {
+      "id": 3000,
+      "title": "Extrudr WOOD",
+      "handle": "wood",
+      "product_type": "Wood PLA",
+      "vendor": "Extrudr",
+      "tags": "Wood PLA",
+      "variants": [
+        {
+          "id": 2901,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-wood",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:24.413Z"
+    },
+    {
+      "id": 3100,
+      "title": "Extrudr XPETG CF",
+      "handle": "xpetg-cf",
+      "product_type": "PETG-CF",
+      "vendor": "Extrudr",
+      "tags": "PETG-CF",
+      "variants": [
+        {
+          "id": 3001,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-xpetg-cf",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:25.660Z"
+    },
+    {
+      "id": 3200,
+      "title": "Extrudr XPETG MATT",
+      "handle": "xpetg-matt",
+      "product_type": "Matte PETG",
+      "vendor": "Extrudr",
+      "tags": "Matte PETG",
+      "variants": [
+        {
+          "id": 3101,
+          "title": "Default",
+          "price": null,
+          "compare_at_price": null,
+          "sku": "EXT-xpetg-matt",
+          "option1": "Default",
+          "option2": null,
+          "option3": null,
+          "available": true,
+          "grams": 1100
+        }
+      ],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Default"
+          ]
+        }
+      ],
+      "images": [],
+      "body_html": "",
+      "published_at": "2026-03-13T14:15:27.083Z"
+    }
+  ],
+  "excluded": 0,
+  "fetchedAt": "2026-03-13T14:15:27.599Z",
+  "source": "extrudr-saleor-scrape",
+  "currency": "EUR"
+}
