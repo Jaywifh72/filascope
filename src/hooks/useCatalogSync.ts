@@ -151,7 +151,7 @@ async function fetchFromPrefetchedJson(
 
   const response = await fetch(jsonPath);
   if (!response.ok) {
-    throw new Error(`Failed to load pre-fetched data: HTTP ${response.status}. Run scripts/fetch-bambu-products.cjs first.`);
+    throw new Error(`Failed to load pre-fetched data: HTTP ${response.status}. Run the brand's pre-fetch script first (e.g., scripts/fetch-<brand>-products.cjs).`);
   }
 
   const data = await response.json();
@@ -350,6 +350,22 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       source_currency: 'CAD',
     },
   },
+  '3d-fuel': {
+    brand_name: '3D-Fuel',
+    platform: 'shopify',
+    base_url: 'https://www.3dfuel.com',
+    scrape_method: 'prefetched_json',
+    adapter_key: '3d-fuel',
+    catalog_strategy: 'prefetched-json',
+    regional_url_pattern: {
+      US: 'https://www.3dfuel.com',
+    },
+    variant_mapping: {
+      material_option: 'option1',
+      size_option: 'option2',
+      color_option: 'option3',
+    },
+  },
 };
 
 /**
@@ -521,10 +537,13 @@ export function useCatalogSync() {
       if (catalogStrategy === 'prefetched-json' || catalogStrategy === 'prefetched_json') {
         // Load from pre-fetched JSON file (e.g., Bambu Lab — no CORS, no Shopify API)
         const brandSlug = brandData.brand_slug;
-        const jsonPath = `/data/${brandSlug.replace(/-/g, '-')}-products.json`;
 
-        // For Bambu Lab, the file is at /data/bambu-products.json
-        const actualPath = brandSlug === 'bambu-lab' ? '/data/bambu-products.json' : jsonPath;
+        // Map brand slugs to their pre-fetched JSON filenames
+        const PREFETCH_PATHS: Record<string, string> = {
+          'bambu-lab': '/data/bambu-products.json',
+          '3d-fuel': '/data/3dfuel-products.json',
+        };
+        const actualPath = PREFETCH_PATHS[brandSlug] || `/data/${brandSlug}-products.json`;
 
         setScanStatusMessage('Loading pre-fetched product data...');
         const result = await fetchFromPrefetchedJson(

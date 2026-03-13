@@ -129,6 +129,11 @@ const MATERIAL_NORMALIZE: Record<string, string> = {
   "pla galaxy":"PLA Galaxy","wood pla":"Wood PLA","petg-cf":"PETG-CF",
   "petg cf":"PETG-CF","pla-cf":"PLA-CF","pla cf":"PLA-CF",
   "abs-gf":"ABS-GF","pa-cf":"PA-CF","pa-gf":"PA-GF",
+  // 3D-Fuel brand-specific material names
+  "pro pctg":"PCTG","pro pctg-cf10":"PCTG-CF","tough pro pla+":"PLA+",
+  "standard pla+":"PLA+","silk pla+":"Silk PLA","pro petg":"PETG",
+  "pro abs":"ABS","pro asa":"ASA","pet-cf":"PET-CF",
+  "entwined v2hemp":"Hemp-PLA","entwined v2 hemp":"Hemp-PLA",
 };
 
 const KNOWN_COLOR_WORDS = [
