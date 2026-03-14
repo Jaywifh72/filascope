@@ -136,49 +136,28 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
   return (
     <section className="relative overflow-hidden">
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-4 pb-1 sm:pt-6 sm:pb-2 md:pt-8 md:pb-3">
-        <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-          {/* Headline */}
-          <h1 className="animate-fade-in mb-4">
-            <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-white">
-              3D Printer Filament Comparison{' '}
-            </span>
-            <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-primary">
-              — Find Your Perfect Filament
-            </span>
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-4 pb-1 sm:pt-6 sm:pb-2 md:pt-6 md:pb-3">
+        <div className="flex flex-col items-start max-w-3xl">
+          {/* Headline — compact, left-aligned */}
+          <h1 className="animate-fade-in text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.15] text-white mb-2">
+            Find Your Perfect Filament
           </h1>
-          
-          {/* Subheadline */}
-          <div className="mb-3 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <p className="text-lg md:text-xl text-gray-300 font-medium">
-              <AnimatedStat value={displayProductCount} /> materials indexed from <AnimatedStat value={displayBrandCount} />+ manufacturers.
-            </p>
-            <p className="text-base text-gray-400 mt-1">
-              Compare properties, specs, and pricing in one unified data hub.
-            </p>
-          </div>
 
-          {/* Social proof / Trust badges */}
-          <div 
-            className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-gray-400 mb-6 animate-fade-in border-t border-white/10 pt-4 mt-4"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-primary/70" />
-              <span>Trusted by <span className="text-primary font-semibold">10,000+</span> makers</span>
-            </div>
-            <span className="text-gray-600 hidden sm:inline">•</span>
-            <div className="flex items-center gap-1.5">
-              <RefreshCw className="h-3 w-3 text-primary/70" />
-              <span>Updated daily from <span className="text-foreground font-medium">15+</span> retailers</span>
-            </div>
-          </div>
-          
-          {/* Search Input */}
+          {/* Stats + trust — single compact line */}
+          <p className="text-sm sm:text-base text-gray-400 mb-5 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <AnimatedStat value={displayProductCount} /> materials from <AnimatedStat value={displayBrandCount} />+ brands
+            <span className="text-white/20 mx-2">·</span>
+            <span className="inline-flex items-center gap-1">
+              <RefreshCw className="h-3 w-3 text-primary/60" />
+              Updated daily
+            </span>
+          </p>
+
+          {/* Search Input — full width, no max constraint */}
           <SearchBarGated>
-            <div 
-              className="w-full max-w-full sm:max-w-[500px] mb-6 animate-fade-in search-icon-pulse"
-              style={{ animationDelay: "0.25s" }}
+            <div
+              className="w-full max-w-[560px] mb-4 animate-fade-in search-icon-pulse"
+              style={{ animationDelay: "0.15s" }}
             >
               <style>{`
                 .search-icon-pulse svg:first-child {
@@ -200,7 +179,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
           </SearchBarGated>
 
           {/* Smart Context Bar — personalized chips */}
-          <div className="w-full max-w-full sm:max-w-[600px] mb-4">
+          <div className="w-full max-w-[600px] mb-2">
             <SmartContextBar />
           </div>
         </div>

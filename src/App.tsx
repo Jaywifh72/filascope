@@ -304,7 +304,9 @@ const App = () => (
                   <Route path="/matrix" element={<Matrix />} />
                   <Route path="/deals" element={<Deals />} />
                   <Route path="/wizard" element={<Wizard />} />
-                  <Route path="/diagnose" element={<Diagnose />} />
+                  <Route path="/diagnose" element={<Navigate to="/wizard" replace />} />
+                  <Route path="/quiz" element={<Navigate to="/wizard" replace />} />
+                  <Route path="/filament-quiz" element={<Navigate to="/wizard" replace />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/vault" element={<Vault />} />

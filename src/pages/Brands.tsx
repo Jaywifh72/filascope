@@ -439,69 +439,6 @@ const Brands = () => {
         <Breadcrumbs items={[{ name: "Brands", url: "/brands" }]} />
       </div>
 
-      {/* Quick Action Cards */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 my-6">
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:grid md:grid-cols-4 md:overflow-visible md:mx-0 md:px-0">
-          {/* Brand Quiz - Coming Soon */}
-          <div className="relative min-w-[200px] flex-shrink-0 md:min-w-0">
-            <span className="absolute -top-1.5 -right-1.5 z-10 text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0 rounded-full font-medium">Soon</span>
-            <div
-              className="rounded-xl border border-border bg-card/50 p-4 flex items-center gap-3 cursor-default text-left opacity-60 hover:opacity-80 transition-all h-full"
-            >
-              <div className="rounded-lg bg-primary/10 p-2 shrink-0">
-                <Sparkles className="h-8 w-8 text-primary/70" />
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-foreground">Brand Quiz</div>
-                <div className="text-xs text-muted-foreground">Find your ideal brand</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Compare Brands - Primary action */}
-          <button
-            onClick={() => navigate('/compare')}
-            className="min-w-[200px] flex-shrink-0 md:min-w-0 rounded-xl border border-primary/30 bg-card/50 p-4 flex items-center gap-3 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer text-left"
-          >
-            <div className="rounded-lg bg-primary/10 p-2 shrink-0">
-              <GitCompare className="h-8 w-8 text-primary/70" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-foreground">Compare Brands</div>
-              <div className="text-xs text-muted-foreground">Side-by-side comparison</div>
-            </div>
-          </button>
-
-          {/* Verified Brands */}
-          <button
-            onClick={() => setFilters({ ...filters, verifiedOnly: true })}
-            className="min-w-[200px] flex-shrink-0 md:min-w-0 rounded-xl border border-border bg-card/50 p-4 flex items-center gap-3 hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-pointer text-left"
-          >
-            <div className="rounded-lg bg-primary/10 p-2 shrink-0">
-              <ShieldCheck className="h-8 w-8 text-primary/70" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-foreground">Verified Brands</div>
-              <div className="text-xs text-muted-foreground">{mergedBrands.filter(b => VERIFIED_BRANDS.includes(b.name)).length} verified brands</div>
-            </div>
-          </button>
-
-          {/* High Speed Brands */}
-          <button
-            onClick={() => setFilters({ ...filters, features: [...filters.features.filter(f => f !== 'highSpeed'), 'highSpeed'] })}
-            className="min-w-[200px] flex-shrink-0 md:min-w-0 rounded-xl border border-border bg-card/50 p-4 flex items-center gap-3 hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-pointer text-left"
-          >
-            <div className="rounded-lg bg-primary/10 p-2 shrink-0">
-              <Zap className="h-8 w-8 text-primary/70" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-foreground">High Speed</div>
-              <div className="text-xs text-muted-foreground">Speed-optimized filaments</div>
-            </div>
-          </button>
-        </div>
-      </div>
-
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <div className="flex gap-8">
           {/* Sidebar */}

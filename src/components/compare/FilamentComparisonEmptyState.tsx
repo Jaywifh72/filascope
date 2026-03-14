@@ -1,4 +1,4 @@
-import { ArrowRight, Scale, Sparkles, Target, Search, GitCompare, BarChart3, Beaker, Shield, Zap, Waves, type LucideIcon } from "lucide-react";
+import { ArrowRight, Scale, Sparkles, Target, Search, Beaker, Shield, Zap, Waves, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -39,12 +39,6 @@ const popularComparisons: PopularComparison[] = [
   },
 ];
 
-const quickStartMaterials = [
-  { name: "Bambu Lab PLA Basic", slug: "bambu-pla-basic" },
-  { name: "Polymaker PolyLite PETG", slug: "polymaker-polylite-petg" },
-  { name: "Prusament ASA", slug: "prusament-asa" },
-];
-
 interface FilamentComparisonEmptyStateProps {
   onBrowseMaterials: () => void;
 }
@@ -62,43 +56,28 @@ export function FilamentComparisonEmptyState({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 animate-in fade-in-0 duration-300">
-      {/* Main Illustration */}
-      <div className="relative mb-8">
-        {/* Glowing background effect */}
-        <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl scale-150 opacity-40" />
-        
-        {/* Main icon container */}
-        <div className="relative bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 rounded-2xl p-8 transition-transform duration-300 hover:scale-105">
-          <Scale className="w-16 h-16 text-primary" strokeWidth={1.5} />
-          
-          {/* Decorative dots */}
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-pulse" />
-          <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-primary/60 rounded-full" />
-        </div>
-      </div>
-
-      {/* Title & Subtitle */}
-      <h2 className="text-xl font-semibold text-foreground mb-2 text-center">
+    <div className="flex flex-col items-center justify-center py-10 px-4 animate-in fade-in-0 duration-300">
+      {/* Title & Subtitle — compact */}
+      <Scale className="w-10 h-10 text-primary/60 mb-4" strokeWidth={1.5} />
+      <h2 className="text-lg font-semibold text-foreground mb-1 text-center">
         Your Compare Tray is Empty
       </h2>
-      <p className="text-muted-foreground text-center max-w-md mb-8">
-        Add filaments from the Materials page to compare their properties, 
-        print settings, and performance metrics side-by-side.
+      <p className="text-sm text-muted-foreground text-center max-w-md mb-6">
+        Add filaments from the catalog to compare properties, temps & specs side-by-side.
       </p>
 
       {/* Primary Actions */}
-      <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
-        <Button 
-          onClick={onBrowseMaterials} 
+      <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+        <Button
+          onClick={onBrowseMaterials}
           size="lg"
-          className="gap-2 transition-all duration-150 hover:scale-105"
+          className="gap-2"
         >
           <Search className="w-4 h-4" />
           Browse Materials
         </Button>
-        
-        <Button 
+
+        <Button
           asChild
           variant="outline"
           size="lg"
@@ -154,33 +133,10 @@ export function FilamentComparisonEmptyState({
         </div>
       </div>
 
-      {/* Comparison table preview hint */}
-      <div className="mt-12 text-center">
-        <p className="text-xs text-muted-foreground">
-          Compare up to <span className="text-primary font-medium">4 filaments</span> at once
-        </p>
-      </div>
-
-      {/* How It Works */}
-      <div className="mt-12 w-full max-w-2xl">
-        <p className="text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          How It Works
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          {[
-            { step: "01", icon: Search, title: "Browse Materials", subtitle: "Select materials from the reference library" },
-            { step: "02", icon: GitCompare, title: "Add to Tray", subtitle: "Click the compare icon to add up to 4" },
-            { step: "03", icon: BarChart3, title: "Compare Side-by-Side", subtitle: "View properties, temps & specs together" },
-          ].map((item) => (
-            <div key={item.step} className="text-center p-4 rounded-lg border border-border/30 bg-muted/30">
-              <p className="text-[10px] font-mono text-primary/40 mb-1">{item.step}</p>
-              <item.icon className="w-8 h-8 mx-auto text-primary/60 mb-2" />
-              <p className="text-sm font-semibold text-foreground">{item.title}</p>
-              <p className="text-xs text-muted-foreground mt-1">{item.subtitle}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Compare hint */}
+      <p className="mt-8 text-xs text-muted-foreground">
+        Compare up to <span className="text-primary font-medium">4 filaments</span> at once
+      </p>
     </div>
   );
 }

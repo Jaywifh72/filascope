@@ -987,53 +987,173 @@ export function groupFilamentsByProduct<T extends FilamentBase>(filaments: T[]):
  */
 export function getProductLineName(
   material: string | null | undefined,
-  productTitle: string | null | undefined
+  productTitle: string | null | undefined,
+  vendor?: string | null
 ): string {
-  const title = productTitle || '';
-  
-  // Get the base product name from title (strips color, size, etc.)
-  const baseFromTitle = getBaseProductName(title, material);
-  
-  // Base material types that are NOT descriptive product lines
+  let title = (productTitle || '').trim();
+
+  // Strip vendor prefix from title first
+  if (vendor) {
+    const vendorLower = vendor.toLowerCase().trim();
+    if (title.toLowerCase().startsWith(vendorLower + ' ')) {
+      title = title.slice(vendor.trim().length).trim();
+    }
+  }
+
+  // Strip trailing filler from title
+  title = title
+    .replace(/\s*[-–—]\s*3D\s*Printer\s*Filament\s*$/i, '')
+    .replace(/\s*3D\s*Printer\s*Filament\s*$/i, '')
+    .replace(/\s*[-–—]\s*Filament\s*$/i, '')
+    .replace(/\s*Filament\s*$/i, '')
+    .replace(/\s*1\.75\s*mm\s*$/i, '')
+    .replace(/\s*2\.85\s*mm\s*$/i, '')
+    .replace(/\s*\d+(\.\d+)?\s*(kg|g)\s*$/i, '')
+    .replace(/\s*[-–—]\s*$/, '')
+    .trim();
+
+  // ── Strategy 1: Dash-based split ──
+  // If title has " - " separator, the text before it is the product line name.
+  // e.g., "PLA - Jade White" → "PLA", "Easy PLA - Ruby Red" → "Easy PLA"
+  const dashIdx = title.indexOf(' - ');
+  if (dashIdx > 0) {
+    const beforeDash = title.slice(0, dashIdx).trim();
+    if (beforeDash.length >= 2) {
+      return cleanFilamentDisplayName(beforeDash);
+    }
+  }
+
+  // ── Strategy 2: Material field with modifiers ──
+  // If material has descriptive modifiers (e.g., "PLA Matte", "PLA High Speed"), prefer it
+  // BUT only if the material name actually appears in the title (so "PETG-HS" isn't used
+  // when the title says "Rapid PETG").
   const baseMaterialTypes = [
-    'PLA', 'PLA+', 'PETG', 'ABS', 'ASA', 'TPU', 'TPE', 'PC', 'PA', 'PA6', 'HIPS', 
+    'PLA', 'PLA+', 'PETG', 'ABS', 'ASA', 'TPU', 'TPE', 'PC', 'PA', 'PA6', 'HIPS',
     'PVA', 'Nylon', 'PP', 'PCTG', 'PEEK', 'PEI', 'PPSU', 'CPE',
     'TPU-95A', 'TPU-85A', 'TPU 95A', 'TPU 85A',
   ];
-  
-  // Check if material field is more descriptive than base types
   if (material) {
-    const materialNormalized = material.trim();
+    const materialNormalized = material.trim()
+      .replace(/^Premium\s+/i, '')
+      .replace(/\s+Filament$/i, '')
+      .trim();
     const isJustBaseMaterial = baseMaterialTypes.some(
       base => materialNormalized.toLowerCase() === base.toLowerCase()
     );
-    
-    // If material is more descriptive (contains modifiers like "High Speed", "Silk", "Matte", etc.)
     if (!isJustBaseMaterial && materialNormalized.length > 2) {
-      // Clean up common prefixes/suffixes that aren't useful for display
-      let cleanedMaterial = materialNormalized
-        .replace(/^Premium\s+/i, '') // "Premium PLA High Speed" → "PLA High Speed"
-        .replace(/\s+Filament$/i, '') // Remove trailing "Filament"
-        .trim();
-      
-      // If after cleaning it's still more descriptive than base, use it
-      if (cleanedMaterial.length > baseFromTitle.length || 
-          cleanedMaterial.toLowerCase() !== baseFromTitle.toLowerCase()) {
-        // Check if it contains modifiers that make it more descriptive
-        const modifiers = ['High Speed', 'HS', 'Matte', 'Silk', 'Marble', 'Wood', 'Carbon', 
-          'Glass', 'Glow', 'Galaxy', 'Metal', 'Sparkle', 'Tough', 'Pro', 'Plus', 'Basic',
-          'Translucent', 'Clear', 'Flexible', 'Impact', 'Aero', 'HF', 'Lite'];
-        const hasModifier = modifiers.some(mod => 
-          materialNormalized.toLowerCase().includes(mod.toLowerCase())
+      const modifiers = ['High Speed', 'HS', 'Matte', 'Silk', 'Marble', 'Wood', 'Carbon',
+        'Glass', 'Glow', 'Galaxy', 'Metal', 'Sparkle', 'Tough', 'Pro', 'Plus', 'Basic',
+        'Translucent', 'Clear', 'Flexible', 'Impact', 'Aero', 'HF', 'Lite'];
+      const hasModifier = modifiers.some(mod =>
+        materialNormalized.toLowerCase().includes(mod.toLowerCase())
+      );
+      // Only use material field if it (or its words) appear in the title.
+      // This prevents coded names like "PETG-HS" overriding title "Rapid PETG".
+      const materialAppearsInTitle = title.toLowerCase().includes(materialNormalized.toLowerCase())
+        || materialNormalized.split(/[\s-]+/).every(word =>
+            word.length >= 2 && title.toLowerCase().includes(word.toLowerCase())
+          );
+      if (hasModifier && materialAppearsInTitle) {
+        return materialNormalized;
+      }
+    }
+  }
+
+  // ── Strategy 3: Title IS the product line name ──
+  // No dash separator → title might be the product line itself (e.g., "PLA Basic", "PLA Matte")
+  // or might have color baked in (e.g., "Bronze PLA", "PLA Galaxy Red").
+  // Use getBaseProductName() to strip colors, then protect product line modifiers.
+  const baseFromTitle = getBaseProductName(title, material);
+  let result = cleanFilamentDisplayName(baseFromTitle);
+
+  // If getBaseProductName() stripped too much (left just base material),
+  // check if the original title had product line modifiers that were lost.
+  const PRODUCT_LINE_MODIFIERS = [
+    'basic', 'matte', 'matt', 'silk', 'marble', 'galaxy', 'translucent', 'transparent',
+    'glow', 'sparkle', 'glitter', 'wood', 'carbon', 'metal', 'metallic', 'rapid', 'easy',
+    'tough', 'pro', 'plus', 'hyper', 'extrafill', 'flexfill', 'aero', 'lite', 'refill',
+    'dual-color', 'tri-color', 'hf',
+  ];
+  // COLOR-AMBIGUOUS modifiers: words that can form compound color names.
+  // "Galaxy Red" and "Transparent Blue" are color names, so "Galaxy" and "Transparent"
+  // should NOT be recovered/kept when followed by a color word.
+  // But "Silk Blue" and "Matte Black" → "Silk"/"Matte" are always product line modifiers,
+  // "Blue"/"Black" is just the color — these SHOULD be recovered/kept.
+  const COLOR_AMBIGUOUS_MODIFIERS = [
+    'galaxy', 'transparent', 'translucent', 'metallic', 'sparkle',
+  ];
+
+  const colorWordsLower = COLOR_WORDS.map(c => c.toLowerCase());
+  const resultIsBase = baseMaterialTypes.some(
+    base => result.toLowerCase() === base.toLowerCase()
+  );
+  if (resultIsBase) {
+    // Check if the title had a modifier that got incorrectly stripped
+    const titleLower = title.toLowerCase();
+    for (const mod of PRODUCT_LINE_MODIFIERS) {
+      const modIdx = titleLower.indexOf(mod);
+      if (modIdx < 0) continue;
+
+      // For color-ambiguous modifiers (galaxy, transparent, etc.), skip recovery
+      // if followed by a color word — the combo is a compound color name.
+      if (COLOR_AMBIGUOUS_MODIFIERS.includes(mod)) {
+        const afterMod = title.slice(modIdx + mod.length).trim();
+        if (afterMod.length > 0) {
+          const afterModLower = afterMod.toLowerCase();
+          const followedByColor = colorWordsLower.some(color =>
+            afterModLower === color || afterModLower.startsWith(color + ' ')
+          );
+          if (followedByColor) continue;
+        }
+      }
+
+      // Reconstruct: base material + modifier from the original title
+      const originalMod = title.slice(modIdx, modIdx + mod.length);
+      result = `${result} ${originalMod.charAt(0).toUpperCase() + originalMod.slice(1)}`;
+      break;
+    }
+  }
+
+  // Targeted fix: If result ends with a COLOR-AMBIGUOUS modifier, but in the original
+  // title that modifier was followed by a color word, it's part of a compound color name
+  // (e.g., "Galaxy Red"). Strip it. TRUE modifiers (silk, matte, etc.) are never stripped.
+  const resultWords = result.split(/\s+/);
+  if (resultWords.length >= 2) {
+    const lastWord = resultWords[resultWords.length - 1].toLowerCase();
+    if (COLOR_AMBIGUOUS_MODIFIERS.includes(lastWord)) {
+      const lastWordIdx = title.toLowerCase().lastIndexOf(lastWord);
+      if (lastWordIdx >= 0) {
+        const afterInTitle = title.slice(lastWordIdx + lastWord.length).trim().toLowerCase();
+        const wasFollowedByColor = afterInTitle.length > 0 && colorWordsLower.some(color =>
+          afterInTitle === color || afterInTitle.startsWith(color + ' ')
         );
-        
-        if (hasModifier) {
-          return cleanedMaterial;
+        if (wasFollowedByColor) {
+          result = resultWords.slice(0, -1).join(' ');
         }
       }
     }
   }
-  
-  // Fall back to the cleaned base product name from title
-  return cleanFilamentDisplayName(baseFromTitle);
+
+  // Final: strip any remaining pure color words (not modifiers) from start/end
+  const sortedColors = [...COLOR_WORDS].sort((a, b) => b.length - a.length);
+  for (const color of sortedColors) {
+    if (PRODUCT_LINE_MODIFIERS.includes(color.toLowerCase())) continue;
+    const firstWord = color.split(' ')[0].toLowerCase();
+    if (PRODUCT_LINE_MODIFIERS.includes(firstWord)) continue;
+
+    const colorEsc = color.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const endRe = new RegExp(`\\s+${colorEsc}\\s*$`, 'i');
+    if (endRe.test(result)) {
+      const stripped = result.replace(endRe, '').trim();
+      if (stripped.length >= 2 && /[a-zA-Z]/.test(stripped)) { result = stripped; break; }
+    }
+    const startRe = new RegExp(`^${colorEsc}\\s+`, 'i');
+    if (startRe.test(result)) {
+      const stripped = result.replace(startRe, '').trim();
+      if (stripped.length >= 2 && /[a-zA-Z]/.test(stripped)) { result = stripped; break; }
+    }
+  }
+
+  result = result.replace(/\s*[-–—]\s*$/, '').trim();
+  return result || material || 'Filament';
 }

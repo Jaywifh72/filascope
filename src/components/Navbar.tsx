@@ -115,8 +115,8 @@ const Navbar = () => {
   // Deals count for badge
   const { data: dealsData, isLoading: dealsLoading } = useDealsCount();
 
-  // Check if Learn dropdown should be active
-  const isLearnActive = ['/accessories', '/reference', '/learn', '/guides', '/resources/profiles'].some(path => location.pathname.startsWith(path));
+  // Check if Tools dropdown should be active
+  const isLearnActive = ['/accessories', '/reference', '/learn', '/guides', '/resources/profiles', '/wizard', '/matrix', '/hueforge', '/compare', '/colors'].some(path => location.pathname.startsWith(path));
 
   // Check active nav link
   const isActive = (path: string) => {
@@ -254,24 +254,27 @@ const Navbar = () => {
     );
   };
 
-  // Learn menu sections for mega-menu
+  // Tools menu sections for mega-menu
   const learnMenuSections = [
     {
-      title: 'Guides & References',
+      title: 'Tools',
+      icon: Wrench,
+      items: [
+        { to: '/wizard', label: 'Material Wizard', icon: Search },
+        { to: '/colors', label: 'Color Finder', icon: Search },
+        { to: '/matrix', label: 'Compatibility Matrix', icon: Database },
+        { to: '/hueforge-td-database', label: 'HueForge TD Database', icon: Database },
+        { to: '/accessories', label: 'Accessories', icon: Wrench },
+      ]
+    },
+    {
+      title: 'Guides',
       icon: BookOpen,
       items: [
         { to: '/reference/materials', label: 'Material Knowledge Base', icon: BookOpen },
-      ]
-    },
-    {
-      title: 'Tools & Software',
-      icon: Wrench,
-      items: [
         { to: '/reference/slicers', label: 'Slicer Directory', icon: Scissors },
-        { to: '/hueforge-tools', label: 'HueForge Tools', icon: Database },
       ]
     },
-    
   ];
 
   // Flattened items for tablet/mobile "More" dropdown
@@ -372,7 +375,7 @@ const Navbar = () => {
                     isLearnActive ? 'text-primary bg-foreground/5' : 'text-muted-foreground'
                   )}
                 >
-                  Learn
+                  Tools
                   <ChevronDown className={cn(
                     "w-3.5 h-3.5 transition-all duration-200",
                     learnDropdownOpen 

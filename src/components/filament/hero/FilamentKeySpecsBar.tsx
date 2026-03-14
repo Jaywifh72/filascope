@@ -45,8 +45,31 @@ export function FilamentKeySpecsBar({
 }: FilamentKeySpecsBarProps) {
   const specs: SpecItem[] = [];
 
-  // Note: Nozzle and Bed temps are now shown in the Quick Specs Grid above,
-  // so they are removed from this bar to avoid duplication
+  // Nozzle Temperature
+  if (nozzleTempMin || nozzleTempMax) {
+    const tempDisplay = nozzleTempMin && nozzleTempMax
+      ? `${nozzleTempMin}-${nozzleTempMax}°C`
+      : `${nozzleTempMin || nozzleTempMax}°C`;
+    specs.push({
+      icon: <Thermometer className="w-4 h-4" />,
+      label: 'Nozzle',
+      value: tempDisplay,
+      tooltip: 'Recommended nozzle temperature range',
+    });
+  }
+
+  // Bed Temperature
+  if (bedTempMin || bedTempMax) {
+    const bedDisplay = bedTempMin && bedTempMax
+      ? `${bedTempMin}-${bedTempMax}°C`
+      : `${bedTempMin || bedTempMax}°C`;
+    specs.push({
+      icon: <Flame className="w-4 h-4" />,
+      label: 'Bed',
+      value: bedDisplay,
+      tooltip: 'Recommended bed temperature range',
+    });
+  }
 
   // Print Speed
   if (printSpeedMax) {

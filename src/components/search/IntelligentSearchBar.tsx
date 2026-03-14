@@ -63,7 +63,8 @@ const IntelligentSearchBar = ({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      {/* Suggestion chips — hidden on mobile to save space, visible on md+ */}
+      <div className="hidden md:flex flex-wrap gap-2">
         {SUGGESTION_CHIPS.map((chip) => (
           <button
             key={chip.label}

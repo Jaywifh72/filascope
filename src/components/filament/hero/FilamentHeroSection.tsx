@@ -62,7 +62,7 @@ export function FilamentHeroSection({
   onNavigateToCommunity,
 }: FilamentHeroSectionProps) {
   // Get the best product line name (e.g., "PLA High Speed" instead of just "PLA")
-  const productLineName = getProductLineName(pricingFilament.material, pricingFilament.product_title);
+  const productLineName = getProductLineName(pricingFilament.material, pricingFilament.product_title, pricingFilament.vendor);
   // Keep baseName for color extraction compatibility
   const baseName = baseProductName;
 
@@ -116,103 +116,99 @@ export function FilamentHeroSection({
               </Link>
             </div>
             
-            {/* Product Line Name badge (outside h1) + Share */}
+            {/* Product Line Name h1 + Share */}
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span className="block text-sm font-semibold text-primary tracking-wide uppercase">
-                  {productLineName}
-                </span>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
-                  {(() => {
-                    const colorDisplay = pricingFilament.color_family || null;
-                    const h1Full = `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''} — ${pricingFilament.material} 3D Printer Filament`;
-                    const h1Short = `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''} — ${pricingFilament.material} Filament`;
-                    return h1Full.length <= 70 ? h1Full : h1Short.length <= 70 ? h1Short : `${pricingFilament.vendor} ${productLineName}${colorDisplay ? ` ${colorDisplay}` : ''}`;
-                  })()}
-                </h1>
-              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
+                {(() => {
+                  // If product line has multiple colors, show just the line name
+                  // (color is already visible via swatches + color chip badge)
+                  const hasMultipleColors = colorVariants && colorVariants.length > 1;
+                  if (hasMultipleColors) return productLineName;
+                  // Single-color product: append color to disambiguate
+                  const colorDisplay = pricingFilament.color_family || null;
+                  return `${productLineName}${colorDisplay ? ` — ${colorDisplay}` : ''}`;
+                })()}
+              </h1>
               <ShareButton title={productLineName} />
             </div>
 
-            {/* Material & Feature Badges */}
-            <div className="flex items-center gap-3 flex-wrap">
+            {/* Compact spec line — diameter · color · weight · finish */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+              {displayFilament.diameter_nominal_mm && (
+                <span>{displayFilament.diameter_nominal_mm}mm</span>
+              )}
+              {displayFilament.color_family && (
+                <>
+                  <span className="text-white/20">·</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    {displayFilament.color_hex && (
+                      <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(displayFilament.color_hex) }} />
+                    )}
+                    {displayFilament.color_family}
+                  </span>
+                </>
+              )}
+              {displayFilament.net_weight_g && displayFilament.net_weight_g > 0 && (
+                <>
+                  <span className="text-white/20">·</span>
+                  <span>{displayFilament.net_weight_g >= 1000 ? `${displayFilament.net_weight_g / 1000}kg` : `${displayFilament.net_weight_g}g`}</span>
+                </>
+              )}
+              {displayFilament.finish_type && isValidFinishType(displayFilament.finish_type) && displayFilament.finish_type.toLowerCase() !== 'standard' && (
+                <>
+                  <span className="text-white/20">·</span>
+                  <span>{displayFilament.finish_type}</span>
+                </>
+              )}
+            </div>
+
+            {/* Feature Badges + TD + FilaScore */}
+            <div className="flex gap-2 flex-wrap items-center">
               {pricingFilament.material && (
-                <MaterialBadge 
-                  material={pricingFilament.material} 
-                  variant="default" 
+                <MaterialBadge
+                  material={pricingFilament.material}
+                  variant="default"
                   size="sm"
                   className="text-xs"
                 />
               )}
               {pricingFilament.high_speed_capable && (
-                <>
-                  <span className="text-muted-foreground">•</span>
-                  <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                    <Zap className="w-3 h-3 mr-1" />
-                    High-Speed Ready
-                  </Badge>
-                </>
-              )}
-              {communityRating && communityRating.reviewCount > 0 && (
-                <>
-                  <span className="text-muted-foreground">•</span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={onNavigateToCommunity}
-                        className="inline-flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity cursor-pointer"
-                      >
-                        <Star className="w-4 h-4 fill-primary text-primary" />
-                        <span className="font-semibold text-primary">{communityRating.avgRating.toFixed(1)}</span>
-                        <span className="text-muted-foreground text-xs">
-                          ({communityRating.reviewCount} review{communityRating.reviewCount !== 1 ? 's' : ''})
-                        </span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs max-w-[220px]">
-                      <p className="font-medium mb-1">{communityRating.avgRating.toFixed(1)} average from {communityRating.reviewCount} reviews</p>
-                      <div className="space-y-0.5 text-muted-foreground">
-                        {communityRating.avgQuality != null && <p>Print Quality: {communityRating.avgQuality.toFixed(1)}</p>}
-                        {communityRating.avgEase != null && <p>Ease: {communityRating.avgEase.toFixed(1)}</p>}
-                        {communityRating.avgValue != null && <p>Value: {communityRating.avgValue.toFixed(1)}</p>}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </>
-              )}
-            </div>
-
-            {/* Quick Spec Badges */}
-            <div className="flex gap-2 flex-wrap">
-              {displayFilament.diameter_nominal_mm && (
-                <Badge variant="outline" className="text-xs px-2.5 py-1 bg-white/[0.02] border-white/[0.08]">
-                  {displayFilament.diameter_nominal_mm}mm
+                <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                  <Zap className="w-3 h-3 mr-1" />
+                  High-Speed
                 </Badge>
-              )}
-              {displayFilament.color_family && (
-                <Badge variant="outline" className="text-xs px-2.5 py-1 flex items-center gap-1.5 bg-white/[0.02] border-white/[0.08]">
-                  {displayFilament.color_hex && (
-                    <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(displayFilament.color_hex) }} />
-                  )}
-                  {displayFilament.color_family}
-                </Badge>
-              )}
-              {displayFilament.net_weight_g && displayFilament.net_weight_g > 0 && (
-                <Badge variant="outline" className="text-xs px-2.5 py-1 bg-white/[0.02] border-white/[0.08]">
-                  <Package className="w-3 h-3 mr-1" />
-                  {displayFilament.net_weight_g}g
-                </Badge>
-              )}
-              {displayFilament.finish_type && isValidFinishType(displayFilament.finish_type) && (
-                <Badge variant="secondary" className="text-xs px-2.5 py-1">{displayFilament.finish_type}</Badge>
               )}
               {displayFilament.is_nozzle_abrasive && (
                 <Badge variant="destructive" className="text-xs px-2.5 py-1">⚠️ Abrasive</Badge>
               )}
-               {isMultiPack && (
+              {isMultiPack && (
                 <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-primary/20 text-primary border-primary/30">
                   📦 {packQuantity}-Pack
                 </Badge>
+              )}
+              {communityRating && communityRating.reviewCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onNavigateToCommunity}
+                      className="inline-flex items-center gap-1 text-sm hover:opacity-80 transition-opacity cursor-pointer"
+                    >
+                      <Star className="w-3.5 h-3.5 fill-primary text-primary" />
+                      <span className="font-semibold text-primary text-xs">{communityRating.avgRating.toFixed(1)}</span>
+                      <span className="text-muted-foreground text-xs">
+                        ({communityRating.reviewCount})
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+                    <p className="font-medium mb-1">{communityRating.avgRating.toFixed(1)} average from {communityRating.reviewCount} reviews</p>
+                    <div className="space-y-0.5 text-muted-foreground">
+                      {communityRating.avgQuality != null && <p>Print Quality: {communityRating.avgQuality.toFixed(1)}</p>}
+                      {communityRating.avgEase != null && <p>Ease: {communityRating.avgEase.toFixed(1)}</p>}
+                      {communityRating.avgValue != null && <p>Value: {communityRating.avgValue.toFixed(1)}</p>}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               )}
               {/* TD (Transmission Distance) — always visible */}
               <Tooltip>
@@ -279,17 +275,8 @@ export function FilamentHeroSection({
               />
             )}
 
-            {/* Quick Specs Grid - Matches Printer detail page style */}
-            <FilamentQuickSpecsGrid
-              nozzleTempMin={displayFilament.nozzle_temp_min_c}
-              nozzleTempMax={displayFilament.nozzle_temp_max_c}
-              bedTempMin={displayFilament.bed_temp_min_c}
-              bedTempMax={displayFilament.bed_temp_max_c}
-              diameter={displayFilament.diameter_nominal_mm}
-              netWeight={displayFilament.net_weight_g}
-              material={displayFilament.material}
-              className="pt-1"
-            />
+            {/* Quick Specs Grid removed — temps/diameter/weight are shown in the
+                Key Specs Bar below the hero and in the badge row above. */}
           </div>
         </div>
       </div>

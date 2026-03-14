@@ -141,6 +141,17 @@ export default {
         }
       }
 
+      // If prerender returned a non-200 status or non-HTML content type,
+      // fall back to the SPA so crawlers at least get the noscript fallback
+      // and Googlebot can render the JavaScript.
+      const contentType = prerenderRes.headers.get("Content-Type") || "";
+      if (!prerenderRes.ok || !contentType.includes("text/html")) {
+        console.error(
+          `[_worker.js] Prerender returned ${prerenderRes.status} (${contentType}) for ${pathname} — falling back to SPA`
+        );
+        return env.ASSETS.fetch(request);
+      }
+
       // Clone headers and add diagnostic header
       const responseHeaders = new Headers(prerenderRes.headers);
       responseHeaders.set("X-Prerender-Worker", "true");

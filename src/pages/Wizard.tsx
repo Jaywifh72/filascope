@@ -3,7 +3,7 @@ import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
 import { HowToSchema } from "@/components/seo/HowToSchema";
 import { SoftwareApplicationSchema } from "@/components/seo/SoftwareApplicationSchema";
-import { FAQSection } from "@/components/seo/FAQSection";
+import { FAQSchema } from "@/components/seo/FAQSchema";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -257,7 +257,8 @@ const Wizard = () => {
         offers={{ price: "0", priceCurrency: "USD" }}
         creator={{ name: "FilaScope", url: "https://filascope.com" }}
       />
-      <FAQSection faqs={[
+      {/* FAQ JSON-LD for SEO only — no visible FAQ wall above the wizard */}
+      <FAQSchema faqs={[
         { question: "How does FilaScope's filament quiz work?", answer: "FilaScope's Quick Match asks 5 questions about your project type, printer model, material preference, budget, and priorities. It then recommends the best-matching filaments from our database of 8,200+ options with real pricing." },
         { question: "Is FilaScope's filament recommendation tool free?", answer: "Yes, FilaScope's Quick Match filament finder is completely free. No account required." },
       ]} />

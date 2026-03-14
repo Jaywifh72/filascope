@@ -799,7 +799,7 @@ const { id } = useParams();
   const baseProductName = getBaseName(filament.product_title);
   
   // Get the best product line name for SEO and display
-  const productLineName = getProductLineName(displayFilament.material, displayFilament.product_title);
+  const productLineName = getProductLineName(displayFilament.material, displayFilament.product_title, displayFilament.vendor);
 
   // Build full SEO title, avoiding doubled brand name.
   // If productLineName already starts with the vendor, don't prepend vendor again.
@@ -808,7 +808,21 @@ const { id } = useParams();
     vendorName.replace(/™|®|©/g, '').trim().toLowerCase()
   );
   const colorDisplay = displayFilament.color_family || null;
-  const colorSuffix = colorDisplay ? ` ${colorDisplay}` : '';
+  // Deduplicate: if color starts with a word already at the end of productLineName
+  // e.g., productLineName="PLA Matte", color="Matte Charcoal" → suffix should be " Charcoal"
+  let colorSuffix = '';
+  if (colorDisplay) {
+    const plnWords = productLineName.toLowerCase().split(/\s+/);
+    const lastPlnWord = plnWords[plnWords.length - 1];
+    const colorLower = colorDisplay.toLowerCase();
+    if (colorLower.startsWith(lastPlnWord + ' ') || colorLower === lastPlnWord) {
+      // Strip the duplicated prefix word from the color
+      const deduped = colorDisplay.slice(lastPlnWord.length).trim();
+      colorSuffix = deduped ? ` ${deduped}` : '';
+    } else {
+      colorSuffix = ` ${colorDisplay}`;
+    }
+  }
   const seoFullName = productLineStartsWithVendor
     ? `${productLineName}${colorSuffix}`
     : `${vendorName} ${productLineName}${colorSuffix}`.trim();

@@ -528,7 +528,8 @@ const KNOWN_BRAND_CONFIGS: Record<string, {
       US: 'https://eryone3d.com',
     },
     variant_mapping: {
-      color_option: 'option1',
+      color_from_title: true,
+      source_currency: 'USD',
     },
   },
   'esun': {
@@ -1634,7 +1635,7 @@ export function useCatalogSync() {
 
         try {
           if (item.status === 'price_changed' && item.existing_filament_id) {
-            // UPDATE existing filament prices
+            // UPDATE existing filament prices + backfill null enrichment fields
             const priceUpdate: Record<string, any> = {
               updated_at: new Date().toISOString(),
               last_scraped_at: new Date().toISOString(),
@@ -1647,6 +1648,41 @@ export function useCatalogSync() {
             if (merged.price_jpy != null) priceUpdate.price_jpy = merged.price_jpy;
             if (merged.price_cny != null) priceUpdate.price_cny = merged.price_cny;
             if (merged.variant_available != null) priceUpdate.variant_available = merged.variant_available;
+
+            // Backfill enrichment fields (only set if we have new data — won't overwrite existing values
+            // because Supabase COALESCE is not available via .update(), so we use a separate query)
+            const enrichmentFields: [string, any][] = [
+              ['tg_c', merged.tg_c], ['drying_temp_c', merged.drying_temp_c],
+              ['drying_time_hours', merged.drying_time_hours],
+              ['moisture_sensitivity_level', merged.moisture_sensitivity_level],
+              ['is_nozzle_abrasive', merged.is_nozzle_abrasive],
+              ['recommended_nozzle_type', merged.recommended_nozzle_type],
+              ['fan_min_percent', merged.fan_min_percent], ['fan_max_percent', merged.fan_max_percent],
+              ['density_g_cm3', merged.density_g_cm3],
+              ['nozzle_temp_sweetspot_c', merged.nozzle_temp_sweetspot_c],
+              ['use_case_tags', merged.use_case_tags],
+              ['food_contact_rating', merged.food_contact_rating],
+              ['retraction_length_mm', merged.retraction_length_mm],
+              ['retraction_speed_mms', merged.retraction_speed_mms],
+              ['tds_url', merged.tds_url],
+              // Mechanical properties
+              ['tensile_strength_xy_mpa', merged.tensile_strength_xy_mpa],
+              ['elongation_break_xy_percent', merged.elongation_break_xy_percent],
+              ['flexural_strength_mpa', merged.flexural_strength_mpa],
+              ['impact_strength_kj_m2', merged.impact_strength_kj_m2],
+              ['shore_hardness_d', merged.shore_hardness_d],
+              ['hardness_shore_a', merged.hardness_shore_a],
+              // Thermal properties
+              ['melt_temp_c', merged.melt_temp_c],
+              ['hdt_045_mpa_c', merged.hdt_045_mpa_c],
+              ['vicat_softening_temp_c', merged.vicat_softening_temp_c],
+              ['water_absorption_percent', merged.water_absorption_percent],
+              // Product line grouping
+              ['product_line_id', merged.product_line_id],
+            ];
+            for (const [field, value] of enrichmentFields) {
+              if (value != null) priceUpdate[field] = value;
+            }
 
             const { error: updateErr } = await supabase
               .from('filaments')
@@ -1712,6 +1748,35 @@ export function useCatalogSync() {
                 td: merged.td_value ?? merged.td,
                 variant_available: merged.variant_available ?? true,
                 available_regions: merged.available_regions ?? item.available_regions,
+                // Enrichment fields
+                tg_c: merged.tg_c,
+                moisture_sensitivity_level: merged.moisture_sensitivity_level,
+                is_nozzle_abrasive: merged.is_nozzle_abrasive,
+                recommended_nozzle_type: merged.recommended_nozzle_type,
+                fan_min_percent: merged.fan_min_percent,
+                fan_max_percent: merged.fan_max_percent,
+                density_g_cm3: merged.density_g_cm3,
+                nozzle_temp_sweetspot_c: merged.nozzle_temp_sweetspot_c,
+                use_case_tags: merged.use_case_tags,
+                food_contact_rating: merged.food_contact_rating,
+                retraction_length_mm: merged.retraction_length_mm,
+                retraction_speed_mms: merged.retraction_speed_mms,
+                spool_ams_fit: merged.spool_ams_fit,
+                tds_url: merged.tds_url,
+                // Mechanical properties
+                tensile_strength_xy_mpa: merged.tensile_strength_xy_mpa,
+                elongation_break_xy_percent: merged.elongation_break_xy_percent,
+                flexural_strength_mpa: merged.flexural_strength_mpa,
+                impact_strength_kj_m2: merged.impact_strength_kj_m2,
+                shore_hardness_d: merged.shore_hardness_d,
+                hardness_shore_a: merged.hardness_shore_a,
+                // Thermal properties
+                melt_temp_c: merged.melt_temp_c,
+                hdt_045_mpa_c: merged.hdt_045_mpa_c,
+                vicat_softening_temp_c: merged.vicat_softening_temp_c,
+                water_absorption_percent: merged.water_absorption_percent,
+                // Product line grouping
+                product_line_id: merged.product_line_id,
                 sync_source: 'catalog-sync-client',
                 auto_created: true,
               })
@@ -1815,16 +1880,28 @@ export function useCatalogSync() {
       for (const fil of insertedFilaments) {
         let score = 0;
         const d = fil.data;
-        if (d.display_name) score += 15;
-        if (d.color_hex && d.color_hex !== '#808080') score += 15;
-        if (d.color_family) score += 10;
-        if (d.material) score += 10;
-        if (d.price_usd || d.variant_price) score += 15;
-        if (d.featured_image) score += 10;
-        if (d.nozzle_temp_min_c || d.nozzle_temp_max_c) score += 10;
-        if (d.variant_sku) score += 5;
-        if (d.product_url || d.product_url_us) score += 5;
-        if (d.net_weight_g) score += 5;
+        // Core fields (80 points max)
+        if (d.display_name) score += 12;
+        if (d.color_hex && d.color_hex !== '#808080') score += 12;
+        if (d.color_family) score += 8;
+        if (d.material) score += 8;
+        if (d.price_usd || d.variant_price) score += 12;
+        if (d.featured_image) score += 8;
+        if (d.nozzle_temp_min_c || d.nozzle_temp_max_c) score += 8;
+        if (d.variant_sku) score += 4;
+        if (d.product_url || d.product_url_us) score += 4;
+        if (d.net_weight_g) score += 4;
+        // Enrichment fields (20 points max)
+        if (d.drying_temp_c) score += 3;
+        if (d.tg_c) score += 3;
+        if (d.density_g_cm3) score += 3;
+        if (d.moisture_sensitivity_level) score += 3;
+        if (d.fan_min_percent != null || d.fan_max_percent != null) score += 3;
+        if (d.use_case_tags?.length > 0) score += 3;
+        if (d.is_nozzle_abrasive != null) score += 2;
+        if (d.tensile_strength_xy_mpa) score += 1;
+        if (d.impact_strength_kj_m2) score += 1;
+        if (d.melt_temp_c) score += 1;
         totalQuality += Math.min(score, 100);
       }
       const avgQuality = insertedFilaments.length > 0

@@ -71,6 +71,35 @@ export interface ExtractedFilament {
   variant_available: boolean;
   available_regions: string[];
   weight_source: "body_html" | "variant_title" | "product_title" | null;
+  // Enrichment fields (populated from material defaults + body_html parsing)
+  tg_c: number | null;
+  moisture_sensitivity_level: string | null;
+  is_nozzle_abrasive: boolean | null;
+  recommended_nozzle_type: string | null;
+  fan_min_percent: number | null;
+  fan_max_percent: number | null;
+  density_g_cm3: number | null;
+  nozzle_temp_sweetspot_c: number | null;
+  use_case_tags: string[] | null;
+  food_contact_rating: string | null;
+  retraction_length_mm: number | null;
+  retraction_speed_mms: number | null;
+  spool_ams_fit: string | null;
+  tds_url: string | null;
+  // Mechanical properties
+  tensile_strength_xy_mpa: number | null;
+  elongation_break_xy_percent: number | null;
+  flexural_strength_mpa: number | null;
+  impact_strength_kj_m2: number | null;
+  shore_hardness_d: number | null;
+  hardness_shore_a: number | null;
+  // Thermal properties
+  melt_temp_c: number | null;
+  hdt_045_mpa_c: number | null;
+  vicat_softening_temp_c: number | null;
+  water_absorption_percent: number | null;
+  // Product line grouping
+  product_line_id: string;
 }
 
 // ============================================================
@@ -196,6 +225,376 @@ const KNOWN_COLOR_WORDS = [
 const REGION_KEYWORDS = ["ship","shipment","country","region","destination","shop from","delivery"];
 const MATERIAL_OPT_KEYWORDS = ["material","type","types","category"];
 const COLOR_OPT_KEYWORDS = ["color","colour"];
+
+// ============================================================
+// Material Defaults — Scientifically consistent per-material specs
+// ============================================================
+
+interface MaterialDefaults {
+  tg_c: number | null;
+  drying_temp_c: number;
+  drying_time_hours: number;
+  moisture_sensitivity_level: string;
+  is_nozzle_abrasive: boolean;
+  recommended_nozzle_type: string;
+  fan_min_percent: number;
+  fan_max_percent: number;
+  density_g_cm3: number;
+  nozzle_temp_sweetspot_c: number;
+  use_case_tags: string[];
+  food_contact_rating: string;
+  // Mechanical properties (typical values for 3D-printed parts, XY orientation)
+  tensile_strength_xy_mpa: number | null;
+  elongation_break_xy_percent: number | null;
+  flexural_strength_mpa: number | null;
+  impact_strength_kj_m2: number | null;
+  shore_hardness_d: number | null;
+  hardness_shore_a: number | null;
+  // Thermal properties
+  melt_temp_c: number | null;
+  hdt_045_mpa_c: number | null;
+  vicat_softening_temp_c: number | null;
+  water_absorption_percent: number | null;
+}
+
+const MATERIAL_DEFAULTS: Record<string, MaterialDefaults> = {
+  PLA: {
+    tg_c: 60, drying_temp_c: 45, drying_time_hours: 4,
+    moisture_sensitivity_level: "Low",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 80, fan_max_percent: 100, density_g_cm3: 1.24,
+    nozzle_temp_sweetspot_c: 210,
+    use_case_tags: ["Prototyping", "Visual models", "HueForge", "Low-warp prints"],
+    food_contact_rating: "Conditional",
+    tensile_strength_xy_mpa: 50, elongation_break_xy_percent: 6,
+    flexural_strength_mpa: 80, impact_strength_kj_m2: 3.5,
+    shore_hardness_d: 83, hardness_shore_a: null,
+    melt_temp_c: 175, hdt_045_mpa_c: 55, vicat_softening_temp_c: 57,
+    water_absorption_percent: 0.5,
+  },
+  "PLA+": {
+    tg_c: 60, drying_temp_c: 45, drying_time_hours: 4,
+    moisture_sensitivity_level: "Low",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 80, fan_max_percent: 100, density_g_cm3: 1.24,
+    nozzle_temp_sweetspot_c: 215,
+    use_case_tags: ["Functional parts", "Improved toughness", "Prototyping"],
+    food_contact_rating: "Conditional",
+    tensile_strength_xy_mpa: 55, elongation_break_xy_percent: 10,
+    flexural_strength_mpa: 85, impact_strength_kj_m2: 6,
+    shore_hardness_d: 83, hardness_shore_a: null,
+    melt_temp_c: 175, hdt_045_mpa_c: 55, vicat_softening_temp_c: 57,
+    water_absorption_percent: 0.5,
+  },
+  "Silk PLA": {
+    tg_c: 60, drying_temp_c: 45, drying_time_hours: 4,
+    moisture_sensitivity_level: "Low",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 80, fan_max_percent: 100, density_g_cm3: 1.24,
+    nozzle_temp_sweetspot_c: 215,
+    use_case_tags: ["Decorative", "Visual models", "Vases", "Display pieces"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 46, elongation_break_xy_percent: 5,
+    flexural_strength_mpa: 70, impact_strength_kj_m2: 3,
+    shore_hardness_d: 80, hardness_shore_a: null,
+    melt_temp_c: 175, hdt_045_mpa_c: 52, vicat_softening_temp_c: 55,
+    water_absorption_percent: 0.5,
+  },
+  "Matte PLA": {
+    tg_c: 60, drying_temp_c: 45, drying_time_hours: 4,
+    moisture_sensitivity_level: "Low",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 80, fan_max_percent: 100, density_g_cm3: 1.24,
+    nozzle_temp_sweetspot_c: 215,
+    use_case_tags: ["Visual models", "Low-layer-line finish", "Prototyping"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 48, elongation_break_xy_percent: 5,
+    flexural_strength_mpa: 75, impact_strength_kj_m2: 3.2,
+    shore_hardness_d: 82, hardness_shore_a: null,
+    melt_temp_c: 175, hdt_045_mpa_c: 53, vicat_softening_temp_c: 56,
+    water_absorption_percent: 0.5,
+  },
+  "Tough PLA": {
+    tg_c: 60, drying_temp_c: 45, drying_time_hours: 4,
+    moisture_sensitivity_level: "Low",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 70, fan_max_percent: 100, density_g_cm3: 1.24,
+    nozzle_temp_sweetspot_c: 215,
+    use_case_tags: ["Functional parts", "Impact resistance", "Engineering"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 56, elongation_break_xy_percent: 15,
+    flexural_strength_mpa: 85, impact_strength_kj_m2: 8,
+    shore_hardness_d: 82, hardness_shore_a: null,
+    melt_temp_c: 175, hdt_045_mpa_c: 55, vicat_softening_temp_c: 57,
+    water_absorption_percent: 0.5,
+  },
+  HSPLA: {
+    tg_c: 60, drying_temp_c: 45, drying_time_hours: 4,
+    moisture_sensitivity_level: "Low",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 50, fan_max_percent: 100, density_g_cm3: 1.24,
+    nozzle_temp_sweetspot_c: 220,
+    use_case_tags: ["High-speed printing", "Rapid prototyping", "Batch production"],
+    food_contact_rating: "Conditional",
+    tensile_strength_xy_mpa: 50, elongation_break_xy_percent: 8,
+    flexural_strength_mpa: 78, impact_strength_kj_m2: 4,
+    shore_hardness_d: 83, hardness_shore_a: null,
+    melt_temp_c: 175, hdt_045_mpa_c: 55, vicat_softening_temp_c: 57,
+    water_absorption_percent: 0.5,
+  },
+  PETG: {
+    tg_c: 80, drying_temp_c: 65, drying_time_hours: 4,
+    moisture_sensitivity_level: "Moderate",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 30, fan_max_percent: 60, density_g_cm3: 1.27,
+    nozzle_temp_sweetspot_c: 235,
+    use_case_tags: ["Functional parts", "Chemical resistance", "Outdoor use", "Food containers"],
+    food_contact_rating: "Conditional",
+    tensile_strength_xy_mpa: 47, elongation_break_xy_percent: 23,
+    flexural_strength_mpa: 70, impact_strength_kj_m2: 5.5,
+    shore_hardness_d: 75, hardness_shore_a: null,
+    melt_temp_c: 245, hdt_045_mpa_c: 70, vicat_softening_temp_c: 78,
+    water_absorption_percent: 0.2,
+  },
+  ABS: {
+    tg_c: 105, drying_temp_c: 80, drying_time_hours: 4,
+    moisture_sensitivity_level: "Moderate",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 0, fan_max_percent: 30, density_g_cm3: 1.04,
+    nozzle_temp_sweetspot_c: 245,
+    use_case_tags: ["Functional parts", "Heat resistance", "Post-processing", "Enclosure required"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 40, elongation_break_xy_percent: 25,
+    flexural_strength_mpa: 65, impact_strength_kj_m2: 20,
+    shore_hardness_d: 76, hardness_shore_a: null,
+    melt_temp_c: 230, hdt_045_mpa_c: 98, vicat_softening_temp_c: 100,
+    water_absorption_percent: 0.3,
+  },
+  TPU: {
+    tg_c: -40, drying_temp_c: 50, drying_time_hours: 4,
+    moisture_sensitivity_level: "Moderate",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 30, fan_max_percent: 60, density_g_cm3: 1.21,
+    nozzle_temp_sweetspot_c: 230,
+    use_case_tags: ["Flexible parts", "Phone cases", "Gaskets", "Vibration dampening"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 35, elongation_break_xy_percent: 450,
+    flexural_strength_mpa: null, impact_strength_kj_m2: null,
+    shore_hardness_d: null, hardness_shore_a: 95,
+    melt_temp_c: 220, hdt_045_mpa_c: null, vicat_softening_temp_c: null,
+    water_absorption_percent: 0.8,
+  },
+  ASA: {
+    tg_c: 100, drying_temp_c: 80, drying_time_hours: 4,
+    moisture_sensitivity_level: "Moderate",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 0, fan_max_percent: 30, density_g_cm3: 1.07,
+    nozzle_temp_sweetspot_c: 250,
+    use_case_tags: ["Outdoor use", "UV resistance", "Automotive", "Enclosure required"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 42, elongation_break_xy_percent: 30,
+    flexural_strength_mpa: 68, impact_strength_kj_m2: 18,
+    shore_hardness_d: 76, hardness_shore_a: null,
+    melt_temp_c: 240, hdt_045_mpa_c: 95, vicat_softening_temp_c: 96,
+    water_absorption_percent: 0.3,
+  },
+  Nylon: {
+    tg_c: 70, drying_temp_c: 70, drying_time_hours: 12,
+    moisture_sensitivity_level: "High",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 0, fan_max_percent: 30, density_g_cm3: 1.14,
+    nozzle_temp_sweetspot_c: 255,
+    use_case_tags: ["Mechanical parts", "Gears", "Bearings", "High strength"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 70, elongation_break_xy_percent: 30,
+    flexural_strength_mpa: 50, impact_strength_kj_m2: 12,
+    shore_hardness_d: 75, hardness_shore_a: null,
+    melt_temp_c: 260, hdt_045_mpa_c: 180, vicat_softening_temp_c: null,
+    water_absorption_percent: 2.5,
+  },
+  PA: {
+    tg_c: 70, drying_temp_c: 70, drying_time_hours: 12,
+    moisture_sensitivity_level: "High",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 0, fan_max_percent: 30, density_g_cm3: 1.14,
+    nozzle_temp_sweetspot_c: 260,
+    use_case_tags: ["Mechanical parts", "High strength", "Engineering"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 70, elongation_break_xy_percent: 30,
+    flexural_strength_mpa: 50, impact_strength_kj_m2: 12,
+    shore_hardness_d: 75, hardness_shore_a: null,
+    melt_temp_c: 260, hdt_045_mpa_c: 180, vicat_softening_temp_c: null,
+    water_absorption_percent: 2.5,
+  },
+  PC: {
+    tg_c: 147, drying_temp_c: 80, drying_time_hours: 8,
+    moisture_sensitivity_level: "High",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 0, fan_max_percent: 20, density_g_cm3: 1.20,
+    nozzle_temp_sweetspot_c: 275,
+    use_case_tags: ["Heat resistance", "Impact resistance", "Enclosure required", "Engineering"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 60, elongation_break_xy_percent: 80,
+    flexural_strength_mpa: 90, impact_strength_kj_m2: 50,
+    shore_hardness_d: 80, hardness_shore_a: null,
+    melt_temp_c: 280, hdt_045_mpa_c: 132, vicat_softening_temp_c: 145,
+    water_absorption_percent: 0.2,
+  },
+  PVA: {
+    tg_c: 85, drying_temp_c: 45, drying_time_hours: 8,
+    moisture_sensitivity_level: "Very High",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 80, fan_max_percent: 100, density_g_cm3: 1.23,
+    nozzle_temp_sweetspot_c: 200,
+    use_case_tags: ["Support material", "Water-soluble", "Dual extrusion"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 30, elongation_break_xy_percent: 10,
+    flexural_strength_mpa: null, impact_strength_kj_m2: null,
+    shore_hardness_d: null, hardness_shore_a: null,
+    melt_temp_c: 200, hdt_045_mpa_c: null, vicat_softening_temp_c: null,
+    water_absorption_percent: null,
+  },
+  HIPS: {
+    tg_c: 100, drying_temp_c: 70, drying_time_hours: 4,
+    moisture_sensitivity_level: "Low",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 0, fan_max_percent: 50, density_g_cm3: 1.05,
+    nozzle_temp_sweetspot_c: 235,
+    use_case_tags: ["Support material", "Limonene-soluble", "ABS companion"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 25, elongation_break_xy_percent: 40,
+    flexural_strength_mpa: 35, impact_strength_kj_m2: 10,
+    shore_hardness_d: 70, hardness_shore_a: null,
+    melt_temp_c: 230, hdt_045_mpa_c: 85, vicat_softening_temp_c: 94,
+    water_absorption_percent: 0.1,
+  },
+  PEBA: {
+    tg_c: -50, drying_temp_c: 55, drying_time_hours: 6,
+    moisture_sensitivity_level: "High",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 20, fan_max_percent: 50, density_g_cm3: 1.01,
+    nozzle_temp_sweetspot_c: 240,
+    use_case_tags: ["Flexible parts", "High elasticity", "Wearables"],
+    food_contact_rating: "No",
+    tensile_strength_xy_mpa: 25, elongation_break_xy_percent: 600,
+    flexural_strength_mpa: null, impact_strength_kj_m2: null,
+    shore_hardness_d: null, hardness_shore_a: 63,
+    melt_temp_c: 155, hdt_045_mpa_c: null, vicat_softening_temp_c: null,
+    water_absorption_percent: 1.2,
+  },
+  PEEK: {
+    tg_c: 143, drying_temp_c: 150, drying_time_hours: 4,
+    moisture_sensitivity_level: "High",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Hardened Steel",
+    fan_min_percent: 0, fan_max_percent: 0, density_g_cm3: 1.30,
+    nozzle_temp_sweetspot_c: 400,
+    use_case_tags: ["Aerospace", "Medical", "Extreme heat", "Industrial"],
+    food_contact_rating: "Conditional",
+    tensile_strength_xy_mpa: 100, elongation_break_xy_percent: 30,
+    flexural_strength_mpa: 165, impact_strength_kj_m2: 7,
+    shore_hardness_d: 85, hardness_shore_a: null,
+    melt_temp_c: 343, hdt_045_mpa_c: 260, vicat_softening_temp_c: null,
+    water_absorption_percent: 0.5,
+  },
+  PCTG: {
+    tg_c: 84, drying_temp_c: 65, drying_time_hours: 4,
+    moisture_sensitivity_level: "Moderate",
+    is_nozzle_abrasive: false, recommended_nozzle_type: "Brass",
+    fan_min_percent: 30, fan_max_percent: 60, density_g_cm3: 1.23,
+    nozzle_temp_sweetspot_c: 240,
+    use_case_tags: ["Impact resistance", "Chemical resistance", "Functional parts"],
+    food_contact_rating: "Conditional",
+    tensile_strength_xy_mpa: 50, elongation_break_xy_percent: 200,
+    flexural_strength_mpa: 70, impact_strength_kj_m2: 65,
+    shore_hardness_d: 75, hardness_shore_a: null,
+    melt_temp_c: 250, hdt_045_mpa_c: 72, vicat_softening_temp_c: 80,
+    water_absorption_percent: 0.2,
+  },
+};
+
+/**
+ * Resolve a material string (e.g. "Silk PLA", "PETG-CF", "Nylon 12+CF")
+ * to its base material defaults. Applies CF/GF overrides for composite materials.
+ */
+function resolveMaterialDefaults(material: string): MaterialDefaults | null {
+  // Direct match first
+  if (MATERIAL_DEFAULTS[material]) return { ...MATERIAL_DEFAULTS[material] };
+
+  const upper = material.toUpperCase();
+  const lower = material.toLowerCase();
+
+  // Check for composite indicators (must apply before base material match)
+  const isCF = upper.includes("CF") || upper.includes("CARBON");
+  const isGF = upper.includes("GF") || upper.includes("GLASS");
+
+  // Fuzzy match: strip suffixes/prefixes to find base material
+  // Order matters — check more specific materials first
+  const baseMaterialOrder = [
+    "Silk PLA", "Matte PLA", "Tough PLA", "HSPLA",
+    "PLA+", "PCTG", "PETG", "PEBA", "PEEK", "HIPS",
+    "PVA", "ABS", "ASA", "TPU", "PLA",
+    "Nylon", "PA", "PC",
+  ];
+
+  let baseMat: string | null = null;
+  for (const bm of baseMaterialOrder) {
+    const bmLower = bm.toLowerCase();
+    // Word-boundary check for short materials
+    if (bmLower.length <= 3) {
+      const re = new RegExp(`\\b${bmLower.replace(/[+]/g, "\\+")}\\b`);
+      if (re.test(lower)) { baseMat = bm; break; }
+    } else {
+      if (lower.includes(bmLower)) { baseMat = bm; break; }
+    }
+  }
+
+  if (!baseMat || !MATERIAL_DEFAULTS[baseMat]) return null;
+
+  const defaults = { ...MATERIAL_DEFAULTS[baseMat] };
+
+  // CF/GF composite overrides
+  if (isCF || isGF) {
+    defaults.is_nozzle_abrasive = true;
+    defaults.recommended_nozzle_type = "Hardened Steel";
+    defaults.fan_min_percent = Math.max(0, defaults.fan_min_percent - 20);
+    defaults.fan_max_percent = Math.max(20, defaults.fan_max_percent - 20);
+    // CF composites have different use cases
+    if (isCF) {
+      defaults.use_case_tags = [...defaults.use_case_tags.filter(t =>
+        !t.includes("Visual") && !t.includes("Decorative") && !t.includes("HueForge")
+      ), "Carbon fiber reinforced", "Structural parts", "Stiffness"];
+    }
+    if (isGF) {
+      defaults.use_case_tags = [...defaults.use_case_tags.filter(t =>
+        !t.includes("Visual") && !t.includes("Decorative") && !t.includes("HueForge")
+      ), "Glass fiber reinforced", "Impact resistance", "Structural parts"];
+    }
+  }
+
+  return defaults;
+}
+
+// ============================================================
+// Product Line ID — deterministic grouping for color variants
+// ============================================================
+
+/**
+ * Compute a deterministic product_line_id for grouping color variants.
+ * Format: {adapter_key}_{normalized_material}_{diameter}_{finish_type}
+ *
+ * Examples:
+ *   eryone_pla_1.75_standard
+ *   bambu-lab_silk-pla_1.75_silk
+ *   3dxtech_petg-cf_1.75_carbon-fiber
+ */
+export function computeProductLineId(
+  adapterKey: string, material: string, diameter: number, finishType: string
+): string {
+  const matSlug = material.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '').replace(/^-+/, '');
+  const finishSlug = finishType.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '').replace(/^-+/, '');
+  const diaStr = diameter.toString();
+  return `${adapterKey}_${matSlug}_${diaStr}_${finishSlug}`;
+}
 
 // ============================================================
 // Helpers
@@ -333,16 +732,17 @@ function guessColorFamily(name: string): string | null {
 function guessFinishType(material: string, title: string): string {
   const c = `${material} ${title}`.toLowerCase();
   if (c.includes("silk")) return "Silk";
-  if (c.includes("matte")) return "Matte";
+  if (c.includes("matte") || c.includes("matt ")) return "Matte";
   if (c.includes("marble")) return "Marble";
   if (c.includes("galaxy")) return "Galaxy";
-  if (c.includes("sparkle") || c.includes("glitter")) return "Sparkle";
-  if (c.includes("glow") || c.includes("luminous")) return "Glow-in-the-Dark";
+  if (c.includes("sparkle") || c.includes("glitter") || c.includes("shimmer") || c.includes("starlight")) return "Sparkle";
+  if (c.includes("glow") || c.includes("luminous") || c.includes("phosphor")) return "Glow-in-the-Dark";
   if (c.includes("transparent") || c.includes("translucent")) return "Transparent";
   if (c.includes("neon")) return "Neon";
   if (c.includes("wood")) return "Wood Fill";
   if (c.includes("carbon")) return "Carbon Fiber";
-  if (c.includes("rainbow")) return "Rainbow";
+  if (c.includes("rainbow") || c.includes("multicolor") || c.includes("multi-color")) return "Rainbow";
+  if (c.includes("metallic") || c.includes("metal ")) return "Metallic";
   return "Standard";
 }
 
@@ -393,23 +793,53 @@ function detectOptionPositions(product: any, config: ScrapingConfig): {
 
 // ── Simplified spec extraction from body_html ──
 
-function parseSpecsFromHtml(bodyHtml: string, specConfig: Record<string, string> | null): {
+interface ParsedSpecs {
   nozzleTempMin: number | null; nozzleTempMax: number | null;
   bedTempMin: number | null; bedTempMax: number | null;
   netWeight: number | null; diameter: number | null;
   printSpeedMax: number | null; weightSource: "body_html" | null;
-} {
-  const r = {
-    nozzleTempMin: null as number | null, nozzleTempMax: null as number | null,
-    bedTempMin: null as number | null, bedTempMax: null as number | null,
-    netWeight: null as number | null, diameter: null as number | null,
-    printSpeedMax: null as number | null, weightSource: null as "body_html" | null,
+  // Enhanced spec fields
+  dryingTempC: number | null; dryingTimeHours: number | null;
+  tgC: number | null; densityGCm3: number | null;
+  fanMinPercent: number | null; fanMaxPercent: number | null;
+  retractionLengthMm: number | null; retractionSpeedMms: number | null;
+  tdsUrl: string | null;
+  // Mechanical & thermal properties from body_html
+  tensileStrengthMpa: number | null;
+  elongationBreakPercent: number | null;
+  flexuralStrengthMpa: number | null;
+  impactStrengthKjM2: number | null;
+  shoreHardnessD: number | null;
+  hardnessShoreA: number | null;
+  meltTempC: number | null;
+  hdtC: number | null;
+  vicatC: number | null;
+  waterAbsorptionPercent: number | null;
+}
+
+function parseSpecsFromHtml(bodyHtml: string, specConfig: Record<string, string> | null): ParsedSpecs {
+  const r: ParsedSpecs = {
+    nozzleTempMin: null, nozzleTempMax: null,
+    bedTempMin: null, bedTempMax: null,
+    netWeight: null, diameter: null,
+    printSpeedMax: null, weightSource: null,
+    dryingTempC: null, dryingTimeHours: null,
+    tgC: null, densityGCm3: null,
+    fanMinPercent: null, fanMaxPercent: null,
+    retractionLengthMm: null, retractionSpeedMms: null,
+    tdsUrl: null,
+    tensileStrengthMpa: null, elongationBreakPercent: null,
+    flexuralStrengthMpa: null, impactStrengthKjM2: null,
+    shoreHardnessD: null, hardnessShoreA: null,
+    meltTempC: null, hdtC: null, vicatC: null,
+    waterAbsorptionPercent: null,
   };
   if (!bodyHtml) return r;
 
   const text = bodyHtml.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ");
   const tryRe = (p: string) => { try { return text.match(new RegExp(p, "i")); } catch { return null; } };
 
+  // ── Existing spec extraction ──
   const dRe = specConfig?.diameter_regex || "(?:Diameter|Filament\\s+Diameter)[:\\s]*([\\d.]+)";
   const dm = tryRe(dRe);
   if (dm?.[1]) r.diameter = parseFloat(dm[1]);
@@ -433,6 +863,136 @@ function parseSpecsFromHtml(bodyHtml: string, specConfig: Record<string, string>
   const sRe = specConfig?.speed_regex || "(?:Print(?:ing)?\\s+Speed)[:\\s]*(?:up\\s+to\\s+)?([\\d]+)\\s*(?:mm/s|mm\\/s)";
   const sm = tryRe(sRe);
   if (sm?.[1]) r.printSpeedMax = parseInt(sm[1]);
+
+  // ── Enhanced spec extraction ──
+
+  // Drying temperature: "Drying Temp: 45°C", "Dry at 50°C", "Recommended Drying Temperature: 65°C"
+  const dryTempM = tryRe("(?:Dry(?:ing)?\\s*(?:Temp(?:erature)?)?|Recommended\\s+Dry(?:ing)?\\s*Temp(?:erature)?)[:\\s]*([\\d]+)\\s*[°℃]");
+  if (dryTempM?.[1]) {
+    const dt = parseInt(dryTempM[1]);
+    if (dt >= 30 && dt <= 200) r.dryingTempC = dt;
+  }
+
+  // Drying time: "Drying Time: 4 hours", "Dry for 4-6 hours", "Dry Time: 8h"
+  const dryTimeM = tryRe("(?:Dry(?:ing)?\\s*Time)[:\\s]*([\\d]+)\\s*(?:[-–~to]+\\s*[\\d]+\\s*)?(?:h(?:ours?|rs?)?|H)");
+  if (dryTimeM?.[1]) {
+    const dt = parseInt(dryTimeM[1]);
+    if (dt >= 1 && dt <= 48) r.dryingTimeHours = dt;
+  }
+
+  // Glass transition temperature: "Tg: 60°C", "Glass Transition: 80°C", "Vicat: 58°C"
+  const tgM = tryRe("(?:Tg|Glass\\s*Transition(?:\\s*Temp(?:erature)?)?|Vicat)[:\\s]*([\\d]+)\\s*[°℃]");
+  if (tgM?.[1]) {
+    const tg = parseInt(tgM[1]);
+    if (tg >= -60 && tg <= 400) r.tgC = tg;
+  }
+
+  // Density: "Density: 1.24 g/cm³", "Specific Gravity: 1.27", "1.04 g/cc"
+  const densityM = tryRe("(?:Density|Specific\\s*Gravity)[:\\s]*([\\d]+\\.?[\\d]*)\\s*(?:g\\/cm[³3]?|g\\/cc)?");
+  if (densityM?.[1]) {
+    const d = parseFloat(densityM[1]);
+    if (d >= 0.8 && d <= 2.5) r.densityGCm3 = d;
+  }
+
+  // Fan speed: "Fan Speed: 50-100%", "Cooling Fan: 80~100%", "Part Cooling: 30-60%"
+  const fanM = tryRe("(?:Fan\\s*Speed|Cool(?:ing)?\\s*Fan|Part\\s*Cool(?:ing)?)[:\\s]*([\\d]+)\\s*[%]?\\s*[–\\-~to]+\\s*([\\d]+)\\s*[%]?");
+  if (fanM?.[1] && fanM?.[2]) {
+    const fMin = parseInt(fanM[1]);
+    const fMax = parseInt(fanM[2]);
+    if (fMin >= 0 && fMin <= 100 && fMax >= 0 && fMax <= 100) {
+      r.fanMinPercent = fMin; r.fanMaxPercent = fMax;
+    }
+  }
+
+  // Retraction length: "Retraction: 0.8mm", "Retraction Distance: 1.0mm", "Retraction Length: 0.5-1.0mm"
+  const retLenM = tryRe("(?:Retraction)\\s*(?:Distance|Length)?[:\\s]*([\\d]+\\.?[\\d]*)\\s*(?:mm)");
+  if (retLenM?.[1]) {
+    const rl = parseFloat(retLenM[1]);
+    if (rl >= 0.1 && rl <= 15) r.retractionLengthMm = rl;
+  }
+
+  // Retraction speed: "Retraction Speed: 25mm/s", "Retract Speed: 30mm/s"
+  const retSpdM = tryRe("(?:Retract(?:ion)?\\s*Speed)[:\\s]*([\\d]+)\\s*(?:mm\\/s|mm/s)");
+  if (retSpdM?.[1]) {
+    const rs = parseInt(retSpdM[1]);
+    if (rs >= 5 && rs <= 100) r.retractionSpeedMms = rs;
+  }
+
+  // TDS URL: look for links to PDFs containing "tds", "technical", "datasheet", "safety"
+  const tdsLinkM = bodyHtml.match(/<a[^>]+href=["']([^"']*(?:tds|technical|datasheet|safety)[^"']*\.pdf[^"']*)["']/i);
+  if (tdsLinkM?.[1]) r.tdsUrl = tdsLinkM[1];
+
+  // ── Mechanical & thermal property extraction ──
+
+  // Tensile strength: "Tensile Strength: 50 MPa", "Tensile Strength (XY): 48 MPa"
+  const tensileM = tryRe("(?:Tensile\\s+Strength)\\s*(?:\\(XY\\))?[:\\s]*([\\d]+\\.?[\\d]*)\\s*(?:MPa|mpa|N\\/mm)");
+  if (tensileM?.[1]) {
+    const v = parseFloat(tensileM[1]);
+    if (v >= 1 && v <= 500) r.tensileStrengthMpa = v;
+  }
+
+  // Elongation at break: "Elongation at Break: 6%", "Elongation: 25%"
+  const elongM = tryRe("(?:Elongation)\\s*(?:at\\s+Break)?[:\\s]*([\\d]+\\.?[\\d]*)\\s*[%]");
+  if (elongM?.[1]) {
+    const v = parseFloat(elongM[1]);
+    if (v >= 0.5 && v <= 1000) r.elongationBreakPercent = v;
+  }
+
+  // Flexural strength: "Flexural Strength: 80 MPa", "Bending Strength: 70 MPa"
+  const flexM = tryRe("(?:Flexural|Bending)\\s+Strength[:\\s]*([\\d]+\\.?[\\d]*)\\s*(?:MPa|mpa|N\\/mm)");
+  if (flexM?.[1]) {
+    const v = parseFloat(flexM[1]);
+    if (v >= 1 && v <= 500) r.flexuralStrengthMpa = v;
+  }
+
+  // Impact strength: "Impact Strength: 20 kJ/m²", "Charpy Impact: 5.5 kJ/m²", "Izod Impact: 8 kJ/m²"
+  const impactM = tryRe("(?:(?:Charpy|Izod|Notched)?\\s*Impact\\s+Strength)[:\\s]*([\\d]+\\.?[\\d]*)\\s*(?:kJ\\/m|KJ\\/m)");
+  if (impactM?.[1]) {
+    const v = parseFloat(impactM[1]);
+    if (v >= 0.1 && v <= 200) r.impactStrengthKjM2 = v;
+  }
+
+  // Shore Hardness D: "Shore D Hardness: 83", "Hardness (Shore D): 76"
+  const shoreD = tryRe("(?:Shore\\s*D\\s*(?:Hardness)?|Hardness\\s*\\(Shore\\s*D\\))[:\\s]*([\\d]+)");
+  if (shoreD?.[1]) {
+    const v = parseInt(shoreD[1]);
+    if (v >= 10 && v <= 100) r.shoreHardnessD = v;
+  }
+
+  // Shore Hardness A: "Shore A Hardness: 95", "Hardness (Shore A): 85"
+  const shoreA = tryRe("(?:Shore\\s*A\\s*(?:Hardness)?|Hardness\\s*\\(Shore\\s*A\\))[:\\s]*([\\d]+)");
+  if (shoreA?.[1]) {
+    const v = parseInt(shoreA[1]);
+    if (v >= 10 && v <= 100) r.hardnessShoreA = v;
+  }
+
+  // Melt temperature: "Melt Temperature: 175°C", "Melting Point: 260°C"
+  const meltM = tryRe("(?:Melt(?:ing)?\\s*(?:Temp(?:erature)?|Point))[:\\s]*([\\d]+)\\s*[°℃]");
+  if (meltM?.[1]) {
+    const v = parseInt(meltM[1]);
+    if (v >= 100 && v <= 500) r.meltTempC = v;
+  }
+
+  // HDT: "HDT @ 0.45 MPa: 55°C", "Heat Deflection: 98°C", "HDT (0.45MPa): 70°C"
+  const hdtM = tryRe("(?:HDT|Heat\\s*Deflection(?:\\s*Temp(?:erature)?)?)\\s*(?:@|\\()?\\s*(?:0\\.45\\s*MPa)?\\s*(?:\\))?[:\\s]*([\\d]+)\\s*[°℃]");
+  if (hdtM?.[1]) {
+    const v = parseInt(hdtM[1]);
+    if (v >= 30 && v <= 400) r.hdtC = v;
+  }
+
+  // Vicat softening: "Vicat Softening: 57°C", "Vicat B/50: 100°C"
+  const vicatM = tryRe("(?:Vicat)\\s*(?:Softening(?:\\s*Temp(?:erature)?)?|[AB]\\/\\d+)?[:\\s]*([\\d]+)\\s*[°℃]");
+  if (vicatM?.[1]) {
+    const v = parseInt(vicatM[1]);
+    if (v >= 30 && v <= 400) r.vicatC = v;
+  }
+
+  // Water absorption: "Water Absorption: 0.5%", "Moisture Absorption: 2.5%"
+  const waterM = tryRe("(?:Water|Moisture)\\s*Absorption[:\\s]*([\\d]+\\.?[\\d]*)\\s*[%]");
+  if (waterM?.[1]) {
+    const v = parseFloat(waterM[1]);
+    if (v >= 0 && v <= 20) r.waterAbsorptionPercent = v;
+  }
 
   return r;
 }
@@ -615,10 +1175,22 @@ export function extractFilamentsFromProduct(
 
     const displayName = makeDisplayName(material, colorName);
 
+    // Resolve material defaults for enrichment fields
+    const matDefaults = resolveMaterialDefaults(material);
+
+    // Title-keyword based CF/GF detection (overrides material defaults)
+    const titleUpper = product.title?.toUpperCase() || "";
+    const titleHasCF = titleUpper.includes("CF") || titleUpper.includes("CARBON FIBER");
+    const titleHasGF = titleUpper.includes("GF") || titleUpper.includes("GLASS FIBER");
+
+    // Priority: body_html extraction > material defaults > title keywords
+    const isAbrasive = titleHasCF || titleHasGF || matDefaults?.is_nozzle_abrasive || null;
+    const nozzleType = isAbrasive ? "Hardened Steel" : (matDefaults?.recommended_nozzle_type ?? null);
+
     filaments.push({
       brand_id: config.brand_id,
       material,
-      product_title: `${config.brand_name} ${displayName}`,
+      product_title: displayName,
       display_name: displayName,
       color_family: guessColorFamily(colorName),
       color_hex: guessColorHex(colorName),
@@ -648,11 +1220,42 @@ export function extractFilamentsFromProduct(
       print_speed_max_mms: specs.printSpeedMax,
       high_speed_capable: material.includes("HSPLA") || material.includes("HS") ||
         (specs.printSpeedMax !== null && specs.printSpeedMax >= 300),
-      drying_temp_c: null,
-      drying_time_hours: null,
+      drying_temp_c: specs.dryingTempC ?? matDefaults?.drying_temp_c ?? null,
+      drying_time_hours: specs.dryingTimeHours ?? matDefaults?.drying_time_hours ?? null,
       pack_quantity: 1,
       variant_available: anyAvailable,
       available_regions: availableRegions,
+      // Enrichment fields
+      tg_c: specs.tgC ?? matDefaults?.tg_c ?? null,
+      moisture_sensitivity_level: matDefaults?.moisture_sensitivity_level ?? null,
+      is_nozzle_abrasive: isAbrasive,
+      recommended_nozzle_type: nozzleType,
+      fan_min_percent: specs.fanMinPercent ?? matDefaults?.fan_min_percent ?? null,
+      fan_max_percent: specs.fanMaxPercent ?? matDefaults?.fan_max_percent ?? null,
+      density_g_cm3: specs.densityGCm3 ?? matDefaults?.density_g_cm3 ?? null,
+      nozzle_temp_sweetspot_c: matDefaults?.nozzle_temp_sweetspot_c ?? null,
+      use_case_tags: matDefaults?.use_case_tags ?? null,
+      food_contact_rating: matDefaults?.food_contact_rating ?? null,
+      retraction_length_mm: specs.retractionLengthMm ?? null,
+      retraction_speed_mms: specs.retractionSpeedMms ?? null,
+      spool_ams_fit: null,
+      tds_url: specs.tdsUrl ?? null,
+      // Mechanical properties (body_html > material defaults)
+      tensile_strength_xy_mpa: specs.tensileStrengthMpa ?? matDefaults?.tensile_strength_xy_mpa ?? null,
+      elongation_break_xy_percent: specs.elongationBreakPercent ?? matDefaults?.elongation_break_xy_percent ?? null,
+      flexural_strength_mpa: specs.flexuralStrengthMpa ?? matDefaults?.flexural_strength_mpa ?? null,
+      impact_strength_kj_m2: specs.impactStrengthKjM2 ?? matDefaults?.impact_strength_kj_m2 ?? null,
+      shore_hardness_d: specs.shoreHardnessD ?? matDefaults?.shore_hardness_d ?? null,
+      hardness_shore_a: specs.hardnessShoreA ?? matDefaults?.hardness_shore_a ?? null,
+      // Thermal properties (body_html > material defaults)
+      melt_temp_c: specs.meltTempC ?? matDefaults?.melt_temp_c ?? null,
+      hdt_045_mpa_c: specs.hdtC ?? matDefaults?.hdt_045_mpa_c ?? null,
+      vicat_softening_temp_c: specs.vicatC ?? matDefaults?.vicat_softening_temp_c ?? null,
+      water_absorption_percent: specs.waterAbsorptionPercent ?? matDefaults?.water_absorption_percent ?? null,
+      // Product line grouping
+      product_line_id: computeProductLineId(
+        config.adapter_key, material, specs.diameter || 1.75, guessFinishType(material, colorName)
+      ),
     });
   }
 

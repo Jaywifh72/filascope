@@ -207,138 +207,40 @@ const Deals = () => {
       )}
       <div className="min-h-screen flex flex-col">
       <section className="flex-1" role="region" aria-label="Deals listings">
-        {/* Hero Section — compressed */}
-        <section className="relative py-4 md:py-6 px-6 md:px-10">
+        {/* Hero Section — compact */}
+        <section className="relative px-4 sm:px-6 md:px-10 pt-4 pb-1 sm:pt-6 sm:pb-2 md:pt-6 md:pb-3">
           <div className="max-w-[1600px] mx-auto">
-            {/* Badge with live indicator */}
-            <div className="flex items-center justify-center mb-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/5">
-                <Tag className="h-3.5 w-3.5 text-emerald-400" />
-                <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
-                  Today's Deals
-                </span>
-                <span className="relative flex h-2 w-2 ml-1.5" aria-hidden="true">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
-              </div>
-            </div>
+            <div className="flex flex-col items-start max-w-3xl">
+              {/* Compact H1 */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.15] text-white mb-2">
+                Filament <span className="text-emerald-400">Deals & Discounts</span>
+              </h1>
 
-            {/* Headline */}
-            <h1 className="text-2xl md:text-4xl font-bold text-center mb-2">
-              3D Printer Filament <span className="text-emerald-400">Deals & Discounts</span>
-            </h1>
-            <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-2xl mx-auto mb-2">
-              FilaScope monitors real-time 3D printer filament prices from 15+ stores across the US, Canada, EU, UK, and Australia, flagging price drops and deals across 8,200+ filaments. Prices are updated daily to ensure you always find the lowest available price for your preferred filament.
-            </p>
-
-            {/* Dynamic stat pills + Deal Alerts CTA */}
-            <div
-              className="flex items-center justify-center gap-3 flex-wrap"
-              aria-label={`Deal statistics: up to ${maxDiscount} percent off, ${uniqueBrandCount} brands, updated ${lastUpdated ? formatDistanceToNow(new Date(lastUpdated), { addSuffix: true }) : 'recently'}`}
-            >
-              {maxDiscount > 0 && (
-                <span className="text-xs font-medium px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-muted-foreground">
-                  Up to <span className="text-emerald-400 font-semibold">{maxDiscount}%</span> off
-                </span>
-              )}
-              {uniqueBrandCount > 0 && (
-                <span className="text-xs font-medium px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-muted-foreground">
-                  <span className="text-teal-400 font-semibold">{uniqueBrandCount}</span> brands
-                </span>
-              )}
-              {lastUpdated && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  {formatDistanceToNow(new Date(lastUpdated), { addSuffix: true })}
-                </span>
-              )}
-              <Button variant="outline" size="sm" className="text-xs h-7 px-3 gap-1.5 rounded-full" asChild>
-                <Link to="#deal-alerts">
-                  <Bell className="h-3 w-3" />
-                  Deal Alerts
-                </Link>
-              </Button>
-            </div>
-
-            {/* Intro paragraph */}
-            <p className="text-sm text-muted-foreground text-center max-w-3xl mx-auto mt-4 leading-relaxed">
-              Find the best <strong className="text-foreground">3D printer filament deals</strong> and <strong className="text-foreground">filament discounts</strong> across
-              {' '}{totalDeals > 0 ? <>{totalDeals}+</> : 'hundreds of'} active offers from {uniqueBrandCount > 0 ? `${uniqueBrandCount}+` : '19+'} brands.
-              {' '}We track <strong className="text-foreground">filament prices</strong> daily from stores in the US, Canada, EU, UK, and Australia so you can find the{' '}
-              <strong className="text-foreground">cheapest filament</strong> for your project without checking every retailer.
-              {' '}Browse the <Link to="/filaments" className="text-primary hover:underline">full filament catalog</Link>,{' '}
-              <Link to="/compare" className="text-primary hover:underline">compare filaments side by side</Link>, explore{' '}
-              <Link to="/brands" className="text-primary hover:underline">all brands</Link>, or read our{' '}
-              <Link to="/guides/how-to-choose-3d-printer-filament" className="text-primary hover:underline">filament buying guide</Link> for help choosing the right material.
-            </p>
-
-            {/* Stat cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5 max-w-3xl mx-auto">
-              <Card className="bg-muted/30 border-border/50">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <ShoppingBag className="h-5 w-5 text-emerald-400 shrink-0" />
-                  <div>
-                    <p className="text-lg font-bold text-foreground">{totalDeals ? `${totalDeals}+` : '417+'}</p>
-                    <p className="text-[10px] text-muted-foreground">Active Deals</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-muted/30 border-border/50">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <Tag className="h-5 w-5 text-teal-400 shrink-0" />
-                  <div>
-                    <p className="text-lg font-bold text-foreground">{uniqueBrandCount ? `${uniqueBrandCount}+` : '19+'}</p>
-                    <p className="text-[10px] text-muted-foreground">Brands on Sale</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-muted/30 border-border/50">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <TrendingDown className="h-5 w-5 text-amber-400 shrink-0" />
-                  <div>
-                    <p className="text-lg font-bold text-foreground">Up to {maxDiscount > 0 ? maxDiscount : 60}%</p>
-                    <p className="text-[10px] text-muted-foreground">Off</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-muted/30 border-border/50">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <Globe className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-lg font-bold text-foreground">5</p>
-                    <p className="text-[10px] text-muted-foreground">Regions Covered</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Material deal links */}
-            <div className="mt-6 max-w-3xl mx-auto">
-              <h2 className="text-lg font-semibold text-foreground text-center mb-3">Today's Best Filament Deals by Material</h2>
-              <div className="flex items-center justify-center gap-2 flex-wrap">
-                {[
-                  { label: "PLA Deals", material: "PLA" },
-                  { label: "PETG Deals", material: "PETG" },
-                  { label: "ABS Deals", material: "ABS" },
-                  { label: "TPU Deals", material: "TPU" },
-                  { label: "Specialty Deals", material: "Specialty" },
-                ].map(chip => (
-                  <button
-                    key={chip.material}
-                    onClick={() => {
-                      setSelectedMaterials(chip.material === "Specialty" ? [] : [chip.material]);
-                      if (chip.material === "Specialty") {
-                        setSelectedMaterials(availableMaterials.filter(m => !["PLA", "PETG", "ABS", "TPU"].includes(m)));
-                      }
-                      document.getElementById("deals-filters")?.scrollIntoView({ behavior: "smooth" });
-                    }}
-                    className="px-4 py-2 text-sm rounded-full border border-border bg-card hover:bg-accent hover:border-primary/30 transition-colors font-medium text-foreground"
-                  >
-                    {chip.label}
-                  </button>
-                ))}
-              </div>
+              {/* Stats line */}
+              <p className="text-sm sm:text-base text-gray-400 mb-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                {totalDeals > 0 ? (
+                  <><span className="text-emerald-400 font-semibold">{totalDeals}+</span> deals</>
+                ) : (
+                  <><span className="text-emerald-400 font-semibold">417+</span> deals</>
+                )}
+                {' '}from{' '}
+                <span className="text-emerald-400 font-semibold">{uniqueBrandCount > 0 ? `${uniqueBrandCount}+` : '19+'}</span> brands
+                {maxDiscount > 0 && (
+                  <>
+                    <span className="text-white/20 mx-2">·</span>
+                    Up to <span className="text-emerald-400 font-semibold">{maxDiscount}%</span> off
+                  </>
+                )}
+                {lastUpdated && (
+                  <>
+                    <span className="text-white/20 mx-2">·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Updated {formatDistanceToNow(new Date(lastUpdated), { addSuffix: false })} ago
+                    </span>
+                  </>
+                )}
+              </p>
             </div>
           </div>
         </section>
