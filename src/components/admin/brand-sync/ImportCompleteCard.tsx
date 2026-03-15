@@ -13,9 +13,11 @@ interface Props {
   brandSlug: string;
   onReset: () => void;
   onRetry?: (error: ImportError) => Promise<boolean>;
+  /** "filament" or "printer" — adapts result text */
+  productLabel?: string;
 }
 
-export function ImportCompleteCard({ result, brandSlug, onReset, onRetry }: Props) {
+export function ImportCompleteCard({ result, brandSlug, onReset, onRetry, productLabel = 'filament' }: Props) {
   const [errorsExpanded, setErrorsExpanded] = useState(false);
 
   const hasErrors = result.errorDetails?.length > 0 || result.errors > 0;
@@ -37,7 +39,7 @@ export function ImportCompleteCard({ result, brandSlug, onReset, onRetry }: Prop
               {hasErrors ? 'Import Complete with Issues' : 'Import Complete'}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {result.imported} filament{result.imported !== 1 ? 's' : ''} imported
+              {result.imported} {productLabel}{result.imported !== 1 ? 's' : ''} imported
               {result.updatedPrices > 0 && `, ${result.updatedPrices} prices updated`}
             </p>
           </div>

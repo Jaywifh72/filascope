@@ -18,7 +18,7 @@ interface AffiliateConfig {
 }
 
 // Hardcoded fallback configs — used when the Edge Function is unreachable (CORS, cold start, outage).
-// Sourced from affiliate_configs + affiliate_programs tables as of 2026-03-02.
+// Sourced from affiliate_configs + affiliate_programs tables. Last synced: 2026-03-14.
 const FALLBACK_CONFIGS: AffiliateConfig[] = [
   // Amazon — all regions
   { vendor_name: "Amazon", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: "filascope-20", amazon_uk_tag: "filascope-20", amazon_de_tag: "filascope-20", amazon_ca_tag: "filascope-20", amazon_au_tag: "filascope-20", amazon_jp_tag: "filascope-20", affiliate_network: "amazon" },
@@ -56,8 +56,8 @@ const FALLBACK_CONFIGS: AffiliateConfig[] = [
   { vendor_name: "FormFutura", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
   // 3D-Fuel — direct
   { vendor_name: "3D-Fuel", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
-  // Siraya Tech — UpPromote
-  { vendor_name: "Siraya Tech", affiliate_id: "7165608.JA2wBdEg", affiliate_url_pattern: "?sca_ref=7165608.JA2wBdEg", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
+  // Siraya Tech — UpPromote (updated 2026-03-14 to match affiliate_programs DB)
+  { vendor_name: "Siraya Tech", affiliate_id: "10634572.rHWsw5PvJi", affiliate_url_pattern: "?sca_ref=10634572.rHWsw5PvJi", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
 ];
 
 // In-memory cache for configs

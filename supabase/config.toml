@@ -494,3 +494,6 @@ verify_jwt = false
 
 [functions.backfill-filament-listings]
 verify_jwt = false
+
+[functions.sync-printer-prices]
+verify_jwt = false

@@ -91,9 +91,10 @@ Deno.serve(async (req) => {
 
     if (configError) throw new Error(`Failed to load brand_sync_config: ${configError.message}`);
 
-    const configByBrandId = new Map<string, BrandSyncConfig>();
+    // Build config lookup by both brand_id (UUID or slug) — the table has mixed keys
+    const configByKey = new Map<string, BrandSyncConfig>();
     for (const c of allConfigs || []) {
-      configByBrandId.set(c.brand_id, c as BrandSyncConfig);
+      configByKey.set(c.brand_id, c as BrandSyncConfig);
     }
 
     // 2. Query printers with brand join
@@ -159,19 +160,25 @@ Deno.serve(async (req) => {
     if (body.printer_id) {
       query = query.eq("id", body.printer_id);
     } else if (body.brand_id) {
-      // Find brand by slug match
-      const { data: brandRow } = await supabase
-        .from("printer_brands")
-        .select("id, brand")
-        .then(({ data }) => ({
-          data: data?.find(b => slugify(b.brand) === body.brand_id) || null,
-        }));
-      if (!brandRow) {
-        return new Response(JSON.stringify({ error: `Brand not found for slug: ${body.brand_id}` }), {
-          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      // Accept either UUID or slug
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.brand_id);
+      if (isUuid) {
+        query = query.eq("brand_id", body.brand_id);
+      } else {
+        // Find brand by slug match
+        const { data: brandRow } = await supabase
+          .from("printer_brands")
+          .select("id, brand")
+          .then(({ data }) => ({
+            data: data?.find(b => slugify(b.brand) === body.brand_id) || null,
+          }));
+        if (!brandRow) {
+          return new Response(JSON.stringify({ error: `Brand not found for slug: ${body.brand_id}` }), {
+            status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        query = query.eq("brand_id", brandRow.id);
       }
-      query = query.eq("brand_id", brandRow.id);
     }
 
     const { data: printers, error: printersError } = await query;
@@ -194,7 +201,9 @@ Deno.serve(async (req) => {
       }
 
       const brandSlug = slugify(brandName);
-      const config = configByBrandId.get(brandSlug);
+      // Look up config by slug first, then by brand UUID (table has mixed keys)
+      const brandId = (printer as any).printer_brands?.id;
+      const config = configByKey.get(brandSlug) || (brandId ? configByKey.get(brandId) : undefined);
 
       // If manual_only, skip
       if (config?.primary_extraction === "manual_only") {

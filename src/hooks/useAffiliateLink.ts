@@ -32,9 +32,28 @@ interface UseAffiliateLinkResult {
 }
 
 /**
+ * Local fallback affiliate configs for brands not yet in the affiliate_programs DB.
+ * Structured as partial AffiliateProgram objects so buildAffiliateLinkLocal() works.
+ * These are the safety net — the canonical source of truth is the DB.
+ */
+const LOCAL_FALLBACK_PROGRAMS: Record<string, Partial<AffiliateProgram>> = {
+  polymaker: {
+    id: "local-polymaker",
+    brand_name: "Polymaker",
+    region_code: "GLOBAL",
+    affiliate_network: "Affiliatly",
+    store_base_url: "https://us.polymaker.com",
+    tracking_parameter: "aff",
+    tracking_value: "99",
+    link_generation_method: "url_parameter",
+    is_active: true,
+  },
+};
+
+/**
  * Hook that looks up an affiliate_programs record for a given brand+region.
  * Returns helpers to build tracked affiliate links and open them.
- * Falls back gracefully when no program exists (returns original URLs).
+ * Falls back to LOCAL_FALLBACK_PROGRAMS when no DB entry exists.
  */
 export function useAffiliateLink(brandName: string | null | undefined): UseAffiliateLinkResult {
   const { region } = useRegion();
@@ -92,7 +111,7 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
       }
       if (globalMatch) return globalMatch as AffiliateProgram;
 
-      // Last resort: any active program
+      // Last resort: any active program in the DB
       const { data: fallback, error: fallbackError } = await supabase
         .from("affiliate_programs")
         .select("*")
@@ -102,9 +121,18 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
         .maybeSingle();
       if (fallbackError) {
         console.error("[useAffiliateLink] fallback lookup error:", fallbackError);
-        return null;
       }
-      return (fallback as AffiliateProgram) ?? null;
+      if (fallback) return fallback as AffiliateProgram;
+
+      // Final fallback: check local hardcoded configs for brands not yet in DB
+      const localKey = resolvedBrandName!.toLowerCase();
+      const localFallback = LOCAL_FALLBACK_PROGRAMS[localKey];
+      if (localFallback) {
+        console.info(`[useAffiliateLink] Using local fallback for "${resolvedBrandName}"`);
+        return localFallback as AffiliateProgram;
+      }
+
+      return null;
     },
   });
 

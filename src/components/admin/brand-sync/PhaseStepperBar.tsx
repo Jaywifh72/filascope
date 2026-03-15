@@ -7,6 +7,8 @@ interface Props {
   phase: Phase;
   scanStats?: { discovered?: number; newCount?: number } | null;
   importStats?: { imported?: number } | null;
+  /** "filaments" or "printers" — adapts tooltip text */
+  productLabel?: string;
 }
 
 const STEPS = [
@@ -14,21 +16,21 @@ const STEPS = [
     key: 'scan',
     label: 'Scan Store',
     icon: Search,
-    tooltip: 'Discover all filament products from the brand\'s online store',
+    tooltip: (pl: string) => `Discover all ${pl} products from the brand's online store`,
     phases: ['select', 'scanning', 'processing'] as Phase[],
   },
   {
     key: 'delta',
     label: 'Review Delta',
     icon: GitCompare,
-    tooltip: 'Compare discovered products against the existing database to find new and changed items',
+    tooltip: (_pl: string) => 'Compare discovered products against the existing database to find new and changed items',
     phases: ['delta'] as Phase[],
   },
   {
     key: 'import',
     label: 'Import',
     icon: Download,
-    tooltip: 'Create or update filament records in the database with all extracted data',
+    tooltip: (pl: string) => `Create or update ${pl} records in the database with all extracted data`,
     phases: ['importing', 'complete'] as Phase[],
   },
 ] as const;
@@ -46,7 +48,7 @@ function getStepState(stepPhases: readonly Phase[], currentPhase: Phase) {
   return 'pending';
 }
 
-export function PhaseStepperBar({ phase, scanStats, importStats }: Props) {
+export function PhaseStepperBar({ phase, scanStats, importStats, productLabel = 'filament' }: Props) {
   return (
     <TooltipProvider>
       <div className="flex items-center gap-0 mb-6">
@@ -102,7 +104,7 @@ export function PhaseStepperBar({ phase, scanStats, importStats }: Props) {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p className="max-w-xs text-xs">{step.tooltip}</p>
+                  <p className="max-w-xs text-xs">{step.tooltip(productLabel)}</p>
                 </TooltipContent>
               </Tooltip>
 

@@ -545,17 +545,25 @@ const PrinterDetail = () => {
     };
 
     try {
+      let images: string[] = [];
       if (printer?.scraped_data) {
         const scrapedData = printer.scraped_data as any;
-        const images = scrapedData?.images?.product_images;
-        if (Array.isArray(images) && images.length > 0) {
-          setProductImages(images);
-          validateImages(images);
-        } else {
-          setProductImages([]);
-          setValidImages(new Set());
-          setCheckedImages(new Set());
+        const scrapedImages = scrapedData?.images?.product_images;
+        if (Array.isArray(scrapedImages) && scrapedImages.length > 0) {
+          images = scrapedImages;
         }
+      }
+      // Fall back to image_url if no scraped images
+      if (images.length === 0 && printer?.image_url) {
+        images = [printer.image_url];
+      }
+      if (images.length > 0) {
+        setProductImages(images);
+        validateImages(images);
+      } else {
+        setProductImages([]);
+        setValidImages(new Set());
+        setCheckedImages(new Set());
       }
     } catch (error) {
       console.error("Error extracting product images:", error);

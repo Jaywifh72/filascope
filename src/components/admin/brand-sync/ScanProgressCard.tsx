@@ -8,15 +8,25 @@ interface Props {
   brandName: string;
   scanJob: SyncJob | null;
   statusMessage?: string;
+  /** "filaments" or "printers" — adapts stage text */
+  productLabel?: string;
+  /** Override scanJob.filament_products_found (used by printer sync) */
+  productsFoundCount?: number;
 }
 
-function getStage(job: SyncJob | null): { label: string; detail: string; progress: number; icon: React.ReactNode } {
+function getStage(
+  job: SyncJob | null,
+  productLabel: string,
+  productsFoundOverride?: number,
+): { label: string; detail: string; progress: number; icon: React.ReactNode } {
+  const productsFound = productsFoundOverride ?? job?.filament_products_found;
+
   if (!job || job.status === 'syncing') {
     // Job is in progress — show estimated progress
-    if (job?.filament_products_found != null && job.filament_products_found > 0) {
+    if (productsFound != null && productsFound > 0) {
       return {
-        label: 'Extracting filaments',
-        detail: `Found ${job.filament_products_found} filament products...`,
+        label: `Extracting ${productLabel}`,
+        detail: `Found ${productsFound} ${productLabel} products...`,
         progress: 60,
         icon: <GitCompare className="w-4 h-4 text-blue-500" />,
       };
@@ -38,9 +48,11 @@ function getStage(job: SyncJob | null): { label: string; detail: string; progres
   }
 
   if (job.status === 'completed') {
+    const foundCount = productsFound ?? 0;
+    const totalItems = (job.new_count ?? 0) + (job.changed_count ?? 0) + (job.matched_count ?? 0);
     return {
       label: 'Scan complete',
-      detail: `${job.filament_products_found ?? 0} products → ${(job.new_count ?? 0) + (job.changed_count ?? 0) + (job.matched_count ?? 0)} filaments`,
+      detail: `${foundCount} products → ${totalItems} ${productLabel}`,
       progress: 100,
       icon: <CheckCircle2 className="w-4 h-4 text-green-500" />,
     };
@@ -54,8 +66,8 @@ function getStage(job: SyncJob | null): { label: string; detail: string; progres
   };
 }
 
-export function ScanProgressCard({ brandName, scanJob, statusMessage }: Props) {
-  const stage = getStage(scanJob);
+export function ScanProgressCard({ brandName, scanJob, statusMessage, productLabel = 'filaments', productsFoundCount }: Props) {
+  const stage = getStage(scanJob, productLabel, productsFoundCount);
 
   // Override stage detail with live status message from hook if available
   if (statusMessage) {

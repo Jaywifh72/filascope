@@ -220,7 +220,7 @@ export const getPrinterImage = (printer: Printer): string | null => {
   const scrapedData = printer.scraped_data as Record<string, unknown> | null;
   const images = scrapedData?.images as Record<string, unknown> | null;
   const productImages = images?.product_images as string[] | null;
-  return productImages?.[0] || null;
+  return productImages?.[0] || printer.image_url || null;
 };
 
 // Get key features for a printer
