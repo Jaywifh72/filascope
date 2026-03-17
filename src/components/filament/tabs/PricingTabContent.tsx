@@ -30,6 +30,7 @@ import type { CurrencyCode } from '@/types/regional';
 import type { PriceCandidate } from '@/hooks/useFilamentDetailPricing';
 import { useExchangeRates } from '@/hooks/useExchangeRates';
 import { formatPrice as formatCurrencyPrice } from '@/config/currencies';
+import { AmazonBadges } from '../AmazonBadges';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -93,6 +94,8 @@ interface UnifiedStoreItem {
   inStock: boolean;
   lastChecked?: string | null;
   retailerLogo?: string | null;
+  /** Amazon-specific product details */
+  amazonDetails?: PriceCandidate['amazonDetails'];
 }
 
 // Store Row Component
@@ -193,6 +196,10 @@ function StoreRow({ store, userCurrencySymbol, lastScrapedAt, formatPrice }: {
               <span>Last checked: {freshnessInfo.text}</span>
               <span className="text-muted-foreground/50 text-[10px]">({freshnessInfo.fullDate})</span>
             </div>
+          )}
+          {/* Amazon badges (Prime, coupons, ratings, etc.) */}
+          {store.amazonDetails && (
+            <AmazonBadges details={store.amazonDetails} layout="inline" className="mt-1" />
           )}
         </div>
       </div>
@@ -353,6 +360,7 @@ export function PricingTabContent({
           : 'retailer',
         inStock: true,
         retailerLogo: candidate.retailerLogo,
+        amazonDetails: candidate.amazonDetails,
       };
     });
   }, [priceCandidates, region, currency, getConversionRate]);

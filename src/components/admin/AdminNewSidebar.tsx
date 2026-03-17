@@ -19,6 +19,7 @@ import {
   Sun,
   PackagePlus,
   ShieldCheck,
+  ShoppingCart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,7 @@ const NAV_GROUPS: NavGroup[] = [
       { title: 'Pricing Data', href: '/admin/pricing-data', icon: DollarSign },
       { title: 'TD Management', href: '/admin/td-management', icon: Sun },
       { title: 'Brand Catalog Sync', href: '/admin/filament-onboarding', icon: PackagePlus },
+      { title: 'Amazon Filament Sync', href: '/admin/amazon-sync', icon: ShoppingCart },
     ],
   },
   {

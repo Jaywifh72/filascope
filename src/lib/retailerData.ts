@@ -21,7 +21,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   'amazon': {
     slug: 'amazon',
     name: 'Amazon',
-    logo_url: '/images/retailers/amazon.png',
+    logo_url: '/images/retailers/amazon.svg',
     website_url: 'https://amazon.com',
     trust_score: 4.8,
     shipping_speed_rating: 5.0,

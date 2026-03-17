@@ -137,6 +137,7 @@ const AdminTdManagement = lazy(() => import("./pages/admin/TdManagement"));
 const AdminFilamentOnboarding = lazy(() => import("./pages/admin/BrandCatalogSync"));
 const AdminAffiliatesNew = lazy(() => import("./pages/admin/Affiliates"));
 const AdminDataIntegrity = lazy(() => import("./pages/admin/DataIntegrity"));
+const AdminAmazonSync = lazy(() => import("./pages/admin/AmazonSync"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const FilamentCategoryPage = lazy(() => import("./pages/FilamentCategoryPage"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
@@ -325,6 +326,7 @@ const App = () => (
                   <Route path="/admin/filament-onboarding" element={<AdminNewLayoutModule><AdminFilamentOnboarding /></AdminNewLayoutModule>} />
                   <Route path="/admin/affiliates" element={<AdminNewLayoutModule><AdminAffiliatesNew /></AdminNewLayoutModule>} />
                   <Route path="/admin/data-integrity" element={<AdminNewLayoutModule><AdminDataIntegrity /></AdminNewLayoutModule>} />
+                  <Route path="/admin/amazon-sync" element={<AdminNewLayoutModule><AdminAmazonSync /></AdminNewLayoutModule>} />
                   <Route path="/admin/*" element={<AdminRedirect />} />
                   <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
                   <Route path="/old-admin/dashboard" element={<AdminDashboard />} />

@@ -47,6 +47,22 @@ export interface PriceCandidate {
   isLocal: boolean;
   /** Retailer logo URL */
   retailerLogo?: string | null;
+  /** Amazon-specific product details (Prime, coupons, ratings, etc.) */
+  amazonDetails?: {
+    rating?: number | null;
+    review_count?: number | null;
+    is_prime_eligible?: boolean | null;
+    coupon_text?: string | null;
+    coupon_percent?: number | null;
+    coupon_amount_cents?: number | null;
+    deal_type?: string | null;
+    deal_end_at?: string | null;
+    subscribe_save_percent?: number | null;
+    stock_status?: string;
+    is_addon_item?: boolean;
+    buy_box_seller?: string | null;
+    is_sold_by_brand?: boolean | null;
+  } | null;
 }
 
 export interface DetailPricingResult {

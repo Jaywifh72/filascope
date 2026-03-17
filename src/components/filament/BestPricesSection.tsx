@@ -10,6 +10,8 @@ import type { RegionCode } from '@/types/regional';
 import { cn } from '@/lib/utils';
 import type { PriceCandidate } from '@/hooks/useFilamentDetailPricing';
 import { useAffiliateLink } from '@/hooks/useAffiliateLink';
+import { useAmazonBestDetails } from '@/hooks/useAmazonProductDetails';
+import { AmazonBadges } from './AmazonBadges';
 
 interface BestPricesSectionProps {
   filamentId: string;
@@ -23,6 +25,9 @@ interface BestPricesSectionProps {
 export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCount, candidates, candidatesLoading, vendor }: BestPricesSectionProps) {
   const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(vendor);
   const { region, currency, formatPrice, convertPrice, hasRates } = useRegion();
+
+  // Fetch Amazon product details for this filament (Prime, coupons, ratings)
+  const { data: amazonDetails } = useAmazonBestDetails(filamentId, region);
 
   const useFallbackFetch = candidates === undefined;
   const userCurrency = REGIONS[region as RegionCode]?.defaultCurrency || 'USD';
@@ -98,6 +103,13 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
   }, [candidates, fallbackListings, region]);
 
   const totalCount = totalRetailerCount ?? (candidates ? candidates.length : fallbackListings.length);
+
+  // Check if the best retailer is Amazon (for showing Amazon-specific badges)
+  const isAmazonRetailer = useMemo(() => {
+    if (!bestRetailer) return false;
+    const name = bestRetailer.name.toLowerCase();
+    return name.includes('amazon') || bestRetailer.url.includes('amazon.');
+  }, [bestRetailer]);
 
   const buyNowUrl = useMemo(() => {
     if (!bestRetailer) return '';
@@ -184,6 +196,10 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
                   </span>
                 )}
               </div>
+              {/* Amazon badges: show if best retailer is Amazon and we have details */}
+              {isAmazonRetailer && amazonDetails && (
+                <AmazonBadges details={amazonDetails} layout="inline" className="mt-1" />
+              )}
             </div>
           </div>
 
