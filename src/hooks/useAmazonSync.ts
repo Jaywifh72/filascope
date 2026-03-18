@@ -365,7 +365,7 @@ export function useAmazonSync() {
         .select(`id, product_title, vendor, featured_image, variant_price, material, color_family, ${linkCol}`)
         .ilike('vendor', `%${options.brandSlug}%`)
         .order('product_title')
-        .limit(options.limit || 1000);
+        .limit(options.limit || 1000) as { data: any[] | null; error: any };
 
       if (error) throw error;
 

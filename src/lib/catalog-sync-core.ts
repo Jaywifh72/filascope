@@ -210,7 +210,6 @@ const MATERIAL_NORMALIZE: Record<string, string> = {
   "pla glow":"PLA-Glow","pla marble":"PLA","pla crystal":"PLA",
   "pla dual color":"PLA","pla silk dual color":"Silk PLA",
   "silk shiny gradient":"Silk PLA","pla basic-high speed":"HSPLA",
-  "pla basic":"PLA",
 };
 
 const KNOWN_COLOR_WORDS = [
