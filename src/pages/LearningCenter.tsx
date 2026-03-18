@@ -251,8 +251,8 @@ const getCategoryConfig = (category: string) => {
 function GuideCard({ guide }: { guide: GuideMetadata }) {
   const categoryConfig = getCategoryConfig(guide.category);
   
-  const linkTo = guide.isBuyingGuide ? `/guides/${guide.slug}` : `/learn/${guide.slug}`;
-  
+  const linkTo = guide.isBuyingGuide ? `/guides/${guide.slug}` : `/guides/${guide.slug}`;
+
   return (
     <Link to={linkTo}>
       <Card className="bg-card/50 border-border hover:border-primary/50 hover:bg-card/80 transition-all group h-full">
@@ -268,15 +268,15 @@ function GuideCard({ guide }: { guide: GuideMetadata }) {
               </Badge>
             )}
           </div>
-          
+
           <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">
             {guide.title}
           </h3>
-          
+
           <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3">
             {guide.description}
           </p>
-          
+
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
@@ -295,8 +295,8 @@ function GuideCard({ guide }: { guide: GuideMetadata }) {
 
 function FeaturedGuideCard({ guide }: { guide: GuideMetadata }) {
   const categoryConfig = getCategoryConfig(guide.category);
-  
-  const linkTo = guide.isBuyingGuide ? `/guides/${guide.slug}` : `/learn/${guide.slug}`;
+
+  const linkTo = guide.isBuyingGuide ? `/guides/${guide.slug}` : `/guides/${guide.slug}`;
   
   return (
     <Link to={linkTo}>
@@ -377,7 +377,7 @@ export default function LearningCenter() {
     <CollectionPageSchema
       name="3D Printing Guides, Tutorials & Buying Advice"
       description={lcMetaDesc}
-      url="https://filascope.com/learn"
+      url="https://filascope.com/guides"
       numberOfItems={GUIDES.length}
     />
     <ItemListSchema
@@ -385,14 +385,14 @@ export default function LearningCenter() {
       items={[...GUIDES].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 30).map((g, i) => ({
         position: i + 1,
         name: g.title,
-        url: `https://filascope.com${g.isBuyingGuide ? '/guides' : '/learn'}/${g.slug}`,
+        url: `https://filascope.com/guides/${g.slug}`,
         description: g.description,
       }))}
     />
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Visible breadcrumb trail */}
       <div className="max-w-7xl mx-auto px-4 pt-4">
-        <Breadcrumbs items={[{ name: "Guides", url: "/learn" }]} />
+        <Breadcrumbs items={[{ name: "Guides", url: "/guides" }]} />
       </div>
 
       {/* Hero Section */}

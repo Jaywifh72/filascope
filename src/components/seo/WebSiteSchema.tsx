@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { name: 'Printers',  url: `${BASE_URL}/printers` },
   { name: 'Brands',    url: `${BASE_URL}/brands` },
   { name: 'Deals',     url: `${BASE_URL}/deals` },
-  { name: 'Guides',    url: `${BASE_URL}/learn` },
+  { name: 'Guides',    url: `${BASE_URL}/guides` },
   { name: 'HueForge TD Database', url: `${BASE_URL}/hueforge-td-database` },
 ] as const;
 

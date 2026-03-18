@@ -110,7 +110,7 @@ const ACCENT = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function HueForgeHub() {
-  const canonicalUrl = 'https://filascope.com/learn/hueforge';
+  const canonicalUrl = 'https://filascope.com/guides/hueforge-beginners-guide';
 
   return (
     <>
@@ -125,7 +125,7 @@ export default function HueForgeHub() {
         description="Everything you need for HueForge printing: TD value database, filament finder, beginner TD guides, measurement tutorials, and white filament rankings."
         datePublished="2026-02-20"
         dateModified="2026-02-20"
-        url="/learn/hueforge"
+        url="/guides/hueforge-beginners-guide"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'HueForge 3D Printing' }}
         proficiencyLevel="Beginner"
@@ -135,8 +135,8 @@ export default function HueForgeHub() {
         {/* Breadcrumb */}
         <div className="max-w-5xl mx-auto px-4 py-6">
           <Breadcrumbs items={[
-            { name: 'Learn', url: '/learn' },
-            { name: 'HueForge Hub', url: '/learn/hueforge' },
+            { name: 'Guides', url: '/guides' },
+            { name: 'HueForge Hub', url: '/guides/hueforge-beginners-guide' },
           ]} />
         </div>
 

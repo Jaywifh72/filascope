@@ -46,7 +46,7 @@ export default function MaterialKnowledgeBase() {
       />
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Learn', url: 'https://filascope.com/learn' },
+        { name: 'Guides', url: 'https://filascope.com/guides' },
         { name: 'Material Knowledge Base', url: 'https://filascope.com/reference/materials' },
       ]} />
       <DefinedTermSetSchema
@@ -64,7 +64,7 @@ export default function MaterialKnowledgeBase() {
         <div className="container mx-auto px-4 py-8 relative z-10">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-sm mb-4" aria-label="Breadcrumb">
-            <Link to="/learn" className="text-slate-400 hover:text-cyan-400 transition-colors">Learn</Link>
+            <Link to="/guides" className="text-slate-400 hover:text-cyan-400 transition-colors">Guides</Link>
             <span className="text-slate-600">/</span>
             <span className="text-foreground font-medium">Material Knowledge Base</span>
           </nav>

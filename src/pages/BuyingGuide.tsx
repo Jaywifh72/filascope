@@ -10,7 +10,7 @@ export default function BuyingGuide() {
   const { slug } = useParams<{ slug: string }>();
   
   if (!slug) {
-    return <Navigate to="/learn" replace />;
+    return <Navigate to="/guides" replace />;
   }
 
   const config = getBuyingGuideConfig(slug);
@@ -26,7 +26,7 @@ export default function BuyingGuide() {
               The buying guide you're looking for doesn't exist or has been moved.
             </p>
             <Button asChild>
-              <Link to="/learn">Browse All Guides</Link>
+              <Link to="/guides">Browse All Guides</Link>
             </Button>
           </CardContent>
         </Card>

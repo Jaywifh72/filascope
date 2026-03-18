@@ -16,8 +16,16 @@
 /best-filaments-for-hueforge /guides/best-filaments-for-hueforge 301
 /best-white-filaments /guides/best-white-filaments-for-hueforge 301
 /filament-temperature-guide /guides/filament-temperature-guide 301
-/filament-storage-guide /guides/filament-storage-guide 301
+/filament-storage-guide /guides/how-to-store-filament 301
 /learn/hueforge /guides/hueforge-beginners-guide 301
+
+# Learn → Guides consolidation (canonical URLs under /guides/)
+/learn/pla-vs-petg-vs-abs /guides/pla-vs-petg 301
+/learn/best-filament-for-beginners-2025 /guides/best-filaments-for-beginners 301
+/learn/how-to-choose-3d-printer-budget /guides/how-to-choose-filament 301
+/learn/understanding-filament-temperature-settings /guides/filament-temperature-guide 301
+/learn/top-10-filaments-functional-parts /guides/best-filaments-for-functional-parts 301
+/learn/* /guides/:splat 301
 
 # SPA catch-all — MUST be last
 /* /index.html 200

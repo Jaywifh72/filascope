@@ -160,7 +160,7 @@ export function SiteFooter() {
     { name: "How to Choose Filament", href: "/guides/how-to-choose-3d-printer-filament" },
     { name: "Filament Types Explained", href: "/guides/3d-printer-filament-types-explained" },
     { name: "Temperature Guide", href: "/guides/filament-temperature-guide" },
-    { name: "All Guides →", href: "/learn" },
+    { name: "All Guides →", href: "/guides" },
   ];
 
   const aboutLinks: { name: string; href: string; external?: boolean; badge?: string; icon?: React.ComponentType<{ className?: string }> }[] = [

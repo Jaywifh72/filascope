@@ -19,7 +19,7 @@ const STATIC_URLS = [
   "/", "/deals", "/printers", "/brands", "/brands/compare", "/compare",
   "/wizard", "/color-finder", "/hueforge-td-database", "/hueforge-filaments",
   "/accessories", "/diagnose", "/reference/slicers", "/reference/repos",
-  "/matrix", "/about", "/methodology", "/learn", "/affiliate-disclosure",
+  "/matrix", "/about", "/methodology", "/guides", "/affiliate-disclosure",
   "/privacy", "/terms",
 ].map((p) => `${BASE_URL}${p}`);
 

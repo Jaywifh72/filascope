@@ -390,6 +390,7 @@ const App = () => (
                   <Route path="/hueforge-project-planner" element={<HueForgeProjectPlanner />} />
                   <Route path="/hueforge-tools" element={<HueForgeTools />} />
                   <Route path="/hueforge-palette-builder" element={<HueForgePaletteBuilder />} />
+                  <Route path="/guides" element={<LearningCenter />} />
                   <Route path="/learn" element={<LearningCenter />} />
                   <Route path="/learn/hueforge" element={<Navigate to="/guides/what-is-hueforge-td" replace />} />
                   <Route path="/learn/:slug" element={<GuideDetail />} />

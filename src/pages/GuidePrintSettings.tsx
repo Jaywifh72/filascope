@@ -37,8 +37,8 @@ const GuidePrintSettings = () => {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <Link 
-              to="/learn" 
+            <Link
+              to="/guides"
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
             >
               <ArrowLeft className="w-4 h-4" />

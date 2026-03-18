@@ -1659,7 +1659,7 @@ const MaterialCompare = () => {
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-sm mb-4" aria-label="Breadcrumb">
           <Link
-            to="/learn"
+            to="/guides"
             className="text-slate-400 hover:text-cyan-400 transition-colors"
           >
             Learn

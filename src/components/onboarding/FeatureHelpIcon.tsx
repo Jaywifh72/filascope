@@ -20,7 +20,7 @@ export const FEATURE_HELP_DEFINITIONS: Record<string, FeatureHelpDefinition> = {
   nozzle_size: {
     title: "Nozzle Size",
     description: "Standard is 0.4mm. Smaller nozzles give finer detail but print slower. Larger nozzles are faster but less detailed.",
-    learnMoreUrl: "/learn/temperature-settings",
+    learnMoreUrl: "/guides/filament-temperature-guide",
     learnMoreLabel: "Temperature guide",
   },
   flow_type: {
@@ -68,7 +68,7 @@ export const FEATURE_HELP_DEFINITIONS: Record<string, FeatureHelpDefinition> = {
   moisture_sensitivity: {
     title: "Moisture Sensitivity",
     description: "How much the filament absorbs moisture from air. High sensitivity materials need dry storage and may require drying before printing.",
-    learnMoreUrl: "/learn/beginner-filament-guide",
+    learnMoreUrl: "/guides/best-filaments-for-beginners",
     learnMoreLabel: "Filament care guide",
   },
 };

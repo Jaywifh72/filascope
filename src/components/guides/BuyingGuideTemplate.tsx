@@ -107,7 +107,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
 
   const breadcrumbs = [
     { name: 'Home', url: 'https://filascope.com/' },
-    { name: 'Guides', url: 'https://filascope.com/learn' },
+    { name: 'Guides', url: 'https://filascope.com/guides' },
     { name: config.title, url: `https://filascope.com/guides/${config.slug}` },
   ];
 
@@ -194,7 +194,7 @@ export function BuyingGuideTemplate({ config }: { config: GuideConfig }) {
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <Breadcrumbs
             items={[
-              { name: "Guides", url: "/learn" },
+              { name: "Guides", url: "/guides" },
               { name: config.title, url: `/guides/${config.slug}` },
             ]}
           />

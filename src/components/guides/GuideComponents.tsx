@@ -139,7 +139,7 @@ export function GuideReadNext({ guides }: GuideReadNextProps) {
         {guides.map((guide) => (
           <Link 
             key={guide.slug}
-            to={`/learn/${guide.slug}`}
+            to={`/guides/${guide.slug}`}
             className="group"
           >
             <Card className="bg-card/50 border-border hover:border-primary/50 transition-colors h-full">

@@ -101,7 +101,7 @@ const LLMS_TXT = `# FilaScope — The World's Most Complete 3D Printer Filament 
 - Side-by-Side Comparison Tool: https://filascope.com/compare
 - Color Finder: https://filascope.com/colors
 - Material Knowledge Base: https://filascope.com/reference/materials
-- Learning Center (32 guides): https://filascope.com/learn
+- Learning Center (50+ guides): https://filascope.com/guides
 
 ## Material Categories
 
@@ -128,11 +128,11 @@ const LLMS_TXT = `# FilaScope — The World's Most Complete 3D Printer Filament 
 - Best PLA Filaments 2026: https://filascope.com/guides/best-pla-filaments
 - Best PETG Filaments 2026: https://filascope.com/guides/best-petg-filaments
 - Best ABS Filaments 2026: https://filascope.com/guides/best-abs-filaments
-- Best TPU Filaments 2026: https://filascope.com/guides/best-tpu-filaments-2026
+- Best TPU Filaments 2026: https://filascope.com/guides/best-tpu-filaments
 - Best ASA Filaments 2026: https://filascope.com/guides/best-asa-filaments
 - Best Nylon Filaments 2026: https://filascope.com/guides/best-nylon-filaments
 - Best Budget Filaments: https://filascope.com/guides/best-budget-filaments
-- Best Filaments for Beginners: https://filascope.com/guides/best-filaments-for-beginners
+- Best Filaments for Beginners: https://filascope.com/guides/beginners-guide
 - Best High-Speed PLA: https://filascope.com/guides/best-high-speed-pla-filaments
 - Best Filaments for Miniatures: https://filascope.com/guides/best-filaments-for-miniatures
 - Best Filaments for Functional Parts: https://filascope.com/guides/best-filaments-for-functional-parts
@@ -151,11 +151,11 @@ const LLMS_TXT = `# FilaScope — The World's Most Complete 3D Printer Filament 
 
 ## HueForge Guides
 
-- What Is HueForge TD?: https://filascope.com/guides/what-is-hueforge-td
-- Best Filaments for HueForge: https://filascope.com/guides/best-filaments-for-hueforge
+- What Is HueForge TD?: https://filascope.com/guides/understanding-td-values
+- Best Filaments for HueForge: https://filascope.com/guides/hueforge-filaments
 - Best White Filaments for HueForge: https://filascope.com/guides/best-white-filaments-for-hueforge
 - How to Measure Filament TD: https://filascope.com/guides/how-to-measure-filament-td
-- Complete HueForge Guide: https://filascope.com/learn/hueforge
+- Complete HueForge Guide: https://filascope.com/guides/hueforge-beginners-guide
 
 ## Key Features
 
@@ -180,12 +180,13 @@ const LLMS_TXT = `# FilaScope — The World's Most Complete 3D Printer Filament 
 - Best PLA Filaments 2026: https://filascope.com/guides/best-pla-filaments
 - Best PETG Filaments 2026: https://filascope.com/guides/best-petg-filaments
 - Best ABS Filaments 2026: https://filascope.com/guides/best-abs-filaments
-- Best Filaments for Beginners: https://filascope.com/best-filaments-for-beginners
-- Best Filaments for HueForge: https://filascope.com/best-filaments-for-hueforge
+- Best Filaments for Beginners: https://filascope.com/guides/beginners-guide
+- Best Filaments for HueForge: https://filascope.com/guides/hueforge-filaments
 - Best Filaments for Outdoor Use: https://filascope.com/guides/best-filaments-for-outdoor-use
-- PLA vs PETG Comparison: https://filascope.com/pla-vs-petg
+- PLA vs PETG Comparison: https://filascope.com/guides/pla-vs-petg
 - What is HueForge TD: https://filascope.com/guides/what-is-hueforge-td
-- Complete HueForge Guide: https://filascope.com/learn/hueforge
+- Understanding TD Values: https://filascope.com/guides/understanding-td-values
+- Complete HueForge Guide: https://filascope.com/guides/hueforge-beginners-guide
 - Silk PLA Comparison: https://filascope.com/guides/silk-pla-comparison
 - ASA vs ABS for Outdoors: https://filascope.com/guides/asa-vs-abs-outdoor-printing
 
@@ -287,7 +288,7 @@ HueForge Transmission Distance (TD) measures how many millimeters of light can p
 - Filament Deals (400+ active): https://filascope.com/deals
 - Comparison Tool: https://filascope.com/compare
 - Color Finder: https://filascope.com/color-finder
-- Learning Center (32 guides): https://filascope.com/learn
+- Learning Center (50+ guides): https://filascope.com/guides
 
 ## Buying Guides
 
@@ -296,8 +297,8 @@ HueForge Transmission Distance (TD) measures how many millimeters of light can p
 - Best ABS Filaments 2026: https://filascope.com/guides/best-abs-filaments
 - Best TPU Filaments 2026: https://filascope.com/guides/best-tpu-filaments
 - Best ASA Filaments 2026: https://filascope.com/guides/best-asa-filaments
-- Best Filaments for Beginners: https://filascope.com/best-filaments-for-beginners
-- Best Filaments for HueForge: https://filascope.com/best-filaments-for-hueforge
+- Best Filaments for Beginners: https://filascope.com/guides/beginners-guide
+- Best Filaments for HueForge: https://filascope.com/guides/hueforge-filaments
 - Best Filaments for Outdoor Use: https://filascope.com/guides/best-filaments-for-outdoor-use
 - Best Filaments for Lithophanes: https://filascope.com/guides/best-filaments-for-lithophanes
 - Best White Filaments for HueForge: https://filascope.com/guides/best-white-filaments-for-hueforge
@@ -308,10 +309,10 @@ HueForge Transmission Distance (TD) measures how many millimeters of light can p
 
 ## Material Comparison Guides
 
-- PLA vs PETG: https://filascope.com/pla-vs-petg
-- What is HueForge TD: https://filascope.com/guides/what-is-hueforge-td
+- PLA vs PETG: https://filascope.com/guides/pla-vs-petg
+- What is HueForge TD: https://filascope.com/guides/understanding-td-values
 - How to Measure Filament TD: https://filascope.com/guides/how-to-measure-filament-td
-- HueForge Complete Guide: https://filascope.com/learn/hueforge
+- HueForge Complete Guide: https://filascope.com/guides/hueforge-beginners-guide
 
 ## Top Brands on FilaScope
 

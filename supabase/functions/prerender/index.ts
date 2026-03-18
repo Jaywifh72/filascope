@@ -128,7 +128,8 @@ const GUIDE_META: Record<string,{title:string;description:string}> = {
 // ── Simple static pages (consolidated) ──
 type SP = {t:string;d:string;c:string;h:string;b:string;ot?:string;jld?:Record<string,unknown>[]};
 const STATIC_PG: Record<string,SP> = {
-  "/learn":{t:"3D Printing Knowledge Base | FilaScope",d:"Learn about 3D printing filaments: material guides, comparisons, and tips.",c:"/learn",h:"3D Printing Knowledge Base",b:"Guides, comparisons, and tips for 3D printer filaments."},
+  "/guides":{t:"3D Printing Guides & Buying Advice | FilaScope",d:"Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting.",c:"/guides",h:"3D Printing Guides & Buying Advice",b:"Guides, comparisons, and tips for 3D printer filaments."},
+  "/learn":{t:"3D Printing Knowledge Base | FilaScope",d:"This page has moved to /guides.",c:"/guides",h:"3D Printing Knowledge Base",b:"Guides, comparisons, and tips for 3D printer filaments."},
   "/compare":{t:"Compare 3D Filaments Side by Side | FilaScope",d:"Compare 3D printer filaments side by side.",c:"/compare",h:"Compare 3D Printer Filaments",b:"Compare filaments side by side across specs, prices, and compatibility."},
   "/colors":{t:"3D Filament Color Finder — Search by Color | FilaScope",d:"Find 3D printer filaments by exact color.",c:"/colors",h:"3D Filament Color Finder",b:"Search for 3D printer filaments by color."},
   "/color-finder":{t:"3D Filament Color Finder — Search by Color | FilaScope",d:"Find 3D printer filaments by exact color.",c:"/colors",h:"3D Filament Color Finder",b:"Search for 3D printer filaments by color."},
@@ -286,7 +287,7 @@ async function dealsPage(sb:SupabaseClient): Promise<PageData> {
 function guidePage(slug:string): PageData {
   const m=GUIDE_META[slug]; if(!m) return fallback(`/guides/${slug}`);
   let title=`${m.title} | FilaScope`; if(title.length>60) title=m.title;
-  const can=`/guides/${slug}`;const crumbs=[{name:"Home",url:"/"},{name:"Learn",url:"/learn"},{name:m.title,url:can}];
+  const can=`/guides/${slug}`;const crumbs=[{name:"Home",url:"/"},{name:"Guides",url:"/guides"},{name:m.title,url:can}];
   return {type:"guide",title,description:m.description,canonical:can,ogImage:buildOgImageUrl({type:"guide",title:m.title}),ogType:"article",jsonLd:[{"@context":"https://schema.org","@type":"Article",headline:m.title,description:m.description,publisher:{"@type":"Organization",name:"FilaScope",url:BASE_URL},url:`${BASE_URL}${can}`},bcSchema(crumbs)],breadcrumbs:crumbs,h1:m.title,bodyText:m.description};
 }
 
@@ -369,7 +370,7 @@ const SP_LIST = [
   {p:"/hueforge-color-matcher",pr:0.7,cf:"weekly"},{p:"/hueforge-project-planner",pr:0.7,cf:"weekly"},
   {p:"/hueforge-filament-substitute-finder",pr:0.7,cf:"weekly"},{p:"/hueforge-tools",pr:0.7,cf:"weekly"},
   {p:"/accessories",pr:0.7,cf:"weekly"},{p:"/diagnose",pr:0.7,cf:"monthly"},
-  {p:"/matrix",pr:0.7,cf:"weekly"},{p:"/learn",pr:0.5,cf:"weekly"},
+  {p:"/matrix",pr:0.7,cf:"weekly"},{p:"/guides",pr:0.7,cf:"weekly"},
   {p:"/reference/slicers",pr:0.5,cf:"monthly"},{p:"/reference/repos",pr:0.5,cf:"monthly"},
   {p:"/about",pr:0.3,cf:"monthly"},{p:"/methodology",pr:0.3,cf:"monthly"},
   {p:"/affiliate-disclosure",pr:0.3,cf:"monthly"},{p:"/privacy",pr:0.3,cf:"monthly"},{p:"/terms",pr:0.3,cf:"monthly"},

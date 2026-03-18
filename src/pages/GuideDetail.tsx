@@ -235,7 +235,7 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
               The guide you're looking for doesn't exist or has been moved.
             </p>
             <Button asChild>
-              <Link to="/learn">Browse All Guides</Link>
+              <Link to="/guides">Browse All Guides</Link>
             </Button>
           </CardContent>
         </Card>
@@ -262,7 +262,7 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
         headline={guide.title}
         description={guideDescription}
         datePublished={guide.publishedAt}
-        url={`/learn/${slug}`}
+        url={`/guides/${slug}`}
       />
       {slug && GUIDE_HOW_TO_DATA[slug] && (
         <HowToSchema {...GUIDE_HOW_TO_DATA[slug]} />
@@ -271,7 +271,7 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/learn')} className="gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/guides')} className="gap-2">
               <ArrowLeft className="w-4 h-4" />
               All Guides
             </Button>
@@ -287,8 +287,8 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
         {/* Visible breadcrumb */}
         <DetailBreadcrumb
           segments={[
-            { label: "Guides", href: "/learn" },
-            { label: guide.title, href: `/learn/${slug}` },
+            { label: "Guides", href: "/guides" },
+            { label: guide.title, href: `/guides/${slug}` },
           ]}
           mobileBackLabel="Guides"
         />

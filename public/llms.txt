@@ -4,7 +4,7 @@
 
 > FilaScope is the only platform combining HueForge TD values, real-time multi-regional pricing, and printer compatibility in one database. Prices updated daily from 15+ retailers.
 
-> Last updated: 2026-03-12
+> Last updated: 2026-03-18
 
 ## Core Pages
 
@@ -16,7 +16,7 @@
 - Filament Deals: https://filascope.com/deals
 - Comparison Tool: https://filascope.com/compare
 - Color Finder: https://filascope.com/colors
-- Learning Center (50+ guides): https://filascope.com/learn
+- Learning Center (50+ guides): https://filascope.com/guides
 - Quick Match Filament Quiz: https://filascope.com/wizard
 
 ## Material Categories
@@ -40,18 +40,32 @@
 - Best TPU Filaments 2026: https://filascope.com/guides/best-tpu-filaments
 - Best ASA Filaments 2026: https://filascope.com/guides/best-asa-filaments
 - Best Nylon Filaments 2026: https://filascope.com/guides/best-nylon-filaments
-- Best Filaments for Beginners: https://filascope.com/guides/best-filaments-for-beginners
-- Best Filaments for HueForge: https://filascope.com/guides/best-filaments-for-hueforge
+- Best Filaments for Beginners: https://filascope.com/guides/beginners-guide
+- Best Filaments for HueForge: https://filascope.com/guides/hueforge-filaments
 - Best Budget Filaments: https://filascope.com/guides/best-budget-filaments
-- Best White Filaments: https://filascope.com/guides/best-white-filaments
+- Best White Filaments for HueForge: https://filascope.com/guides/best-white-filaments-for-hueforge
 - Best Filaments for Miniatures: https://filascope.com/guides/best-filaments-for-miniatures
 - Best Filaments for Cosplay: https://filascope.com/guides/best-filaments-for-cosplay
 - Best Filaments for Outdoor Use: https://filascope.com/guides/best-filaments-for-outdoor-use
-- Best Food-Safe Filaments: https://filascope.com/guides/best-filaments-for-food-safe
-- Best Bambu Lab Filaments: https://filascope.com/guides/best-bambu-lab-filaments
-- Best Prusa Filaments: https://filascope.com/guides/best-prusa-filaments
+- Best Food-Safe Filaments: https://filascope.com/guides/best-food-safe-filaments
 - Strongest 3D Printer Filament: https://filascope.com/guides/strongest-3d-printer-filament
-- Cheapest 3D Printer Filament: https://filascope.com/guides/cheapest-filament
+- Best PC Filaments: https://filascope.com/guides/best-pc-filaments
+- Silk PLA Comparison: https://filascope.com/guides/silk-pla-comparison
+- Best Filaments for Functional Parts: https://filascope.com/guides/best-filaments-for-functional-parts
+- Best Filaments for Lithophanes: https://filascope.com/guides/best-filaments-for-lithophanes
+- Best High-Speed PLA: https://filascope.com/guides/best-high-speed-pla-filaments
+
+## Printer-Specific Guides
+
+- Best Filament for Bambu Lab P1S: https://filascope.com/guides/best-filament-for-bambu-lab-p1s
+- Best Filament for Bambu Lab A1: https://filascope.com/guides/best-filament-for-bambu-lab-a1
+- Best Filament for Bambu Lab A1 Mini: https://filascope.com/guides/best-filament-for-bambu-lab-a1-mini
+- Best Filament for Bambu Lab X1 Carbon: https://filascope.com/guides/best-filament-for-bambu-lab-x1-carbon
+- Best Filament for Prusa MK4: https://filascope.com/guides/best-filament-for-prusa-mk4
+- Best Filament for Creality K1: https://filascope.com/guides/best-filament-for-creality-k1
+- Best Filament for Creality K1 Max: https://filascope.com/guides/best-filament-for-creality-k1-max
+- Best Filament for Creality Ender 3 V3: https://filascope.com/guides/best-filament-for-creality-ender-3-v3
+- Best Filament for Ender 3: https://filascope.com/guides/best-filament-for-ender-3
 
 ## Material Comparisons
 
@@ -60,19 +74,25 @@
 - PETG vs ABS: https://filascope.com/guides/petg-vs-abs
 - TPU vs PETG: https://filascope.com/guides/tpu-vs-petg
 - Nylon vs PETG: https://filascope.com/guides/nylon-vs-petg
+- PLA+ vs PLA Pro: https://filascope.com/guides/pla-plus-vs-pla-pro
+- ASA vs ABS for Outdoor Printing: https://filascope.com/guides/asa-vs-abs-outdoor-printing
 
 ## HueForge Guides
 
-- What is HueForge TD: https://filascope.com/guides/what-is-hueforge-td
+- Understanding TD Values: https://filascope.com/guides/understanding-td-values
 - How to Measure Filament TD: https://filascope.com/guides/how-to-measure-filament-td
+- HueForge Beginners Guide: https://filascope.com/guides/hueforge-beginners-guide
+- HueForge Color Selection: https://filascope.com/guides/hueforge-color-selection
+- Best Filaments for HueForge Lithophanes: https://filascope.com/guides/best-filaments-for-hueforge-lithophanes
 - Best White Filaments for HueForge: https://filascope.com/guides/best-white-filaments-for-hueforge
 
 ## How-To Guides
 
-- How to Choose 3D Printer Filament: https://filascope.com/guides/how-to-choose-3d-printer-filament
-- Filament Types Explained: https://filascope.com/guides/filament-types-explained
+- How to Choose Filament: https://filascope.com/guides/how-to-choose-filament
 - Filament Temperature Guide: https://filascope.com/guides/filament-temperature-guide
-- Filament Storage Guide: https://filascope.com/guides/filament-storage-guide
+- Filament Storage Guide: https://filascope.com/guides/how-to-store-filament
+- How to Dry Filament: https://filascope.com/guides/how-to-dry-filament
+- Food-Safe Filament Guide: https://filascope.com/guides/food-safe-filament
 
 ## Top Brands
 

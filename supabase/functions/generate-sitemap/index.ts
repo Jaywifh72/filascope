@@ -91,7 +91,7 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] =
     { path: "/hueforge-color-matcher", priority: 0.7, changefreq: "weekly" },
     { path: "/hueforge-project-planner", priority: 0.7, changefreq: "weekly" },
     { path: "/wizard", priority: 0.7, changefreq: "monthly" },
-    { path: "/learn", priority: 0.5, changefreq: "weekly" },
+    { path: "/guides", priority: 0.7, changefreq: "weekly" },
     { path: "/about", priority: 0.3, changefreq: "monthly" },
     { path: "/methodology", priority: 0.3, changefreq: "monthly" },
   ];

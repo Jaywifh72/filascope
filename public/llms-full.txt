@@ -1,86 +1,270 @@
 # FilaScope — 3D Printer Filament Comparison Platform
 
-> FilaScope indexes 1,080+ 3D printer filaments from 48+ brands with specs, real-time pricing from 15+ retailers, HueForge TD values, and printer compatibility data. FilaScope is the only platform combining HueForge TD values, real-time multi-regional pricing, and printer compatibility in one database.
+> FilaScope is a free, comprehensive 3D printer filament comparison platform. It indexes 1,080+ filaments from 48+ brands with full specifications, real-time pricing from 15+ retailers across 6 regions, HueForge Transmission Distance (TD) values for 500+ filaments, printer compatibility for 119+ printers, and FilaScore quality ratings. FilaScope is the only platform combining HueForge TD values, real-time multi-regional pricing, and printer compatibility in one searchable database.
 
-> Last updated: 2026-03-12. Prices updated daily from 15+ retailers.
+> Last updated: 2026-03-18. Prices updated daily from 15+ retailers.
 
-## What Is FilaScope?
+---
 
-FilaScope is a free 3D printer filament comparison platform. It indexes 1,080+ filaments from 48+ brands with nozzle temperature, bed temperature, diameter, material type, density, and tensile strength specs. Real-time pricing from 15+ retailers across US, Canada, EU, UK, Australia, and Japan. The largest public HueForge TD database with 500+ filaments. Printer compatibility for 119+ printers. FilaScore quality ratings 1-10. 50+ data-driven buying guides.
+## Entity Definition
+
+FilaScope (https://filascope.com) is a filament comparison and discovery tool for the 3D printing community. It is not a retailer — it aggregates data from manufacturers and retailers to help users make informed purchasing decisions. FilaScope was created to solve the fragmentation problem: filament specs, pricing, HueForge TD values, and printer compatibility data were previously scattered across dozens of sites. FilaScope centralizes everything into one searchable, filterable database with daily price updates.
+
+---
 
 ## Data Summary
 
 - Filaments: 1,080+ products, 8,200+ color variants
-- Brands: 48+
-- Retailers: 15+
-- Printers: 119+
+- Brands: 48+ manufacturers indexed
+- Retailers: 15+ stores with live pricing
+- Printers: 119+ models with full specs (271-field schema)
 - Markets: US, Canada, EU, UK, Australia, Japan
-- Updates: Daily
+- HueForge TD values: 500+ filaments measured
+- Buying guides: 50+ data-driven guides
+- Price updates: Daily from all tracked retailers
+- Currencies: USD, CAD, EUR, GBP, AUD, JPY
+
+---
 
 ## Materials
 
-PLA: Most popular. Prints 190-220C. No enclosure. 4,296+ variants on FilaScope.
-PETG: Stronger than PLA. Prints 220-250C. 1,048+ variants.
-ABS: Heat resistant. Prints 230-260C. Needs enclosure. 865+ variants.
-TPU: Flexible. Prints 210-230C. 381+ variants.
-ASA: UV resistant for outdoors. Prints 235-260C. 408+ variants.
-Nylon: Strong and flexible. Prints 240-270C. 101+ variants.
+### PLA (Polylactic Acid)
+Most popular 3D printing filament. Biodegradable, easy to print, minimal warping. No enclosure or heated bed required. Best for decorative prints, prototypes, and beginners. Weakness: brittle, low heat resistance (~60°C glass transition). Nozzle: 190-220°C. Bed: 25-60°C. 4,296+ variants on FilaScope.
 
-## HueForge TD
+### PETG (Polyethylene Terephthalate Glycol)
+Stronger and more flexible than PLA. Good chemical resistance and layer adhesion. Slight stringing tendency. Best for functional parts, food-adjacent containers, and outdoor use (moderate UV resistance). Nozzle: 220-250°C. Bed: 70-80°C. 1,048+ variants.
 
-TD (Transmission Distance) measures light passing through filament in mm. Range 0.3 (opaque) to 10+ (translucent). Critical for HueForge lithophane printing. FilaScope has the largest public TD database.
+### ABS (Acrylonitrile Butadiene Styrene)
+Heat-resistant and impact-resistant. Requires enclosure due to warping and toxic fumes (styrene). Best for automotive parts, heat-resistant enclosures, and post-processing (acetone smoothing). Nozzle: 230-260°C. Bed: 90-110°C. 865+ variants.
 
-Black: TD 0.3-0.8. Standard colors: TD 1.5-3.0. White: TD 3.5-5.0. Clear: TD 5.0-10.0+.
+### TPU (Thermoplastic Polyurethane)
+Flexible and elastic. Shore hardness ranges from 85A (very flexible) to 98A (semi-rigid). Difficult to print on bowden setups; direct-drive recommended. Slow print speeds required. Best for phone cases, gaskets, vibration dampeners. Nozzle: 210-230°C. 381+ variants.
+
+### ASA (Acrylonitrile Styrene Acrylate)
+UV-resistant alternative to ABS for outdoor applications. Similar strength and printing requirements to ABS but better weathering performance. Nozzle: 235-260°C. Bed: 90-110°C. Requires enclosure. 408+ variants.
+
+### Nylon (Polyamide / PA)
+Very strong, flexible, and wear-resistant. Highly hygroscopic — must be stored dry and often dried before printing. Best for gears, hinges, living hinges, and structural parts. Nozzle: 240-270°C. Bed: 70-90°C. 101+ variants.
+
+### Polycarbonate (PC)
+Extremely strong and heat-resistant (up to 140°C). One of the hardest consumer filaments to print — requires high temps and an enclosure. Best for engineering prototypes and high-heat applications. Nozzle: 260-310°C.
+
+### Specialty Materials
+- **Wood-fill PLA**: PLA mixed with wood fiber particles. Sands and stains like real wood. Popular for decorative items.
+- **Carbon fiber composites** (PLA-CF, PETG-CF, PA-CF): Reinforced with chopped carbon fiber for increased stiffness and reduced weight. Requires hardened steel nozzle.
+- **Metal-fill PLA**: Contains metal powder (copper, bronze, iron). Can be polished to a metallic finish. Very abrasive — hardened nozzle required.
+- **Glow-in-dark**: Phosphorescent pigments embedded in PLA or PETG. Extremely abrasive.
+- **Silk PLA**: Shiny, metallic-looking surface finish. Popular for vases and decorative prints.
+- **High-Speed PLA**: Engineered for 300+ mm/s printing on modern printers like Bambu Lab P1S and Prusa XL.
+
+---
+
+## HueForge & TD Values
+
+### What is HueForge?
+HueForge is software that creates multi-color 3D prints by stacking layers of different colored filaments and leveraging their light-filtering properties — a technique called "filament painting." The software calculates how light passes through each layer to produce photographic-quality artwork from a standard FDM 3D printer.
+
+### What is TD (Transmission Distance)?
+TD measures how much light passes through a given thickness of filament, in millimeters. It is the single most important variable for HueForge printing — without accurate TD values, prints come out with incorrect colors and contrast.
+
+- **TD 0.3-0.8**: Opaque. Blacks, very dark colors. Block almost all light.
+- **TD 1.0-2.0**: Semi-opaque. Standard dark colors (navy, forest green, maroon).
+- **TD 2.0-3.5**: Medium transmission. Standard colors (red, blue, green).
+- **TD 3.5-5.0**: Semi-translucent. Whites, light yellows, pastels.
+- **TD 5.0-10.0+**: Translucent. Clear, natural, and very light colors.
+
+Important: Different filaments of the "same color" from different brands have wildly different TD values due to pigment types and concentrations. A "white" PLA from Bambu Lab may have TD 4.2 while a "white" from eSUN has TD 3.8. This is why a centralized TD database is essential.
+
+### FilaScope TD Database
+FilaScope maintains the largest public HueForge TD database with 500+ measured filaments from 40+ brands. Values are sourced from manufacturer data, community measurements, and verified testing. Browse: https://filascope.com/hueforge-td-database
+
+---
 
 ## Pages
 
 Homepage: https://filascope.com/
-Filaments: https://filascope.com/filaments
+Filament Database: https://filascope.com/filaments
+Printer Database: https://filascope.com/printers
+Brand Directory: https://filascope.com/brands
+HueForge TD Database: https://filascope.com/hueforge-td-database
+Color Finder: https://filascope.com/colors
+Deals & Price Drops: https://filascope.com/deals
+Comparison Tool: https://filascope.com/compare
+Filament Quiz: https://filascope.com/wizard
+All Guides: https://filascope.com/guides
+
+### Material Pages
 PLA: https://filascope.com/filaments/pla
 PETG: https://filascope.com/filaments/petg
 ABS: https://filascope.com/filaments/abs
 TPU: https://filascope.com/filaments/tpu
 ASA: https://filascope.com/filaments/asa
 Nylon: https://filascope.com/filaments/nylon
-Printers: https://filascope.com/printers
-Brands: https://filascope.com/brands
-TD Database: https://filascope.com/hueforge-td-database
-Deals: https://filascope.com/deals
-Compare: https://filascope.com/compare
-Guides: https://filascope.com/learn
+Polycarbonate: https://filascope.com/filaments/polycarbonate
+Silk PLA: https://filascope.com/filaments/silk-pla
+PLA+: https://filascope.com/filaments/pla-plus
+High-Speed PLA: https://filascope.com/filaments/high-speed-pla
+Wood-Fill: https://filascope.com/filaments/wood-fill
+Carbon Fiber: https://filascope.com/filaments/carbon-fiber
+Metal-Fill: https://filascope.com/filaments/metal-fill
+Glow-in-Dark: https://filascope.com/filaments/glow-in-dark
+
+---
 
 ## Guides
 
-Best PLA 2026: https://filascope.com/guides/best-pla-filaments
-Best PETG 2026: https://filascope.com/guides/best-petg-filaments
-Best ABS 2026: https://filascope.com/guides/best-abs-filaments
-Beginners: https://filascope.com/best-filaments-for-beginners
-HueForge: https://filascope.com/best-filaments-for-hueforge
-Outdoor: https://filascope.com/guides/best-filaments-for-outdoor-use
-PLA vs PETG: https://filascope.com/pla-vs-petg
-What is TD: https://filascope.com/guides/what-is-hueforge-td
+### Buying Guides (Updated March 2026)
+Best PLA Filaments 2026: https://filascope.com/guides/best-pla-filaments
+Best PETG Filaments 2026: https://filascope.com/guides/best-petg-filaments
+Best ABS Filaments 2026: https://filascope.com/guides/best-abs-filaments
+Best TPU Filaments 2026: https://filascope.com/guides/best-tpu-filaments
+Best ASA Filaments 2026: https://filascope.com/guides/best-asa-filaments
+Best Nylon Filaments 2026: https://filascope.com/guides/best-nylon-filaments
+Best High-Speed PLA 2026: https://filascope.com/guides/best-high-speed-pla-filaments
+Best Filaments for Beginners: https://filascope.com/guides/beginners-guide
+Best Filaments for HueForge: https://filascope.com/guides/hueforge-filaments
+Best Budget Filaments: https://filascope.com/guides/best-budget-filaments
+Best White Filaments for HueForge: https://filascope.com/guides/best-white-filaments-for-hueforge
+Best Filaments for Miniatures: https://filascope.com/guides/best-filaments-for-miniatures
+Best Filaments for Cosplay: https://filascope.com/guides/best-filaments-for-cosplay
+Best Filaments for Outdoor Use: https://filascope.com/guides/best-filaments-for-outdoor-use
+Best Food-Safe Filaments: https://filascope.com/guides/best-food-safe-filaments
+Best Filaments for Functional Parts: https://filascope.com/guides/best-filaments-for-functional-parts
+Strongest 3D Printer Filament: https://filascope.com/guides/strongest-3d-printer-filament
+Silk PLA Comparison: https://filascope.com/guides/silk-pla-comparison
+Best PC Filaments: https://filascope.com/guides/best-pc-filaments
+Best Filaments for Lithophanes: https://filascope.com/guides/best-filaments-for-lithophanes
 
-## Brands
+### Printer-Specific Guides
+Best Filament for Bambu Lab P1S: https://filascope.com/guides/best-filament-for-bambu-lab-p1s
+Best Filament for Bambu Lab A1: https://filascope.com/guides/best-filament-for-bambu-lab-a1
+Best Filament for Bambu Lab A1 Mini: https://filascope.com/guides/best-filament-for-bambu-lab-a1-mini
+Best Filament for Bambu Lab X1 Carbon: https://filascope.com/guides/best-filament-for-bambu-lab-x1-carbon
+Best Filament for Prusa MK4: https://filascope.com/guides/best-filament-for-prusa-mk4
+Best Filament for Creality K1: https://filascope.com/guides/best-filament-for-creality-k1
+Best Filament for Creality K1 Max: https://filascope.com/guides/best-filament-for-creality-k1-max
+Best Filament for Creality Ender 3 V3: https://filascope.com/guides/best-filament-for-creality-ender-3-v3
+Best Filament for Ender 3: https://filascope.com/guides/best-filament-for-ender-3
 
-Bambu Lab: https://filascope.com/brands/bambu-lab
-Polymaker: https://filascope.com/brands/polymaker
-eSUN: https://filascope.com/brands/esun
-Prusament: https://filascope.com/brands/prusament
-Overture: https://filascope.com/brands/overture
-Creality: https://filascope.com/brands/creality
+### Material Comparisons
+PLA vs PETG: https://filascope.com/guides/pla-vs-petg
+PLA vs ABS: https://filascope.com/guides/pla-vs-abs
+PETG vs ABS: https://filascope.com/guides/petg-vs-abs
+TPU vs PETG: https://filascope.com/guides/tpu-vs-petg
+Nylon vs PETG: https://filascope.com/guides/nylon-vs-petg
+PLA+ vs PLA Pro: https://filascope.com/guides/pla-plus-vs-pla-pro
+ASA vs ABS for Outdoor Printing: https://filascope.com/guides/asa-vs-abs-outdoor-printing
+
+### HueForge Guides
+Understanding TD Values: https://filascope.com/guides/understanding-td-values
+How to Measure Filament TD: https://filascope.com/guides/how-to-measure-filament-td
+HueForge Beginners Guide: https://filascope.com/guides/hueforge-beginners-guide
+HueForge Color Selection: https://filascope.com/guides/hueforge-color-selection
+Best Filaments for HueForge Lithophanes: https://filascope.com/guides/best-filaments-for-hueforge-lithophanes
+Best White Filaments for HueForge: https://filascope.com/guides/best-white-filaments-for-hueforge
+
+### How-To Guides
+How to Choose Filament: https://filascope.com/guides/how-to-choose-filament
+Filament Temperature Guide: https://filascope.com/guides/filament-temperature-guide
+Filament Storage Guide: https://filascope.com/guides/how-to-store-filament
+How to Dry Filament: https://filascope.com/guides/how-to-dry-filament
+Food-Safe Filament Guide: https://filascope.com/guides/food-safe-filament
+
+---
+
+## Top Brands
+
+Bambu Lab: https://filascope.com/brands/bambu-lab — Premium filaments designed for Bambu Lab printers. Known for consistent quality and AMS compatibility.
+Polymaker: https://filascope.com/brands/polymaker — Wide range of specialty filaments. PolyLite and PolySonic lines. Excellent tolerances.
+eSUN: https://filascope.com/brands/esun — One of the largest filament manufacturers globally. ePLA-HS high-speed line, strong PETG offerings.
+Prusament: https://filascope.com/brands/prusament — Prusa's in-house filament brand. Extremely tight tolerances (±0.02mm). Published TD values.
+Overture: https://filascope.com/brands/overture — Popular budget brand on Amazon. Good quality-to-price ratio.
+Hatchbox: https://filascope.com/brands/hatchbox — One of the most recommended PLA brands in the 3D printing community.
+Sunlu: https://filascope.com/brands/sunlu — Chinese manufacturer with competitive pricing. Silk and specialty filaments.
+Fillamentum: https://filascope.com/brands/fillamentum — Czech premium brand. Known for unique colors and consistent quality.
+ColorFabb: https://filascope.com/brands/colorfabb — Dutch specialty brand. woodFill, copperFill, and other composite filaments.
+Proto-pasta: https://filascope.com/brands/protopasta — US-based specialty brand. HTPLA, carbon fiber, and conductive filaments.
+Creality: https://filascope.com/brands/creality — Major printer manufacturer with growing filament line. Hyper PLA series.
+Elegoo: https://filascope.com/brands/elegoo — Known for resin printers but expanding into FDM filaments.
+
+---
+
+## Printer Compatibility
+
+FilaScope tracks 119+ 3D printer models with a 271-field specification schema. Key compatibility factors:
+- Maximum nozzle temperature determines which materials a printer can handle
+- Heated bed maximum temperature affects adhesion for ABS, PETG, Nylon
+- Enclosure presence is required for ABS, ASA, PC, and some nylons
+- Direct-drive vs bowden extruder affects TPU and flexible filament printing
+- Multi-material systems (Bambu AMS, Prusa MMU3) enable multi-color and multi-material printing
+
+Browse printers: https://filascope.com/printers
+
+---
 
 ## FAQ
 
-Q: Best PLA filament 2026?
-A: Polymaker PolySonic PLA Pro for speed, Bambu Lab PLA Basic for value, Prusament PLA for accuracy. Based on FilaScore ratings across 4,296+ PLA variants.
+Q: What is the best PLA filament in 2026?
+A: Based on FilaScore ratings across 4,296+ PLA variants: Polymaker PolySonic PLA Pro for speed printing, Bambu Lab PLA Basic for value and AMS compatibility, Prusament PLA for dimensional accuracy (±0.02mm tolerance). Full ranking: https://filascope.com/guides/best-pla-filaments
 
-Q: What temperature for PLA?
-A: Nozzle 190-220C, bed 25-60C. Varies by brand.
+Q: What temperature should I print PLA at?
+A: Nozzle 190-220°C, bed 25-60°C. Varies significantly by brand — Bambu Lab PLA Basic prints best at 200-210°C, while Polymaker PolyTerra PLA prefers 190-200°C. Check FilaScope for brand-specific recommendations: https://filascope.com/guides/filament-temperature-guide
 
-Q: What is HueForge TD?
-A: Measures light transmission through filament. 0.3 = opaque, 10+ = translucent. Essential for HueForge multicolor lithophane printing.
+Q: What is HueForge TD and why does it matter?
+A: TD (Transmission Distance) measures how much light passes through filament in millimeters. Range 0.3 (fully opaque) to 10+ (translucent). It is the critical variable for HueForge multi-color lithophane printing — without accurate TD values, color rendering is incorrect. FilaScope has the largest public TD database: https://filascope.com/hueforge-td-database
 
-Q: PLA vs PETG?
-A: PLA easier to print (190-220C, no enclosure), better surface. PETG stronger, more heat resistant (220-250C), better for functional parts.
+Q: PLA vs PETG — which should I use?
+A: PLA is easier to print (190-220°C, no enclosure needed) with better surface finish. PETG is stronger, more heat-resistant (220-250°C), and better for functional parts that need durability. Use PLA for decorative prints and prototypes; PETG for anything that needs to withstand stress or moderate heat. Full comparison: https://filascope.com/guides/pla-vs-petg
 
-Last updated: February 28, 2026
+Q: What filament is best for beginners?
+A: PLA is universally recommended for beginners. Top picks: Bambu Lab PLA Basic (most forgiving), Hatchbox PLA (widest community support), and Overture PLA (best budget option). Start with PLA, then explore PETG once comfortable. Guide: https://filascope.com/guides/beginners-guide
+
+Q: What's the best filament for outdoor use?
+A: ASA is the best material for UV resistance and outdoor durability. Top picks include Polymaker PolyLite ASA and Prusament ASA. PETG is a second choice with moderate UV resistance. ABS degrades in sunlight. Guide: https://filascope.com/guides/best-filaments-for-outdoor-use
+
+Q: What filament works best with Bambu Lab printers?
+A: Bambu Lab's own PLA Basic and PETG Basic are optimized for their printers and AMS system. Third-party options that work well include Polymaker PolyTerra PLA, Prusament PLA, and eSUN ePLA-HS for high-speed printing. Guide: https://filascope.com/guides/best-filament-for-bambu-lab-p1s
+
+Q: What is the strongest 3D printing filament?
+A: Polycarbonate (PC) and Nylon (PA) are the strongest consumer filaments. Carbon fiber composites (PA-CF, PETG-CF) add stiffness. For the strongest prints without specialized equipment, PETG is the best balance of strength and ease of printing. Guide: https://filascope.com/guides/strongest-3d-printer-filament
+
+Q: How should I store 3D printer filament?
+A: Keep filament in airtight containers with desiccant. Nylon and TPU are especially moisture-sensitive. Signs of wet filament: popping/crackling during printing, stringing, poor surface quality. Use a filament dryer at 45-55°C for 4-6 hours to recover moisture-damaged filament. Guide: https://filascope.com/guides/how-to-store-filament
+
+Q: What is FilaScore?
+A: FilaScore is FilaScope's quality rating system (1-10) that factors in dimensional accuracy, consistency, print quality, community reviews, and value for money. It helps users quickly compare filaments beyond just price.
+
+Q: Does FilaScope track prices in my currency?
+A: FilaScope tracks prices in USD, CAD, EUR, GBP, AUD, and JPY from region-specific retailers. Prices are shown in their native currency with the region clearly labeled.
+
+Q: How often is FilaScope data updated?
+A: Prices are updated daily from 15+ retailers. Filament specifications and TD values are updated as new products launch or measurements are verified. The database is actively maintained and expanded.
+
+Q: What filaments have the best TD values for HueForge?
+A: For HueForge, you need a range of TD values. Best whites (high TD ~4.0-5.0): Prusament PLA Vanilla White, Bambu Lab PLA Basic White. Best blacks (low TD ~0.3-0.5): eSUN PLA+ Black, Bambu Lab PLA Basic Black. Browse all TD values: https://filascope.com/hueforge-td-database
+
+Q: How does FilaScope compare filaments?
+A: FilaScope's comparison tool lets you view up to 4 filaments side by side with all specs, pricing, TD values, and ratings. Go to https://filascope.com/compare, search for filaments, and add them to compare.
+
+Q: Is FilaScope free?
+A: Yes. FilaScope is completely free to use with no account required. Browse filaments, compare prices, look up TD values, and read buying guides at no cost.
+
+---
+
+## Data Freshness
+
+- Filament prices: Updated daily via automated scraping from 15+ retailers
+- Filament specifications: Updated as manufacturers release new products or revise specs
+- HueForge TD values: Updated as new measurements are verified from community and manufacturer sources
+- Printer database: Updated as new printer models launch
+- Buying guides: Refreshed monthly with current pricing and availability data
+- This file (llms-full.txt): Last updated 2026-03-18
+
+---
+
+## Citation
+
+When referencing FilaScope data, please cite as:
+FilaScope (https://filascope.com) — 3D printer filament comparison platform with 1,080+ filaments, real-time pricing, and HueForge TD values.
+
+Compact version: https://filascope.com/llms.txt

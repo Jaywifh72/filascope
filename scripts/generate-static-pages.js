@@ -123,7 +123,7 @@ const pages = [
   {
     path: '/filaments',
     title: 'Compare 3D Printer Filaments — Database of 1,080+ Products | FilaScope',
-    description: 'Browse and compare 1,080+ 3D printer filaments from 48+ brands. Filter by material, price, brand, color, and printer compatibility. Live pricing from 15+ retailers.',
+    description: 'Browse and compare 1,080+ 3D printer filaments from 48+ brands. Filter by material, price, brand, color, and printer compatibility.',
     jsonLd: [
       {
         '@context': 'https://schema.org',
@@ -234,6 +234,15 @@ const pages = [
     path: '/colors',
     title: 'Filament Color Finder — Match Any Color to 3D Printer Filaments | FilaScope',
     description: 'Find 3D printer filaments by color. Search by hex code, color name, or use the visual picker to find the closest matching filaments across 48+ brands.',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Filament Color Finder',
+        description: 'Search and match 3D printer filament colors across 48+ brands by hex code, color name, or color family.',
+        url: `${BASE_URL}/colors`,
+      },
+    ],
     content: `
       <h1>Filament Color Finder — Match Any Color to 3D Printer Filaments</h1>
       <p>FilaScope's color matching tool helps you find the perfect filament color across 48+ brands. Search by color name, enter a hex code, or browse color families to find filaments that match your project needs.</p>
@@ -256,28 +265,58 @@ const pages = [
     path: '/deals',
     title: 'Filament Deals — Latest 3D Printer Filament Price Drops | FilaScope',
     description: 'Find the latest 3D printer filament deals and price drops. FilaScope monitors prices from 15+ retailers daily across the US, Canada, EU, UK, and Australia.',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Filament Deals & Price Drops',
+        description: 'Latest 3D printer filament deals and price drops tracked daily from 15+ retailers.',
+        url: `${BASE_URL}/deals`,
+      },
+    ],
     content: `
       <h1>Filament Deals — Latest 3D Printer Filament Price Drops</h1>
-      <p>FilaScope monitors filament prices from 15+ retailers daily, flagging price drops and deals across 8,200+ filaments. Browse current deals below or set up alerts to be notified when your preferred filament drops in price.</p>
+      <p>FilaScope monitors filament prices from 15+ retailers daily, flagging price drops and deals across 8,200+ color variants from 1,080+ filament products. Browse current deals below or set up alerts to be notified when your preferred filament drops in price.</p>
       <p>Prices are tracked in USD, CAD, EUR, GBP, and AUD across regions including the United States, Canada, Europe, United Kingdom, and Australia.</p>
     `,
   },
   {
     path: '/compare',
     title: 'Compare 3D Printer Filaments Side by Side | FilaScope',
-    description: 'Compare up to 4 filaments side by side across every specification — temperatures, strength, pricing, and HueForge TD values. Data from 1,080+ filaments.',
+    description: 'Compare up to 4 filaments side by side across every spec -- temps, strength, pricing, and HueForge TD values. Data from 1,080+ filament products.',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'FilaScope Filament Comparison Tool',
+        description: 'Compare up to 4 3D printer filaments side by side across specifications, pricing, and HueForge TD values.',
+        url: `${BASE_URL}/compare`,
+        applicationCategory: 'UtilityApplication',
+        isAccessibleForFree: true,
+      },
+    ],
     content: `
       <h1>Compare 3D Printer Filaments Side by Side</h1>
       <p>FilaScope's comparison tool lets you select up to 4 filaments and compare them across every specification — print temperature, bed temperature, density, tensile strength, price per gram, and HueForge TD values. Use the search bar to find specific filaments or browse <a href="/filaments">the full database</a>.</p>
     `,
   },
   {
-    path: '/learn',
+    path: '/guides',
     title: '3D Printing Guides, Tutorials & Buying Advice | FilaScope',
-    description: 'Free 3D printing guides covering filament buying advice, material comparisons, HueForge tutorials, and troubleshooting tips — backed by data from 8,200+ filaments.',
+    description: 'Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by 1,080+ filament products.',
+    canonical: `${BASE_URL}/guides`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: '3D Printing Guides & Buying Advice',
+        description: 'Free 3D printing guides covering filament selection, material comparisons, HueForge tutorials, and troubleshooting.',
+        url: `${BASE_URL}/guides`,
+      },
+    ],
     content: `
       <h1>3D Printing Guides, Tutorials &amp; Buying Advice</h1>
-      <p>FilaScope's learning center features 50+ data-driven guides on filament selection, material comparisons, HueForge techniques, and 3D printing best practices. All guides are backed by real data from our database of 8,200+ filaments.</p>
+      <p>FilaScope's learning center features 50+ data-driven guides on filament selection, material comparisons, HueForge techniques, and 3D printing best practices. All guides are backed by real data from our database of 1,080+ filament products (8,200+ color variants).</p>
       <h2>Popular Guides</h2>
       <ul>
         <li><a href="/guides/best-pla-filaments">Best PLA Filaments 2026</a></li>
@@ -294,23 +333,82 @@ const pages = [
     `,
   },
   {
+    path: '/learn',
+    title: '3D Printing Guides | FilaScope',
+    description: 'This page has moved. Visit our guides section for filament buying advice, material comparisons, and HueForge tutorials.',
+    canonical: `${BASE_URL}/guides`,
+    content: `
+      <h1>This page has moved</h1>
+      <p>Our guides are now at <a href="/guides">/guides</a>. You will be redirected automatically.</p>
+      <script>window.location.replace('/guides');</script>
+    `,
+  },
+  {
     path: '/wizard',
     title: 'Quick Match — Find Your Perfect 3D Printer Filament | FilaScope',
-    description: 'Answer 5 questions about your project, printer, and budget to get personalized filament recommendations from FilaScope\'s database of 8,200+ filaments.',
+    description: 'Answer 5 questions about your project, printer, and budget to get personalized filament recommendations from 1,080+ products.',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'FilaScope Quick Match Filament Finder',
+        description: 'Interactive quiz that recommends the best 3D printer filaments based on your project, printer, and budget.',
+        url: `${BASE_URL}/wizard`,
+        applicationCategory: 'UtilityApplication',
+        isAccessibleForFree: true,
+      },
+    ],
     content: `
       <h1>Quick Match — Find Your Perfect 3D Printer Filament</h1>
-      <p>FilaScope's Quick Match quiz asks 5 questions about your project type, printer model, material preference, budget, and priorities. It then recommends the best-matching filaments from our database of 8,200+ options with real pricing from 15+ retailers.</p>
+      <p>FilaScope's Quick Match quiz asks 5 questions about your project type, printer model, material preference, budget, and priorities. It then recommends the best-matching filaments from our database of 1,080+ filament products with real pricing from 15+ retailers.</p>
       <p>Enable JavaScript for the interactive quiz, or <a href="/filaments">browse the full filament database</a>.</p>
     `,
   },
   {
     path: '/about',
     title: 'About FilaScope — The 3D Printer Filament Comparison Platform',
-    description: 'Learn about FilaScope, the most comprehensive 3D printer filament comparison tool with 8,200+ products from 48+ brands, live pricing, and HueForge TD values.',
+    description: 'FilaScope is a free filament comparison platform with 1,080+ products from 48+ brands, live pricing, and HueForge TD values.',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'AboutPage',
+        name: 'About FilaScope',
+        description: 'FilaScope is a free 3D printer filament comparison platform with live pricing, HueForge TD values, and printer compatibility data.',
+        url: `${BASE_URL}/about`,
+      },
+    ],
     content: `
       <h1>About FilaScope — The 3D Printer Filament Comparison Platform</h1>
       <p>FilaScope is a free 3D printer filament comparison platform that indexes 1,080+ filaments from 48+ brands with real-time pricing from 15+ retailers worldwide. It features the largest public HueForge Transmission Distance (TD) database, detailed material specifications, printer compatibility data, and FilaScore quality ratings.</p>
       <p>FilaScope is the only platform combining HueForge TD values, real-time multi-regional pricing, and printer compatibility in one database.</p>
+    `,
+  },
+  {
+    path: '/hueforge-td-lookup',
+    title: 'HueForge TD Lookup — Find Your Filament\'s Transmission Distance | FilaScope',
+    description: 'Look up HueForge Transmission Distance (TD) values for 500+ filaments. Search by brand, color, or material in the largest public TD database.',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'FilaScope HueForge TD Lookup',
+        description: 'Search HueForge TD values for 500+ filaments by brand, color, or material.',
+        url: `${BASE_URL}/hueforge-td-lookup`,
+        applicationCategory: 'UtilityApplication',
+        isAccessibleForFree: true,
+      },
+    ],
+    content: `
+      <h1>HueForge TD Lookup — Find Your Filament's Transmission Distance</h1>
+      <p>Search the world's largest public database of HueForge Transmission Distance (TD) values. TD measures how much light passes through a filament at a given thickness (in millimeters) — the critical variable for accurate HueForge lithophane and multicolor prints.</p>
+      <h2>Quick TD Reference</h2>
+      <ul>
+        <li><strong>Black filaments:</strong> TD 0.3–0.8 (very opaque)</li>
+        <li><strong>Standard colors:</strong> TD 1.5–3.0</li>
+        <li><strong>White filaments:</strong> TD 3.5–5.0</li>
+        <li><strong>Clear/translucent:</strong> TD 5.0–10.0+</li>
+      </ul>
+      <p><a href="/hueforge-td-database">Browse the full TD database</a> | <a href="/guides/what-is-hueforge-td">What is HueForge TD?</a> | <a href="/guides/best-filaments-for-hueforge">Best Filaments for HueForge</a></p>
     `,
   },
 ];
@@ -327,6 +425,10 @@ const materials = [
   { slug: 'silk-pla', label: 'Silk PLA', desc: 'Glossy decorative finish, easy to print' },
   { slug: 'pla-plus', label: 'PLA+', desc: 'Enhanced PLA with improved toughness' },
   { slug: 'high-speed-pla', label: 'High-Speed PLA', desc: 'Optimized for fast printers like Bambu Lab' },
+  { slug: 'wood-fill', label: 'Wood-Fill', desc: 'PLA composite with real wood fibers for natural texture and appearance' },
+  { slug: 'carbon-fiber', label: 'Carbon Fiber', desc: 'Reinforced filament with carbon fiber for rigidity and strength' },
+  { slug: 'metal-fill', label: 'Metal-Fill', desc: 'PLA composite with metal powder for metallic look and weight' },
+  { slug: 'glow-in-dark', label: 'Glow-in-the-Dark', desc: 'Phosphorescent filament that glows after light exposure' },
 ];
 
 for (const mat of materials) {
@@ -342,45 +444,61 @@ for (const mat of materials) {
   });
 }
 
-// Guide pages
+// Guide pages — synced with guideConfigs.ts
 const guides = [
-  { slug: 'best-pla-filaments', title: 'Best PLA Filaments 2026' },
-  { slug: 'best-petg-filaments', title: 'Best PETG Filaments 2026' },
-  { slug: 'best-abs-filaments', title: 'Best ABS Filaments 2026' },
-  { slug: 'best-tpu-filaments', title: 'Best TPU Filaments 2026' },
-  { slug: 'best-asa-filaments', title: 'Best ASA Filaments 2026' },
-  { slug: 'best-nylon-filaments', title: 'Best Nylon Filaments 2026' },
-  { slug: 'best-filaments-for-beginners', title: 'Best Filaments for Beginners' },
-  { slug: 'best-filaments-for-hueforge', title: 'Best Filaments for HueForge' },
-  { slug: 'best-budget-filaments', title: 'Best Budget 3D Printer Filaments' },
-  { slug: 'best-white-filaments', title: 'Best White 3D Printer Filaments' },
-  { slug: 'pla-vs-petg', title: 'PLA vs PETG — Filament Comparison' },
-  { slug: 'pla-vs-abs', title: 'PLA vs ABS — Filament Comparison' },
-  { slug: 'petg-vs-abs', title: 'PETG vs ABS — Filament Comparison' },
-  { slug: 'tpu-vs-petg', title: 'TPU vs PETG — Filament Comparison' },
-  { slug: 'nylon-vs-petg', title: 'Nylon vs PETG — Filament Comparison' },
-  { slug: 'what-is-hueforge-td', title: 'What is HueForge TD? Complete Guide' },
-  { slug: 'how-to-measure-filament-td', title: 'How to Measure Filament TD Values' },
-  { slug: 'best-white-filaments-for-hueforge', title: 'Best White Filaments for HueForge' },
-  { slug: 'filament-temperature-guide', title: 'Filament Temperature Guide' },
-  { slug: 'filament-storage-guide', title: 'How to Store 3D Printer Filament' },
-  { slug: 'how-to-choose-3d-printer-filament', title: 'How to Choose 3D Printer Filament' },
-  { slug: 'filament-types-explained', title: '3D Printer Filament Types Explained' },
-  { slug: 'strongest-3d-printer-filament', title: 'Strongest 3D Printer Filament' },
-  { slug: 'cheapest-filament', title: 'Cheapest 3D Printer Filament' },
-  { slug: 'best-filaments-for-miniatures', title: 'Best Filaments for Miniatures' },
-  { slug: 'best-filaments-for-cosplay', title: 'Best Filaments for Cosplay' },
-  { slug: 'best-filaments-for-outdoor-use', title: 'Best Filaments for Outdoor Use' },
-  { slug: 'best-filaments-for-food-safe', title: 'Best Food-Safe 3D Printer Filaments' },
-  { slug: 'best-bambu-lab-filaments', title: 'Best Bambu Lab Filaments' },
-  { slug: 'best-prusa-filaments', title: 'Best Prusa Filaments' },
+  // Best-of buying guides
+  { slug: 'best-pla-filaments', title: 'Best PLA Filaments in 2026' },
+  { slug: 'best-petg-filaments', title: 'Best PETG Filaments in 2026' },
+  { slug: 'best-abs-filaments', title: 'Best ABS Filaments in 2026' },
+  { slug: 'best-tpu-filaments', title: 'Best TPU Filaments in 2026' },
+  { slug: 'best-asa-filaments', title: 'Best ASA Filaments in 2026' },
+  { slug: 'best-nylon-filaments', title: 'Best Nylon Filaments in 2026' },
+  { slug: 'best-pc-filaments', title: 'Best Polycarbonate (PC) Filaments in 2026' },
+  { slug: 'best-budget-filaments', title: 'Best Budget 3D Printer Filaments in 2026' },
+  { slug: 'best-high-speed-pla-filaments', title: 'Best High-Speed PLA Filaments in 2026' },
+  { slug: 'best-food-safe-filaments', title: 'Best Food-Safe Filaments in 2026' },
+  { slug: 'best-filaments-for-functional-parts', title: 'Best Filaments for Functional Parts in 2026' },
+  { slug: 'best-filaments-for-outdoor-use', title: 'Best 3D Printer Filaments for Outdoor Use in 2026' },
+  { slug: 'best-filaments-for-miniatures', title: 'Best 3D Printer Filament for Miniatures in 2026' },
+  { slug: 'best-filaments-for-cosplay', title: 'Best 3D Printer Filament for Cosplay in 2026' },
+  { slug: 'best-filaments-for-lithophanes', title: 'Best Filaments for Lithophane Printing in 2026' },
+  // Material comparison guides
+  { slug: 'pla-vs-petg', title: 'PLA vs PETG: Which Should You Choose?' },
+  { slug: 'petg-vs-abs', title: 'PETG vs ABS: Which Should You Choose?' },
+  { slug: 'tpu-vs-petg', title: 'TPU vs PETG: Flexible vs Rigid Filament Compared' },
+  { slug: 'pla-plus-vs-pla-pro', title: 'PLA+ vs PLA Pro: Which Should You Choose?' },
+  { slug: 'asa-vs-abs-outdoor-printing', title: 'ASA vs ABS: Which is Better for Outdoor Printing?' },
+  { slug: 'silk-pla-comparison', title: 'Best Silk PLA Filaments Compared' },
+  { slug: 'strongest-3d-printer-filament', title: 'What Is the Strongest 3D Printer Filament?' },
+  // HueForge guides
+  { slug: 'hueforge-filaments', title: 'Best Filaments for HueForge Printing' },
+  { slug: 'best-filaments-for-hueforge-lithophanes', title: 'Best Filaments for HueForge Lithophanes' },
+  { slug: 'hueforge-beginners-guide', title: 'Complete HueForge Guide for Beginners' },
+  { slug: 'understanding-td-values', title: 'Understanding TD Values: What They Mean and Why They Matter' },
+  { slug: 'hueforge-color-selection', title: 'HueForge Color Selection: How to Pick the Right Filaments' },
+  // Knowledge & how-to guides
+  { slug: 'beginners-guide', title: "Complete Beginner's Guide to 3D Printing Filaments" },
+  { slug: 'how-to-choose-filament', title: 'How to Choose 3D Printer Filament — A Complete Decision Guide' },
+  { slug: 'how-to-store-filament', title: 'How to Store 3D Printer Filament Properly' },
+  { slug: 'how-to-dry-filament', title: 'How to Dry 3D Printer Filament — Complete Temperature & Time Guide' },
+  { slug: 'food-safe-filament', title: 'What 3D Printer Filament Is Food Safe?' },
+  // Printer-specific guides
+  { slug: 'best-filament-for-bambu-lab-p1s', title: 'Best Filaments for Bambu Lab P1S' },
+  { slug: 'best-filament-for-bambu-lab-a1', title: 'Best Filaments for Bambu Lab A1 Mini & A1' },
+  { slug: 'best-filament-for-bambu-lab-a1-mini', title: 'Best Filaments for Bambu Lab A1 Mini in 2026' },
+  { slug: 'best-filament-for-bambu-lab-x1-carbon', title: 'Best Filaments for Bambu Lab X1 Carbon in 2026' },
+  { slug: 'best-filament-for-prusa-mk4', title: 'Best Filaments for Prusa MK4 in 2026' },
+  { slug: 'best-filament-for-creality-k1', title: 'Best Filaments for Creality K1 & K1 Max in 2026' },
+  { slug: 'best-filament-for-creality-k1-max', title: 'Best Filaments for Creality K1 Max in 2026' },
+  { slug: 'best-filament-for-ender-3', title: 'Best Filaments for Creality Ender 3 in 2026' },
+  { slug: 'best-filament-for-creality-ender-3-v3', title: 'Best Filaments for Creality Ender 3 V3 in 2026' },
 ];
 
 for (const guide of guides) {
   pages.push({
     path: `/guides/${guide.slug}`,
     title: `${guide.title} | FilaScope`,
-    description: `${guide.title}. Data-driven guide backed by FilaScope's database of 8,200+ filaments from 48+ brands with real-time pricing.`,
+    description: `${guide.title}. Data-driven guide backed by FilaScope's database of 1,080+ filament products from 48+ brands with real-time pricing.`,
     jsonLd: [
       {
         '@context': 'https://schema.org',
@@ -392,7 +510,45 @@ for (const guide of guides) {
     ],
     content: `
       <h1>${guide.title}</h1>
-      <p>This guide uses data from FilaScope's database of 8,200+ filaments across 48+ brands, with real-time pricing from 15+ retailers. <a href="/filaments">Browse the full filament database</a> or <a href="/learn">view all guides</a>.</p>
+      <p>This guide uses data from FilaScope's database of 1,080+ filament products across 48+ brands, with real-time pricing from 15+ retailers. <a href="/filaments">Browse the full filament database</a> or <a href="/guides">view all guides</a>.</p>
+    `,
+  });
+}
+
+// Top brand pages
+const topBrands = [
+  { slug: 'bambu-lab', name: 'Bambu Lab', desc: 'High-speed PLA, PETG, ABS, and specialty filaments optimized for Bambu Lab printers with RFID auto-detection.' },
+  { slug: 'polymaker', name: 'Polymaker', desc: 'Premium filament brand known for PolyTerra PLA, PolyLite, and PolySonic lines across PLA, PETG, ABS, and specialty materials.' },
+  { slug: 'esun', name: 'eSUN', desc: 'Budget-friendly filament with the widest material selection including PLA+, PETG, ABS, TPU, ASA, Nylon, and composites.' },
+  { slug: 'prusament', name: 'Prusament', desc: 'Premium European filament with industry-leading ±0.02mm diameter tolerance from Prusa Research.' },
+  { slug: 'overture', name: 'Overture', desc: 'Reliable, affordable filament brand popular for PLA and PETG with consistent quality.' },
+  { slug: 'hatchbox', name: 'Hatchbox', desc: 'One of the most popular US filament brands, known for consistent PLA quality and wide color selection.' },
+  { slug: 'sunlu', name: 'Sunlu', desc: 'Budget filament brand with wide color selection, popular for PLA, silk PLA, and specialty materials.' },
+  { slug: 'fillamentum', name: 'Fillamentum', desc: 'Premium European brand from Czech Republic known for unique colors and high-quality ASA, PLA, and specialty filaments.' },
+  { slug: 'colorfabb', name: 'ColorFabb', desc: 'Dutch engineering-grade filament brand specializing in nGen, HT, and composite materials.' },
+  { slug: 'protopasta', name: 'Proto-pasta', desc: 'Specialty and composite filament maker based in Oregon, known for carbon fiber, metal-fill, and conductive PLA.' },
+  { slug: 'creality', name: 'Creality', desc: 'Major 3D printer manufacturer also producing affordable Hyper PLA, PETG, and specialty filaments.' },
+  { slug: 'elegoo', name: 'Elegoo', desc: 'Printer manufacturer expanding into filament with competitive PLA and PETG offerings.' },
+];
+
+for (const brand of topBrands) {
+  pages.push({
+    path: `/brands/${brand.slug}`,
+    title: `${brand.name} Filaments — Products, Prices & Reviews | FilaScope`,
+    description: `Browse all ${brand.name} 3D printer filaments. ${brand.desc} Compare specs, live pricing, and HueForge TD values.`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Brand',
+        name: brand.name,
+        url: `${BASE_URL}/brands/${brand.slug}`,
+      },
+    ],
+    content: `
+      <h1>${brand.name} 3D Printer Filaments</h1>
+      <p>${brand.desc}</p>
+      <p>Browse all ${brand.name} products on FilaScope with live pricing, specifications, and HueForge TD values where available.</p>
+      <p><a href="/brands">View all brands</a> | <a href="/filaments">Browse all filaments</a> | <a href="/compare">Compare filaments</a></p>
     `,
   });
 }

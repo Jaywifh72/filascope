@@ -65,7 +65,7 @@ const NotFound = () => {
     { to: "/brands", label: "View Filament Brands", icon: Tag, description: "Browse 50+ filament brands" },
     { to: "/deals", label: "Today's Deals", icon: Sparkles, description: "Check out the latest discounts" },
     { to: "/hueforge-td-database", label: "HueForge TD Database", icon: Palette, description: "Transmissivity data for lithophanes" },
-    { to: "/learn", label: "Learning Center", icon: BookOpen, description: "Guides, comparisons, and tips" },
+    { to: "/guides", label: "Learning Center", icon: BookOpen, description: "Guides, comparisons, and tips" },
   ];
 
   return (

@@ -88,7 +88,7 @@ export default function FilamentStorageGuide() {
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <Breadcrumbs items={[
-            { name: 'Guides', url: '/learn' },
+            { name: 'Guides', url: '/guides' },
             { name: 'Filament Storage Guide', url: '/filament-storage-guide' },
           ]} />
         </div>

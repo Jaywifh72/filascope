@@ -24,7 +24,7 @@ const STATIC_ROUTES = [
   { path: "/printers", priority: "0.8", changefreq: "weekly" },
   { path: "/brands", priority: "0.8", changefreq: "weekly" },
   { path: "/deals", priority: "0.8", changefreq: "daily" },
-  { path: "/learn", priority: "0.7", changefreq: "weekly" },
+  { path: "/guides", priority: "0.7", changefreq: "weekly" },
   { path: "/hueforge-td-database", priority: "0.9", changefreq: "weekly" },
   { path: "/color-finder", priority: "0.7", changefreq: "monthly" },
   { path: "/compare", priority: "0.7", changefreq: "monthly" },
