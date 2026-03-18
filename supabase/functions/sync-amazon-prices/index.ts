@@ -291,7 +291,8 @@ serve(async (req) => {
 
           // HMAC chain
           async function hmacSha256(key: ArrayBuffer | Uint8Array, data: string): Promise<ArrayBuffer> {
-            const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+            const keyBuffer = key instanceof Uint8Array ? key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) : key;
+            const cryptoKey = await crypto.subtle.importKey("raw", keyBuffer as ArrayBuffer, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
             return crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
           }
 
