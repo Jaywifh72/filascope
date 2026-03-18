@@ -199,7 +199,7 @@ const MATERIAL_NORMALIZE: Record<string, string> = {
   // AzureFilm material normalizations
   "pla strongman":"PLA+","pla prime":"PLA+","pla lumos":"PLA-Glow","pla pearl":"Silk PLA",
   "matte hs":"Matte PLA","pla matte hs":"Matte PLA","petg hyper speed":"PETG",
-  "pet-cf":"PET-CF","paht-cf":"PA-CF","lumberlay":"Wood PLA",
+  "paht-cf":"PA-CF","lumberlay":"Wood PLA",
   "lumberlay pine":"Wood PLA","lumberlay bamboo":"Wood PLA","lumberlay cork":"Wood PLA",
   "lumberlay ebony":"Wood PLA","lumberlay oak":"Wood PLA","lumberlay poplar":"Wood PLA",
   "abs plus":"ABS","abs prime":"ABS","asa prime":"ASA",
