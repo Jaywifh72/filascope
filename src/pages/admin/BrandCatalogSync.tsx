@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { RefreshCw, Box, Cpu, DollarSign } from 'lucide-react';
+import { RefreshCw, Box, Cpu, DollarSign, ShoppingCart } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,6 +20,7 @@ import { PrinterDeltaReviewPanel } from '@/components/admin/printer-sync/Printer
 import { PrinterImportProgressCard } from '@/components/admin/printer-sync/PrinterImportProgressCard';
 import { usePrinterCatalogSync } from '@/hooks/usePrinterCatalogSync';
 import { PriceSyncSection } from '@/components/admin/price-sync/PriceSyncSection';
+import { AmazonPriceSyncSection } from '@/components/admin/amazon-sync/AmazonPriceSyncSection';
 
 // Re-export types for backward compatibility
 export type { SyncItem, SyncJob } from '@/hooks/useCatalogSync';
@@ -76,6 +77,17 @@ export default function BrandCatalogSync() {
       />
 
       <PriceSyncSection />
+
+      {/* ─── Amazon Price Sync Section ─── */}
+      <Separator className="my-8" />
+
+      <AdminPageHeader
+        icon={ShoppingCart}
+        title="Amazon Price Sync"
+        description="Fetch current filament prices from Amazon marketplaces via PA-API and update listings"
+      />
+
+      <AmazonPriceSyncSection />
     </div>
   );
 }
