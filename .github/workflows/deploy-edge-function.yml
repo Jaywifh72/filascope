@@ -22,6 +22,6 @@ jobs:
 
       - name: Deploy Edge Function
         run: |
-          supabase functions deploy ${{ github.event.inputs.function_name }} --project-ref cfqfavmhdbyjzejipiwa --no-verify-jwt
+          supabase functions deploy ${{ github.event.inputs.function_name }} --project-ref fytxfdvbzstnimzhjgth --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
