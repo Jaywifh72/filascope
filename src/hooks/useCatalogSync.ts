@@ -1356,10 +1356,10 @@ export function useCatalogSync() {
       // ── Store items in brand_sync_items ──
       setScanStatusMessage('Saving results...');
 
-      const itemsToInsert = diffResults.map(r => ({
+      const itemsToInsert: any[] = diffResults.map(r => ({
         job_id: currentJobId,
         status: r.status,
-        extracted_data: r.filament as unknown as Record<string, unknown>,
+        extracted_data: r.filament as any,
         display_name: r.filament.display_name,
         color_name: r.filament.color_family || r.filament.display_name.split(' - ').pop() || null,
         material_type: r.filament.material,

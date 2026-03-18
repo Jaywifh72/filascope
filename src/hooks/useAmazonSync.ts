@@ -164,7 +164,7 @@ export function useAmazonSync() {
         query = query.or(orFilters);
       }
 
-      const { data: filaments, error: fetchError } = await query;
+      const { data: filaments, error: fetchError } = await query as { data: any[] | null; error: any };
       if (fetchError) throw fetchError;
 
       if (!filaments || filaments.length === 0) {
@@ -365,7 +365,7 @@ export function useAmazonSync() {
         .select(`id, product_title, vendor, featured_image, variant_price, material, color_family, ${linkCol}`)
         .ilike('vendor', `%${options.brandSlug}%`)
         .order('product_title')
-        .limit(options.limit || 1000);
+        .limit(options.limit || 1000) as { data: any[] | null; error: any };
 
       if (error) throw error;
 
