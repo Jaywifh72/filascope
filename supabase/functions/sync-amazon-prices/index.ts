@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { HmacSha256 } from "https://deno.land/std@0.168.0/hash/sha256.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -291,7 +290,7 @@ serve(async (req) => {
           const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${credentialScope}\n${canonicalRequestHashHex}`;
 
           // HMAC chain
-          async function hmacSha256(key: ArrayBuffer, data: string): Promise<ArrayBuffer> {
+          async function hmacSha256(key: ArrayBuffer | Uint8Array, data: string): Promise<ArrayBuffer> {
             const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
             return crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
           }
