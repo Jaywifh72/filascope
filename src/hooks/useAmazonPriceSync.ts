@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -62,19 +61,21 @@ export function useAmazonPriceSync() {
       body.stale_only = false; // sync all, not just stale
       body.batch_size = 10;
 
-      const { data, error: fnError } = await supabase.functions.invoke('sync-amazon-prices', {
-        body,
+      // Call the edge function on our Supabase project (fytxfdvbzstnimzhjgth)
+      // directly, since it's deployed there — not on the Lovable-managed project.
+      const EDGE_FN_URL = 'https://fytxfdvbzstnimzhjgth.supabase.co/functions/v1/sync-amazon-prices';
+      const response = await fetch(EDGE_FN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
 
-      if (fnError) {
-        const msg = fnError.message || String(fnError);
-        if (msg.includes('Failed to send') || msg.includes('NOT_FOUND') || msg.includes('404')) {
-          throw new Error(
-            'The sync-amazon-prices edge function is not deployed. Deploy via: npx supabase functions deploy sync-amazon-prices --project-ref cfqfavmhdbyjzejipiwa'
-          );
-        }
-        throw new Error(msg);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Edge function error (${response.status}): ${text}`);
       }
+
+      const data = await response.json();
 
       if (data?.error) throw new Error(data.error);
 
