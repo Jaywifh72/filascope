@@ -164,7 +164,7 @@ export function useAmazonSync() {
         query = query.or(orFilters);
       }
 
-      const { data: filaments, error: fetchError } = await query;
+      const { data: filaments, error: fetchError } = await query as { data: any[] | null; error: any };
       if (fetchError) throw fetchError;
 
       if (!filaments || filaments.length === 0) {
