@@ -615,6 +615,13 @@ export type Database = {
             foreignKeyName: "affiliate_configs_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
+          },
+          {
+            foreignKeyName: "affiliate_configs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
@@ -942,6 +949,13 @@ export type Database = {
             foreignKeyName: "affiliate_programs_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
+          },
+          {
+            foreignKeyName: "affiliate_programs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
@@ -960,6 +974,389 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      amazon_brand_stores: {
+        Row: {
+          brand_id: string | null
+          brand_slug: string
+          crawl_status: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          last_crawled_at: string | null
+          marketplace: string
+          product_count: number | null
+          seller_id: string | null
+          store_name: string | null
+          storefront_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          brand_slug: string
+          crawl_status?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          last_crawled_at?: string | null
+          marketplace: string
+          product_count?: number | null
+          seller_id?: string | null
+          store_name?: string | null
+          storefront_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          brand_slug?: string
+          crawl_status?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          last_crawled_at?: string | null
+          marketplace?: string
+          product_count?: number | null
+          seller_id?: string | null
+          store_name?: string | null
+          storefront_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amazon_brand_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_brand_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_brand_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
+          },
+          {
+            foreignKeyName: "amazon_brand_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brand_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_brand_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_brand_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      amazon_product_details: {
+        Row: {
+          anomaly_reason: string | null
+          buy_box_seller: string | null
+          coupon_amount_cents: number | null
+          coupon_percent: number | null
+          coupon_text: string | null
+          created_at: string | null
+          deal_end_at: string | null
+          deal_type: string | null
+          id: string
+          is_addon_item: boolean | null
+          is_price_anomaly: boolean | null
+          is_prime_eligible: boolean | null
+          is_sold_by_brand: boolean | null
+          last_fetched_at: string | null
+          main_image_url: string | null
+          mapping_id: string
+          price_vs_msrp_ratio: number | null
+          rating: number | null
+          review_count: number | null
+          stock_status: string | null
+          subscribe_save_percent: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          anomaly_reason?: string | null
+          buy_box_seller?: string | null
+          coupon_amount_cents?: number | null
+          coupon_percent?: number | null
+          coupon_text?: string | null
+          created_at?: string | null
+          deal_end_at?: string | null
+          deal_type?: string | null
+          id?: string
+          is_addon_item?: boolean | null
+          is_price_anomaly?: boolean | null
+          is_prime_eligible?: boolean | null
+          is_sold_by_brand?: boolean | null
+          last_fetched_at?: string | null
+          main_image_url?: string | null
+          mapping_id: string
+          price_vs_msrp_ratio?: number | null
+          rating?: number | null
+          review_count?: number | null
+          stock_status?: string | null
+          subscribe_save_percent?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          anomaly_reason?: string | null
+          buy_box_seller?: string | null
+          coupon_amount_cents?: number | null
+          coupon_percent?: number | null
+          coupon_text?: string | null
+          created_at?: string | null
+          deal_end_at?: string | null
+          deal_type?: string | null
+          id?: string
+          is_addon_item?: boolean | null
+          is_price_anomaly?: boolean | null
+          is_prime_eligible?: boolean | null
+          is_sold_by_brand?: boolean | null
+          last_fetched_at?: string | null
+          main_image_url?: string | null
+          mapping_id?: string
+          price_vs_msrp_ratio?: number | null
+          rating?: number | null
+          review_count?: number | null
+          stock_status?: string | null
+          subscribe_save_percent?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amazon_product_details_mapping_id_fkey"
+            columns: ["mapping_id"]
+            isOneToOne: true
+            referencedRelation: "amazon_product_mappings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      amazon_product_mappings: {
+        Row: {
+          amazon_title: string | null
+          asin: string
+          brand_name: string | null
+          created_at: string | null
+          filament_id: string
+          id: string
+          is_active: boolean | null
+          listing_id: string | null
+          marketplace: string
+          match_confidence: string | null
+          match_source: string | null
+          matched_at: string | null
+          notes: string | null
+          parent_asin: string | null
+          product_group: string | null
+          spool_count: number | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+          weight_kg: number | null
+        }
+        Insert: {
+          amazon_title?: string | null
+          asin: string
+          brand_name?: string | null
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          is_active?: boolean | null
+          listing_id?: string | null
+          marketplace: string
+          match_confidence?: string | null
+          match_source?: string | null
+          matched_at?: string | null
+          notes?: string | null
+          parent_asin?: string | null
+          product_group?: string | null
+          spool_count?: number | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          weight_kg?: number | null
+        }
+        Update: {
+          amazon_title?: string | null
+          asin?: string
+          brand_name?: string | null
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          is_active?: boolean | null
+          listing_id?: string | null
+          marketplace?: string
+          match_confidence?: string | null
+          match_source?: string | null
+          matched_at?: string | null
+          notes?: string | null
+          parent_asin?: string | null
+          product_group?: string | null
+          spool_count?: number | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amazon_product_mappings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "td_community_stats"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "filament_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amazon_product_mappings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_filament_listings"
+            referencedColumns: ["listing_id"]
+          },
+        ]
+      }
+      amazon_sync_runs: {
+        Row: {
+          api_calls_used: number | null
+          brand_slug: string | null
+          completed_at: string | null
+          created_at: string | null
+          duration_ms: number | null
+          error_log: Json | null
+          errors: number | null
+          id: string
+          marketplace: string | null
+          new_mappings: number | null
+          prices_updated: number | null
+          processed: number | null
+          run_type: string
+          skipped: number | null
+          started_at: string | null
+          status: string
+          summary: Json | null
+          total_items: number | null
+          triggered_by: string | null
+        }
+        Insert: {
+          api_calls_used?: number | null
+          brand_slug?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_log?: Json | null
+          errors?: number | null
+          id?: string
+          marketplace?: string | null
+          new_mappings?: number | null
+          prices_updated?: number | null
+          processed?: number | null
+          run_type: string
+          skipped?: number | null
+          started_at?: string | null
+          status?: string
+          summary?: Json | null
+          total_items?: number | null
+          triggered_by?: string | null
+        }
+        Update: {
+          api_calls_used?: number | null
+          brand_slug?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_log?: Json | null
+          errors?: number | null
+          id?: string
+          marketplace?: string | null
+          new_mappings?: number | null
+          prices_updated?: number | null
+          processed?: number | null
+          run_type?: string
+          skipped?: number | null
+          started_at?: string | null
+          status?: string
+          summary?: Json | null
+          total_items?: number | null
+          triggered_by?: string | null
+        }
+        Relationships: []
       }
       answer_helpful_votes: {
         Row: {
@@ -1337,6 +1734,13 @@ export type Database = {
             foreignKeyName: "brand_regional_stores_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
+          },
+          {
+            foreignKeyName: "brand_regional_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
@@ -1401,6 +1805,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_active_brands"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_representatives_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
           },
           {
             foreignKeyName: "brand_representatives_brand_id_fkey"
@@ -1518,6 +1929,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_active_brands"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_scraper_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
           },
           {
             foreignKeyName: "brand_scraper_profiles_brand_id_fkey"
@@ -1932,6 +2350,13 @@ export type Database = {
             foreignKeyName: "brand_sync_jobs_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
+          },
+          {
+            foreignKeyName: "brand_sync_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
@@ -2048,6 +2473,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_active_brands"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
           },
           {
             foreignKeyName: "brand_sync_logs_brand_id_fkey"
@@ -4292,7 +4724,15 @@ export type Database = {
       filaments: {
         Row: {
           admin_notes: string | null
+          amazon_link_au: string | null
+          amazon_link_be: string | null
+          amazon_link_ca: string | null
           amazon_link_de: string | null
+          amazon_link_es: string | null
+          amazon_link_fr: string | null
+          amazon_link_it: string | null
+          amazon_link_jp: string | null
+          amazon_link_nl: string | null
           amazon_link_uk: string | null
           amazon_link_us: string | null
           amazon_match_confidence: number | null
@@ -4447,7 +4887,15 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          amazon_link_au?: string | null
+          amazon_link_be?: string | null
+          amazon_link_ca?: string | null
           amazon_link_de?: string | null
+          amazon_link_es?: string | null
+          amazon_link_fr?: string | null
+          amazon_link_it?: string | null
+          amazon_link_jp?: string | null
+          amazon_link_nl?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
           amazon_match_confidence?: number | null
@@ -4602,7 +5050,15 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          amazon_link_au?: string | null
+          amazon_link_be?: string | null
+          amazon_link_ca?: string | null
           amazon_link_de?: string | null
+          amazon_link_es?: string | null
+          amazon_link_fr?: string | null
+          amazon_link_it?: string | null
+          amazon_link_jp?: string | null
+          amazon_link_nl?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
           amazon_match_confidence?: number | null
@@ -4769,6 +5225,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_active_brands"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
           },
           {
             foreignKeyName: "filaments_brand_id_fkey"
@@ -5687,6 +6150,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_active_brands"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_extraction_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
           },
           {
             foreignKeyName: "price_extraction_logs_brand_id_fkey"
@@ -7481,6 +7951,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_active_brands"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_discovery_queue_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
           },
           {
             foreignKeyName: "product_discovery_queue_brand_id_fkey"
@@ -12068,6 +12545,13 @@ export type Database = {
             foreignKeyName: "filaments_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_amazon_brand_coverage"
+            referencedColumns: ["brand_id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
@@ -12856,6 +13340,18 @@ export type Database = {
           scraping_active: boolean | null
           scraping_enabled: boolean | null
           website_url: string | null
+        }
+        Relationships: []
+      }
+      v_amazon_brand_coverage: {
+        Row: {
+          brand_id: string | null
+          brand_name: string | null
+          coverage_pct: number | null
+          last_sync: string | null
+          mapped_filaments: number | null
+          total_filaments: number | null
+          verified_count: number | null
         }
         Relationships: []
       }
