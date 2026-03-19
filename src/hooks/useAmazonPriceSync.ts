@@ -1,5 +1,8 @@
 import { useState, useCallback } from 'react';
 
+// Edge function base URL — deployed on our Supabase project (not Lovable's)
+const EDGE_BASE = 'https://fytxfdvbzstnimzhjgth.supabase.co/functions/v1';
+
 // ── Types ──────────────────────────────────────────────────
 
 export type AmazonSyncPhase = 'select' | 'syncing' | 'results';
@@ -61,9 +64,7 @@ export function useAmazonPriceSync() {
       body.stale_only = false; // sync all, not just stale
       body.batch_size = 10;
 
-      // Call the edge function on our Supabase project (fytxfdvbzstnimzhjgth)
-      // directly, since it's deployed there — not on the Lovable-managed project.
-      const EDGE_FN_URL = 'https://fytxfdvbzstnimzhjgth.supabase.co/functions/v1/sync-amazon-prices';
+      const EDGE_FN_URL = `${EDGE_BASE}/sync-amazon-prices`;
       const response = await fetch(EDGE_FN_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
