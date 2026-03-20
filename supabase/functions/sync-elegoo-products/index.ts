@@ -1138,7 +1138,7 @@ serve(async (req) => {
         // TDS Discovery and Parsing as background task
         const processTdsInBackground = async () => {
           const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
-          const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+          const lovableApiKey = Deno.env.get('OPENAI_API_KEY');
           
           if (!firecrawlApiKey || !lovableApiKey) {
             console.log('[ELEGOO-SYNC] ⚠️ Missing API keys for TDS work, skipping');
@@ -1323,14 +1323,14 @@ serve(async (req) => {
               }
               
               // Extract TDS data with AI
-              const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${lovableApiKey}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  model: 'google/gemini-2.5-flash',
+                  model: 'gpt-4o-mini',
                   messages: [{
                     role: 'user',
                     content: `Extract TDS specs from this filament technical data sheet. Return JSON with these fields (null if not found):

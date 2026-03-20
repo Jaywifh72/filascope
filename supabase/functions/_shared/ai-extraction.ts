@@ -1,8 +1,8 @@
 // AI-powered extraction helpers for intelligent scraping
-// Uses Lovable AI (Gemini) for real-time extraction assistance
+// Uses OpenAI for real-time extraction assistance
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const AI_GATEWAY_URL = 'https://api.openai.com/v1/chat/completions';
 
 interface BrandProfile {
   brand_slug: string;
@@ -45,19 +45,19 @@ interface AIExtractionResult {
   reasoning: string;
 }
 
-async function callLovableAI(prompt: string, systemPrompt?: string): Promise<string> {
-  if (!LOVABLE_API_KEY) {
-    throw new Error('LOVABLE_API_KEY is not configured');
+async function callOpenAI(prompt: string, systemPrompt?: string): Promise<string> {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured');
   }
 
   const response = await fetch(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
         { role: 'user', content: prompt }
@@ -112,7 +112,7 @@ Respond with JSON:
 }`;
 
   try {
-    const response = await callLovableAI(prompt);
+    const response = await callOpenAI(prompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
@@ -125,7 +125,7 @@ Respond with JSON:
   } catch (error) {
     console.error('AI color extraction failed:', error);
   }
-  
+
   return { value: 'Unknown', confidence: 0, reasoning: 'AI extraction failed' };
 }
 
@@ -137,7 +137,7 @@ export async function aiExtractProductLine(
   profile: BrandProfile | null
 ): Promise<AIExtractionResult> {
   const knownLines = profile?.discovered_product_lines || [];
-  
+
   const prompt = `Extract the product line from this 3D printer filament product.
 
 PRODUCT DATA:
@@ -165,7 +165,7 @@ Respond with JSON:
 }`;
 
   try {
-    const response = await callLovableAI(prompt);
+    const response = await callOpenAI(prompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
@@ -220,7 +220,7 @@ Respond with JSON:
 }`;
 
   try {
-    const response = await callLovableAI(prompt);
+    const response = await callOpenAI(prompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
@@ -271,7 +271,7 @@ Respond with JSON:
 }`;
 
   try {
-    const response = await callLovableAI(prompt);
+    const response = await callOpenAI(prompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
@@ -318,7 +318,7 @@ Respond with JSON array:
 ]`;
 
     try {
-      const response = await callLovableAI(prompt);
+      const response = await callOpenAI(prompt);
       const jsonMatch = response.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);

@@ -62,7 +62,7 @@ const LOGO_FILES = [
   "treed.png",
 ];
 
-const LIVE_BASE = "https://filascope.lovable.app/brands";
+const LIVE_BASE = "https://filascope.com/brands";
 const TARGET_WIDTH = 384;
 
 Deno.serve(async (req) => {

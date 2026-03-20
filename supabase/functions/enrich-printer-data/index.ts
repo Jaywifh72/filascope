@@ -121,14 +121,14 @@ Return a JSON object with these fields (only include fields you're confident abo
 Return ONLY the JSON object, no explanation or markdown.`;
 
   try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -256,9 +256,9 @@ serve(async (req) => {
 
     const { printerIds, limit = 10, forceUpdate = false } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not configured');
     }
 
     // Create service role client for database operations
@@ -347,7 +347,7 @@ serve(async (req) => {
       // Add delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const specs = await enrichPrinterWithAI(brandName, modelName, LOVABLE_API_KEY);
+      const specs = await enrichPrinterWithAI(brandName, modelName, OPENAI_API_KEY);
 
       if (!specs) {
         failedCount++;

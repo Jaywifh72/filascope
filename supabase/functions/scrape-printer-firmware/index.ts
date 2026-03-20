@@ -170,7 +170,7 @@ async function useAIToExtractFirmware(
   brandName: string,
   sourceUrl: string
 ): Promise<FirmwareRelease[]> {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY');
+  const apiKey = Deno.env.get('OPENAI_API_KEY');
   if (!apiKey) {
     console.log('No Lovable API key, skipping AI extraction');
     return [];
@@ -229,14 +229,14 @@ Content to extract from:
 ${truncatedMarkdown}`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { 
             role: 'system', 
@@ -519,7 +519,7 @@ async function fetchDetailedReleaseNotes(
   printerName: string,
   brandName: string
 ): Promise<FirmwareRelease[]> {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY');
+  const apiKey = Deno.env.get('OPENAI_API_KEY');
   if (!apiKey) return firmware;
   
   // Only fetch details for releases with source URLs that have sparse notes
@@ -561,14 +561,14 @@ Return a JSON object with:
 Content:
 ${markdown}`;
 
-        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'gpt-4o-mini',
             messages: [
               { role: 'system', content: 'Extract detailed firmware release notes. Return valid JSON only.' },
               { role: 'user', content: detailPrompt }

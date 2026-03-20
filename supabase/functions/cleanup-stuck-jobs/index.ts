@@ -78,10 +78,10 @@ async function generateCleanupAISummary(
   },
   ageMinutes: number
 ): Promise<AISummary | null> {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  
-  if (!LOVABLE_API_KEY) {
-    console.log(`[CLEANUP] LOVABLE_API_KEY not configured, skipping AI summary for job ${job.id}`);
+  const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+
+  if (!OPENAI_API_KEY) {
+    console.log(`[CLEANUP] OPENAI_API_KEY not configured, skipping AI summary for job ${job.id}`);
     return null;
   }
 
@@ -144,14 +144,14 @@ Analyze this stuck job and the debug logs to provide:
    - Provide specific code recommendations to prevent future hangs
    - Include timeout handling, heartbeats, error recovery strategies`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'You are a Senior Web Scraping & Backend Engineering Expert. When jobs timeout or get stuck, you analyze the failure and debug logs to provide detailed, actionable prompts to fix the underlying issues. Your prompts should be expert-level, specific, and include code references.' },
           { role: 'user', content: prompt }
@@ -208,7 +208,7 @@ Analyze this stuck job and the debug logs to provide:
     
     return {
       generatedAt: new Date().toISOString(),
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       summary: {
         headline: summary.headline,
         whatWentRight: summary.whatWentRight || [],

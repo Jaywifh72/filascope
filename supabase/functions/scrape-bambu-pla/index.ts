@@ -31,10 +31,10 @@ async function generateAISummary(
   dryRun: boolean,
   ctx: any
 ): Promise<AISummary | null> {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  
-  if (!LOVABLE_API_KEY) {
-    console.log(`[${ctx.requestId}] LOVABLE_API_KEY not configured, skipping AI summary`);
+  const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+
+  if (!OPENAI_API_KEY) {
+    console.log(`[${ctx.requestId}] OPENAI_API_KEY not configured, skipping AI summary`);
     return null;
   }
 
@@ -71,14 +71,14 @@ Analyze this job and provide:
    - Be formatted in markdown for readability
    - If no issues exist (healthScore >= 90 AND no errors), set lovablePrompt to null`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'You are a Senior Web Scraping & Backend Engineering Expert. When issues occur, you provide detailed, actionable prompts that can be pasted into Lovable (an AI-powered web development tool) to fix problems. Your prompts should be expert-level, specific, and include code references.' },
           { role: 'user', content: prompt }
@@ -136,7 +136,7 @@ Analyze this job and provide:
     
     return {
       generatedAt: new Date().toISOString(),
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       summary: {
         headline: summary.headline,
         whatWentRight: summary.whatWentRight || [],

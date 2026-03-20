@@ -148,7 +148,7 @@ serve(async (req) => {
     // Fetch mappings to sync
     let query = supabase
       .from("amazon_product_mappings")
-      .select("*, filaments!inner(id, name, brand, weight)")
+      .select("*, filaments!inner(id, product_title, vendor, net_weight_g)")
       .eq("is_active", true);
 
     if (marketplace) {
@@ -185,7 +185,7 @@ serve(async (req) => {
     let filteredMappings = mappings;
     if (brand_slug) {
       filteredMappings = mappings.filter((m: any) =>
-        m.filaments?.brand?.toLowerCase().replace(/\s+/g, "-") === brand_slug.toLowerCase()
+        m.filaments?.vendor?.toLowerCase().replace(/\s+/g, "-") === brand_slug.toLowerCase()
       );
     }
 

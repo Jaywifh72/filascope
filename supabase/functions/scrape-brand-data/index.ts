@@ -614,11 +614,11 @@ async function parseTdsForVendor(
   limit: number = 10
 ): Promise<{ parsed: number; failed: number; details: string[] }> {
   const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
-  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+  const lovableApiKey = Deno.env.get("OPENAI_API_KEY");
   
   if (!firecrawlApiKey || !lovableApiKey) {
     console.log("⚠️ Missing API keys for TDS parsing");
-    return { parsed: 0, failed: 0, details: ["Missing FIRECRAWL_API_KEY or LOVABLE_API_KEY"] };
+    return { parsed: 0, failed: 0, details: ["Missing FIRECRAWL_API_KEY or OPENAI_API_KEY"] };
   }
   
   // Find filaments with TDS URLs but missing print settings
@@ -675,14 +675,14 @@ async function parseTdsForVendor(
       }
       
       // Extract with AI
-      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'gpt-4o-mini',
           messages: [{
             role: 'user',
             content: `Extract 3D filament specs from this TDS. Return JSON with these fields (use null if not found):

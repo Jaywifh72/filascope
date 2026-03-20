@@ -15,7 +15,7 @@ const PROD_DOMAIN = "https://filascope.com";
 function validateUrls(obj: unknown, path: string, errors: ValidationError[], schemaType: string) {
   if (typeof obj === "string") {
     if (
-      (obj.startsWith("http://localhost") || obj.startsWith("https://localhost") || obj.includes("lovable.app")) &&
+      (obj.startsWith("http://localhost") || obj.startsWith("https://localhost")) &&
       !obj.includes(PROD_DOMAIN)
     ) {
       errors.push({ schemaType, field: path, message: `URL points to dev/preview domain: "${obj}"` });

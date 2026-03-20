@@ -168,7 +168,7 @@ serve(async (req) => {
     console.log('Scraped content length:', pageContent.length);
 
     // Step 2: Extract with AI (Lovable AI / Gemini)
-    const lovableKey = Deno.env.get('LOVABLE_API_KEY');
+    const lovableKey = Deno.env.get('OPENAI_API_KEY');
     if (!lovableKey) {
       return new Response(
         JSON.stringify({ success: false, error: 'AI API key not configured' }),
@@ -176,14 +176,14 @@ serve(async (req) => {
       );
     }
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: EXTRACTION_PROMPT },
           { role: 'user', content: `Extract filament data from this product page:\n\nURL: ${formattedUrl}\n\nPage Content:\n${pageContent.substring(0, 15000)}` }

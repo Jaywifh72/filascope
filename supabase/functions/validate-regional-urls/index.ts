@@ -89,7 +89,7 @@ async function validateUrl(url: string): Promise<{
     const response = await fetch(url, {
       method: 'HEAD',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; FilaScope/1.0; +https://filascope.lovable.app)',
+        'User-Agent': 'Mozilla/5.0 (compatible; FilaScope/1.0; +https://filascope.com)',
       },
       redirect: 'manual',
       signal: controller.signal,

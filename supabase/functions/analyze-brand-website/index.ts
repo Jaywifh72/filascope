@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const AI_GATEWAY_URL = 'https://api.openai.com/v1/chat/completions';
 const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
 
 interface AnalysisRequest {
@@ -34,19 +34,19 @@ interface ShopifyProduct {
   images: Array<{ src: string; alt: string | null }>;
 }
 
-async function callLovableAI(prompt: string): Promise<string> {
-  if (!LOVABLE_API_KEY) {
-    throw new Error('LOVABLE_API_KEY is not configured');
+async function callOpenAI(prompt: string): Promise<string> {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured');
   }
 
   const response = await fetch(AI_GATEWAY_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         { 
           role: 'system', 
@@ -442,7 +442,7 @@ Analyze and respond with this exact JSON structure:
 Be precise and derive rules from the actual data, not assumptions.`;
 
     console.log('Calling AI for analysis...');
-    const aiResponse = await callLovableAI(analysisPrompt);
+    const aiResponse = await callOpenAI(analysisPrompt);
     
     // Parse AI response - strip markdown code blocks if present
     let analysis;

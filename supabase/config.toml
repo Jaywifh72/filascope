@@ -1,4 +1,4 @@
-project_id = "cfqfavmhdbyjzejipiwa"
+project_id = "fytxfdvbzstnimzhjgth"
 
 [functions.sync-bambulab-products]
 verify_jwt = false

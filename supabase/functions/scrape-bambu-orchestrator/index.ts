@@ -518,9 +518,9 @@ async function completeJob(supabase: any, state: ChunkState): Promise<void> {
   // Generate AI summary if available
   let aiSummary = null;
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (LOVABLE_API_KEY) {
-      aiSummary = await generateAISummary(results, materials, dryRun, LOVABLE_API_KEY, logs);
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (OPENAI_API_KEY) {
+      aiSummary = await generateAISummary(results, materials, dryRun, OPENAI_API_KEY, logs);
     }
   } catch (e) {
     console.error('[ORCHESTRATOR] Failed to generate AI summary:', e);
@@ -607,14 +607,14 @@ Provide a brief analysis with:
 6. Health score (0-100)
 7. ${hasErrors ? 'A detailed lovablePrompt for fixing the issues - include specific file paths, error analysis, and code recommendations. Start with "As a Senior Web Scraping & Backend Expert..."' : 'null for lovablePrompt since no errors'}`;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'You are a Senior Web Scraping & Backend Expert. Analyze scrape job results and provide actionable insights. When errors exist, generate detailed fix prompts for Lovable.' },
         { role: 'user', content: prompt }
@@ -659,7 +659,7 @@ Provide a brief analysis with:
   const summary = JSON.parse(toolCall.function.arguments);
   return {
     generatedAt: new Date().toISOString(),
-    model: 'google/gemini-2.5-flash',
+    model: 'gpt-4o-mini',
     summary: {
       headline: summary.headline || 'Scrape completed',
       whatWentRight: summary.whatWentRight || [],
