@@ -110,12 +110,14 @@ export default function ColorFinder() {
       <DocumentHead
         title="Filament Color Finder & Picker — Match Any Color to 3D Filament | FilaScope"
         description="Free filament color finder: match any color to 1,000+ 3D printer filaments from 48+ brands. Search by hex code, color name, or visual picker. Find exact color matches for HueForge & printing projects."
-        ogTitle="Find 3D Printer Filaments by Color — Color Matching Tool | FilaScope"
+        canonical="https://filascope.com/colors"
+        ogTitle="Filament Color Finder & Picker — Match Any Color to 3D Filament | FilaScope"
         ogDescription="Match any color to real 3D printer filaments across 48+ brands. Search by hex code, color name, or visual picker."
-        keywords="filament color comparison, 3D printing color match, filament color finder, hex color filament, HueForge colors"
+        keywords="filament color finder, filament color picker, 3D printing color match, hex color filament, HueForge colors, filament color comparison"
       />
+      <BreadcrumbSchema items={[{ name: 'Home', url: '/' }, { name: 'Color Finder', url: '/colors' }]} />
       <Breadcrumbs
-        items={[{ name: "Find by Color", url: "/colors" }]}
+        items={[{ name: "Color Finder", url: "/colors" }]}
         className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-4 pb-1"
       />
       <WebApplicationSchema
