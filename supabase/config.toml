@@ -498,5 +498,8 @@ verify_jwt = false
 [functions.sync-printer-prices]
 verify_jwt = false
 
+[functions.seo-advisor]
+verify_jwt = true
+
 [functions.sync-amazon-prices]
 verify_jwt = false
