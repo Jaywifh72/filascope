@@ -1466,6 +1466,11 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Why is TPU harder to print than PETG?', answer: 'TPU\'s flexibility causes it to buckle in the extruder or Bowden tube instead of being pushed forward. You must print slowly and with minimal retraction compared to rigid filaments.' },
     ],
     relatedSlugs: ['best-tpu-filaments', 'best-petg-filaments', 'pla-vs-petg', 'how-to-choose-3d-printer-filament', 'best-filaments-for-functional-parts'],
+    aiSnippet: {
+      summaryText: 'TPU is flexible and impact-resistant, ideal for phone cases, gaskets, and wearables. PETG is rigid and strong, suited for structural parts, enclosures, and outdoor use. Choose TPU when the part needs to bend or absorb shock; choose PETG when it needs to hold shape under load.',
+      topPick: { name: 'Polymaker PolyFlex TPU95', brand: 'Polymaker', reason: 'Best overall flexible filament — easy to print, consistent results' },
+      runnerUp: { name: 'Overture PETG', brand: 'Overture', reason: 'Excellent rigid alternative — strong, affordable, low warping' },
+    },
   },
 
   // ─── Miniatures guide moved to end of file with expanded content ───
