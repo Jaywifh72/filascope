@@ -209,7 +209,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const creds = JSON.parse(credJson);
+    // Try parsing as JSON first; if it fails, try base64 decoding
+    let parsedJson = credJson;
+    try {
+      JSON.parse(credJson);
+    } catch {
+      // Likely base64 encoded
+      parsedJson = new TextDecoder().decode(Uint8Array.from(atob(credJson), c => c.charCodeAt(0)));
+    }
+    const creds = JSON.parse(parsedJson);
     if (!creds.client_email || !creds.private_key || !creds.token_uri) {
       return new Response(
         JSON.stringify({ error: "Invalid service account JSON", code: "INVALID_CREDENTIALS" }),
@@ -248,9 +256,17 @@ Deno.serve(async (req) => {
 
     for (let i = 0; i < rows.length; i += BATCH) {
       const batch = rows.slice(i, i + BATCH);
+      // Replace NULLs with empty strings for upsert conflict matching
+      const cleanBatch = batch.map((row: any) => ({
+        ...row,
+        query: row.query || '',
+        page: row.page || '',
+        country: row.country || '',
+        device: row.device || '',
+      }));
       const { error: upsertError } = await supabaseAdmin
         .from("search_console_data")
-        .upsert(batch, {
+        .upsert(cleanBatch, {
           onConflict: "date,query,page,country,device",
           ignoreDuplicates: false,
         });
