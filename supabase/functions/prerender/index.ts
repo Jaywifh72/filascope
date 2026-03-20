@@ -183,7 +183,7 @@ function homepage(): PageData {
 async function filamentListingPage(sb: SupabaseClient): Promise<PageData> {
   const {count} = await sb.from("filaments").select("id",{count:"exact",head:true});
   const n = count??0;
-  const {data:top} = await sb.from("filaments").select("product_handle,id,product_title,display_name,vendor,material,variant_price,filascope_score,variant_available").not("filascope_score","is",null).order("filascope_score",{ascending:false}).limit(50);
+  const {data:top} = await sb.from("filaments").select("product_handle,id,product_title,display_name,vendor,material,variant_price,filascope_score,variant_available").not("filascope_score","is",null).order("filascope_score",{ascending:false}).limit(200);
   const items = (top??[]) as any[];
   const links = items.map((f:any)=>({href:`${BASE_URL}/filament/${f.product_handle||f.id}`,text:f.display_name||f.product_title||"Filament"}));
   const crumbs = [{name:"Home",url:"/"},{name:"Filaments",url:"/filaments"}];
@@ -193,7 +193,7 @@ async function filamentListingPage(sb: SupabaseClient): Promise<PageData> {
 async function filamentCategoryPage(slug:string, sb:SupabaseClient, page=0): Promise<PageData> {
   const cfg = MAT_CFG[slug]; if(!cfg) return fallback(`/filaments/${slug}`);
   const meta = CAT_META[slug]??CAT_META["pla"];
-  const PS=50, offset=page*PS;
+  const PS=100, offset=page*PS;
   let cq = sb.from("filaments").select("id",{count:"exact",head:true});
   if(cfg.ilike) cq = (sb as any).from("filaments").select("id",{count:"exact",head:true}).or(cfg.materials.map(m=>`material.eq.${m}`).join(",")+`,material.ilike.${cfg.ilike}`);
   else cq = cq.in("material",cfg.materials);
