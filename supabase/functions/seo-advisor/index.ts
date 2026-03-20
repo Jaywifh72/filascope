@@ -23,11 +23,11 @@ serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
 
-    if (!openaiApiKey) {
+    if (!anthropicApiKey) {
       return new Response(
-        JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
+        JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -159,36 +159,33 @@ Focus on actionable, specific recommendations based on the data provided. Consid
 
 Return ONLY the JSON array, no markdown formatting or explanation.`;
 
-    // 7. Call OpenAI API
-    console.log("Calling OpenAI API for SEO analysis...");
+    // 7. Call Anthropic API (Claude)
+    console.log("Calling Anthropic API for SEO analysis...");
 
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+    const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openaiApiKey}`,
+        "x-api-key": anthropicApiKey,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        system: "You are an expert SEO analyst for a 3D printer filament comparison website. Always respond with valid JSON arrays only, no markdown formatting.",
         messages: [
-          {
-            role: "system",
-            content: "You are an expert SEO analyst. Always respond with valid JSON arrays only.",
-          },
           { role: "user", content: prompt },
         ],
-        temperature: 0.3,
-        max_tokens: 2000,
       }),
     });
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      throw new Error(`OpenAI API error: ${openaiResponse.status} ${errorText}`);
+    if (!anthropicResponse.ok) {
+      const errorText = await anthropicResponse.text();
+      throw new Error(`Anthropic API error: ${anthropicResponse.status} ${errorText}`);
     }
 
-    const openaiData = await openaiResponse.json();
-    const rawContent = openaiData.choices?.[0]?.message?.content ?? "[]";
+    const anthropicData = await anthropicResponse.json();
+    const rawContent = anthropicData.content?.[0]?.text ?? "[]";
 
     // 8. Parse the response into structured actions
     let actions: SeoAction[];

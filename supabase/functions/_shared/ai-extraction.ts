@@ -1,8 +1,8 @@
 // AI-powered extraction helpers for intelligent scraping
-// Uses OpenAI for real-time extraction assistance
+// Uses Anthropic Claude for real-time extraction assistance
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-const AI_GATEWAY_URL = 'https://api.openai.com/v1/chat/completions';
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') || Deno.env.get('OPENAI_API_KEY');
+const USE_ANTHROPIC = !!Deno.env.get('ANTHROPIC_API_KEY');
 
 interface BrandProfile {
   brand_slug: string;
@@ -46,14 +46,41 @@ interface AIExtractionResult {
 }
 
 async function callOpenAI(prompt: string, systemPrompt?: string): Promise<string> {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not configured');
+  if (!ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY (or OPENAI_API_KEY) is not configured');
   }
 
-  const response = await fetch(AI_GATEWAY_URL, {
+  if (USE_ANTHROPIC) {
+    // Use Anthropic Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        ...(systemPrompt ? { system: systemPrompt } : {}),
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text || '';
+  }
+
+  // Fallback: OpenAI API
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -62,7 +89,7 @@ async function callOpenAI(prompt: string, systemPrompt?: string): Promise<string
         ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
         { role: 'user', content: prompt }
       ],
-      temperature: 0.1, // Low temperature for consistent extraction
+      temperature: 0.1,
     }),
   });
 
