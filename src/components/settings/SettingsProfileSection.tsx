@@ -132,7 +132,7 @@ export function SettingsProfileSection({
           {slugError && <p className="text-xs text-destructive">{slugError}</p>}
           {profile.username_slug && !slugError && (
             <p className="text-xs text-muted-foreground">
-              Profile URL: filascope.lovable.app/user/{profile.username_slug}
+              Profile URL: filascope.com/user/{profile.username_slug}
             </p>
           )}
         </div>

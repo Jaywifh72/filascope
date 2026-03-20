@@ -15,7 +15,7 @@ export function EmbedCodeDialog({ open, onOpenChange, productId }: EmbedCodeDial
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://filascope.lovable.app";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://filascope.com";
   const embedUrl = `${origin}/embed/${productId}`;
   const embedCode = `<iframe src="${embedUrl}" width="400" height="220" style="border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;" loading="lazy" title="FilaScope Product Card"></iframe>`;
 

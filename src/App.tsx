@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { lazy, Suspense, useEffect } from "react";
 
 // Sitemap redirect — sends browsers and crawlers to the edge function that generates dynamic XML
-const SITEMAP_EDGE_BASE = "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=";
+const SITEMAP_EDGE_BASE = "https://fytxfdvbzstnimzhjgth.supabase.co/functions/v1/prerender?path=";
 function SitemapRedirect({ path }: { path: string }) {
   useEffect(() => {
     window.location.replace(SITEMAP_EDGE_BASE + encodeURIComponent(path));

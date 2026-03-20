@@ -57,7 +57,7 @@ export default function EmbedProduct() {
   const score = scoreResult.score;
   const priceDisplay = filament.variant_price ? formatPrice(filament.variant_price) : null;
   const slug = filament.product_handle || filament.id;
-  const detailUrl = `https://filascope.lovable.app/filament/${slug}`;
+  const detailUrl = `https://filascope.com/filament/${slug}`;
 
   return (
     <div className="h-full bg-background text-foreground p-4 flex gap-4" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>

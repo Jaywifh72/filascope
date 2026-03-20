@@ -12,7 +12,7 @@
  */
 
 const PRERENDER_URL =
-  "https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender";
+  "https://fytxfdvbzstnimzhjgth.supabase.co/functions/v1/prerender";
 
 
 /** Lower-cased substrings that identify bot User-Agents */
