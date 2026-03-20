@@ -274,7 +274,7 @@ export function useSettings() {
   const changePassword = useCallback(async () => {
     if (!user?.email) return;
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/settings`,
+      redirectTo: `${window.location.origin}/auth`,
     });
     if (error) {
       toast.error("Failed to send password reset email.");
