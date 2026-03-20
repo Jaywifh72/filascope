@@ -15,7 +15,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { UserCog, KeyRound, Trash2 } from "lucide-react";
+import { UserCog, KeyRound, Trash2, Eye, EyeOff, Check, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 
 interface Props {
@@ -26,6 +28,63 @@ interface Props {
 }
 
 export function SettingsAccountSection({ user, isAdmin, onChangePassword, onDeleteAccount }: Props) {
+  const { toast } = useToast();
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 8) return "Password must be at least 8 characters";
+    if (!/[A-Z]/.test(pwd)) return "Must include at least 1 capital letter";
+    if (!/[a-z]/.test(pwd)) return "Must include at least 1 lowercase letter";
+    if (!/[0-9]/.test(pwd)) return "Must include at least 1 number";
+    if (!/[^A-Za-z0-9]/.test(pwd)) return "Must include at least 1 special character";
+    return null;
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Error", description: "New passwords do not match", variant: "destructive" });
+      return;
+    }
+    const validationError = validatePassword(newPassword);
+    if (validationError) {
+      toast({ title: "Invalid password", description: validationError, variant: "destructive" });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      // Verify current password by signing in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: currentPassword,
+      });
+      if (signInError) {
+        toast({ title: "Error", description: "Current password is incorrect", variant: "destructive" });
+        setChangingPassword(false);
+        return;
+      }
+
+      // Update to new password
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
+
+      toast({ title: "Password updated", description: "Your password has been changed successfully" });
+      setShowPasswordForm(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update password", variant: "destructive" });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   return (
     <Card className="border-border/50">
       <CardHeader>
@@ -76,11 +135,77 @@ export function SettingsAccountSection({ user, isAdmin, onChangePassword, onDele
 
         <Separator className="bg-border/50" />
 
+        {/* Change Password */}
+        {showPasswordForm ? (
+          <div className="space-y-4 p-4 rounded-lg border border-border/50 bg-muted/20">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <KeyRound className="w-4 h-4" /> Change Password
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => { setShowPasswordForm(false); setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); }}>
+                Cancel
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="current-password" className="text-xs">Current Password</Label>
+              <div className="relative">
+                <Input
+                  id="current-password"
+                  type={showPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-password-settings" className="text-xs">New Password</Label>
+              <Input
+                id="new-password-settings"
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+              <p className="text-xs text-muted-foreground">
+                Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password-settings" className="text-xs">Confirm New Password</Label>
+              <Input
+                id="confirm-password-settings"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+
+            <Button onClick={handleChangePassword} disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword} size="sm">
+              {changingPassword ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Updating...</> : <><Check className="w-4 h-4 mr-2" />Update Password</>}
+            </Button>
+          </div>
+        ) : null}
+
         {/* Actions */}
         <div className="flex flex-wrap gap-3">
-          <Button variant="outline" size="sm" onClick={onChangePassword}>
-            <KeyRound className="w-4 h-4 mr-2" />Change Password
-          </Button>
+          {!showPasswordForm && (
+            <Button variant="outline" size="sm" onClick={() => setShowPasswordForm(true)}>
+              <KeyRound className="w-4 h-4 mr-2" />Change Password
+            </Button>
+          )}
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
