@@ -210,15 +210,14 @@ Return ONLY the JSON array, no markdown formatting or explanation.`;
 
     // 9. Store actions in seo_advisor_actions table
     const now = new Date().toISOString();
-    const insertRows = actions.map((action, index) => ({
+    const insertRows = actions.map((action) => ({
       priority: action.priority,
       title: action.title,
       description: action.description,
       effort: action.effort,
       impact: action.impact,
-      sort_order: index,
-      created_at: now,
-      status: "pending",
+      completed: false,
+      generated_at: now,
     }));
 
     const { error: insertError } = await supabase
