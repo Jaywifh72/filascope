@@ -141,7 +141,7 @@ export const platforms: PlatformData[] = [
   {
     id: 'printables',
     name: 'Printables',
-    logo: '/lovable-uploads/5200538c-56aa-4aa0-96ca-1e32fcb324b4.png',
+    logo: '/images/platforms/printables.png',
     owner: 'Prusa Research',
     tagline: 'The Community Benchmark',
     modelType: 'hybrid',
@@ -183,7 +183,7 @@ export const platforms: PlatformData[] = [
   {
     id: 'makerworld',
     name: 'MakerWorld',
-    logo: '/lovable-uploads/38d58050-45be-4829-86ea-e8c2f7e42ecc.png',
+    logo: '/images/platforms/makerworld.png',
     owner: 'Bambu Lab',
     tagline: 'The Ecosystem Disruptor',
     modelType: 'loss-leader',
@@ -225,7 +225,7 @@ export const platforms: PlatformData[] = [
   {
     id: 'thingiverse',
     name: 'Thingiverse',
-    logo: '/lovable-uploads/5e58ff3b-b595-4cdd-b8e7-9c2f94e21e7f.png',
+    logo: '/images/platforms/thingiverse.png',
     owner: 'UltiMaker',
     tagline: 'The Legacy Archive',
     modelType: 'ad-supported',
@@ -266,7 +266,7 @@ export const platforms: PlatformData[] = [
   {
     id: 'cults3d',
     name: 'Cults3D',
-    logo: '/lovable-uploads/3a0cbb62-ac2e-4e55-8c86-0f2fc41b7a37.png',
+    logo: '/images/platforms/cults3d.png',
     owner: 'Independent (France)',
     tagline: 'The Independent Marketplace',
     modelType: 'marketplace',
@@ -302,7 +302,7 @@ export const platforms: PlatformData[] = [
   {
     id: 'myminifactory',
     name: 'MyMiniFactory',
-    logo: '/lovable-uploads/d0bd7fa3-9dbb-45ea-a6e6-d9d5f5af3c1f.png',
+    logo: '/images/platforms/myminifactory.png',
     owner: 'MMF (UK)',
     tagline: 'The Premium Curator',
     modelType: 'premium',
@@ -338,7 +338,7 @@ export const platforms: PlatformData[] = [
   {
     id: 'thangs',
     name: 'Thangs',
-    logo: '/lovable-uploads/b47bb476-9bc9-43eb-8bfc-77b9f919e8fa.png',
+    logo: '/images/platforms/thangs.png',
     owner: 'Physna',
     tagline: 'The Geometric Search Engine',
     modelType: 'search-sub',
@@ -374,7 +374,7 @@ export const platforms: PlatformData[] = [
   {
     id: 'creality-cloud',
     name: 'Creality Cloud',
-    logo: '/lovable-uploads/8a4f3a87-da62-41b2-96ba-32cc67d6e46f.png',
+    logo: '/images/platforms/creality-cloud.png',
     owner: 'Creality',
     tagline: 'The Mobile Ecosystem',
     modelType: 'mobile-sub',
@@ -410,7 +410,7 @@ export const platforms: PlatformData[] = [
   {
     id: 'grabcad',
     name: 'GrabCAD',
-    logo: '/lovable-uploads/c28abd79-4f1b-4ed7-88ed-fcb77f17e578.png',
+    logo: '/images/platforms/grabcad.png',
     owner: 'Stratasys',
     tagline: "The Engineer's Vault",
     modelType: 'lead-gen',
