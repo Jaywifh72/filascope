@@ -411,6 +411,985 @@ const pages = [
       <p><a href="/hueforge-td-database">Browse the full TD database</a> | <a href="/guides/what-is-hueforge-td">What is HueForge TD?</a> | <a href="/guides/best-filaments-for-hueforge">Best Filaments for HueForge</a></p>
     `,
   },
+
+  // ─── HueForge Tool Pages ────────────────────────────────────────
+  {
+    path: '/hueforge-filaments',
+    title: 'HueForge Compatible Filaments — TD-Tested | FilaScope',
+    description: 'Find filaments with verified HueForge TD values. Filter by brand, color, and transmissivity for perfect lithophane and multicolor prints.',
+    canonical: `${BASE_URL}/hueforge-filaments`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'HueForge Compatible Filaments',
+        description: 'Browse filaments with verified HueForge Transmission Distance (TD) values for lithophane and multicolor 3D printing.',
+        url: `${BASE_URL}/hueforge-filaments`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'HueForge Filaments', item: `${BASE_URL}/hueforge-filaments` },
+        ],
+      },
+    ],
+    content: `
+      <h1>HueForge Compatible Filaments</h1>
+      <p>Browse filaments with verified HueForge Transmission Distance (TD) values. Filter by brand, color, and TD range to find the perfect filaments for lithophane and multicolor prints.</p>
+      <p><a href="/hueforge-td-database">Full TD database</a> | <a href="/hueforge-td-lookup">TD lookup tool</a></p>
+    `,
+  },
+  {
+    path: '/hueforge-tools',
+    title: 'HueForge Tools — TD Calculator & More | FilaScope',
+    description: 'Free HueForge tools: TD calculator, palette builder, layer preview, and color matcher. Plan your multicolor 3D prints with data.',
+    canonical: `${BASE_URL}/hueforge-tools`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'FilaScope HueForge Tools',
+        description: 'Suite of free tools for HueForge multicolor 3D printing — TD calculator, palette builder, layer preview, and color matcher.',
+        url: `${BASE_URL}/hueforge-tools`,
+        applicationCategory: 'UtilityApplication',
+        isAccessibleForFree: true,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'HueForge Tools', item: `${BASE_URL}/hueforge-tools` },
+        ],
+      },
+    ],
+    content: `
+      <h1>HueForge Tools</h1>
+      <p>Free tools to help you plan HueForge multicolor 3D prints. Calculate TD values, build palettes, preview layers, and match filament colors — all backed by FilaScope's database.</p>
+      <ul>
+        <li><a href="/hueforge-palette-builder">Palette Builder</a> — Design multi-color filament palettes</li>
+        <li><a href="/hueforge-layer-preview">Layer Preview</a> — Visualize your print layers</li>
+        <li><a href="/hueforge-color-matcher">Color Matcher</a> — Find matching filament colors</li>
+        <li><a href="/hueforge-td-lookup">TD Lookup</a> — Search TD values by brand and color</li>
+      </ul>
+    `,
+  },
+  {
+    path: '/hueforge-palette-builder',
+    title: 'HueForge Palette Builder — Multi-Color Prints | FilaScope',
+    description: 'Design multi-color filament palettes for HueForge prints. Select filaments by TD value and color to build the perfect combination.',
+    canonical: `${BASE_URL}/hueforge-palette-builder`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'FilaScope HueForge Palette Builder',
+        description: 'Interactive tool to design multi-color filament palettes for HueForge 3D prints using verified TD values.',
+        url: `${BASE_URL}/hueforge-palette-builder`,
+        applicationCategory: 'DesignApplication',
+        isAccessibleForFree: true,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'HueForge Tools', item: `${BASE_URL}/hueforge-tools` },
+          { '@type': 'ListItem', position: 3, name: 'Palette Builder', item: `${BASE_URL}/hueforge-palette-builder` },
+        ],
+      },
+    ],
+    content: `
+      <h1>HueForge Palette Builder</h1>
+      <p>Design multi-color filament palettes for HueForge prints. Select filaments by TD value and color, then preview how they combine for lithophane and multicolor projects.</p>
+      <p><a href="/hueforge-tools">All HueForge tools</a> | <a href="/hueforge-td-database">TD database</a></p>
+    `,
+  },
+  {
+    path: '/hueforge-layer-preview',
+    title: 'HueForge Layer Preview — Visualize Print Layers | FilaScope',
+    description: 'Visualize how filament layers stack in your HueForge print. Preview light transmission and color blending before you print.',
+    canonical: `${BASE_URL}/hueforge-layer-preview`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'FilaScope HueForge Layer Preview',
+        description: 'Visualize how filament layers stack and transmit light in HueForge multicolor 3D prints.',
+        url: `${BASE_URL}/hueforge-layer-preview`,
+        applicationCategory: 'DesignApplication',
+        isAccessibleForFree: true,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'HueForge Tools', item: `${BASE_URL}/hueforge-tools` },
+          { '@type': 'ListItem', position: 3, name: 'Layer Preview', item: `${BASE_URL}/hueforge-layer-preview` },
+        ],
+      },
+    ],
+    content: `
+      <h1>HueForge Layer Preview</h1>
+      <p>Visualize how filament layers stack and transmit light in your HueForge print. Preview color blending and transmission effects before committing to a print.</p>
+      <p><a href="/hueforge-tools">All HueForge tools</a> | <a href="/hueforge-palette-builder">Palette Builder</a></p>
+    `,
+  },
+  {
+    path: '/hueforge-color-matcher',
+    title: 'HueForge Color Matcher — Find Matching Filaments | FilaScope',
+    description: 'Find filament colors that match your HueForge project. Search by hex code or color name across 48+ brands with TD data.',
+    canonical: `${BASE_URL}/hueforge-color-matcher`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'FilaScope HueForge Color Matcher',
+        description: 'Match filament colors for HueForge projects. Search by hex code or color name across 48+ brands with verified TD values.',
+        url: `${BASE_URL}/hueforge-color-matcher`,
+        applicationCategory: 'UtilityApplication',
+        isAccessibleForFree: true,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'HueForge Tools', item: `${BASE_URL}/hueforge-tools` },
+          { '@type': 'ListItem', position: 3, name: 'Color Matcher', item: `${BASE_URL}/hueforge-color-matcher` },
+        ],
+      },
+    ],
+    content: `
+      <h1>HueForge Color Matcher</h1>
+      <p>Find filament colors that match your HueForge project needs. Search by hex code or color name across 48+ brands, with TD values to ensure accurate light transmission results.</p>
+      <p><a href="/hueforge-tools">All HueForge tools</a> | <a href="/colors">Color finder</a></p>
+    `,
+  },
+
+  // ─── Material Hub Pages ─────────────────────────────────────────
+  {
+    path: '/materials/pla',
+    title: 'PLA Filament Guide — Properties & Settings | FilaScope',
+    description: 'Complete PLA filament guide: print settings, mechanical properties, best brands, and top picks. The most popular 3D printing material explained.',
+    canonical: `${BASE_URL}/materials/pla`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'PLA Filament Guide',
+        description: 'Comprehensive guide to PLA filament properties, print settings, and best product picks.',
+        url: `${BASE_URL}/materials/pla`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Materials', item: `${BASE_URL}/materials` },
+          { '@type': 'ListItem', position: 3, name: 'PLA', item: `${BASE_URL}/materials/pla` },
+        ],
+      },
+    ],
+    content: `
+      <h1>PLA Filament Guide</h1>
+      <p>PLA is the most popular 3D printing filament. It prints at 190-220°C, requires minimal bed temperature, and produces high-quality results with low warping. Browse PLA properties, recommended settings, and top-rated products.</p>
+      <p><a href="/filaments/pla">Browse PLA filaments</a> | <a href="/guides/best-pla-filaments">Best PLA picks</a></p>
+    `,
+  },
+  {
+    path: '/materials/petg',
+    title: 'PETG Filament Guide — Properties & Settings | FilaScope',
+    description: 'Complete PETG filament guide: print settings, strength data, chemical resistance, and best brands. Stronger than PLA for functional parts.',
+    canonical: `${BASE_URL}/materials/petg`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'PETG Filament Guide',
+        description: 'Comprehensive guide to PETG filament properties, print settings, and best product picks.',
+        url: `${BASE_URL}/materials/petg`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Materials', item: `${BASE_URL}/materials` },
+          { '@type': 'ListItem', position: 3, name: 'PETG', item: `${BASE_URL}/materials/petg` },
+        ],
+      },
+    ],
+    content: `
+      <h1>PETG Filament Guide</h1>
+      <p>PETG is a strong, chemically resistant filament that prints at 220-250°C. It bridges the gap between PLA ease-of-use and ABS durability. Explore properties, settings, and top-rated PETG products.</p>
+      <p><a href="/filaments/petg">Browse PETG filaments</a> | <a href="/guides/best-petg-filaments">Best PETG picks</a></p>
+    `,
+  },
+  {
+    path: '/materials/abs',
+    title: 'ABS Filament Guide — Properties & Settings | FilaScope',
+    description: 'Complete ABS filament guide: print settings, heat resistance, enclosure requirements, and best brands for functional 3D printing.',
+    canonical: `${BASE_URL}/materials/abs`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'ABS Filament Guide',
+        description: 'Comprehensive guide to ABS filament properties, print settings, and best product picks.',
+        url: `${BASE_URL}/materials/abs`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Materials', item: `${BASE_URL}/materials` },
+          { '@type': 'ListItem', position: 3, name: 'ABS', item: `${BASE_URL}/materials/abs` },
+        ],
+      },
+    ],
+    content: `
+      <h1>ABS Filament Guide</h1>
+      <p>ABS is a heat-resistant engineering filament that prints at 230-260°C and requires an enclosed printer. It offers excellent durability and post-processing options. Review properties, settings, and top ABS products.</p>
+      <p><a href="/filaments/abs">Browse ABS filaments</a> | <a href="/guides/best-abs-filaments">Best ABS picks</a></p>
+    `,
+  },
+  {
+    path: '/materials/tpu',
+    title: 'TPU Filament Guide — Flexible Filament Settings | FilaScope',
+    description: 'Complete TPU flexible filament guide: print settings, shore hardness, direct-drive requirements, and best brands for flexible 3D prints.',
+    canonical: `${BASE_URL}/materials/tpu`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'TPU Filament Guide',
+        description: 'Comprehensive guide to TPU flexible filament properties, print settings, and best product picks.',
+        url: `${BASE_URL}/materials/tpu`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Materials', item: `${BASE_URL}/materials` },
+          { '@type': 'ListItem', position: 3, name: 'TPU', item: `${BASE_URL}/materials/tpu` },
+        ],
+      },
+    ],
+    content: `
+      <h1>TPU Filament Guide</h1>
+      <p>TPU is a flexible, elastic filament that prints at 220-250°C. It works best with direct-drive extruders at slower speeds. Explore shore hardness ratings, settings, and the best TPU products.</p>
+      <p><a href="/filaments/tpu">Browse TPU filaments</a> | <a href="/guides/best-tpu-filaments">Best TPU picks</a></p>
+    `,
+  },
+  {
+    path: '/materials/asa',
+    title: 'ASA Filament Guide — UV-Resistant Settings | FilaScope',
+    description: 'Complete ASA filament guide: UV resistance data, print settings, outdoor durability, and best brands. The go-to material for outdoor prints.',
+    canonical: `${BASE_URL}/materials/asa`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'ASA Filament Guide',
+        description: 'Comprehensive guide to ASA filament properties, UV resistance, print settings, and best product picks.',
+        url: `${BASE_URL}/materials/asa`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Materials', item: `${BASE_URL}/materials` },
+          { '@type': 'ListItem', position: 3, name: 'ASA', item: `${BASE_URL}/materials/asa` },
+        ],
+      },
+    ],
+    content: `
+      <h1>ASA Filament Guide</h1>
+      <p>ASA is the UV-resistant alternative to ABS, designed for outdoor 3D prints. It prints at 230-260°C and requires an enclosure. Explore UV durability data, settings, and the best ASA products.</p>
+      <p><a href="/filaments/asa">Browse ASA filaments</a> | <a href="/guides/best-asa-filaments">Best ASA picks</a></p>
+    `,
+  },
+  {
+    path: '/materials/nylon',
+    title: 'Nylon Filament Guide — High-Strength Settings | FilaScope',
+    description: 'Complete nylon filament guide: print settings, moisture management, strength data, and best brands for high-performance 3D printing.',
+    canonical: `${BASE_URL}/materials/nylon`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Nylon Filament Guide',
+        description: 'Comprehensive guide to nylon filament properties, print settings, moisture management, and best product picks.',
+        url: `${BASE_URL}/materials/nylon`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Materials', item: `${BASE_URL}/materials` },
+          { '@type': 'ListItem', position: 3, name: 'Nylon', item: `${BASE_URL}/materials/nylon` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Nylon Filament Guide</h1>
+      <p>Nylon is the strongest common FDM filament, printing at 240-270°C. It requires dry storage and an enclosed printer. Review strength data, moisture management tips, and the best nylon products.</p>
+      <p><a href="/filaments/nylon">Browse nylon filaments</a> | <a href="/guides/best-nylon-filaments">Best nylon picks</a></p>
+    `,
+  },
+
+  // ─── Color Family Pages ─────────────────────────────────────────
+  {
+    path: '/colors/white',
+    title: 'White 3D Printer Filaments — Browse White Colors | FilaScope',
+    description: 'Find the perfect white 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/white`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'White 3D Printer Filaments',
+        description: 'Browse and compare white 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/white`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'White', item: `${BASE_URL}/colors/white` },
+        ],
+      },
+    ],
+    content: `
+      <h1>White 3D Printer Filaments</h1>
+      <p>Browse white filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect white for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/black',
+    title: 'Black 3D Printer Filaments — Browse Black Colors | FilaScope',
+    description: 'Find the perfect black 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/black`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Black 3D Printer Filaments',
+        description: 'Browse and compare black 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/black`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Black', item: `${BASE_URL}/colors/black` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Black 3D Printer Filaments</h1>
+      <p>Browse black filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect black for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/red',
+    title: 'Red 3D Printer Filaments — Browse Red Colors | FilaScope',
+    description: 'Find the perfect red 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/red`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Red 3D Printer Filaments',
+        description: 'Browse and compare red 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/red`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Red', item: `${BASE_URL}/colors/red` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Red 3D Printer Filaments</h1>
+      <p>Browse red filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect red for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/blue',
+    title: 'Blue 3D Printer Filaments — Browse Blue Colors | FilaScope',
+    description: 'Find the perfect blue 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/blue`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Blue 3D Printer Filaments',
+        description: 'Browse and compare blue 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/blue`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Blue', item: `${BASE_URL}/colors/blue` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Blue 3D Printer Filaments</h1>
+      <p>Browse blue filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect blue for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/green',
+    title: 'Green 3D Printer Filaments — Browse Green Colors | FilaScope',
+    description: 'Find the perfect green 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/green`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Green 3D Printer Filaments',
+        description: 'Browse and compare green 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/green`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Green', item: `${BASE_URL}/colors/green` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Green 3D Printer Filaments</h1>
+      <p>Browse green filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect green for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/yellow',
+    title: 'Yellow 3D Printer Filaments — Browse Yellow Colors | FilaScope',
+    description: 'Find the perfect yellow 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/yellow`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Yellow 3D Printer Filaments',
+        description: 'Browse and compare yellow 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/yellow`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Yellow', item: `${BASE_URL}/colors/yellow` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Yellow 3D Printer Filaments</h1>
+      <p>Browse yellow filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect yellow for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/orange',
+    title: 'Orange 3D Printer Filaments — Browse Orange Colors | FilaScope',
+    description: 'Find the perfect orange 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/orange`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Orange 3D Printer Filaments',
+        description: 'Browse and compare orange 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/orange`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Orange', item: `${BASE_URL}/colors/orange` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Orange 3D Printer Filaments</h1>
+      <p>Browse orange filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect orange for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/purple',
+    title: 'Purple 3D Printer Filaments — Browse Purple Colors | FilaScope',
+    description: 'Find the perfect purple 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/purple`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Purple 3D Printer Filaments',
+        description: 'Browse and compare purple 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/purple`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Purple', item: `${BASE_URL}/colors/purple` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Purple 3D Printer Filaments</h1>
+      <p>Browse purple filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect purple for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/pink',
+    title: 'Pink 3D Printer Filaments — Browse Pink Colors | FilaScope',
+    description: 'Find the perfect pink 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/pink`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Pink 3D Printer Filaments',
+        description: 'Browse and compare pink 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/pink`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Pink', item: `${BASE_URL}/colors/pink` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Pink 3D Printer Filaments</h1>
+      <p>Browse pink filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect pink for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/gray',
+    title: 'Gray 3D Printer Filaments — Browse Gray Colors | FilaScope',
+    description: 'Find the perfect gray 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/gray`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Gray 3D Printer Filaments',
+        description: 'Browse and compare gray 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/gray`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Gray', item: `${BASE_URL}/colors/gray` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Gray 3D Printer Filaments</h1>
+      <p>Browse gray filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect gray for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/brown',
+    title: 'Brown 3D Printer Filaments — Browse Brown Colors | FilaScope',
+    description: 'Find the perfect brown 3D printer filament. Compare shades from 48+ brands with hex values, TD data, and prices.',
+    canonical: `${BASE_URL}/colors/brown`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Brown 3D Printer Filaments',
+        description: 'Browse and compare brown 3D printer filaments from 48+ brands with hex values, TD data, and live pricing.',
+        url: `${BASE_URL}/colors/brown`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Brown', item: `${BASE_URL}/colors/brown` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Brown 3D Printer Filaments</h1>
+      <p>Browse brown filaments from 48+ brands. Compare shades, hex values, HueForge TD data, and live pricing to find the perfect brown for your project.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+  {
+    path: '/colors/transparent',
+    title: 'Transparent 3D Printer Filaments — Browse Clear Colors | FilaScope',
+    description: 'Find the perfect transparent 3D printer filament. Compare clear and translucent options from 48+ brands with TD data and prices.',
+    canonical: `${BASE_URL}/colors/transparent`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Transparent 3D Printer Filaments',
+        description: 'Browse and compare transparent and translucent 3D printer filaments from 48+ brands with TD data and live pricing.',
+        url: `${BASE_URL}/colors/transparent`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Colors', item: `${BASE_URL}/colors` },
+          { '@type': 'ListItem', position: 3, name: 'Transparent', item: `${BASE_URL}/colors/transparent` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Transparent 3D Printer Filaments</h1>
+      <p>Browse transparent and translucent filaments from 48+ brands. Compare clarity levels, HueForge TD data, and live pricing for clear 3D printing projects.</p>
+      <p><a href="/colors">All colors</a> | <a href="/filaments">All filaments</a></p>
+    `,
+  },
+
+  // ─── Printer Category Pages ─────────────────────────────────────
+  {
+    path: '/printers/enclosed',
+    title: 'Enclosed 3D Printers — Models with Enclosures | FilaScope',
+    description: 'Compare enclosed 3D printers for ABS, ASA, nylon, and PC printing. Filter by build volume, price, and enclosure type.',
+    canonical: `${BASE_URL}/printers/enclosed`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Enclosed 3D Printers',
+        description: 'Compare enclosed 3D printers designed for high-temp materials like ABS, ASA, nylon, and polycarbonate.',
+        url: `${BASE_URL}/printers/enclosed`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Printers', item: `${BASE_URL}/printers` },
+          { '@type': 'ListItem', position: 3, name: 'Enclosed', item: `${BASE_URL}/printers/enclosed` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Enclosed 3D Printers</h1>
+      <p>Compare enclosed 3D printers built for high-temperature materials like ABS, ASA, nylon, and polycarbonate. Enclosures reduce warping, block drafts, and contain fumes.</p>
+      <p><a href="/printers">All printers</a> | <a href="/compatibility-matrix">Compatibility matrix</a></p>
+    `,
+  },
+  {
+    path: '/printers/multi-color',
+    title: 'Multi-Color 3D Printers — AMS & MMU Models | FilaScope',
+    description: 'Compare multi-color 3D printers with AMS, MMU, and multi-extruder systems. Print in multiple colors and materials automatically.',
+    canonical: `${BASE_URL}/printers/multi-color`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Multi-Color 3D Printers',
+        description: 'Compare multi-color 3D printers with automatic material switching systems like AMS and MMU.',
+        url: `${BASE_URL}/printers/multi-color`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Printers', item: `${BASE_URL}/printers` },
+          { '@type': 'ListItem', position: 3, name: 'Multi-Color', item: `${BASE_URL}/printers/multi-color` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Multi-Color 3D Printers</h1>
+      <p>Compare 3D printers with automatic multi-color and multi-material systems including Bambu Lab AMS, Prusa MMU, and multi-extruder setups for multicolor prints.</p>
+      <p><a href="/printers">All printers</a> | <a href="/hueforge-tools">HueForge tools</a></p>
+    `,
+  },
+  {
+    path: '/printers/high-speed',
+    title: 'High-Speed 3D Printers — Fast Models Compared | FilaScope',
+    description: 'Compare the fastest 3D printers on the market. Filter by max speed, acceleration, and print quality at high speeds.',
+    canonical: `${BASE_URL}/printers/high-speed`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'High-Speed 3D Printers',
+        description: 'Compare the fastest 3D printers with detailed speed, acceleration, and quality specifications.',
+        url: `${BASE_URL}/printers/high-speed`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Printers', item: `${BASE_URL}/printers` },
+          { '@type': 'ListItem', position: 3, name: 'High-Speed', item: `${BASE_URL}/printers/high-speed` },
+        ],
+      },
+    ],
+    content: `
+      <h1>High-Speed 3D Printers</h1>
+      <p>Compare the fastest 3D printers available, with max speeds up to 600mm/s and high acceleration. Filter by speed, print quality, and price to find the right fast printer.</p>
+      <p><a href="/printers">All printers</a> | <a href="/filaments/high-speed-pla">High-speed PLA filaments</a></p>
+    `,
+  },
+  {
+    path: '/printers/budget',
+    title: 'Budget 3D Printers Under $300 — Affordable Models | FilaScope',
+    description: 'Compare the best budget 3D printers under $300. Find affordable models with great print quality, specs, and filament compatibility.',
+    canonical: `${BASE_URL}/printers/budget`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Budget 3D Printers Under $300',
+        description: 'Compare affordable 3D printers under $300 with detailed specifications and filament compatibility data.',
+        url: `${BASE_URL}/printers/budget`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Printers', item: `${BASE_URL}/printers` },
+          { '@type': 'ListItem', position: 3, name: 'Budget', item: `${BASE_URL}/printers/budget` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Budget 3D Printers Under $300</h1>
+      <p>Find the best affordable 3D printers under $300. Compare build volume, print quality, speed, and filament compatibility across budget-friendly models.</p>
+      <p><a href="/printers">All printers</a> | <a href="/guides/best-budget-filaments">Best budget filaments</a></p>
+    `,
+  },
+  {
+    path: '/printers/large-format',
+    title: 'Large Format 3D Printers — Big Build Volume | FilaScope',
+    description: 'Compare large format 3D printers with big build volumes. Find models with 300mm+ build areas for large-scale 3D printing projects.',
+    canonical: `${BASE_URL}/printers/large-format`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Large Format 3D Printers',
+        description: 'Compare large format 3D printers with 300mm+ build volumes for large-scale printing projects.',
+        url: `${BASE_URL}/printers/large-format`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Printers', item: `${BASE_URL}/printers` },
+          { '@type': 'ListItem', position: 3, name: 'Large Format', item: `${BASE_URL}/printers/large-format` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Large Format 3D Printers</h1>
+      <p>Compare large format 3D printers with build volumes of 300mm and above. Find the right big-build-area printer for cosplay, prototyping, and large-scale projects.</p>
+      <p><a href="/printers">All printers</a> | <a href="/filaments">Browse filaments</a></p>
+    `,
+  },
+
+  // ─── Utility Pages ──────────────────────────────────────────────
+  {
+    path: '/compatibility-matrix',
+    title: 'Printer-Filament Compatibility Matrix | FilaScope',
+    description: 'Check which filaments work with your 3D printer. Cross-reference 119+ printers with material types, nozzle temps, and bed requirements.',
+    canonical: `${BASE_URL}/compatibility-matrix`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'FilaScope Printer-Filament Compatibility Matrix',
+        description: 'Interactive tool to check filament compatibility across 119+ 3D printers by material type, temperature, and bed requirements.',
+        url: `${BASE_URL}/compatibility-matrix`,
+        applicationCategory: 'UtilityApplication',
+        isAccessibleForFree: true,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Compatibility Matrix', item: `${BASE_URL}/compatibility-matrix` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Printer-Filament Compatibility Matrix</h1>
+      <p>Check which filament materials work with your 3D printer. Cross-reference 119+ printers against material types based on nozzle temperature, bed temperature, and enclosure requirements.</p>
+      <p><a href="/printers">Browse printers</a> | <a href="/filaments">Browse filaments</a></p>
+    `,
+  },
+  {
+    path: '/slicer-directory',
+    title: 'Slicer Directory — Compare 3D Printing Software | FilaScope',
+    description: 'Compare 3D printer slicer software. Review features, supported printers, and material profiles for Cura, PrusaSlicer, OrcaSlicer, and more.',
+    canonical: `${BASE_URL}/slicer-directory`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: '3D Printer Slicer Directory',
+        description: 'Directory of 3D printer slicer software with feature comparisons, supported printers, and material profile coverage.',
+        url: `${BASE_URL}/slicer-directory`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Slicer Directory', item: `${BASE_URL}/slicer-directory` },
+        ],
+      },
+    ],
+    content: `
+      <h1>3D Printer Slicer Directory</h1>
+      <p>Compare popular 3D printer slicer software including Cura, PrusaSlicer, OrcaSlicer, Bambu Studio, and more. Review features, printer support, and material profiles.</p>
+      <p><a href="/printers">Browse printers</a> | <a href="/filaments">Browse filaments</a></p>
+    `,
+  },
+  {
+    path: '/model-repositories',
+    title: '3D Model Repositories — Where to Find STL Files | FilaScope',
+    description: 'Directory of 3D model repositories for STL and 3MF files. Find free and paid models on Thingiverse, Printables, MakerWorld, and more.',
+    canonical: `${BASE_URL}/model-repositories`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: '3D Model Repositories',
+        description: 'Directory of 3D model repositories and STL file sources for 3D printing.',
+        url: `${BASE_URL}/model-repositories`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Model Repositories', item: `${BASE_URL}/model-repositories` },
+        ],
+      },
+    ],
+    content: `
+      <h1>3D Model Repositories</h1>
+      <p>Find STL and 3MF files for your 3D printer. Browse top model repositories including Thingiverse, Printables, MakerWorld, Thangs, and more.</p>
+      <p><a href="/printers">Browse printers</a> | <a href="/filaments">Browse filaments</a></p>
+    `,
+  },
+
+  // ─── Reference Pages ───────────────────────────────────────────
+  {
+    path: '/reference/materials',
+    title: '3D Printing Material Knowledge Base | FilaScope',
+    description: 'Complete 3D printing material reference. Properties, print settings, and use cases for PLA, PETG, ABS, TPU, ASA, nylon, PC, and more.',
+    canonical: `${BASE_URL}/reference/materials`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: '3D Printing Material Knowledge Base',
+        description: 'Comprehensive reference for all 3D printing material types with properties, settings, and use cases.',
+        url: `${BASE_URL}/reference/materials`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Reference', item: `${BASE_URL}/reference` },
+          { '@type': 'ListItem', position: 3, name: 'Materials', item: `${BASE_URL}/reference/materials` },
+        ],
+      },
+    ],
+    content: `
+      <h1>3D Printing Material Knowledge Base</h1>
+      <p>Comprehensive reference for all 3D printing materials. Learn properties, recommended print settings, and ideal use cases for PLA, PETG, ABS, TPU, ASA, nylon, polycarbonate, and specialty filaments.</p>
+      <p><a href="/filaments">Browse filaments</a> | <a href="/guides">Guides</a></p>
+    `,
+  },
+  {
+    path: '/reference/slicers',
+    title: 'Slicer Software Guide — Settings & Config | FilaScope',
+    description: 'Guide to 3D printer slicer settings and configuration. Learn key parameters for print quality, speed, and material-specific profiles.',
+    canonical: `${BASE_URL}/reference/slicers`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Slicer Software Guide',
+        description: 'Reference guide to 3D printer slicer software settings, configuration, and material-specific profiles.',
+        url: `${BASE_URL}/reference/slicers`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Reference', item: `${BASE_URL}/reference` },
+          { '@type': 'ListItem', position: 3, name: 'Slicers', item: `${BASE_URL}/reference/slicers` },
+        ],
+      },
+    ],
+    content: `
+      <h1>Slicer Software Guide</h1>
+      <p>Learn key slicer settings for optimal 3D print quality. This guide covers layer height, speed, temperature, retraction, and material-specific profiles across popular slicers.</p>
+      <p><a href="/slicer-directory">Slicer directory</a> | <a href="/filaments">Browse filaments</a></p>
+    `,
+  },
 ];
 
 // Material category pages
