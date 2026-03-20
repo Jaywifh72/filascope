@@ -18,22 +18,34 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetMode, setResetMode] = useState(false);
+  const [updatePasswordMode, setUpdatePasswordMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      // Don't redirect if we're in password recovery flow
+      if (session && !window.location.hash.includes("type=recovery")) {
         navigate("/");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
+      if (event === "PASSWORD_RECOVERY") {
+        // User clicked the reset link — show the update password form
+        setUpdatePasswordMode(true);
+      } else if (event === "SIGNED_IN" && session && !updatePasswordMode) {
         navigate("/");
       }
     });
 
+    // Also check URL hash for recovery token on initial load
+    if (window.location.hash.includes("type=recovery")) {
+      setUpdatePasswordMode(true);
+    }
+
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, updatePasswordMode]);
 
   const validatePassword = (pwd: string) => {
     if (pwd.length < 8) return "Password must be at least 8 characters";
@@ -103,6 +115,42 @@ const Auth = () => {
     }
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (newPassword !== confirmPassword) {
+        throw new Error("Passwords do not match");
+      }
+
+      const validationError = validatePassword(newPassword);
+      if (validationError) {
+        throw new Error(validationError);
+      }
+
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully",
+      });
+      setUpdatePasswordMode(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update password",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -134,6 +182,63 @@ const Auth = () => {
       });
     }
   };
+
+  if (updatePasswordMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md p-8 bg-card border-border">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-2 text-foreground">Set New Password</h2>
+            <p className="text-muted-foreground">Enter your new password below</p>
+          </div>
+
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div>
+              <Label htmlFor="new-password">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="bg-background border-border pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Min 8 chars, uppercase, lowercase, number, special character
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="bg-background border-border"
+              />
+            </div>
+
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Updating..." : "Update Password"}
+            </Button>
+          </form>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
