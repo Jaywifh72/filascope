@@ -570,6 +570,42 @@ const pages = [
     `,
   },
 
+  // ─── Temperature Chart (high-value SEO target) ────────────────
+  {
+    path: '/filament-temperature-chart',
+    title: '3D Printer Filament Temperature Chart — Complete Settings Reference | FilaScope',
+    description: 'Complete 3D filament temperature chart with nozzle and bed temp settings for PLA, PETG, ABS, TPU, Nylon, ASA, PC and 15+ materials. Updated 2026.',
+    canonical: `${BASE_URL}/filament-temperature-chart`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        headline: '3D Printer Filament Temperature Chart — Complete Settings Reference',
+        description: 'Complete 3D filament temperature chart with nozzle and bed temp settings for PLA, PETG, ABS, TPU, Nylon, ASA, PC and 15+ materials.',
+        url: `${BASE_URL}/filament-temperature-chart`,
+        datePublished: '2026-03-20',
+        dateModified: '2026-03-20',
+        publisher: { '@type': 'Organization', name: 'FilaScope', url: BASE_URL },
+        author: { '@type': 'Organization', name: 'FilaScope' },
+      },
+    ],
+    content: `
+      <h1>3D Printer Filament Temperature Chart — Complete Settings Reference</h1>
+      <p>The definitive temperature reference chart for all 3D printer filament types. Find the exact nozzle temperature, bed temperature, and print speed settings for PLA, PETG, ABS, TPU, Nylon, ASA, Polycarbonate, PVA, HIPS, and specialty filaments.</p>
+      <h2>Quick Reference — Most Common Materials</h2>
+      <ul>
+        <li><strong>PLA:</strong> Nozzle 190–220°C, Bed 0–60°C, No enclosure needed</li>
+        <li><strong>PETG:</strong> Nozzle 220–250°C, Bed 70–85°C, Enclosure optional</li>
+        <li><strong>ABS:</strong> Nozzle 230–260°C, Bed 90–110°C, Enclosure required</li>
+        <li><strong>TPU:</strong> Nozzle 220–250°C, Bed 40–60°C, Slow print speed</li>
+        <li><strong>Nylon:</strong> Nozzle 240–270°C, Bed 70–90°C, Enclosure required, dry storage essential</li>
+      </ul>
+      <h2>All Filament Temperature Settings</h2>
+      <p>This chart covers 20+ filament types including PLA, PLA+, PETG, ABS, ASA, TPU, Nylon/PA, Polycarbonate (PC), PVA, HIPS, Carbon Fiber composites, Wood-Fill, Metal-Fill, Silk PLA, and more.</p>
+      <p><a href="/guides/filament-temperature-guide">Detailed temperature guide</a> | <a href="/filaments">Browse all filaments</a> | <a href="/guides/how-to-choose-filament">How to choose filament</a></p>
+    `,
+  },
+
   // ─── Material Hub Pages ─────────────────────────────────────────
   {
     path: '/materials/pla',

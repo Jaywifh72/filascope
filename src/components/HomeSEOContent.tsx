@@ -14,7 +14,9 @@ export function HomeSEOContent() {
         { label: 'Best ABS Filaments', href: '/guides/best-abs-filaments' },
         { label: 'ABS vs ASA for Outdoor Printing', href: '/guides/asa-vs-abs-outdoor-printing' },
         { label: 'Best Filaments for Miniatures', href: '/guides/best-filaments-for-miniatures' },
-        { label: 'Filament Temperature Guide', href: '/filament-temperature-guide' },
+        { label: 'Filament Temperature Guide', href: '/guides/filament-temperature-guide' },
+        { label: '3D Filament Temperature Chart', href: '/filament-temperature-chart' },
+        { label: 'Filament Color Finder', href: '/colors' },
       ],
     },
     {

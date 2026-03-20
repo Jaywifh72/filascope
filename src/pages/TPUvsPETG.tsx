@@ -103,8 +103,8 @@ export default function TPUvsPETG() {
   return (
     <div className="min-h-screen bg-background">
       <DocumentHead
-        title="TPU vs PETG — 3D Filament Comparison Guide | FilaScope"
-        description="TPU vs PETG compared: flexibility, strength, print difficulty, and use cases. Flexible vs rigid filament data-driven comparison from FilaScope."
+        title="TPU vs PETG — Difference Between PETG and TPU Filament | FilaScope"
+        description="What's the difference between PETG and TPU? Full comparison of flexibility, strength, temperature settings, print difficulty, and best use cases for each 3D printer filament."
         ogType="article"
       />
       <BreadcrumbSchema items={[{ name: 'Home', url: '/' }, { name: 'TPU vs PETG', url: '/guides/tpu-vs-petg' }]} />

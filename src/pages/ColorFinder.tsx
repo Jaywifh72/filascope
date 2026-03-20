@@ -108,8 +108,8 @@ export default function ColorFinder() {
   return (
     <>
       <DocumentHead
-        title="Find 3D Printer Filaments by Color — Color Matching Tool | FilaScope"
-        description="Match any color to 3D printer filaments across 48+ brands. Search by hex code or color name. Perfect for HueForge & color-matched prints."
+        title="Filament Color Finder & Picker — Match Any Color to 3D Filament | FilaScope"
+        description="Free filament color finder: match any color to 1,000+ 3D printer filaments from 48+ brands. Search by hex code, color name, or visual picker. Find exact color matches for HueForge & printing projects."
         ogTitle="Find 3D Printer Filaments by Color — Color Matching Tool | FilaScope"
         ogDescription="Match any color to real 3D printer filaments across 48+ brands. Search by hex code, color name, or visual picker."
         keywords="filament color comparison, 3D printing color match, filament color finder, hex color filament, HueForge colors"

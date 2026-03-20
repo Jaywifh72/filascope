@@ -303,6 +303,7 @@ export default function FilamentTemperatureGuide() {
             <h2 className="text-lg font-semibold mb-4">Related Guides & Tools</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
+                { to: '/filament-temperature-chart', label: '3D Filament Temperature Chart — Quick Reference' },
                 { to: '/filaments', label: 'Browse all filaments on FilaScope' },
                 { to: '/matrix', label: 'Printer–Filament Compatibility Matrix' },
                 { to: '/compare', label: 'Compare filaments side by side' },

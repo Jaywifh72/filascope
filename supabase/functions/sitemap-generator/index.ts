@@ -32,6 +32,9 @@ const STATIC_ROUTES = [
   { path: "/colors", priority: "0.7", changefreq: "monthly" },
   { path: "/accessories", priority: "0.6", changefreq: "weekly" },
   { path: "/wizard", priority: "0.6", changefreq: "monthly" },
+  { path: "/filament-temperature-chart", priority: "0.9", changefreq: "weekly" },
+  { path: "/tpu-vs-petg", priority: "0.8", changefreq: "monthly" },
+  { path: "/about", priority: "0.4", changefreq: "monthly" },
 ];
 
 const MATERIAL_ROUTES = [
@@ -52,6 +55,7 @@ const CORNERSTONE_GUIDES = new Set([
 ]);
 const COMPARISON_GUIDES = new Set([
   "/guides/pla-vs-petg",
+  "/guides/petg-vs-abs",
   "/guides/silk-pla-comparison",
   "/guides/asa-vs-abs-outdoor-printing",
   "/guides/pla-plus-vs-pla-pro",
@@ -90,6 +94,19 @@ const GUIDE_ROUTES = [
   "/guides/food-safe-filament",
   "/guides/silk-pla-comparison",
   "/guides/asa-vs-abs-outdoor-printing",
+  "/guides/petg-vs-abs",
+  "/guides/best-tpu-filaments",
+  "/guides/best-asa-filaments",
+  "/guides/best-nylon-filaments",
+  "/guides/best-high-speed-pla-filaments",
+  "/guides/best-filaments-for-outdoor-use",
+  "/guides/best-filaments-for-functional-parts",
+  "/guides/best-filament-for-bambu-lab-p1s",
+  "/guides/best-filament-for-ender-3",
+  "/guides/best-filament-for-creality-k1-max",
+  "/guides/best-filament-for-creality-ender-3-v3",
+  "/guides/beginners-guide",
+  "/guides/filament-types-explained",
 ].map((path) => ({ path, priority: guideRoutePriority(path), changefreq: "weekly" as const }));
 
 function urlEntry(
