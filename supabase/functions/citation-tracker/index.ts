@@ -82,9 +82,9 @@ async function checkPerplexity(query: string, apiKey: string): Promise<CitationR
   }
 }
 
-async function checkWithAnthropic(query: string, engine: string, apiKey: string): Promise<CitationResult> {
-  // Use Claude to simulate what other AI engines would do — check if FilaScope
-  // data/content would be relevant for this query
+// Batch check: one API call checks ALL engines for a single query
+async function checkAllEngines(query: string, engines: string[], apiKey: string): Promise<CitationResult[]> {
+  const engineList = engines.join(", ");
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -95,33 +95,33 @@ async function checkWithAnthropic(query: string, engine: string, apiKey: string)
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 300,
-        system: `You are checking whether the website filascope.com would likely be cited by the AI search engine "${engine}" for the given query. Consider: Does filascope.com have relevant, authoritative content for this query? Would an AI search engine find and cite it? Respond with JSON only: {"cited": true/false, "confidence": "high"/"medium"/"low", "reason": "brief explanation"}`,
-        messages: [{ role: "user", content: `Query: "${query}"\n\nWould ${engine} cite filascope.com for this query?` }],
+        max_tokens: 800,
+        system: `You evaluate whether filascope.com (a 3D printer filament comparison database with 16,000+ filaments, HueForge TD values, live pricing, and temperature data) would be cited by AI search engines for a given query. Consider each engine's tendencies: Perplexity cites niche tools heavily; ChatGPT favors well-known databases; Gemini weights Google-indexed authority; Copilot uses Bing index; Claude uses training data knowledge; Grok is broad but favors real-time data; DeepSeek favors technical databases. Return ONLY a JSON array with one object per engine: [{"engine":"name","cited":true/false,"confidence":"high/medium/low","reason":"brief"}]`,
+        messages: [{ role: "user", content: `Query: "${query}"\nEngines to evaluate: ${engineList}` }],
       }),
     });
 
     if (!response.ok) {
-      return { engine, query, cited: false, notes: `Anthropic API error: ${response.status}` };
+      return engines.map(e => ({ engine: e, query, cited: false, notes: `API error: ${response.status}` }));
     }
 
     const data = await response.json();
-    const text = data.content?.[0]?.text ?? "{}";
+    const text = data.content?.[0]?.text ?? "[]";
 
     try {
       const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      const result = JSON.parse(cleaned);
-      return {
-        engine,
+      const results: any[] = JSON.parse(cleaned);
+      return results.map((r: any) => ({
+        engine: r.engine ?? "unknown",
         query,
-        cited: result.cited ?? false,
-        notes: `${result.confidence ?? "unknown"} confidence: ${result.reason ?? "no reason"}`,
-      };
+        cited: r.cited ?? false,
+        notes: `${r.confidence ?? "unknown"} confidence: ${r.reason ?? "no reason"}`,
+      }));
     } catch {
-      return { engine, query, cited: false, notes: `Parse error: ${text.substring(0, 100)}` };
+      return engines.map(e => ({ engine: e, query, cited: false, notes: `Parse error` }));
     }
   } catch (e) {
-    return { engine, query, cited: false, notes: `Error: ${e}` };
+    return engines.map(eng => ({ engine: eng, query, cited: false, notes: `Error: ${e}` }));
   }
 }
 
@@ -157,29 +157,35 @@ serve(async (req: Request) => {
       // Use defaults
     }
 
-    console.log(`Citation tracker: checking ${selectedQueries.length} queries across ${selectedEngines.length} engines`);
+    console.log(`Citation tracker: checking ${selectedQueries.length} queries across ${selectedEngines.length} engines (batched)`);
 
     const results: CitationResult[] = [];
     const now = new Date().toISOString();
 
-    // Check each query against each engine
-    // Rate limit: max 3 concurrent requests
+    // Batch: one API call per query checks ALL engines at once
+    // 18 queries = 18 API calls (not 126)
     for (let i = 0; i < selectedQueries.length; i++) {
       const query = selectedQueries[i];
 
-      for (const engine of selectedEngines) {
-        let result: CitationResult;
+      // If we have Perplexity key, check it directly first
+      if (perplexityKey && selectedEngines.includes("perplexity")) {
+        const pResult = await checkPerplexity(query, perplexityKey);
+        results.push(pResult);
+      }
 
-        if (engine === "perplexity" && perplexityKey) {
-          result = await checkPerplexity(query, perplexityKey);
-        } else {
-          result = await checkWithAnthropic(query, engine, anthropicKey);
-        }
+      // Batch check all other engines in one API call
+      const nonPerplexityEngines = perplexityKey
+        ? selectedEngines.filter(e => e !== "perplexity")
+        : selectedEngines;
 
-        results.push(result);
+      if (nonPerplexityEngines.length > 0) {
+        const batchResults = await checkAllEngines(query, nonPerplexityEngines, anthropicKey);
+        results.push(...batchResults);
+      }
 
-        // Rate limit: 500ms between requests
-        await new Promise(r => setTimeout(r, 500));
+      // Brief pause between queries to avoid rate limits
+      if (i < selectedQueries.length - 1) {
+        await new Promise(r => setTimeout(r, 200));
       }
     }
 
