@@ -2,6 +2,7 @@
 # The 200! force flag ensures these static files are served even with the catch-all
 /robots.txt /robots.txt 200!
 /llms.txt /llms.txt 200!
+/filascope17741222.txt /filascope17741222.txt 200!
 
 # Dynamic sitemaps — route to edge function for fresh data
 /sitemap.xml https://fytxfdvbzstnimzhjgth.supabase.co/functions/v1/sitemap-generator 200!
