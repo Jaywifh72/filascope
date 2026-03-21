@@ -114,6 +114,59 @@ serve(async (req: Request) => {
       throw new Error(`Failed to count filaments: ${filamentError.message}`);
     }
 
+    // 5b. Fetch GA4 traffic data for richer analysis
+    let ga4TopPages: any[] = [];
+    let ga4TrafficSources: any = null;
+    let ga4Devices: any = null;
+    let ga4DailySummary: any[] = [];
+
+    const { data: ga4Pages } = await supabase
+      .from("ga4_metrics")
+      .select("data")
+      .eq("metric_type", "top_pages")
+      .order("date", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (ga4Pages?.data) {
+      ga4TopPages = (ga4Pages.data as any[]).slice(0, 20);
+    }
+
+    const { data: ga4Sources } = await supabase
+      .from("ga4_metrics")
+      .select("data")
+      .eq("metric_type", "traffic_sources")
+      .order("date", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (ga4Sources?.data) {
+      ga4TrafficSources = ga4Sources.data;
+    }
+
+    const { data: ga4DeviceData } = await supabase
+      .from("ga4_metrics")
+      .select("data")
+      .eq("metric_type", "devices")
+      .order("date", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (ga4DeviceData?.data) {
+      ga4Devices = ga4DeviceData.data;
+    }
+
+    const { data: ga4Daily } = await supabase
+      .from("ga4_metrics")
+      .select("date, data")
+      .eq("metric_type", "daily_summary")
+      .order("date", { ascending: false })
+      .limit(14);
+
+    if (ga4Daily) {
+      ga4DailySummary = ga4Daily.map((r: any) => ({ date: r.date, ...r.data }));
+    }
+
     // 6. Build the prompt
     const topQueriesSummary = (topQueries ?? []).slice(0, 25).map((q) => ({
       query: q.query,
@@ -125,7 +178,7 @@ serve(async (req: Request) => {
 
     const prompt = `You are an SEO expert for FilaScope (https://filascope.com), a 3D printer filament comparison platform.
 
-Analyze the following Search Console and site data, then provide 5-7 prioritized SEO actions.
+Analyze the following Search Console data, Google Analytics (GA4) traffic data, and AI citation data, then provide 7-10 prioritized SEO/AEO actions.
 
 ## Site Overview
 - Total filaments in database: ${filamentCount ?? 0}
@@ -143,6 +196,18 @@ ${JSON.stringify(topQueriesSummary, null, 2)}
 ## Recent AI Citation Log
 ${citations && citations.length > 0 ? JSON.stringify(citations.slice(0, 10), null, 2) : "No citation data available yet."}
 
+## GA4 Traffic Data (Last 14 Days)
+${ga4DailySummary.length > 0 ? `Daily traffic trend:\n${JSON.stringify(ga4DailySummary, null, 2)}` : "No GA4 daily data available yet."}
+
+## GA4 Top Pages by Sessions
+${ga4TopPages.length > 0 ? JSON.stringify(ga4TopPages, null, 2) : "No GA4 page data available yet."}
+
+## GA4 Traffic Sources
+${ga4TrafficSources ? JSON.stringify(ga4TrafficSources, null, 2) : "No traffic source data available yet."}
+
+## GA4 Device Breakdown
+${ga4Devices ? JSON.stringify(ga4Devices, null, 2) : "No device data available yet."}
+
 ## Instructions
 Return a JSON array of 5-7 SEO actions. Each action must have:
 - priority: "P0" (critical/do now), "P1" (important/do soon), or "P2" (nice to have)
@@ -151,11 +216,16 @@ Return a JSON array of 5-7 SEO actions. Each action must have:
 - effort: "low", "medium", or "high"
 - impact: "low", "medium", or "high"
 
-Focus on actionable, specific recommendations based on the data provided. Consider:
+Focus on actionable, specific recommendations based on ALL data provided (GSC + GA4 + citations). Consider:
 - Quick wins (high impression queries with low CTR or positions 4-20)
 - Content gaps (queries where we rank but have no dedicated page)
 - Technical SEO issues suggested by the data
 - AI/AEO optimization opportunities based on citation patterns
+- GA4 insights: pages with high bounce rates that need content improvement
+- GA4 insights: traffic source gaps (e.g., low organic %, high direct = branding issue)
+- GA4 insights: device breakdown issues (mobile vs desktop performance gaps)
+- GA4 insights: pages with declining traffic trends that need refreshing
+- Cross-reference GSC queries with GA4 top pages to find mismatches (ranking pages that don't get actual traffic)
 
 Return ONLY the JSON array, no markdown formatting or explanation.`;
 
@@ -171,7 +241,7 @@ Return ONLY the JSON array, no markdown formatting or explanation.`;
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
+        max_tokens: 4000,
         system: "You are an expert SEO analyst for a 3D printer filament comparison website. Always respond with valid JSON arrays only, no markdown formatting.",
         messages: [
           { role: "user", content: prompt },
