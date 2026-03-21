@@ -11,7 +11,7 @@ export function useLatestNews(limit = 4) {
       const { data, error } = await supabase
         .from("news_articles")
         .select("*")
-        .eq("visible", true)
+        .eq("is_visible", true)
         .order("published_date", { ascending: false })
         .limit(limit);
 
@@ -36,7 +36,7 @@ export function useNewsPaginated(
       let query = supabase
         .from("news_articles")
         .select("*", { count: "exact" })
-        .eq("visible", true)
+        .eq("is_visible", true)
         .order("published_date", { ascending: false })
         .range(from, to);
 
@@ -63,7 +63,7 @@ export function useNewsTags() {
       const { data, error } = await supabase
         .from("news_articles")
         .select("tags")
-        .eq("visible", true);
+        .eq("is_visible", true);
 
       if (error) throw error;
 
