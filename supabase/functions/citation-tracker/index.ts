@@ -31,7 +31,7 @@ const CITATION_QUERIES = [
 ];
 
 // AI engines to check
-const ENGINES = ["perplexity", "chatgpt", "gemini", "copilot"] as const;
+const ENGINES = ["perplexity", "chatgpt", "gemini", "copilot", "claude", "grok", "deepseek"] as const;
 
 interface CitationResult {
   engine: string;

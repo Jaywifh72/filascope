@@ -524,7 +524,7 @@ function CitationTrackerSection() {
                 ) : (
                   <Bot className="w-3 h-3" />
                 )}
-                {autoChecking ? "Checking 18 queries..." : "Auto-Check All Engines"}
+                {autoChecking ? "Checking 18 queries × 7 engines..." : "Auto-Check All 7 Engines"}
               </Button>
               {checkNowLinks.map((link) => (
                 <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer">
