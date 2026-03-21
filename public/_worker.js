@@ -56,8 +56,10 @@ const CRAWLER_AGENTS = [
   // AI crawlers
   "gptbot",           // OpenAI GPTBot
   "chatgpt-user",     // ChatGPT browsing
+  "oai-searchbot",    // OpenAI SearchBot
   "claudebot",        // Anthropic Claude
   "anthropic-ai",     // Anthropic generic
+  "claude-web",       // Claude web browsing
   "perplexitybot",    // Perplexity AI
   "google-extended",  // Google AI training
   "ccbot",            // Common Crawl (used for AI training)
@@ -65,6 +67,12 @@ const CRAWLER_AGENTS = [
   "cohere-ai",        // Cohere AI
   "diffbot",          // Diffbot
   "youbot",           // You.com
+  "deepseekbot",      // DeepSeek AI
+  "ai2bot",           // Allen AI
+  "meta-externalagent", // Meta AI
+  "bytedance",        // ByteDance / TikTok AI
+  "grokbot",          // xAI Grok
+  "gemini",           // Google Gemini
 ];
 
 function isCrawler(userAgent) {
@@ -95,7 +103,33 @@ export default {
     const pathname = url.pathname;
     const userAgent = request.headers.get("User-Agent") || "";
 
-    // 1. Always serve machine-readable/static files directly from assets
+    // 0. Redirect www to root domain (canonical URL consolidation)
+    if (url.hostname === "www.filascope.com") {
+      url.hostname = "filascope.com";
+      return Response.redirect(url.toString(), 301);
+    }
+
+    // 1a. Route dynamic sitemap.xml to Supabase edge function
+    if (pathname === "/sitemap.xml") {
+      try {
+        const sitemapRes = await fetch(
+          "https://fytxfdvbzstnimzhjgth.supabase.co/functions/v1/sitemap-generator",
+          { headers: { Accept: "application/xml" } }
+        );
+        if (sitemapRes.ok) {
+          const headers = new Headers(sitemapRes.headers);
+          headers.set("Content-Type", "application/xml; charset=utf-8");
+          headers.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
+          return new Response(sitemapRes.body, { status: 200, headers });
+        }
+      } catch (e) {
+        console.error("[_worker.js] Sitemap fetch failed:", e);
+      }
+      // Fall through to static sitemap.xml if edge function fails
+      return env.ASSETS.fetch(request);
+    }
+
+    // 1b. Always serve machine-readable/static files directly from assets
     if (
       STATIC_PATHS.has(pathname) ||
       pathname.startsWith("/sitemap-") ||
@@ -114,55 +148,40 @@ export default {
     }
 
     // 3. Bot detected — proxy to prerender edge function
-    //    Pass the original path + query string as the ?path= parameter
-    const prerenderTarget = new URL(PRERENDER_URL);
-    prerenderTarget.searchParams.set(
-      "path",
-      pathname + (url.search ? url.search : "")
-    );
+    const prerenderPath = pathname + (url.search ? url.search : "");
+    const prerenderUrl = PRERENDER_URL + "?path=" + encodeURIComponent(prerenderPath);
 
     try {
-      const prerenderReq = new Request(prerenderTarget.toString(), {
-        method: "GET",
+      const prerenderRes = await fetch(prerenderUrl, {
         headers: {
-          // Forward the original User-Agent so the edge function can log it
           "User-Agent": userAgent,
-          Accept: "text/html,application/xhtml+xml",
+          "Accept": "text/html",
         },
       });
 
-      const prerenderRes = await fetch(prerenderReq);
-
-      // If prerender returned a redirect (301/302), follow it once
+      // Handle redirects
       if (prerenderRes.status === 301 || prerenderRes.status === 302) {
         const location = prerenderRes.headers.get("Location");
-        if (location) {
-          return Response.redirect(location, prerenderRes.status);
-        }
+        if (location) return Response.redirect(location, prerenderRes.status);
       }
 
-      // If prerender returned a non-200 status or non-HTML content type,
-      // fall back to the SPA so crawlers at least get the noscript fallback
-      // and Googlebot can render the JavaScript.
-      const contentType = prerenderRes.headers.get("Content-Type") || "";
-      if (!prerenderRes.ok || !contentType.includes("text/html")) {
-        console.error(
-          `[_worker.js] Prerender returned ${prerenderRes.status} (${contentType}) for ${pathname} — falling back to SPA`
-        );
-        return env.ASSETS.fetch(request);
+      // If prerender succeeded, return its HTML
+      if (prerenderRes.ok) {
+        const html = await prerenderRes.text();
+        return new Response(html, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "X-Prerender": "true",
+            "Cache-Control": "public, max-age=3600, s-maxage=86400",
+          },
+        });
       }
 
-      // Clone headers and add diagnostic header
-      const responseHeaders = new Headers(prerenderRes.headers);
-      responseHeaders.set("X-Prerender-Worker", "true");
-
-      return new Response(prerenderRes.body, {
-        status: prerenderRes.status,
-        headers: responseHeaders,
-      });
+      // Non-OK — fall back to SPA
+      return env.ASSETS.fetch(request);
     } catch (err) {
-      // Fallback to SPA on prerender error — never break for users
-      console.error("[_worker.js] Prerender fetch failed:", err);
+      // Fallback to SPA on error
       return env.ASSETS.fetch(request);
     }
   },
