@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Search, ArrowRight } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Search, ArrowRight, Newspaper } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 // Logo served from storage at 224px (retina for 112px display) instead of bundling the 885KB source
@@ -116,7 +116,7 @@ const Navbar = () => {
   const { data: dealsData, isLoading: dealsLoading } = useDealsCount();
 
   // Check if Tools dropdown should be active
-  const isLearnActive = ['/accessories', '/reference', '/learn', '/guides', '/resources/profiles', '/wizard', '/matrix', '/hueforge', '/compare', '/colors'].some(path => location.pathname.startsWith(path));
+  const isLearnActive = ['/accessories', '/reference', '/learn', '/guides', '/resources/profiles', '/wizard', '/matrix', '/hueforge', '/compare', '/colors', '/news'].some(path => location.pathname.startsWith(path));
 
   // Check active nav link
   const isActive = (path: string) => {
@@ -273,6 +273,13 @@ const Navbar = () => {
       items: [
         { to: '/reference/materials', label: 'Material Knowledge Base', icon: BookOpen },
         { to: '/reference/slicers', label: 'Slicer Directory', icon: Scissors },
+      ]
+    },
+    {
+      title: 'Stay Updated',
+      icon: Newspaper,
+      items: [
+        { to: '/news', label: '3D Printing News', icon: Newspaper },
       ]
     },
   ];

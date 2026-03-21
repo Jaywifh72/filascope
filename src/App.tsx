@@ -211,6 +211,8 @@ const BrandMaterialPage = lazy(() => import("./pages/BrandMaterialPage"));
 const ColorFamilyPage = lazy(() => import("./pages/ColorFamilyPage"));
 const BestFilamentsForBeginners = lazy(() => import("./pages/BestFilamentsForBeginners"));
 const FilamentTemperatureGuide = lazy(() => import("./pages/FilamentTemperatureGuide"));
+const FilamentTemperatureChart = lazy(() => import("./pages/FilamentTemperatureChart"));
+const News = lazy(() => import("./pages/News"));
 const FilamentStorageGuide = lazy(() => import("./pages/FilamentStorageGuide"));
 const BestFilament = lazy(() => import("./pages/BestFilament"));
 const CheapestFilament = lazy(() => import("./pages/CheapestFilament"));
@@ -434,6 +436,8 @@ const App = () => (
                   <Route path="/best-white-filaments" element={<BestWhiteFilaments />} />
                   <Route path="/filament-database" element={<FilamentDatabase />} />
                   <Route path="/best-filaments-for-beginners" element={<Navigate to="/guides/best-filaments-for-beginners" replace />} />
+                  <Route path="/filament-temperature-chart" element={<FilamentTemperatureChart />} />
+                  <Route path="/news" element={<News />} />
                   <Route path="/guides/filament-temperature-guide" element={<FilamentTemperatureGuide />} />
                   <Route path="/filament-temperature-guide" element={<Navigate to="/guides/filament-temperature-guide" replace />} />
                   <Route path="/filament-storage-guide" element={<FilamentStorageGuide />} />

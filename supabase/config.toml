@@ -509,3 +509,6 @@ verify_jwt = false
 
 [functions.citation-tracker]
 verify_jwt = false
+
+[functions.curate-news]
+verify_jwt = false

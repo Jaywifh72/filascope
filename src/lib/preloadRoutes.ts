@@ -34,6 +34,9 @@ const routePreloaders: Record<string, RoutePreloader> = {
   // Resources
   '/resources/profiles': () => import('../pages/ResourcesProfiles'),
   
+  // News
+  '/news': () => import('../pages/News'),
+
   // User pages
   '/settings': () => import('../pages/Settings'),
   '/vault': () => import('../pages/Vault'),
