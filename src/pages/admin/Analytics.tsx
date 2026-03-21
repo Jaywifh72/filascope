@@ -10,6 +10,7 @@ import { SeoHealthPanel } from "@/components/admin/analytics/SeoHealthPanel";
 import { ContentGapsPanel } from "@/components/admin/analytics/ContentGapsPanel";
 import { SearchConsolePanel } from "@/components/admin/analytics/SearchConsolePanel";
 import SeoCommandCenter from "@/components/admin/analytics/SeoCommandCenter";
+import { TrafficPanel } from "@/components/admin/analytics/TrafficPanel";
 
 export default function Analytics() {
   return (
@@ -30,6 +31,7 @@ export default function Analytics() {
             <TabsTrigger value="seo">SEO Health</TabsTrigger>
             <TabsTrigger value="gaps">Content Gaps</TabsTrigger>
             <TabsTrigger value="gsc">Search Console</TabsTrigger>
+            <TabsTrigger value="ga4">GA4 Traffic</TabsTrigger>
             <TabsTrigger value="command" className="bg-primary/10 text-primary font-semibold">SEO Command Center</TabsTrigger>
           </TabsList>
 
@@ -59,6 +61,10 @@ export default function Analytics() {
 
           <TabsContent value="gsc">
             <SearchConsolePanel />
+          </TabsContent>
+
+          <TabsContent value="ga4">
+            <TrafficPanel />
           </TabsContent>
 
           <TabsContent value="command">

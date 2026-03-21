@@ -503,3 +503,6 @@ verify_jwt = true
 
 [functions.sync-amazon-prices]
 verify_jwt = false
+
+[functions.ga4-sync]
+verify_jwt = false
