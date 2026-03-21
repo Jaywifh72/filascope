@@ -105,6 +105,48 @@ serve(async (req: Request) => {
       console.warn(`Citation log query failed (table may not exist): ${citationsError.message}`);
     }
 
+    // 4b. Regional/international breakdown from GSC
+    const { data: countryRows } = await supabase
+      .from("search_console_data")
+      .select("country, clicks, impressions, position")
+      .not("country", "is", null);
+
+    const countryStats: Record<string, { clicks: number; impressions: number; queries: number; avgPos: number }> = {};
+    for (const r of countryRows ?? []) {
+      const c = r.country;
+      if (!countryStats[c]) countryStats[c] = { clicks: 0, impressions: 0, queries: 0, avgPos: 0 };
+      countryStats[c].clicks += r.clicks ?? 0;
+      countryStats[c].impressions += r.impressions ?? 0;
+      countryStats[c].queries++;
+      countryStats[c].avgPos += r.position ?? 0;
+    }
+    // Calculate avg position and sort by impressions
+    const topCountries = Object.entries(countryStats)
+      .map(([code, s]) => ({
+        country: code,
+        clicks: s.clicks,
+        impressions: s.impressions,
+        queries: s.queries,
+        avg_position: s.queries > 0 ? +(s.avgPos / s.queries).toFixed(1) : 0,
+        ctr: s.impressions > 0 ? +((s.clicks / s.impressions) * 100).toFixed(1) : 0,
+      }))
+      .sort((a, b) => b.impressions - a.impressions)
+      .slice(0, 15);
+
+    // 4c. Device breakdown from GSC
+    const { data: deviceRows } = await supabase
+      .from("search_console_data")
+      .select("device, clicks, impressions")
+      .not("device", "is", null);
+
+    const deviceStats: Record<string, { clicks: number; impressions: number }> = {};
+    for (const r of deviceRows ?? []) {
+      const d = r.device ?? "unknown";
+      if (!deviceStats[d]) deviceStats[d] = { clicks: 0, impressions: 0 };
+      deviceStats[d].clicks += r.clicks ?? 0;
+      deviceStats[d].impressions += r.impressions ?? 0;
+    }
+
     // 5. Count total filaments
     const { count: filamentCount, error: filamentError } = await supabase
       .from("filaments")
@@ -183,6 +225,8 @@ Analyze the following Search Console data, Google Analytics (GA4) traffic data, 
 ## Site Overview
 - Total filaments in database: ${filamentCount ?? 0}
 - Indexed pages (pages with impressions in GSC): ${indexedPageCount}
+- Multi-regional pricing: USD, CAD, EUR, GBP, AUD, JPY, CNY
+- Countries with GSC data: ${topCountries.length}
 - Total clicks (all time in GSC): ${totalClicks}
 - Total impressions (all time in GSC): ${totalImpressions}
 - Average CTR: ${totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : 0}%
@@ -195,6 +239,12 @@ ${JSON.stringify(topQueriesSummary, null, 2)}
 
 ## Recent AI Citation Log
 ${citations && citations.length > 0 ? JSON.stringify(citations.slice(0, 10), null, 2) : "No citation data available yet."}
+
+## GSC Regional Breakdown (Top 15 Countries by Impressions)
+${topCountries.length > 0 ? JSON.stringify(topCountries, null, 2) : "No country data available."}
+
+## GSC Device Breakdown
+${Object.keys(deviceStats).length > 0 ? JSON.stringify(deviceStats, null, 2) : "No device data available."}
 
 ## GA4 Traffic Data (Last 14 Days)
 ${ga4DailySummary.length > 0 ? `Daily traffic trend:\n${JSON.stringify(ga4DailySummary, null, 2)}` : "No GA4 daily data available yet."}
@@ -226,6 +276,10 @@ Focus on actionable, specific recommendations based on ALL data provided (GSC + 
 - GA4 insights: device breakdown issues (mobile vs desktop performance gaps)
 - GA4 insights: pages with declining traffic trends that need refreshing
 - Cross-reference GSC queries with GA4 top pages to find mismatches (ranking pages that don't get actual traffic)
+- International SEO: identify top countries by impressions and recommend hreflang, regional content, or localization
+- International SEO: flag countries with high impressions but 0% CTR (may need localized meta descriptions)
+- International SEO: suggest currency/region-specific landing pages for top non-English markets
+- Device optimization: compare mobile vs desktop performance and flag gaps
 
 Return ONLY the JSON array, no markdown formatting or explanation.`;
 
