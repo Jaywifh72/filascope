@@ -456,6 +456,28 @@ function CitationTrackerSection() {
     }
   };
 
+  const [autoChecking, setAutoChecking] = useState(false);
+
+  const handleAutoCheck = async () => {
+    setAutoChecking(true);
+    try {
+      const { data, error } = await (await import("@/integrations/supabase/client")).supabase
+        .functions.invoke("citation-tracker", { body: {} });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const { summary } = data;
+      toast.success(
+        `Checked ${summary.total_checks} queries: ${summary.cited} cited (${summary.citation_rate})`
+      );
+      // Refetch citations
+      window.location.reload();
+    } catch (e) {
+      toast.error(`Auto-check failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setAutoChecking(false);
+    }
+  };
+
   const checkNowLinks = [
     {
       label: "Perplexity",
@@ -490,11 +512,25 @@ function CitationTrackerSection() {
               />
             </div>
             <div className="flex gap-2 mt-4 justify-center flex-wrap">
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-1 text-xs"
+                onClick={handleAutoCheck}
+                disabled={autoChecking}
+              >
+                {autoChecking ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Bot className="w-3 h-3" />
+                )}
+                {autoChecking ? "Checking 18 queries..." : "Auto-Check All Engines"}
+              </Button>
               {checkNowLinks.map((link) => (
                 <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="sm" className="gap-1 text-xs">
                     <Search className="w-3 h-3" />
-                    Check {link.label}
+                    {link.label}
                     <ExternalLink className="w-3 h-3" />
                   </Button>
                 </a>

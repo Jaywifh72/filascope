@@ -506,3 +506,6 @@ verify_jwt = false
 
 [functions.ga4-sync]
 verify_jwt = false
+
+[functions.citation-tracker]
+verify_jwt = false
