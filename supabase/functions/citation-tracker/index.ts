@@ -7,27 +7,15 @@ const corsHeaders = {
 };
 
 // Queries that FilaScope should be cited for across AI platforms
+// Default: 6 high-value queries (keeps under 45s timeout)
+// Pass custom queries array in the request body for more
 const CITATION_QUERIES = [
-  // Core product queries
   "best PLA filament 2026",
   "compare 3D printer filaments",
   "filament temperature chart",
   "HueForge TD values database",
-  "filament color finder tool",
-  "cheapest PLA filament",
   "PLA vs PETG comparison",
-  "best PETG filament",
-  "3D printer filament database",
-  "filament price comparison",
-  // Niche/long-tail queries
-  "HueForge transmissive distance lookup",
-  "filament compatibility checker",
-  "TPU vs PETG comparison",
-  "best filament for Bambu Lab P1S",
-  "strongest 3D printer filament",
-  "best filament for beginners",
-  "3D filament specs database",
-  "filament color matching tool",
+  "filament color finder tool",
 ];
 
 // AI engines to check
@@ -189,9 +177,9 @@ serve(async (req: Request) => {
       }
     }
 
-    // Store results in seo_citation_log
+    // Store results in seo_citation_log (column is ai_engine, not engine)
     const insertRows = results.map(r => ({
-      engine: r.engine,
+      ai_engine: r.engine,
       query: r.query,
       cited: r.cited,
       notes: r.notes,

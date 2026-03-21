@@ -38,7 +38,7 @@ export interface PositionBucket {
 
 export interface CitationEntry {
   id: string;
-  engine: string;
+  engine: string;       // mapped from ai_engine column
   query: string;
   cited: boolean;
   notes: string | null;
@@ -303,11 +303,19 @@ export function useCitationLog() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("seo_citation_log")
-        .select("*")
+        .select("id, ai_engine, query, cited, notes, checked_at")
         .order("checked_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return (data ?? []) as CitationEntry[];
+      // Map ai_engine column to engine for UI compatibility
+      return (data ?? []).map((r: any) => ({
+        id: r.id,
+        engine: r.ai_engine,
+        query: r.query,
+        cited: r.cited,
+        notes: r.notes,
+        checked_at: r.checked_at,
+      })) as CitationEntry[];
     },
   });
 }
@@ -336,7 +344,7 @@ export function useAddCitation() {
   return useMutation({
     mutationFn: async (entry: { engine: string; query: string; cited: boolean; notes?: string }) => {
       const { error } = await supabase.from("seo_citation_log").insert({
-        engine: entry.engine,
+        ai_engine: entry.engine,
         query: entry.query,
         cited: entry.cited,
         notes: entry.notes ?? null,

@@ -97,8 +97,8 @@ serve(async (req: Request) => {
     // 4. Read citation log
     const { data: citations, error: citationsError } = await supabase
       .from("seo_citation_log")
-      .select("*")
-      .order("created_at", { ascending: false })
+      .select("id, ai_engine, query, cited, notes, checked_at")
+      .order("checked_at", { ascending: false })
       .limit(20);
 
     if (citationsError) {

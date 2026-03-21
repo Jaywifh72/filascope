@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -457,9 +458,11 @@ function CitationTrackerSection() {
   };
 
   const [autoChecking, setAutoChecking] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleAutoCheck = async () => {
     setAutoChecking(true);
+    toast.info("Checking 6 queries across 7 AI engines... this takes ~30 seconds");
     try {
       const { data, error } = await (await import("@/integrations/supabase/client")).supabase
         .functions.invoke("citation-tracker", { body: {} });
@@ -467,10 +470,10 @@ function CitationTrackerSection() {
       if (data?.error) throw new Error(data.error);
       const { summary } = data;
       toast.success(
-        `Checked ${summary.total_checks} queries: ${summary.cited} cited (${summary.citation_rate})`
+        `Done! ${summary.cited}/${summary.total_checks} cited (${summary.citation_rate})`
       );
-      // Refetch citations
-      window.location.reload();
+      // Refresh the citation list without page reload
+      queryClient.invalidateQueries({ queryKey: ["seo-cmd-citations"] });
     } catch (e) {
       toast.error(`Auto-check failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -524,7 +527,7 @@ function CitationTrackerSection() {
                 ) : (
                   <Bot className="w-3 h-3" />
                 )}
-                {autoChecking ? "Checking 18 queries × 7 engines..." : "Auto-Check All 7 Engines"}
+                {autoChecking ? "Checking 6 queries × 7 engines..." : "Auto-Check All 7 Engines"}
               </Button>
               {checkNowLinks.map((link) => (
                 <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer">
