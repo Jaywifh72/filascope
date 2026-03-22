@@ -136,35 +136,38 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
   return (
     <section className="relative overflow-hidden">
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-2 pb-1 sm:pt-3 sm:pb-1">
-        {/* Desktop: H1 + search on one row. Mobile: stacked */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-          <h1 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-bold tracking-tight leading-[1.15] text-white mb-2 lg:mb-0 lg:shrink-0">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-3 pb-2 sm:pt-4 sm:pb-2">
+        {/* Row 1: H1 + trust stats */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3 mb-2">
+          <h1 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-bold tracking-tight leading-[1.15] text-white">
             Find Your Perfect Filament
           </h1>
-
-          {/* Search Input — expands to fill remaining space on desktop */}
-          <SearchBarGated>
-            <div className="w-full lg:max-w-[520px] search-icon-pulse">
-              <style>{`
-                .search-icon-pulse svg:first-child {
-                  animation: searchPulse 5s ease-in-out infinite;
-                }
-                @keyframes searchPulse {
-                  0%, 90%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
-                  95% { opacity: 1; transform: translateY(-50%) scale(1.15); }
-                }
-              `}</style>
-              <SearchInputWithHistory
-                value={searchTerm}
-                onChange={onSearchChange}
-                placeholder={searchSuggestions[currentSuggestionIndex]}
-                context="filaments"
-                className="h-11 sm:h-12"
-              />
-            </div>
-          </SearchBarGated>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0 whitespace-nowrap">
+            <AnimatedStat value={displayProductCount} /> filaments · <AnimatedStat value={displayBrandCount} /> brands · Updated daily
+          </p>
         </div>
+
+        {/* Row 2: Search bar — always visible, full width */}
+        <SearchBarGated>
+          <div className="w-full max-w-2xl search-icon-pulse">
+            <style>{`
+              .search-icon-pulse svg:first-child {
+                animation: searchPulse 5s ease-in-out infinite;
+              }
+              @keyframes searchPulse {
+                0%, 90%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
+                95% { opacity: 1; transform: translateY(-50%) scale(1.15); }
+              }
+            `}</style>
+            <SearchInputWithHistory
+              value={searchTerm}
+              onChange={onSearchChange}
+              placeholder={searchSuggestions[currentSuggestionIndex]}
+              context="filaments"
+              className="h-10 sm:h-11"
+            />
+          </div>
+        </SearchBarGated>
       </div>
     </section>
   );

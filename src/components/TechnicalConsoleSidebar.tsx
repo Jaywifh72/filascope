@@ -507,6 +507,9 @@ export function TechnicalConsoleSidebar({
         </div>
       </Collapsible>
 
+      {/* Quick Match CTA — high visibility placement */}
+      <QuickMatchSidebarCTA />
+
       {/* Spool Size - Collapsible */}
       <Collapsible open={spoolOpen} onOpenChange={setSpoolOpen}>
         <div className="border-b border-border">
@@ -741,8 +744,6 @@ export function TechnicalConsoleSidebar({
         </TooltipProvider>
       </div>
 
-      {/* Quick Match CTA */}
-      <QuickMatchSidebarCTA />
     </aside>
   );
 }

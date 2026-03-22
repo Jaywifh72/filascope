@@ -297,10 +297,10 @@ const Finder = () => {
     return localStorage.getItem("finderShowCostPerPrint") === "true";
   });
 
-  // In Stock Only toggle (default: ON)
+  // In Stock Only toggle (default: OFF — show all products)
   const [inStockOnly, setInStockOnly] = useState(() => {
     const saved = localStorage.getItem("finderInStockOnly");
-    return saved === null ? true : saved === "true";
+    return saved === null ? false : saved === "true";
   });
 
   // Bulk community ratings for all filaments
