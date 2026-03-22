@@ -272,17 +272,15 @@ const Wizard = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Sparkles className="h-6 w-6 text-primary" />
-                <h2 className="text-xl md:text-2xl font-bold">Material Wizard</h2>
+                <h2 className="text-xl md:text-2xl font-bold">Find Your Perfect Filament</h2>
               </div>
-              <div className="relative h-6 w-8 overflow-hidden">
-                <span
-                  key={currentStep}
-                  className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground font-mono animate-[scale-in_200ms_ease-out]"
-                >
-                  {currentStep + 1} / {questions.length}
-                </span>
-              </div>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                Step {currentStep + 1} of {questions.length}
+              </span>
             </div>
+            {currentStep === 0 && (
+              <p className="text-xs text-muted-foreground mb-3">Matched from 16,000+ filaments across 49+ brands</p>
+            )}
             {/* Segmented progress */}
             <div className="flex gap-1">
               {STEP_LABELS.map((_, i) => (
@@ -291,9 +289,9 @@ const Wizard = () => {
                   className={cn(
                     "h-2 rounded-full transition-all duration-300 w-[40px] sm:flex-1",
                     i < currentStep
-                      ? "bg-amber-500"
+                      ? "bg-primary"
                       : i === currentStep
-                        ? "bg-amber-500/50 animate-pulse"
+                        ? "bg-primary/50 animate-pulse"
                         : "bg-muted"
                   )}
                 />
@@ -338,8 +336,8 @@ const Wizard = () => {
                         className={cn(
                           "group flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all duration-150 min-h-[56px] touch-manipulation",
                           isSelected
-                            ? "border-amber-500 bg-amber-500/10"
-                            : "border-border hover:border-amber-500/50 hover:bg-muted/60"
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:border-primary/50 hover:bg-muted/60"
                         )}
                       >
                         {option.icon && (
@@ -352,8 +350,8 @@ const Wizard = () => {
                         <div className={cn(
                           "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
                           isSelected
-                            ? "border-amber-500 bg-amber-500"
-                            : "border-muted-foreground/30"
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground/40"
                         )}>
                           {isSelected && (
                             <Check className="h-3 w-3 text-background" />
@@ -376,8 +374,8 @@ const Wizard = () => {
                       className={cn(
                         "group flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all duration-150 min-h-[56px] touch-manipulation",
                         isChecked
-                          ? "border-amber-500 bg-amber-500/10"
-                          : "border-border hover:border-amber-500/50 hover:bg-muted/60"
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50 hover:bg-muted/60"
                       )}
                       onClick={() => handleMultiAnswer(option.value, !isChecked)}
                     >
@@ -421,12 +419,12 @@ const Wizard = () => {
             >
               {isLastQuestion ? (
                 <>
-                  See Results
+                  See My Matches
                   <Sparkles className="ml-2 h-4 w-4" />
                 </>
               ) : (
                 <>
-                  Next
+                  Next: {STEP_LABELS[currentStep + 1]}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
