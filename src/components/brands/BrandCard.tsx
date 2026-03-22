@@ -76,7 +76,7 @@ const BrandCard = ({
 
   const cardInner = (
     <div
-      className={`flex flex-col min-h-[260px] rounded-xl overflow-hidden group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 animate-fade-in motion-reduce:animate-none ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
+      className={`flex flex-col min-h-[240px] rounded-xl overflow-hidden group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.01] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/8 [@media(hover:hover)]:hover:border-cyan-500/30 animate-fade-in motion-reduce:animate-none ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border/60'}`}
       style={{ animationDelay: `${Math.min(index * 60, 480)}ms`, animationFillMode: 'both' }}
     >
       {/* Color Accent Bar */}

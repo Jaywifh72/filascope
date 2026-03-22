@@ -12,7 +12,7 @@ import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ItemListSchema, FAQSection } from "@/components/seo";
+import { ItemListSchema } from "@/components/seo";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { toBrandSlug } from "@/utils/brandSlug";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -464,21 +464,20 @@ const Brands = () => {
                 </h2>
               </div>
               
-              {/* Sort Dropdown - inline after count */}
-              <div className="flex items-center gap-2 ml-4">
-                <span className="text-xs text-gray-500 font-mono uppercase tracking-wider">Sort:</span>
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2 ml-auto">
                 <Select
                   value={filters.sortBy}
                   onValueChange={(value) => setFilters({ ...filters, sortBy: value as BrandFilters["sortBy"] })}
                 >
-                  <SelectTrigger className="w-[140px] h-7 text-xs text-cyan-400 font-mono bg-transparent border-none shadow-none px-1">
+                  <SelectTrigger className="w-[160px] h-8 text-xs bg-muted/30 border-border/50 hover:border-primary/40 transition-colors">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="count-desc">Most Filaments</SelectItem>
                     <SelectItem value="count-asc">Least Filaments</SelectItem>
-                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-                    <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                    <SelectItem value="name-asc">Name (A → Z)</SelectItem>
+                    <SelectItem value="name-desc">Name (Z → A)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -514,7 +513,7 @@ const Brands = () => {
               />
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {filteredBrands
                     .filter(b => b.productLineCount > 0 || b.variantCount > 0)
                     .map((brand, index) => (
@@ -561,7 +560,7 @@ const Brands = () => {
                             </span>
                             <div className="h-px flex-1 bg-border/40" />
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {emptyBrands.map((brand) => (
                               <BrandCard
                                 key={brand.name}
@@ -593,8 +592,8 @@ const Brands = () => {
         {/* Brand Comparison Prompt */}
         {filteredBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0).length >= 6 && (
           <div className="mt-8 mb-6 max-w-2xl mx-auto">
-            <div className="border border-dashed border-gray-700/60 rounded-xl p-6 text-center bg-gray-900/30">
-              <GitCompare className="h-8 w-8 mx-auto mb-3 text-primary/60" />
+            <div className="border border-border/50 rounded-xl p-6 text-center bg-card/50 backdrop-blur-sm">
+              <GitCompare className="h-7 w-7 mx-auto mb-3 text-primary" />
               <h3 className="text-base font-semibold text-foreground mb-1">
                 Can't decide between brands?
               </h3>
@@ -624,36 +623,30 @@ const Brands = () => {
           </div>
         )}
 
-        {/* Stats Footer */}
-        <div className="mt-12 border border-gray-800 rounded-lg bg-gray-900/30 p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="md:border-r md:border-gray-800">
-              <Building2 className="h-5 w-5 text-primary mx-auto mb-1" />
-              <p className="text-2xl font-bold text-primary font-mono tabular-nums">{brandCount.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Tracked Brands</p>
-            </div>
-            <div className="md:border-r md:border-gray-800">
-              <Package className="h-5 w-5 text-primary mx-auto mb-1" />
-              <p className="text-2xl font-bold text-primary font-mono tabular-nums">{mergedBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0).length.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Brands with Products</p>
-            </div>
-            <div className="md:border-r md:border-gray-800">
-              <Layers className="h-5 w-5 text-primary mx-auto mb-1" />
-              <p className="text-2xl font-bold text-primary font-mono tabular-nums">{totalVariants.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Total Filaments</p>
-            </div>
-            <div>
-              <ShieldCheck className="h-5 w-5 text-emerald-400 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-primary font-mono tabular-nums">{mergedBrands.filter(b => VERIFIED_BRANDS.includes(b.name)).length.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Verified Brands</p>
-            </div>
+        {/* Stats Strip — compact horizontal */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-6 sm:gap-10 py-4 border-t border-b border-border/30">
+          <div className="text-center">
+            <p className="text-xl font-bold text-primary tabular-nums">{brandCount.toLocaleString()}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Brands</p>
           </div>
-          <p className="text-[10px] text-muted-foreground text-center mt-3 flex items-center justify-center gap-1.5">
+          <div className="text-center">
+            <p className="text-xl font-bold text-primary tabular-nums">{mergedBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0).length.toLocaleString()}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">With Products</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xl font-bold text-primary tabular-nums">{totalVariants.toLocaleString()}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Filaments</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xl font-bold text-emerald-400 tabular-nums">{mergedBrands.filter(b => VERIFIED_BRANDS.includes(b.name)).length.toLocaleString()}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Verified</p>
+          </div>
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
             </span>
-            Data updated daily from 15+ retailers
+            Updated daily
           </p>
         </div>
 
@@ -734,16 +727,18 @@ const Brands = () => {
           </Accordion>
         </section>
 
-        {/* Brand FAQs — visible accordion + JSON-LD */}
-        <FAQSection faqs={[
-          { question: 'What are the best 3D printer filament brands?', answer: 'According to FilaScope\'s database of 8,200+ filaments from 48+ brands, the top-rated brands include Bambu Lab, Polymaker, Prusament, and Fillamentum — each scoring consistently high on documentation, consistency, and material variety. Budget picks like eSUN and Overture deliver strong value without sacrificing quality.' },
-          { question: 'Which filament brand has the best PLA?', answer: 'FilaScope\'s specification data shows that for premium PLA, Prusament is widely regarded for its tight ±0.02mm tolerances, while Polymaker\'s PolyLite PLA offers excellent surface quality across a huge color range. Bambu Lab PLA Basic is a strong all-rounder optimized for high-speed printing.' },
-          { question: 'What is the cheapest reliable filament brand?', answer: 'Based on FilaScope\'s real-time price tracking across 15+ stores in 5 regions, eSUN, Overture, and Sunlu consistently offer sub-$15/kg pricing with acceptable quality for hobbyist use.' },
-          { question: 'Which brands have HueForge TD data?', answer: 'Based on FilaScope\'s HueForge TD database, which tracks transmission distance values for 500+ filaments, brands including Bambu Lab, Polymaker, Prusament, eSUN, and others have verified TD data.' },
-          { question: 'Do all brands make filaments in 1.75mm diameter?', answer: 'According to FilaScope\'s database of 8,200+ filaments from 48+ brands, the vast majority of consumer 3D printer filament brands produce 1.75mm diameter spools. A few brands like ColorFabb and Fillamentum also offer 2.85mm variants for printers like the Ultimaker series.' },
-          { question: 'Is Bambu Lab filament better than Polymaker?', answer: 'FilaScope\'s specification data shows both are top-tier. Bambu Lab filaments are optimized for Bambu printers with excellent high-speed performance and tight AMS compatibility. Polymaker offers a wider material range with specialty options. The best choice depends on your printer and material needs.' },
-          { question: 'What filament brands work with Bambu Lab printers?', answer: 'According to FilaScope\'s database of 8,200+ filaments from 48+ brands, most 1.75mm filament brands work with Bambu Lab printers. For optimal AMS compatibility, Bambu Lab\'s own filaments include RFID chips for auto-detection. Third-party brands like Polymaker, eSUN, and Sunlu also work well.' },
-        ]} />
+        {/* JSON-LD only for FAQ structured data — visual FAQ is rendered above via Accordion */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "What are the best 3D printer filament brands?", "acceptedAnswer": { "@type": "Answer", "text": "The top-rated brands include Bambu Lab, Polymaker, Prusament, and Fillamentum. Budget picks like eSUN and Overture deliver strong value." }},
+            { "@type": "Question", "name": "Which filament brand has the best PLA?", "acceptedAnswer": { "@type": "Answer", "text": "Prusament is widely regarded for tight tolerances, Polymaker PolyLite PLA offers excellent surface quality, and Bambu Lab PLA Basic is optimized for high-speed printing." }},
+            { "@type": "Question", "name": "What is the cheapest reliable filament brand?", "acceptedAnswer": { "@type": "Answer", "text": "eSUN, Overture, and Sunlu consistently offer sub-$15/kg pricing with acceptable quality for hobbyist use." }},
+            { "@type": "Question", "name": "Which brands have HueForge TD data?", "acceptedAnswer": { "@type": "Answer", "text": "FilaScope tracks HueForge TD values for 500+ filaments from Bambu Lab, Polymaker, Prusament, eSUN, and others." }},
+            { "@type": "Question", "name": "Do all brands make filaments in 1.75mm diameter?", "acceptedAnswer": { "@type": "Answer", "text": "The vast majority produce 1.75mm spools. ColorFabb and Fillamentum also offer 2.85mm variants for Ultimaker-series printers." }},
+          ]
+        }) }} />
 
         </div>
         </div>
