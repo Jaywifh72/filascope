@@ -136,29 +136,16 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
   return (
     <section className="relative overflow-hidden">
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-4 pb-1 sm:pt-6 sm:pb-2 md:pt-6 md:pb-3">
-        <div className="flex flex-col items-start max-w-3xl">
-          {/* Headline — compact, left-aligned */}
-          <h1 className="animate-fade-in text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.15] text-white mb-2">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-2 pb-1 sm:pt-3 sm:pb-1">
+        {/* Desktop: H1 + search on one row. Mobile: stacked */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+          <h1 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-bold tracking-tight leading-[1.15] text-white mb-2 lg:mb-0 lg:shrink-0">
             Find Your Perfect Filament
           </h1>
 
-          {/* Stats + trust — single compact line */}
-          <p className="text-sm sm:text-base text-gray-400 mb-5 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <AnimatedStat value={displayProductCount} /> materials from <AnimatedStat value={displayBrandCount} />+ brands
-            <span className="text-white/20 mx-2">·</span>
-            <span className="inline-flex items-center gap-1">
-              <RefreshCw className="h-3 w-3 text-primary/60" />
-              Updated daily
-            </span>
-          </p>
-
-          {/* Search Input — full width, no max constraint */}
+          {/* Search Input — expands to fill remaining space on desktop */}
           <SearchBarGated>
-            <div
-              className="w-full max-w-[560px] mb-4 animate-fade-in search-icon-pulse"
-              style={{ animationDelay: "0.15s" }}
-            >
+            <div className="w-full lg:max-w-[520px] search-icon-pulse">
               <style>{`
                 .search-icon-pulse svg:first-child {
                   animation: searchPulse 5s ease-in-out infinite;
@@ -173,15 +160,10 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
                 onChange={onSearchChange}
                 placeholder={searchSuggestions[currentSuggestionIndex]}
                 context="filaments"
-                className="h-12 sm:h-14"
+                className="h-11 sm:h-12"
               />
             </div>
           </SearchBarGated>
-
-          {/* Smart Context Bar — personalized chips */}
-          <div className="w-full max-w-[600px] mb-2">
-            <SmartContextBar />
-          </div>
         </div>
       </div>
     </section>
