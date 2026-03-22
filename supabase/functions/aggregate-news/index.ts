@@ -41,14 +41,16 @@ interface ScoredArticle {
 // ---------------------------------------------------------------------------
 
 const RSS_FEEDS: FeedSource[] = [
-  { name: "All3DP", url: "https://all3dp.com/feed/", tier: 1 },
+  // Tier 1 — reliable RSS feeds (no Cloudflare blocking)
   { name: "3DPrint.com", url: "https://3dprint.com/feed/", tier: 1 },
-  { name: "3D Printing Industry", url: "https://3dprintingindustry.com/feed/", tier: 1 },
-  { name: "Tom's Hardware", url: "https://www.tomshardware.com/feeds/all", tier: 1 },
-  { name: "Hackaday", url: "https://hackaday.com/tag/3d-printer-hacks/feed/", tier: 2 },
-  { name: "Prusa Blog", url: "https://blog.prusa3d.com/feed/", tier: 2 },
+  { name: "Hackaday", url: "https://hackaday.com/tag/3d-printer-hacks/feed/", tier: 1 },
+  { name: "Prusa Blog", url: "https://blog.prusa3d.com/feed/", tier: 1 },
+  // Tier 2 — brand blogs
   { name: "Bambu Lab Blog", url: "https://blog.bambulab.com/rss/", tier: 2 },
+  // Tier 3 — community
   { name: "Reddit r/3Dprinting", url: "https://www.reddit.com/r/3Dprinting/top/.rss?t=week", tier: 3 },
+  // Note: All3DP, Tom's Hardware, 3D Printing Industry are Cloudflare-protected
+  // and block server-side RSS fetches. They can be re-added if a proxy is set up.
 ];
 
 const SOURCE_LOGOS: Record<string, string> = {
@@ -92,10 +94,38 @@ function estimateReadTimeMin(text: string): number {
 // RSS Fetching & Parsing
 // ---------------------------------------------------------------------------
 
+// Regex-based XML tag extraction (no DOM parser needed)
+function getTagContent(xml: string, tag: string): string | null {
+  // Try CDATA first, then regular content
+  const cdataRe = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>`, "i");
+  const cdataMatch = xml.match(cdataRe);
+  if (cdataMatch) return cdataMatch[1].trim();
+
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
+  const match = xml.match(re);
+  return match ? match[1].trim() : null;
+}
+
+function getAttr(xml: string, tag: string, attr: string): string | null {
+  const re = new RegExp(`<${tag}[^>]+${attr}=["']([^"']+)["']`, "i");
+  const match = xml.match(re);
+  return match ? match[1] : null;
+}
+
+function splitItems(xml: string): string[] {
+  // Split on <item> or <entry> tags
+  const itemRe = /<item[\s>][\s\S]*?<\/item>/gi;
+  const items = xml.match(itemRe);
+  if (items && items.length > 0) return items;
+
+  const entryRe = /<entry[\s>][\s\S]*?<\/entry>/gi;
+  return xml.match(entryRe) || [];
+}
+
 async function fetchFeed(feed: FeedSource): Promise<RawArticle[]> {
   try {
     const res = await fetch(feed.url, {
-      headers: { "User-Agent": "FilaScope/1.0 News Aggregator" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; FilaScope/1.0; +https://filascope.com)" },
       signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) {
@@ -103,51 +133,46 @@ async function fetchFeed(feed: FeedSource): Promise<RawArticle[]> {
       return [];
     }
     const xml = await res.text();
-    const doc = new DOMParser().parseFromString(xml, "text/xml");
 
-    if (!doc || doc.documentElement.nodeName === "parsererror") {
-      console.warn(`Feed ${feed.name}: XML parse error`);
+    // Check if we got HTML (Cloudflare block) instead of XML
+    if (xml.includes("<!DOCTYPE html") || xml.includes("Attention Required")) {
+      console.warn(`Feed ${feed.name}: blocked by Cloudflare`);
       return [];
     }
 
-    // Handle both RSS <item> and Atom <entry>
-    let items = doc.querySelectorAll("item");
-    if (!items || items.length === 0) {
-      items = doc.querySelectorAll("entry");
-    }
+    const items = splitItems(xml);
+    console.log(`Feed ${feed.name}: found ${items.length} items`);
 
     const articles: RawArticle[] = [];
 
     for (const item of items) {
-      const title = item.querySelector("title")?.textContent?.trim();
+      const title = getTagContent(item, "title");
 
-      // Link: RSS uses <link> text content, Atom uses href attribute
-      const linkEl = item.querySelector("link");
-      const link =
-        linkEl?.textContent?.trim() || linkEl?.getAttribute("href") || null;
+      // Link: RSS uses <link> text, Atom uses href attribute on <link>
+      let link = getTagContent(item, "link");
+      if (!link || link.startsWith("<")) {
+        // Atom-style: <link href="..."/>
+        link = getAttr(item, "link", "href");
+      }
 
-      const pubDate =
-        item.querySelector("pubDate")?.textContent ||
-        item.querySelector("published")?.textContent ||
-        item.querySelector("updated")?.textContent;
+      const pubDate = getTagContent(item, "pubDate")
+        || getTagContent(item, "published")
+        || getTagContent(item, "updated");
 
-      const description =
-        item.querySelector("description")?.textContent ||
-        item.querySelector("content")?.textContent ||
-        item.querySelector("summary")?.textContent;
+      const description = getTagContent(item, "description")
+        || getTagContent(item, "content")
+        || getTagContent(item, "summary");
 
-      // Image extraction: try media:content, enclosure, then HTML img
-      const imageUrl =
-        item.querySelector("media\\:content, content")?.getAttribute("url") ||
-        item.querySelector("enclosure")?.getAttribute("url") ||
-        extractFirstImageFromHtml(description || "");
+      // Image: try enclosure, media:content, then HTML img in description
+      const imageUrl = getAttr(item, "enclosure", "url")
+        || getAttr(item, "media:content", "url")
+        || extractFirstImageFromHtml(description || "");
 
       if (!title || !link) continue;
 
       const pubDateParsed = pubDate ? new Date(pubDate) : new Date();
-      const daysSincePublished =
-        (Date.now() - pubDateParsed.getTime()) / 86400000;
-      if (daysSincePublished > 7) continue; // Only last 7 days
+      const daysSincePublished = (Date.now() - pubDateParsed.getTime()) / 86400000;
+      if (daysSincePublished > 14) continue; // Last 14 days (wider window)
 
       articles.push({
         title,
