@@ -426,7 +426,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
               ? "bg-cyan-500/20 border border-cyan-500 text-cyan-400 opacity-100 scale-105"
               : cn(
                   "bg-card/80 border border-border backdrop-blur-sm text-muted-foreground",
-                  "opacity-0 group-hover:opacity-100",
+                  "opacity-60 group-hover:opacity-100",
                 ),
             isCompareDisabled && "opacity-30 cursor-not-allowed"
           )}

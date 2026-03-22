@@ -68,6 +68,7 @@ import { FinderPaginationBar } from "@/components/FinderPaginationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
 import { OnboardingTour } from "@/components/onboarding";
+import { WelcomeBanner } from "@/components/onboarding/WelcomeBanner";
 import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { TrendingSection } from "@/components/TrendingSection";
@@ -1088,7 +1089,10 @@ const Finder = () => {
         isLoading={isLoading || filamentCount === undefined}
       />
 
-      {/* Quick Paths removed — merged into QuickFilterPills below */}
+      {/* First-visit onboarding banner — dismissible, drives Quick Match */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10">
+        <WelcomeBanner />
+      </div>
 
       {/* Region Transition Indicator - fixed at top of viewport during region changes */}
       <RegionTransitionIndicator 
