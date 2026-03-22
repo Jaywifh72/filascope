@@ -524,63 +524,17 @@ export default function HueForgeTDDatabase() {
       />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* ── Hero ──────────────────────────────────────────────────── */}
-        <section className="text-center mb-16">
-          <Badge variant="outline" className="mb-4 text-sm">
-            <Sun className="w-3 h-3 mr-1 text-purple-400" />
-            Transmissivity Data
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-primary bg-clip-text text-transparent">
-            HueForge TD Value Database — Filament Transmissivity Data for Lithophanes
+        {/* ── Hero — compact, data-first ────────────────────────── */}
+        <section className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-foreground">
+            HueForge TD Database
           </h1>
-          <p className="text-base text-muted-foreground max-w-3xl mx-auto mb-4">
-            FilaScope's HueForge TD database is one of the most comprehensive collections of filament transmission distance (TD) values available, tracking transmissivity data for {totalCount}+ filaments. TD values measure how much light passes through a filament at a given thickness — essential data for creating lithophanes and HueForge multi-color art.
+          <p className="text-sm text-muted-foreground max-w-2xl mb-4">
+            Search {totalCount}+ filaments with verified TD values across {brandCount} brands and {materials.length} materials.
+            TD (Transmission Distance) measures how much light passes through a filament — essential for lithophanes and HueForge multi-color art.
           </p>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            The world's most comprehensive transmissivity database for HueForge lithophane printing.
-            Search{' '}
-            <span className="text-foreground font-semibold">{totalCount}+</span> filaments by TD
-            value, color, and brand.
-          </p>
-
-          <div className="flex justify-center gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-400">{totalCount}</div>
-              <div className="text-sm text-muted-foreground">Filaments</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-400">{brandCount}</div>
-              <div className="text-sm text-muted-foreground">Brands</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-400">{materials.length}</div>
-              <div className="text-sm text-muted-foreground">Materials</div>
-            </div>
-          </div>
-
-          {/* NEW: Jump to Database CTA */}
-          <div className="flex flex-col items-center gap-2 mb-8">
-            <Button
-              size="lg"
-              className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-8 rounded-lg text-lg"
-              onClick={() =>
-                document.getElementById('td-browser')?.scrollIntoView({ behavior: 'smooth' })
-              }
-            >
-              <Search className="w-5 h-5 mr-2" />
-              Search the Database
-            </Button>
-            <ChevronDown className="w-6 h-6 text-cyan-500 animate-bounce opacity-60" />
-            <button
-              onClick={() =>
-                document.getElementById('td-education')?.scrollIntoView({ behavior: 'smooth' })
-              }
-              className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors"
-            >
-              Or learn about TD values below ↓
-            </button>
-          </div>
-
+          {/* SEO-only expanded title */}
+          <h2 className="sr-only">Filament Transmissivity Data for Lithophanes — HueForge TD Value Lookup</h2>
         </section>
 
         {/* ── Browse Filaments Table (MOVED UP) ────────────────────── */}
