@@ -347,43 +347,7 @@ export function BrandOverviewTab({
 
   return (
     <div className="space-y-8">
-      {/* Brand Highlights Section - only show with 2+ highlights */}
-      {highlights.length >= 2 && <div ref={highlightsRef}>
-        <h2 className="text-lg font-semibold text-white mb-4 border-l-[3px] border-cyan-500 pl-3">Brand Highlights</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {highlights.map((highlight, idx) => (
-            <div
-              key={idx}
-              className={cn(
-                "relative bg-gray-800/30 border border-gray-700 rounded-xl p-6 group/highlight overflow-hidden",
-                "transition-all duration-500 ease-out",
-                highlightsVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-5",
-                highlight.onClick && "cursor-pointer hover:bg-muted/30"
-              )}
-              style={{ transitionDelay: highlightsVisible ? `${idx * 100}ms` : '0ms' }}
-              onClick={highlight.onClick}
-              role={highlight.onClick ? "button" : undefined}
-              aria-label={highlight.ariaLabel}
-              tabIndex={highlight.onClick ? 0 : undefined}
-              onKeyDown={highlight.onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); highlight.onClick?.(); } } : undefined}
-            >
-              {/* Top accent line — visible on hover */}
-              <div className="absolute top-0 left-4 w-10 h-[3px] bg-cyan-500 rounded-b opacity-0 group-hover/highlight:opacity-100 transition-opacity duration-300" />
-              <div className="text-primary mb-3 transition-opacity duration-700 group-hover/highlight:animate-pulse">
-                {highlight.icon}
-              </div>
-              <div className="text-base font-semibold text-white mb-1">
-                {highlight.title}
-              </div>
-              <div className="text-sm text-slate-400">
-                {highlight.description}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>}
+      {/* Brand Highlights removed — hero spec cards convey the same info */}
 
       {/* Popular Products Section */}
       {popularProducts.length > 0 && (
@@ -498,7 +462,7 @@ export function BrandOverviewTab({
                     </div>
                     
                     {/* Product Name */}
-                    <h3 className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[40px]" title={product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}>
+                    <h3 className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[40px] capitalize" title={product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}>
                       {product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}
                     </h3>
                     

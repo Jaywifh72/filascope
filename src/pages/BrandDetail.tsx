@@ -376,11 +376,7 @@ const BrandDetail = () => {
             >
               {descExpanded ? 'Read less' : 'Read more'}
             </button>
-            <div className="flex flex-wrap gap-4 text-xs text-gray-500 mt-3">
-              {brandInfo?.location && <span>🏭 Made in {brandInfo.location}</span>}
-              {availableMaterials.length > 0 && <span>📦 {availableMaterials.length} Material Types</span>}
-              {brandPriceRange && <span>💰 From {formatPrice(brandPriceRange.min)}/spool</span>}
-            </div>
+            {/* Metadata chips removed — redundant with spec cards in hero */}
           </div>
         )}
 
