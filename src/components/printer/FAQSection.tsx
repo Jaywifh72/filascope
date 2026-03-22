@@ -342,18 +342,7 @@ export function FAQSection(props: FAQSectionProps) {
         </button>
       )}
 
-      {/* CTA Footer */}
-      <div className="mt-12 pt-8 border-t border-border flex flex-col items-center gap-4">
-        <p className="text-base font-semibold text-foreground">
-          Still have questions?
-        </p>
-        <a
-          href="/contact"
-          className="inline-flex items-center justify-center h-12 px-8 bg-primary/10 border-[1.5px] border-primary/30 rounded-[10px] text-[15px] font-semibold text-primary transition-all hover:bg-primary/15 hover:border-primary/50 hover:-translate-y-0.5"
-        >
-          Contact Our Support Team
-        </a>
-      </div>
+      {/* Support CTA removed — FilaScope is a comparison platform, not the manufacturer */}
     </section>
   );
 }

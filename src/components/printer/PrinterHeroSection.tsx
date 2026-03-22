@@ -91,8 +91,8 @@ export function PrinterHeroSection({
     <div className="space-y-6">
       {/* Image and Info Grid - Stack on mobile, side-by-side on lg */}
       <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-6 lg:gap-10 items-start">
-        {/* Left Column: Product Images */}
-        <div className="w-full">
+        {/* Left Column: Product Images — constrained on mobile */}
+        <div className="w-full max-h-[300px] lg:max-h-none overflow-hidden">
           <ProductGallery
             images={galleryImages}
             productTitle={printer.model_name}
@@ -108,7 +108,7 @@ export function PrinterHeroSection({
                 <Link to={`/brands/${toBrandSlug(brand)}`} className="block text-sm text-gray-400 font-medium mb-1 hover:text-primary transition-colors" title={`Browse all ${brand} 3D printer filaments`}>{brand}{' '}</Link>
               )}
               <span className="block text-3xl font-bold text-foreground">{printer.model_name}{' '}</span>
-              <span className="block text-xs text-muted-foreground/50 font-normal mt-0.5">3D Printer</span>
+              <span className="sr-only">3D Printer</span>
             </h1>
             <TooltipProvider delayDuration={300}>
               <Tooltip>
