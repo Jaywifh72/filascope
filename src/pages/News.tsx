@@ -140,7 +140,7 @@ const News = () => {
             >
               All
             </Badge>
-            {tags.map((tag) => (
+            {tags.slice(0, 12).map((tag) => (
               <Badge
                 key={tag}
                 variant={tagFilter === tag ? "default" : "outline"}
@@ -170,11 +170,53 @@ const News = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {articles.map((article) => (
-              <NewsCard key={article.id} article={article} />
-            ))}
-          </div>
+          <>
+            {/* Hero card — first article spans full width */}
+            {articles.length > 0 && (
+              <a
+                href={articles[0].source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block mb-6"
+              >
+                <Card className="transition-colors hover:border-primary/40 bg-card overflow-hidden">
+                  <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row gap-6">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Badge variant="secondary" className="text-xs">{articles[0].source_name}</Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(articles[0].published_date), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-3 group-hover:text-primary transition-colors">
+                        {articles[0].title}
+                      </h2>
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                        {articles[0].summary}
+                      </p>
+                      {articles[0].tags.length > 0 && (
+                        <div className="flex gap-1.5 flex-wrap">
+                          {articles[0].tags.slice(0, 4).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0">{tag}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                  </CardContent>
+                </Card>
+              </a>
+            )}
+
+            {/* Remaining articles in 3-column grid */}
+            {articles.length > 1 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {articles.slice(1).map((article) => (
+                  <NewsCard key={article.id} article={article} />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* Pagination */}
