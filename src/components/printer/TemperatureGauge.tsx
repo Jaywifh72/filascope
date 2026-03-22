@@ -33,53 +33,53 @@ function ThermometerBar({ value, maxScale, label, type }: ThermometerBarProps) {
   return (
     <div className="flex flex-col items-center flex-1">
       {/* Label */}
-      <div className="text-xs text-gray-400 mb-2 text-center">{label}</div>
-      
-      {/* Thermometer container */}
-      <div className="relative flex flex-col items-center">
-        {/* Scale marks on the side */}
-        <div className="absolute left-0 top-0 bottom-6 w-6 flex flex-col justify-between items-end pr-1">
+      <div className="text-xs text-gray-400 mb-3 text-center font-medium tracking-wide uppercase">{label}</div>
+
+      {/* Thermometer container — centered alignment */}
+      <div className="flex items-end gap-1.5">
+        {/* Scale marks */}
+        <div className="flex flex-col justify-between h-32 sm:h-40 items-end">
           {marks.slice().reverse().map((mark) => (
-            <span key={mark} className="text-[9px] text-gray-500 leading-none">
+            <span key={mark} className="text-[9px] text-gray-500 leading-none tabular-nums">
               {mark}°
             </span>
           ))}
         </div>
-        
-        {/* Thermometer body */}
-        <div className="relative ml-6">
+
+        {/* Thermometer body — tube + bulb aligned on center axis */}
+        <div className="flex flex-col items-center">
           {/* Glass tube */}
-          <div className="w-6 sm:w-8 h-32 sm:h-40 bg-muted/50 rounded-t-full border border-border/50 overflow-hidden relative">
+          <div className="w-7 sm:w-8 h-32 sm:h-40 bg-muted/40 rounded-t-full border border-border/40 overflow-hidden relative">
             {/* Fill with gradient */}
-            <div 
+            <div
               className={cn(
                 "absolute bottom-0 left-0 right-0 rounded-t-full transition-all duration-700 ease-out",
-                type === 'nozzle' 
+                type === 'nozzle'
                   ? "bg-gradient-to-t from-orange-600 via-red-500 to-red-400"
                   : "bg-gradient-to-t from-blue-500 via-cyan-400 to-teal-400"
               )}
               style={{ height: `${percentage}%` }}
             />
-            
-            {/* Glass reflection effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-transparent w-1/3" />
+
+            {/* Glass reflection */}
+            <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-white/10 to-transparent" />
           </div>
-          
-          {/* Thermometer bulb */}
+
+          {/* Thermometer bulb — centered below tube */}
           <div className={cn(
-            "w-10 sm:w-12 h-10 sm:h-12 rounded-full -mt-2 mx-auto flex items-center justify-center border border-border/50",
+            "w-11 sm:w-12 h-11 sm:h-12 rounded-full -mt-1.5 flex items-center justify-center border border-border/40 shadow-lg",
             type === 'nozzle'
-              ? "bg-gradient-to-br from-red-500 to-orange-600"
-              : "bg-gradient-to-br from-cyan-500 to-blue-600"
+              ? "bg-gradient-to-br from-red-500 to-orange-600 shadow-red-500/20"
+              : "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-cyan-500/20"
           )}>
             <Thermometer className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
           </div>
         </div>
       </div>
-      
+
       {/* Value display */}
       <div className="mt-3 text-center">
-        <div className="text-xl sm:text-2xl font-bold text-white">{value}°C</div>
+        <div className="text-xl sm:text-2xl font-bold text-white tabular-nums">{value}°C</div>
         <div className="text-[10px] sm:text-xs text-gray-500">Maximum</div>
       </div>
     </div>
