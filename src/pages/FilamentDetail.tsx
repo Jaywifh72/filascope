@@ -993,9 +993,7 @@ const { id } = useParams();
           />
         )}
 
-        <BackToResults />
-        {/* Exploration Trail Breadcrumb */}
-        <ExplorationTrail currentId={displayFilament.id} />
+        {/* Breadcrumbs only — BackToResults and ExplorationTrail removed for cleaner layout */}
         <DetailBreadcrumb
           segments={[
             { label: "Filaments", href: "/filaments" },

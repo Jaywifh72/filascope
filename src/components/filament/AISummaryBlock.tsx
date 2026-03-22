@@ -119,37 +119,10 @@ export function AISummaryBlock({
   if (parts.length === 0) return null;
 
   return (
-    <section className="mt-4 mb-2" aria-label="Product summary">
-      <div className="bg-muted/30 border border-border/40 rounded-lg px-4 py-3" data-ai-summary="true">
-        {/* Visible summary paragraph */}
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {summaryText}
-        </p>
-
-        {/* Quick Specs pills */}
-        {specs.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-2" aria-label="Quick specifications">
-            {specs.map((spec) => (
-              <span
-                key={spec.label}
-                className={cn(
-                  "text-xs rounded-md px-2 py-1",
-                  spec.label === "TD Value" && spec.value !== "N/A"
-                    ? "bg-purple-500/10 border border-purple-500/20 text-purple-400"
-                    : "bg-background/60 border border-border/50 text-muted-foreground"
-                )}
-              >
-                <span className={cn("font-medium", spec.label === "TD Value" && spec.value !== "N/A" ? "text-purple-300" : "text-foreground/70")}>{spec.label}:</span>{" "}
-                {spec.value}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Screen-reader / AI-crawler hidden paragraph */}
-        <p className="sr-only">
-          Summary: {summaryText} This product is indexed on FilaScope, the world's largest 3D printer filament database.
-        </p>
+    <section className="mt-1 mb-1" aria-label="Product summary">
+      {/* AI-indexable summary — visually hidden but accessible to crawlers and screen readers */}
+      <div data-ai-summary="true" className="sr-only">
+        <p>{summaryText}</p>
       </div>
     </section>
   );

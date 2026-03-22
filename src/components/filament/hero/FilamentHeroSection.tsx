@@ -80,8 +80,8 @@ export function FilamentHeroSection({
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
         
         <div className="relative grid lg:grid-cols-[40%_60%] gap-8 lg:gap-12 items-start">
-          {/* Left Column - Image Gallery (40%) */}
-          <div className="relative">
+          {/* Left Column - Image Gallery (40%) — constrained height */}
+          <div className="relative max-h-[280px] lg:max-h-[320px] overflow-hidden">
             <div className="transition-transform duration-300 hover:scale-[1.02]">
               <div className="shadow-[0_20px_60px_rgba(0,212,212,0.15)] rounded-2xl overflow-hidden">
                 <FilamentHeroGallery
