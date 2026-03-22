@@ -1,8 +1,6 @@
-import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { BreadcrumbSchema, DefinedTermSetSchema, FAQSection } from "@/components/seo";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, GitCompare, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import MaterialReference from "@/components/MaterialReference";
 
 const materialTerms = [
@@ -27,15 +25,6 @@ const materialFaqs = [
 ];
 
 export default function MaterialKnowledgeBase() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  const handleFamilyClick = (familyName: string) => {
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('expand-material-family', { detail: familyName }));
-    }, 100);
-  };
-
   return (
     <>
       <DocumentHead
@@ -54,14 +43,8 @@ export default function MaterialKnowledgeBase() {
         description="Comprehensive reference for 3D printing filament material types, properties, and recommended print settings."
         terms={materialTerms}
       />
-      <FAQSection faqs={materialFaqs} />
-
-      <div className="min-h-screen bg-background relative">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,207,232,0.03)_0%,_transparent_50%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,_rgba(255,0,85,0.02)_0%,_transparent_40%)] pointer-events-none" />
-
-        <div className="container mx-auto px-4 py-8 relative z-10">
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-sm mb-4" aria-label="Breadcrumb">
             <Link to="/guides" className="text-slate-400 hover:text-cyan-400 transition-colors">Guides</Link>
@@ -69,98 +52,23 @@ export default function MaterialKnowledgeBase() {
             <span className="text-foreground font-medium">Material Knowledge Base</span>
           </nav>
 
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 mb-8">
-            <div className="flex-1 min-w-0">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm font-medium mb-4">
-                <BookOpen className="w-4 h-4" />
-                <span>KNOWLEDGE BASE</span>
-              </div>
-
-              {/* Title */}
-              <h1 className="text-4xl font-bold text-foreground mb-3">
-                3D Printing Material <span className="text-primary">Knowledge Base</span>
-              </h1>
-
-              {/* Subtitle */}
-              <p className="text-muted-foreground text-lg mb-4">
-                Deep-dive reference for every 3D printing material — from PLA basics to advanced engineering polymers. 236+ material types with print settings, strengths, weaknesses, and technical data.
-              </p>
-
-              {/* Quick Stats */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  236+ Material Types
-                </span>
-                <span className="text-border">•</span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  15+ Property Categories
-                </span>
-                <span className="text-border">•</span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Detailed Print Settings
-                </span>
-              </div>
-            </div>
-
-            {/* Material Families Quick Nav + Compare CTA */}
-            <div className="hidden lg:flex flex-col gap-3 w-[280px] flex-shrink-0">
-              <div className="bg-slate-800/30 border border-white/5 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-foreground mb-3">Material Families</h3>
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {MATERIAL_CATEGORIES.map((cat) => {
-                    const shortName = cat.name.replace(/ Family$/i, '');
-                    const slug = shortName.toLowerCase().replace(/\+/g, '-plus').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-                    return (
-                      <a
-                        key={cat.id}
-                        href={`/materials/${slug}`}
-                        onClick={(e) => { e.preventDefault(); handleFamilyClick(cat.name); }}
-                        className="text-xs px-2.5 py-1 rounded-full bg-slate-700/50 text-slate-300 hover:bg-cyan-500/20 hover:text-cyan-300 cursor-pointer transition-colors"
-                      >
-                        {shortName}
-                      </a>
-                    );
-                  })}
-                </div>
-                <p className="text-xs text-slate-500">236+ materials · 15+ categories</p>
-              </div>
-
-              {/* Compare CTA */}
-              <Link
-                to="/compare"
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/15 hover:border-primary/30 transition-all group"
-              >
-                <GitCompare className="w-5 h-5 text-primary flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">Compare filaments</p>
-                  <p className="text-xs text-muted-foreground">Side-by-side specs &amp; pricing</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-primary/60 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
+          {/* Compact header */}
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+              Material Knowledge Base
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              Reference for 236+ 3D printing materials with print settings, properties, and compatibility data. Select a material family to explore.
+            </p>
           </div>
 
-          {/* Mobile compare CTA */}
-          <div className="lg:hidden mb-6">
-            <Link
-              to="/compare"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/15 hover:border-primary/30 transition-all group"
-            >
-              <GitCompare className="w-5 h-5 text-primary flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">Compare specific filaments →</p>
-                <p className="text-xs text-muted-foreground">Side-by-side specs &amp; pricing</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-primary/60 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
-
-          {/* Material Reference Content */}
+          {/* Material Reference Content — the primary tool */}
           <MaterialReference />
+
+          {/* FAQ below the tool content */}
+          <div className="mt-12 max-w-3xl">
+            <FAQSection faqs={materialFaqs} />
+          </div>
         </div>
       </div>
     </>
