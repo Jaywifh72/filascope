@@ -218,6 +218,7 @@ const BestFilament = lazy(() => import("./pages/BestFilament"));
 const CheapestFilament = lazy(() => import("./pages/CheapestFilament"));
 const FilamentTypes = lazy(() => import("./pages/FilamentTypes"));
 const FilamentPrinterCompatibility = lazy(() => import("./pages/FilamentPrinterCompatibility"));
+const FinderV2 = lazy(() => import("./pages/FinderV2"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -275,6 +276,7 @@ const App = () => (
                   <main id="main-content" tabIndex={-1} className="outline-none pb-20 md:pb-0">
                   <Routes>
                   <Route path="/" element={<Finder />} />
+                  <Route path="/beta" element={<FinderV2 />} />
                   <Route path="/finder" element={<Finder />} />
                   <Route path="/filaments" element={<FilamentCategoryPage />} />
                   <Route path="/filaments/:slug" element={<FilamentCategoryPage />} />
