@@ -10,12 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import type { Database } from "@/integrations/supabase/types";
 import { MatrixPrinterSelector } from "@/components/matrix/MatrixPrinterSelector";
 import { PopularPrinterCards, type PopularPrinter } from "@/components/matrix/PopularPrinterCards";
 import { SampleMatrixPreview } from "@/components/matrix/SampleMatrixPreview";
+import { getFilamentUrl } from "@/lib/filamentUrl";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -155,11 +157,11 @@ const Matrix = () => {
           <Breadcrumbs items={[{ name: "Compatibility Matrix", url: "/matrix" }]} />
           {/* Header */}
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-foreground">
               Compatibility Matrix
             </h1>
-            <p className="text-muted-foreground max-w-2xl">
-              Select your printer below to see which filaments are compatible with it, with recommended print settings for each material.
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              Select your printer to see compatible filaments with recommended settings.
             </p>
           </div>
 
@@ -287,31 +289,44 @@ const Matrix = () => {
                       <p>No filaments match your filters</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      {filteredResults.map(({ filament, compatibility }) => (
-                        <div
-                          key={filament.id}
-                          className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/5 transition-colors"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-1">
-                              <h3 className="font-semibold truncate">{filament.product_title}</h3>
-                              {filament.material && (
-                                <Badge variant="secondary">{filament.material}</Badge>
+                    <div className="space-y-1.5">
+                      {filteredResults.map(({ filament, compatibility }) => {
+                        const href = getFilamentUrl(filament);
+                        return (
+                          <Link
+                            key={filament.id}
+                            to={href}
+                            className="flex items-center justify-between p-3 sm:p-4 rounded-lg border border-border/50 hover:border-primary/40 hover:bg-accent/5 transition-all group"
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              {/* Color swatch */}
+                              {filament.color_hex && (
+                                <div
+                                  className="w-8 h-8 rounded-lg border border-border/50 flex-shrink-0 shadow-sm"
+                                  style={{ backgroundColor: filament.color_hex }}
+                                />
                               )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">{filament.vendor}</p>
-                            {compatibility.limitations && compatibility.limitations.length > 0 && (
-                              <div className="mt-2 text-xs text-muted-foreground">
-                                {compatibility.limitations.slice(0, 2).join(" • ")}
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">{filament.product_title}</h3>
+                                  {filament.material && (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">{filament.material}</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">{filament.vendor}</p>
                               </div>
-                            )}
-                          </div>
-                          <div className="ml-4">
-                            <CompatibilityBadge compatibility={compatibility} />
-                          </div>
-                        </div>
-                      ))}
+                            </div>
+                            <div className="flex items-center gap-3 ml-3 flex-shrink-0">
+                              {filament.variant_price && filament.variant_price > 0 && (
+                                <span className="text-sm font-medium text-foreground tabular-nums">
+                                  ${filament.variant_price.toFixed(2)}
+                                </span>
+                              )}
+                              <CompatibilityBadge compatibility={compatibility} />
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </CardContent>
