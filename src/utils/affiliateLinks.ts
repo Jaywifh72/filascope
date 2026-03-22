@@ -81,8 +81,14 @@ export function buildAffiliateLinkLocal(
     return url;
   }
 
+  if (!program.link_template) {
+    // Fallback: just return the store base URL with UTM params
+    const base = program.store_base_url || '';
+    return `${base}${path ? '/' + path.replace(/^\//, '') : ''}?utm_source=filascope&utm_medium=affiliate`;
+  }
+
   let url = program.link_template
-    .replace("{store_url}", program.store_base_url)
+    .replace("{store_url}", program.store_base_url || '')
     .replace("{path}", path)
     .replace("{tracking_value}", program.tracking_value || "");
 

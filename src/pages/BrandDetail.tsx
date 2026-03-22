@@ -147,7 +147,7 @@ const BrandDetail = () => {
     if (filaments.length === 0) return null;
     const prices = filaments.map(f => f.variant_price).filter((p): p is number => p !== null && p > 0);
     if (prices.length === 0) return null;
-    return { min: Math.min(...prices), max: Math.max(...prices) };
+    return { min: prices.reduce((a, b) => a < b ? a : b, Infinity), max: prices.reduce((a, b) => a > b ? a : b, -Infinity) };
   }, [filaments]);
 
   // Derive top retailer names from product_url domains
@@ -268,7 +268,7 @@ const BrandDetail = () => {
           if (filaments.length === 0) return null;
           const prices = filaments.map(f => f.variant_price).filter((p): p is number => p !== null && p > 0);
           if (prices.length === 0) return null;
-          return { low: Math.min(...prices), high: Math.max(...prices) };
+          return { low: prices.reduce((a, b) => a < b ? a : b, Infinity), high: prices.reduce((a, b) => a > b ? a : b, -Infinity) };
         })()}
         location={brandInfo?.location ? (() => {
           const parts = brandInfo.location.split(',').map(s => s.trim());
@@ -311,8 +311,8 @@ const BrandDetail = () => {
                 .map(f => f.variant_price)
                 .filter((p): p is number => p !== null && p > 0);
               if (usdPrices.length >= filaments.length * 0.1) {
-                const min = Math.min(...usdPrices);
-                const max = Math.max(...usdPrices);
+                const min = usdPrices.reduce((a, b) => a < b ? a : b, Infinity);
+                const max = usdPrices.reduce((a, b) => a > b ? a : b, -Infinity);
                 return `${formatPrice(min).split('.')[0]}–${formatPrice(max).split('.')[0]}`;
               }
               const regionalPriceKeys = ['price_cad', 'price_eur', 'price_gbp', 'price_aud', 'price_jpy'] as const;
@@ -321,15 +321,15 @@ const BrandDetail = () => {
                   .map(f => (f as Record<string, unknown>)[col] as number | null)
                   .filter((p): p is number => p !== null && p > 0);
                 if (regionalPrices.length >= filaments.length * 0.1) {
-                  const min = Math.min(...regionalPrices);
-                  const max = Math.max(...regionalPrices);
+                  const min = regionalPrices.reduce((a, b) => a < b ? a : b, Infinity);
+                  const max = regionalPrices.reduce((a, b) => a > b ? a : b, -Infinity);
                   const currencyLabel = col === 'price_cad' ? 'CA$' : col === 'price_eur' ? '€' : col === 'price_gbp' ? '£' : col === 'price_aud' ? 'A$' : '¥';
                   return `${currencyLabel}${Math.round(min)}–${currencyLabel}${Math.round(max)}`;
                 }
               }
               if (usdPrices.length > 0) {
-                const min = Math.min(...usdPrices);
-                const max = Math.max(...usdPrices);
+                const min = usdPrices.reduce((a, b) => a < b ? a : b, Infinity);
+                const max = usdPrices.reduce((a, b) => a > b ? a : b, -Infinity);
                 return `${formatPrice(min).split('.')[0]}–${formatPrice(max).split('.')[0]}`;
               }
               return undefined;
