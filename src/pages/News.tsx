@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Clock } from "lucide-react";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNewsPaginated, useNewsTags } from "@/hooks/useNewsArticles";
-import { formatDistanceToNow } from "date-fns";
-import type { NewsArticle } from "@/types/news";
+import { usePersonalizedNews } from "@/hooks/useNewsArticles";
+import { formatDistanceToNow, differenceInHours } from "date-fns";
+import { cn } from "@/lib/utils";
+import type { NewsArticle, NewsCategory, NEWS_CATEGORY_COLORS } from "@/types/news";
 
 const PAGE_SIZE = 12;
 
@@ -28,6 +29,9 @@ function NewsCardSkeleton() {
 }
 
 function NewsCard({ article }: { article: NewsArticle }) {
+  const isNewToday = differenceInHours(new Date(), new Date(article.published_date)) < 24;
+  const categoryBorder = article.category ? CATEGORY_BORDER[article.category] : "";
+
   return (
     <a
       href={article.source_url}
@@ -35,7 +39,10 @@ function NewsCard({ article }: { article: NewsArticle }) {
       rel="noopener noreferrer"
       className="group"
     >
-      <Card className="h-full transition-colors hover:border-primary/40 bg-card">
+      <Card className={cn(
+        "h-full transition-colors hover:border-primary/40 bg-card",
+        categoryBorder && `border-t-2 ${categoryBorder}`
+      )}>
         {article.image_url && (
           <div className="aspect-video w-full overflow-hidden rounded-t-lg">
             <img
@@ -47,11 +54,17 @@ function NewsCard({ article }: { article: NewsArticle }) {
           </div>
         )}
         <CardContent className="p-4 flex flex-col gap-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {article.source_logo_url && (
+              <img src={article.source_logo_url} alt="" className="w-4 h-4 rounded-sm" loading="lazy" />
+            )}
             <Badge variant="secondary" className="text-xs">
               {article.source_name}
             </Badge>
-            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            {isNewToday && (
+              <Badge className="text-[9px] px-1.5 py-0 bg-primary/20 text-primary border-primary/30">New</Badge>
+            )}
+            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
           </div>
 
           <h3 className="font-semibold leading-snug line-clamp-2">
@@ -63,14 +76,23 @@ function NewsCard({ article }: { article: NewsArticle }) {
           </p>
 
           <div className="mt-auto flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(article.published_date), {
-                addSuffix: true,
-              })}
-            </span>
-            {article.tags.length > 0 && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>
+                {formatDistanceToNow(new Date(article.published_date), { addSuffix: true })}
+              </span>
+              {article.read_time_min && (
+                <>
+                  <span>·</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {article.read_time_min} min
+                  </span>
+                </>
+              )}
+            </div>
+            {article.tags && article.tags.length > 0 && (
               <div className="flex gap-1 flex-wrap justify-end">
-                {article.tags.slice(0, 3).map((tag) => (
+                {article.tags.slice(0, 2).map((tag) => (
                   <Badge
                     key={tag}
                     variant="outline"
@@ -88,22 +110,26 @@ function NewsCard({ article }: { article: NewsArticle }) {
   );
 }
 
+const CATEGORIES: { value: NewsCategory | undefined; label: string }[] = [
+  { value: undefined, label: "All" },
+  { value: "filament", label: "Filament" },
+  { value: "printer", label: "Printer" },
+  { value: "software", label: "Software" },
+  { value: "industry", label: "Industry" },
+  { value: "community", label: "Community" },
+];
+
+const CATEGORY_BORDER: Record<string, string> = {
+  filament: "border-t-cyan-500",
+  printer: "border-t-green-500",
+  software: "border-t-purple-500",
+  industry: "border-t-amber-500",
+  community: "border-t-pink-500",
+};
+
 const News = () => {
-  const [page, setPage] = useState(1);
-  const [tagFilter, setTagFilter] = useState<string | undefined>();
-
-  const { data: tagsData } = useNewsTags();
-  const { data, isLoading } = useNewsPaginated(page, PAGE_SIZE, tagFilter);
-
-  const articles = data?.articles ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const tags = tagsData ?? [];
-
-  const handleTagClick = (tag: string) => {
-    setPage(1);
-    setTagFilter((prev) => (prev === tag ? undefined : tag));
-  };
+  const [categoryFilter, setCategoryFilter] = useState<NewsCategory | undefined>();
+  const { articles, isLoading } = usePersonalizedNews(PAGE_SIZE, categoryFilter);
 
   return (
     <>
@@ -127,31 +153,19 @@ const News = () => {
           and industry trends.
         </p>
 
-        {/* Tag filter bar */}
-        {tags.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide">
+        {/* Category tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide">
+          {CATEGORIES.map((cat) => (
             <Badge
-              variant={tagFilter === undefined ? "default" : "outline"}
+              key={cat.label}
+              variant={categoryFilter === cat.value ? "default" : "outline"}
               className="cursor-pointer whitespace-nowrap shrink-0"
-              onClick={() => {
-                setTagFilter(undefined);
-                setPage(1);
-              }}
+              onClick={() => setCategoryFilter(cat.value)}
             >
-              All
+              {cat.label}
             </Badge>
-            {tags.slice(0, 12).map((tag) => (
-              <Badge
-                key={tag}
-                variant={tagFilter === tag ? "default" : "outline"}
-                className="cursor-pointer whitespace-nowrap shrink-0"
-                onClick={() => handleTagClick(tag)}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
 
         {/* Article grid */}
         {isLoading ? (
@@ -219,29 +233,11 @@ const News = () => {
           </>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
+        {/* Article count */}
+        {articles.length > 0 && (
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            Showing {articles.length} articles · Ranked by relevance to your interests
+          </p>
         )}
       </div>
     </>

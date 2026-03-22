@@ -512,3 +512,6 @@ verify_jwt = false
 
 [functions.curate-news]
 verify_jwt = false
+
+[functions.aggregate-news]
+verify_jwt = false
