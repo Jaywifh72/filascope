@@ -139,8 +139,8 @@ export function PrinterHeroSection({
             </TooltipProvider>
           </div>
 
-          {/* AEO Answer Block */}
-          <p className="text-muted-foreground leading-relaxed text-sm">
+          {/* AEO Answer Block — visually hidden, accessible to crawlers */}
+          <p className="sr-only">
             {(() => {
               const name = `${brand ? brand + ' ' : ''}${printer.model_name}`;
               const type = (printer.printer_type || printer.printer_technology || 'FDM').toUpperCase();
@@ -237,29 +237,20 @@ export function PrinterHeroSection({
             reviewCount={printer.review_count_aggregated}
           />
 
-          {/* Quick Specs Grid - 2x2 on mobile, 4 columns on larger screens */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-            <QuickSpecCard
-              icon={Box} 
-              label="Build Volume" 
-              value={buildVolume} 
-            />
-            <QuickSpecCard 
-              icon={Gauge} 
-              label="Speed" 
-              value={maxSpeed} 
-            />
-            <QuickSpecCard 
-              icon={Thermometer} 
-              label="Nozzle Temp" 
-              value={maxNozzleTemp} 
-            />
-            <QuickSpecCard 
-              icon={hasWifi ? Wifi : WifiOff} 
-              label="Connectivity" 
-              value={hasWifi ? "Wi-Fi" : "No Wi-Fi"} 
-            />
-          </div>
+          {/* Quick Specs Grid — only show specs with real data */}
+          {(() => {
+            const specs = [
+              buildVolume !== "N/A" && <QuickSpecCard key="vol" icon={Box} label="Build Volume" value={buildVolume} />,
+              maxSpeed !== "N/A" && <QuickSpecCard key="speed" icon={Gauge} label="Speed" value={maxSpeed} />,
+              maxNozzleTemp !== "N/A" && <QuickSpecCard key="temp" icon={Thermometer} label="Nozzle Temp" value={maxNozzleTemp} />,
+              <QuickSpecCard key="wifi" icon={hasWifi ? Wifi : WifiOff} label="Connectivity" value={hasWifi ? "Wi-Fi" : "No Wi-Fi"} />,
+            ].filter(Boolean);
+            return specs.length > 0 ? (
+              <div className={`grid grid-cols-2 ${specs.length >= 4 ? 'lg:grid-cols-4' : specs.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-3 mb-4`}>
+                {specs}
+              </div>
+            ) : null;
+          })()}
 
           {/* Admin: Data Quality Indicator */}
           {isAdmin && (

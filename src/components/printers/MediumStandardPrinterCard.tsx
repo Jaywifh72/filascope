@@ -347,8 +347,8 @@ export default function MediumStandardPrinterCard({
               )}
             </div>
 
-            {/* Spec Micro-Grid — 4 columns, hidden on mobile */}
-            <div className="hidden sm:grid grid-cols-4 gap-0">
+            {/* Spec Micro-Grid — 4 columns, hidden on mobile, hidden if no specs */}
+            <div className={`${(printer.build_volume_x_mm || printer.max_print_speed_mms || printer.max_nozzle_temp_c || kinematics) ? 'hidden sm:grid' : 'hidden'} grid-cols-4 gap-0`}>
               <div className="text-center py-1.5 min-w-0 border-r border-border/30">
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-0.5">Vol</span>
                 <span className={`text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis block ${
