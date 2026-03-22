@@ -265,7 +265,7 @@ const DEFAULT_FILTERS = {
   searchTerm: "",
   selectedBrands: [],
   priceRange: [0, 100] as [number, number],
-  sortBy: "filascope_score",
+  sortBy: "scoring-desc",
   matte: false,
   silk: false,
   metallic: false,
@@ -520,10 +520,20 @@ const MATERIAL_PAA: Record<string, { question: string; answer: string }[]> = {
   ],
 };
 
+const SORT_OPTIONS = [
+  { value: "scoring-desc", label: "Best Match" },
+  { value: "price-asc", label: "Price: Low → High" },
+  { value: "price-desc", label: "Price: High → Low" },
+  { value: "alpha-asc", label: "Name: A → Z" },
+  { value: "strength-desc", label: "Strongest First" },
+  { value: "print-desc", label: "Easiest to Print" },
+];
+
 export default function FilamentCategoryPage() {
   const { slug } = useParams<{ slug?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [sortBy, setSortBy] = useState("scoring-desc");
   const { region: currentRegion } = useRegion();
 
   // Intelligent search
@@ -573,6 +583,7 @@ export default function FilamentCategoryPage() {
     ...DEFAULT_FILTERS,
     selectedMaterials: config ? config.materials : [],
     searchTerm: searchParam,
+    sortBy,
   };
 
   // Fetch product count for the material
@@ -786,6 +797,30 @@ export default function FilamentCategoryPage() {
             />
           </div>
         </SearchBarGated>
+
+        {/* Sort & results bar */}
+        {!isAiActive && !isLoading && groups.length > 0 && (
+          <div className="flex items-center justify-between mb-4 gap-4">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{totalCount.toLocaleString()}</span> filaments
+              {slug ? ` in ${label}` : ""}
+              {searchParam ? ` matching "${searchParam}"` : ""}
+            </p>
+            <div className="flex items-center gap-2">
+              <label htmlFor="sort-select" className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">Sort by:</label>
+              <select
+                id="sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-md px-3 py-1.5 focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Conditional: AI results vs normal grid */}
         {isAiActive ? (

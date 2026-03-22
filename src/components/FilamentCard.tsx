@@ -740,15 +740,15 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
               )}
             </div>
             
-            {/* Store domain link */}
+            {/* Store domain link — revealed on hover */}
             {(() => {
               const storeDomain = extractStoreDomain(filament.product_url);
                 return storeDomain ? (
-                <a 
+                <a
                   href={filament.product_url!}
                   target="_blank"
                   rel="nofollow sponsored noopener noreferrer"
-                  className="text-xs text-primary hover:underline"
+                  className="text-xs text-primary hover:underline opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                   onClick={(e) => e.stopPropagation()}
                 >
                   at {storeDomain}
@@ -839,7 +839,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           ELEMENT 3b: Nozzle Temp Compact Row
           ═══════════════════════════════════════════════════════════════ */}
       {(filament.nozzle_temp_min_c || filament.nozzle_temp_max_c) && (
-        <div className="px-6 pb-2 flex items-center gap-1.5">
+        <div className="px-6 pb-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 max-h-0 group-hover:max-h-8 overflow-hidden">
           <Thermometer className="w-3 h-3 text-muted-foreground" />
           <span className="text-xs text-muted-foreground">
             {filament.nozzle_temp_min_c && filament.nozzle_temp_max_c
