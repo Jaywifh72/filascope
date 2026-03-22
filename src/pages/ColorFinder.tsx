@@ -135,13 +135,13 @@ export default function ColorFinder() {
         {/* Header */}
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-pink-500/10 border border-pink-500/20">
-              <Palette className="w-5 h-5 text-pink-400" />
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <Palette className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Find 3D Printer Filaments by Color — Color Matching Tool</h1>
+              <h1 className="text-2xl font-bold text-foreground">Color Finder</h1>
               <p className="text-sm text-muted-foreground">
-                FilaScope's color matching tool compares filament colors across 48+ brands using hex codes and visual swatches. Pick a color below or enter a hex code to find the closest matching filaments.
+                Match any color to 16,000+ filaments across 49+ brands. Pick a color or enter a hex code.
               </p>
             </div>
           </div>
@@ -165,9 +165,10 @@ export default function ColorFinder() {
             className={cn(
               "px-4 py-1.5 text-sm rounded-md transition-all flex items-center gap-1.5",
               mode === 'hueforge'
-                ? "bg-amber-500/20 text-amber-400 font-medium"
+                ? "bg-primary/20 text-primary font-medium"
                 : "text-muted-foreground hover:text-foreground"
             )}
+            title="Plan multi-layer color combinations for HueForge lithophane prints"
           >
             <Layers className="w-3.5 h-3.5" /> HueForge Stack
           </button>
