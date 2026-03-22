@@ -78,12 +78,12 @@ export default function FinderV2() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('printers')
-        .select('*, brands!inner(name)')
+        .select('*, printer_brands(brand)')
         .order('model_name');
       if (error) throw error;
       return (data ?? []).map((p: any) => ({
         ...p,
-        brand: (p.brands as any)?.name ?? 'Unknown',
+        brand: (p.printer_brands as any)?.brand ?? 'Unknown',
       }));
     },
     staleTime: 10 * 60 * 1000,
@@ -126,11 +126,14 @@ export default function FinderV2() {
   const { data: brandCount = 0 } = useQuery({
     queryKey: ['finderV2-brand-count'],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from('brands')
-        .select('*', { count: 'exact', head: true });
+      // brands table is not exposed via API — count distinct vendors from filaments
+      const { data, error } = await supabase
+        .from('filaments')
+        .select('vendor')
+        .not('vendor', 'is', null);
       if (error) throw error;
-      return count ?? 0;
+      const unique = new Set((data ?? []).map((r: any) => r.vendor));
+      return unique.size;
     },
     staleTime: 30 * 60 * 1000,
   });
