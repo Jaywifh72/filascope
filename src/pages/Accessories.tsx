@@ -1,7 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { CircleDot, Square, Layers, Wrench } from "lucide-react";
+import { CircleDot, Square, Layers } from "lucide-react";
+import { DocumentHead } from "@/components/seo/DocumentHead";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import HotendList from "@/components/HotendList";
 import BuildPlateList from "@/components/BuildPlateList";
 import AMSList from "@/components/AMSList";
@@ -36,44 +38,22 @@ export default function Accessories() {
   });
 
   return (
+    <>
+    <DocumentHead
+      title="3D Printer Accessories — Hotends, Build Plates & AMS Systems | FilaScope"
+      description={`Browse ${stats?.hotends || 200}+ hotends, ${stats?.buildPlates || 90} build plates, and ${stats?.amsSystems || 14} AMS/MMU systems from ${stats?.brands || 25} brands. Compare specs and prices.`}
+      canonical="https://filascope.com/accessories"
+    />
     <div className="min-h-screen bg-background">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        {/* Hero Header */}
-        <div className="space-y-3 pb-4 sm:pb-6 border-b border-border/50">
-          {/* Badge */}
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs sm:text-sm font-medium">
-            <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            UPGRADE CENTER
-          </span>
-          
-          {/* Title */}
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Accessories</h1>
-          
-          {/* Subtitle */}
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Browse hotends, build plates, and multi-material systems for your 3D printer
+        <Breadcrumbs items={[{ name: "Accessories", url: "/accessories" }]} />
+
+        {/* Header — compact */}
+        <div className="space-y-2 pb-4 border-b border-border/50">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">3D Printer Accessories</h1>
+          <p className="text-sm text-muted-foreground">
+            Browse hotends, build plates, and multi-material systems from {stats?.brands || 25}+ brands.
           </p>
-          
-          {/* Quick Stats - Stack on mobile */}
-          {stats && (
-            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1 sm:gap-0 text-sm sm:text-base text-gray-400 mt-2">
-              <span className="whitespace-nowrap">
-                <span className="text-primary font-medium">{stats.hotends}</span> Hotends
-              </span>
-              <span className="hidden sm:inline mx-2">•</span>
-              <span className="whitespace-nowrap">
-                <span className="text-primary font-medium">{stats.buildPlates}</span> Build Plates
-              </span>
-              <span className="hidden sm:inline mx-2">•</span>
-              <span className="whitespace-nowrap">
-                <span className="text-primary font-medium">{stats.amsSystems}</span> AMS/MMU Systems
-              </span>
-              <span className="hidden sm:inline mx-2">•</span>
-              <span className="whitespace-nowrap">
-                <span className="text-primary font-medium">{stats.brands}</span> Brands
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Tabs - Horizontal scroll on mobile, or 2x2 grid */}
@@ -85,7 +65,7 @@ export default function Accessories() {
             }`}
           >
             <CircleDot className="w-4 h-4" />
-            Hotends
+            Hotends{stats?.hotends ? <span className="text-xs text-muted-foreground ml-1">({stats.hotends})</span> : ''}
             <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-all duration-300 ${
               activeTab === "hotends" ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
             }`} />
@@ -97,7 +77,7 @@ export default function Accessories() {
             }`}
           >
             <Square className="w-4 h-4" />
-            Build Plates
+            Build Plates{stats?.buildPlates ? <span className="text-xs text-muted-foreground ml-1">({stats.buildPlates})</span> : ''}
             <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-all duration-300 ${
               activeTab === "build-plates" ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
             }`} />
@@ -109,7 +89,7 @@ export default function Accessories() {
             }`}
           >
             <Layers className="w-4 h-4" />
-            AMS/MMU
+            AMS/MMU{stats?.amsSystems ? <span className="text-xs text-muted-foreground ml-1">({stats.amsSystems})</span> : ''}
             <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-all duration-300 ${
               activeTab === "ams" ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
             }`} />
@@ -133,5 +113,6 @@ export default function Accessories() {
         </Tabs>
       </div>
     </div>
+    </>
   );
 }
