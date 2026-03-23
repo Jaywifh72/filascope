@@ -123,10 +123,10 @@ export default function FilamentDatabase() {
   return (
     <div className="min-h-screen bg-background">
       <DocumentHead
-        title={`3D Filament Database — Compare ${displayTotal}+ Products | FilaScope`}
-        description={`The most comprehensive 3D printer filament database. Compare PLA, PETG, ABS & more across ${displayBrands}+ brands. Filter by specs, price, TD value & compatibility.`}
+        title="3D Printer Filament Database — Search 16,000+ Filaments by Spec"
+        description="Searchable database of 16,000+ 3D printer filaments with material specs, temperatures, prices, and HueForge TD values. Filter by brand, material, color, and more."
         ogType="website"
-        keywords="3D printer filament database, compare filaments, filament specs, filament prices, PLA filament, PETG filament, filament comparison tool"
+        keywords="3D printer filament database, search filaments, filament specs, filament prices, PLA filament, PETG filament, filament comparison tool, HueForge TD values"
       />
       <BreadcrumbSchema items={breadcrumbs} />
       <WebApplicationSchema

@@ -108,12 +108,12 @@ export default function ColorFinder() {
   return (
     <>
       <DocumentHead
-        title="Filament Color Finder & Picker — Match Any Color to 3D Filament | FilaScope"
-        description="Free filament color finder: match any color to 1,000+ 3D printer filaments from 48+ brands. Search by hex code, color name, or visual picker. Find exact color matches for HueForge & printing projects."
+        title="3D Printer Filament Color Finder — Match Any Shade to 16,000+ Filaments"
+        description="Free filament color finder tool — match any hex color to 16,000+ 3D printer filaments from 49+ brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
         canonical="https://filascope.com/colors"
-        ogTitle="Filament Color Finder & Picker — Match Any Color to 3D Filament | FilaScope"
-        ogDescription="Match any color to real 3D printer filaments across 48+ brands. Search by hex code, color name, or visual picker."
-        keywords="filament color finder, filament color picker, 3D printing color match, hex color filament, HueForge colors, filament color comparison"
+        ogTitle="3D Printer Filament Color Finder — Match Any Shade to 16,000+ Filaments"
+        ogDescription="Free filament color finder tool — match any hex color to 16,000+ 3D printer filaments from 49+ brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
+        keywords="filament color finder, 3d printer filament color picker, filament color match, hex to filament, 3D printing color tool, HueForge color finder, filament color comparison"
       />
       <BreadcrumbSchema items={[{ name: 'Home', url: '/' }, { name: 'Color Finder', url: '/colors' }]} />
       <Breadcrumbs
@@ -323,6 +323,26 @@ export default function ColorFinder() {
               >
                 Best Filaments for HueForge <ArrowRight className="w-3 h-3" />
               </Link>
+            </div>
+          </section>
+
+          {/* Related Resources */}
+          <section className="bg-muted/30 rounded-xl p-6 border border-border">
+            <h2 className="text-lg font-semibold mb-4">Related Resources</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { to: '/filaments', label: 'Browse 16,000+ Filaments by Spec' },
+                { to: '/filament-temperature-chart', label: '3D Filament Temperature Chart' },
+                { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
+                { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
+                { to: '/guides/petg-vs-tpu', label: 'PETG vs TPU Comparison' },
+                { to: '/guides/best-filaments-for-beginners', label: 'Best Filaments for Beginners' },
+              ].map((link) => (
+                <Link key={link.to} to={link.to} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5 text-primary shrink-0" />
+                  {link.label}
+                </Link>
+              ))}
             </div>
           </section>
 

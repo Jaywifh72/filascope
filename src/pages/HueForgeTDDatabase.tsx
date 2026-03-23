@@ -448,10 +448,8 @@ export default function HueForgeTDDatabase() {
   };
 
   // ── SEO meta ────────────────────────────────────────────────────────
-  const seoTitle = 'HueForge TD Value Database — Filament Transmissivity Data for Lithophanes | FilaScope';
-  const seoDescription = totalCount > 100
-    ? `Search the world's largest HueForge TD value database with transmissivity data for ${totalCount}+ filaments from ${brandCount}+ brands. Find the perfect filament for lithophane printing.`
-    : "Search the world's largest HueForge TD value database with transmissivity data for 500+ filaments from 40+ brands. Find the perfect filament for lithophane printing with FilaScope.";
+  const seoTitle = 'HueForge TD Database — Transmission Distance Values for 1,000+ Filaments';
+  const seoDescription = 'The largest HueForge Transmission Distance database online — TD values for 1,000+ filaments across 49+ brands. Essential reference for filament painting and multi-color lithophane projects.';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
@@ -460,7 +458,7 @@ export default function HueForgeTDDatabase() {
         description={seoDescription}
         ogTitle={seoTitle}
         ogDescription={seoDescription}
-        keywords="HueForge TD values, filament TD database, transmissivity data, lithophane filament, HueForge transmissivity, best filament for HueForge"
+        keywords="HueForge TD database, transmission distance values, filament TD data, lithophane filament, HueForge transmissivity, filament painting, best filament for HueForge"
       />
 
       <Breadcrumbs

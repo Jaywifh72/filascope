@@ -404,13 +404,13 @@ const Brands = () => {
   return (
     <>
       <DocumentHead
-        title={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        description={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
-        ogTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        ogDescription={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
-        twitterTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Brands | FilaScope`}
-        twitterDescription={`Compare ${brandCount || 48}+ 3D filament brands with live pricing & specs. Explore Bambu Lab, Polymaker, Prusament, eSUN & more on FilaScope.`}
-        keywords="3D filament brands, filament manufacturers, Bambu Lab filament, Polymaker, Prusament, eSUN, filament reviews, filament prices"
+        title="3D Printer Filament Brands — Compare 49+ Manufacturers | FilaScope"
+        description="Browse 49+ 3D printer filament brands with pricing, specs, and ratings. Compare Bambu Lab, Prusament, Hatchbox, eSUN, Polymaker, and more. Find the best brand for your printer."
+        ogTitle="3D Printer Filament Brands — Compare 49+ Manufacturers | FilaScope"
+        ogDescription="Browse 49+ 3D printer filament brands with pricing, specs, and ratings. Compare Bambu Lab, Prusament, Hatchbox, eSUN, Polymaker, and more. Find the best brand for your printer."
+        twitterTitle="3D Printer Filament Brands — Compare 49+ Manufacturers | FilaScope"
+        twitterDescription="Browse 49+ 3D printer filament brands with pricing, specs, and ratings. Compare Bambu Lab, Prusament, Hatchbox, eSUN, Polymaker, and more. Find the best brand for your printer."
+        keywords="3D printer filament brands, filament manufacturers, Bambu Lab filament, Polymaker, Prusament, Hatchbox, eSUN, filament reviews, filament prices, best filament brand"
       />
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}

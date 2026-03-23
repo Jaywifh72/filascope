@@ -445,8 +445,8 @@ const Compare = () => {
   const maxSlots = 4;
   const emptySlots = maxSlots - filaments.length;
 
-  const pageTitle = 'Compare 3D Filaments Side-by-Side | FilaScope';
-  const pageDescription = 'Compare 3D printer filaments side by side. Specs, prices, TD values, printer compatibility & material properties. Make data-driven filament choices.';
+  const pageTitle = 'Compare 3D Printer Filaments Side by Side — Specs, Prices & Ratings';
+  const pageDescription = 'Compare any 3D printer filaments side by side. View specs, pricing, TD values, and compatibility data in one view. Make smarter filament choices with real data.';
 
   return (
     <>

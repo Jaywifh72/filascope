@@ -203,11 +203,12 @@ export default function FilamentTemperatureChart() {
   return (
     <>
       <DocumentHead
-        title="3D Printer Filament Temperature Chart — Complete Settings Reference | FilaScope"
-        description="Complete 3D filament temperature chart with nozzle and bed temp settings for PLA, PETG, ABS, TPU, Nylon, ASA, PC and 15+ materials. Updated 2026."
+        title="3D Filament Temperature Chart 2026 — Nozzle & Bed Temps for 25+ Materials"
+        description="Free printable 3D filament temperature chart — nozzle temps, bed temps, speed & enclosure settings for PLA, PETG, ABS, TPU, Nylon, PC and 20+ materials. Updated March 2026."
         canonical={canonical}
-        ogTitle="3D Printer Filament Temperature Chart — Complete Reference"
-        ogDescription="Complete 3D filament temperature chart with nozzle and bed temp settings for PLA, PETG, ABS, TPU, Nylon, ASA, PC and 15+ materials."
+        ogTitle="3D Filament Temperature Chart 2026 — Nozzle & Bed Temps for 25+ Materials"
+        ogDescription="Free printable 3D filament temperature chart — nozzle temps, bed temps, speed & enclosure settings for PLA, PETG, ABS, TPU, Nylon, PC and 20+ materials. Updated March 2026."
+        keywords="filament temperature chart, 3d printer temperature settings, nozzle temperature guide, bed temperature chart, PLA temperature, PETG temperature, ABS temperature, filament print settings 2026"
       />
       <ArticleSchema
         headline="3D Printer Filament Temperature Chart"
@@ -218,6 +219,25 @@ export default function FilamentTemperatureChart() {
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: '3D Printer Filament Temperature Settings' }}
         proficiencyLevel="Beginner"
+      />
+      {/* ItemList schema for temperature data — helps search engines understand the chart content */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: "3D Printer Filament Temperature Chart",
+            description: "Comprehensive temperature settings for 25+ 3D printer filament materials including nozzle temperature, bed temperature, print speed, and enclosure requirements.",
+            numberOfItems: FILAMENT_DATA.length,
+            itemListElement: FILAMENT_DATA.map((f, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: `${f.material} Temperature Settings`,
+              description: `${f.material}: Nozzle ${f.nozzleMin}–${f.nozzleMax}°C, Bed ${f.bedMin}–${f.bedMax}°C, Speed ${f.speedMin}–${f.speedMax} mm/s. Enclosure: ${f.enclosure}. ${f.notes}`,
+            })),
+          }),
+        }}
       />
 
       <div className="min-h-screen bg-background">
@@ -468,12 +488,16 @@ export default function FilamentTemperatureChart() {
             <div className="grid sm:grid-cols-2 gap-3">
               {[
                 { to: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide (in-depth)' },
-                { to: '/filaments', label: 'Browse all filaments with brand-specific temps' },
+                { to: '/filaments', label: 'Browse 16,000+ filaments with brand-specific temps' },
+                { to: '/colors', label: 'Filament Color Finder — match any color' },
+                { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
+                { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
+                { to: '/guides/petg-vs-tpu', label: 'PETG vs TPU — which to choose?' },
+                { to: '/guides/tpu-vs-petg', label: 'TPU vs PETG Comparison' },
+                { to: '/hueforge-td-database', label: 'HueForge TD Database' },
                 { to: '/matrix', label: 'Printer\u2013Filament Compatibility Matrix' },
                 { to: '/compare', label: 'Compare filaments side by side' },
                 { to: '/guides/how-to-choose-3d-printer-filament', label: 'How to Choose 3D Printer Filament' },
-                { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
-                { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
                 { to: '/guides/3d-printer-filament-types-explained', label: 'Filament Types Explained' },
               ].map((link) => (
                 <Link key={link.to} to={link.to} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">

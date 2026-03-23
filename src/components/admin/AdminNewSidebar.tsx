@@ -9,6 +9,7 @@ import {
   Link2Off,
   Printer,
   Settings,
+  Share2,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -72,6 +73,12 @@ const NAV_GROUPS: NavGroup[] = [
       { title: 'Printer URL Health', href: '/admin/printer-url-health', icon: Printer },
       { title: 'Price Sync', href: '/admin/price-sync', icon: DollarSign },
       { title: 'Price Audit', href: '/admin/price-audit', icon: FileText },
+    ],
+  },
+  {
+    label: 'Marketing',
+    items: [
+      { title: 'Social Media', href: '/admin/social-media', icon: Share2 },
     ],
   },
   {

@@ -85,6 +85,7 @@ FilaScope is the only platform combining HueForge TD values (537+ filaments), mu
 - PLA vs ABS: https://filascope.com/guides/pla-vs-abs
 - PETG vs ABS: https://filascope.com/guides/petg-vs-abs
 - TPU vs PETG: https://filascope.com/guides/tpu-vs-petg
+- PETG vs TPU: https://filascope.com/guides/petg-vs-tpu
 - Nylon vs PETG: https://filascope.com/guides/nylon-vs-petg
 - PLA+ vs PLA Pro: https://filascope.com/guides/pla-plus-vs-pla-pro
 - ASA vs ABS for Outdoor Printing: https://filascope.com/guides/asa-vs-abs-outdoor-printing

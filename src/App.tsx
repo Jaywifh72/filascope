@@ -138,6 +138,7 @@ const AdminFilamentOnboarding = lazy(() => import("./pages/admin/BrandCatalogSyn
 const AdminAffiliatesNew = lazy(() => import("./pages/admin/Affiliates"));
 const AdminDataIntegrity = lazy(() => import("./pages/admin/DataIntegrity"));
 const AdminAmazonSync = lazy(() => import("./pages/admin/AmazonSync"));
+const AdminSocialMedia = lazy(() => import("./pages/admin/SocialMedia"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const FilamentCategoryPage = lazy(() => import("./pages/FilamentCategoryPage"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
@@ -202,6 +203,8 @@ const PLAvsABS = lazy(() => import("./pages/PLAvsABS"));
 const PETGvsABS = lazy(() => import("./pages/PETGvsABS"));
 const TPUvsPETG = lazy(() => import("./pages/TPUvsPETG"));
 const NylonvsPETG = lazy(() => import("./pages/NylonvsPETG"));
+const PETGvsTpu = lazy(() => import("./pages/PETGvsTpu"));
+const BestPLAFilament = lazy(() => import("./pages/BestPLAFilament"));
 const HowToChooseFilament = lazy(() => import("./pages/HowToChooseFilament"));
 const FilamentTypesExplained = lazy(() => import("./pages/FilamentTypesExplained"));
 const BestWhiteFilaments = lazy(() => import("./pages/BestWhiteFilaments"));
@@ -331,6 +334,7 @@ const App = () => (
                   <Route path="/admin/affiliates" element={<AdminNewLayoutModule><AdminAffiliatesNew /></AdminNewLayoutModule>} />
                   <Route path="/admin/data-integrity" element={<AdminNewLayoutModule><AdminDataIntegrity /></AdminNewLayoutModule>} />
                   <Route path="/admin/amazon-sync" element={<AdminNewLayoutModule><AdminAmazonSync /></AdminNewLayoutModule>} />
+                  <Route path="/admin/social-media" element={<AdminNewLayoutModule><AdminSocialMedia /></AdminNewLayoutModule>} />
                   <Route path="/admin/*" element={<AdminRedirect />} />
                   <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
                   <Route path="/old-admin/dashboard" element={<AdminDashboard />} />
@@ -408,6 +412,8 @@ const App = () => (
                   <Route path="/guides/petg-vs-abs" element={<PETGvsABS />} />
                   <Route path="/guides/tpu-vs-petg" element={<TPUvsPETG />} />
                   <Route path="/guides/nylon-vs-petg" element={<NylonvsPETG />} />
+                  <Route path="/guides/petg-vs-tpu" element={<PETGvsTpu />} />
+                  <Route path="/guides/best-pla-filaments" element={<BestPLAFilament />} />
                   <Route path="/guides/how-to-choose-3d-printer-filament" element={<HowToChooseFilament />} />
                   <Route path="/guides/3d-printer-filament-types-explained" element={<FilamentTypesExplained />} />
                   <Route path="/guides/best-filaments-for-beginners" element={<BestFilamentsForBeginners />} />
@@ -455,6 +461,9 @@ const App = () => (
                   <Route path="/asa-vs-abs" element={<Navigate to="/materials/compare?a=asa&b=abs" replace />} />
                   <Route path="/tpu-vs-pla" element={<Navigate to="/materials/compare?a=tpu&b=pla" replace />} />
                   <Route path="/nylon-vs-petg" element={<Navigate to="/materials/compare?a=nylon&b=petg" replace />} />
+                  <Route path="/petg-vs-tpu" element={<Navigate to="/guides/petg-vs-tpu" replace />} />
+                  <Route path="/best-pla-filament" element={<Navigate to="/guides/best-pla-filaments" replace />} />
+                  <Route path="/best-pla-filaments" element={<Navigate to="/guides/best-pla-filaments" replace />} />
                   {/* Sitemap routes — _redirects 302s aren't honoured on Lovable hosting, so redirect here */}
                   <Route path="/sitemap.xml"           element={<SitemapRedirect path="/sitemap.xml" />} />
                   <Route path="/sitemap-pages.xml"     element={<SitemapRedirect path="/sitemap-pages.xml" />} />

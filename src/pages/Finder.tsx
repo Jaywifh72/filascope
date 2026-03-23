@@ -1042,18 +1042,18 @@ const Finder = () => {
         { targetId: "filament-results", label: "Skip to results" },
       ]} />
       <DocumentHead
-        title="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        description="Compare 1,080+ 3D printer filaments from 48+ brands. Live pricing, HueForge TD values & detailed specs. Find your perfect filament."
-        ogTitle="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        ogDescription="Compare 1,080+ 3D printer filaments from 48+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility, and detailed specs."
+        title="FilaScope — Compare 16,000+ 3D Printer Filaments | Specs, Prices & TD Values"
+        description="Compare 16,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
+        ogTitle="FilaScope — Compare 16,000+ 3D Printer Filaments | Specs, Prices & TD Values"
+        ogDescription="Compare 16,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
         ogType="website"
         ogUrl="https://filascope.com"
         ogSiteName="FilaScope"
         ogImage="https://filascope.com/og-image.png"
         twitterCard="summary_large_image"
         twitterSite="@FilaScope"
-        twitterTitle="FilaScope — Compare 3D Printer Filaments, Specs & Prices"
-        twitterDescription="Compare 1,080+ 3D printer filaments from 48+ brands. Live pricing, HueForge TD values & detailed specs."
+        twitterTitle="FilaScope — Compare 16,000+ 3D Printer Filaments | Specs, Prices & TD Values"
+        twitterDescription="Compare 16,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
         twitterImage="https://filascope.com/og-image.png"
         keywords="3D printer filament comparison, filament database, compare filaments, filament specs, HueForge TD values, filament prices, 3D printing"
       />
@@ -1064,7 +1064,7 @@ const Finder = () => {
           "@context": "https://schema.org",
           "@type": "Dataset",
           "name": "FilaScope 3D Printer Filament Database",
-          "description": "Structured database of 1,080+ 3D printer filaments from 48+ brands with material specifications, nozzle and bed temperatures, HueForge Transmission Distance values, real-time pricing from 15+ retailers, printer compatibility data, and FilaScore quality ratings.",
+          "description": "Structured database of 16,000+ 3D printer filaments from 49+ brands with material specifications, nozzle and bed temperatures, HueForge Transmission Distance values, real-time pricing from 15+ retailers, printer compatibility data, and FilaScore quality ratings.",
           "url": "https://filascope.com/filaments",
           "keywords": ["3D printer filament database","filament specifications","HueForge TD values","filament price comparison","PLA filament data","PETG filament data","3D printing materials"],
           "creator": {"@type": "Organization","name": "FilaScope","url": "https://filascope.com"},

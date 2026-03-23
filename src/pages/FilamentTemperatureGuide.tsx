@@ -65,11 +65,11 @@ export default function FilamentTemperatureGuide() {
   return (
     <>
       <DocumentHead
-        title="3D Printer Filament Temperature Guide — Settings Chart for Every Material | FilaScope"
-        description="Complete filament temperature settings chart for PLA, PETG, ABS, TPU, Nylon, ASA & more. Nozzle temp, bed temp, and print speed for every material type."
+        title="Filament Temperature Guide 2026 — How to Set Perfect Print Temps"
+        description="Step-by-step guide to choosing the right nozzle & bed temperature for every 3D printer filament type. Temperature towers, troubleshooting, and expert tips for PLA, PETG, ABS, TPU, and more."
         canonical={canonical}
-        ogTitle="3D Printer Filament Temperature Guide — Every Material"
-        ogDescription="Complete filament temperature settings chart for PLA, PETG, ABS, TPU, Nylon, ASA & more. Nozzle temp, bed temp, and print speed for every material type."
+        ogTitle="Filament Temperature Guide 2026 — How to Set Perfect Print Temps"
+        ogDescription="Step-by-step guide to choosing the right nozzle & bed temperature for every 3D printer filament type. Temperature towers, troubleshooting, and expert tips for PLA, PETG, ABS, TPU, and more."
       />
       <ArticleSchema
         headline="3D Printer Filament Temperature Guide"
