@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 
 const BASE_URL = 'https://filascope.com';
 
@@ -34,7 +34,7 @@ export function ArticleSchema({
 }: ArticleSchemaProps) {
   const fullUrl = url.startsWith('http') ? url : `${BASE_URL}${url}`;
 
-  useJsonLd({
+  const jsonLd = {
     '@context': 'https://schema.org',
     '@type': articleType,
     headline,
@@ -59,7 +59,9 @@ export function ArticleSchema({
         cssSelector: speakableCssSelectors,
       },
     }),
-  });
+  };
 
-  return null;
+  useJsonLd(jsonLd);
+
+  return <JsonLd jsonLd={jsonLd} />;
 }

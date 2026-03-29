@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 
 interface CollectionPageSchemaProps {
   name: string;
@@ -26,5 +26,5 @@ export function CollectionPageSchema({
   };
 
   useJsonLd(jsonLd);
-  return null;
+  return <JsonLd jsonLd={jsonLd} />;
 }

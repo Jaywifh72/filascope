@@ -17,6 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: sudo apt-get install -y jq
+
       - name: Extract URLs from sitemaps
         id: urls
         run: |

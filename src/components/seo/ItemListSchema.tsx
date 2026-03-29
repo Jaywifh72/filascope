@@ -1,4 +1,5 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
+import { buildOfferBlock } from './schemaHelpers';
 
 interface ItemListItem {
   name: string;
@@ -25,41 +26,37 @@ export function ItemListSchema({
   items,
   itemListOrder = 'Ascending',
 }: ItemListSchemaProps) {
-  useJsonLd(
-    items && items.length > 0
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'ItemList',
-          name,
-          ...(description && { description }),
-          itemListOrder: `https://schema.org/ItemListOrder${itemListOrder}`,
-          numberOfItems: items.length,
-          itemListElement: items.map((item, index) => ({
+  const jsonLd = items && items.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name,
+        ...(description && { description }),
+        itemListOrder: `https://schema.org/ItemListOrder${itemListOrder}`,
+        numberOfItems: items.length,
+        itemListElement: items.map((item, index) => {
+          const offerBlock = buildOfferBlock(item.price, item.priceCurrency || 'USD', true);
+          return {
             '@type': 'ListItem',
             position: item.position || index + 1,
             name: item.name,
             url: item.url,
             item: {
-              '@type': (item.price != null && item.priceCurrency) ? 'Product' : 'Thing',
+              '@type': offerBlock ? 'Product' : 'Thing',
               name: item.name,
               url: item.url,
               ...(item.image && { image: item.image }),
               ...(item.description && { description: item.description }),
               ...(item.brand && { brand: { '@type': 'Brand', name: item.brand } }),
               ...(item.material && { material: item.material }),
-              ...(item.price != null && item.priceCurrency && {
-                offers: {
-                  '@type': 'Offer',
-                  price: item.price,
-                  priceCurrency: item.priceCurrency,
-                  availability: 'https://schema.org/InStock',
-                },
-              }),
+              ...(offerBlock && { offers: offerBlock }),
             },
-          })),
-        }
-      : null,
-  );
+          };
+        }),
+      }
+    : null;
 
-  return null;
+  useJsonLd(jsonLd);
+
+  return <JsonLd jsonLd={jsonLd} />;
 }

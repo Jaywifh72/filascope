@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 
 interface HowToStep {
   name: string;
@@ -26,32 +26,32 @@ export function HowToSchema({
   supply,
   tool,
 }: HowToSchemaProps) {
-  useJsonLd(
-    steps && steps.length > 0
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'HowTo',
-          name,
-          description,
-          ...(totalTime && { totalTime }),
-          ...(image && { image }),
-          ...(supply && {
-            supply: supply.map((item) => ({ '@type': 'HowToSupply', name: item })),
-          }),
-          ...(tool && {
-            tool: tool.map((item) => ({ '@type': 'HowToTool', name: item })),
-          }),
-          step: steps.map((step, index) => ({
-            '@type': 'HowToStep',
-            position: index + 1,
-            name: step.name,
-            text: step.text,
-            ...(step.image && { image: step.image }),
-            ...(step.url && { url: step.url }),
-          })),
-        }
-      : null,
-  );
+  const jsonLd = steps && steps.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'HowTo',
+        name,
+        description,
+        ...(totalTime && { totalTime }),
+        ...(image && { image }),
+        ...(supply && {
+          supply: supply.map((item) => ({ '@type': 'HowToSupply', name: item })),
+        }),
+        ...(tool && {
+          tool: tool.map((item) => ({ '@type': 'HowToTool', name: item })),
+        }),
+        step: steps.map((step, index) => ({
+          '@type': 'HowToStep',
+          position: index + 1,
+          name: step.name,
+          text: step.text,
+          ...(step.image && { image: step.image }),
+          ...(step.url && { url: step.url }),
+        })),
+      }
+    : null;
 
-  return null;
+  useJsonLd(jsonLd);
+
+  return <JsonLd jsonLd={jsonLd} />;
 }

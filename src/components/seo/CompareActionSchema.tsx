@@ -1,4 +1,5 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
+import { buildOfferBlock } from './schemaHelpers';
 
 const BASE_URL = 'https://filascope.com';
 
@@ -39,6 +40,7 @@ export function CompareActionSchema({ products }: CompareActionSchemaProps) {
               ? `${BASE_URL}/filament/${p.slug}`
               : `${BASE_URL}/filament/${p.id}`;
 
+            const offerBlock = buildOfferBlock(p.price, p.currency || 'USD', true);
             const item: Record<string, unknown> = {
               '@type': 'ListItem',
               position: i + 1,
@@ -52,14 +54,7 @@ export function CompareActionSchema({ products }: CompareActionSchemaProps) {
                   brand: { '@type': 'Brand', name: p.brand },
                 }),
                 ...(p.material && { material: p.material }),
-                ...(p.price != null && {
-                  offers: {
-                    '@type': 'Offer',
-                    price: p.price.toFixed(2),
-                    priceCurrency: p.currency || 'USD',
-                    availability: 'https://schema.org/InStock',
-                  },
-                }),
+                ...(offerBlock && { offers: offerBlock }),
               },
             };
 
@@ -70,5 +65,5 @@ export function CompareActionSchema({ products }: CompareActionSchemaProps) {
 
   useJsonLd(schema);
 
-  return null;
+  return <JsonLd jsonLd={schema} />;
 }

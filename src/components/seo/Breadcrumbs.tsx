@@ -1,4 +1,4 @@
-import { useJsonLd } from "./useJsonLd";
+import { useJsonLd, JsonLd } from "./useJsonLd";
 import { Home, ChevronRight } from "lucide-react";
 
 export interface BreadcrumbItem {
@@ -26,25 +26,27 @@ export function Breadcrumbs({
   const chain: BreadcrumbItem[] =
     items[0]?.url === "/" ? items : [{ name: "Home", url: "/" }, ...items];
 
-  useJsonLd(
-    chain.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          itemListElement: chain.map((item, index) => ({
-            "@type": "ListItem",
-            position: index + 1,
-            name: item.name,
-            item: `${siteUrl}${item.url}`,
-          })),
-        }
-      : null
-  );
+  const jsonLd = chain.length > 0
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: chain.map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: item.name,
+          item: `${siteUrl}${item.url}`,
+        })),
+      }
+    : null;
+
+  useJsonLd(jsonLd);
 
   if (chain.length <= 1) return null;
 
   return (
-    <nav
+    <>
+      <JsonLd jsonLd={jsonLd} />
+      <nav
       aria-label="Breadcrumb"
       className={`flex flex-wrap items-center gap-1 text-sm text-muted-foreground ${className ?? ""}`}
     >
@@ -96,5 +98,6 @@ export function Breadcrumbs({
         })}
       </ol>
     </nav>
+    </>
   );
 }

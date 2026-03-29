@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 
 interface VariableMeasured {
   '@type': 'PropertyValue';
@@ -52,7 +52,7 @@ export function DatasetSchema({
       ? { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: `${url}/export` }
       : undefined);
 
-  useJsonLd({
+  const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name,
@@ -69,7 +69,9 @@ export function DatasetSchema({
     ...(isAccessibleForFree !== undefined && { isAccessibleForFree }),
     ...(recordCount && { size: `${recordCount} filament records` }),
     includedInDataCatalog: { '@type': 'DataCatalog', name: 'FilaScope 3D Printing Database' },
-  });
+  };
 
-  return null;
+  useJsonLd(jsonLd);
+
+  return <JsonLd jsonLd={jsonLd} />;
 }

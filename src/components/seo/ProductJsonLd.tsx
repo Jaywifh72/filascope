@@ -1,6 +1,7 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 import { useRegion } from '@/contexts/RegionContext';
 import { RegionCode, CurrencyCode } from '@/types/regional';
+import { buildOfferBlock } from './schemaHelpers';
 
 interface RegionalOffer {
   region: RegionCode;
@@ -414,16 +415,13 @@ export function ProductJsonLd({
       };
     }
 
-    // Single offer — always emit at least an availability/url offer so
-    // Google doesn't flag the Product schema as missing 'offers'.
+    // Single offer — guard: omit entirely when price is falsy so we never
+    // emit a price-less Offer, which triggers Google Search Console warnings.
+    const baseOffer = buildOfferBlock(price, activeCurrency, availability);
+    if (!baseOffer) return undefined;
     return {
-      '@type': 'Offer',
-      priceCurrency: activeCurrency,
-      ...(price != null && { price: price.toFixed(2) }),
+      ...baseOffer,
       priceValidUntil,
-      availability: availability
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock',
       url,
       shippingDetails,
       ...(returnPolicy && { hasMerchantReturnPolicy: returnPolicy }),
@@ -561,5 +559,5 @@ export function ProductJsonLd({
   };
 
   useJsonLd(jsonLd);
-  return null;
+  return <JsonLd jsonLd={jsonLd} />;
 }

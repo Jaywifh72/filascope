@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRegion } from '@/contexts/RegionContext';
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
+import { buildOfferBlock } from './schemaHelpers';
 
 interface TrendingFilament {
   id: string;
@@ -77,44 +78,38 @@ export function TrendingItemListSchema() {
 
   const items = filaments?.slice(0, 10) ?? [];
 
-  useJsonLd(
-    items.length > 0
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'ItemList',
-          name: `Trending 3D Printer Filaments in ${regionConfig.name}`,
-          description: `The most popular 3D printer filaments this week, ranked by maker interest and engagement on FilaScope.`,
-          numberOfItems: items.length,
-          itemListOrder: 'https://schema.org/ItemListOrderDescending',
-          itemListElement: items.map((f, i) => {
-            const productUrl = `https://filascope.com/filament/${f.product_handle || f.id}`;
-            return {
-              '@type': 'ListItem',
-              position: i + 1,
+  const jsonLd = items.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: `Trending 3D Printer Filaments in ${regionConfig.name}`,
+        description: `The most popular 3D printer filaments this week, ranked by maker interest and engagement on FilaScope.`,
+        numberOfItems: items.length,
+        itemListOrder: 'https://schema.org/ItemListOrderDescending',
+        itemListElement: items.map((f, i) => {
+          const productUrl = `https://filascope.com/filament/${f.product_handle || f.id}`;
+          const offerBlock = buildOfferBlock(f.current_price, f.currency_code || 'USD', true);
+          return {
+            '@type': 'ListItem',
+            position: i + 1,
+            name: f.product_title,
+            url: productUrl,
+            item: {
+              '@type': 'Product',
               name: f.product_title,
               url: productUrl,
-              item: {
-                '@type': 'Product',
-                name: f.product_title,
-                url: productUrl,
-                ...(f.image_url && { image: f.image_url }),
-                ...(f.brand_name && {
-                  brand: { '@type': 'Organization', name: f.brand_name },
-                }),
-                ...(f.current_price != null && {
-                  offers: {
-                    '@type': 'Offer',
-                    price: f.current_price.toFixed(2),
-                    priceCurrency: f.currency_code || 'USD',
-                    availability: 'https://schema.org/InStock',
-                  },
-                }),
-              },
-            };
-          }),
-        }
-      : null,
-  );
+              ...(f.image_url && { image: f.image_url }),
+              ...(f.brand_name && {
+                brand: { '@type': 'Organization', name: f.brand_name },
+              }),
+              ...(offerBlock && { offers: offerBlock }),
+            },
+          };
+        }),
+      }
+    : null;
 
-  return null;
+  useJsonLd(jsonLd);
+
+  return <JsonLd jsonLd={jsonLd} />;
 }

@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { useJsonLd, useJsonLdMultiple } from "@/components/seo/useJsonLd";
+import { useJsonLdMultiple, JsonLdMultiple } from "@/components/seo/useJsonLd";
+import { buildOfferBlock } from "@/components/seo/schemaHelpers";
 import { FAQSection } from "@/components/seo";
 import { MATERIAL_SLUG_CONFIG } from "@/pages/MaterialHub";
 import { materialNameToSlug } from "@/lib/materialSlugUtils";
@@ -206,7 +207,7 @@ function useCategorySchemas(
   canonical: string,
   groups: any[],
   count: number
-) {
+): (Record<string, unknown> | null)[] {
   const label = slug ? (MATERIAL_SLUG_CONFIG[slug]?.label ?? slug) : "All";
   const category = label + " 3D Printer Filament";
 
@@ -219,6 +220,7 @@ function useCategorySchemas(
         itemListElement: groups.slice(0, 50).map((g, i) => {
           const f = g.representativeFilament;
           const handle = f?.product_handle || f?.id;
+          const offerBlock = buildOfferBlock(g.priceRange?.min ?? null, "USD", !!g.anyInStock);
           return {
             "@type": "ListItem",
             position: i + 1,
@@ -229,16 +231,7 @@ function useCategorySchemas(
               ...(g.vendor && { brand: { "@type": "Brand", name: g.vendor } }),
               category,
               ...(f?.featured_image && { image: f.featured_image }),
-              ...(g.priceRange?.min && {
-                offers: {
-                  "@type": "Offer",
-                  price: g.priceRange.min.toFixed(2),
-                  priceCurrency: "USD",
-                  availability: g.anyInStock
-                    ? "https://schema.org/InStock"
-                    : "https://schema.org/OutOfStock",
-                },
-              }),
+              ...(offerBlock && { offers: offerBlock }),
             },
           };
         }),
@@ -255,7 +248,9 @@ function useCategorySchemas(
       }
     : null;
 
-  useJsonLdMultiple([collectionPageSchema].filter(Boolean) as Record<string, unknown>[]);
+  const schemas = [collectionPageSchema].filter(Boolean) as Record<string, unknown>[];
+  useJsonLdMultiple(schemas);
+  return schemas;
 }
 
 // ─────────────────────────────────────────────
@@ -697,7 +692,7 @@ export default function FilamentCategoryPage() {
       ]
     : [{ name: "Filaments", url: "/filaments" }];
 
-  useCategorySchemas(slug, h1Text, canonical, groups, displayCount);
+  const categorySchemas = useCategorySchemas(slug, h1Text, canonical, groups, displayCount);
 
   const paaQuestions = slug ? (MATERIAL_PAA[slug] ?? []) : [];
   const baseFaqs = slug && config
@@ -708,6 +703,7 @@ export default function FilamentCategoryPage() {
 
   return (
     <>
+      <JsonLdMultiple schemas={categorySchemas} />
       <DocumentHead
         title={title}
         description={description}

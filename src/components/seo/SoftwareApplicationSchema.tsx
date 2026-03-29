@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 
 interface SoftwareApplicationOffer {
   price: string;
@@ -59,5 +59,5 @@ export function SoftwareApplicationSchema({
   }
 
   useJsonLd(jsonLd);
-  return null;
+  return <JsonLd jsonLd={jsonLd} />;
 }

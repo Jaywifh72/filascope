@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 
 interface ContactPoint {
   type: string;
@@ -78,7 +78,7 @@ export function OrganizationSchema({
   if (logoWidth) logoObject.width = logoWidth;
   if (logoHeight) logoObject.height = logoHeight;
 
-  useJsonLd({
+  const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name,
@@ -119,8 +119,10 @@ export function OrganizationSchema({
     }),
     ...(areaServed && { areaServed }),
     ...(serviceType && { serviceType }),
-  });
+  };
 
-  return null;
+  useJsonLd(jsonLd);
+
+  return <JsonLd jsonLd={jsonLd} />;
 }
 

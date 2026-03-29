@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 
 interface DefinedTermItem {
   name: string;
@@ -13,22 +13,22 @@ interface DefinedTermSetSchemaProps {
 }
 
 export function DefinedTermSetSchema({ name, description, terms }: DefinedTermSetSchemaProps) {
-  useJsonLd(
-    terms && terms.length > 0
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'DefinedTermSet',
-          name,
-          ...(description && { description }),
-          hasDefinedTerm: terms.map((term) => ({
-            '@type': 'DefinedTerm',
-            name: term.name,
-            description: term.description,
-            url: term.url,
-          })),
-        }
-      : null,
-  );
+  const jsonLd = terms && terms.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'DefinedTermSet',
+        name,
+        ...(description && { description }),
+        hasDefinedTerm: terms.map((term) => ({
+          '@type': 'DefinedTerm',
+          name: term.name,
+          description: term.description,
+          url: term.url,
+        })),
+      }
+    : null;
 
-  return null;
+  useJsonLd(jsonLd);
+
+  return <JsonLd jsonLd={jsonLd} />;
 }

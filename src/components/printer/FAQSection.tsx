@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useJsonLd } from '@/components/seo/useJsonLd';
+import { useJsonLd, JsonLd } from '@/components/seo/useJsonLd';
 import DOMPurify from 'dompurify';
 
 interface FAQ {
@@ -196,7 +196,7 @@ export function FAQSection(props: FAQSectionProps) {
   const faqs = generateFAQs(props);
 
   // FAQPage JSON-LD — inject ALL 20 questions for rich results eligibility
-  useJsonLd({
+  const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: faqs.map(faq => ({
@@ -207,7 +207,8 @@ export function FAQSection(props: FAQSectionProps) {
         text: stripHtml(faq.answer),
       },
     })),
-  });
+  };
+  useJsonLd(faqJsonLd);
   
   const filteredFAQs = activeCategory === 'All'
     ? faqs
@@ -231,7 +232,9 @@ export function FAQSection(props: FAQSectionProps) {
   };
 
   return (
-    <section className="max-w-[1000px] mx-auto px-5 md:px-10 py-16 md:py-20">
+    <>
+      <JsonLd jsonLd={faqJsonLd} />
+      <section className="max-w-[1000px] mx-auto px-5 md:px-10 py-16 md:py-20">
       <h2 className="text-xl md:text-2xl font-bold text-foreground text-center mb-4">
         Frequently Asked Questions
       </h2>
@@ -344,5 +347,6 @@ export function FAQSection(props: FAQSectionProps) {
 
       {/* Support CTA removed — FilaScope is a comparison platform, not the manufacturer */}
     </section>
+    </>
   );
 }

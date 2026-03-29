@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 
 interface WebApplicationOffer {
   price: string;
@@ -34,5 +34,5 @@ export function WebApplicationSchema({
   }
 
   useJsonLd(jsonLd);
-  return null;
+  return <JsonLd jsonLd={jsonLd} />;
 }

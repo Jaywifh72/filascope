@@ -1,5 +1,6 @@
-import { useJsonLdMultiple } from './useJsonLd';
+import { useJsonLdMultiple, JsonLdMultiple } from './useJsonLd';
 import type { Database } from '@/integrations/supabase/types';
+import { buildOfferBlock } from './schemaHelpers';
 
 type Printer = Database['public']['Tables']['printers']['Row'] & {
   brand: { brand: string } | null;
@@ -58,6 +59,7 @@ export function PrinterListProductSchema({ printers }: PrinterListProductSchemaP
     }
 
     const modelDesc = [p.brand?.brand, p.model_name, p.printer_technology].filter(Boolean).join(' ');
+    const offerBlock = buildOfferBlock(price ?? null, 'USD', true);
 
     return {
       '@context': 'https://schema.org',
@@ -69,19 +71,11 @@ export function PrinterListProductSchema({ printers }: PrinterListProductSchemaP
       }),
       ...(modelDesc && { description: modelDesc }),
       ...(image && { image }),
-      ...(price && {
-        offers: {
-          '@type': 'Offer',
-          price: String(price),
-          priceCurrency: 'USD',
-          availability: 'https://schema.org/InStock',
-          url,
-        },
-      }),
+      ...(offerBlock && { offers: { ...offerBlock, url } }),
       ...(additionalProperty.length > 0 && { additionalProperty }),
     };
   });
 
   useJsonLdMultiple(schemas);
-  return null;
+  return <JsonLdMultiple schemas={schemas} />;
 }

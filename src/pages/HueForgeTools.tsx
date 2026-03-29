@@ -5,7 +5,7 @@ import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Breadcrumbs } from "@/components/seo";
 import { Badge } from "@/components/ui/badge";
 import { HUEFORGE_TOOLS } from "@/components/hueforge/HueForgeToolsData";
-import { useJsonLd } from "@/components/seo/useJsonLd";
+import { useJsonLd, JsonLd } from "@/components/seo/useJsonLd";
 
 const BASE_URL = "https://filascope.com";
 
@@ -81,7 +81,7 @@ export default function HueForgeTools() {
   }, [reveal]);
 
   // ItemList schema for the 6 tools
-  useJsonLd({
+  const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "HueForge Tools & Transmissivity Data",
@@ -94,10 +94,11 @@ export default function HueForgeTools() {
       url: `${BASE_URL}${tool.href}`,
       description: tool.description,
     })),
-  });
+  };
+  useJsonLd(itemListJsonLd);
 
   // FAQPage schema
-  useJsonLd({
+  const faqPageJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: FAQ_DATA.map((faq) => ({
@@ -108,10 +109,11 @@ export default function HueForgeTools() {
         text: faq.a,
       },
     })),
-  });
+  };
+  useJsonLd(faqPageJsonLd);
 
   // SoftwareApplication schema for all 6 tools
-  useJsonLd({
+  const softwareAppJsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
@@ -175,10 +177,11 @@ export default function HueForgeTools() {
         publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL },
       },
     ],
-  });
+  };
+  useJsonLd(softwareAppJsonLd);
 
   // HowTo schema for the workflow section
-  useJsonLd({
+  const howToJsonLd = {
     "@context": "https://schema.org",
     "@type": "HowTo",
     name: "How to Plan and Print a HueForge Project",
@@ -196,10 +199,15 @@ export default function HueForgeTools() {
       { "@type": "HowToTool", name: "FilaScope Palette Builder" },
       { "@type": "HowToTool", name: "FilaScope Layer Stacking Preview" },
     ],
-  });
+  };
+  useJsonLd(howToJsonLd);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <JsonLd jsonLd={itemListJsonLd} />
+      <JsonLd jsonLd={faqPageJsonLd} />
+      <JsonLd jsonLd={softwareAppJsonLd} />
+      <JsonLd jsonLd={howToJsonLd} />
       <DocumentHead
         title="HueForge Tools — TD Database, Palette Builder, Color Matcher & More | FilaScope"
         description="Free HueForge tools and the web's largest filament Transmission Distance (TD) database. Search 111+ filament TD values, build palettes, preview layer stacking, match colors, find substitutes, and plan HueForge projects."

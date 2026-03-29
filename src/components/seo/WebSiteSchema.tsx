@@ -1,4 +1,4 @@
-import { useJsonLdMultiple } from './useJsonLd';
+import { useJsonLdMultiple, JsonLdMultiple } from './useJsonLd';
 
 const BASE_URL = 'https://filascope.com';
 
@@ -46,5 +46,5 @@ export function WebSiteSchema({
 
   useJsonLdMultiple([websiteSchema, siteNavSchema]);
 
-  return null;
+  return <JsonLdMultiple schemas={[websiteSchema, siteNavSchema]} />;
 }

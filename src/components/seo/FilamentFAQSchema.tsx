@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 import { generateDynamicFAQs } from '@/lib/generateFilamentFAQs';
 
 interface FilamentFAQSchemaProps {
@@ -89,5 +89,5 @@ export function FilamentFAQSchema({
   } : null;
 
   useJsonLd(schema as any);
-  return null;
+  return <JsonLd jsonLd={schema as any} />;
 }

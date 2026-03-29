@@ -1,4 +1,4 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 
@@ -22,24 +22,26 @@ export function RelatedQuestionsSection({
   suppressSchema = false,
 }: RelatedQuestionsSectionProps) {
   // Inject FAQPage schema only when not suppressed (i.e. standalone usage).
-  useJsonLd(
-    !suppressSchema && questions?.length > 0
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: questions.map((q) => ({
-            '@type': 'Question',
-            name: q.question,
-            acceptedAnswer: { '@type': 'Answer', text: q.answer },
-          })),
-        }
-      : null,
-  );
+  const jsonLd = !suppressSchema && questions?.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: questions.map((q) => ({
+          '@type': 'Question',
+          name: q.question,
+          acceptedAnswer: { '@type': 'Answer', text: q.answer },
+        })),
+      }
+    : null;
+
+  useJsonLd(jsonLd);
 
   if (!questions?.length) return null;
 
   return (
-    <section className={cn('mt-12 border-t border-border pt-8', className)}>
+    <>
+      <JsonLd jsonLd={jsonLd} />
+      <section className={cn('mt-12 border-t border-border pt-8', className)}>
       <h2 className="text-xl font-semibold mb-6">{title}</h2>
       <Accordion type="single" collapsible className="space-y-2">
         {questions.map((q, i) => (
@@ -58,5 +60,6 @@ export function RelatedQuestionsSection({
         ))}
       </Accordion>
     </section>
+    </>
   );
 }

@@ -1,4 +1,5 @@
-import { useJsonLd } from './useJsonLd';
+import { useJsonLd, JsonLd } from './useJsonLd';
+import { buildOfferBlock } from './schemaHelpers';
 
 interface DealItem {
   name: string;
@@ -37,38 +38,45 @@ export function OfferCatalogSchema({
   };
 
   if (deals && deals.length > 0) {
-    schema.itemListElement = deals.map((deal) => {
-      const offer: Record<string, unknown> = {
-        '@type': 'Offer',
-        name: deal.name,
-        url: deal.url,
-        price: deal.price.toFixed(2),
-        priceCurrency: deal.currency || 'USD',
-        availability: deal.availability !== false
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-      };
-
-      if (deal.priceValidUntil) {
-        offer.priceValidUntil = deal.priceValidUntil;
-      }
-
-      if (deal.originalPrice && deal.originalPrice > deal.price) {
-        const discountPct = Math.round(
-          ((deal.originalPrice - deal.price) / deal.originalPrice) * 100
+    const offerItems = deals
+      .map((deal) => {
+        const baseOffer = buildOfferBlock(
+          deal.price,
+          deal.currency || 'USD',
+          deal.availability !== false,
         );
-        offer.description = `${discountPct}% off — was ${deal.currency || 'USD'} ${deal.originalPrice.toFixed(2)}`;
-      }
+        // Skip deals with a falsy price (null, undefined, or 0)
+        if (!baseOffer) return null;
 
-      if (deal.seller) {
-        offer.seller = { '@type': 'Organization', name: deal.seller };
-      }
+        const offer: Record<string, unknown> = {
+          ...baseOffer,
+          name: deal.name,
+          url: deal.url,
+        };
 
-      return offer;
-    });
+        if (deal.priceValidUntil) {
+          offer.priceValidUntil = deal.priceValidUntil;
+        }
+
+        if (deal.originalPrice && deal.originalPrice > deal.price) {
+          const discountPct = Math.round(
+            ((deal.originalPrice - deal.price) / deal.originalPrice) * 100,
+          );
+          offer.description = `${discountPct}% off — was ${deal.currency || 'USD'} ${deal.originalPrice.toFixed(2)}`;
+        }
+
+        if (deal.seller) {
+          offer.seller = { '@type': 'Organization', name: deal.seller };
+        }
+
+        return offer;
+      })
+      .filter((o): o is Record<string, unknown> => o !== null);
+
+    if (offerItems.length > 0) schema.itemListElement = offerItems;
   }
 
   useJsonLd(schema);
 
-  return null;
+  return <JsonLd jsonLd={schema} />;
 }

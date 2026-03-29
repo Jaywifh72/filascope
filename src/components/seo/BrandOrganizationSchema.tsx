@@ -1,4 +1,4 @@
-import { useJsonLdMultiple } from './useJsonLd';
+import { useJsonLdMultiple, JsonLdMultiple } from './useJsonLd';
 
 const BASE_URL = 'https://filascope.com';
 
@@ -99,5 +99,5 @@ export function BrandOrganizationSchema({
 
   useJsonLdMultiple([orgJsonLd, collectionPageJsonLd, itemListJsonLd]);
 
-  return null;
+  return <JsonLdMultiple schemas={[orgJsonLd, collectionPageJsonLd, itemListJsonLd]} />;
 }

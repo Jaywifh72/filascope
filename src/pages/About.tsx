@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { OrganizationSchema, FAQSection, BreadcrumbSchema } from '@/components/seo';
-import { useJsonLd } from '@/components/seo/useJsonLd';
+import { useJsonLd, JsonLd } from '@/components/seo/useJsonLd';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ENTITY_DESCRIPTION =
@@ -36,16 +36,18 @@ const FAQS = [
 ];
 
 export default function About() {
-  useJsonLd({
+  const aboutPageJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'AboutPage',
     name: 'About FilaScope',
     url: 'https://filascope.com/about',
     mainEntityOfPage: 'https://filascope.com/about',
-  });
+  };
+  useJsonLd(aboutPageJsonLd);
 
   return (
     <>
+      <JsonLd jsonLd={aboutPageJsonLd} />
       <Helmet>
         <title>About FilaScope — The 3D Printer Filament Comparison Platform</title>
         <meta name="description" content={ENTITY_DESCRIPTION} />
