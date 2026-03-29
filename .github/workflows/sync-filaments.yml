@@ -539,6 +539,81 @@ jobs:
           done
 
   # ============================================================================
+  # SYNC: Price orchestrator (brand-specific price sync via daily-price-orchestrator)
+  # Runs in parallel with scraping jobs — handles tier-based price sync for all brands
+  # and writes to brand_sync_logs + automated_brands tracking tables
+  # ============================================================================
+  sync-prices:
+    name: Sync Prices via Orchestrator
+    runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '0 3 * * *' || github.event.inputs.job == 'all'
+    steps:
+      - name: Trigger price orchestrator
+        id: start-orchestrator
+        run: |
+          echo "🚀 Starting price orchestrator..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "$SUPABASE_URL/functions/v1/daily-price-orchestrator" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"trigger": "cron"}')
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response: $http_code"
+          echo "$body" | jq -c .
+
+          if [ "$http_code" -eq 409 ]; then
+            echo "⚠️ Orchestrator already running — skipping"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "❌ Failed to start price orchestrator"
+            exit 1
+          fi
+
+          TOTAL_BATCHES=$(echo "$body" | jq -r '.totalBatches // 1')
+          ELIGIBLE=$(echo "$body" | jq -r '.eligibleBrands // 0')
+          echo "total_batches=$TOTAL_BATCHES" >> $GITHUB_OUTPUT
+          echo "skip=false" >> $GITHUB_OUTPUT
+          echo "✅ Orchestration started — $ELIGIBLE brands in $TOTAL_BATCHES batches"
+
+      - name: Process remaining batches
+        if: steps.start-orchestrator.outputs.skip != 'true'
+        run: |
+          TOTAL="${{ steps.start-orchestrator.outputs.total_batches }}"
+          REMAINING=$((TOTAL - 1))
+
+          if [ "$REMAINING" -le 0 ]; then
+            echo "✅ Only 1 batch — no continuation needed, waiting for it to finish"
+            sleep 2400
+            exit 0
+          fi
+
+          echo "⏳ Processing $REMAINING remaining batches (40 min apart)..."
+
+          for i in $(seq 1 $REMAINING); do
+            echo "💤 Sleeping 40 minutes before continuation $i of $REMAINING..."
+            sleep 2400
+
+            echo "▶️ Triggering orchestrator-continue (batch $((i + 1)) of $TOTAL)..."
+            response=$(curl -s -w "\n%{http_code}" -X POST \
+              "$SUPABASE_URL/functions/v1/orchestrator-continue" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Content-Type: application/json")
+
+            http_code=$(echo "$response" | tail -n1)
+            body=$(echo "$response" | sed '$d')
+            echo "Response $http_code — $(echo "$body" | jq -rc '.message // .error // .')"
+          done
+
+          echo "✅ All orchestrator batches triggered"
+
+  # ============================================================================
   # QUALITY: Calculate scores and run health checks
   # ============================================================================
   quality-report:
@@ -592,7 +667,7 @@ jobs:
   summary:
     name: Generate Summary Report
     runs-on: ubuntu-latest
-    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other, enrich-images, discover-tds, enrich-tds, enrich-regional, quality-report]
+    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other, sync-prices, enrich-images, discover-tds, enrich-tds, enrich-regional, quality-report]
     if: always()
 
     steps:
@@ -654,6 +729,7 @@ jobs:
           echo "- scrape-shopify: ${{ needs.scrape-shopify.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- scrape-amazon: ${{ needs.scrape-amazon.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- scrape-other: ${{ needs.scrape-other.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- sync-prices: ${{ needs.sync-prices.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- enrich-images: ${{ needs.enrich-images.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- discover-tds: ${{ needs.discover-tds.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- enrich-tds: ${{ needs.enrich-tds.result }}" >> $GITHUB_STEP_SUMMARY
