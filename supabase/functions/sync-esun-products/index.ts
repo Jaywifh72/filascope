@@ -203,6 +203,16 @@ Deno.serve(async (req) => {
     // =========================================================================
     // STEP 3: PROCESS SEED DATA
     // =========================================================================
+
+    // Pre-fetch existing eSUN product_ids so we can distinguish creates vs updates
+    const { data: existingRows } = await supabase
+      .from('filaments')
+      .select('product_id')
+      .eq('vendor', 'eSun');
+    const existingProductIds = new Set(
+      (existingRows || []).map((r: { product_id: string | null }) => r.product_id).filter(Boolean)
+    );
+
     const productsToInsert: Record<string, unknown>[] = [];
     const productLineStats: Record<string, number> = {};
 
@@ -288,7 +298,9 @@ Deno.serve(async (req) => {
         console.error(`[sync-esun-products] Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, upsertError.message);
         stats.errors += batch.length;
       } else {
-        stats.updated += batch.length;
+        const newInBatch = batch.filter(f => !existingProductIds.has(f.product_id as string)).length;
+        stats.created += newInBatch;
+        stats.updated += batch.length - newInBatch;
         console.log(`[sync-esun-products] Upserted batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(productsToInsert.length / BATCH_SIZE)} (${upsertData?.length || batch.length} rows)`);
       }
     }
@@ -307,7 +319,7 @@ Deno.serve(async (req) => {
         .eq('id', brandId);
       
       // Update product counts
-      await supabase.rpc('update_brand_product_counts', { brand_slug_param: 'esun' });
+      await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'esun' });
 
       // Create sync log with regional_breakdown
       await supabase
@@ -315,7 +327,7 @@ Deno.serve(async (req) => {
         .insert({
           brand_id: brandId,
           brand_slug: 'esun',
-          sync_type: cleanSlate ? 'clean_slate' : 'incremental',
+          sync_type: cleanSlate ? 'full_scrape' : 'update_only',
           status: stats.errors > (stats.created + stats.updated) ? 'failed' : stats.errors > 0 ? 'partial' : 'completed',
           triggered_by: 'admin_ui',
           completed_at: new Date().toISOString(),

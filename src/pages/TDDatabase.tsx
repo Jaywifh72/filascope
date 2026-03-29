@@ -188,7 +188,9 @@ export default function TDDatabase() {
         description="Comprehensive database of Transmission Distance (TD) values for 3D printing filaments, used for HueForge and lithophane printing"
         url="https://filascope.com/td-database"
         keywords={['TD value', 'Transmission Distance', 'HueForge', 'filament database', '3D printing', 'lithophane']}
+        creator={{ '@type': 'Organization', name: 'FilaScope', url: 'https://filascope.com' }}
         recordCount={filaments?.length}
+        isAccessibleForFree={true}
       />
       
       <FAQSection faqs={tdFaqs} />
