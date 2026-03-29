@@ -158,6 +158,32 @@ export async function processBrand(
 ): Promise<{ success: boolean; productsUpdated: number; error?: string; regionalData?: Record<string, any> }> {
   const { slug, syncType } = brand;
 
+  // ── Tracking: create sync log + mark brand as actively scraping ───────────
+  let syncLogId: string | null = null;
+  try {
+    const { data: brandRow } = await supabase
+      .from('automated_brands')
+      .select('id')
+      .eq('brand_slug', slug)
+      .maybeSingle();
+
+    await supabase.rpc('start_brand_scrape', { p_brand_slug: slug });
+
+    const { data: logRow } = await supabase
+      .from('brand_sync_logs')
+      .insert({
+        brand_slug: slug,
+        brand_id: brandRow?.id ?? null,
+        status: 'running',
+        started_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+    syncLogId = logRow?.id ?? null;
+  } catch (trackErr) {
+    console.warn(`[ORCHESTRATOR] Tracking init failed for ${slug}:`, trackErr);
+  }
+
   try {
     let url: string;
     let init: RequestInit;
@@ -189,8 +215,22 @@ export async function processBrand(
         || syncResult?.updated
         || syncResult?.summary?.totalMatched
         || 0;
+      const created = syncResult?.summary?.totalCreated || syncResult?.stats?.created || syncResult?.created || 0;
+      const discovered = syncResult?.summary?.totalDiscovered || syncResult?.stats?.total || syncResult?.discovered || updated + created;
       const regionalData = syncResult?.regionBreakdown || syncResult?.regional_breakdown || null;
       console.log(`[ORCHESTRATOR] ✅ ${slug} synced (${updated} updated${retried ? ', after retry' : ''})`);
+
+      // ── Tracking: complete sync log ───────────────────────────────────────
+      if (syncLogId) {
+        await supabase.rpc('complete_brand_scrape', {
+          p_sync_log_id: syncLogId,
+          p_success: true,
+          p_products_discovered: discovered,
+          p_products_created: created,
+          p_products_updated: updated,
+        }).catch((e: any) => console.warn(`[ORCHESTRATOR] complete_brand_scrape failed for ${slug}:`, e));
+      }
+
       return { success: true, productsUpdated: updated, regionalData };
     } else {
       const errorMsg = syncResult?.error || syncResponse.statusText;
@@ -205,6 +245,16 @@ export async function processBrand(
         region,
         sync_run_id: runId,
       });
+
+      // ── Tracking: complete sync log ───────────────────────────────────────
+      if (syncLogId) {
+        await supabase.rpc('complete_brand_scrape', {
+          p_sync_log_id: syncLogId,
+          p_success: false,
+          p_error_message: String(errorMsg).slice(0, 500),
+        }).catch((e: any) => console.warn(`[ORCHESTRATOR] complete_brand_scrape failed for ${slug}:`, e));
+      }
+
       return { success: false, productsUpdated: 0, error: String(errorMsg) };
     }
   } catch (err) {
@@ -218,6 +268,16 @@ export async function processBrand(
       region,
       sync_run_id: runId,
     });
+
+    // ── Tracking: complete sync log ───────────────────────────────────────
+    if (syncLogId) {
+      await supabase.rpc('complete_brand_scrape', {
+        p_sync_log_id: syncLogId,
+        p_success: false,
+        p_error_message: isTimeout ? 'Timed out after 180s' : String(err).slice(0, 500),
+      }).catch((e: any) => console.warn(`[ORCHESTRATOR] complete_brand_scrape failed for ${slug}:`, e));
+    }
+
     return { success: false, productsUpdated: 0, error: String(err) };
   }
 }

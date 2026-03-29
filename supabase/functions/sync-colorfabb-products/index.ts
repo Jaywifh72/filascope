@@ -64,36 +64,59 @@ Deno.serve(async (req) => {
     }
 
     // =========================================================================
-    // STEP 2: Fetch Existing Products for deduplication
+    // STEP 2: Fetch Existing Products for deduplication + price backfill
     // =========================================================================
     const { data: existingProducts } = await supabase
       .from('filaments')
-      .select('id, product_id, product_url')
+      .select('id, product_id, product_url, variant_price')
       .ilike('vendor', 'colorfabb');
 
-    const existingUrls = new Set((existingProducts || []).map(p => p.product_url).filter(Boolean));
+    // Build lookup maps for deduplication and URL-based price updates
+    const existingByUrl = new Map<string, { id: string; hasPrice: boolean }>();
     const existingIds = new Set((existingProducts || []).map(p => p.product_id).filter(Boolean));
-    console.log(`[ColorFabb] Found ${existingProducts?.length || 0} existing products`);
+    for (const p of (existingProducts || [])) {
+      if (p.product_url) {
+        existingByUrl.set(p.product_url, { id: p.id, hasPrice: p.variant_price != null });
+      }
+    }
+    console.log(`[ColorFabb] Found ${existingProducts?.length || 0} existing products (${existingByUrl.size} with URLs)`);
 
     // =========================================================================
-    // STEP 3: Process CSV Seed Data
+    // STEP 3: Process CSV Seed Data — update prices on URL matches, insert new
     // =========================================================================
     console.log(`[ColorFabb] Processing ${COLORFABB_PRODUCT_SEED.length} products from seed data...`);
 
-    const productsToUpsert: Array<Record<string, unknown>> = [];
+    const productsToInsert: Array<Record<string, unknown>> = [];
+    const priceUpdates: Array<{ id: string; price: number }> = [];
     const productsProcessed = Math.min(COLORFABB_PRODUCT_SEED.length, limit);
 
     for (let i = 0; i < productsProcessed; i++) {
       const seed = COLORFABB_PRODUCT_SEED[i];
-      
+
       try {
-        // Generate unique product ID
-        const slug = seed.productName.toLowerCase()
+        const cleanUrl = seed.productUrl.replace(/\\:/g, ':');
+        const urlMatch = existingByUrl.get(cleanUrl);
+
+        // If a product exists with this URL and has no price, update its price
+        if (urlMatch && seed.priceUsd !== null && (!urlMatch.hasPrice || cleanSlate)) {
+          priceUpdates.push({ id: urlMatch.id, price: seed.priceUsd });
+          stats.updated++;
+          continue;
+        }
+
+        // If matched by URL and already has a price, skip
+        if (urlMatch && !cleanSlate) {
+          stats.skipped++;
+          continue;
+        }
+
+        // Generate unique product ID for insertion
+        const productSlug = seed.productName.toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, '');
-        const productId = `colorfabb-${slug}-1.75mm-750g`;
+        const productId = `colorfabb-${productSlug}-1.75mm-750g`;
 
-        // Skip if already exists (in non-cleanSlate mode)
+        // Skip if already exists by generated ID (previously inserted by seed)
         if (!cleanSlate && existingIds.has(productId)) {
           stats.skipped++;
           continue;
@@ -110,11 +133,11 @@ Deno.serve(async (req) => {
           imageUrl = imageUrl.replace(/\\_/g, '_').replace(/\\:/g, ':');
         }
 
-        const filamentData = {
+        productsToInsert.push({
           product_id: productId,
           product_title: cleanColorFabbTitle(seed.productName),
           vendor: COLORFABB_STORE_INFO.vendor,
-          product_url: seed.productUrl.replace(/\\:/g, ':'),
+          product_url: cleanUrl,
           variant_price: seed.priceUsd,
           featured_image: imageUrl,
           material: enriched.material,
@@ -137,9 +160,7 @@ Deno.serve(async (req) => {
           auto_updated: true,
           last_scraped_at: new Date().toISOString(),
           sync_status: 'synced',
-        };
-
-        productsToUpsert.push(filamentData);
+        });
 
       } catch (err) {
         console.error(`[ColorFabb] Error processing ${seed.productName}:`, err);
@@ -149,17 +170,37 @@ Deno.serve(async (req) => {
     }
 
     // =========================================================================
-    // STEP 4: Batch Upsert Products
+    // STEP 3.5: Apply URL-matched price updates (backfill prices on scraped products)
     // =========================================================================
-    console.log(`[ColorFabb] Inserting ${productsToUpsert.length} products...`);
-
-    if (productsToUpsert.length > 0) {
-      // Batch insert in chunks of 50 (no upsert since no unique constraint on product_id)
+    if (priceUpdates.length > 0) {
+      console.log(`[ColorFabb] Backfilling prices on ${priceUpdates.length} URL-matched products...`);
       const chunkSize = 50;
-      for (let i = 0; i < productsToUpsert.length; i += chunkSize) {
-        const chunk = productsToUpsert.slice(i, i + chunkSize);
-        
-        // Use insert with conflict handling via delete-then-insert pattern
+      for (let i = 0; i < priceUpdates.length; i += chunkSize) {
+        const chunk = priceUpdates.slice(i, i + chunkSize);
+        for (const { id, price } of chunk) {
+          const { error: updateErr } = await supabase
+            .from('filaments')
+            .update({ variant_price: price, auto_updated: true, last_scraped_at: new Date().toISOString() })
+            .eq('id', id);
+          if (updateErr) {
+            console.error(`[ColorFabb] Price update error for id ${id}:`, updateErr);
+            stats.errors++;
+          }
+        }
+        console.log(`[ColorFabb] Price backfill batch ${Math.floor(i / chunkSize) + 1}: ${chunk.length} products updated`);
+      }
+    }
+
+    // =========================================================================
+    // STEP 4: Insert new products (seed entries with no existing URL match)
+    // =========================================================================
+    console.log(`[ColorFabb] Inserting ${productsToInsert.length} new products...`);
+
+    if (productsToInsert.length > 0) {
+      const chunkSize = 50;
+      for (let i = 0; i < productsToInsert.length; i += chunkSize) {
+        const chunk = productsToInsert.slice(i, i + chunkSize);
+
         const { error: insertError, data: insertData } = await supabase
           .from('filaments')
           .insert(chunk)
@@ -219,7 +260,7 @@ Deno.serve(async (req) => {
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`[ColorFabb] Sync complete in ${duration}s - discovered: ${stats.discovered}, created: ${stats.created}, skipped: ${stats.skipped}, errors: ${stats.errors}`);
+    console.log(`[ColorFabb] Sync complete in ${duration}s - discovered: ${stats.discovered}, created: ${stats.created}, updated: ${stats.updated}, skipped: ${stats.skipped}, errors: ${stats.errors}`);
 
     return new Response(
       JSON.stringify({
