@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { PriceDisplay } from "@/components/ui/PriceDisplay";
+import { useCurrencyPreference } from "@/hooks/useCurrencyPreference";
 import { Link } from "react-router-dom";
 import {
   TrendingDown,
@@ -47,6 +49,7 @@ export function WishlistItemCard({
   onRemoveTag,
 }: WishlistItemProps) {
   const [tagInput, setTagInput] = useState("");
+  const currency = useCurrencyPreference();
 
   const priceChange =
     item.price_when_added && item.filament?.variant_price
@@ -132,7 +135,7 @@ export function WishlistItemCard({
             <div className="text-right flex-shrink-0">
               {item.filament?.variant_price && (
                 <div className="font-mono font-semibold text-primary">
-                  ${item.filament.variant_price.toFixed(2)}
+                  <PriceDisplay priceUsd={item.filament.variant_price} currency={currency} />
                 </div>
               )}
               {trueCost && (

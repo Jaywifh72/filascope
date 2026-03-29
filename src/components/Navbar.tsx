@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 const filascopeLogo = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/render/image/public/site-assets/logo-filascope.webp?width=224&resize=contain`;
 
 import { RegionSelector } from "@/components/RegionSelector";
+import { CurrencySelector } from "@/components/ui/CurrencySelector";
 import { SearchCommandPalette } from "@/components/search/SearchCommandPalette";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { RecentlyViewedDropdown } from "@/components/RecentlyViewedDropdown";
@@ -622,7 +623,8 @@ const Navbar = () => {
           </div>
 
           {/* Region Selector - Prominent position (desktop/tablet) */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-1.5">
+            <CurrencySelector />
             <RegionSelector />
           </div>
 

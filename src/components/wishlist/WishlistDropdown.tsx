@@ -1,4 +1,6 @@
 import { Heart, X, TrendingDown, Package, ArrowRight, Loader2 } from "lucide-react";
+import { PriceDisplay } from "@/components/ui/PriceDisplay";
+import { useCurrencyPreference } from "@/hooks/useCurrencyPreference";
 import { Button } from "@/components/ui/button";
 import { WishlistItem, WishlistStats } from "@/hooks/useWishlist";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -21,6 +23,7 @@ export function WishlistDropdown({
   onClose,
 }: WishlistDropdownProps) {
   const { removeFromWishlist } = useWishlist();
+  const currency = useCurrencyPreference();
 
   const handleRemove = async (e: React.MouseEvent, filamentId: string) => {
     e.preventDefault();
@@ -108,7 +111,9 @@ export function WishlistDropdown({
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{item.filament?.vendor}</span>
                   {item.filament?.variant_price && (
-                    <span className="font-mono">${item.filament.variant_price.toFixed(2)}</span>
+                    <span className="font-mono">
+                      <PriceDisplay priceUsd={item.filament.variant_price} currency={currency} />
+                    </span>
                   )}
                 </div>
                 {priceChange > 0 && (
