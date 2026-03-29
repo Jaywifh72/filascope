@@ -208,13 +208,19 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from('exchange_rates')
         .select('currency_code, rate_to_usd');
-      
+
       if (error) throw error;
-      
-      const rates = buildRateMap(data || []);
+
+      if (!data || data.length === 0) {
+        // Table exists but is empty — use hardcoded fallback rates
+        setExchangeRates(DEFAULT_RATES);
+        return;
+      }
+
+      const rates = buildRateMap(data);
       setExchangeRates(rates);
       setRatesLastUpdated(new Date());
-      writeCachedRates(data || []);
+      writeCachedRates(data);
     } catch (error) {
       console.error('Failed to load exchange rates:', error);
       setExchangeRates(DEFAULT_RATES);

@@ -51,7 +51,7 @@ export function FilamentCardV2({ filament, matchPercent }: FilamentCardV2Props) 
   const { addItem, removeItem, isInCompare } = useCompare();
   // useRegion returns { region: RegionCode, currency: CurrencyCode, ... }
   // region is a RegionCode string (e.g. 'US', 'CA', 'EU', 'UK', 'AU'), not an object
-  const { region, currency } = useRegion();
+  const { region, currency, convertPrice: convertToCurrency, hasRates } = useRegion();
 
   const detailHref = getFilamentHref(filament.id, filament.product_handle);
   const freshness = getFreshnessLabel(filament.last_scraped_at);
@@ -66,7 +66,7 @@ export function FilamentCardV2({ filament, matchPercent }: FilamentCardV2Props) 
     : 0;
 
   // Regional price resolution — region is a RegionCode string ('US' | 'CA' | 'EU' | 'UK' | 'AU' | ...)
-  const { price, currencyCode } = useMemo(() => {
+  const { price, currencyCode, isConverted } = useMemo(() => {
     const regionCode = (region as string).toUpperCase();
     const priceMap: Record<string, { price: number | null | undefined; code: string }> = {
       CA: { price: filament.price_cad, code: 'CAD' },
@@ -75,9 +75,19 @@ export function FilamentCardV2({ filament, matchPercent }: FilamentCardV2Props) 
       AU: { price: filament.price_aud, code: 'AUD' },
     };
     const regional = priceMap[regionCode];
-    if (regional?.price != null) return { price: regional.price, currencyCode: regional.code };
-    return { price: filament.variant_price, currencyCode: 'USD' };
-  }, [filament, region]);
+    if (regional?.price != null) {
+      return { price: regional.price, currencyCode: regional.code, isConverted: false };
+    }
+    // Convert USD to user's currency when no native regional price is available
+    if (filament.variant_price != null && hasRates && currency !== 'USD') {
+      return {
+        price: convertToCurrency(filament.variant_price, 'USD'),
+        currencyCode: currency,
+        isConverted: true,
+      };
+    }
+    return { price: filament.variant_price, currencyCode: 'USD', isConverted: false };
+  }, [filament, region, currency, convertToCurrency, hasRates]);
 
   // Price per kg
   const pricePerKg = useMemo(() => {
@@ -265,10 +275,10 @@ export function FilamentCardV2({ filament, matchPercent }: FilamentCardV2Props) 
               </span>
             )}
             {pricePerKg != null ? (
-              <>
-                {formatPrice(pricePerKg, currencyCode as CurrencyCode)}
-                <span className="text-xs font-normal text-muted-foreground"> /kg</span>
-              </>
+              <span title={isConverted ? 'Estimated — converted from USD' : undefined} className={isConverted ? 'opacity-75' : undefined}>
+                {isConverted && '~'}{formatPrice(pricePerKg, currencyCode as CurrencyCode)}
+                <span className="text-xs font-normal text-muted-foreground"> /kg{isConverted && ' (est.)'}</span>
+              </span>
             ) : (
               <span className="text-sm text-muted-foreground">Price unavailable</span>
             )}
