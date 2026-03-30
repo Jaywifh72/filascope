@@ -39,21 +39,23 @@ function getFunctionSlug(brandSlug: string): string {
 
 const ALL_BRANDS: BrandEntry[] = [
   // ── TIER 1: Daily sync (major brands) ────────────────────────────────
-  { slug: 'bambu-lab',    syncType: 'regional', tier: 1 },
-  { slug: 'polymaker',    syncType: 'regional', tier: 1 },
-  { slug: 'elegoo',       syncType: 'regional', tier: 1 },
-  { slug: 'creality',     syncType: 'regional', tier: 1 },
-  { slug: 'anycubic',     syncType: 'regional', tier: 1 },
+  // Using brand-specific syncs so products are created+updated with full field data
+  // (sync-regional-prices only updates existing rows; brand-specific handles upserts)
+  { slug: 'bambu-lab',    syncType: 'brand-specific', tier: 1 },
+  { slug: 'polymaker',    syncType: 'brand-specific', tier: 1 },
+  { slug: 'elegoo',       syncType: 'brand-specific', tier: 1 },
+  { slug: 'creality',     syncType: 'brand-specific', tier: 1 },
+  { slug: 'anycubic',     syncType: 'brand-specific', tier: 1 },
   { slug: 'esun',         syncType: 'brand-specific', tier: 1 },
   { slug: 'prusament',    syncType: 'brand-specific', tier: 1 },
   { slug: 'overture',     syncType: 'brand-specific', tier: 1 },
 
   // ── TIER 2: Every 3 days ─────────────────────────────────────────────
-  { slug: 'sunlu',        syncType: 'regional', tier: 2 },
-  { slug: 'eryone',       syncType: 'regional', tier: 2 },
-  { slug: 'jayo',         syncType: 'regional', tier: 2 },
-  { slug: 'kingroon',     syncType: 'regional', tier: 2 },
-  { slug: 'sovol',        syncType: 'regional', tier: 2 },
+  { slug: 'sunlu',        syncType: 'brand-specific', tier: 2 },
+  { slug: 'eryone',       syncType: 'brand-specific', tier: 2 },
+  { slug: 'jayo',         syncType: 'regional', tier: 2 },   // no dedicated sync fn yet
+  { slug: 'kingroon',     syncType: 'brand-specific', tier: 2 },
+  { slug: 'sovol',        syncType: 'brand-specific', tier: 2 },
   { slug: 'hatchbox',     syncType: 'brand-specific', tier: 2 },
   { slug: 'colorfabb',    syncType: 'brand-specific', tier: 2 },
   { slug: 'fillamentum',  syncType: 'brand-specific', tier: 2 },
@@ -62,11 +64,11 @@ const ALL_BRANDS: BrandEntry[] = [
   { slug: 'ninjatek',     syncType: 'brand-specific', tier: 2 },
 
   // ── TIER 3: Weekly ───────────────────────────────────────────────────
-  { slug: 'qidi',         syncType: 'regional', tier: 3 },
-  { slug: 'flashforge',   syncType: 'regional', tier: 3 },
-  { slug: 'artillery',    syncType: 'regional', tier: 3 },
+  { slug: 'qidi',         syncType: 'regional', tier: 3 },  // no dedicated sync fn
+  { slug: 'flashforge',   syncType: 'regional', tier: 3 },  // no dedicated sync fn
+  { slug: 'artillery',    syncType: 'regional', tier: 3 },  // no dedicated sync fn
   // Removed: 'longer', 'two-trees', 'voxelab' - not in automated_brands
-  { slug: 'geeetech',     syncType: 'regional', tier: 3 },
+  { slug: 'geeetech',     syncType: 'brand-specific', tier: 3 },
   
   { slug: '3d-fuel',      syncType: 'brand-specific', tier: 3 },
   { slug: '3dhojor',      syncType: 'brand-specific', tier: 3 },
@@ -92,6 +94,13 @@ const ALL_BRANDS: BrandEntry[] = [
   { slug: 'voxelpla',     syncType: 'brand-specific', tier: 3 },
   { slug: 'yousu',        syncType: 'brand-specific', tier: 3 },
   { slug: 'ziro',         syncType: 'brand-specific', tier: 3 },
+
+  // ── New Shopify brands (Phase 2 additions) ────────────────────────────
+  { slug: 'sainsmart',      syncType: 'brand-specific', tier: 3 },
+  { slug: 'gst3d',          syncType: 'brand-specific', tier: 3 },
+  { slug: 'filaments-ca',   syncType: 'brand-specific', tier: 3 },
+  { slug: 'printed-solid',  syncType: 'brand-specific', tier: 3 },
+  { slug: 'taulman3d',      syncType: 'brand-specific', tier: 3 },
 ];
 
 const TIER_FREQUENCY_HOURS: Record<number, number> = {

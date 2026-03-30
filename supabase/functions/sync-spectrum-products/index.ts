@@ -73,6 +73,7 @@ interface SpectrumProduct {
   imageUrl: string;
   colorHex: string | null;
   tdsUrl: string | null;
+  price: number | null;
 }
 
 interface SyncStats {
@@ -359,7 +360,12 @@ function transformProducts(shopifyProducts: ShopifyProduct[]): SpectrumProduct[]
     const color = extractColor(sp);
     const productUrl = `${SHOPIFY_BASE_URL}/products/${sp.handle}`;
     const imageUrl = sp.images?.[0]?.src || '';
-    
+    // Pick the 1kg variant price; fall back to first variant
+    const variant1kg = sp.variants.find(v =>
+      /\b1\s*kg\b|\b1000\s*g\b/i.test(v.title)
+    ) || sp.variants[0];
+    const price = variant1kg?.price ? parseFloat(variant1kg.price) : null;
+
     products.push({
       title: sp.title,
       material,
@@ -368,6 +374,7 @@ function transformProducts(shopifyProducts: ShopifyProduct[]): SpectrumProduct[]
       imageUrl,
       colorHex: null, // Will be resolved by mapSpectrumColorToHex
       tdsUrl: null, // Will be resolved by enrichSpectrumProduct
+      price,
     });
   }
   
@@ -645,7 +652,7 @@ async function runBackgroundSync(
           color_family: seedProduct.color,
           featured_image: seedProduct.imageUrl || null,
           product_url: seedProduct.productUrl,
-          variant_price: null,
+          variant_price: seedProduct.price,
           tds_url: seedProduct.tdsUrl || enrichment.tdsUrl,
           nozzle_temp_min_c: enrichment.nozzleTempMin,
           nozzle_temp_max_c: enrichment.nozzleTempMax,

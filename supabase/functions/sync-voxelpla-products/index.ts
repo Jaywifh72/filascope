@@ -54,13 +54,44 @@ async function runVoxelPLASync(
     errors: 0,
   };
   
+  // Fetch live prices from Shopify API keyed by product handle
+  async function fetchLivePrices(): Promise<Map<string, number>> {
+    const priceMap = new Map<string, number>();
+    try {
+      let page = 1;
+      while (true) {
+        const res = await fetch(`https://voxelpla.com/products.json?limit=250&page=${page}`, {
+          headers: { 'User-Agent': 'FilaScope/1.0' },
+        });
+        if (!res.ok) break;
+        const data = await res.json();
+        if (!data.products?.length) break;
+        for (const p of data.products) {
+          const variant1kg = p.variants?.find((v: any) =>
+            /\b1\s*kg\b|\b1000\s*g\b/i.test(v.title)
+          ) || p.variants?.[0];
+          if (variant1kg?.price) {
+            priceMap.set(p.handle, parseFloat(variant1kg.price));
+          }
+        }
+        if (data.products.length < 250) break;
+        page++;
+        await new Promise(r => setTimeout(r, 500));
+      }
+    } catch (err) {
+      console.warn('[VoxelPLA] Failed to fetch live prices:', err);
+    }
+    console.log(`[VoxelPLA] Fetched live prices for ${priceMap.size} products`);
+    return priceMap;
+  }
+
   try {
     console.log('='.repeat(60));
     console.log('VoxelPLA BACKGROUND SYNC STARTED');
     console.log(`Seed contains ${totalProducts} products`);
     console.log(`Sync Log ID: ${syncLogId}`);
     console.log('='.repeat(60));
-    
+
     // =======================================================================
     // STEP 1: Validate seed data
     // =======================================================================
@@ -113,12 +144,18 @@ async function runVoxelPLASync(
     console.log(`[Step 2] Deleted ${deletedCount} existing products`);
     
     // =======================================================================
+    // STEP 2.5: Fetch live prices from Shopify API
+    // =======================================================================
+    console.log('\n[Step 2.5] Fetching live prices from Shopify API...');
+    const livePrices = await fetchLivePrices();
+
+    // =======================================================================
     // STEP 3: Transform seed products with progress
     // =======================================================================
     console.log('\n[Step 3] Transforming seed products...');
-    
+
     const filamentRecords = [];
-    
+
     for (let i = 0; i < totalProducts; i++) {
       const product = VOXELPLA_PRODUCT_SEED[i];
       stats.productsProcessed = i + 1;
@@ -146,6 +183,8 @@ async function runVoxelPLASync(
       const productId = generateVoxelPLAProductId(product.material, product.color);
       const colorFamily = getVoxelPLAColorFamily(colorHex, product.color);
       
+      const variantPrice = livePrices.get(product.handle) ?? null;
+
       const record = {
         product_id: productId,
         product_title: product.title,
@@ -155,6 +194,7 @@ async function runVoxelPLASync(
         product_url: product.productUrl,
         featured_image: product.imageUrl,
         tds_url: product.tdsUrl,
+        variant_price: variantPrice,
         material: normalizedMaterial,
         product_line_id: productLineId,
         finish_type: finishType,

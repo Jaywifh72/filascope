@@ -146,6 +146,33 @@ Deno.serve(async (req) => {
       stepResults.push({ step: 'clean_slate', success: true, count: 0, details: 'skipped' });
     }
 
+    // Step 3.5: Fetch live prices from Shopify API
+    console.log('[Step 3.5] Fetching live prices from Shopify API...');
+    const handlePriceMap = new Map<string, number>();
+    try {
+      let page = 1;
+      while (true) {
+        const res = await fetch(
+          `${HATCHBOX_STORE_INFO.productsJsonUrl}?limit=250&page=${page}`,
+          { headers: { 'User-Agent': 'FilaScope-Sync/1.0' } }
+        );
+        if (!res.ok) { console.warn(`[Step 3.5] Shopify returned ${res.status}`); break; }
+        const data = await res.json();
+        const products: any[] = data.products || [];
+        if (products.length === 0) break;
+        for (const p of products) {
+          const v1kg = p.variants?.find((v: any) => /\b1\s*kg\b|\b1000\s*g\b/i.test(v.title)) || p.variants?.[0];
+          if (v1kg?.price) handlePriceMap.set(p.handle, parseFloat(v1kg.price));
+        }
+        if (products.length < 250) break;
+        page++;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      console.log(`[Step 3.5] Fetched prices for ${handlePriceMap.size} products`);
+    } catch (err) {
+      console.warn('[Step 3.5] Price fetch failed — will use $27.99 fallback:', err);
+    }
+
     // Step 4: Process each seed entry
     console.log(`[Step 4] Processing ${filteredSeed.length} products from CSV seed...`);
 
@@ -184,7 +211,7 @@ Deno.serve(async (req) => {
           nozzle_temp_max_c: printSettings?.nozzle_temp_max_c || null,
           bed_temp_min_c: printSettings?.bed_temp_min_c || null,
           bed_temp_max_c: printSettings?.bed_temp_max_c || null,
-          variant_price: 27.99, // Default price for Hatchbox
+          variant_price: handlePriceMap.get(productHandle) ?? 27.99,
           auto_created: true,
           auto_updated: true,
           last_scraped_at: new Date().toISOString(),

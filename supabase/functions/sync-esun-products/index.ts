@@ -201,6 +201,35 @@ Deno.serve(async (req) => {
     }
 
     // =========================================================================
+    // STEP 2.5: FETCH LIVE PRICES FROM SHOPIFY API
+    // =========================================================================
+    // Build handle → cheapest 1kg price map from esun3dstore.com
+    const handlePriceMap = new Map<string, number>();
+    try {
+      let page = 1;
+      while (true) {
+        const res = await fetch(
+          `https://esun3dstore.com/products.json?limit=250&page=${page}`,
+          { headers: { 'User-Agent': 'FilaScope-Sync/1.0' } }
+        );
+        if (!res.ok) { console.warn(`[sync-esun-products] Shopify returned ${res.status}`); break; }
+        const data = await res.json();
+        const products: any[] = data.products || [];
+        if (products.length === 0) break;
+        for (const p of products) {
+          const v1kg = p.variants?.find((v: any) => /\b1\s*kg\b|\b1000\s*g\b/i.test(v.title)) || p.variants?.[0];
+          if (v1kg?.price) handlePriceMap.set(p.handle, parseFloat(v1kg.price));
+        }
+        if (products.length < 250) break;
+        page++;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      console.log(`[sync-esun-products] Fetched prices for ${handlePriceMap.size} products`);
+    } catch (err) {
+      console.warn('[sync-esun-products] Price fetch failed — using defaults:', err);
+    }
+
+    // =========================================================================
     // STEP 3: PROCESS SEED DATA
     // =========================================================================
 
@@ -232,7 +261,8 @@ Deno.serve(async (req) => {
           null // No TDS URL in seed
         );
 
-        // Get default price for this product line
+        // Get live price by Shopify handle, fall back to hardcoded defaults
+        const productHandle = seed.productUrl.split('/products/')[1]?.split('?')[0] || '';
         const lineName = seed.filamentLine
           .replace(/\besun\b\s*/gi, '')
           .replace(/\b1\.75\s*mm\b/gi, '')
@@ -240,7 +270,8 @@ Deno.serve(async (req) => {
           .replace(/\b1\s*kg\b/gi, '')
           .replace(/\bfilament\b/gi, '')
           .trim();
-        const defaultPrice = ESUN_DEFAULT_PRICES[lineName] || 19.99;
+        const defaultPrice = (productHandle && handlePriceMap.get(productHandle))
+          || ESUN_DEFAULT_PRICES[lineName] || 19.99;
 
         // Build filament record
         const filament = {

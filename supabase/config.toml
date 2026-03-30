@@ -515,3 +515,21 @@ verify_jwt = false
 
 [functions.aggregate-news]
 verify_jwt = false
+
+[functions.sync-sainsmart-products]
+verify_jwt = false
+
+[functions.sync-gst3d-products]
+verify_jwt = false
+
+[functions.sync-filaments-ca-products]
+verify_jwt = false
+
+[functions.sync-printed-solid-products]
+verify_jwt = false
+
+[functions.sync-atomic-filament-products]
+verify_jwt = false
+
+[functions.sync-taulman3d-products]
+verify_jwt = false

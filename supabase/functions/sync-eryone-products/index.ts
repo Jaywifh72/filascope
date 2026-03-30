@@ -64,6 +64,33 @@ Deno.serve(async (req) => {
 
     const brandId = brand?.id || null;
 
+    // Fetch live prices from Shopify API keyed by variant ID
+    const variantPriceMap = new Map<string, number>();
+    try {
+      let page = 1;
+      while (true) {
+        const res = await fetch(
+          `https://eryone3d.com/products.json?limit=250&page=${page}`,
+          { headers: { 'User-Agent': 'FilaScope-Sync/1.0' } }
+        );
+        if (!res.ok) { console.warn(`[Eryone] Shopify returned ${res.status}`); break; }
+        const data = await res.json();
+        const products: any[] = data.products || [];
+        if (products.length === 0) break;
+        for (const p of products) {
+          for (const v of p.variants || []) {
+            if (v.price) variantPriceMap.set(String(v.id), parseFloat(v.price));
+          }
+        }
+        if (products.length < 250) break;
+        page++;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      console.log(`[Eryone] Fetched prices for ${variantPriceMap.size} variants`);
+    } catch (err) {
+      console.warn('[Eryone] Price fetch failed — will use default prices:', err);
+    }
+
     // Step 1: Process seed into product records
     // For CSV-seeded brands, ignore limit - process entire curated seed
     // The seed is already a finite list, no need to artificially limit
@@ -78,12 +105,13 @@ Deno.serve(async (req) => {
         const cleanedTitle = cleanEryoneTitle(seed.filamentLine);
         
         // Create unique product ID from URL
-        const urlMatch = seed.productUrl.match(/variant=(\d+)/);
-        const variantId = urlMatch ? urlMatch[1] : seed.productUrl.split('/').pop()?.replace(/[^\w-]/g, '');
+        const variantIdFromUrl = seed.productUrl.match(/variant=(\d+)/)?.[1];
+        const variantId = variantIdFromUrl ?? seed.productUrl.split('/').pop()?.replace(/[^\w-]/g, '');
         const productId = `eryone-${variantId || seed.color.toLowerCase().replace(/\s+/g, '-')}`;
 
-        // Get default price
-        const defaultPrice = ERYONE_DEFAULT_PRICES[seed.filamentLine] || 22.99;
+        // Get live price by variant ID, fall back to hardcoded defaults
+        const defaultPrice = (variantIdFromUrl && variantPriceMap.get(variantIdFromUrl))
+          || ERYONE_DEFAULT_PRICES[seed.filamentLine] || 22.99;
 
         // Ensure hex has # prefix
         const colorHex = seed.colorHex ? (seed.colorHex.startsWith('#') ? seed.colorHex : `#${seed.colorHex}`) : null;

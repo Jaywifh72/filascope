@@ -465,6 +465,7 @@ Deno.serve(async (req) => {
           product_line_id: enrichment.productLineId,
           color_family: colorName,
           color_hex: colorHex,
+          variant_price: product.priceEur,
           price_eur: product.priceEur,
           featured_image: product.imageUrl,
           product_url_eu: product.url,

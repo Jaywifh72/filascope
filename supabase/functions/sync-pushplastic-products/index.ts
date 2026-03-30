@@ -274,9 +274,38 @@ Deno.serve(async (req) => {
     }
 
     // =========================================================================
+    // STEP 3.5: Fetch live prices from Shopify API
+    // =========================================================================
+    const variantPriceMap = new Map<string, number>();
+    try {
+      let page = 1;
+      while (true) {
+        const res = await fetch(
+          `https://www.pushplastic.com/products.json?limit=250&page=${page}`,
+          { headers: { 'User-Agent': 'FilaScope-Sync/1.0' } }
+        );
+        if (!res.ok) { console.warn(`[PushPlastic] Shopify returned ${res.status}`); break; }
+        const data = await res.json();
+        const products: any[] = data.products || [];
+        if (products.length === 0) break;
+        for (const p of products) {
+          for (const v of p.variants || []) {
+            if (v.price) variantPriceMap.set(String(v.id), parseFloat(v.price));
+          }
+        }
+        if (products.length < 250) break;
+        page++;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      console.log(`[PushPlastic] Fetched prices for ${variantPriceMap.size} variants`);
+    } catch (err) {
+      console.warn('[PushPlastic] Price fetch failed — using defaults:', err);
+    }
+
+    // =========================================================================
     // STEP 4: Batch insert enriched products
     // =========================================================================
-    
+
     console.log(`Processing ${validProducts.length} products for insert...`);
     
     const batchSize = 50;
@@ -323,7 +352,10 @@ Deno.serve(async (req) => {
           tds_url: enriched.tdsUrl || tdsUrl,
           product_url: entry.colorLink || entry.productLink,
           featured_image: PUSHPLASTIC_PRODUCT_LINE_IMAGES[productLineId] || null,
-          variant_price: getPushPlasticDefaultPrice(material),
+          variant_price: (() => {
+            const varId = (entry.colorLink || '').match(/variant=(\d+)/)?.[1];
+            return (varId && variantPriceMap.get(varId)) || getPushPlasticDefaultPrice(material);
+          })(),
           variant_compare_at_price: null,
           variant_sku: null,
           variant_available: true,
