@@ -38,20 +38,20 @@ jobs:
           KEY_LOCATION="https://filascope.com/${KEY}.txt"
           API_URL="https://api.indexnow.org/indexnow"
 
-          # Read URLs and batch into groups of 10000
           URLS=$(cat /tmp/urls.txt)
           TOTAL=$(echo "$URLS" | wc -l)
           echo "Submitting $TOTAL URLs to IndexNow..."
 
-          # Build JSON payload
-          URL_ARRAY=$(echo "$URLS" | jq -R -s 'split("\n") | map(select(length > 0))')
+          # Write URL array to file to avoid ARG_MAX limits with large sitemaps
+          echo "$URLS" | jq -R -s 'split("\n") | map(select(length > 0))' > /tmp/url_array.json
 
+          # Build payload using --slurpfile (reads from file, avoids shell argument limits)
           PAYLOAD=$(jq -n \
             --arg host "$HOST" \
             --arg key "$KEY" \
             --arg keyLocation "$KEY_LOCATION" \
-            --argjson urlList "$URL_ARRAY" \
-            '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urlList}')
+            --slurpfile urlList /tmp/url_array.json \
+            '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urlList[0]}')
 
           # Submit
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL" \
@@ -70,4 +70,5 @@ jobs:
             echo "✅ Successfully submitted $TOTAL URLs to IndexNow"
           else
             echo "⚠️ IndexNow returned HTTP $HTTP_CODE (may still be processing)"
+            exit 1
           fi
