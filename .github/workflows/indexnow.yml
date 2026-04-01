@@ -46,17 +46,18 @@ jobs:
           echo "$URLS" | jq -R -s 'split("\n") | map(select(length > 0))' > /tmp/url_array.json
 
           # Build payload using --slurpfile (reads from file, avoids shell argument limits)
-          PAYLOAD=$(jq -n \
+          # Write directly to file — never expand into a shell variable (ARG_MAX issue with 5000+ URLs)
+          jq -n \
             --arg host "$HOST" \
             --arg key "$KEY" \
             --arg keyLocation "$KEY_LOCATION" \
             --slurpfile urlList /tmp/url_array.json \
-            '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urlList[0]}')
+            '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urlList[0]}' > /tmp/payload.json
 
-          # Submit
+          # Submit using @file to avoid passing huge payload as shell argument
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL" \
             -H "Content-Type: application/json" \
-            -d "$PAYLOAD")
+            -d @/tmp/payload.json)
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           BODY=$(echo "$RESPONSE" | head -n -1)
