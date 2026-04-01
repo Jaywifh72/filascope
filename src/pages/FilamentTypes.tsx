@@ -116,7 +116,7 @@ export default function FilamentTypes() {
   return (
     <>
       <DocumentHead
-        title="3D Printer Filament Types — Complete Guide to All Materials | FilaScope"
+        title="3D Printer Filament Types — Complete Materials Guide"
         description="A complete guide to all 3D printer filament types — PLA, PETG, ABS, ASA, TPU, Nylon, PC, Carbon Fiber, and specialty materials. Comparison table, print settings, and use cases."
         ogType="article"
       />

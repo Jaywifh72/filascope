@@ -86,7 +86,7 @@ export default function BestPLAFilament() {
   return (
     <>
       <DocumentHead
-        title="Best PLA Filament 2026 — Top 12 Rated by Data | FilaScope"
+        title="Best PLA Filament 2026 — Top Picks Ranked by Data"
         description="12 best PLA filaments rated from 16,000+ options using FilaScore. Real prices from 15+ stores, specs compared. Bambu, Prusament, Hatchbox & more."
         canonical="https://filascope.com/guides/best-pla-filaments"
         ogType="article"
@@ -133,6 +133,39 @@ export default function BestPLAFilament() {
             <p className="text-foreground text-base">
               The best PLA filament in 2026 depends on your use case. For Bambu Lab printers, <strong>Bambu Lab PLA Basic</strong> (optimized for high-speed, ±0.01mm tolerance) is the top pick. For all other printers, <strong>Prusament PLA</strong> (±0.02mm, QR-verified) is the gold standard. Best value: <strong>Polymaker PolyLite PLA</strong> ($21.99/kg, ±0.02mm). Best budget: <strong>Overture PLA</strong> ($17.99/kg, vacuum-sealed). Rankings based on FilaScope&apos;s database of 16,000+ filaments and FilaScore algorithm.
             </p>
+          </div>
+
+          {/* Price Comparison Answer Block — AI-citable, dynamically populated */}
+          <div className="border border-border rounded-lg p-5" id="current-best-prices">
+            <h2 className="text-base font-semibold mb-3">Current Best PLA Prices</h2>
+            {!isLoading && filaments && filaments.length > 0 ? (
+              <>
+                <p className="text-sm text-muted-foreground mb-3">
+                  As of March 2026, the most affordable PLA filaments tracked by FilaScope (ranked by FilaScore, prices from 15+ retailers):
+                </p>
+                <ul className="space-y-1 mb-3">
+                  {filaments.slice(0, 5).map((f) => {
+                    const name = f.display_name || f.product_title;
+                    return (
+                      <li key={f.id} className="text-sm text-foreground">
+                        <strong>{f.vendor} {name}</strong>
+                        {f.variant_price ? <> — from <strong>${f.variant_price.toFixed(2)}/kg</strong></> : null}
+                        {f.material && f.material !== 'PLA' ? <span className="text-muted-foreground"> ({f.material})</span> : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="text-xs text-muted-foreground">
+                  Prices updated from 15+ retailers.{' '}
+                  <Link to="/filaments/pla" className="text-primary hover:underline">Compare all PLA prices →</Link>
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                As of March 2026, the most affordable quality PLA filaments on FilaScope include Sunlu PLA Basic (from $13.99/kg), eSUN PLA+ (from $15.99/kg), Overture PLA (from $16.99/kg), Bambu Lab PLA Basic (from $19.99/kg), and Polymaker PolyTerra PLA (from $19.99/kg). Prices updated daily from 15+ retailers.{' '}
+                <Link to="/filaments/pla" className="text-primary hover:underline">Compare all PLA prices →</Link>
+              </p>
+            )}
           </div>
 
           {/* Why PLA */}

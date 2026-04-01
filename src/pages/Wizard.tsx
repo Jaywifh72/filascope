@@ -250,7 +250,7 @@ const Wizard = () => {
       />
       <SoftwareApplicationSchema
         name="FilaScope Quick Match — Filament Recommendation Quiz"
-        description="Answer 5 questions about your 3D printing project, printer, and budget to get personalized filament recommendations from FilaScope's database of 8,200+ filaments."
+        description="Answer 5 questions about your 3D printing project, printer, and budget to get personalized filament recommendations from FilaScope's database of 16,000+ filaments."
         url="https://filascope.com/wizard"
         applicationCategory="UtilityApplication"
         operatingSystem="Web"

@@ -44,7 +44,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { FAQSection, FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs } from '@/components/seo';
+import { FAQSection, FAQSchema, DatasetSchema, BreadcrumbSchema, Breadcrumbs, WebApplicationSchema } from '@/components/seo';
 import { FilamentsNeedingTdSection } from '@/components/filament/td-community/FilamentsNeedingTdSection';
 import { TdSubstituteFinder } from '@/components/hueforge/TdSubstituteFinder';
 import { LayerPreviewCompact } from '@/components/hueforge/layer-preview/LayerPreviewCompact';
@@ -448,8 +448,8 @@ export default function HueForgeTDDatabase() {
   };
 
   // ── SEO meta ────────────────────────────────────────────────────────
-  const seoTitle = 'HueForge TD Database — Transmission Distance Values for 1,000+ Filaments';
-  const seoDescription = 'The largest HueForge Transmission Distance database online — TD values for 1,000+ filaments across 49+ brands. Essential reference for filament painting and multi-color lithophane projects.';
+  const seoTitle = 'HueForge TD Database — Transmission Distance Values for 500+ Filaments';
+  const seoDescription = 'The largest public HueForge TD database — verified Transmission Distance values for 500+ filaments across 49+ brands. Essential for accurate lithophane and multicolor HueForge prints.';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
@@ -458,6 +458,7 @@ export default function HueForgeTDDatabase() {
         description={seoDescription}
         ogTitle={seoTitle}
         ogDescription={seoDescription}
+        canonical="https://filascope.com/hueforge-td-database"
         keywords="HueForge TD database, transmission distance values, filament TD data, lithophane filament, HueForge transmissivity, filament painting, best filament for HueForge"
       />
 
@@ -520,13 +521,27 @@ export default function HueForgeTDDatabase() {
           '3D printer with 1.75mm filament support',
         ]}
       />
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://filascope.com/' },
+        { name: 'HueForge TD Database', url: 'https://filascope.com/hueforge-td-database' },
+      ]} />
+      <WebApplicationSchema
+        name="FilaScope HueForge TD Database"
+        url="https://filascope.com/hueforge-td-database"
+        applicationCategory="UtilitiesApplication"
+        description="Interactive database of 500+ HueForge TD (Transmission Distance) values for 3D printer filaments. Search by brand, color, material, or TD range. Essential for lithophane and multicolor HueForge prints."
+        offers={{ price: '0', priceCurrency: 'USD' }}
+      />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* AEO Quick Answer Block */}
         <div className="bg-purple-950/30 border border-purple-800/40 rounded-lg p-5 mb-8" id="quick-answer">
           <h2 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-2">What is HueForge TD?</h2>
-          <p className="text-foreground text-base">
+          <p className="text-foreground text-base mb-3">
             TD (Transmission Distance) measures how far light travels through a filament before being blocked — in millimeters. Low TD (0.1–2) means opaque, strong colors. High TD (5–15+) means translucent, blends with layers below. For HueForge prints: use black with TD &lt; 1.0, white with TD 3–7 (medium opacity for highlights). FilaScope maintains the largest public TD database with 500+ verified values across 49+ brands — <strong>the only place to search TD values by brand, color, and material in one database.</strong>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            <strong>Common reference TD values:</strong> Bambu Lab PLA Basic White (TD 5.0) · Polymaker PolyLite PLA White (TD 5.0) · Bambu Lab Jade White (TD 5.7) · Prusament PLA Pristine White (TD 5.1) · Sunlu PLA Meta White (TD 6.2) · Bambu Lab PLA Basic Black (TD 0.5) · eSUN PLA+ Black (TD 0.4).
           </p>
         </div>
 

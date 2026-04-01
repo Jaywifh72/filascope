@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { DocumentHead } from '@/components/seo/DocumentHead';
-import { ArticleSchema, FAQSection } from '@/components/seo';
+import { ArticleSchema, FAQSection, BreadcrumbSchema, DatasetSchema } from '@/components/seo';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -203,7 +203,7 @@ export default function FilamentTemperatureChart() {
   return (
     <>
       <DocumentHead
-        title="3D Filament Temperature Chart — 25+ Materials | FilaScope"
+        title="3D Filament Temperature Chart 2026 — All Materials"
         description="Free temperature chart for 25+ filament types. Nozzle, bed, speed & enclosure settings for PLA, PETG, ABS, TPU, Nylon, PC & more. Printable & searchable."
         canonical={canonical}
         ogTitle="3D Filament Temperature Chart 2026 — Nozzle & Bed Temps for 25+ Materials"
@@ -219,6 +219,25 @@ export default function FilamentTemperatureChart() {
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: '3D Printer Filament Temperature Settings' }}
         proficiencyLevel="Beginner"
+      />
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://filascope.com/' },
+        { name: 'Guides', url: 'https://filascope.com/guides' },
+        { name: 'Filament Temperature Chart', url: 'https://filascope.com/filament-temperature-chart' },
+      ]} />
+      <DatasetSchema
+        name="3D Printer Filament Temperature Chart"
+        description={`Comprehensive temperature settings reference for ${FILAMENT_DATA.length} 3D printer filament materials including PLA, PETG, ABS, TPU, ASA, Nylon, and Polycarbonate. Includes nozzle temperature, bed temperature, print speed, and enclosure requirements.`}
+        url="https://filascope.com/filament-temperature-chart"
+        keywords={['filament temperature', '3D printer settings', 'PLA temperature', 'PETG temperature', 'ABS temperature', 'nozzle temperature', 'bed temperature']}
+        creator={{ '@type': 'Organization', name: 'FilaScope', url: 'https://filascope.com' }}
+        recordCount={FILAMENT_DATA.length}
+        variableMeasured={[
+          { '@type': 'PropertyValue', name: 'Nozzle Temperature', unitText: '°C' },
+          { '@type': 'PropertyValue', name: 'Bed Temperature', unitText: '°C' },
+          { '@type': 'PropertyValue', name: 'Print Speed', unitText: 'mm/s' },
+        ]}
+        dateModified="2026-03-20"
       />
       {/* ItemList schema for temperature data — helps search engines understand the chart content */}
       <script
@@ -321,6 +340,34 @@ export default function FilamentTemperatureChart() {
               {QUICK_REF.map(data => (
                 <QuickRefCard key={data.material} data={data} />
               ))}
+            </div>
+          </section>
+
+          {/* Q&A Answer Sections — AI-citable direct answers */}
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold mb-2">What temperature should I print PLA at?</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                PLA filament prints best at <strong>190–220°C nozzle temperature</strong> with a <strong>50–60°C heated bed</strong>. Start at 210°C and adjust in 5°C increments. Too low causes under-extrusion and poor layer adhesion; too high causes stringing and oozing. Specialty PLA variants like silk PLA and PLA+ typically run 5–10°C higher than standard PLA. Always check the manufacturer-recommended range on the spool label, as values vary by up to 15°C between brands.
+              </p>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-2">What temperature does PETG print at?</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                PETG requires <strong>230–250°C nozzle temperature</strong> and a <strong>70–85°C bed</strong>. Start at 240°C. PETG is sensitive to over-extrusion and stringing — reduce fan speed to 30–50% (unlike PLA which runs full fan) and try dropping flow rate to 95% if you see stringing. PETG bonds well to PEI build surfaces and does not require an enclosure, though one can improve consistency.
+              </p>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-2">What temperature does ABS require?</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                ABS requires <strong>230–260°C nozzle temperature</strong>, a <strong>90–110°C heated bed</strong>, and a <strong>fully enclosed printer</strong>. Without enclosure, ABS will warp, crack, and delaminate due to drafts and ambient temperature fluctuations. Run minimal or zero part cooling fan. ABS is best suited for functional parts that need heat resistance (up to ~80°C) or impact toughness.
+              </p>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-2">Which filament has the lowest print temperature?</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                <strong>PLA has the lowest print temperature</strong> of all common 3D printing filaments at <strong>190–220°C</strong>. PVA support material is the only common filament with a lower range (180–210°C), but it is rarely used as a primary material. This low temperature means PLA works on virtually any printer — including basic models without all-metal hotends — and requires no heated enclosure.
+              </p>
             </div>
           </section>
 

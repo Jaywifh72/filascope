@@ -31,6 +31,12 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
+User-agent: GoogleOther
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
 User-agent: Applebot
 Allow: /
 
@@ -59,6 +65,9 @@ User-agent: YouBot
 Allow: /
 
 User-agent: AI2Bot
+Allow: /
+
+User-agent: Diffbot
 Allow: /
 
 Sitemap: https://filascope.com/sitemap.xml

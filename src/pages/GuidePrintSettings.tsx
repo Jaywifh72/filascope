@@ -1,5 +1,6 @@
 import { DocumentHead } from "@/components/seo/DocumentHead";
 import { ArticleSchema } from "@/components/seo/ArticleSchema";
+import { HowToSchema } from "@/components/seo/HowToSchema";
 import { Link } from "react-router-dom";
 import { SlidersHorizontal, Clock, ArrowLeft, BookOpen } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
@@ -18,13 +19,27 @@ const GuidePrintSettings = () => {
   return (
     <>
       <DocumentHead
-        title="Print Settings Guide | FilaScope"
-        description="Learn optimal print settings for different materials. Master layer height, print speed, temperature, and more."
+        title="3D Print Settings Guide 2026 — Speed, Temp & Layer Height"
+        description="Complete 3D print settings guide: optimal layer height, print speed, nozzle temperature, bed temperature, and retraction settings for PLA, PETG, ABS, TPU, ASA, and Nylon. Updated 2026."
+        canonical="https://filascope.com/guides/print-settings"
+        ogType="article"
+        keywords="3D print settings, print speed settings, layer height guide, nozzle temperature settings, retraction settings, filament print settings"
+      />
+      <HowToSchema
+        name="How to Dial In 3D Print Settings for Any Filament"
+        description="Step-by-step guide to setting optimal print settings for any 3D printing filament material."
+        steps={[
+          { name: "Set nozzle temperature", text: "Start with the manufacturer's recommended nozzle temperature. For PLA, this is typically 200–220°C. For PETG, 230–250°C. For ABS, 240–260°C." },
+          { name: "Set bed temperature", text: "Set the heated bed temperature: PLA 50–60°C, PETG 70–85°C, ABS 90–110°C, TPU 30–60°C. No heated bed required for PLA if printing slowly." },
+          { name: "Choose layer height", text: "Use 0.2mm layer height for most prints. Use 0.1mm for detail prints. Use 0.3mm for fast structural prints. Layer height must be 75% or less of nozzle diameter." },
+          { name: "Set print speed", text: "Start at 50mm/s for PLA, 45mm/s for PETG, 40mm/s for ABS. Modern high-speed printers (Bambu Lab, Creality K1) can run PLA at 200–300mm/s with high-speed filament." },
+          { name: "Configure retraction", text: "For direct drive: 0.5–1mm retraction at 35mm/s. For Bowden: 4–7mm retraction at 45mm/s. Too much retraction causes clogs. Too little causes stringing." },
+        ]}
       />
       <ArticleSchema
-        headline="Print Settings Guide"
-        description="Learn optimal print settings for different materials. Master layer height, print speed, temperature, and more."
-        url="https://filascope.com/print-settings-guide"
+        headline="3D Print Settings Guide 2026"
+        description="Complete 3D print settings guide: optimal layer height, print speed, nozzle temperature, bed temperature, and retraction settings for PLA, PETG, ABS, TPU, ASA, and Nylon."
+        url="https://filascope.com/guides/print-settings"
         datePublished="2025-01-15"
         dateModified="2026-02-20"
       />
