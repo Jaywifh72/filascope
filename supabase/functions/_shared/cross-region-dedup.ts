@@ -48,7 +48,33 @@ export async function findCrossRegionMatch(
   }
 
   if (!matches || matches.length === 0) {
-    return null;
+    // Fallback: match by vendor name instead of brand_id
+    // Handles filaments seeded with a legacy brand_id that doesn't match automated_brands
+    let vendorQuery = supabase
+      .from('filaments')
+      .select('id, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy')
+      .eq('vendor', vendor);
+
+    if (material) {
+      vendorQuery = vendorQuery.eq('material', material);
+    } else {
+      vendorQuery = vendorQuery.is('material', null);
+    }
+
+    if (colorHex) {
+      vendorQuery = vendorQuery.or(`color_hex.eq.${colorHex},product_title.ilike.${productTitle}`);
+    } else {
+      vendorQuery = vendorQuery.ilike('product_title', productTitle);
+    }
+
+    const { data: vendorMatches } = await vendorQuery.limit(10);
+
+    if (!vendorMatches || vendorMatches.length === 0) {
+      return null;
+    }
+
+    console.log(`[cross-region-dedup] Vendor fallback match found for ${vendor}`);
+    return selectBestMatch(vendorMatches);
   }
 
   if (matches.length === 1) {
@@ -58,7 +84,20 @@ export async function findCrossRegionMatch(
 
   // Multiple matches: pick the one with most regional prices filled
   console.log(`[cross-region-dedup] ${matches.length} candidates found, selecting best quality match`);
-  
+  return selectBestMatch(matches);
+}
+
+type PriceRow = {
+  id: string;
+  variant_price: number | null;
+  price_cad: number | null;
+  price_eur: number | null;
+  price_gbp: number | null;
+  price_aud: number | null;
+  price_jpy: number | null;
+};
+
+function selectBestMatch(matches: PriceRow[]): string {
   let bestMatch = matches[0];
   let bestScore = 0;
 

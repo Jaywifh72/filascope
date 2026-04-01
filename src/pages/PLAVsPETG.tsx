@@ -194,6 +194,14 @@ export default function PLAVsPETG() {
           <span>PLA vs PETG</span>
         </nav>
 
+        {/* AEO Quick Answer Block */}
+        <div className="bg-cyan-950/30 border border-cyan-800/40 rounded-lg p-5 mb-8" id="quick-answer">
+          <h2 className="text-sm font-semibold text-cyan-400 uppercase tracking-wider mb-2">Quick Answer</h2>
+          <p className="text-foreground text-base">
+            <strong>PLA vs PETG:</strong> Use PLA for decorative prints, figurines, and prototypes — it prints at 190–220°C, needs no enclosure, and is the easiest material to use. Use PETG for functional parts, anything that needs heat resistance above 60°C, or chemical resistance — it prints at 230–250°C and is ~30% stronger than PLA. PETG costs roughly the same but requires a 70–85°C bed. For beginners: PLA. For functional parts: PETG.
+          </p>
+        </div>
+
         <header className="mb-10">
           <h1 className="text-3xl font-bold mb-3">PLA vs PETG — Which 3D Printer Filament Is Right for You?</h1>
           <p className="text-muted-foreground text-lg leading-relaxed">

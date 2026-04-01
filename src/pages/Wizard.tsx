@@ -261,6 +261,8 @@ const Wizard = () => {
       <FAQSchema faqs={[
         { question: "How does FilaScope's filament quiz work?", answer: "FilaScope's Quick Match asks 5 questions about your project type, printer model, material preference, budget, and priorities. It then recommends the best-matching filaments from our database of 8,200+ options with real pricing." },
         { question: "Is FilaScope's filament recommendation tool free?", answer: "Yes, FilaScope's Quick Match filament finder is completely free. No account required." },
+        { question: "How do I choose the right 3D printer filament?", answer: "Choose filament based on four factors: (1) your printer — open-frame printers work best with PLA or PETG; enclosed printers can handle ABS, ASA, and Nylon. (2) Your project — decorative prints use PLA; functional parts use PETG or ABS; flexible parts use TPU. (3) Your skill level — PLA is easiest, engineering materials are hardest. (4) Your budget — PLA and PETG are $15–25/kg; engineering materials cost $30–80/kg. Use FilaScope's Quick Match wizard for instant personalized recommendations." },
+        { question: "What is the best filament for beginners?", answer: "PLA is the best filament for beginners. It prints at low temperatures (190–220°C), doesn't require a heated bed, doesn't warp, and is forgiving of minor calibration errors. Top beginner brands: Overture PLA ($17.99/kg), Polymaker PolyLite PLA ($21.99/kg), and Hatchbox PLA ($22.99/kg)." },
       ]} />
       <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}>
       <div className="max-w-2xl mx-auto w-full flex flex-col">

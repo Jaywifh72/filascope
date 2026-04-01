@@ -203,11 +203,11 @@ export default function FilamentTemperatureChart() {
   return (
     <>
       <DocumentHead
-        title="3D Filament Temperature Chart 2026 — Nozzle & Bed Temps for 25+ Materials"
-        description="Free printable 3D filament temperature chart — nozzle temps, bed temps, speed & enclosure settings for PLA, PETG, ABS, TPU, Nylon, PC and 20+ materials. Updated March 2026."
+        title="3D Filament Temperature Chart — 25+ Materials | FilaScope"
+        description="Free temperature chart for 25+ filament types. Nozzle, bed, speed & enclosure settings for PLA, PETG, ABS, TPU, Nylon, PC & more. Printable & searchable."
         canonical={canonical}
         ogTitle="3D Filament Temperature Chart 2026 — Nozzle & Bed Temps for 25+ Materials"
-        ogDescription="Free printable 3D filament temperature chart — nozzle temps, bed temps, speed & enclosure settings for PLA, PETG, ABS, TPU, Nylon, PC and 20+ materials. Updated March 2026."
+        ogDescription="Free printable 3D filament temperature chart — nozzle temps, bed temps, speed & enclosure settings for PLA, PETG, ABS, TPU, Nylon, PC and 20+ materials."
         keywords="filament temperature chart, 3d printer temperature settings, nozzle temperature guide, bed temperature chart, PLA temperature, PETG temperature, ABS temperature, filament print settings 2026"
       />
       <ArticleSchema
@@ -239,6 +239,52 @@ export default function FilamentTemperatureChart() {
           }),
         }}
       />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What temperature should I print PLA at?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "PLA prints at 190–220°C nozzle temperature with a 50–60°C heated bed. Start at 205°C and adjust based on your specific brand. Some high-speed PLA formulations can run at 220–240°C for faster flow rates."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What temperature does PETG print at?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "PETG prints at 230–250°C nozzle temperature with a 70–85°C bed. Start at 240°C. PETG is sensitive to over-extrusion and stringing — try reducing flow rate to 95% if you see stringing."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What temperature does ABS require?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "ABS requires 230–260°C nozzle temperature and a 90–110°C bed. It also requires a fully enclosed printer to prevent warping. Without enclosure, ABS will crack and delaminate."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What temperature does TPU print at?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "TPU (flexible filament) prints at 220–250°C with a 30–60°C bed. Print slowly (20–30mm/s) with retraction disabled or minimized. Requires a direct drive extruder for best results."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What temperature does Nylon require?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Nylon prints at 240–270°C nozzle with a 70–90°C bed and requires an enclosure. It is highly hygroscopic — must be dried before printing (80°C for 8–12 hours). Use a dedicated filament dryer while printing."
+            }
+          }
+        ]
+      }) }} />
 
       <div className="min-h-screen bg-background">
         {/* Breadcrumbs */}

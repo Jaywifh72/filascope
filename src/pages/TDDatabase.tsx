@@ -178,9 +178,11 @@ export default function TDDatabase() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <DocumentHead
-        title="TD Value Database - Transmission Distance for 3D Printing Filaments | FilaScope"
-        description="Complete database of Transmission Distance (TD) values for 3D printing filaments. Essential data for HueForge, lithophanes, and multicolor printing. Export to CSV."
-        keywords="TD database, Transmission Distance, filament data, HueForge values, lithophane filament, 3D printing data"
+        title="HueForge TD Database — 537+ Filament TD Values | FilaScope"
+        description="The largest TD value database for HueForge & lithophanes. 537+ measured Transmission Distance values, searchable & exportable to CSV. Free."
+        ogTitle="TD Value Database — Transmission Distance for 3D Printing Filaments | FilaScope"
+        ogDescription="Complete database of 537+ Transmission Distance (TD) values for 3D printing filaments. Essential data for HueForge, lithophanes, and multicolor printing."
+        keywords="TD database, Transmission Distance, filament data, HueForge values, lithophane filament, 3D printing data, HueForge TD"
       />
       
       <DatasetSchema

@@ -1,19 +1,19 @@
 # FilaScope
 
-> The world's most complete 3D printer filament comparison platform. FilaScope indexes 18,213 filaments from 55+ brands with specs, real-time pricing from 15+ retailers, HueForge TD values, and printer compatibility data.
+> The world's most complete 3D printer filament comparison platform. FilaScope indexes 16,107 filaments from 55 brands with specs, real-time pricing from 39 retailers, 500+ verified HueForge TD values, and printer compatibility data.
 
-> Last updated: 2026-03-29
+> Last updated: 2026-03-31
 
 ## Unique Data
 
-FilaScope is the only platform combining HueForge TD values (111+ verified filaments), multi-regional live pricing (USD, CAD, EUR, GBP, AUD, JPY), and printer compatibility data in one database. Prices updated daily from 15+ retailers.
+FilaScope is the only platform combining HueForge TD values (500+ verified TD values across 49+ brands), multi-regional live pricing (USD, CAD, EUR, GBP, AUD, JPY), and printer compatibility data in one database. Prices updated daily from 39 retailers.
 
 ## Data Coverage
 
-- Filaments: 18,213 variants from 55+ brands
+- Filaments: 16,107 variants from 55 brands
 - Printers: 155 models with full specs (271-field schema)
-- HueForge TD values: 111+ filaments with verified TD measurements
-- Static pages: 113 prerendered pages
+- HueForge TD values: 500+ filaments with verified TD values (the largest public database)
+- Static pages: 5,101 prerendered pages (filaments, brands, printers, guides, colors)
 - Material categories: 7 (PLA, PETG, ABS, TPU, ASA, Nylon, PC)
 - Markets: US, Canada, EU, UK, Australia, Japan
 - Currencies: USD, CAD, EUR, GBP, AUD, JPY
@@ -21,15 +21,20 @@ FilaScope is the only platform combining HueForge TD values (111+ verified filam
 ## Core Pages
 
 - Homepage: https://filascope.com/
-- Filament Database (18,213 products): https://filascope.com/filaments
+- Filament Database (16,107 products): https://filascope.com/filaments
 - 3D Printer Database (155 printers): https://filascope.com/printers
 - Brand Directory (55+ brands): https://filascope.com/brands
-- HueForge TD Database (111+ filaments with TD values): https://filascope.com/hueforge-td-database
+- HueForge TD Database (500+ verified TD values): https://filascope.com/hueforge-td-database
 - Filament Deals: https://filascope.com/deals
 - Comparison Tool: https://filascope.com/compare
-- Color Finder: https://filascope.com/colors
+- Color Finder (search filaments by hex color): https://filascope.com/colors
 - Material Guide: https://filascope.com/materials
 - FilaScore Rankings: https://filascope.com/rankings
+- Printer Comparison Tool: https://filascope.com/printers/compare
+- Material Comparison Tool: https://filascope.com/materials/compare
+- Compatibility Matrix: https://filascope.com/compatibility-matrix
+- Filament Temperature Chart: https://filascope.com/filament-temperature-chart
+- Slicer Directory: https://filascope.com/slicer-directory
 
 ## HueForge TD Database
 

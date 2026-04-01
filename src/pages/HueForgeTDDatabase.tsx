@@ -522,6 +522,14 @@ export default function HueForgeTDDatabase() {
       />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* AEO Quick Answer Block */}
+        <div className="bg-purple-950/30 border border-purple-800/40 rounded-lg p-5 mb-8" id="quick-answer">
+          <h2 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-2">What is HueForge TD?</h2>
+          <p className="text-foreground text-base">
+            TD (Transmission Distance) measures how far light travels through a filament before being blocked — in millimeters. Low TD (0.1–2) means opaque, strong colors. High TD (5–15+) means translucent, blends with layers below. For HueForge prints: use black with TD &lt; 1.0, white with TD 3–7 (medium opacity for highlights). FilaScope maintains the largest public TD database with 500+ verified values across 49+ brands — <strong>the only place to search TD values by brand, color, and material in one database.</strong>
+          </p>
+        </div>
+
         {/* ── Hero — compact, data-first ────────────────────────── */}
         <section className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-foreground">
