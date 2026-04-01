@@ -1,0 +1,74 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_GA_MEASUREMENT_ID: ${{ secrets.VITE_GA_MEASUREMENT_ID }}
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=filascope-prod --branch=main
+
+      - name: Notify OpenClaw — success
+        if: success()
+        env:
+          OPENCLAW_HOOK_TOKEN: ${{ secrets.OPENCLAW_HOOK_TOKEN }}
+          OPENCLAW_HOOK_URL: ${{ secrets.OPENCLAW_HOOK_URL }}
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          PAYLOAD=$(jq -n \
+            --arg event "deploy_complete" \
+            --arg status "success" \
+            --arg run_url "$RUN_URL" \
+            --arg message "filascope.com is live on Cloudflare Pages. Commit: ${{ github.event.head_commit.message }}" \
+            '{event:$event, status:$status, run_url:$run_url, message:$message}')
+          curl -s -X POST "${OPENCLAW_HOOK_URL}/hooks/filascope-sync" \
+            -H "Authorization: Bearer ${OPENCLAW_HOOK_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" || echo "⚠️ OpenClaw notification failed (non-blocking)"
+
+      - name: Notify OpenClaw — failure
+        if: failure()
+        env:
+          OPENCLAW_HOOK_TOKEN: ${{ secrets.OPENCLAW_HOOK_TOKEN }}
+          OPENCLAW_HOOK_URL: ${{ secrets.OPENCLAW_HOOK_URL }}
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          PAYLOAD=$(jq -n \
+            --arg event "deploy_complete" \
+            --arg status "failure" \
+            --arg run_url "$RUN_URL" \
+            --arg message "BUILD OR DEPLOY FAILED. filascope.com may be down or outdated. Commit: ${{ github.event.head_commit.message }}" \
+            '{event:$event, status:$status, run_url:$run_url, message:$message}')
+          curl -s -X POST "${OPENCLAW_HOOK_URL}/hooks/filascope-sync" \
+            -H "Authorization: Bearer ${OPENCLAW_HOOK_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" || echo "⚠️ OpenClaw notification failed (non-blocking)"

@@ -788,3 +788,41 @@ jobs:
               });
               console.log(`Added comment to existing issue #${existingIssues[0].number}`);
             }
+
+      - name: Notify OpenClaw
+        if: always()
+        env:
+          OPENCLAW_HOOK_TOKEN: ${{ secrets.OPENCLAW_HOOK_TOKEN }}
+          OPENCLAW_HOOK_URL: ${{ secrets.OPENCLAW_HOOK_URL }}
+        run: |
+          FAILED_COUNT="${{ steps.fetch-stats.outputs.failed_count }}"
+          ZERO="${{ steps.fetch-stats.outputs.zero_discovery }}"
+
+          # Determine status
+          if [ "${FAILED_COUNT:-0}" -gt 3 ]; then
+            STATUS="failure"
+          elif [ -n "$ZERO" ] || [ "${FAILED_COUNT:-0}" -gt 0 ]; then
+            STATUS="warning"
+          else
+            STATUS="success"
+          fi
+
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          PAYLOAD=$(jq -n \
+            --arg event "sync_complete" \
+            --arg status "$STATUS" \
+            --argjson created "${{ steps.fetch-stats.outputs.total_created || 0 }}" \
+            --argjson updated "${{ steps.fetch-stats.outputs.total_updated || 0 }}" \
+            --argjson failed_count "${FAILED_COUNT:-0}" \
+            --arg failed_brands "${{ steps.fetch-stats.outputs.failed_brands }}" \
+            --arg zero_discovery "$ZERO" \
+            --arg run_url "$RUN_URL" \
+            '{event:$event, status:$status, created:$created, updated:$updated,
+              failed_count:$failed_count, failed_brands:$failed_brands,
+              zero_discovery:$zero_discovery, run_url:$run_url}')
+
+          curl -s -X POST "${OPENCLAW_HOOK_URL}/hooks/filascope-sync" \
+            -H "Authorization: Bearer ${OPENCLAW_HOOK_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" || echo "⚠️ OpenClaw notification failed (non-blocking)"

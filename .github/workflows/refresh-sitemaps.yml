@@ -49,3 +49,17 @@ jobs:
               workflow_id: 'indexnow.yml',
               ref: 'main',
             });
+
+      - name: Notify OpenClaw
+        if: always()
+        env:
+          OPENCLAW_HOOK_TOKEN: ${{ secrets.OPENCLAW_HOOK_TOKEN }}
+          OPENCLAW_HOOK_URL: ${{ secrets.OPENCLAW_HOOK_URL }}
+        run: |
+          CHANGED="${{ steps.changes.outputs.changed }}"
+          MSG="🗺️ FilaScope sitemaps refreshed. Changes detected: ${CHANGED}."
+          [ "$CHANGED" = "true" ] && MSG="$MSG IndexNow submission triggered." || MSG="$MSG No changes, IndexNow skipped."
+          curl -s -X POST "${OPENCLAW_HOOK_URL}/hooks/filascope-wake" \
+            -H "Authorization: Bearer ${OPENCLAW_HOOK_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\": \"$MSG\", \"mode\": \"next-heartbeat\"}" || echo "⚠️ OpenClaw notification failed (non-blocking)"
