@@ -123,8 +123,8 @@ export default function FilamentDatabase() {
   return (
     <div className="min-h-screen bg-background">
       <DocumentHead
-        title="3D Printer Filament Database — Search 16,000+ Filaments by Spec"
-        description="Searchable database of 16,000+ 3D printer filaments with material specs, temperatures, prices, and HueForge TD values. Filter by brand, material, color, and more."
+        title="3D Printer Filament Database — Search 22,000+ Filaments by Spec"
+        description="Searchable database of 22,000+ 3D printer filaments with material specs, temperatures, prices, and HueForge TD values. Filter by brand, material, color, and more."
         ogType="website"
         keywords="3D printer filament database, search filaments, filament specs, filament prices, PLA filament, PETG filament, filament comparison tool, HueForge TD values"
       />

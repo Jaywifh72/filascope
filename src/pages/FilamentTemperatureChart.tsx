@@ -581,7 +581,7 @@ export default function FilamentTemperatureChart() {
             <div className="grid sm:grid-cols-2 gap-3">
               {[
                 { to: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide (in-depth)' },
-                { to: '/filaments', label: 'Browse 16,000+ filaments with brand-specific temps' },
+                { to: '/filaments', label: 'Browse 22,000+ filaments with brand-specific temps' },
                 { to: '/colors', label: 'Filament Color Finder — match any color' },
                 { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
                 { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },
