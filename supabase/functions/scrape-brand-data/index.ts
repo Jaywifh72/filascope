@@ -29,10 +29,12 @@ interface ScrapeRequest {
 
 interface ScrapeStats {
   processed: number;
-  created: number;
+  matched: number;   // filaments found in DB (updated or unchanged) — FIX: separate from processed
+  created: number;   // new filaments auto-created
   updated: number;
   unchanged: number;
-  errors: number;
+  notFound: number;  // FIX: not-found is NOT an error — expected when auto_create=false
+  errors: number;    // FIX: only real I/O failures count as errors
   priceChanges: number;
   availabilityChanges: number;
   priceHistoryLogged: number;
@@ -253,7 +255,9 @@ async function completeBrandSyncLog(
   const { error } = await supabase.rpc('complete_brand_scrape', {
     p_sync_log_id: syncLogId,
     p_success: stats.errors === 0,
-    p_products_discovered: stats.processed,
+    // FIX: products_discovered = filaments matched to DB + new creations
+    // previously used stats.processed which counted ALL scraped items including not_found
+    p_products_discovered: stats.matched + stats.created,
     p_products_created: stats.created,
     p_products_updated: stats.updated,
     p_products_failed: stats.errors,
@@ -318,9 +322,11 @@ async function processScrapedProducts(
 ): Promise<{ stats: ScrapeStats; results: unknown[] }> {
   const stats: ScrapeStats = {
     processed: 0,
+    matched: 0,
     created: 0,
     updated: 0,
     unchanged: 0,
+    notFound: 0,
     errors: 0,
     priceChanges: 0,
     availabilityChanges: 0,
@@ -409,9 +415,9 @@ async function processScrapedProducts(
           continue;
         }
         
-        // No auto-create - log as not found
-        console.log(`No matching filament found for: ${product.title} (${product.productId})`);
-        stats.errors++;
+        // FIX: not_found is expected behavior when auto_create=false — not an error
+        console.log(`Not found (auto-create disabled): ${product.title} (${product.productId})`);
+        stats.notFound++;
         results.push({
           productId: product.productId,
           title: product.title,
@@ -426,6 +432,9 @@ async function processScrapedProducts(
         compareAtPrice: product.compareAtPrice,
         available: product.available,
       }));
+
+      // FIX: track matched filaments (DB hits — updated OR unchanged)
+      stats.matched++;
 
       // Skip if unchanged (unless force is set)
       if (newHash === filament.external_data_hash && !force) {
@@ -792,9 +801,11 @@ Deno.serve(async (req) => {
     const allResults: Record<string, { stats: ScrapeStats; results: unknown[]; syncLogId?: string }> = {};
     const totalStats: ScrapeStats = {
       processed: 0,
+      matched: 0,
       created: 0,
       updated: 0,
       unchanged: 0,
+      notFound: 0,
       errors: 0,
       priceChanges: 0,
       availabilityChanges: 0,
@@ -896,9 +907,11 @@ Deno.serve(async (req) => {
 
         // Aggregate stats
         totalStats.processed += stats.processed;
+        totalStats.matched += stats.matched;
         totalStats.created += stats.created;
         totalStats.updated += stats.updated;
         totalStats.unchanged += stats.unchanged;
+        totalStats.notFound += stats.notFound;
         totalStats.errors += stats.errors;
         totalStats.validationErrors += stats.validationErrors;
         totalStats.priceChanges += stats.priceChanges;
@@ -931,9 +944,11 @@ Deno.serve(async (req) => {
         
         const errorStats: ScrapeStats = {
           processed: 0,
+          matched: 0,
           created: 0,
           updated: 0,
           unchanged: 0,
+          notFound: 0,
           errors: 1,
           priceChanges: 0,
           availabilityChanges: 0,
@@ -975,7 +990,7 @@ Deno.serve(async (req) => {
 
     const executionTime = (Date.now() - startTime) / 1000;
 
-    console.log(`\n✅ Completed in ${executionTime.toFixed(1)}s: ${totalStats.processed} processed, ${totalStats.created} created, ${totalStats.updated} updated, ${totalStats.priceChanges} price changes`);
+    console.log(`\n✅ Completed in ${executionTime.toFixed(1)}s: ${totalStats.processed} processed, ${totalStats.matched} matched, ${totalStats.created} created, ${totalStats.updated} updated, ${totalStats.notFound} not_found (expected), ${totalStats.errors} errors, ${totalStats.priceChanges} price changes`);
 
     return new Response(
       JSON.stringify({
