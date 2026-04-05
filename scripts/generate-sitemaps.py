@@ -7,8 +7,8 @@ import urllib.request
 from datetime import date
 
 BASE_URL = "https://filascope.com"
-API_BASE = "https://cfqfavmhdbyjzejipiwa.supabase.co/rest/v1"
-API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmcWZhdm1oZGJ5anplamlwaXdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzODc5MjMsImV4cCI6MjA3OTk2MzkyM30.6OF5AnRIiwPAhts1Ob9b8yigJcOP_9o4F_9mALklxoQ"
+API_BASE = "https://fytxfdvbzstnimzhjgth.supabase.co/rest/v1"
+API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5dHhmZHZienN0bmltemhqZ3RoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDM0ODY2MCwiZXhwIjoyMDc5OTI0NjYwfQ.hrXImQ-abyBfwhMsti7GnLdILZR9rWvUNN5eXb8cjCg"
 TODAY = date.today().isoformat()
 OUT_DIR = "public"
 
