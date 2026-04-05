@@ -114,6 +114,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
   // Resolve display values: live data → cache → hardcoded fallback
   const displayProductCount = productCount > 0 ? productCount : (cached?.productCount ?? null);
+  const displayFilamentCount = filamentCount > 0 ? filamentCount : (cached?.filamentCount ?? null);
   const displayBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? 48);
 
   // Cache successful live values (all three must be valid)
@@ -143,7 +144,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             Find Your Perfect Filament
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0 whitespace-nowrap">
-            <AnimatedStat value={displayProductCount} /> filaments · <AnimatedStat value={displayBrandCount} /> brands · Updated daily
+            <AnimatedStat value={displayFilamentCount} /> filaments · <AnimatedStat value={displayBrandCount} /> brands · Updated daily
           </p>
         </div>
 
