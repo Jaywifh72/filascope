@@ -3,11 +3,11 @@
  * Update these when the database grows — every page will reflect the change.
  */
 export const SITE_COUNTS = {
-  FILAMENT_PRODUCTS: '1,080+',    // Unique base filament SKUs
-  FILAMENT_VARIANTS: '8,200+',    // Total color/size variants
-  BRANDS: '48+',
-  PRINTERS: '119+',
+  FILAMENT_PRODUCTS: '5,414+',    // Unique base filament SKUs (from sitemap 2026-04-05)
+  FILAMENT_VARIANTS: '24,000+',    // Total color/size variants
+  BRANDS: '49+',
+  PRINTERS: '167+',            // Printer database count (2026-04-05)
   STORES: '15+',
-  TD_FILAMENTS: '500+',
+  TD_FILAMENTS: '537+',
   GUIDES: '50+',
 } as const;
