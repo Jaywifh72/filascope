@@ -37,6 +37,7 @@ import { useAffiliateLink } from '@/hooks/useAffiliateLink';
 import { AffiliateDiscountBanner } from '@/components/affiliate/AffiliateDiscountBanner';
 import { AffiliateDisclosure } from '@/components/affiliate/AffiliateDisclosure';
 import { AffiliateInactiveBanner } from '@/components/affiliate/AffiliateInactiveBanner';
+import { SocialShare } from '@/components/sharing/SocialShare';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -87,6 +88,11 @@ interface FilamentPurchaseSidebarProps {
   diameterNominalMm?: number | null;
   nozzleTempMinC?: number | null;
   nozzleTempMaxC?: number | null;
+  // NEW: Social sharing data
+  colorName?: string | null;
+  transmissionDistance?: number | null;
+  compatiblePrinterCount?: number | null;
+  colorHex?: string | null;
 }
 
 export function FilamentPurchaseSidebar({
@@ -129,6 +135,10 @@ export function FilamentPurchaseSidebar({
   diameterNominalMm,
   nozzleTempMinC,
   nozzleTempMaxC,
+  colorName,
+  transmissionDistance,
+  compatiblePrinterCount,
+  colorHex,
 }: FilamentPurchaseSidebarProps) {
   const { formatPrice, currency } = useRegion();
   const { trackStoreClick } = useConversionTracking();
@@ -384,6 +394,27 @@ export function FilamentPurchaseSidebar({
               </span>
             )}
           </Button>
+
+          {/* Divider */}
+          <div className="h-px bg-border my-2" />
+
+          {/* Social Share Section */}
+          <SocialShare
+            filament={{
+              id: filamentId,
+              brand: vendor,
+              material: material,
+              color_name: colorName || productTitle,
+              hue_forge_td: transmissionDistance,
+              price_cad: pricePerKg,
+              diameter: diameterNominalMm ? `${diameterNominalMm}` : '1.75',
+              compatible_printer_count: compatiblePrinterCount,
+              color_hex: colorHex,
+            }}
+            variant="vertical"
+            showEmbed={true}
+            className="space-y-3"
+          />
 
           {/* Divider */}
           <div className="h-px bg-border my-2" />

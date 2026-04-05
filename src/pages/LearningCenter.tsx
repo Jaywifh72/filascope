@@ -370,9 +370,9 @@ export default function LearningCenter() {
     <>
     <DocumentHead
       title="3D Printing Guides, Tutorials & Buying Advice | FilaScope"
-      description="Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by data from 22,000+ filaments across 49+ brands."
+      description="Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by data from 24,000+ filaments across 49+ brands."
       ogTitle="3D Printing Guides, Tutorials & Buying Advice | FilaScope"
-      ogDescription="Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by data from 22,000+ filaments across 49+ brands."
+      ogDescription="Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by data from 24,000+ filaments across 49+ brands."
     />
     <CollectionPageSchema
       name="3D Printing Guides, Tutorials & Buying Advice"

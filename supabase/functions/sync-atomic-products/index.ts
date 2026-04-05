@@ -44,6 +44,8 @@ const corsHeaders = {
 const BASELINE_PRODUCT_COUNT = 150;
 // Drop >20% from baseline triggers a warning anomaly alert
 const CATALOG_DROP_WARN_PERCENT = 0.20;
+// Maximum products to scrape per run to stay within edge function timeout
+const MAX_PRODUCTS_TO_SCRAPE = 100;
 
 interface SyncRequest {
   dryRun?: boolean;
@@ -196,7 +198,7 @@ async function scrapeProductPage(
         url: productUrl,
         formats: ['html'],
         onlyMainContent: false,
-        waitFor: 2000,
+        waitFor: 1000, // Reduced from 2000ms to 1000ms for faster scraping
       }),
     });
 
@@ -505,9 +507,16 @@ Deno.serve(async (req) => {
     // =========================================================================
     console.log('[ATOMIC-SYNC] ─────────────────────────────────────────────────────');
     console.log('[ATOMIC-SYNC] STEP 2: Scraping product pages for H1 titles');
+    console.log(`[ATOMIC-SYNC] Discovered ${uniqueProducts.size} unique products to scrape`);
     
-    const productsToInsert: any[] = [];
     const productEntries = Array.from(uniqueProducts.entries());
+    
+    // Limit products to scrape to stay within edge function timeout
+    if (productEntries.length > MAX_PRODUCTS_TO_SCRAPE) {
+      console.log(`[ATOMIC-SYNC] ⚠️  Limiting scrape from ${productEntries.length} to ${MAX_PRODUCTS_TO_SCRAPE} products to avoid timeout`);
+      productEntries.length = MAX_PRODUCTS_TO_SCRAPE;
+    }
+    
     const BATCH_SIZE = 5;
     const totalBatches = Math.ceil(productEntries.length / BATCH_SIZE);
     

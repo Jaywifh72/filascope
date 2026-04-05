@@ -9,6 +9,7 @@ import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { trackSearch as trackGA4Search } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
+import { ColorSearch } from "@/components/color-finder/ColorSearch";
 
 interface SearchInputWithHistoryProps {
   value: string;
@@ -254,7 +255,7 @@ export function SearchInputWithHistory({
             onClick={() => onChange("")}
             className={cn(
               "absolute top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors",
-              isLoading && value.length >= 2 ? "right-10" : "right-3"
+              isLoading && value.length >= 2 ? "right-14" : "right-7"
             )}
             aria-label="Clear search"
           >
@@ -262,10 +263,14 @@ export function SearchInputWithHistory({
           </button>
         )}
         {isLoading && value.length >= 2 && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+          <div className="absolute right-7 top-1/2 -translate-y-1/2">
             <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
         )}
+        {/* Color Search button */}
+        <div className="absolute right-1 top-1/2 -translate-y-1/2">
+          <ColorSearch variant="icon" className="hover:bg-transparent" />
+        </div>
       </div>
 
       {/* ── Smart Category Chips ── */}

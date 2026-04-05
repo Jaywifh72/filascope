@@ -3,6 +3,7 @@ import { Users, RefreshCw } from "lucide-react";
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { SearchBarGated } from "@/components/search/SearchBarGated";
 import { SmartContextBar } from "@/components/SmartContextBar";
+import { PrinterSearch } from "@/components/PrinterSearch";
 
 const CACHE_KEY = "hero_stats_cache";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -150,7 +151,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
         {/* Row 2: Search bar — always visible, full width */}
         <SearchBarGated>
-          <div className="w-full max-w-2xl search-icon-pulse">
+          <div className="w-full max-w-2xl search-icon-pulse mb-4">
             <style>{`
               .search-icon-pulse svg:first-child {
                 animation: searchPulse 5s ease-in-out infinite;
@@ -169,6 +170,11 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             />
           </div>
         </SearchBarGated>
+
+        {/* Row 3: Printer Search Component */}
+        <div className="w-full max-w-2xl">
+          <PrinterSearch />
+        </div>
       </div>
     </section>
   );

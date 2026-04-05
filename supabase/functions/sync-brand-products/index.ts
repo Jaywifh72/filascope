@@ -337,12 +337,16 @@ Deno.serve(async (req) => {
 
   try {
     const body: SyncRequest = await req.json();
-    let { brandSlug, dryRun = true, materialFilter, regions, tasks = ['products'], limit = 100, background = false } = body;
+    let { brandSlug, dryRun = true, materialFilter, regions, tasks = ['products'], limit = 50, background = false } = body;
     
+    // Reduce limit for slow brands to prevent timeout
     // Anycubic has many color variants per product line - increase limit to ensure complete coverage
-    if (brandSlug === 'anycubic' && limit <= 100) {
-      limit = 200;
+    if (brandSlug === 'anycubic' && limit <= 50) {
+      limit = 150;
       console.log(`[sync-brand-products] Increased limit to ${limit} for Anycubic (many color variants)`);
+    } else if (['sainsmart', 'extrudr'].includes(brandSlug) && limit > 50) {
+      limit = 50;
+      console.log(`[sync-brand-products] Reduced limit to ${limit} for ${brandSlug} to prevent timeout`);
     }
 
     if (!brandSlug) {

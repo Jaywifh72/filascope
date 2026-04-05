@@ -250,7 +250,7 @@ const Wizard = () => {
       />
       <SoftwareApplicationSchema
         name="FilaScope Quick Match — Filament Recommendation Quiz"
-        description="Answer 5 questions about your 3D printing project, printer, and budget to get personalized filament recommendations from FilaScope's database of 22,000+ filaments."
+        description="Answer 5 questions about your 3D printing project, printer, and budget to get personalized filament recommendations from FilaScope's database of 24,000+ filaments."
         url="https://filascope.com/wizard"
         applicationCategory="UtilityApplication"
         operatingSystem="Web"
@@ -281,7 +281,7 @@ const Wizard = () => {
               </span>
             </div>
             {currentStep === 0 && (
-              <p className="text-xs text-muted-foreground mb-3">Matched from 22,000+ filaments across 49+ brands</p>
+              <p className="text-xs text-muted-foreground mb-3">Matched from 24,000+ filaments across 49+ brands</p>
             )}
             {/* Segmented progress */}
             <div className="flex gap-1">

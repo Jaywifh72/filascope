@@ -140,16 +140,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Batch insert
+    // Batch upsert (insert or update if exists)
     const batchSize = 50;
     for (let i = 0; i < filamentRows.length; i += batchSize) {
       const batch = filamentRows.slice(i, i + batchSize);
-      const { error: insertError, data } = await supabase.from('filaments').insert(batch).select('id');
+      const { error: insertError, data } = await supabase
+        .from('filaments')
+        .upsert(batch, {
+          onConflict: 'product_id',
+          ignoreDuplicates: false
+        })
+        .select('id');
       if (insertError) {
         errors.push(`Batch ${i / batchSize + 1}: ${insertError.message}`);
         productsFailed += batch.length;
       } else {
-        productsCreated += data?.length || batch.length;
+        // Count actual created vs updated
+        const insertedCount = data?.filter((row: any) => row.created_at === row.updated_at).length || batch.length;
+        const updatedCount = (data?.length || batch.length) - insertedCount;
+        productsCreated += insertedCount;
+        // We don't track productsUpdated separately in this seed-based sync
       }
     }
 

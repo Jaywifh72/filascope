@@ -510,7 +510,7 @@ export default function FilamentTemperatureChart() {
               The most comprehensive filament temperature reference on the web. Find the right nozzle temperature,
               bed temperature, print speed, and enclosure requirements for {FILAMENT_DATA.length} materials — plus glass transition
               temperatures, brand-specific defaults from {BRAND_NAMES.length} manufacturers, and troubleshooting guides.
-              Backed by our database of 22,000+ filament listings.
+              Backed by our database of 24,000+ filament listings.
             </p>
           </div>
         </section>
@@ -758,7 +758,7 @@ export default function FilamentTemperatureChart() {
               <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               Temperature ranges shown are typical starting points. Actual values vary between brands by up to 15&deg;C.
               Check the spool label and print a temperature tower for best results. See our{' '}
-              <Link to="/filaments" className="text-primary hover:underline">filament database</Link> for 22,000+ brand-specific temperature listings.
+              <Link to="/filaments" className="text-primary hover:underline">filament database</Link> for 24,000+ brand-specific temperature listings.
             </p>
           </section>
 
@@ -899,7 +899,7 @@ export default function FilamentTemperatureChart() {
             <p className="text-xs text-muted-foreground flex items-start gap-1.5">
               <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               Brand defaults sourced from manufacturer product pages, technical data sheets (TDS), and spool labels as of April 2026. For real-time brand-specific temperatures,
-              browse our <Link to="/filaments" className="text-primary hover:underline">filament database</Link> with 22,000+ listings.
+              browse our <Link to="/filaments" className="text-primary hover:underline">filament database</Link> with 24,000+ listings.
             </p>
           </section>
 
@@ -1384,7 +1384,7 @@ export default function FilamentTemperatureChart() {
             <div className="grid sm:grid-cols-2 gap-3">
               {[
                 { to: '/guides/filament-temperature-guide', label: 'Filament Temperature Guide (in-depth)' },
-                { to: '/filaments', label: 'Browse 22,000+ filaments with brand-specific temps' },
+                { to: '/filaments', label: 'Browse 24,000+ filaments with brand-specific temps' },
                 { to: '/colors', label: 'Filament Color Finder — match any color' },
                 { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
                 { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },

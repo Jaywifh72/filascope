@@ -181,12 +181,12 @@ function staticPage(path: string): PageData | null {
 
 // ── Dynamic page handlers ──
 function homepage(): PageData {
-  return {type:"homepage",title:"Compare 22,000+ 3D Filaments — FilaScope (2026)",
-    description:"Compare 22,000+ 3D printer filaments from 49+ brands. Search by price, material, color, HueForge TD value & printer compatibility. Updated daily.",
+  return {type:"homepage",title:"Compare 24,000+ 3D Filaments — FilaScope (2026)",
+    description:"Compare 24,000+ 3D printer filaments from 49+ brands. Search by price, material, color, HueForge TD value & printer compatibility. Updated daily.",
     canonical:"/",ogType:"website",
     jsonLd:[{"@context":"https://schema.org","@type":"WebSite",name:"FilaScope",url:BASE_URL,description:"The most comprehensive 3D printer filament database.",potentialAction:{"@type":"SearchAction",target:{"@type":"EntryPoint",urlTemplate:`${BASE_URL}/?search={search_term_string}`},"query-input":"required name=search_term_string"}},{"@context":"https://schema.org","@type":"Organization",name:"FilaScope",url:BASE_URL,logo:`${BASE_URL}/og-image.png`}],
     breadcrumbs:[{name:"Home",url:"/"}],h1:"FilaScope — 3D Printer Filament Database",
-    bodyText:"Compare 3D printer filaments across 50+ brands."};
+    bodyText:"Compare 3D printer filaments across 50+ brands."};}
 }
 
 async function filamentListingPage(sb: SupabaseClient): Promise<PageData> {

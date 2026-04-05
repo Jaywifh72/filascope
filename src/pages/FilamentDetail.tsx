@@ -70,6 +70,9 @@ import { useCommunityReviewStats } from "@/hooks/useCommunityReviewStats";
 import { useFilamentReviewsForSchema } from "@/hooks/useFilamentReviewsForSchema";
 import { calculateUnifiedScore, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
 import { useCompatiblePrintersForSchema } from "@/hooks/useCompatiblePrintersForSchema";
+import { StructuredData } from "@/components/seo/StructuredData";
+import { generateProductSchema, generateBreadcrumbSchema } from "@/utils/schema";
+import { NoscriptFallback } from "@/components/NoscriptFallback";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -861,6 +864,23 @@ const { id } = useParams();
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Breadcrumb Schema - now handled by DetailBreadcrumb */}
 
+      {/* JSON-LD Product Schema using new utilities */}
+      <StructuredData data={generateProductSchema({
+        name: seoFullName,
+        brand: displayFilament.vendor,
+        material: displayFilament.material,
+        weight: displayFilament.net_weight_g ? `${displayFilament.net_weight_g}g` : undefined,
+        price: validationPricePerKg,
+        currency: 'USD',
+        td: displayFilament.transmission_distance || undefined,
+        diameter: displayFilament.diameter_nominal_mm ? `${displayFilament.diameter_nominal_mm}mm` : undefined,
+        description: seoDescription,
+        image: displayFilament.featured_image,
+        url: `https://filascope.com/filament/${canonicalSlug}`,
+        color: displayFilament.color_family || undefined,
+        available: displayFilament.variant_available ?? true
+      })} />
+
       {/* SEO Meta Tags - Uses product line name for better SEO */}
       <ProductSEO
         title={seoFullName}
@@ -1206,6 +1226,10 @@ const { id } = useParams();
             diameterNominalMm={displayFilament.diameter_nominal_mm}
             nozzleTempMinC={displayFilament.nozzle_temp_min_c}
             nozzleTempMaxC={displayFilament.nozzle_temp_max_c}
+            colorName={displayFilament.color_name}
+            transmissionDistance={displayFilament.transmission_distance}
+            compatiblePrinterCount={compatiblePrinterCount}
+            colorHex={displayFilament.color_hex}
           />
         </div>
       </div>
@@ -1400,6 +1424,51 @@ const { id } = useParams();
 
       {/* Spacer for sticky bar */}
       <div className="h-20 md:h-16" />
+
+      {/* Noscript fallback for SEO and AI crawlers */}
+      <NoscriptFallback
+        title={seoFullName}
+        description={`${displayFilament.material} filament from ${displayFilament.vendor}. ${displayFilament.net_weight_g ? `${(displayFilament.net_weight_g / 1000).toFixed(1)}kg spool.` : ''} ${displayFilament.transmission_distance ? `HueForge TD value: ${displayFilament.transmission_distance}mm.` : ''}`}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": seoFullName,
+          "brand": {
+            "@type": "Brand",
+            "name": displayFilament.vendor
+          },
+          "offers": sidebarPricePerKg ? [{
+            "@type": "Offer",
+            "price": sidebarPricePerKg,
+            "priceCurrency": currency
+          }] : undefined,
+          "additionalProperty": [
+            {
+              "@type": "PropertyValue",
+              "name": "Material",
+              "value": displayFilament.material
+            },
+            {
+              "@type": "PropertyValue",
+              "name": "Weight",
+              "value": displayFilament.net_weight_g ? `${(displayFilament.net_weight_g / 1000).toFixed(1)}kg` : 'N/A'
+            },
+            ...(displayFilament.transmission_distance ? [{
+              "@type": "PropertyValue",
+              "name": "HueForge TD",
+              "value": displayFilament.transmission_distance
+            }] : [])
+          ]
+        }}
+      >
+        <ul>
+          <li><strong>Brand:</strong> {displayFilament.vendor}</li>
+          <li><strong>Material:</strong> {displayFilament.material}</li>
+          <li><strong>Weight:</strong> {displayFilament.net_weight_g ? `${(displayFilament.net_weight_g / 1000).toFixed(1)}kg` : 'N/A'}</li>
+          {displayFilament.transmission_distance && <li><strong>HueForge TD:</strong> {displayFilament.transmission_distance} mm</li>}
+          {sidebarPricePerKg && <li><strong>Price:</strong> {formatPrice(sidebarPricePerKg)}/kg</li>}
+        </ul>
+      </NoscriptFallback>
     </div>
   );
 };

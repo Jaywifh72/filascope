@@ -26,6 +26,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DatasetSchema, FAQSection } from '@/components/seo';
+import { NoscriptFallback } from '@/components/NoscriptFallback';
 
 interface TDFilament {
   id: string;
@@ -386,6 +387,27 @@ export default function TDDatabase() {
             ))}
           </div>
         </section>
+
+        {/* Noscript fallback for SEO and AI crawlers */}
+        <NoscriptFallback
+          title="HueForge TD Database - FilaScope"
+          description="The largest database of HueForge Transmission Distance (TD) values for 3D printing filaments. Search 500+ TD values to find the perfect filament for lithophane prints."
+        >
+          <h2>What is HueForge TD Value?</h2>
+          <p>HueForge Transmission Distance (TD) measures how much light passes through a 3D printed filament layer, expressed in millimeters. Higher TD values mean more light transmission, creating brighter colors in HueForge lithophane prints.</p>
+
+          <h2>FilaScope HueForge TD Database</h2>
+          <p>FilaScope maintains the largest database of measured TD values across 24,000+ filaments from 50+ brands. Currently showing {filaments?.length || 0} filaments with verified TD values.</p>
+
+          <h2>How to Use TD Values</h2>
+          <ul>
+            <li><strong>High TD (3.0mm+):</strong> Best for bright, saturated lithophanes</li>
+            <li><strong>Medium TD (1.5-3.0mm):</strong> Balanced for most prints</li>
+            <li><strong>Low TD (under 1.5mm):</strong> Best for subtle, artistic effects</li>
+          </ul>
+
+          <p>Visit <a href="/">FilaScope.com</a> to search and compare filaments by TD value, or <a href="/filaments">browse all filaments</a>.</p>
+        </NoscriptFallback>
       </div>
     </div>
   );

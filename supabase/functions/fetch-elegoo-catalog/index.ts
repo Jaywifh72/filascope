@@ -346,7 +346,7 @@ serve(async (req) => {
         originalPrice: item.OriginalPrice || item.CurrentPrice,  // MSRP: fallback to CurrentPrice if missing
         compareAtPrice: item.OriginalPrice > item.CurrentPrice ? item.OriginalPrice : null,
         currency: item.Currency || 'USD',
-        url: item.Url,
+        url: item.Url?.replace(/(?<!:)\/{2,}/g, '/'),
         imageUrl: item.ImageUrl,
         manufacturer: item.Manufacturer,
         mpn: item.ManufacturerPartNumber,

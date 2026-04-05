@@ -108,11 +108,11 @@ export default function ColorFinder() {
   return (
     <>
       <DocumentHead
-        title="3D Printer Filament Color Finder — Match Any Shade to 22,000+ Filaments"
-        description="Free filament color finder tool — match any hex color to 22,000+ 3D printer filaments from 49+ brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
+        title="3D Printer Filament Color Finder — Match Any Shade to 24,000+ Filaments"
+        description="Free filament color finder tool — match any hex color to 24,000+ 3D printer filaments from 49+ brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
         canonical="https://filascope.com/colors"
-        ogTitle="3D Printer Filament Color Finder — Match Any Shade to 22,000+ Filaments"
-        ogDescription="Free filament color finder tool — match any hex color to 22,000+ 3D printer filaments from 49+ brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
+        ogTitle="3D Printer Filament Color Finder — Match Any Shade to 24,000+ Filaments"
+        ogDescription="Free filament color finder tool — match any hex color to 24,000+ 3D printer filaments from 49+ brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
         keywords="filament color finder, 3d printer filament color picker, filament color match, hex to filament, 3D printing color tool, HueForge color finder, filament color comparison"
       />
       <BreadcrumbSchema items={[{ name: 'Home', url: '/' }, { name: 'Color Finder', url: '/colors' }]} />
@@ -138,12 +138,12 @@ export default function ColorFinder() {
             <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
               <Palette className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Color Finder</h1>
-              <p className="text-sm text-muted-foreground">
-                Match any color to 22,000+ filaments across 49+ brands. Pick a color or enter a hex code.
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Color Finder</h1>
+            <p className="text-sm text-muted-foreground">
+              Match any color to 24,000+ filaments across 49+ brands. Pick a color or enter a hex code.
+            </p>
+          </div>
           </div>
         </div>
 
@@ -331,7 +331,7 @@ export default function ColorFinder() {
             <h2 className="text-lg font-semibold mb-4">Related Resources</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { to: '/filaments', label: 'Browse 22,000+ Filaments by Spec' },
+                { to: '/filaments', label: 'Browse 24,000+ Filaments by Spec' },
                 { to: '/filament-temperature-chart', label: '3D Filament Temperature Chart' },
                 { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
                 { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },

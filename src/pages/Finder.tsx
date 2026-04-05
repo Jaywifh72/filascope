@@ -48,6 +48,7 @@ import { LatestNewsSection } from "@/components/news/LatestNewsSection";
 import HeroSection from "@/components/HeroSection";
 import { TrendingItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
+import { NoscriptFallback } from "@/components/NoscriptFallback";
 import ResultsHeader from "@/components/ResultsHeader";
 import { QuickPathsPills } from "@/components/QuickPathsPills";
 import { HeroProductGrid } from "@/components/HeroProductGrid";
@@ -1042,18 +1043,18 @@ const Finder = () => {
         { targetId: "filament-results", label: "Skip to results" },
       ]} />
       <DocumentHead
-        title="FilaScope — 22,000+ Filaments, Live Prices & TD Values"
-        description="Compare 22,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
-        ogTitle="FilaScope — Compare 22,000+ 3D Printer Filaments | Specs, Prices & TD Values"
-        ogDescription="Compare 22,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
+        title="FilaScope — 24,000+ Filaments, Live Prices & TD Values"
+        description="Compare 24,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
+        ogTitle="FilaScope — Compare 24,000+ 3D Printer Filaments | Specs, Prices & TD Values"
+        ogDescription="Compare 24,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
         ogType="website"
         ogUrl="https://filascope.com"
         ogSiteName="FilaScope"
         ogImage="https://filascope.com/og-image.png"
         twitterCard="summary_large_image"
         twitterSite="@FilaScope"
-        twitterTitle="FilaScope — Compare 22,000+ 3D Printer Filaments | Specs, Prices & TD Values"
-        twitterDescription="Compare 22,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
+        twitterTitle="FilaScope — Compare 24,000+ 3D Printer Filaments | Specs, Prices & TD Values"
+        twitterDescription="Compare 24,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & detailed specs. The most comprehensive filament database online."
         twitterImage="https://filascope.com/og-image.png"
         keywords="3D printer filament comparison, filament database, compare filaments, filament specs, HueForge TD values, filament prices, 3D printing"
       />
@@ -1064,7 +1065,7 @@ const Finder = () => {
           "@context": "https://schema.org",
           "@type": "Dataset",
           "name": "FilaScope 3D Printer Filament Database",
-          "description": "Structured database of 22,000+ 3D printer filaments from 49+ brands with material specifications, nozzle and bed temperatures, HueForge Transmission Distance values, real-time pricing from 15+ retailers, printer compatibility data, and FilaScore quality ratings.",
+          "description": "Structured database of 24,000+ 3D printer filaments from 49+ brands with material specifications, nozzle and bed temperatures, HueForge Transmission Distance values, real-time pricing from 15+ retailers, printer compatibility data, and FilaScore quality ratings.",
           "url": "https://filascope.com/filaments",
           "keywords": ["3D printer filament database","filament specifications","HueForge TD values","filament price comparison","PLA filament data","PETG filament data","3D printing materials"],
           "creator": {"@type": "Organization","name": "FilaScope","url": "https://filascope.com"},
@@ -1779,6 +1780,85 @@ const Finder = () => {
       <HomeSEOContent />
       <LatestNewsSection />
       <HomeFAQSection />
+
+      {/* Noscript fallback for SEO/AI crawlers */}
+      <noscript>
+        <div style={{
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          padding: '40px 20px',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          backgroundColor: '#1a1a1a',
+          color: '#e5e5e5',
+          minHeight: '100vh'
+        }}>
+          <header style={{ marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>
+              FilaScope — Compare 24,000+ 3D Printer Filaments
+            </h1>
+            <p style={{ fontSize: '16px', lineHeight: '1.6' }}>
+              The most comprehensive filament database with real-time pricing, HueForge TD values, and printer compatibility data.
+            </p>
+          </header>
+
+          <section style={{ marginBottom: '30px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '15px', color: '#fff' }}>
+              Why Use FilaScope?
+            </h2>
+            <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+              <li style={{ marginBottom: '10px' }}>✓ <strong>24,000+ filaments</strong> from 50+ brands</li>
+              <li style={{ marginBottom: '10px' }}>✓ <strong>Real-time pricing</strong> from 15+ retailers</li>
+              <li style={{ marginBottom: '10px' }}>✓ <strong>HueForge TD values</strong> — largest public database</li>
+              <li style={{ marginBottom: '10px' }}>✓ <strong>Printer compatibility</strong> — find what works with your printer</li>
+              <li style={{ marginBottom: '10px' }}>✓ <strong>Multi-regional</strong> pricing in USD, CAD, EUR, GBP, AUD</li>
+            </ul>
+          </section>
+
+          <section style={{ marginBottom: '30px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '15px', color: '#fff' }}>
+              Popular Filament Types
+            </h2>
+            <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+              <li><a href="/filaments/pla" style={{ color: '#3b82f6', textDecoration: 'underline' }}>PLA Filament</a></li>
+              <li><a href="/filaments/petg" style={{ color: '#3b82f6', textDecoration: 'underline' }}>PETG Filament</a></li>
+              <li><a href="/filaments/abs" style={{ color: '#3b82f6', textDecoration: 'underline' }}>ABS Filament</a></li>
+              <li><a href="/filaments/tpu" style={{ color: '#3b82f6', textDecoration: 'underline' }}>TPU Filament</a></li>
+              <li><a href="/filaments/asa" style={{ color: '#3b82f6', textDecoration: 'underline' }}>ASA Filament</a></li>
+              <li><a href="/filaments/nylon" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Nylon Filament</a></li>
+            </ul>
+          </section>
+
+          <section style={{ marginBottom: '30px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '15px', color: '#fff' }}>
+              HueForge TD Database
+            </h2>
+            <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '15px' }}>
+              FilaScope maintains the world's largest verified database of HueForge Transmission Distance (TD) values.
+              TD measures how much light passes through a 3D printed filament layer — critical for lithophane and multicolor printing.
+            </p>
+            <a href="/hueforge-filaments" style={{ 
+              display: 'inline-block',
+              padding: '12px 24px',
+              backgroundColor: '#3b82f6',
+              color: '#fff',
+              textDecoration: 'none',
+              borderRadius: '4px',
+              fontWeight: 'bold'
+            }}>
+              Browse HueForge TD Database
+            </a>
+          </section>
+
+          <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #333', fontSize: '14px', color: '#999' }}>
+            <p>© 2026 FilaScope — All rights reserved.</p>
+            <p>
+              <a href="/about" style={{ color: '#999', textDecoration: 'underline' }}>About</a> · 
+              <a href="/filament-temperature-chart" style={{ color: '#999', textDecoration: 'underline' }}>Temperature Chart</a> · 
+              <a href="/best-3d-printer-filament" style={{ color: '#999', textDecoration: 'underline' }}>Best Filament Guide</a>
+            </p>
+          </footer>
+        </div>
+      </noscript>
     </div>
   );
 };

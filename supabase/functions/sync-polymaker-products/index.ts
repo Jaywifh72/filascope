@@ -26,6 +26,11 @@ import {
   extractDiameterMm,
   generatePolymakerTdsUrl,
 } from '../_shared/polymaker-defaults.ts';
+import {
+  fetchWithTimeout,
+  TIMEOUT_PRESETS,
+  USER_AGENTS,
+} from '../_shared/fetch-with-timeout.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -109,13 +114,13 @@ async function fetchShopifyProducts(baseUrl: string): Promise<ShopifyProduct[]> 
     const url = `${baseUrl}/products.json?limit=${limit}&page=${page}`;
     
     try {
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'FilaScope/1.0',
+          'User-Agent': USER_AGENTS.BOT,
         },
-      });
-      
+      }, TIMEOUT_PRESETS.FAST); // 8 second timeout for API calls
+
       if (!response.ok) {
         console.error(`[Polymaker] Failed to fetch page ${page}: ${response.status}`);
         break;

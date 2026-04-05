@@ -98,7 +98,10 @@ import {
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
+import { NoscriptFallback } from "@/components/NoscriptFallback";
 import { DocumentHead } from "@/components/seo/DocumentHead";
+import { StructuredData } from "@/components/seo/StructuredData";
+import { generatePrinterSchema } from "@/utils/schema";
 import { toBrandSlug } from "@/utils/brandSlug";
 import { normalizeSlug } from "@/lib/printerSlugUtils";
 
@@ -725,7 +728,23 @@ const PrinterDetail = () => {
         availability={!isDiscontinued}
         productType="printer"
       />
-      
+
+      {/* JSON-LD Product Schema using new utilities */}
+      <StructuredData data={generatePrinterSchema({
+        name: `${printerName} 3D Printer`,
+        manufacturer: printerBrand,
+        buildVolume: printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
+          ? `${printer.build_volume_x_mm} x ${printer.build_volume_y_mm} x ${printer.build_volume_z_mm} mm`
+          : undefined,
+        price: displayPrice,
+        currency: 'USD',
+        nozzleSize: '0.4mm',
+        description: seoDescription,
+        image: seoImage,
+        url: `https://filascope.com/printers/${canonicalPrinterSlug}`,
+        available: !isDiscontinued
+      })} />
+
       {/* JSON-LD Structured Data — enhanced with additional printer specs */}
       <ProductJsonLd
         name={`${printerName} 3D Printer`}
@@ -1606,6 +1625,58 @@ const PrinterDetail = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+      {/* Noscript fallback for SEO and AI crawlers */}
+      <NoscriptFallback
+        title={`${printerName} 3D Printer`}
+        description={`${printerBrand} ${printerModel}. ${buildVolumeDisplay ? `Build volume: ${buildVolumeDisplay}.` : ''} ${displayPrice ? `Price: ${formatPrice(displayPrice)}.` : ''}`}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": `${printerName} 3D Printer`,
+          "manufacturer": {
+            "@type": "Organization",
+            "name": printerBrand
+          },
+          "offers": displayPrice ? [{
+            "@type": "Offer",
+            "price": displayPrice,
+            "priceCurrency": currency
+          }] : undefined,
+          "additionalProperty": [
+            ...(buildVolumeDisplay ? [{
+              "@type": "PropertyValue",
+              "name": "Build Volume",
+              "value": buildVolumeDisplay
+            }] : []),
+            ...(printer.max_print_speed_mms ? [{
+              "@type": "PropertyValue",
+              "name": "Max Print Speed",
+              "value": `${printer.max_print_speed_mms}mm/s`
+            }] : []),
+            ...(printer.max_nozzle_temp_c ? [{
+              "@type": "PropertyValue",
+              "name": "Max Nozzle Temp",
+              "value": `${printer.max_nozzle_temp_c}°C`
+            }] : []),
+            ...(printer.bed_max_temp_c ? [{
+              "@type": "PropertyValue",
+              "name": "Max Bed Temp",
+              "value": `${printer.bed_max_temp_c}°C`
+            }] : [])
+          ]
+        }}
+      >
+        <ul>
+          <li><strong>Manufacturer:</strong> {printerBrand}</li>
+          <li><strong>Model:</strong> {printerModel}</li>
+          {buildVolumeDisplay && <li><strong>Build Volume:</strong> {buildVolumeDisplay}</li>}
+          {printer.max_print_speed_mms && <li><strong>Max Print Speed:</strong> {printer.max_print_speed_mms}mm/s</li>}
+          {printer.max_nozzle_temp_c && <li><strong>Max Nozzle Temp:</strong> {printer.max_nozzle_temp_c}°C</li>}
+          {printer.bed_max_temp_c && <li><strong>Max Bed Temp:</strong> {printer.bed_max_temp_c}°C</li>}
+          {displayPrice && <li><strong>Price:</strong> {formatPrice(displayPrice)}</li>}
+        </ul>
+      </NoscriptFallback>
 
       </div>
     </div>
