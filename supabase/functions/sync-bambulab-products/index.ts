@@ -2328,15 +2328,15 @@ Deno.serve(async (req) => {
           duration_seconds: Math.round(duration / 1000),
           products_discovered: discoveredProducts.length,
           products_created: created,
-          products_updated: updated,
-          products_failed: errors,
+          products_updated: _updated,
+          products_failed: _errors,
           regions_synced: ['US'],
           regional_breakdown: {
             US: {
-              updated: updated,
+              updated: _updated,
               created: created,
-              skipped: skipped,
-              errors: errors,
+              skipped: _skipped,
+              errors: _errors,
               products_found: discoveredProducts.length,
               duration_ms: duration,
             }
@@ -2347,19 +2347,22 @@ Deno.serve(async (req) => {
     
     // Update brand product counts
     await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'bambu-lab' });
+    const _updated = typeof updated !== 'undefined' ? updated : 0;
+    const _skipped = typeof skipped !== 'undefined' ? skipped : 0;
+    const _errors = typeof errors !== 'undefined' ? errors : 0;
     
     console.log(`[BambuLab] Debug: created=${created}, updated=${typeof updated}, skipped=${typeof skipped}, errors=${typeof errors}`);
-    console.log(`[BambuLab] Sync complete: ${created} created, ${updated} updated, ${skipped} skipped, ${errors} errors`);
+    console.log(`[BambuLab] Sync complete: ${created} created, ${_updated} updated, ${_skipped} skipped, ${_errors} errors`);
     
     const result = {
-      success: errors === 0 || (created + updated) > 0,
+      success: errors === 0 || (created + _updated) > 0,
       summary: {
         totalDiscovered: discoveredProducts.length,
         totalScraped: scrapedProducts.length,
         created,
-        updated,
-        skipped,
-        errors,
+        _updated,
+        _skipped,
+        _errors,
       },
       duration: `${(duration / 1000).toFixed(1)}s`,
       duration_ms: duration,
