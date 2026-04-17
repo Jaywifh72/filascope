@@ -1,0 +1,7 @@
+name: Test Deploy Edge Function
+on workflow-dispatch:
+language: yeml
+condition:
+  branches: ['main']
+jobs:
+  deploy: true
