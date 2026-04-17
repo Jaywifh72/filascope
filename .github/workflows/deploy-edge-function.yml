@@ -20,17 +20,8 @@ jobs:
         with:
           version: latest
 
-      - name: Debug Info
+      - name: Deploy Edge Function
         run: |
-          echo "=== DEBUG INFO ==="
-          echo "Function name: ${{ github.event.inputs.function_name }}"
-          echo "SUPABASE_ACCESS_TOKEN set: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}"
-          echo "Token prefix: $(echo '${{ secrets.SUPABASE_ACCESS_TOKEN }}' | head -c 10)"
-          echo "Project ref: fytxfdvbzstnimzhjgth"
-          echo "=== CHECKING FILE ==="
-          ls -la supabase/functions/${{ github.event.inputs.function_name }}/ || echo "Function dir not found"
-          echo "=== DEPLOY COMMAND ==="
-          supabase functions deploy ${{ github.event.inputs.function_name }} --project-ref fytxfdvbzstnimzhjgth --no-verify-jwt 2>&1
-          echo "Exit code: $?"
+          supabase functions deploy ${{ github.event.inputs.function_name }} --project-ref fytxfdvbzstnimzhjgth --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
