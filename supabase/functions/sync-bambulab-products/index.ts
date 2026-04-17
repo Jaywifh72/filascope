@@ -2291,6 +2291,9 @@ Deno.serve(async (req) => {
     
     // Batch insert
     let created = 0;
+    let updated = 0; // Clean-slate sync only creates; updated tracked for completeness
+    let skipped = 0;
+    let errors = 0;
     const batchSize = 50;
     
     for (let i = 0; i < productsToInsert.length; i += batchSize) {
@@ -2326,11 +2329,12 @@ Deno.serve(async (req) => {
           duration_seconds: Math.round(duration / 1000),
           products_discovered: discoveredProducts.length,
           products_created: created,
+          products_updated: updated,
           products_failed: errors,
           regions_synced: ['US'],
           regional_breakdown: {
             US: {
-              updated: 0,
+              updated: updated,
               created: created,
               skipped: skipped,
               errors: errors,
@@ -2345,15 +2349,15 @@ Deno.serve(async (req) => {
     // Update brand product counts
     await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'bambu-lab' });
     
-    console.log(`[BambuLab] Sync complete: ${created} created, ${skipped} skipped, ${errors} errors`);
+    console.log(`[BambuLab] Sync complete: ${created} created, ${updated} updated, ${skipped} skipped, ${errors} errors`);
     
-    const result: SyncResult = {
-      success: errors === 0 || created > 0,
+    const result = {
+      success: errors === 0 || (created + updated) > 0,
       summary: {
         totalDiscovered: discoveredProducts.length,
         totalScraped: scrapedProducts.length,
         created,
-        updated: 0,
+        updated,
         skipped,
         errors,
       },
