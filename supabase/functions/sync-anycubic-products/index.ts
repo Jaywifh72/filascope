@@ -404,6 +404,52 @@ async function runSync(
     }
 
     // =========================================================================
+    // STEP 2.5: Stale product cleanup
+    // =========================================================================
+    if (!dryRun && !cleanSlate) {
+      console.log('[ANYCUBIC-SYNC] Step 2.5: Cleaning up stale Anycubic products...');
+      const syncedProductIds = new Set(allFilamentData.map(f => f.product_id));
+
+      // Get all current Anycubic products in DB
+      const { data: existingProducts } = await supabase
+        .from('filaments')
+        .select('id, product_id')
+        .ilike('vendor', '%anycubic%');
+
+      if (existingProducts && existingProducts.length > 0) {
+        const staleProducts = existingProducts.filter(
+          (p: any) => !syncedProductIds.has(p.product_id)
+        );
+
+        if (staleProducts.length > 0) {
+          const staleIds = staleProducts.map((p: any) => p.id);
+          console.log(`[ANYCUBIC-SYNC] Found ${staleIds.length} stale products to remove`);
+
+          // Delete in batches of 50
+          for (let i = 0; i < staleIds.length; i += 50) {
+            const batch = staleIds.slice(i, i + 50);
+            const { error: deleteError } = await supabase
+              .from('filaments')
+              .delete()
+              .in('id', batch);
+
+            if (deleteError) {
+              console.error('[ANYCUBIC-SYNC] Stale batch delete error:', deleteError);
+            } else {
+              console.log(`[ANYCUBIC-SYNC] Deleted batch of ${batch.length} stale products`);
+            }
+          }
+
+          console.log(`[ANYCUBIC-SYNC] Stale cleanup complete: ${staleIds.length} products removed`);
+        } else {
+          console.log('[ANYCUBIC-SYNC] No stale products found');
+        }
+      } else {
+        console.log('[ANYCUBIC-SYNC] No existing Anycubic products in DB to check for staleness');
+      }
+    }
+
+    // =========================================================================
     // STEP 3: Save decision logs
     // =========================================================================
     console.log('[ANYCUBIC-SYNC] Step 3: Saving decision logs...');
@@ -647,16 +693,49 @@ async function fetchProduct(
   
   // Build map of scraped swatches for color matching
   const scrapedSwatches = scrapedData?.colorSwatches || [];
+  
+  // Track seen colors to deduplicate across shipping regions
+  // Anycubic variants have 3D options: Color × Size × Shipping Region
+  // We only want one entry per color (US pricing)
+  const seenColors = new Set<string>();
 
   for (let idx = 0; idx < (product.variants || []).length; idx++) {
     const variant = product.variants[idx];
+    
+    // FILTER: Skip non-US shipping region variants to avoid 4x duplication
+    // Variant format: "Black (#212721) / 1KG / US" or "Black / 1kg / EU"
+    const variantParts = (variant.title || '').split(/\s*[\/|]\s*/).map((p: string) => p.trim());
+    const shippingRegion = variantParts[variantParts.length - 1]?.toUpperCase();
+    const isRegionVariant = ['US', 'EU', 'UK', 'OTHER', 'CA', 'AU'].includes(shippingRegion || '');
+    if (isRegionVariant && shippingRegion !== 'US') {
+      continue; // Skip non-US shipping region variants
+    }
     
     // PRIORITY: Try to match color from scraped swatches first
     let colorName: string;
     let colorSource: string;
     
-    // Parse color from variant title as baseline
-    const parsedColor = extractColorFromVariantTitle(variant.title);
+    // Handle CA-only products with reversed option order:
+    // CA variants: option1="1KG" (weight), option2="Red" (color), option3=null (no region)
+    // US variants:  option1="Black (#212721)" (color), option2="1KG" (weight), option3="US" (region)
+    let parsedColor: string;
+    if (
+      !variant.option3 &&
+      variant.option1 &&
+      /^\d+(\.\d+)?\s*(kg|g)$/i.test(variant.option1.trim()) &&
+      variant.option2
+    ) {
+      parsedColor = variant.option2.trim();
+    } else {
+      parsedColor = extractColorFromVariantTitle(variant.title);
+    }
+    
+    // DEDUP: Skip if we already have this color (from another shipping region/size)
+    const colorKey = parsedColor.toLowerCase().replace(/\s*\(#[0-9a-f]+\)\s*/i, '').trim();
+    if (seenColors.has(colorKey)) {
+      continue;
+    }
+    seenColors.add(colorKey);
     
     // Method 1: Find matching scraped swatch by name (case-insensitive)
     const matchedSwatch = scrapedSwatches.find(
@@ -734,7 +813,7 @@ async function fetchProduct(
       colorName,
       price: parseFloat(variant.price) || 0,
       compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
-      available: variant.available ?? true,
+      available: typeof variant.available === 'boolean' ? variant.available : true,
       imageUrl,
       productUrl,
       productLineId,
@@ -802,6 +881,8 @@ function extractColorFromVariantTitle(variantTitle: string): string {
     if (/^\d+(\.\d+)?\s*mm$/i.test(part)) return false;
     if (/^\d+$/.test(part)) return false;
     if (['default', 'standard', 'regular', 'title'].includes(lower)) return false;
+    // Filter out region codes (US, EU, UK, CA, AU, OTHER) that appear as option values
+    if (/^(US|EU|UK|CA|AU|OTHER)$/i.test(part.trim())) return false;
     return true;
   });
   

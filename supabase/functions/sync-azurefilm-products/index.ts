@@ -206,40 +206,97 @@ async function scrapeProductPages(
           }
           
           // Extract price (WooCommerce pattern)
-          // Pattern 1: <span class="woocommerce-Price-amount">€17.50</span>
-          // Pattern 2: data-price="17.50"
+          // AzureFilm is WooCommerce — variable products use AggregateOffer in JSON-LD
           let priceEur: number | null = null;
           
-          // Try JSON-LD first
+          // ── Strategy 1: JSON-LD structured data ──────────────────────────
           const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
           if (jsonLdMatch) {
             for (const match of jsonLdMatch) {
               try {
                 const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
                 const jsonData = JSON.parse(jsonContent);
-                if (jsonData.offers?.price) {
-                  priceEur = parseFloat(jsonData.offers.price);
+                
+                // Helper: extract price from a single offers object
+                const extractOfferPrice = (offers: any): number | null => {
+                  if (!offers) return null;
+                  const o = Array.isArray(offers) ? offers[0] : offers;
+                  // Direct "price" field (simple products)
+                  if (o.price) return parseFloat(String(o.price).replace(',', '.'));
+                  // AggregateOffer uses lowPrice instead of price (variable products)
+                  if (o.lowPrice) return parseFloat(String(o.lowPrice).replace(',', '.'));
+                  return null;
+                };
+                
+                // Check top-level offers
+                const topPrice = extractOfferPrice(jsonData.offers);
+                if (topPrice && !isNaN(topPrice) && topPrice > 0) {
+                  priceEur = topPrice;
                   break;
                 }
+                
+                // Check @graph entries
                 if (jsonData['@graph']) {
                   for (const item of jsonData['@graph']) {
-                    if (item.offers?.price) {
-                      priceEur = parseFloat(item.offers.price);
+                    // Product-level offers
+                    const graphPrice = extractOfferPrice(item.offers);
+                    if (graphPrice && !isNaN(graphPrice) && graphPrice > 0) {
+                      priceEur = graphPrice;
                       break;
                     }
+                    // Some WooCommerce themes nest offers under hasVariant
+                    if (item.hasVariant) {
+                      for (const variant of (Array.isArray(item.hasVariant) ? item.hasVariant : [item.hasVariant])) {
+                        const varPrice = extractOfferPrice(variant.offers);
+                        if (varPrice && !isNaN(varPrice) && varPrice > 0) {
+                          priceEur = varPrice;
+                          break;
+                        }
+                      }
+                    }
+                    if (priceEur) break;
                   }
+                  if (priceEur) break;
                 }
               } catch {
-                // Continue to next pattern
+                // Continue to next JSON-LD block
               }
             }
           }
           
-          // Fallback: WooCommerce price pattern
+          // ── Strategy 2: WooCommerce HTML price patterns ──────────────────
           if (!priceEur) {
-            const priceMatch = html.match(/class="woocommerce-Price-amount[^"]*"[^>]*>.*?([0-9]+[.,][0-9]{2})/i);
-            if (priceMatch) {
-              priceEur = parseFloat(priceMatch[1].replace(',', '.'));
+            // Pattern A: woocommerce-Price-amount with bdi wrapping
+            const wcMatchA = html.match(/class="woocommerce-Price-amount[^"]*"[^>]*>[\s\S]*?<bdi[^>]*>[\s\S]*?([0-9]+[.,][0-9]{2})/i);
+            if (wcMatchA) {
+              priceEur = parseFloat(wcMatchA[1].replace(',', '.'));
+            }
+          }
+          if (!priceEur) {
+            // Pattern B: woocommerce-Price-amount without bdi
+            const wcMatchB = html.match(/class="woocommerce-Price-amount[^"]*"[^>]*>[\s\S]*?([0-9]+[.,][0-9]{2})/i);
+            if (wcMatchB) {
+              priceEur = parseFloat(wcMatchB[1].replace(',', '.'));
+            }
+          }
+          
+          // ── Strategy 3: Generic € price pattern (ultimate fallback) ──────
+          // Matches: €17.50, €17,50, 17.50 €, 17,50 €
+          if (!priceEur) {
+            const euroPatterns = [
+              /€\s*([0-9]+[.,][0-9]{2})/i,
+              /([0-9]+[.,][0-9]{2})\s*€/i,
+            ];
+            for (const pat of euroPatterns) {
+              const allMatches = [...html.matchAll(new RegExp(pat.source, 'gi'))];
+              const prices = allMatches
+                .map(m => parseFloat(m[1].replace(',', '.')))
+                .filter(p => !isNaN(p) && p > 5 && p < 200); // sane filament price range
+              if (prices.length > 0) {
+                // Use the lowest price (likely the base variant)
+                priceEur = Math.min(...prices);
+                break;
+              }
             }
           }
           
@@ -268,10 +325,17 @@ async function scrapeProductPages(
       })
     );
     
-    // Filter out failures
+    // Filter out failures and log price extraction stats
+    let pricesFound = 0;
+    let pricesMissing = 0;
     for (const result of batchResults) {
       if (result) {
         scrapedProducts.push(result);
+        if (result.priceEur !== null && result.priceEur > 0) {
+          pricesFound++;
+        } else {
+          pricesMissing++;
+        }
       }
     }
     
@@ -287,6 +351,11 @@ async function scrapeProductPages(
   }
   
   console.log(`[AzureFilm] Successfully scraped ${scrapedProducts.length} products`);
+  console.log(`[AzureFilm] Price extraction: ${(() => {
+    const found = scrapedProducts.filter(p => p.priceEur !== null && p.priceEur > 0).length;
+    const missing = scrapedProducts.length - found;
+    return `${found}/${scrapedProducts.length} found, ${missing} missing`;
+  })()}`);
   return scrapedProducts;
 }
 
@@ -465,7 +534,7 @@ Deno.serve(async (req) => {
           product_line_id: enrichment.productLineId,
           color_family: colorName,
           color_hex: colorHex,
-          variant_price: product.priceEur,
+          variant_price: product.priceEur ? Math.round(product.priceEur * EUR_TO_USD_RATE * 100) / 100 : null,
           price_eur: product.priceEur,
           featured_image: product.imageUrl,
           product_url_eu: product.url,

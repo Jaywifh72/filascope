@@ -1341,7 +1341,7 @@ export class FirecrawlScraper extends BaseScraper {
             },
             body: JSON.stringify({
               url: productUrl,
-              formats: ["markdown"],
+              formats: ["markdown", "html"],
               onlyMainContent: true,
               waitFor: 2000,
             }),
@@ -1351,6 +1351,7 @@ export class FirecrawlScraper extends BaseScraper {
 
           const data = await scrapeResponse.json();
           const markdown = data.data?.markdown || data.markdown || "";
+          const html = data.data?.html || data.html || "";
           const metadata = data.data?.metadata || {};
           
           // Extract title
@@ -1366,10 +1367,8 @@ export class FirecrawlScraper extends BaseScraper {
           if (seenIds.has(productId)) continue;
           seenIds.add(productId);
           
-          // Extract price
-          const priceMatch = markdown.match(/(?:€|EUR)\s*([\d.,]+)/i) || 
-                            markdown.match(/([\d.,]+)\s*(?:€|EUR)/i);
-          const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : null;
+          // Extract price using the class's robust 4-strategy extractor (JSON-LD → meta → HTML → markdown)
+          const price = this.extractPriceFromContent(html, markdown);
           
           // Extract image from OG or content
           const imageUrl = metadata.ogImage?.[0]?.url || null;
@@ -1381,7 +1380,7 @@ export class FirecrawlScraper extends BaseScraper {
             productId,
             sku: productId,
             title,
-            price: price ? price * 1.08 : null, // EUR to USD
+            price: price ? this.convertToUSD(price) : null,
             compareAtPrice: null,
             available: true,
             currency: "EUR",

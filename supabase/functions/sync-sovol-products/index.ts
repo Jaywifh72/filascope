@@ -179,26 +179,44 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
         continue;
       }
       
-      // Create unique key per product+color (consolidate ship regions)
-      const uniqueKey = `${product.id}-${color.toLowerCase()}`;
+      // Filter out bulk weight variants (2KG/5KG/10KG) — only keep 1KG standard spools
+      // parsed.weight is in grams (e.g. 2000, 5000, 10000 for bulk; 1000 for 1KG)
+      if (parsed.weight !== null && parsed.weight !== 1000) {
+        console.log(`[Filter] Bulk weight variant skipped: ${color} (${parsed.weight}g) from ${product.title}`);
+        skippedBulk++;
+        continue;
+      }
       
-      // Skip if we've already seen this color variant
+      // Create unique key per product+color+region (preserve regional pricing)
+      const uniqueKey = `${product.id}-${color.toLowerCase()}-${parsed.shipFrom || 'default'}`;
+      
+      // Skip if we've already seen this color+region variant
       if (seenColorVariants.has(uniqueKey)) {
         continue;
       }
       seenColorVariants.add(uniqueKey);
       
-      // Extract weight from variant or product title
+      // Extract weight — prioritize title parsing over Shopify grams field
+      // NOTE: Shopify variant.grams is systematically wrong (always ~2600g) for Sovol
       let weight = parsed.weight;
-      if (!weight && variant.grams > 0) {
-        weight = variant.grams;
+      if (!weight) {
+        // Try product title first (most reliable for Sovol)
+        const titleWeightMatch = product.title.match(/(\d+(?:\.\d+)?)\s*kg/i);
+        if (titleWeightMatch) {
+          weight = parseFloat(titleWeightMatch[1]) * 1000;
+        }
       }
       if (!weight) {
-        // Try to extract from title
-        const weightMatch = product.title.match(/(\d+(?:\.\d+)?)\s*kg/i);
-        if (weightMatch) {
-          weight = parseFloat(weightMatch[1]) * 1000;
+        // Try variant title for weight
+        const variantWeightMatch = variant.title?.match(/(\d+(?:\.\d+)?)\s*kg/i);
+        if (variantWeightMatch) {
+          weight = parseFloat(variantWeightMatch[1]) * 1000;
         }
+      }
+      if (!weight && variant.grams > 0) {
+        // Last resort: Shopify grams (known to be inaccurate for Sovol, always ~2600g)
+        console.warn(`[Weight] Using unreliable Shopify grams (${variant.grams}g) for: ${product.title}`);
+        weight = variant.grams;
       }
       
       // Filter out bulk/sample products using shared utility
@@ -262,6 +280,29 @@ async function upsertVariants(
         colorHex = getSovolColorHex(variant.color, enrichment.finishType);
       }
       
+      // Build regional price fields based on ship-from region
+      // US → variant_price (default), EU → price_eur, UK → price_gbp, CA → price_cad, AU → price_aud
+      const regionalPriceFields: Record<string, number | null> = {
+        variant_price: null,
+        price_eur: null,
+        price_gbp: null,
+        price_cad: null,
+        price_aud: null,
+      };
+      const region = variant.shipFrom;
+      if (region === 'EU') {
+        regionalPriceFields.price_eur = variant.price;
+      } else if (region === 'UK') {
+        regionalPriceFields.price_gbp = variant.price;
+      } else if (region === 'CA') {
+        regionalPriceFields.price_cad = variant.price;
+      } else if (region === 'AU') {
+        regionalPriceFields.price_aud = variant.price;
+      } else {
+        // Default (US or unspecified) → variant_price
+        regionalPriceFields.variant_price = variant.price;
+      }
+      
       // Build filament record
       const filamentData = {
         product_id: variant.productId,
@@ -275,7 +316,11 @@ async function upsertVariants(
         color_hex: colorHex,
         color_family: variant.color,
         is_nozzle_abrasive: enrichment.isAbrasive,
-        variant_price: variant.price,
+        variant_price: regionalPriceFields.variant_price,
+        price_eur: regionalPriceFields.price_eur,
+        price_gbp: regionalPriceFields.price_gbp,
+        price_cad: regionalPriceFields.price_cad,
+        price_aud: regionalPriceFields.price_aud,
         variant_compare_at_price: variant.compareAtPrice,
         variant_available: variant.available,
         variant_sku: variant.sku,
@@ -539,6 +584,54 @@ Deno.serve(async (req) => {
     if (!options.skipEnrich && variants.length > 0) {
       const upsertResult = await upsertVariants(supabase, variants, brandId);
       results.push(upsertResult);
+    }
+    
+    // Step 3.5: Clean up stale products no longer in the store
+    if (!options.skipFetch && variants.length > 0) {
+      console.log('[Step 3.5] Cleaning up stale Sovol products...');
+      const syncedProductIds = new Set(variants.map(v => v.productId));
+      
+      // Get all current Sovol products in DB
+      const { data: existingProducts } = await supabase
+        .from('filaments')
+        .select('id, product_id')
+        .ilike('vendor', 'sovol');
+      
+      if (existingProducts && existingProducts.length > 0) {
+        const staleProducts = existingProducts.filter(
+          (p: any) => !syncedProductIds.has(p.product_id)
+        );
+        
+        if (staleProducts.length > 0) {
+          const staleIds = staleProducts.map((p: any) => p.id);
+          console.log(`[Step 3.5] Found ${staleIds.length} stale products to remove`);
+          
+          // Delete in batches of 50
+          for (let i = 0; i < staleIds.length; i += 50) {
+            const batch = staleIds.slice(i, i + 50);
+            const { error: deleteError } = await supabase
+              .from('filaments')
+              .delete()
+              .in('id', batch);
+            
+            if (deleteError) {
+              console.error(`[Step 3.5] Batch delete error:`, deleteError);
+            } else {
+              console.log(`[Step 3.5] Deleted batch of ${batch.length} stale products`);
+            }
+          }
+          
+          results.push({
+            step: 'stale_cleanup',
+            success: true,
+            count: staleIds.length,
+            details: { removed: staleIds.length },
+          });
+        } else {
+          console.log('[Step 3.5] No stale products found');
+          results.push({ step: 'stale_cleanup', success: true, count: 0 });
+        }
+      }
     }
     
     // Step 4: TDS discovery (skipped for consumer brand)

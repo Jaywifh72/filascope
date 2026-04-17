@@ -553,19 +553,21 @@ async function runBackgroundSync(
     }
     
     // ========================================================================
-    // STEP 3: PROCESS EACH PRODUCT
+    // STEP 3: PROCESS PRODUCTS (BATCH UPSERT)
     // ========================================================================
-    console.log('[SPECTRUM] Step 3: Processing products...');
+    console.log('[SPECTRUM] Step 3: Processing products (batch upsert mode)...');
     
     const productsToProcess = (cleanSlate || !limit) ? seedProducts : seedProducts.slice(0, limit);
     const processedIds = new Set<string>();
     const totalToProcess = productsToProcess.length;
+    const BATCH_SIZE = 50; // Flush to DB every 50 products
+    let batch: any[] = []; // Accumulate filament data for bulk upsert
     
     for (let i = 0; i < productsToProcess.length; i++) {
       const seedProduct = productsToProcess[i];
       
-      // Update progress every 10 products
-      if (i % 10 === 0) {
+      // Update progress every 25 products
+      if (i % 25 === 0) {
         await updateProgress('Processing products', i, totalToProcess, `Processing ${i + 1} of ${totalToProcess}`);
       }
       
@@ -639,7 +641,7 @@ async function runBackgroundSync(
           colorHex = getSpectrumColorHex(seedProduct.color, seedProduct.title);
         }
         
-        // Prepare filament data
+        // Prepare filament data and add to batch
         const filamentData = {
           product_id: productId,
           product_title: seedProduct.title,
@@ -668,66 +670,63 @@ async function runBackgroundSync(
           last_scraped_at: new Date().toISOString(),
         };
         
-        // Upsert to database
-        const { data: existing } = await supabase
-          .from('filaments')
-          .select('id')
-          .eq('product_id', productId)
-          .maybeSingle();
+        batch.push(filamentData);
         
-        if (existing) {
-          const { error: updateError } = await supabase
-            .from('filaments')
-            .update(filamentData)
-            .eq('id', existing.id);
+        // Flush batch when it reaches BATCH_SIZE or at the end of the loop
+        if (batch.length >= BATCH_SIZE || i === productsToProcess.length - 1) {
+          console.log(`[SPECTRUM] Flushing batch of ${batch.length} products to DB...`);
           
-          if (updateError) {
-            console.error(`[SPECTRUM] Error updating ${productId}:`, updateError);
-            errors++;
-            productResults.push({
-              productId,
-              title: seedProduct.title,
-              status: 'error',
-              productLineId,
-              color: seedProduct.color,
-              reason: updateError.message,
-            });
-          } else {
-            updated++;
-            productResults.push({
-              productId,
-              title: seedProduct.title,
-              status: 'updated',
-              productLineId,
-              color: seedProduct.color,
-            });
-          }
-        } else {
-          const { error: insertError } = await supabase
+          const { error: batchError } = await supabase
             .from('filaments')
-            .insert(filamentData);
+            .upsert(batch, {
+              onConflict: 'product_id',
+              ignoreDuplicates: false,
+            });
           
-          if (insertError) {
-            console.error(`[SPECTRUM] Error inserting ${productId}:`, insertError);
-            errors++;
-            productResults.push({
-              productId,
-              title: seedProduct.title,
-              status: 'error',
-              productLineId,
-              color: seedProduct.color,
-              reason: insertError.message,
-            });
+          if (batchError) {
+            console.error(`[SPECTRUM] Batch upsert error:`, batchError.message);
+            // Fallback: try individual upserts for this batch to identify bad records
+            for (const item of batch) {
+              const { error: singleError } = await supabase
+                .from('filaments')
+                .upsert(item, { onConflict: 'product_id', ignoreDuplicates: false });
+              if (singleError) {
+                errors++;
+                productResults.push({
+                  productId: item.product_id,
+                  title: item.product_title,
+                  status: 'error',
+                  productLineId: item.product_line_id,
+                  color: item.color_family,
+                  reason: singleError.message,
+                });
+              } else {
+                // Can't distinguish created vs updated without extra SELECT — count as processed
+                created++;
+                productResults.push({
+                  productId: item.product_id,
+                  title: item.product_title,
+                  status: 'processed',
+                  productLineId: item.product_line_id,
+                  color: item.color_family,
+                });
+              }
+            }
           } else {
-            created++;
-            productResults.push({
-              productId,
-              title: seedProduct.title,
-              status: 'created',
-              productLineId,
-              color: seedProduct.color,
-            });
+            // Batch succeeded — count all as processed
+            for (const item of batch) {
+              created++;
+              productResults.push({
+                productId: item.product_id,
+                title: item.product_title,
+                status: 'processed',
+                productLineId: item.product_line_id,
+                color: item.color_family,
+              });
+            }
           }
+          
+          batch = []; // Reset batch
         }
         
       } catch (e) {
@@ -743,6 +742,8 @@ async function runBackgroundSync(
         });
       }
     }
+    
+    console.log(`[SPECTRUM] Step 3 complete: ${created} processed, ${skipped} skipped, ${errors} errors`);
     
     // ========================================================================
     // STEP 4: FIX DUPLICATE HEX CODES
@@ -778,8 +779,30 @@ async function runBackgroundSync(
         
         for (const [hex, count] of hexCounts) {
           if (count > 1) {
-            console.log(`[SPECTRUM] Duplicate hex ${hex} found ${count} times in ${lineId}`);
-            duplicatesFixed += count - 1;
+            console.log(`[SPECTRUM] Duplicate hex ${hex} found ${count} times in ${lineId} - fixing...`);
+            
+            // Find all products with this hex in this line and adjust
+            const dupes = products.filter((p: any) => p.color_hex?.toLowerCase() === hex);
+            for (let i = 1; i < dupes.length; i++) {
+              const dupe = dupes[i];
+              const originalHex = dupe.color_hex?.replace('#', '') || 'FFFFFF';
+              const hexNum = parseInt(originalHex, 16);
+              // Offset by i*17 to create a unique but similar hex
+              const newHexNum = (hexNum + i * 17) % 0xFFFFFF;
+              const newHex = `#${newHexNum.toString(16).padStart(6, '0').toUpperCase()}`;
+              
+              const { error: fixError } = await supabase
+                .from('filaments')
+                .update({ color_hex: newHex })
+                .eq('id', dupe.id);
+              
+              if (!fixError) {
+                console.log(`[SPECTRUM] Fixed duplicate: ${dupe.color_family} ${hex} -> ${newHex}`);
+                duplicatesFixed++;
+              } else {
+                console.error(`[SPECTRUM] Failed to fix duplicate:`, fixError.message);
+              }
+            }
           }
         }
       }

@@ -1,7 +1,8 @@
 /**
- * NINJATEK CSV-SEEDED SYNC PIPELINE
+ * NINJATEK HYBRID SYNC PIPELINE
  * 
- * Uses a curated CSV seed for NinjaTek TPU filaments:
+ * Uses a curated CSV seed for NinjaTek TPU filaments, enriched with live
+ * pricing from the WooCommerce Store API:
  * - NinjaFlex 85A, Edge 83A, Chinchilla 75A, Cheetah 95A, Armadillo 75D, Eel 90A
  * - Plus ColorFabb filaments sold via NinjaTek store
  * 
@@ -11,7 +12,7 @@
  * - No sample products (<300g)
  * - No gift cards or non-filament products
  * 
- * Platform: WooCommerce (WordPress) - uses curated CSV seed
+ * Platform: WooCommerce (WordPress) - CSV seed + WooCommerce Store API for live prices
  * Currency: USD
  */
 
@@ -26,6 +27,73 @@ import {
   shouldIncludeNinjatekVariant,
   type NinjatekProductLine,
 } from '../_shared/ninjatek-defaults.ts';
+
+// ============================================================================
+// STATIC PRICE FALLBACK — used when WooCommerce API is unavailable
+// ============================================================================
+
+const NINJATEK_PRICES: Record<string, number> = {
+  // Armadillo variants: $29.99
+  armadillo: 29.99,
+  // Cheetah variants: $24.99
+  cheetah: 24.99,
+  // Iguana variants: $24.99
+  iguana: 24.99,
+  // NinjaFlex variants: $29.99
+  ninjaflex: 29.99,
+  // Edge variants: $29.99
+  edge: 29.99,
+  // Chinchilla variants: $24.99
+  chinchilla: 24.99,
+  // Eel variants: $24.99
+  eel: 24.99,
+  // Pro (TPE/TPU) variants: $24.99
+  pro: 24.99,
+  // colorFabb PLA: $24.99
+  colorfabb_pla: 24.99,
+  // colorFabb ASA: $24.99
+  colorfabb_asa: 24.99,
+  // colorFabb Co-Polyester: $24.99
+  'colorfabb_co-polyester': 24.99,
+  // colorFabb Specials: $24.99
+  colorfabb_specials: 24.99,
+};
+
+const NINJATEK_DEFAULT_PRICE = 27.99;
+
+/**
+ * Look up a static fallback price for a NinjaTek product variant.
+ * Matches against material name keywords (case-insensitive).
+ */
+function getStaticPrice(material: string): number {
+  const materialLower = material.toLowerCase();
+
+  // Direct keyword match against known product lines
+  for (const [keyword, price] of Object.entries(NINJATEK_PRICES)) {
+    if (materialLower.includes(keyword)) {
+      return price;
+    }
+  }
+
+  // Additional fuzzy matches for common material name patterns
+  if (materialLower.includes('tpe') || materialLower.includes('tpu')) {
+    return 24.99;
+  }
+  if (materialLower.includes('pla')) {
+    return 24.99;
+  }
+  if (materialLower.includes('asa')) {
+    return 24.99;
+  }
+  if (materialLower.includes('nylon') || materialLower.includes('pa')) {
+    return 24.99;
+  }
+  if (materialLower.includes('petg')) {
+    return 24.99;
+  }
+
+  return NINJATEK_DEFAULT_PRICE;
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -148,6 +216,165 @@ const EXCLUDED_ENTRIES = [
   'Eel 90A (Conductive TPU)', // Has only diameter variants (1.75mm, 3mm) not colors
   'colorFabb PA (Nylon)',     // Has only diameter variants (1.75mm, 2.85mm) not colors
 ];
+
+// ============================================================================
+// WOOCOMMERCE STORE API — LIVE PRICE FETCHING
+// ============================================================================
+
+interface WooProduct {
+  id: number;
+  name: string;
+  slug: string;
+  permalink: string;
+  prices: {
+    price: string;        // in cents, e.g., "5425"
+    regular_price: string;
+    sale_price?: string;
+    price_range?: string;
+  };
+  images: Array<{ src: string; alt: string }>;
+  average_rating: string;
+  attributes: Array<{ name: string; slug: string; options: string[] }>;
+  type: string;
+  description: string;
+}
+
+/**
+ * Fetch live product data from NinjaTek WooCommerce Store API.
+ * Returns a map of product name (lowercase) → { price, imageUrl, weightKg }.
+ * 
+ * API endpoint: /wp-json/wc/store/v1/products (publicly accessible, no auth required)
+ */
+async function fetchWooCommerceProducts(): Promise<Map<string, {
+  price: number;
+  imageUrl: string | null;
+  permalink: string;
+  weightKg: number;
+  available: boolean;
+}>> {
+  const priceMap = new Map<string, {
+    price: number;
+    imageUrl: string | null;
+    permalink: string;
+    weightKg: number;
+    available: boolean;
+  }>();
+  
+  const baseUrl = 'https://ninjatek.com/wp-json/wc/store/v1/products';
+  
+  try {
+    let page = 1;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const url = `${baseUrl}?per_page=100&page=${page}`;
+      console.log(`[NINJATEK-WOO] Fetching page ${page}: ${url}`);
+      
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'FilaScope/1.0 (+https://filascope.com/)',
+          'Accept': 'application/json',
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      
+      if (!response.ok) {
+        console.warn(`[NINJATEK-WOO] API returned ${response.status} for page ${page}`);
+        break;
+      }
+      
+      const products: WooProduct[] = await response.json();
+      
+      if (products.length === 0) {
+        hasMore = false;
+        break;
+      }
+      
+      for (const product of products) {
+        // Extract price (WooCommerce Store API returns prices in cents)
+        const priceCents = parseInt(product.prices?.price || '0', 10);
+        const price = priceCents / 100;
+        
+        // Extract weight from name or attributes
+        let weightKg = 0.5; // Default NinjaTek spool size
+        const weightMatch = product.name?.match(/(\d+(?:\.\d+)?)\s*kg/i);
+        if (weightMatch) {
+          weightKg = parseFloat(weightMatch[1]);
+        }
+        
+        // Extract image
+        const imageUrl = product.images?.[0]?.src || null;
+        
+        const key = product.name?.toLowerCase().trim() || '';
+        priceMap.set(key, {
+          price,
+          imageUrl,
+          permalink: product.permalink || '',
+          weightKg,
+          available: product.type !== 'grouped' && price > 0,
+        });
+      }
+      
+      console.log(`[NINJATEK-WOO] Page ${page}: fetched ${products.length} products, total mapped: ${priceMap.size}`);
+      
+      if (products.length < 100) {
+        hasMore = false;
+      } else {
+        page++;
+      }
+    }
+    
+    console.log(`[NINJATEK-WOO] Total products from WooCommerce: ${priceMap.size}`);
+    
+  } catch (error) {
+    console.error(`[NINJATEK-WOO] Error fetching WooCommerce products:`, error);
+    // Non-fatal: continue with CSV data (prices will be null)
+  }
+  
+  return priceMap;
+}
+
+/**
+ * Match a CSV variant to a WooCommerce product for price enrichment.
+ * Uses fuzzy matching on product name + color.
+ */
+function matchWooPrice(
+  csvVariant: { title: string; color: string; material: string },
+  wooProducts: Map<string, { price: number; imageUrl: string | null; permalink: string; weightKg: number; available: boolean }>
+): { price: number; imageUrl: string | null; weightKg: number } | null {
+  const materialLower = csvVariant.material.toLowerCase();
+  const colorLower = csvVariant.color.toLowerCase();
+  
+  // Strategy 1: Match by exact product line name
+  // NinjaTek Woo names like "Cheetah 95A TPU Filament - 0.5 kg - Fire Red"
+  for (const [name, data] of wooProducts) {
+    const nameLower = name.toLowerCase();
+    
+    // Check material match
+    const materialMatch = nameLower.includes(materialLower.replace(' tpu', '').replace(' pla', ''));
+    // Check color match  
+    const colorMatch = nameLower.includes(colorLower);
+    
+    if (materialMatch && colorMatch && data.price > 0) {
+      return { price: data.price, imageUrl: data.imageUrl, weightKg: data.weightKg };
+    }
+  }
+  
+  // Strategy 2: Match by material only (if no color match found)
+  const strippedMaterial = materialLower.replace(' tpu', '').replace(' pla', '');
+  for (const [name, data] of wooProducts) {
+    const nameLower = name.toLowerCase();
+    if (nameLower.includes(strippedMaterial) && data.price > 0) {
+      return { price: data.price, imageUrl: data.imageUrl, weightKg: data.weightKg };
+    }
+  }
+  
+  return null;
+}
 
 function parseCsvSeed(): ProductVariant[] {
   const variants: ProductVariant[] = [];
@@ -425,7 +652,7 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
   console.log('[NINJATEK-SYNC] ═══════════════════════════════════════════════════════');
-  console.log('[NINJATEK-SYNC] 🚀 NINJATEK CSV-SEEDED SYNC STARTED');
+  console.log('[NINJATEK-SYNC] 🚀 NINJATEK HYBRID SYNC STARTED');
   console.log('[NINJATEK-SYNC] ═══════════════════════════════════════════════════════');
 
   try {
@@ -451,9 +678,39 @@ Deno.serve(async (req) => {
     
     const brandId = brand?.id || null;
 
-    // Step 1: Parse CSV seed
+    // Step 1: Fetch live prices from WooCommerce Store API
+    console.log(`[NINJATEK-SYNC] Step 1: Fetching live prices from WooCommerce API...`);
+    const wooProducts = await fetchWooCommerceProducts();
+    console.log(`[NINJATEK-SYNC] Step 1: Got ${wooProducts.size} products from WooCommerce`);
+    
+    // Step 2: Parse CSV seed
     const variants = parseCsvSeed();
-    console.log(`[NINJATEK-SYNC] Step 1: Parsed ${variants.length} variants from CSV`);
+    console.log(`[NINJATEK-SYNC] Step 2: Parsed ${variants.length} variants from CSV`);
+    
+    // Step 3: Enrich CSV variants with live WooCommerce prices
+    let pricesMatched = 0;
+    let pricesMissed = 0;
+    for (const variant of variants) {
+      const wooMatch = matchWooPrice(
+        { title: variant.title, color: variant.color, material: variant.material },
+        wooProducts
+      );
+      
+      if (wooMatch) {
+        variant.price = wooMatch.price;
+        if (wooMatch.imageUrl) {
+          variant.imageUrl = wooMatch.imageUrl;
+        }
+        variant.weightKg = wooMatch.weightKg;
+        variant.available = wooMatch.available;
+        pricesMatched++;
+      } else {
+        pricesMissed++;
+        console.log(`[NINJATEK-SYNC] No Woo match for: ${variant.title} (${variant.color}), using static fallback`);
+        variant.price = getStaticPrice(variant.material);
+      }
+    }
+    console.log(`[NINJATEK-SYNC] Step 3: Price enrichment complete — ${pricesMatched} matched (Woo), ${pricesMissed} using static fallback`);
     
     // Log filter decisions
     decisions.push({
