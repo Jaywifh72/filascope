@@ -2292,8 +2292,6 @@ Deno.serve(async (req) => {
     // Batch insert
     let created = 0;
     let updated = 0; // Clean-slate sync only creates; updated tracked for completeness
-    let skipped = 0;
-    let errors = 0;
     const batchSize = 50;
     
     for (let i = 0; i < productsToInsert.length; i += batchSize) {
