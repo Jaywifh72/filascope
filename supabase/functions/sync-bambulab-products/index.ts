@@ -2348,6 +2348,7 @@ Deno.serve(async (req) => {
     // Update brand product counts
     await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'bambu-lab' });
     
+    console.log(`[BambuLab] Debug: created=${created}, updated=${typeof updated}, skipped=${typeof skipped}, errors=${typeof errors}`);
     console.log(`[BambuLab] Sync complete: ${created} created, ${updated} updated, ${skipped} skipped, ${errors} errors`);
     
     const result = {
