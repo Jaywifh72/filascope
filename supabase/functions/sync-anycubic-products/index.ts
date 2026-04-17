@@ -113,8 +113,13 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verify admin role
-    const authHeader = req.headers.get('Authorization');
+    // Verify admin role OR service role key
+    const authHeader = req.headers.get('Authorization') || '';
+    const apiKey = req.headers.get('apikey') || '';
+    
+    // Allow service role key to bypass user auth
+    const isServiceRole = authHeader.includes('service_role') || apiKey === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Authorization required' }), {
         status: 401,
@@ -122,28 +127,31 @@ Deno.serve(async (req) => {
       });
     }
 
-    const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: userError } = await authClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid authentication' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (!isServiceRole) {
+      // Regular user auth flow
+      const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } },
       });
-    }
 
-    const { data: isAdmin } = await supabase.rpc('has_role', {
-      _user_id: user.id,
-      _role: 'admin',
-    });
+      const { data: { user }, error: userError } = await authClient.auth.getUser();
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: 'Invalid authentication' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Admin role required' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      const { data: isAdmin } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin',
       });
+
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: 'Admin role required' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Parse request
@@ -164,7 +172,7 @@ Deno.serve(async (req) => {
         sync_type: cleanSlate ? 'clean_slate' : 'incremental',
         status: 'running',
         triggered_by: 'admin',
-        triggered_by_user: user.id,
+        triggered_by_user: isServiceRole ? 'service_role' : user!.id,
       })
       .select()
       .single();
@@ -188,7 +196,7 @@ Deno.serve(async (req) => {
     });
 
     // Run the actual sync in background
-    const syncPromise = runSync(supabase, { dryRun, cleanSlate, limit }, syncLogId, user.id);
+    const syncPromise = runSync(supabase, { dryRun, cleanSlate, limit }, syncLogId, isServiceRole ? 'service_role' : user!.id);
     
     // Use EdgeRuntime.waitUntil if available, otherwise just run the promise
     if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
