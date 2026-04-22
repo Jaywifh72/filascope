@@ -766,7 +766,7 @@ export default function MaterialHub() {
       if (!config) return [] as any[];
       const { data } = await (supabase as any)
         .from("filaments")
-        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, featured_image, transmission_distance, filascope_score, diameter_nominal_mm")
+        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, featured_image, transmission_distance, filascope_score, diameter_nominal_mm, last_scraped_at")
         .in("material", config.materials)
         .not("filascope_score", "is", null)
         .order("filascope_score", { ascending: false })
@@ -783,7 +783,7 @@ export default function MaterialHub() {
       if (!config) return [] as any[];
       const { data } = await (supabase as any)
         .from("filaments")
-        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, featured_image, transmission_distance, filascope_score, diameter_nominal_mm, variant_available")
+        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, featured_image, transmission_distance, filascope_score, diameter_nominal_mm, variant_available, last_scraped_at")
         .in("material", config.materials)
         .order("filascope_score", { ascending: false, nullsFirst: false })
         .limit(24);

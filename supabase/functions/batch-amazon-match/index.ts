@@ -5,12 +5,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Amazon marketplace endpoints
+// Amazon marketplace endpoints. Partner tag per marketplace mapping:
+//   -20  US/CA  (North America master tag)
+//   -21  UK/DE/FR/IT/ES  (Europe)
+//   -22  AU/JP  (Asia-Pacific)
+// Defaults can be overridden by env AMAZON_PARTNER_TAG_{US,CA,UK,DE,FR,IT,ES,AU,JP}.
 const MARKETPLACE = {
-  us: { host: 'webservices.amazon.com',   region: 'us-east-1',   tag: '', domain: 'amazon.com' },
-  ca: { host: 'webservices.amazon.ca',    region: 'us-east-1',   tag: '', domain: 'amazon.ca' },
-  uk: { host: 'webservices.amazon.co.uk', region: 'eu-west-1',   tag: '', domain: 'amazon.co.uk' },
-  de: { host: 'webservices.amazon.de',    region: 'eu-west-1',   tag: '', domain: 'amazon.de' },
+  us: { host: 'webservices.amazon.com',   region: 'us-east-1',   tag: 'filascope-20', domain: 'amazon.com'    },
+  ca: { host: 'webservices.amazon.ca',    region: 'us-east-1',   tag: 'filascope-20', domain: 'amazon.ca'     },
+  uk: { host: 'webservices.amazon.co.uk', region: 'eu-west-1',   tag: 'filascope-21', domain: 'amazon.co.uk'  },
+  de: { host: 'webservices.amazon.de',    region: 'eu-west-1',   tag: 'filascope-21', domain: 'amazon.de'     },
+  fr: { host: 'webservices.amazon.fr',    region: 'eu-west-1',   tag: 'filascope-21', domain: 'amazon.fr'     },
+  it: { host: 'webservices.amazon.it',    region: 'eu-west-1',   tag: 'filascope-21', domain: 'amazon.it'     },
+  es: { host: 'webservices.amazon.es',    region: 'eu-west-1',   tag: 'filascope-21', domain: 'amazon.es'     },
+  au: { host: 'webservices.amazon.com.au',region: 'us-west-2',   tag: 'filascope-22', domain: 'amazon.com.au' },
+  jp: { host: 'webservices.amazon.co.jp', region: 'us-west-2',   tag: 'filascope-22', domain: 'amazon.co.jp'  },
 };
 
 // DB field for each marketplace link
@@ -19,6 +28,11 @@ const REGION_LINK_FIELD: Record<string, string> = {
   ca: 'amazon_link_ca',
   uk: 'amazon_link_uk',
   de: 'amazon_link_de',
+  fr: 'amazon_link_fr',
+  it: 'amazon_link_it',
+  es: 'amazon_link_es',
+  au: 'amazon_link_au',
+  jp: 'amazon_link_jp',
 };
 
 interface FilamentRow {
@@ -177,12 +191,11 @@ Deno.serve(async (req) => {
     let body: { brands?: string[]; limit?: number; marketplace?: string } = {};
     try { body = await req.json(); } catch { /* no body */ }
 
-    const requestedMarkets = body.marketplace ? [body.marketplace] : ['us', 'ca', 'uk', 'de'];
+    const requestedMarkets = body.marketplace ? [body.marketplace] : ['us', 'ca', 'uk', 'de', 'au', 'jp'];
     const limitPerBrand = body.limit ?? 20;
 
     const accessKey = Deno.env.get('AMAZON_ACCESS_KEY');
     const secretKey = Deno.env.get('AMAZON_SECRET_KEY');
-    const partnerTag = Deno.env.get('AMAZON_PARTNER_TAG') ?? 'filascope-20';
 
     if (!accessKey || !secretKey) {
       return new Response(
@@ -191,8 +204,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Set partner tags per market
-    for (const mk of Object.values(MARKETPLACE)) mk.tag = partnerTag;
+    // Honor per-marketplace env overrides: AMAZON_PARTNER_TAG_{US,CA,UK,DE,FR,IT,ES,AU,JP}
+    for (const [key, mk] of Object.entries(MARKETPLACE)) {
+      const override = Deno.env.get(`AMAZON_PARTNER_TAG_${key.toUpperCase()}`);
+      if (override) mk.tag = override;
+    }
+    // Legacy fallback: if AMAZON_PARTNER_TAG is set AND per-marketplace keys are not,
+    // apply to US/CA only (matches FilaScope MEMORY.md rule for -20 = NA).
+    const legacyTag = Deno.env.get('AMAZON_PARTNER_TAG');
+    if (legacyTag && !Deno.env.get('AMAZON_PARTNER_TAG_US')) {
+      MARKETPLACE.us.tag = legacyTag;
+      MARKETPLACE.ca.tag = legacyTag;
+    }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -249,7 +272,7 @@ Deno.serve(async (req) => {
 
             if (bestItem && bestScore >= 70) {
               const linkField = REGION_LINK_FIELD[marketKey] ?? `amazon_link_${marketKey}`;
-              const asinUrl = `https://www.${market.domain}/dp/${bestItem.ASIN}?tag=${partnerTag}`;
+              const asinUrl = `https://www.${market.domain}/dp/${bestItem.ASIN}?tag=${market.tag}`;
               const price = bestItem.Offers?.Listings?.[0]?.Price?.Amount ?? null;
 
               const patch: Record<string, unknown> = { id: filament.id, [linkField]: asinUrl };
