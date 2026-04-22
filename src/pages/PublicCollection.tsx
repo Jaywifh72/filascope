@@ -21,6 +21,8 @@ import {
 import { toast } from "sonner";
 import { useWishlistCollections } from "@/hooks/useWishlistCollections";
 import { useCollectionActions } from "@/hooks/useCollectionItems";
+import { useRegion } from "@/contexts/RegionContext";
+import { resolveFilamentPrice } from "@/lib/resolveFilamentPrice";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   folder: <Folder className="h-5 w-5" />,
@@ -69,7 +71,9 @@ export default function PublicCollection() {
           id,
           created_at,
           filament:filaments (
-            id, product_title, vendor, material, featured_image, variant_price, color_hex
+            id, product_title, vendor, material, featured_image,
+            variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy,
+            net_weight_g, pack_quantity, color_hex
           )
         `)
         .eq("user_id", profile.id)
@@ -78,15 +82,10 @@ export default function PublicCollection() {
 
       if (itemsError) throw itemsError;
 
-      const totalValue = (items || []).reduce((sum: number, item: any) => {
-        return sum + (item.filament?.variant_price || 0);
-      }, 0);
-
       return {
         profile,
         collection,
         items: items || [],
-        totalValue,
       };
     },
     enabled: !!username && !!slug,
@@ -142,7 +141,19 @@ export default function PublicCollection() {
     );
   }
 
-  const { profile, collection, items, totalValue } = data;
+  const { profile, collection, items } = data;
+  const { currency, convertPrice, hasRates, formatPrice } = useRegion();
+
+  // Sum collection value in user currency via the canonical resolver
+  const totalValue = items.reduce((sum: number, item: any) => {
+    if (!item.filament) return sum;
+    const resolved = resolveFilamentPrice(item.filament, {
+      userCurrency: currency,
+      convertFromCurrency: convertPrice,
+      hasRates,
+    });
+    return sum + (resolved.spoolPrice ?? 0);
+  }, 0);
 
   return (
     <>
@@ -186,7 +197,7 @@ export default function PublicCollection() {
           <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
             <span>{items.length} item{items.length !== 1 ? "s" : ""}</span>
             {totalValue > 0 && (
-              <span>Estimated value: ${totalValue.toFixed(2)}</span>
+              <span>Estimated value: {formatPrice(totalValue, { showApproximate: true })}</span>
             )}
             <span>
               by{" "}
@@ -235,11 +246,20 @@ export default function PublicCollection() {
                     {item.filament?.material && (
                       <Badge variant="secondary" className="text-xs">{item.filament.material}</Badge>
                     )}
-                    {item.filament?.variant_price && (
-                      <span className="text-sm font-mono font-semibold text-primary">
-                        ${item.filament.variant_price.toFixed(2)}
-                      </span>
-                    )}
+                    {(() => {
+                      if (!item.filament) return null;
+                      const resolved = resolveFilamentPrice(item.filament, {
+                        userCurrency: currency,
+                        convertFromCurrency: convertPrice,
+                        hasRates,
+                      });
+                      if (resolved.spoolPrice == null) return null;
+                      return (
+                        <span className="text-sm font-mono font-semibold text-primary">
+                          {formatPrice(resolved.spoolPrice, { showApproximate: resolved.isConverted })}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
               </Link>

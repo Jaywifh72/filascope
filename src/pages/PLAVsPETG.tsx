@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { normalizeColorHex } from '@/lib/utils';
+import { useResolvedPrice } from '@/hooks/useResolvedPrice';
 import { ArrowRight, CheckCircle, XCircle, MinusCircle } from 'lucide-react';
 
 const FAQS = [
@@ -109,6 +110,13 @@ interface FilamentRow {
   color_family: string | null;
   color_hex: string | null;
   variant_price: number | null;
+  price_cad: number | null;
+  price_eur: number | null;
+  price_gbp: number | null;
+  price_aud: number | null;
+  price_jpy: number | null;
+  net_weight_g: number | null;
+  pack_quantity: number | null;
   filascope_score: number | null;
 }
 
@@ -122,6 +130,7 @@ function FilamentMiniCard({ f }: { f: FilamentRow }) {
   const slug = f.product_handle || f.id;
   const name = f.display_name || f.product_title;
   const hex = normalizeColorHex(f.color_hex);
+  const resolved = useResolvedPrice(f);
   return (
     <Link to={`/filament/${slug}`} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-border hover:border-primary transition-colors bg-card">
       <div className="w-7 h-7 rounded-full border border-border flex-shrink-0" style={{ backgroundColor: hex }} />
@@ -129,7 +138,9 @@ function FilamentMiniCard({ f }: { f: FilamentRow }) {
         <p className="text-xs text-muted-foreground">{f.vendor}</p>
         <p className="text-sm font-medium truncate">{name}</p>
       </div>
-      {f.variant_price && <span className="text-xs text-muted-foreground flex-shrink-0">${f.variant_price.toFixed(2)}</span>}
+      {resolved.formattedSpoolPrice && (
+        <span className="text-xs text-muted-foreground flex-shrink-0">{resolved.formattedSpoolPrice}</span>
+      )}
     </Link>
   );
 }
@@ -140,7 +151,7 @@ export default function PLAVsPETG() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('filaments')
-        .select('id, product_handle, product_title, display_name, vendor, color_family, color_hex, variant_price, filascope_score')
+        .select('id, product_handle, product_title, display_name, vendor, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, filascope_score')
         .eq('material', 'PLA')
         .not('filascope_score', 'is', null)
         .order('filascope_score', { ascending: false })
@@ -155,7 +166,7 @@ export default function PLAVsPETG() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('filaments')
-        .select('id, product_handle, product_title, display_name, vendor, color_family, color_hex, variant_price, filascope_score')
+        .select('id, product_handle, product_title, display_name, vendor, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, filascope_score')
         .eq('material', 'PETG')
         .not('filascope_score', 'is', null)
         .order('filascope_score', { ascending: false })

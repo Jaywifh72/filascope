@@ -9,6 +9,7 @@ import { ArticleSchema } from "@/components/seo/ArticleSchema";
 import { DefinedTermSetSchema } from "@/components/seo/DefinedTermSetSchema";
 import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
 import { FilamentCard } from "@/components/FilamentCard";
+import { useRegion } from "@/contexts/RegionContext";
 import { Thermometer, Scale, Tag, Layers, Wind, Droplets, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { getMaterialReference } from "@/lib/materialReferenceData";
 import { MaterialBrandComparisonTable } from "@/components/filament/MaterialBrandComparisonTable";
@@ -765,7 +766,7 @@ export default function MaterialHub() {
       if (!config) return [] as any[];
       const { data } = await (supabase as any)
         .from("filaments")
-        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, featured_image, transmission_distance, filascope_score, diameter_nominal_mm")
+        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, featured_image, transmission_distance, filascope_score, diameter_nominal_mm")
         .in("material", config.materials)
         .not("filascope_score", "is", null)
         .order("filascope_score", { ascending: false })
@@ -782,7 +783,7 @@ export default function MaterialHub() {
       if (!config) return [] as any[];
       const { data } = await (supabase as any)
         .from("filaments")
-        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, featured_image, transmission_distance, filascope_score, diameter_nominal_mm, variant_available")
+        .select("id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, featured_image, transmission_distance, filascope_score, diameter_nominal_mm, variant_available")
         .in("material", config.materials)
         .order("filascope_score", { ascending: false, nullsFirst: false })
         .limit(24);
@@ -815,6 +816,9 @@ export default function MaterialHub() {
   });
 
   const isLoading = statsLoading || topLoading || productsLoading;
+
+  // Convert average USD price to user currency for display
+  const { formatPrice, convertPrice, hasRates } = useRegion();
 
   // noindex / redirect for unknown slugs
   if (!config) return <Navigate to="/" replace />;
@@ -938,7 +942,13 @@ export default function MaterialHub() {
           <StatCard
             icon={<Scale className="w-4 h-4" />}
             label="Avg. Price"
-            value={stats?.avgPrice ? `$${stats.avgPrice.toFixed(2)}` : "—"}
+            value={
+              stats?.avgPrice && hasRates
+                ? formatPrice(convertPrice(stats.avgPrice, "USD"), { showApproximate: true })
+                : stats?.avgPrice
+                  ? `$${stats.avgPrice.toFixed(2)}`
+                  : "—"
+            }
           />
           <StatCard
             icon={<Thermometer className="w-4 h-4" />}

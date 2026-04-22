@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { normalizeColorHex } from '@/lib/utils';
-import { Sun, ArrowRight, DollarSign } from 'lucide-react';
+import { useResolvedPrice } from '@/hooks/useResolvedPrice';
+import { Sun, ArrowRight } from 'lucide-react';
 
 interface FilamentRow {
   id: string;
@@ -22,6 +23,13 @@ interface FilamentRow {
   color_family: string | null;
   color_hex: string | null;
   variant_price: number | null;
+  price_cad: number | null;
+  price_eur: number | null;
+  price_gbp: number | null;
+  price_aud: number | null;
+  price_jpy: number | null;
+  net_weight_g: number | null;
+  pack_quantity: number | null;
   transmission_distance: number | null;
 }
 
@@ -48,6 +56,7 @@ function FilamentRankRow({ filament, rank }: { filament: FilamentRow; rank: numb
   const slug = filament.product_handle || filament.id;
   const name = filament.display_name || filament.product_title;
   const hex = normalizeColorHex(filament.color_hex, '#FFFFFF');
+  const resolved = useResolvedPrice(filament);
 
   return (
     <Card className="hover:border-primary transition-colors">
@@ -67,9 +76,9 @@ function FilamentRankRow({ filament, rank }: { filament: FilamentRow; rank: numb
                   <Sun className="w-3 h-3 mr-1" />TD {filament.transmission_distance}
                 </Badge>
               )}
-              {filament.variant_price != null && (
+              {resolved.formattedSpoolPrice && (
                 <Badge variant="outline" className="text-xs">
-                  <DollarSign className="w-3 h-3" />{filament.variant_price.toFixed(2)}
+                  {resolved.formattedSpoolPrice}
                 </Badge>
               )}
             </div>
@@ -104,7 +113,7 @@ export default function BestWhiteFilamentsForHueForge() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('filaments')
-        .select('id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, transmission_distance')
+        .select('id, product_handle, product_title, display_name, vendor, material, color_family, color_hex, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, net_weight_g, pack_quantity, transmission_distance')
         .in('color_family', ['White', 'Natural'])
         .not('transmission_distance', 'is', null)
         .order('transmission_distance', { ascending: true })
