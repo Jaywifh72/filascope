@@ -16,6 +16,12 @@ interface BrandEntry {
   functionSlug?: string;
 }
 
+// Brands handled by OpenClaw skills (system cron, not edge functions).
+// The orchestrator MUST skip these — the skill owns its own sync cadence.
+const OPENCLAW_SKILL_BRANDS = new Set<string>([
+  'bambu-lab',  // skill: filascope-bambu-lab-scraper (2026-04-22)
+]);
+
 const SLUG_TO_FUNCTION: Record<string, string> = {
   '3d-fuel': '3dfuel',
   'atomic-filament': 'atomic',
@@ -26,6 +32,8 @@ const SLUG_TO_FUNCTION: Record<string, string> = {
   'duramic-3d': 'duramic',
   'paramount-3d': 'paramount',
   'ic3d-printers': 'ic3d',
+  'overture-3d': 'overture',
+  'treed': 'treed',
   'treed-filaments': 'treed',
   'spectrum-filaments': 'spectrum',
   'gizmo-dorks': 'gizmodorks',
@@ -478,6 +486,10 @@ Deno.serve(async (req) => {
     // Determine eligible brands based on tier frequency
     const eligibleBrands: BrandEntry[] = [];
     for (const brand of ALL_BRANDS) {
+      if (OPENCLAW_SKILL_BRANDS.has(brand.slug)) {
+        console.log(`[ORCHESTRATOR] Skip ${brand.slug} — handled by OpenClaw skill`);
+        continue;
+      }
       const frequencyHours = TIER_FREQUENCY_HOURS[brand.tier];
       const { data: lastSync } = await supabase
         .from('brand_sync_logs')
