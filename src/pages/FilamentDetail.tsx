@@ -37,6 +37,8 @@ import {
 } from "@/components/filament/tabs";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { trackProductView as trackGA4ProductView, trackEcommerceViewItem } from "@/lib/analytics";
+import { PriceHistoryChart } from "@/components/price/PriceHistoryChart";
+import { PriceAlertSignup } from "@/components/price/PriceAlertSignup";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 import { useRegionalStore, getRegionDisplayName } from "@/hooks/useRegionalStore";
 import { useUnifiedRegionalPricing, type UnifiedRegionalPricingResult } from "@/hooks/useUnifiedRegionalPricing";
@@ -302,8 +304,11 @@ const { id } = useParams();
     
     const amazonLinks = [
       { id: 'amazon_us', name: 'Amazon US', link: pricingFilament.amazon_link_us, price: pricingFilament.amazon_price_usd, region: 'US' },
+      { id: 'amazon_ca', name: 'Amazon CA', link: (pricingFilament as any).amazon_link_ca, price: null, region: 'CA' },
       { id: 'amazon_uk', name: 'Amazon UK', link: pricingFilament.amazon_link_uk, price: null, region: 'UK' },
       { id: 'amazon_de', name: 'Amazon DE', link: pricingFilament.amazon_link_de, price: null, region: 'EU' },
+      { id: 'amazon_au', name: 'Amazon AU', link: (pricingFilament as any).amazon_link_au, price: null, region: 'AU' },
+      { id: 'amazon_jp', name: 'Amazon JP', link: (pricingFilament as any).amazon_link_jp, price: null, region: 'JP' },
     ].filter(a => a.link);
     
     const sortedAmazon = amazonLinks.sort((a, b) => {
@@ -1159,6 +1164,7 @@ const { id } = useParams();
               )}
 
               {activeTab === "pricing" && (
+                <>
                 <PricingTabContent
                   filament={displayFilament}
                   retailers={retailers}
@@ -1178,6 +1184,20 @@ const { id } = useParams();
                   priceCandidates={detailPricing.allCandidates}
                   candidatesLoading={detailPricing.isLoading}
                 />
+                {/* Price History Chart */}
+                <PriceHistoryChart
+                  filamentId={displayFilament.id}
+                  full
+                  className="mt-4"
+                />
+                {/* Price Alert Signup */}
+                <PriceAlertSignup
+                  filamentId={displayFilament.id}
+                  currentPrice={sidebarPricePerKg ?? null}
+                  productTitle={productLineName || displayFilament.product_title}
+                  className="mt-4"
+                />
+                </>
               )}
 
               {activeTab === "community" && (

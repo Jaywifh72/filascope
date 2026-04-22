@@ -21,7 +21,11 @@ interface AffiliateConfig {
 // Sourced from affiliate_configs + affiliate_programs tables. Last synced: 2026-03-14.
 const FALLBACK_CONFIGS: AffiliateConfig[] = [
   // Amazon — all regions
-  { vendor_name: "Amazon", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: "filascope-20", amazon_uk_tag: "filascope-20", amazon_de_tag: "filascope-20", amazon_ca_tag: "filascope-20", amazon_au_tag: "filascope-20", amazon_jp_tag: "filascope-20", affiliate_network: "amazon" },
+  // Per-marketplace Amazon Associates tags (MEMORY.md canonical):
+  //   -20  US/CA    (amazon.com, amazon.ca)
+  //   -21  UK/DE/FR/IT/ES  (amazon.co.uk, amazon.de, amazon.fr, amazon.it, amazon.es)
+  //   -22  AU/JP    (amazon.com.au, amazon.co.jp)
+  { vendor_name: "Amazon", affiliate_id: null, affiliate_url_pattern: null, amazon_us_tag: "filascope-20", amazon_ca_tag: "filascope-20", amazon_uk_tag: "filascope-21", amazon_de_tag: "filascope-21", amazon_au_tag: "filascope-22", amazon_jp_tag: "filascope-22", affiliate_network: "amazon" },
   // Anycubic — GoAffPro ref
   { vendor_name: "Anycubic", affiliate_id: "JEANJACQUESBOILEAU", affiliate_url_pattern: "?ref=JEANJACQUESBOILEAU", amazon_us_tag: null, amazon_uk_tag: null, amazon_de_tag: null, affiliate_network: "direct" },
   // Creality — UpPromote sca_ref
@@ -397,60 +401,64 @@ export const useAffiliateLinks = () => {
     return transformUrlSync(url, vendor || null, configs);
   }, [configs]);
 
-  // Convenience function for Amazon links specifically
-  // Returns null if URL is invalid, missing, or not a valid Amazon product page
+  // Convenience function for Amazon links specifically.
+  // Accepts product pages (/dp/, /gp/product/) AND search pages (/s?k=) —
+  // both are legitimate Amazon Associates "Program Links" per the Operating
+  // Agreement. Auto-applies the correct per-marketplace tag based on domain.
+  // Returns null only if the URL isn't an Amazon URL at all.
   const getAmazonUrl = useCallback((
-    url: string | null | undefined, 
-    region: "us" | "uk" | "de" = "us"
+    url: string | null | undefined,
+    // Back-compat arg: ignored when URL already carries a tag; used as hint
+    // for product-page URLs without an explicit tag.
+    _region: "us" | "uk" | "de" = "us"
   ): string | null => {
-    // Guard against null/empty URLs
     if (!url || url.trim() === '') return null;
 
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
-      
-      // Validate this is actually an Amazon domain
-      const isAmazonDomain = hostname.includes('amazon.com') || 
-                             hostname.includes('amazon.co.') ||
-                             hostname.includes('amazon.de') ||
-                             hostname.includes('amazon.fr') ||
-                             hostname.includes('amazon.it') ||
-                             hostname.includes('amazon.es') ||
-                             hostname.includes('amzn.');
-      
+
+      const AMAZON_DOMAINS = [
+        'amazon.com', 'amazon.ca', 'amazon.co.uk', 'amazon.de', 'amazon.fr',
+        'amazon.it', 'amazon.es', 'amazon.com.au', 'amazon.co.jp', 'amazon.in',
+        'amazon.nl', 'amazon.se', 'amazon.pl', 'amzn.to', 'amzn.com',
+      ];
+      const isAmazonDomain = AMAZON_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d) || hostname.endsWith(d));
       if (!isAmazonDomain) {
-        console.warn('[getAmazonUrl] Not an Amazon domain:', hostname);
         return null;
       }
-      
-      // Validate this is a product page (must contain /dp/ or /gp/product/)
+
       const pathname = urlObj.pathname.toLowerCase();
       const isProductPage = pathname.includes('/dp/') || pathname.includes('/gp/product/');
-      
-      if (!isProductPage) {
-        console.warn('[getAmazonUrl] Not a valid Amazon product URL (missing /dp/ or /gp/product/):', url);
+      const isSearchPage  = pathname === '/s' || pathname.startsWith('/s/') || pathname.endsWith('/s');
+      if (!isProductPage && !isSearchPage) {
+        // Home page or category page — not monetizable reliably, reject.
         return null;
       }
-      
-      const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === "amazon");
 
-      if (amazonConfig) {
-        const tag = region === "us"
-          ? amazonConfig.amazon_us_tag
-          : region === "uk"
-            ? amazonConfig.amazon_uk_tag
-            : amazonConfig.amazon_de_tag;
-
-        if (tag) {
-          // Ensure tag doesn't already contain ?tag= prefix (prevent double-encoding)
-          const cleanTag = tag.replace(/^\?tag=/i, '').replace(/^tag=/i, '');
-          urlObj.searchParams.set("tag", cleanTag);
-          return urlObj.toString();
+      // Tag-per-marketplace. Honor any tag already on the URL (search-URL
+      // backfill sets the correct tag already). Only override when missing.
+      if (!urlObj.searchParams.get('tag')) {
+        const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === 'amazon');
+        if (amazonConfig) {
+          const tagForDomain =
+            hostname.endsWith('amazon.com')    ? amazonConfig.amazon_us_tag
+          : hostname.endsWith('amazon.ca')     ? (amazonConfig.amazon_ca_tag || amazonConfig.amazon_us_tag)
+          : hostname.endsWith('amazon.co.uk')  ? amazonConfig.amazon_uk_tag
+          : hostname.endsWith('amazon.de')     ? amazonConfig.amazon_de_tag
+          : hostname.endsWith('amazon.fr')     ? amazonConfig.amazon_de_tag
+          : hostname.endsWith('amazon.it')     ? amazonConfig.amazon_de_tag
+          : hostname.endsWith('amazon.es')     ? amazonConfig.amazon_de_tag
+          : hostname.endsWith('amazon.com.au') ? (amazonConfig.amazon_au_tag || amazonConfig.amazon_us_tag)
+          : hostname.endsWith('amazon.co.jp')  ? (amazonConfig.amazon_jp_tag || amazonConfig.amazon_us_tag)
+          : amazonConfig.amazon_us_tag;
+          if (tagForDomain) {
+            const cleanTag = tagForDomain.replace(/^\?tag=/i, '').replace(/^tag=/i, '');
+            urlObj.searchParams.set('tag', cleanTag);
+          }
         }
       }
-
-      return url;
+      return urlObj.toString();
     } catch (err) {
       console.warn('[getAmazonUrl] Failed to parse URL:', url, err);
       return null;
