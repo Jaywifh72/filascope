@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/polymaker",
+  "title": "Polymaker ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 26 Polymaker ASA filaments. Prices from $27.99 to $40.99. 14 colors available. 1 with HueForge TD values.",
+  "h1": "Polymaker ASA Filament",
+  "keywords": [
+    "Polymaker",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Polymaker",
+  "count": 26,
+  "min_price": 27.99,
+  "max_price": 40.99,
+  "color_count": 14,
+  "has_td": 1,
+  "filament_ids": [
+    "7991b110-58ec-4c52-8dbb-530fcbbd0d7c",
+    "c67050c2-6ce6-4bb7-9e29-f04bded55224",
+    "0cd81c68-4c63-412f-8d63-3b72a33da299",
+    "f255e2a3-a878-4986-8bac-6c825f45cc9e",
+    "4a0fe282-a190-4a1b-a14c-437f6516959c",
+    "d43232bf-55ae-43a4-bf91-0fc81e1cda51",
+    "246b3e58-e7de-4958-a193-48e465655d59",
+    "cf9ecea1-d65a-48f8-8c61-c4678b3ed4d6",
+    "1a2b7b31-ebc8-4fa0-a4ae-1f5291844ad8",
+    "4f9e09de-9dad-4355-b944-5a9b066b0d98",
+    "45104685-f139-407e-989f-471de02fae08",
+    "06a69f1f-2acb-4986-9df7-bce0d7563b22",
+    "3c688e46-8229-416a-bb98-11ca32301646",
+    "c2e4d9cc-da17-46e8-95bc-e5705afccfd9",
+    "374c8007-7c17-45c4-bc5b-e4cd90b416c2",
+    "bdb4061d-7a60-43fe-88e4-3cb3873318d7",
+    "2a46e0e9-187e-43c3-b561-ee8d48356b8e",
+    "5423afc7-4385-44e5-9099-353069a7de04",
+    "345125e2-e54d-4823-84c8-e28f730ecd32",
+    "12baa317-1b80-44c4-83ca-2a80868d4b50"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Polymaker ASA Filament",
+    "description": "Compare 26 Polymaker ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/polymaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polymaker"
+        }
+      ]
+    }
+  }
+}

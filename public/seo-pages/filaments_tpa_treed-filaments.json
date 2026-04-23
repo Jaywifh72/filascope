@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpa/treed-filaments",
+  "title": "TreeD Filaments TPA Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 TreeD Filaments TPA filaments. Prices from $60.39 to $71.39. 2 colors available.",
+  "h1": "TreeD Filaments TPA Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "TPA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPA",
+  "vendor": "TreeD Filaments",
+  "count": 5,
+  "min_price": 60.39,
+  "max_price": 71.39,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "83ade06a-cef3-4c7c-98d2-8df1408d2e4b",
+    "cbfa26cb-352c-4cb7-96be-e62d5624402a",
+    "cefce503-533c-484f-afaa-495f0a378d36",
+    "09f7d975-757c-4b0c-8491-09fe702c708a",
+    "f5096a75-888c-4c34-a7cd-577ded4abd1a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments TPA Filament",
+    "description": "Compare 5 TreeD Filaments TPA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpa/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPA",
+          "item": "https://filascope.com/filaments/tpa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

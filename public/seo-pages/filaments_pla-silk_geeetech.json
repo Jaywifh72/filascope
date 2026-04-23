@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-silk/geeetech",
+  "title": "GEEETECH PLA-SILK Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 GEEETECH PLA-SILK filaments. Prices from $12.49 to $14.49. 3 colors available. 13 with HueForge TD values.",
+  "h1": "GEEETECH PLA-SILK Filament",
+  "keywords": [
+    "GEEETECH",
+    "PLA-SILK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-SILK",
+  "vendor": "GEEETECH",
+  "count": 13,
+  "min_price": 12.49,
+  "max_price": 14.49,
+  "color_count": 3,
+  "has_td": 13,
+  "filament_ids": [
+    "13725a7f-f0bb-4b6d-bc5f-e174595da291",
+    "5643965b-ea4d-4031-86ce-a8b87bec32f9",
+    "ba34f53a-a7b9-4452-88ca-0e11563fc5ca",
+    "5459b6b2-693b-47ac-ac37-6bec50d0ebec",
+    "bd2684da-f2bf-45a9-8218-0e78c74a9d43",
+    "ce38b461-093f-484f-a073-c2b56cff1812",
+    "ef3898ca-0fee-4644-b786-8681ead03ab6",
+    "6a55baa0-b2f2-4b50-9092-31a6a217f6ee",
+    "be25b15c-3d78-43c7-a6a4-7cd789e9f799",
+    "1fbb4798-71ac-489f-b53f-985e254ecfdd",
+    "808ca07e-6ddf-4836-b75d-35b2ae632fa4",
+    "870ca6b7-754b-4d3c-9bed-cae017ca3085",
+    "d8572d7e-4c2c-44fe-88d5-ac01c48487bf"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "GEEETECH PLA-SILK Filament",
+    "description": "Compare 13 GEEETECH PLA-SILK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-silk/geeetech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-SILK",
+          "item": "https://filascope.com/filaments/pla-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GEEETECH"
+        }
+      ]
+    }
+  }
+}

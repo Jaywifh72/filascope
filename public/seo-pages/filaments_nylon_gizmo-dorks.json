@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/nylon/gizmo-dorks",
+  "title": "Gizmo Dorks NYLON Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Gizmo Dorks NYLON filaments. Prices from $29.95 to $29.95. 4 colors available. 4 with HueForge TD values.",
+  "h1": "Gizmo Dorks NYLON Filament",
+  "keywords": [
+    "Gizmo Dorks",
+    "NYLON",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "NYLON",
+  "vendor": "Gizmo Dorks",
+  "count": 4,
+  "min_price": 29.95,
+  "max_price": 29.95,
+  "color_count": 4,
+  "has_td": 4,
+  "filament_ids": [
+    "33e84352-da8f-441b-a1aa-d87f2c2a6c43",
+    "09b87ddb-76bb-45e7-b980-e1b77d3d7338",
+    "aaf88765-9a5e-4ffc-9f4a-b1836c3affc3",
+    "dfc2654c-fe93-4743-a47d-52c0fcb656d2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Gizmo Dorks NYLON Filament",
+    "description": "Compare 4 Gizmo Dorks NYLON filaments on FilaScope",
+    "url": "https://filascope.com/filaments/nylon/gizmo-dorks",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "NYLON",
+          "item": "https://filascope.com/filaments/nylon"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Gizmo Dorks"
+        }
+      ]
+    }
+  }
+}

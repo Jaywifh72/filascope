@@ -1,0 +1,64 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/gst3d",
+  "title": "GST3D PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 11 GST3D PETG+ filaments. Prices from $9.71 to $80.99. 5 colors available.",
+  "h1": "GST3D PETG+ Filament",
+  "keywords": [
+    "GST3D",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "GST3D",
+  "count": 11,
+  "min_price": 9.71,
+  "max_price": 80.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "342252d5-1a84-498d-8f5b-9a199014e12a",
+    "a1994248-2ddb-4c9e-a60b-12b40821e797",
+    "a03eb86a-e99d-42dc-894c-ce1ebead9ae1",
+    "42b9eb9e-6b9f-4d55-9b8f-a0db8b16233c",
+    "5df18681-3c7f-43a2-8bd2-5c0773e1e5f7",
+    "fc73024f-1b84-4807-b17b-a5b5b10b9289",
+    "ff87af1f-8d89-4e8d-b8df-6f878c6c9d7b",
+    "04756eef-e27e-4592-a720-3d70c8947ba1",
+    "063829c6-5840-4432-891e-70683f618960",
+    "1101dd2c-bae6-412f-badb-71a7cc426441",
+    "ec4d7986-0152-42ee-b3f0-4598ee0f4b27"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "GST3D PETG+ Filament",
+    "description": "Compare 11 GST3D PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/gst3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GST3D"
+        }
+      ]
+    }
+  }
+}

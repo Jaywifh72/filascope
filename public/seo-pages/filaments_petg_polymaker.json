@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/polymaker",
+  "title": "Polymaker PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 43 Polymaker PETG+ filaments. Prices from $22.99 to $81.99. 20 colors available. 6 with HueForge TD values.",
+  "h1": "Polymaker PETG+ Filament",
+  "keywords": [
+    "Polymaker",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "Polymaker",
+  "count": 43,
+  "min_price": 22.99,
+  "max_price": 81.99,
+  "color_count": 20,
+  "has_td": 6,
+  "filament_ids": [
+    "9570c4eb-ed66-412d-9868-497e4efe31f9",
+    "1edd0690-97b8-4178-a3bf-e5864a90b56c",
+    "ba48cb70-6bfb-45cb-8e31-c7f900810ba4",
+    "8838f395-6600-4cb6-a685-35530223171d",
+    "78fbe525-775d-4b69-a1b0-0e0eb093911f",
+    "87d15ed4-2d95-42b4-898c-21d14d5d548c",
+    "13735f44-d215-475b-b9f7-012feb2d9700",
+    "2cc58230-9628-4033-bf84-3cd2e1ef535f",
+    "b19481e0-a38b-44aa-b65b-88f36e64a085",
+    "daab222e-f9c3-41b8-9d53-7bd4d03279cf",
+    "313d52d3-6d44-49bc-af5f-87779b64880c",
+    "b36d907f-45d9-46cb-a684-389a60407e76",
+    "d2cdf61f-26e2-4259-93a1-bb325dd53a97",
+    "25e35aab-fd2b-4aca-9d35-74b8a41881d4",
+    "75720595-50b5-4ae5-b1cb-68b3878f3abb",
+    "1e791993-126d-46c6-8d05-57fabfd3c65b",
+    "4901b6e1-bd1a-4867-820e-31dc6518d158",
+    "a7b35346-62cb-48c0-bbfc-8bcca68a373b",
+    "1693bdfa-2411-41dc-a7da-ddb10df95816",
+    "4df69c53-75cd-46c9-8303-92f31fd54d3b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Polymaker PETG+ Filament",
+    "description": "Compare 43 Polymaker PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/polymaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polymaker"
+        }
+      ]
+    }
+  }
+}

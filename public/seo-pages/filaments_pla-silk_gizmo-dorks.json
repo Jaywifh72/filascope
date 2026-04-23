@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-silk/gizmo-dorks",
+  "title": "Gizmo Dorks PLA-SILK Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Gizmo Dorks PLA-SILK filaments. Prices from $22.95 to $24.95. 2 colors available. 4 with HueForge TD values.",
+  "h1": "Gizmo Dorks PLA-SILK Filament",
+  "keywords": [
+    "Gizmo Dorks",
+    "PLA-SILK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-SILK",
+  "vendor": "Gizmo Dorks",
+  "count": 4,
+  "min_price": 22.95,
+  "max_price": 24.95,
+  "color_count": 2,
+  "has_td": 4,
+  "filament_ids": [
+    "37f50c1e-3b0e-4faa-8d16-01c6fa0653ab",
+    "c076a9e5-e99e-43d0-9ef4-47825c44625b",
+    "ac6a77cc-484e-4373-9204-94ad2312234d",
+    "b1cb7fdb-8647-4870-8bb0-b7b00a58aca1"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Gizmo Dorks PLA-SILK Filament",
+    "description": "Compare 4 Gizmo Dorks PLA-SILK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-silk/gizmo-dorks",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-SILK",
+          "item": "https://filascope.com/filaments/pla-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Gizmo Dorks"
+        }
+      ]
+    }
+  }
+}

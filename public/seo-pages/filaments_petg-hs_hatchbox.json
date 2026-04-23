@@ -1,0 +1,63 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-hs/hatchbox",
+  "title": "Hatchbox PETG-HS Filament — Prices, Specs & Reviews",
+  "description": "Compare 10 Hatchbox PETG-HS filaments. Prices from $25.00 to $25.00. 0 colors available.",
+  "h1": "Hatchbox PETG-HS Filament",
+  "keywords": [
+    "Hatchbox",
+    "PETG-HS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-HS",
+  "vendor": "Hatchbox",
+  "count": 10,
+  "min_price": 25,
+  "max_price": 25,
+  "color_count": 0,
+  "has_td": 0,
+  "filament_ids": [
+    "0121a426-4467-45c1-b264-f4da86c44b18",
+    "00ec2665-0012-488c-b30e-975d89642d39",
+    "a8708acc-06ee-480c-aa3a-0f3d13fb455d",
+    "9b69344f-9c53-4ff2-857a-709c03c9077a",
+    "ec8748f3-8e20-4836-8927-5c33db41ddd7",
+    "673f335d-7425-4233-911e-b3ff171eab1e",
+    "848089a8-a718-4f1e-b7fd-4ff406627ed1",
+    "22337e8e-6ec1-4fb3-ba3b-e12cf83cd64a",
+    "c79ece85-9b38-490f-9b97-673313a3a42a",
+    "7b31bc68-8eaf-4dff-b14b-15627752519a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Hatchbox PETG-HS Filament",
+    "description": "Compare 10 Hatchbox PETG-HS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-hs/hatchbox",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-HS",
+          "item": "https://filascope.com/filaments/petg-hs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Hatchbox"
+        }
+      ]
+    }
+  }
+}

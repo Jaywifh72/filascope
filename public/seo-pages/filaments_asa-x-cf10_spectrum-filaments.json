@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa-x-cf10/spectrum-filaments",
+  "title": "Spectrum Filaments ASA-X CF10 Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Spectrum Filaments ASA-X CF10 filaments. Prices from $46.00 to $76.00. 1 colors available.",
+  "h1": "Spectrum Filaments ASA-X CF10 Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "ASA-X CF10",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA-X CF10",
+  "vendor": "Spectrum Filaments",
+  "count": 3,
+  "min_price": 46,
+  "max_price": 76,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "e6a268fd-8fa8-49a7-8040-f92fcb6ad281",
+    "0ce30593-ae2b-40ff-92f0-cc489dcf110a",
+    "76ae10d2-f4b8-406f-a56d-57b43a69cef0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments ASA-X CF10 Filament",
+    "description": "Compare 3 Spectrum Filaments ASA-X CF10 filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa-x-cf10/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA-X CF10",
+          "item": "https://filascope.com/filaments/asa-x-cf10"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

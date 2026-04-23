@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa-cf/kingroon",
+  "title": "Kingroon PA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Kingroon PA-CF filaments. Prices from $27.99 to $54.00. 3 colors available. 5 with HueForge TD values.",
+  "h1": "Kingroon PA-CF Filament",
+  "keywords": [
+    "Kingroon",
+    "PA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA-CF",
+  "vendor": "Kingroon",
+  "count": 5,
+  "min_price": 27.99,
+  "max_price": 54,
+  "color_count": 3,
+  "has_td": 5,
+  "filament_ids": [
+    "9f70e85d-9c90-444c-96f7-e88e9083a268",
+    "7abf57b5-6c8f-4c1b-87f9-985a025e2962",
+    "770e3a93-afe4-4444-b73d-cc7d0802f410",
+    "945e11cc-c114-4c15-85f7-5d6ca8d12226",
+    "ef9dc752-48d7-4931-8647-42780725a25b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon PA-CF Filament",
+    "description": "Compare 5 Kingroon PA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa-cf/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA-CF",
+          "item": "https://filascope.com/filaments/pa-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

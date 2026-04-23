@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-cf/qidi",
+  "title": "QIDI PLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 QIDI PLA-CF filaments. Prices from $29.99 to $29.99. 5 colors available. 5 with HueForge TD values.",
+  "h1": "QIDI PLA-CF Filament",
+  "keywords": [
+    "QIDI",
+    "PLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-CF",
+  "vendor": "QIDI",
+  "count": 5,
+  "min_price": 29.99,
+  "max_price": 29.99,
+  "color_count": 5,
+  "has_td": 5,
+  "filament_ids": [
+    "5ee9bbea-634a-4079-8f2a-b02031aa8c47",
+    "8e11a5aa-25bd-4f0a-a9c7-030e5f5e10f9",
+    "af24858d-8b9a-468e-9680-9b7bec22a80e",
+    "f24d6672-3c1a-4a30-925f-6d5df062e5c7",
+    "894ef8a6-cf25-4ac1-a789-28069c07f5af"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "QIDI PLA-CF Filament",
+    "description": "Compare 5 QIDI PLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-cf/qidi",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-CF",
+          "item": "https://filascope.com/filaments/pla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "QIDI"
+        }
+      ]
+    }
+  }
+}

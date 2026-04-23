@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pp-gf",
+  "title": "Best PP-GF Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PP-GF filaments in 2026. 3 options from 3 brands, starting at $48.00. Expert picks, prices & specs.",
+  "h1": "Best PP-GF Filament (2026)",
+  "keywords": [
+    "best PP-GF",
+    "PP-GF filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PP-GF",
+  "count": 3,
+  "brands": 3,
+  "min_price": 48,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PP-GF Filament 2026",
+    "description": "Expert comparison of 3 PP-GF filaments",
+    "url": "https://filascope.com/best-pp-gf"
+  }
+}

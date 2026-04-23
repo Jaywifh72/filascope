@@ -1,0 +1,65 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-cf/spectrum-filaments",
+  "title": "Spectrum Filaments PETG-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 12 Spectrum Filaments PETG-CF filaments. Prices from $44.00 to $46.00. 6 colors available. 12 with HueForge TD values.",
+  "h1": "Spectrum Filaments PETG-CF Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PETG-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-CF",
+  "vendor": "Spectrum Filaments",
+  "count": 12,
+  "min_price": 44,
+  "max_price": 46,
+  "color_count": 6,
+  "has_td": 12,
+  "filament_ids": [
+    "36b61d01-e498-4000-af3d-b973732c2e7b",
+    "0d0ac95c-5813-445d-869c-89747f19602e",
+    "e8a6988a-5fb5-44b7-9f4b-0caae0aa2af7",
+    "fe0d7a3e-3e40-42a4-a75b-a763b42ea0a9",
+    "5048ce15-94ce-4dc4-8fe4-046aebf2d4de",
+    "2b713507-bb00-4d95-8c5e-46a10b69b167",
+    "2c399866-01d9-4253-b91d-b2bcc7a79b3f",
+    "3bb7c15f-e528-40c8-ba16-cd7c5acccdef",
+    "7bb59bc6-4baa-4338-99b1-7b4bae678d5a",
+    "89937fc2-d167-470f-9758-ae4a8aa8f7f4",
+    "dbf366fb-3391-4134-be31-5219e27214fa",
+    "ec3c42b4-d0f0-4e96-bc7d-09ae81d32c1e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PETG-CF Filament",
+    "description": "Compare 12 Spectrum Filaments PETG-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-cf/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-CF",
+          "item": "https://filascope.com/filaments/petg-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

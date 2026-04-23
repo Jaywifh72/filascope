@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/numakers",
+  "title": "Numakers ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Numakers ABS filaments. Prices from $19.99 to $19.99. 8 colors available.",
+  "h1": "Numakers ABS Filament",
+  "keywords": [
+    "Numakers",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Numakers",
+  "count": 8,
+  "min_price": 19.99,
+  "max_price": 19.99,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "3344fe56-1479-4b72-baef-66275dc53552",
+    "01c5c9a2-1552-4cc1-ac3e-48352e1fc97b",
+    "d15e3d0c-5b35-4f90-a5fd-d8f61f1c5663",
+    "91f714e8-67d2-4c7a-90fa-6e2b5ca62fa8",
+    "2a60a15a-f12b-4356-97bb-ab4cad190443",
+    "f5bf5af4-f660-4367-8f0e-b80a2eb93123",
+    "41e99dbc-0a7a-4562-9ebd-6e361e86343e",
+    "87a29ac5-ff7a-4037-8a05-f3bcb9e5bf3f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers ABS Filament",
+    "description": "Compare 8 Numakers ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-cf/formfutura",
+  "title": "FormFutura PLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 11 FormFutura PLA-CF filaments. Prices from $20.62 to $23.76. 9 colors available. 11 with HueForge TD values.",
+  "h1": "FormFutura PLA-CF Filament",
+  "keywords": [
+    "FormFutura",
+    "PLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-CF",
+  "vendor": "FormFutura",
+  "count": 11,
+  "min_price": 20.62,
+  "max_price": 23.76,
+  "color_count": 9,
+  "has_td": 11,
+  "filament_ids": [
+    "ace16d26-c3a7-4b5c-8312-ad6fb5498425",
+    "72a29131-b0ce-4b18-82fd-311c74781ac3",
+    "3be7d7f6-2dbf-4ded-a62b-7d10a4bfa174",
+    "cb3a9d65-1798-478a-b87d-5e623f5d3459",
+    "155a1b3a-63f0-4039-a82a-b3f6717f18f7",
+    "9c126fd9-ff24-4ca1-9595-308aa3139ae7",
+    "d18a05ad-3506-42dd-8d83-be5cea65dea2",
+    "b4e54b43-ff15-4b40-820f-8fde895b5200",
+    "dcbe4504-2427-4dd5-97f6-7812bf19542e",
+    "83719535-81f3-4cca-855b-0982a4249dbc",
+    "30334e49-2c6c-46f8-9655-e1a8e8f2ef28"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura PLA-CF Filament",
+    "description": "Compare 11 FormFutura PLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-cf/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-CF",
+          "item": "https://filascope.com/filaments/pla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

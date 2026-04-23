@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/matte-pla/kingroon",
+  "title": "Kingroon Matte PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 27 Kingroon Matte PLA filaments. Prices from $16.99 to $149.99. 2 colors available.",
+  "h1": "Kingroon Matte PLA Filament",
+  "keywords": [
+    "Kingroon",
+    "Matte PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Matte PLA",
+  "vendor": "Kingroon",
+  "count": 27,
+  "min_price": 16.99,
+  "max_price": 149.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "21df1cbe-5b35-42e2-b4b8-9fe491079d57",
+    "952ff387-1503-4221-8b5a-cd0f70d4e7e9",
+    "044abec8-90ea-4228-9bef-b9853d865ff5",
+    "55ed8116-a30f-463b-a093-a7b415f8fde4",
+    "d9e0b899-1fc8-497b-89cb-2fddd80fc534",
+    "46ee9acf-a7e7-4e62-b6c4-6bc26b316e82",
+    "b3e6d0c9-d6e0-4b09-a8af-464931f661cb",
+    "bd8817f6-89e9-450b-b147-8aa273e3cbf2",
+    "54989fa5-439e-4c52-acad-3c074d013d83",
+    "1d1e0842-1029-48c1-b90d-9ddc70dd7a33",
+    "8c56e229-7c9b-43cd-8dcf-f4fc3099b0af",
+    "347107ea-e5c1-41f3-b04c-06e299f9309b",
+    "866f351d-3890-4831-8acf-4324f82c58f3",
+    "96638341-d0cd-4728-bead-fbef08050dcf",
+    "5e568d43-1dcf-42ed-98ed-9481959e4d04",
+    "322822b4-f6a3-444b-81df-92be7eab7755",
+    "16654089-8161-4fe5-8bbb-94e498486dda",
+    "a2efb806-46d0-4ed4-817a-febbed971fe7",
+    "e011e507-9cdb-4ef1-8245-2bbaa93f861c",
+    "82e5dc6a-347b-49e6-a435-42b98a2ffbb4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon Matte PLA Filament",
+    "description": "Compare 27 Kingroon Matte PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/matte-pla/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Matte PLA",
+          "item": "https://filascope.com/filaments/matte-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

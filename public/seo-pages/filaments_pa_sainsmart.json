@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa/sainsmart",
+  "title": "SainSmart PA Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 SainSmart PA filaments. Prices from $34.99 to $84.00. 9 colors available. 13 with HueForge TD values.",
+  "h1": "SainSmart PA Filament",
+  "keywords": [
+    "SainSmart",
+    "PA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA",
+  "vendor": "SainSmart",
+  "count": 13,
+  "min_price": 34.99,
+  "max_price": 84,
+  "color_count": 9,
+  "has_td": 13,
+  "filament_ids": [
+    "bf3968fc-cc4b-401c-b0ea-bc283a484992",
+    "4f091a87-37d5-4f29-bdae-d840670ef8d6",
+    "d0e17037-ef93-4779-b81e-8308ab29f860",
+    "9f096c5e-cc13-47c9-8dee-d15b4f8d0670",
+    "510580c1-6e50-4bb8-8880-8b8bbed2401a",
+    "b4c454df-5e39-4a65-bd9f-f8d8e024dcf9",
+    "3e435b4b-48f6-44b0-94e0-ca366d520b11",
+    "d1751438-b70e-43ca-a8a9-836fd7d35583",
+    "06ec5114-6e09-44b9-91ee-1a3e6c9c75b1",
+    "0c3a84ac-4a7f-41e7-a577-25d040dce1bb",
+    "bbbc2f0a-a409-4710-9082-e98d1fa93f79",
+    "b3862b45-a29c-42be-a81a-b80cf46522ed",
+    "54daa0aa-f0d2-4926-b91b-6822feb25650"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "SainSmart PA Filament",
+    "description": "Compare 13 SainSmart PA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa/sainsmart",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA",
+          "item": "https://filascope.com/filaments/pa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "SainSmart"
+        }
+      ]
+    }
+  }
+}

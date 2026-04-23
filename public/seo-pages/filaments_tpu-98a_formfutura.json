@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-98a/formfutura",
+  "title": "FormFutura TPU-98A Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 FormFutura TPU-98A filaments. Prices from $30.99 to $35.70. 7 colors available.",
+  "h1": "FormFutura TPU-98A Filament",
+  "keywords": [
+    "FormFutura",
+    "TPU-98A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-98A",
+  "vendor": "FormFutura",
+  "count": 7,
+  "min_price": 30.99,
+  "max_price": 35.7,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "22bb2000-5779-4ea9-9f48-722a4eab01f4",
+    "69e2396a-06e6-4584-a64e-02b91b4b0fe8",
+    "9ef50ebe-2be0-44e5-a440-1f51ba8b8d46",
+    "b4d2baf0-80a8-4332-974d-15b958fd54e4",
+    "0bc0c6b2-02ba-4af1-903c-f59e101a6e3f",
+    "e6d7c152-aced-49bb-bd70-af2c8a65d6f6",
+    "cf8b2044-c277-4c64-89ab-35882ca577b5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura TPU-98A Filament",
+    "description": "Compare 7 FormFutura TPU-98A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-98a/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-98A",
+          "item": "https://filascope.com/filaments/tpu-98a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

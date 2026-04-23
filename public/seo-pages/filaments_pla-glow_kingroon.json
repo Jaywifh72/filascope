@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-glow/kingroon",
+  "title": "Kingroon PLA-Glow Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Kingroon PLA-Glow filaments. Prices from $19.99 to $19.99. 3 colors available.",
+  "h1": "Kingroon PLA-Glow Filament",
+  "keywords": [
+    "Kingroon",
+    "PLA-Glow",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Glow",
+  "vendor": "Kingroon",
+  "count": 3,
+  "min_price": 19.99,
+  "max_price": 19.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "a0b93ce6-50db-4646-8a47-3cbd66591422",
+    "fcfa6776-7447-4754-8d3a-4709f6855172",
+    "6389bf1b-0e38-46bc-8935-a7f4caac417c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon PLA-Glow Filament",
+    "description": "Compare 3 Kingroon PLA-Glow filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-glow/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Glow",
+          "item": "https://filascope.com/filaments/pla-glow"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

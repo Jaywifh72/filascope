@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc/printed-solid",
+  "title": "Printed Solid PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Printed Solid PC filaments. Prices from $48.00 to $228.00. 3 colors available. 6 with HueForge TD values.",
+  "h1": "Printed Solid PC Filament",
+  "keywords": [
+    "Printed Solid",
+    "PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC",
+  "vendor": "Printed Solid",
+  "count": 6,
+  "min_price": 48,
+  "max_price": 228,
+  "color_count": 3,
+  "has_td": 6,
+  "filament_ids": [
+    "47fdca42-8cf0-4fe8-ad44-4338a4ab9fb7",
+    "d1a36f18-34a2-46a7-a505-7908bc2bc41d",
+    "84829b1c-1bb4-484f-917e-528f8dd09c3d",
+    "a39245d0-24cc-4065-ad5b-9a45a8467c80",
+    "ee29eddf-027f-429a-8a4d-cb3f86d4240e",
+    "91298de9-e9c0-44a5-9b6e-814ac0f08916"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Printed Solid PC Filament",
+    "description": "Compare 6 Printed Solid PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc/printed-solid",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC",
+          "item": "https://filascope.com/filaments/pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Printed Solid"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/peba/esun",
+  "title": "eSun PEBA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 eSun PEBA filaments. Prices from $45.99 to $49.99. 2 colors available.",
+  "h1": "eSun PEBA Filament",
+  "keywords": [
+    "eSun",
+    "PEBA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PEBA",
+  "vendor": "eSun",
+  "count": 3,
+  "min_price": 45.99,
+  "max_price": 49.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "4814ce48-619a-450e-a116-7c1829a19deb",
+    "9c83c080-4ef9-4a84-82e5-9ce8dc98ef16",
+    "f7c4db61-cc19-4350-bac2-6e468cbb96f9"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "eSun PEBA Filament",
+    "description": "Compare 3 eSun PEBA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/peba/esun",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PEBA",
+          "item": "https://filascope.com/filaments/peba"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "eSun"
+        }
+      ]
+    }
+  }
+}

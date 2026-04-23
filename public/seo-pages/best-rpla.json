@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-rpla",
+  "title": "Best rPLA Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best rPLA filaments in 2026. 12 options from 2 brands, starting at $16.52. Expert picks, prices & specs.",
+  "h1": "Best rPLA Filament (2026)",
+  "keywords": [
+    "best rPLA",
+    "rPLA filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "rPLA",
+  "count": 12,
+  "brands": 2,
+  "min_price": 16.52,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best rPLA Filament 2026",
+    "description": "Expert comparison of 12 rPLA filaments",
+    "url": "https://filascope.com/best-rpla"
+  }
+}

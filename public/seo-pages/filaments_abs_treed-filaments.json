@@ -1,0 +1,70 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/treed-filaments",
+  "title": "TreeD Filaments ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 17 TreeD Filaments ABS filaments. Prices from $32.89 to $54.89. 8 colors available.",
+  "h1": "TreeD Filaments ABS Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "TreeD Filaments",
+  "count": 17,
+  "min_price": 32.89,
+  "max_price": 54.89,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "e605210f-1f9a-4e75-9d5e-9f6e39ce9101",
+    "4756a144-f9c6-460e-88ea-6b5774e0567e",
+    "8eed22d4-c4b1-4357-ac0d-ac2ac25b3c8f",
+    "091df94b-659e-4054-a90d-020eaf8ddd49",
+    "d6a73600-8014-4a63-85e3-6951756ab727",
+    "504a22c9-79c2-4c25-b112-8ac625faea1d",
+    "4866ddc4-afa9-4739-9c35-b05190bc74c6",
+    "0a521c31-c99d-411e-bb0c-1bdfc2c28ee1",
+    "7d050174-f7f9-40a8-8ce3-2af5c20676f0",
+    "0b38e356-1569-4ac5-be27-5b84a62d9c9f",
+    "9cbf094d-f956-4b96-befa-7a92d2896676",
+    "c0eaa778-4f7c-4bb0-8648-4b61dd862e15",
+    "287ac008-d048-4194-882f-1cdaabf6ef35",
+    "4dcbfbc1-4f2c-46b1-83ce-bd4be6b9333a",
+    "9968bd14-08ec-4134-9b97-841eac352900",
+    "9d666a15-4d7e-4757-8011-0bdaa0d5ad62",
+    "4989af10-b3ca-40e3-8db7-c7edc533f6cc"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments ABS Filament",
+    "description": "Compare 17 TreeD Filaments ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

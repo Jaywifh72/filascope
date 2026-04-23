@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-cf/creality",
+  "title": "Creality PETG-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Creality PETG-CF filaments. Prices from $39.99 to $39.99. 8 colors available.",
+  "h1": "Creality PETG-CF Filament",
+  "keywords": [
+    "Creality",
+    "PETG-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-CF",
+  "vendor": "Creality",
+  "count": 8,
+  "min_price": 39.99,
+  "max_price": 39.99,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "aed9e1b5-8f0a-44cf-8037-7ef6fc45d3a2",
+    "42f5f504-73c1-4617-bc27-02f449e80928",
+    "6f2e201d-20fe-49c4-ae31-212258dea6de",
+    "077654d6-cb95-45b7-9cd7-9d460d388452",
+    "8faeb18a-9d00-4598-8248-f437bdb8f832",
+    "8c8b8d81-024c-4eaf-a61c-ac86d6290be3",
+    "2f2f22e3-028b-4d33-bc41-d49da45e56e7",
+    "9243f93c-bba6-475b-a071-c788b6366b95"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Creality PETG-CF Filament",
+    "description": "Compare 8 Creality PETG-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-cf/creality",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-CF",
+          "item": "https://filascope.com/filaments/petg-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Creality"
+        }
+      ]
+    }
+  }
+}

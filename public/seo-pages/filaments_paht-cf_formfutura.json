@@ -1,0 +1,64 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/paht-cf/formfutura",
+  "title": "FormFutura PAHT-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 11 FormFutura PAHT-CF filaments. Prices from $52.32 to $357.05. 1 colors available.",
+  "h1": "FormFutura PAHT-CF Filament",
+  "keywords": [
+    "FormFutura",
+    "PAHT-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PAHT-CF",
+  "vendor": "FormFutura",
+  "count": 11,
+  "min_price": 52.32,
+  "max_price": 357.05,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "49c1a5c7-d032-4f89-95b6-fb2dc4adf66c",
+    "e608a40f-032b-4ca4-bb52-7b9177e1cf34",
+    "c3419a1d-4cbc-4df8-8c88-0043570f531f",
+    "80451f61-a4fe-43b8-a91b-1bd88229fc80",
+    "6d8ea28a-f5c0-4aed-8856-268677e311bf",
+    "b77a8319-ec26-493b-91b2-c3df72571005",
+    "b510eb4c-7bb1-49a3-b4d5-39a576ac6ea7",
+    "f19a0476-a61f-49a8-a948-70cfa253d388",
+    "6bef4051-7e49-4747-8c1b-e4d74c30d1ab",
+    "07c8d8a7-7cb9-4802-bac2-c4983747aedc",
+    "3d594d60-b5fa-4f13-8e55-486f7d3de134"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura PAHT-CF Filament",
+    "description": "Compare 11 FormFutura PAHT-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/paht-cf/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PAHT-CF",
+          "item": "https://filascope.com/filaments/paht-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

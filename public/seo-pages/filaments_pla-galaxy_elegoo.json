@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-galaxy/elegoo",
+  "title": "Elegoo PLA Galaxy Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Elegoo PLA Galaxy filaments. Prices from $81.99 to $149.99. 1 colors available. 6 with HueForge TD values.",
+  "h1": "Elegoo PLA Galaxy Filament",
+  "keywords": [
+    "Elegoo",
+    "PLA Galaxy",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Galaxy",
+  "vendor": "Elegoo",
+  "count": 6,
+  "min_price": 81.99,
+  "max_price": 149.99,
+  "color_count": 1,
+  "has_td": 6,
+  "filament_ids": [
+    "5f12c81b-d571-4368-8fa5-2d2c42e860e1",
+    "0ac082c2-a6c7-40dc-95d2-d689b72550e1",
+    "219133e2-4458-4df3-b794-b40fdf39b414",
+    "58b3fc6d-291c-4ab4-abac-dd4c15b34b3e",
+    "885e9812-c28a-415c-ae94-e127cbdb40d1",
+    "e0a7176c-9cf4-4eca-bef2-614578e995f8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PLA Galaxy Filament",
+    "description": "Compare 6 Elegoo PLA Galaxy filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-galaxy/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Galaxy",
+          "item": "https://filascope.com/filaments/pla-galaxy"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

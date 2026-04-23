@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/fillamentum",
+  "title": "Fillamentum PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 23 Fillamentum PETG filaments. Prices from $26.99 to $26.99. 12 colors available. 22 with HueForge TD values.",
+  "h1": "Fillamentum PETG Filament",
+  "keywords": [
+    "Fillamentum",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Fillamentum",
+  "count": 23,
+  "min_price": 26.99,
+  "max_price": 26.99,
+  "color_count": 12,
+  "has_td": 22,
+  "filament_ids": [
+    "9eb8e9e9-1668-45f2-8297-6aba87ce5066",
+    "525a27b8-8a3f-498e-87f0-4a728c2b46c1",
+    "71d8943b-4a82-429d-8c2c-fbedd8bfc760",
+    "da336b07-2eef-47d2-b3a3-e7139304c203",
+    "25b14eba-2262-47d8-b2d8-195319bd01aa",
+    "87f33c7e-f4ef-43b0-ba8c-5bbcc4be3711",
+    "be4f42e0-c997-4927-8ac8-2cb76078cef0",
+    "6db75aca-cccb-4b1b-a85b-4e64156bdeaf",
+    "7e7c2236-56a1-424a-818c-4994998eefc0",
+    "c00aba37-7b4f-4b55-830b-3eb6670e355d",
+    "6ad970c9-2ee3-4287-8109-41cc0ac3411e",
+    "aba15d18-fada-4463-af6e-86494f3b9cf2",
+    "c6872853-1613-468a-a56b-7e47231f90fa",
+    "f6110ddc-29f3-4455-8041-4f02ebfe7ca7",
+    "f3e2ff3f-1517-4ca7-b124-068054570dd0",
+    "b70ed7af-fad7-4144-b7ed-ba315243a496",
+    "94c8fd39-51ce-4486-bafa-9da4fc987869",
+    "447cc1bc-ee6e-4e44-916f-7df160d0f8ba",
+    "77de363d-7dda-4634-a965-865e15e66ee8",
+    "7aa268f7-b33f-48b5-9a2c-a1282424815a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum PETG Filament",
+    "description": "Compare 23 Fillamentum PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

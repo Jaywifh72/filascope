@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/push-plastic",
+  "title": "Push Plastic TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Push Plastic TPU filaments. Prices from $75.99 to $75.99. 5 colors available. 5 with HueForge TD values.",
+  "h1": "Push Plastic TPU Filament",
+  "keywords": [
+    "Push Plastic",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Push Plastic",
+  "count": 5,
+  "min_price": 75.99,
+  "max_price": 75.99,
+  "color_count": 5,
+  "has_td": 5,
+  "filament_ids": [
+    "91d47c78-cf86-4221-8069-52cdfb5ead9b",
+    "572da672-75c7-4a9d-8895-be1b87301ab2",
+    "71a85489-9f69-4c22-b99c-abf2d20d770d",
+    "9fdc4ecd-b17a-4a60-89ea-ba16fe028ae3",
+    "243fe676-9446-48da-86c5-6b344dca4e82"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic TPU Filament",
+    "description": "Compare 5 Push Plastic TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

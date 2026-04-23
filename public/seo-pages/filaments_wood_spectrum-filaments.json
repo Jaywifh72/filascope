@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/wood/spectrum-filaments",
+  "title": "Spectrum Filaments Wood Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Spectrum Filaments Wood filaments. Prices from $28.00 to $48.00. 3 colors available.",
+  "h1": "Spectrum Filaments Wood Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "Wood",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Wood",
+  "vendor": "Spectrum Filaments",
+  "count": 6,
+  "min_price": 28,
+  "max_price": 48,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "a4408ab5-f81c-4b9e-b446-911b95851f95",
+    "192ed12d-7e54-4b76-825a-e174fe97af8a",
+    "db130d97-8fc1-4f06-93fe-4bcfd0cfe229",
+    "8ebe2b5e-b59e-4785-aec5-6f55e499faff",
+    "ddaa2f6d-2b8b-4b1b-b2fc-eddcf74658ba",
+    "8cb78e51-e14a-4c6c-801d-3b95fe6f9ccb"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments Wood Filament",
+    "description": "Compare 6 Spectrum Filaments Wood filaments on FilaScope",
+    "url": "https://filascope.com/filaments/wood/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Wood",
+          "item": "https://filascope.com/filaments/wood"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

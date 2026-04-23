@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/formfutura",
+  "title": "FormFutura TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 FormFutura TPU filaments. Prices from $24.75 to $28.51. 3 colors available. 9 with HueForge TD values.",
+  "h1": "FormFutura TPU Filament",
+  "keywords": [
+    "FormFutura",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "FormFutura",
+  "count": 9,
+  "min_price": 24.75,
+  "max_price": 28.51,
+  "color_count": 3,
+  "has_td": 9,
+  "filament_ids": [
+    "0cfc6d7f-49c7-410b-94a9-a371c0ce1c6b",
+    "a320a9c4-4ece-4723-a3dd-e8af572cab33",
+    "7ddcf909-09b4-46e6-a412-ae0628c47c68",
+    "f924eab0-7b31-4367-ba23-1e4e6a358910",
+    "fd011f9f-d570-49b2-b1ca-12d6e9ee28dc",
+    "77ec3d72-80cc-463c-8865-1453bc33a03c",
+    "b6511609-82cc-4af7-bdf6-335302d63adb",
+    "073af3ce-f857-41b3-89e5-9bb94968d2fd",
+    "28273dd2-93aa-42cb-8488-d0611ff74195"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura TPU Filament",
+    "description": "Compare 9 FormFutura TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

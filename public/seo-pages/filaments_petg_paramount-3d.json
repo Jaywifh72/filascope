@@ -1,0 +1,72 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/paramount-3d",
+  "title": "Paramount 3D PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 19 Paramount 3D PETG filaments. Prices from $26.99 to $26.99. 19 colors available. 7 with HueForge TD values.",
+  "h1": "Paramount 3D PETG Filament",
+  "keywords": [
+    "Paramount 3D",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Paramount 3D",
+  "count": 19,
+  "min_price": 26.99,
+  "max_price": 26.99,
+  "color_count": 19,
+  "has_td": 7,
+  "filament_ids": [
+    "6a9ca720-1813-4b47-9557-49d15bbee7ec",
+    "779992af-c09e-423e-a573-8f849aa0b6c8",
+    "c68da895-bd03-4abc-8b8c-6ae5ba05cf3c",
+    "247e17d2-0b0e-4886-85cc-4cc25acd2233",
+    "3dbc0f8a-9a69-498b-8310-b39924148319",
+    "2bc3c56e-3950-4e71-9909-76df10a25d7b",
+    "c2fddba1-ab48-4c71-83cd-1aa95eddd9ed",
+    "d418dc31-ff96-4e05-bcd3-613ba0c0cd69",
+    "28af8874-d115-4dac-a538-27edc3cd0653",
+    "77c1bb87-f0a9-4afb-ac2b-c79096c0768f",
+    "23c3dedc-0608-4b08-8524-552f0144da74",
+    "6dde2da9-c4a1-4e95-93ab-33b74ecb4347",
+    "9a92096f-d87d-4c10-acc1-e809476f897e",
+    "f3f5e2ab-fad0-48af-b95d-d1871db5b19c",
+    "390b1b4d-83a2-4b30-82f4-9780dc3a166b",
+    "bd328af1-16d7-491f-8e4d-f5b0336c985c",
+    "67e3900f-b5c3-496b-802c-0bbcbb2bb83a",
+    "37cc996d-6400-4bbf-8142-a73cdf7c4ed2",
+    "3bac903c-3f34-4061-915b-09c56ba5e824"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Paramount 3D PETG Filament",
+    "description": "Compare 19 Paramount 3D PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/paramount-3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Paramount 3D"
+        }
+      ]
+    }
+  }
+}

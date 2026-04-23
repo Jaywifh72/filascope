@@ -1,0 +1,697 @@
+/**
+ * BRAND PROFILE SYSTEM v2
+ * 
+ * Custom scraping methodology for each brand based on platform, data availability, and quirks.
+ * Defines field extraction rules and data source priorities.
+ */
+
+// ============================================================================
+// BRAND PROFILE INTERFACES
+// ============================================================================
+
+export interface FieldExtractionRule {
+  field: string;
+  source: 'api' | 'scrape' | 'tds' | 'amazon' | 'manual' | 'calculate';
+  selector?: string;        // CSS selector for scraping
+  api_field?: string;       // API field name
+  transform?: string;       // Transformation function name
+  fallback?: string;        // Fallback value or source
+  confidence: number;       // 0-1 confidence score
+  dependencies?: string[];  // Other fields required first
+}
+
+export interface DataSource {
+  type: 'shopify_api' | 'firecrawl' | 'amazon_paapi' | 'tds_sheet' | 'woocommerce_api' | 'custom';
+  url_pattern: string;
+  fields_extracted: string[];
+  rate_limit: number;       // Requests per second
+  requires_auth: boolean;
+  auth_method?: 'api_key' | 'bearer_token' | 'basic_auth' | 'none';
+  headers?: Record<string, string>;
+  pagination?: {
+    type: 'page' | 'cursor' | 'offset';
+    param: string;
+    limit: number;
+  };
+}
+
+export interface RateLimits {
+  requests_per_second: number;
+  delay_between_requests_ms: number;
+  max_concurrent_requests: number;
+  retry_attempts: number;
+  retry_delay_ms: number;
+}
+
+export interface ExpectedCoverage {
+  basic: number;      // e.g., 95%
+  technical: number;  // e.g., 60%
+  regional: number;   // e.g., 80%
+  scoring: number;    // e.g., 50%
+  overall: number;    // e.g., 70%
+}
+
+export interface BrandProfile {
+  brand_slug: string;
+  display_name: string;
+  platform: 'shopify' | 'woocommerce' | 'firecrawl' | 'amazon' | 'custom';
+  base_url: string;
+  regions: Record<string, string>;
+  api_endpoint: string;
+  scrape_method: string;
+  currency: string | Record<string, string>;
+  expected_filaments: number;
+  quirks: string[];
+  active: boolean;
+  
+  // New: Field extraction rules
+  field_extraction_rules: FieldExtractionRule[];
+  
+  // New: Data source priorities
+  data_sources: DataSource[];
+  
+  // New: Rate limiting
+  rate_limits: RateLimits;
+  
+  // New: Field coverage expectations
+  expected_field_coverage: ExpectedCoverage;
+  
+  // New: Amazon affiliate tag (if available)
+  amazon_tag?: string;
+  
+  // New: Special handling notes
+  special_handling?: string[];
+}
+
+// ============================================================================
+// BRAND PROFILES DATABASE
+// ============================================================================
+
+export const BRAND_PROFILES: Record<string, BrandProfile> = {
+  // ============================================================================
+  // TIER 1: BRANDS WITH AMAZON AFFILIATE LINKS (Revenue Priority)
+  // ============================================================================
+  
+  'polymaker': {
+    brand_slug: 'polymaker',
+    display_name: 'Polymaker',
+    platform: 'shopify',
+    base_url: 'https://us.polymaker.com',
+    regions: {
+      US: 'https://us.polymaker.com',
+      CA: 'https://ca.polymaker.com',
+      EU: 'https://eu.polymaker.com'
+    },
+    api_endpoint: '/products.json',
+    scrape_method: 'shopify_json_api',
+    currency: { US: 'USD', CA: 'CAD', EU: 'EUR' },
+    expected_filaments: 738,
+    quirks: [
+      'Multi-region subdomains',
+      'Large catalog with many variants',
+      'Good TDS documentation available'
+    ],
+    active: true,
+    field_extraction_rules: [
+      { field: 'product_title', source: 'api', api_field: 'title', confidence: 1.0 },
+      { field: 'variant_price', source: 'api', api_field: 'variants[0].price', confidence: 1.0 },
+      { field: 'featured_image', source: 'api', api_field: 'images[0].src', confidence: 1.0 },
+      { field: 'material', source: 'api', api_field: 'product_type', confidence: 0.9 },
+      { field: 'color_family', source: 'api', api_field: 'tags', transform: 'extractColor', confidence: 0.8 },
+      { field: 'nozzle_temp_min_c', source: 'scrape', selector: '.specs-table td:contains("Nozzle")', transform: 'extractTempRange', confidence: 0.7 },
+      { field: 'bed_temp_min_c', source: 'scrape', selector: '.specs-table td:contains("Bed")', transform: 'extractTempRange', confidence: 0.7 },
+      { field: 'density_g_cm3', source: 'scrape', selector: '.specs-table td:contains("Density")', transform: 'extractNumber', confidence: 0.6 },
+      { field: 'transmission_distance', source: 'tds', url_pattern: 'https://polymaker.com/tds/{sku}.pdf', confidence: 0.5 },
+    ],
+    data_sources: [
+      {
+        type: 'shopify_api',
+        url_pattern: '{base_url}/products.json?limit=250&page={page}',
+        fields_extracted: ['product_title', 'variant_price', 'featured_image', 'material', 'color_family'],
+        rate_limit: 2,
+        requires_auth: false,
+        pagination: { type: 'page', param: 'page', limit: 250 }
+      },
+      {
+        type: 'firecrawl',
+        url_pattern: '{base_url}/products/{handle}',
+        fields_extracted: ['nozzle_temp_min_c', 'nozzle_temp_max_c', 'bed_temp_min_c', 'bed_temp_max_c', 'density_g_cm3'],
+        rate_limit: 1,
+        requires_auth: true,
+        auth_method: 'bearer_token'
+      }
+    ],
+    rate_limits: {
+      requests_per_second: 2,
+      delay_between_requests_ms: 500,
+      max_concurrent_requests: 3,
+      retry_attempts: 3,
+      retry_delay_ms: 1000
+    },
+    expected_field_coverage: {
+      basic: 95,
+      technical: 60,
+      regional: 80,
+      scoring: 50,
+      overall: 70
+    },
+    amazon_tag: 'filascope-20',
+    special_handling: [
+      'Use regional subdomains for multi-region pricing',
+      'Extract TDS data from PDF links in product descriptions',
+      'Check for variant-specific images'
+    ]
+  },
+  
+  '3dhojor': {
+    brand_slug: '3dhojor',
+    display_name: '3DHOJOR',
+    platform: 'shopify',
+    base_url: 'https://3dhojor.com',
+    regions: {},
+    api_endpoint: '/products.json',
+    scrape_method: 'shopify_json_api',
+    currency: 'USD',
+    expected_filaments: 149,
+    quirks: [
+      'Budget brand, limited technical specs',
+      'Amazon-heavy distribution'
+    ],
+    active: true,
+    field_extraction_rules: [
+      { field: 'product_title', source: 'api', api_field: 'title', confidence: 1.0 },
+      { field: 'variant_price', source: 'api', api_field: 'variants[0].price', confidence: 1.0 },
+      { field: 'featured_image', source: 'api', api_field: 'images[0].src', confidence: 1.0 },
+      { field: 'material', source: 'api', api_field: 'product_type', confidence: 0.8 },
+      { field: 'color_family', source: 'api', api_field: 'tags', transform: 'extractColor', confidence: 0.7 },
+    ],
+    data_sources: [
+      {
+        type: 'shopify_api',
+        url_pattern: '{base_url}/products.json?limit=250',
+        fields_extracted: ['product_title', 'variant_price', 'featured_image', 'material', 'color_family'],
+        rate_limit: 2,
+        requires_auth: false
+      }
+    ],
+    rate_limits: {
+      requests_per_second: 2,
+      delay_between_requests_ms: 500,
+      max_concurrent_requests: 2,
+      retry_attempts: 2,
+      retry_delay_ms: 1000
+    },
+    expected_field_coverage: {
+      basic: 90,
+      technical: 20,
+      regional: 30,
+      scoring: 20,
+      overall: 40
+    },
+    amazon_tag: 'filascope-20'
+  },
+  
+  'hatchbox': {
+    brand_slug: 'hatchbox',
+    display_name: 'Hatchbox',
+    platform: 'shopify',
+    base_url: 'https://www.hatchbox3d.com',
+    regions: {},
+    api_endpoint: '/products.json',
+    scrape_method: 'shopify_json_api',
+    currency: 'USD',
+    expected_filaments: 459,
+    quirks: [
+      'Popular budget brand',
+      'Good Amazon presence',
+      'Limited technical documentation'
+    ],
+    active: true,
+    field_extraction_rules: [
+      { field: 'product_title', source: 'api', api_field: 'title', confidence: 1.0 },
+      { field: 'variant_price', source: 'api', api_field: 'variants[0].price', confidence: 1.0 },
+      { field: 'featured_image', source: 'api', api_field: 'images[0].src', confidence: 1.0 },
+      { field: 'material', source: 'api', api_field: 'product_type', confidence: 0.9 },
+      { field: 'color_family', source: 'api', api_field: 'tags', transform: 'extractColor', confidence: 0.8 },
+      { field: 'net_weight_g', source: 'api', api_field: 'variants[0].weight', transform: 'weightToGrams', confidence: 0.7 },
+    ],
+    data_sources: [
+      {
+        type: 'shopify_api',
+        url_pattern: '{base_url}/products.json?limit=250',
+        fields_extracted: ['product_title', 'variant_price', 'featured_image', 'material', 'color_family', 'net_weight_g'],
+        rate_limit: 2,
+        requires_auth: false
+      }
+    ],
+    rate_limits: {
+      requests_per_second: 2,
+      delay_between_requests_ms: 500,
+      max_concurrent_requests: 2,
+      retry_attempts: 2,
+      retry_delay_ms: 1000
+    },
+    expected_field_coverage: {
+      basic: 90,
+      technical: 30,
+      regional: 40,
+      scoring: 30,
+      overall: 50
+    },
+    amazon_tag: 'filascope-20'
+  },
+  
+  'esun': {
+    brand_slug: 'esun',
+    display_name: 'eSun',
+    platform: 'shopify',
+    base_url: 'https://www.esun3d.com',
+    regions: {},
+    api_endpoint: '/products.json',
+    scrape_method: 'shopify_json_api',
+    currency: 'USD',
+    expected_filaments: 394,
+    quirks: [
+      'Chinese brand with good technical specs',
+      'Often has TDS PDFs linked',
+      'Good color variety'
+    ],
+    active: true,
+    field_extraction_rules: [
+      { field: 'product_title', source: 'api', api_field: 'title', confidence: 1.0 },
+      { field: 'variant_price', source: 'api', api_field: 'variants[0].price', confidence: 1.0 },
+      { field: 'featured_image', source: 'api', api_field: 'images[0].src', confidence: 1.0 },
+      { field: 'material', source: 'api', api_field: 'product_type', confidence: 0.9 },
+      { field: 'color_family', source: 'api', api_field: 'tags', transform: 'extractColor', confidence: 0.8 },
+      { field: 'nozzle_temp_min_c', source: 'scrape', selector: '.specs-table td:contains("Nozzle")', transform: 'extractTempRange', confidence: 0.6 },
+      { field: 'bed_temp_min_c', source: 'scrape', selector: '.specs-table td:contains("Bed")', transform: 'extractTempRange', confidence: 0.6 },
+      { field: 'density_g_cm3', source: 'scrape', selector: '.specs-table td:contains("Density")', transform: 'extractNumber', confidence: 0.5 },
+    ],
+    data_sources: [
+      {
+        type: 'shopify_api',
+        url_pattern: '{base_url}/products.json?limit=250',
+        fields_extracted: ['product_title', 'variant_price', 'featured_image', 'material', 'color_family'],
+        rate_limit: 2,
+        requires_auth: false
+      },
+      {
+        type: 'firecrawl',
+        url_pattern: '{base_url}/products/{handle}',
+        fields_extracted: ['nozzle_temp_min_c', 'nozzle_temp_max_c', 'bed_temp_min_c', 'bed_temp_max_c', 'density_g_cm3'],
+        rate_limit: 1,
+        requires_auth: true,
+        auth_method: 'bearer_token'
+      }
+    ],
+    rate_limits: {
+      requests_per_second: 2,
+      delay_between_requests_ms: 500,
+      max_concurrent_requests: 2,
+      retry_attempts: 3,
+      retry_delay_ms: 1000
+    },
+    expected_field_coverage: {
+      basic: 90,
+      technical: 50,
+      regional: 50,
+      scoring: 40,
+      overall: 60
+    },
+    amazon_tag: 'filascope-20',
+    special_handling: [
+      'Check for TDS PDF links in product descriptions',
+      'Extract temperature ranges from product specs',
+      'Some products have variant-specific images'
+    ]
+  },
+  
+  'gizmo-dorks': {
+    brand_slug: 'gizmo-dorks',
+    display_name: 'Gizmo Dorks',
+    platform: 'shopify',
+    base_url: 'https://www.gizmodorks.com',
+    regions: {},
+    api_endpoint: '/products.json',
+    scrape_method: 'shopify_json_api',
+    currency: 'USD',
+    expected_filaments: 132,
+    quirks: [
+      'Amazon-focused brand',
+      'Limited technical documentation'
+    ],
+    active: true,
+    field_extraction_rules: [
+      { field: 'product_title', source: 'api', api_field: 'title', confidence: 1.0 },
+      { field: 'variant_price', source: 'api', api_field: 'variants[0].price', confidence: 1.0 },
+      { field: 'featured_image', source: 'api', api_field: 'images[0].src', confidence: 1.0 },
+      { field: 'material', source: 'api', api_field: 'product_type', confidence: 0.8 },
+      { field: 'color_family', source: 'api', api_field: 'tags', transform: 'extractColor', confidence: 0.7 },
+    ],
+    data_sources: [
+      {
+        type: 'shopify_api',
+        url_pattern: '{base_url}/products.json?limit=250',
+        fields_extracted: ['product_title', 'variant_price', 'featured_image', 'material', 'color_family'],
+        rate_limit: 2,
+        requires_auth: false
+      }
+    ],
+    rate_limits: {
+      requests_per_second: 2,
+      delay_between_requests_ms: 500,
+      max_concurrent_requests: 2,
+      retry_attempts: 2,
+      retry_delay_ms: 1000
+    },
+    expected_field_coverage: {
+      basic: 90,
+      technical: 20,
+      regional: 30,
+      scoring: 20,
+      overall: 40
+    },
+    amazon_tag: 'filascope-20'
+  },
+  
+  'amolen': {
+    brand_slug: 'amolen',
+    display_name: 'Amolen',
+    platform: 'shopify',
+    base_url: 'https://amolen.com',
+    regions: {},
+    api_endpoint: '/products.json',
+    scrape_method: 'shopify_json_api',
+    currency: 'USD',
+    expected_filaments: 473,
+    quirks: [
+      'Uses delivery option variants — skip those, find weight variant',
+      'Good color variety',
+      'Some specialty filaments'
+    ],
+    active: true,
+    field_extraction_rules: [
+      { field: 'product_title', source: 'api', api_field: 'title', confidence: 1.0 },
+      { field: 'variant_price', source: 'api', api_field: 'variants[0].price', confidence: 1.0 },
+      { field: 'featured_image', source: 'api', api_field: 'images[0].src', confidence: 1.0 },
+      { field: 'material', source: 'api', api_field: 'product_type', confidence: 0.8 },
+      { field: 'color_family', source: 'api', api_field: 'tags', transform: 'extractColor', confidence: 0.7 },
+      { field: 'net_weight_g', source: 'api', api_field: 'variants[0].weight', transform: 'weightToGrams', confidence: 0.6 },
+    ],
+    data_sources: [
+      {
+        type: 'shopify_api',
+        url_pattern: '{base_url}/products.json?limit=250',
+        fields_extracted: ['product_title', 'variant_price', 'featured_image', 'material', 'color_family', 'net_weight_g'],
+        rate_limit: 2,
+        requires_auth: false
+      }
+    ],
+    rate_limits: {
+      requests_per_second: 2,
+      delay_between_requests_ms: 500,
+      max_concurrent_requests: 2,
+      retry_attempts: 2,
+      retry_delay_ms: 1000
+    },
+    expected_field_coverage: {
+      basic: 90,
+      technical: 30,
+      regional: 40,
+      scoring: 30,
+      overall: 50
+    },
+    amazon_tag: 'filascope-20',
+    special_handling: [
+      'Filter out delivery option variants',
+      'Find weight variant for accurate pricing',
+      'Some products have multiple material types'
+    ]
+  },
+  
+  // ============================================================================
+  // TIER 2: MAJOR BRANDS (High Product Count)
+  // ============================================================================
+  
+  'bambu-lab': {
+    brand_slug: 'bambu-lab',
+    display_name: 'Bambu Lab',
+    platform: 'shopify',
+    base_url: 'https://us.store.bambulab.com',
+    regions: {
+      US: 'https://us.store.bambulab.com',
+      CA: 'https://ca.store.bambulab.com',
+      EU: 'https://eu.store.bambulab.com',
+      UK: 'https://uk.store.bambulab.com'
+    },
+    api_endpoint: '/products.json',
+    scrape_method: 'shopify_json_api',
+    currency: { US: 'USD', CA: 'CAD', EU: 'EUR', UK: 'GBP' },
+    expected_filaments: 9332,
+    quirks: [
+      'Multi-region subdomains',
+      'EU/UK/AU consolidated to CA as of April 2026',
+      'Large catalog — paginate with limit=250&page=N',
+      'Good technical documentation',
+      'AMS compatibility important'
+    ],
+    active: true,
+    field_extraction_rules: [
+      { field: 'product_title', source: 'api', api_field: 'title', confidence: 1.0 },
+      { field: 'variant_price', source: 'api', api_field: 'variants[0].price', confidence: 1.0 },
+      { field: 'featured_image', source: 'api', api_field: 'images[0].src', confidence: 1.0 },
+      { field: 'material', source: 'api', api_field: 'product_type', confidence: 0.9 },
+      { field: 'color_family', source: 'api', api_field: 'tags', transform: 'extractColor', confidence: 0.8 },
+      { field: 'nozzle_temp_min_c', source: 'scrape', selector: '.specs-table td:contains("Nozzle")', transform: 'extractTempRange', confidence: 0.7 },
+      { field: 'bed_temp_min_c', source: 'scrape', selector: '.specs-table td:contains("Bed")', transform: 'extractTempRange', confidence: 0.7 },
+      { field: 'density_g_cm3', source: 'scrape', selector: '.specs-table td:contains("Density")', transform: 'extractNumber', confidence: 0.6 },
+      { field: 'spool_ams_fit', source: 'scrape', selector: '.specs-table td:contains("AMS")', transform: 'extractBoolean', confidence: 0.8 },
+      { field: 'price_eur', source: 'api', api_field: 'variants[0].price', fallback: 'calculate_from_usd', confidence: 0.9 },
+      { field: 'price_gbp', source: 'api', api_field: 'variants[0].price', fallback: 'calculate_from_usd', confidence: 0.9 },
+      { field: 'price_cad', source: 'api', api_field: 'variants[0].price', fallback: 'calculate_from_usd', confidence: 0.9 },
+    ],
+    data_sources: [
+      {
+        type: 'shopify_api',
+        url_pattern: '{base_url}/products.json?limit=250&page={page}',
+        fields_extracted: ['product_title', 'variant_price', 'featured_image', 'material', 'color_family'],
+        rate_limit: 2,
+        requires_auth: false,
+        pagination: { type: 'page', param: 'page', limit: 250 }
+      },
+      {
+        type: 'firecrawl',
+        url_pattern: '{base_url}/products/{handle}',
+        fields_extracted: ['nozzle_temp_min_c', 'nozzle_temp_max_c', 'bed_temp_min_c', 'bed_temp_max_c', 'density_g_cm3', 'spool_ams_fit'],
+        rate_limit: 1,
+        requires_auth: true,
+        auth_method: 'bearer_token'
+      }
+    ],
+    rate_limits: {
+      requests_per_second: 2,
+      delay_between_requests_ms: 500,
+      max_concurrent_requests: 3,
+      retry_attempts: 3,
+      retry_delay_ms: 1000
+    },
+    expected_field_coverage: {
+      basic: 95,
+      technical: 70,
+      regional: 90,
+      scoring: 60,
+      overall: 80
+    },
+    special_handling: [
+      'Paginate through all products (limit=250)',
+      'Extract AMS compatibility from product specs',
+      'Handle multi-region subdomains',
+      'Check for variant-specific images'
+    ]
+  },
+  
+  // ============================================================================
+  // TIER 3: OTHER BRANDS (Default Profile)
+  // ============================================================================
+  
+  'default': {
+    brand_slug: 'default',
+    display_name: 'Default Brand',
+    platform: 'shopify',
+    base_url: '',
+    regions: {},
+    api_endpoint: '/products.json',
+    scrape_method: 'shopify_json_api',
+    currency: 'USD',
+    expected_filaments: 0,
+    quirks: [],
+    active: true,
+    field_extraction_rules: [
+      { field: 'product_title', source: 'api', api_field: 'title', confidence: 1.0 },
+      { field: 'variant_price', source: 'api', api_field: 'variants[0].price', confidence: 1.0 },
+      { field: 'featured_image', source: 'api', api_field: 'images[0].src', confidence: 1.0 },
+      { field: 'material', source: 'api', api_field: 'product_type', confidence: 0.7 },
+      { field: 'color_family', source: 'api', api_field: 'tags', transform: 'extractColor', confidence: 0.6 },
+    ],
+    data_sources: [
+      {
+        type: 'shopify_api',
+        url_pattern: '{base_url}/products.json?limit=250',
+        fields_extracted: ['product_title', 'variant_price', 'featured_image', 'material', 'color_family'],
+        rate_limit: 2,
+        requires_auth: false
+      }
+    ],
+    rate_limits: {
+      requests_per_second: 2,
+      delay_between_requests_ms: 500,
+      max_concurrent_requests: 2,
+      retry_attempts: 2,
+      retry_delay_ms: 1000
+    },
+    expected_field_coverage: {
+      basic: 80,
+      technical: 20,
+      regional: 20,
+      scoring: 10,
+      overall: 30
+    }
+  }
+};
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get brand profile by slug
+ */
+export function getBrandProfile(brandSlug: string): BrandProfile {
+  return BRAND_PROFILES[brandSlug] || BRAND_PROFILES['default'];
+}
+
+/**
+ * Get all active brand profiles
+ */
+export function getActiveBrandProfiles(): BrandProfile[] {
+  return Object.values(BRAND_PROFILES).filter(profile => profile.active);
+}
+
+/**
+ * Get brand profiles by platform
+ */
+export function getBrandProfilesByPlatform(platform: string): BrandProfile[] {
+  return Object.values(BRAND_PROFILES).filter(profile => profile.platform === platform && profile.active);
+}
+
+/**
+ * Get brand profiles with Amazon affiliate tags
+ */
+export function getBrandProfilesWithAmazon(): BrandProfile[] {
+  return Object.values(BRAND_PROFILES).filter(profile => profile.amazon_tag && profile.active);
+}
+
+/**
+ * Create brand profile from registry entry
+ */
+export function createBrandProfileFromRegistry(registryEntry: any): BrandProfile {
+  const baseProfile = BRAND_PROFILES['default'];
+  
+  return {
+    ...baseProfile,
+    brand_slug: registryEntry.brand_slug,
+    display_name: registryEntry.display_name,
+    platform: registryEntry.platform,
+    base_url: registryEntry.base_url,
+    regions: registryEntry.regions || {},
+    api_endpoint: registryEntry.api_endpoint || '/products.json',
+    scrape_method: registryEntry.scrape_method || 'shopify_json_api',
+    currency: registryEntry.currency || 'USD',
+    expected_filaments: registryEntry.expected_filaments || 0,
+    quirks: registryEntry.quirks || [],
+    active: registryEntry.active !== false
+  };
+}
+
+/**
+ * Validate brand profile
+ */
+export function validateBrandProfile(profile: BrandProfile): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (!profile.brand_slug) {
+    errors.push('brand_slug is required');
+  }
+  
+  if (!profile.display_name) {
+    errors.push('display_name is required');
+  }
+  
+  if (!profile.platform) {
+    errors.push('platform is required');
+  }
+  
+  if (!profile.base_url) {
+    errors.push('base_url is required');
+  }
+  
+  if (!profile.api_endpoint) {
+    errors.push('api_endpoint is required');
+  }
+  
+  if (profile.field_extraction_rules.length === 0) {
+    errors.push('At least one field extraction rule is required');
+  }
+  
+  if (profile.data_sources.length === 0) {
+    errors.push('At least one data source is required');
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Get extraction rules for a specific field
+ */
+export function getFieldExtractionRules(profile: BrandProfile, field: string): FieldExtractionRule[] {
+  return profile.field_extraction_rules.filter(rule => rule.field === field);
+}
+
+/**
+ * Get all fields that can be extracted from a data source
+ */
+export function getFieldsFromDataSource(profile: BrandProfile, sourceType: string): string[] {
+  const source = profile.data_sources.find(s => s.type === sourceType);
+  return source ? source.fields_extracted : [];
+}
+
+/**
+ * Estimate time to extract all missing fields
+ */
+export function estimateExtractionTime(profile: BrandProfile, missingFields: string[]): number {
+  let totalTime = 0;
+  
+  for (const field of missingFields) {
+    const rules = getFieldExtractionRules(profile, field);
+    if (rules.length > 0) {
+      const rule = rules[0];
+      const source = profile.data_sources.find(s => s.type === (rule.source === 'api' ? 'shopify_api' : rule.source));
+      
+      if (source) {
+        // Estimate based on rate limit
+        totalTime += 1000 / source.rate_limit; // ms per request
+      }
+    }
+  }
+  
+  return totalTime;
+}
+
+console.log(`✅ Brand Profile System loaded: ${Object.keys(BRAND_PROFILES).length} profiles`);
+console.log(`   With Amazon tags: ${getBrandProfilesWithAmazon().length}`);
+console.log(`   Shopify brands: ${getBrandProfilesByPlatform('shopify').length}`);
+console.log(`   WooCommerce brands: ${getBrandProfilesByPlatform('woocommerce').length}`);
+console.log(`   Firecrawl brands: ${getBrandProfilesByPlatform('firecrawl').length}`);

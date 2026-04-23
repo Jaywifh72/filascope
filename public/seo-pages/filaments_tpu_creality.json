@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/creality",
+  "title": "Creality TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Creality TPU filaments. Prices from $25.99 to $29.99. 3 colors available. 1 with HueForge TD values.",
+  "h1": "Creality TPU Filament",
+  "keywords": [
+    "Creality",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Creality",
+  "count": 3,
+  "min_price": 25.99,
+  "max_price": 29.99,
+  "color_count": 3,
+  "has_td": 1,
+  "filament_ids": [
+    "973188ad-8dcc-419b-8c08-c7443fcce600",
+    "26ce6c12-dfef-4852-883d-a9c47ab22529",
+    "5d0d3cf4-78aa-43ee-9b20-159176b1cf08"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Creality TPU Filament",
+    "description": "Compare 3 Creality TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/creality",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Creality"
+        }
+      ]
+    }
+  }
+}

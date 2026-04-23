@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-70a/recreus",
+  "title": "Recreus TPU-70A Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Recreus TPU-70A filaments. Prices from $45.00 to $45.00. 6 colors available.",
+  "h1": "Recreus TPU-70A Filament",
+  "keywords": [
+    "Recreus",
+    "TPU-70A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-70A",
+  "vendor": "Recreus",
+  "count": 6,
+  "min_price": 45,
+  "max_price": 45,
+  "color_count": 6,
+  "has_td": 0,
+  "filament_ids": [
+    "7752ef8f-813b-45b3-bedc-0e8571fd135a",
+    "1c8bbf8e-514e-43e6-89ee-08d5a9d8ca31",
+    "37a0ee6b-6e3d-4aec-8dcc-deb5ca09f603",
+    "7f8ea5c0-3e98-400f-be69-8c0d2d69b66e",
+    "be7b189f-fdb6-48a8-88bd-7083a13520a5",
+    "f9efddac-3e70-49f0-8c54-3ee63c0c607e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Recreus TPU-70A Filament",
+    "description": "Compare 6 Recreus TPU-70A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-70a/recreus",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-70A",
+          "item": "https://filascope.com/filaments/tpu-70a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recreus"
+        }
+      ]
+    }
+  }
+}

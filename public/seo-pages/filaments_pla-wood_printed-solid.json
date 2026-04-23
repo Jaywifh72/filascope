@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-wood/printed-solid",
+  "title": "Printed Solid PLA-Wood Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Printed Solid PLA-Wood filaments. Prices from $43.99 to $43.99. 2 colors available.",
+  "h1": "Printed Solid PLA-Wood Filament",
+  "keywords": [
+    "Printed Solid",
+    "PLA-Wood",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Wood",
+  "vendor": "Printed Solid",
+  "count": 3,
+  "min_price": 43.99,
+  "max_price": 43.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "b925a910-3785-4155-989e-50d62dcb8e11",
+    "cdc66867-08ce-4090-8856-58cddc824fa4",
+    "a5c1b6d3-8109-4f7b-9575-82583ac135e8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Printed Solid PLA-Wood Filament",
+    "description": "Compare 3 Printed Solid PLA-Wood filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-wood/printed-solid",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Wood",
+          "item": "https://filascope.com/filaments/pla-wood"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Printed Solid"
+        }
+      ]
+    }
+  }
+}

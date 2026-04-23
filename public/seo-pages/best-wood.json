@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-wood",
+  "title": "Best Wood Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best Wood filaments in 2026. 6 options from 1 brands, starting at $28.00. Expert picks, prices & specs.",
+  "h1": "Best Wood Filament (2026)",
+  "keywords": [
+    "best Wood",
+    "Wood filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "Wood",
+  "count": 6,
+  "brands": 1,
+  "min_price": 28,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best Wood Filament 2026",
+    "description": "Expert comparison of 6 Wood filaments",
+    "url": "https://filascope.com/best-wood"
+  }
+}

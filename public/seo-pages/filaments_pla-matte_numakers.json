@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-matte/numakers",
+  "title": "Numakers PLA-MATTE Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Numakers PLA-MATTE filaments. Prices from $22.99 to $22.99. 13 colors available.",
+  "h1": "Numakers PLA-MATTE Filament",
+  "keywords": [
+    "Numakers",
+    "PLA-MATTE",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-MATTE",
+  "vendor": "Numakers",
+  "count": 13,
+  "min_price": 22.99,
+  "max_price": 22.99,
+  "color_count": 13,
+  "has_td": 0,
+  "filament_ids": [
+    "8c0de670-3117-4b7d-a411-d9548d4a16c6",
+    "69956b3e-972f-4eb3-963c-87c47e46efe2",
+    "9dc3020d-bae6-4d02-a056-c3c5e54a0706",
+    "cc190e91-3957-4910-99e9-8cab5956ab2a",
+    "5aa02c03-edab-4fbe-8e2f-691f56da1ba1",
+    "4c43249f-7d05-4f5e-bd13-2dea5268c4e6",
+    "b87d3596-d673-4850-95db-b88180c95cfb",
+    "76765e65-f6b2-4aee-89f8-abc852161e5c",
+    "7445ff0a-8043-4164-8f59-de9369605dc4",
+    "1d20ac87-f92f-445c-918b-48cecb3b4525",
+    "4de39d85-7d82-4eec-8bb7-819e9c02779e",
+    "398c1001-b891-443e-96cb-2cb97ce8a100",
+    "b05af855-4f12-45d7-a8fb-ddf1114a0498"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PLA-MATTE Filament",
+    "description": "Compare 13 Numakers PLA-MATTE filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-matte/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-MATTE",
+          "item": "https://filascope.com/filaments/pla-matte"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/fillamentum",
+  "title": "Fillamentum ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Fillamentum ABS filaments. Prices from $25.99 to $25.99. 11 colors available. 13 with HueForge TD values.",
+  "h1": "Fillamentum ABS Filament",
+  "keywords": [
+    "Fillamentum",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Fillamentum",
+  "count": 13,
+  "min_price": 25.99,
+  "max_price": 25.99,
+  "color_count": 11,
+  "has_td": 13,
+  "filament_ids": [
+    "ad3ac81e-77a3-497b-b084-a599c56c9687",
+    "82264296-0a8d-46c1-97e4-ef299c3f3908",
+    "5b53090b-78bb-4dd9-9181-b8b7c434059e",
+    "1551077e-6c34-4063-b0c3-be998e4eab69",
+    "f900a0d2-c6f4-454b-ae5b-72d1687b5fee",
+    "3eeb35bf-a6ad-4547-8c01-bf51cccea849",
+    "ce5401b1-1c4a-4b97-adb2-2e35360a6261",
+    "17fb30ea-2bbd-4f0e-a0ea-d09176fc853d",
+    "e7ff5cbe-2ff9-4e25-afe1-80bcc29fde4e",
+    "298de870-9117-4381-bb71-c5dc46f4f44e",
+    "57a05209-3fd9-4d41-a57b-7d0f8142027a",
+    "4da46b12-1e88-4018-a730-26068ef8bcaa",
+    "dc374630-d393-4176-96f1-2b025ac7e9fa"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum ABS Filament",
+    "description": "Compare 13 Fillamentum ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

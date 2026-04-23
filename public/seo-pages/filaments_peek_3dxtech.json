@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/peek/3dxtech",
+  "title": "3DXTech PEEK Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 3DXTech PEEK filaments. Prices from $158.00 to $225.00. 2 colors available. 3 with HueForge TD values.",
+  "h1": "3DXTech PEEK Filament",
+  "keywords": [
+    "3DXTech",
+    "PEEK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PEEK",
+  "vendor": "3DXTech",
+  "count": 3,
+  "min_price": 158,
+  "max_price": 225,
+  "color_count": 2,
+  "has_td": 3,
+  "filament_ids": [
+    "f691d631-c7ef-4b8f-9057-968e714b3592",
+    "de6e986e-a051-43c4-91fb-a5118d3d0822",
+    "beed4eef-4c44-4000-b4a7-96e9318e4723"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech PEEK Filament",
+    "description": "Compare 3 3DXTech PEEK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/peek/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PEEK",
+          "item": "https://filascope.com/filaments/peek"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

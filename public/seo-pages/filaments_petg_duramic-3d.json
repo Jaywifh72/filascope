@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/duramic-3d",
+  "title": "Duramic 3D PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 56 Duramic 3D PETG+ filaments. Prices from $18.99 to $38.99. 26 colors available. 54 with HueForge TD values.",
+  "h1": "Duramic 3D PETG+ Filament",
+  "keywords": [
+    "Duramic 3D",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "Duramic 3D",
+  "count": 56,
+  "min_price": 18.99,
+  "max_price": 38.99,
+  "color_count": 26,
+  "has_td": 54,
+  "filament_ids": [
+    "dfc0cc2e-da1b-4191-9923-3b5dbd9a9864",
+    "9ea85033-f224-4b1c-acbe-39a40223b1be",
+    "c8e6984f-af3e-4cee-a60b-bf7569d63e2a",
+    "9eb3fc6a-53de-4268-8cbe-c9aec088bc92",
+    "8ad923b1-90ff-46d6-bc51-590cf4d02428",
+    "1802217a-69be-4e1e-b902-aa923aa26307",
+    "da03ba0f-1e49-4f70-81b6-b71876255ce7",
+    "6fe83158-ab0e-49cb-b07e-3c5c28c8867d",
+    "37bdb45e-ad93-4bbf-9a18-6e5ba2ed791a",
+    "0537637f-15c9-491d-859e-78ee3ce6825c",
+    "b9f5be38-abfb-4cdf-9449-865edd95c653",
+    "07b1ae09-d246-4b35-a9ae-0f75e9789b08",
+    "9b935eda-46bf-4b47-a700-0bfb00d1fc5d",
+    "31a3653a-0fe7-4f3d-9420-df6437365d9d",
+    "1bd3fa78-125d-46e8-b80f-44f54c4c8217",
+    "afddab66-f3a6-41d5-97e9-d2d6d0c613df",
+    "c0b47095-ea6a-47b8-a269-c9463f3e1d1a",
+    "c0f09e19-1c99-407b-babd-f21fc5a874f5",
+    "bf7ce80e-ae10-49dd-8dda-48998a5753e7",
+    "f9a80630-a875-458e-a8a6-44b1bb67d601"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Duramic 3D PETG+ Filament",
+    "description": "Compare 56 Duramic 3D PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/duramic-3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Duramic 3D"
+        }
+      ]
+    }
+  }
+}

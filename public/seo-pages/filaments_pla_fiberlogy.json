@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/fiberlogy",
+  "title": "Fiberlogy PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 97 Fiberlogy PLA filaments. Prices from $19.99 to $24.99. 60 colors available.",
+  "h1": "Fiberlogy PLA Filament",
+  "keywords": [
+    "Fiberlogy",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Fiberlogy",
+  "count": 97,
+  "min_price": 19.99,
+  "max_price": 24.99,
+  "color_count": 60,
+  "has_td": 0,
+  "filament_ids": [
+    "fb335fbf-828e-4c89-8a69-450e602d58a5",
+    "ea9ecc7f-ccb7-4829-b3b3-5d6b316f0bd9",
+    "f459ba94-8a72-4380-95de-fd26e8a149fa",
+    "c9517977-3feb-4712-83ae-32af3acf386b",
+    "7a9a3a01-08fd-4ce3-a008-25205284f595",
+    "d3278db8-140b-45e5-9908-991b7c842971",
+    "27cb64b2-9c36-495c-b128-8ea7b7e3e7ed",
+    "9a39142e-5fe7-4a86-9f08-89325709548b",
+    "fcaad301-7142-4dfe-b2f9-1bc7f561515b",
+    "36590e8a-0462-43f1-b173-42b38d3e56f2",
+    "bffd8d23-4b7b-4ae0-8627-5c4264c76e0e",
+    "72990e9b-e829-40ce-9bab-b5014c6cf0df",
+    "2d58a3dd-d988-441d-a69b-f2800034d4e7",
+    "0072bfcb-c370-481e-9a53-75ee8f717f09",
+    "3f2ed39f-46c8-4fe8-bfa2-8c1c73832c90",
+    "3129d956-813d-4311-92a0-3ec7caf91175",
+    "68d38b9f-2ba0-4f84-9c71-5d81cfc7ad41",
+    "c348fdbb-5840-434d-a666-4cc367f5c5fd",
+    "60a25ffe-6977-4091-bbdc-43675fe4d182",
+    "6e825e90-44d3-4e89-8584-1496e37e14d5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy PLA Filament",
+    "description": "Compare 97 Fiberlogy PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

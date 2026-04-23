@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-silk/spectrum-filaments",
+  "title": "Spectrum Filaments PLA SILK Filament — Prices, Specs & Reviews",
+  "description": "Compare 32 Spectrum Filaments PLA SILK filaments. Prices from $26.00 to $29.00. 16 colors available.",
+  "h1": "Spectrum Filaments PLA SILK Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA SILK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA SILK",
+  "vendor": "Spectrum Filaments",
+  "count": 32,
+  "min_price": 26,
+  "max_price": 29,
+  "color_count": 16,
+  "has_td": 0,
+  "filament_ids": [
+    "640d60ec-c59a-4778-a27e-dd60029e204d",
+    "f51abeea-a32c-43f3-aef2-3b26eb03b5f9",
+    "d48ac3fc-e317-4182-833d-5397ce6a4e28",
+    "4c33d82d-2abc-4bab-a82a-fa299fa30d27",
+    "99641179-f981-4786-a2cc-d7598012d92e",
+    "050088b8-8845-46dd-909f-d36f97f61042",
+    "c01c94e5-0520-4050-925a-40a79cd13869",
+    "7ae2b0b7-ad9b-4ecd-a37d-644507f0a39b",
+    "a843a6bf-7677-4367-b924-d68d4b1ff63e",
+    "b4f3a327-a5b6-473f-b4e8-2c1d43fd744f",
+    "4eb80c18-fbaa-4099-a2fa-8b4843e35b9a",
+    "cc9bf868-9990-4c47-8140-ab22e5f08974",
+    "f7fa4b5e-80b9-481a-a053-72b0485ff60c",
+    "6cc042f4-2cfa-44ff-a681-50192875dc0a",
+    "7946c78d-8180-4dd5-9a73-81fd71564cbb",
+    "d26d2984-96e8-4014-8627-e442c5209027",
+    "dbae27d5-1bfa-42e4-b22b-b67f5fb87826",
+    "b961cdeb-9e4a-4860-a624-c59ef6dd0fd2",
+    "3ac4d738-f0b5-4db1-86ea-18c48a028919",
+    "b3592ddb-7cac-4f7e-89c4-7ee1c922d1d9"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA SILK Filament",
+    "description": "Compare 32 Spectrum Filaments PLA SILK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-silk/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA SILK",
+          "item": "https://filascope.com/filaments/pla-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

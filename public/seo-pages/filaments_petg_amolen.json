@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/amolen",
+  "title": "Amolen PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 22 Amolen PETG+ filaments. Prices from $28.00 to $72.99. 15 colors available. 12 with HueForge TD values.",
+  "h1": "Amolen PETG+ Filament",
+  "keywords": [
+    "Amolen",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "Amolen",
+  "count": 22,
+  "min_price": 28,
+  "max_price": 72.99,
+  "color_count": 15,
+  "has_td": 12,
+  "filament_ids": [
+    "f064d685-c36b-4ac0-acab-a148109920bc",
+    "858db560-6ec5-4e8d-a221-24cfa7dd47f2",
+    "e015c415-12b6-4f18-a7e6-6c5a4bcb0e79",
+    "89465618-60c2-449a-add7-02e51288c746",
+    "698c71cb-16ca-4867-b9e2-44187bc9c282",
+    "3fd2ac11-1022-482a-85b2-81f834ff92be",
+    "776f5c81-2461-46cc-951b-1c472e57abe7",
+    "74531ef3-276d-4e40-8a6b-115cdfdd4b7a",
+    "3b122917-ff20-4fe5-b52a-62bbad072420",
+    "4c0d4339-bca3-47b4-a383-e6cbe8d6f84a",
+    "1ec940f2-ebab-4718-9019-e646a8b9b029",
+    "4f99402d-b74d-480d-9f7c-ab28f9c2f595",
+    "40c48d2a-69d3-4e61-b162-137fe4851a8d",
+    "5b4f939f-3085-4127-a7d7-0b84473dddf1",
+    "d9adc34d-35d2-4cdb-b3e2-3de4d6f75981",
+    "30eaf618-840e-4c79-93d9-b474eba9034c",
+    "ec3a7a9d-50ca-4d20-833f-8fcf300c8571",
+    "9fa7950d-b013-4aad-9f23-ea6f2df19f88",
+    "1c67d939-e725-4336-9b97-bbb9bf79e7ce",
+    "b8af7d1d-7501-40b1-a29b-96b301ea4e90"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Amolen PETG+ Filament",
+    "description": "Compare 22 Amolen PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/amolen",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Amolen"
+        }
+      ]
+    }
+  }
+}

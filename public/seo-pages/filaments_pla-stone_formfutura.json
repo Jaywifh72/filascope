@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-stone/formfutura",
+  "title": "FormFutura PLA-Stone Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 FormFutura PLA-Stone filaments. Prices from $28.92 to $33.32. 4 colors available.",
+  "h1": "FormFutura PLA-Stone Filament",
+  "keywords": [
+    "FormFutura",
+    "PLA-Stone",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Stone",
+  "vendor": "FormFutura",
+  "count": 4,
+  "min_price": 28.92,
+  "max_price": 33.32,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "92707fd3-766e-4c14-8e7e-70ef3de9ac3f",
+    "eb38ea41-09e3-4689-909e-3f67490dac3e",
+    "a964357d-1fcb-44ce-9a5b-570a92a83263",
+    "787171eb-8af1-4092-bd73-3ea543f00007"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura PLA-Stone Filament",
+    "description": "Compare 4 FormFutura PLA-Stone filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-stone/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Stone",
+          "item": "https://filascope.com/filaments/pla-stone"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

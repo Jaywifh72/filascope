@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/elegoo",
+  "title": "Elegoo PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 91 Elegoo PETG+ filaments. Prices from $13.99 to $145.99. 21 colors available. 77 with HueForge TD values.",
+  "h1": "Elegoo PETG+ Filament",
+  "keywords": [
+    "Elegoo",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "Elegoo",
+  "count": 91,
+  "min_price": 13.99,
+  "max_price": 145.99,
+  "color_count": 21,
+  "has_td": 77,
+  "filament_ids": [
+    "04d71421-0d31-416d-a65c-8626b43e16b6",
+    "e0f8d536-859c-4909-81b5-b5a379685268",
+    "33be1ab8-45d5-471b-b065-59c1d8027e7b",
+    "6822eecc-5e28-4dbf-b9ec-18b28323a63c",
+    "59e07455-7815-4ec2-9694-2fd85c746848",
+    "5e278e55-42bf-4eea-80ce-3f086ec16c28",
+    "b3c710f5-55c9-483a-90ad-230d46cfd390",
+    "d0028d1b-1ed9-4bca-a622-5a9141ad185b",
+    "5d7baf0f-e4cd-4cf9-ae6c-651ad3f2848e",
+    "4c17a635-f97f-45ef-8543-accf08da3573",
+    "4fc1518d-0d41-4207-a4ec-8668e472a535",
+    "9720707d-f38d-4112-a519-a48c08f3dc18",
+    "554ac9aa-c650-4b99-a0df-55bf0b2573a2",
+    "6f865c99-121e-49fe-a31e-46b38357a679",
+    "93934b13-3e97-4e53-b0f8-d528052b238e",
+    "c546436a-c4fa-4c6c-8a58-1120de113842",
+    "226cb0b8-9802-44ac-abc6-22c071a0e5c3",
+    "d536c206-7de6-40d2-83f7-31c5bf79a491",
+    "e9d46a6c-fc7a-4456-b4e6-f91edf918329",
+    "b73f52cc-1c24-4b7d-91f4-4e9340f3f92c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PETG+ Filament",
+    "description": "Compare 91 Elegoo PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

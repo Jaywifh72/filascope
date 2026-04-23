@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-matte/kingroon",
+  "title": "Kingroon PLA-MATTE Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Kingroon PLA-MATTE filaments. Prices from $99.99 to $129.99. 0 colors available.",
+  "h1": "Kingroon PLA-MATTE Filament",
+  "keywords": [
+    "Kingroon",
+    "PLA-MATTE",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-MATTE",
+  "vendor": "Kingroon",
+  "count": 3,
+  "min_price": 99.99,
+  "max_price": 129.99,
+  "color_count": 0,
+  "has_td": 0,
+  "filament_ids": [
+    "9b06dd80-fe21-4f2c-81ab-27358a6c843a",
+    "500d8602-42cc-4839-afad-d1090080012c",
+    "9cc68ce2-78d7-4343-8029-25f2d0ec090d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon PLA-MATTE Filament",
+    "description": "Compare 3 Kingroon PLA-MATTE filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-matte/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-MATTE",
+          "item": "https://filascope.com/filaments/pla-matte"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

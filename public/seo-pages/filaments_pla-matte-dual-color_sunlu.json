@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-matte-dual-color/sunlu",
+  "title": "Sunlu PLA Matte Dual-Color Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Sunlu PLA Matte Dual-Color filaments. Prices from $13.99 to $13.99. 4 colors available.",
+  "h1": "Sunlu PLA Matte Dual-Color Filament",
+  "keywords": [
+    "Sunlu",
+    "PLA Matte Dual-Color",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Matte Dual-Color",
+  "vendor": "Sunlu",
+  "count": 4,
+  "min_price": 13.99,
+  "max_price": 13.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "6c77c402-90d0-4cc0-92a0-5b9c131d8eda",
+    "fa89058c-c83b-4067-9fcc-fd50a59a1812",
+    "7df6c7ec-7e4f-4a50-b9af-6f9d876c782b",
+    "bb7bbb93-76f4-4713-aad9-ed3a83d4909c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sunlu PLA Matte Dual-Color Filament",
+    "description": "Compare 4 Sunlu PLA Matte Dual-Color filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-matte-dual-color/sunlu",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Matte Dual-Color",
+          "item": "https://filascope.com/filaments/pla-matte-dual-color"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sunlu"
+        }
+      ]
+    }
+  }
+}

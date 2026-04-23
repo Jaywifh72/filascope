@@ -1,0 +1,72 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/bambu-lab",
+  "title": "Bambu Lab TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 19 Bambu Lab TPU filaments. Prices from $34.99 to $41.99. 7 colors available. 19 with HueForge TD values.",
+  "h1": "Bambu Lab TPU Filament",
+  "keywords": [
+    "Bambu Lab",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Bambu Lab",
+  "count": 19,
+  "min_price": 34.99,
+  "max_price": 41.99,
+  "color_count": 7,
+  "has_td": 19,
+  "filament_ids": [
+    "68a5b140-afac-4d6d-8c14-d76564d4d771",
+    "08d2eb15-f246-47c0-bef0-5cda44ddc2f2",
+    "ba1c07ac-df14-4d79-a1e8-b62acdcabf48",
+    "8c52c4e5-d6e8-45ef-898f-64ece4eddc8d",
+    "7fee79e2-bb81-4530-8ac1-50fdded61384",
+    "30165f76-e419-49cb-b8d1-0d90816a4e73",
+    "47c6be03-72ed-4887-8b93-f6a636693183",
+    "6377f2d9-5271-44b0-ae91-b8c3ba8bee44",
+    "114ce7b8-ae05-494e-9549-ff0e2332dd55",
+    "44ecdfbb-c1d1-49a2-a8f0-d48677351d9f",
+    "417a8e9c-4267-4e75-9d7a-08a4af9a7d95",
+    "ca18444e-4d33-40f9-9d9d-acf6d860eaac",
+    "dad75e05-6496-46a3-9fb3-e39114c7d52e",
+    "151d5073-8725-4bf8-b63b-9dc8be2af5e5",
+    "37fe3fde-0d33-4eeb-a61a-4bd1ea464431",
+    "70c8b838-898f-4576-9b3f-4a5fe452ddc8",
+    "7eb55a66-467e-4a97-8c19-8800e8cd4c1c",
+    "b0195901-c30a-4d91-be83-2ff08d8a0448",
+    "ef7392bc-16dd-4efc-836c-1d73c55749f4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab TPU Filament",
+    "description": "Compare 19 Bambu Lab TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

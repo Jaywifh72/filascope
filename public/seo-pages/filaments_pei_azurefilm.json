@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pei/azurefilm",
+  "title": "AzureFilm PEI Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 AzureFilm PEI filaments. Prices from $17.13 to $21.08. 1 colors available. 3 with HueForge TD values.",
+  "h1": "AzureFilm PEI Filament",
+  "keywords": [
+    "AzureFilm",
+    "PEI",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PEI",
+  "vendor": "AzureFilm",
+  "count": 3,
+  "min_price": 17.13,
+  "max_price": 21.08,
+  "color_count": 1,
+  "has_td": 3,
+  "filament_ids": [
+    "4d2e254e-8451-47b8-b489-adf91b83fb1b",
+    "e27f632c-f3c1-4132-aeaa-fb0bd8d85480",
+    "1ee0886c-b128-42f4-a7b3-df2ad9e1db1d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "AzureFilm PEI Filament",
+    "description": "Compare 3 AzureFilm PEI filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pei/azurefilm",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PEI",
+          "item": "https://filascope.com/filaments/pei"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AzureFilm"
+        }
+      ]
+    }
+  }
+}

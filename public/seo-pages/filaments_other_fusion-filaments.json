@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/other/fusion-filaments",
+  "title": "Fusion Filaments Other Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Fusion Filaments Other filaments. Prices from $24.94 to $34.94. 1 colors available.",
+  "h1": "Fusion Filaments Other Filament",
+  "keywords": [
+    "Fusion Filaments",
+    "Other",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Other",
+  "vendor": "Fusion Filaments",
+  "count": 3,
+  "min_price": 24.94,
+  "max_price": 34.94,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "1b1bf049-81fe-4399-a509-7f82c8fd78e9",
+    "a736635a-4a4f-4c6a-9e59-95f78e67663f",
+    "2b333687-a447-49d8-980c-ce56979e54b3"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fusion Filaments Other Filament",
+    "description": "Compare 3 Fusion Filaments Other filaments on FilaScope",
+    "url": "https://filascope.com/filaments/other/fusion-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Other",
+          "item": "https://filascope.com/filaments/other"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fusion Filaments"
+        }
+      ]
+    }
+  }
+}

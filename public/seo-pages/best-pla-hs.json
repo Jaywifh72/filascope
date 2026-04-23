@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pla-hs",
+  "title": "Best PLA-HS Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PLA-HS filaments in 2026. 22 options from 4 brands, starting at $14.99. Expert picks, prices & specs.",
+  "h1": "Best PLA-HS Filament (2026)",
+  "keywords": [
+    "best PLA-HS",
+    "PLA-HS filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PLA-HS",
+  "count": 22,
+  "brands": 4,
+  "min_price": 14.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PLA-HS Filament 2026",
+    "description": "Expert comparison of 22 PLA-HS filaments",
+    "url": "https://filascope.com/best-pla-hs"
+  }
+}

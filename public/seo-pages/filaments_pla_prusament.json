@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/prusament",
+  "title": "Prusament PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 80 Prusament PLA filaments. Prices from $21.00 to $80.63. 15 colors available. 80 with HueForge TD values.",
+  "h1": "Prusament PLA Filament",
+  "keywords": [
+    "Prusament",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Prusament",
+  "count": 80,
+  "min_price": 21,
+  "max_price": 80.63,
+  "color_count": 15,
+  "has_td": 80,
+  "filament_ids": [
+    "ed260a77-4f27-4d8e-9db3-3e8e418222a9",
+    "f884fefa-bd24-4ac1-b91d-91dea000fbbf",
+    "00b492d7-39b6-4ca3-a031-a3cf073c38fc",
+    "d61a6f2a-f860-4ee1-a3ea-ddb0f6a36220",
+    "e936bd14-65e0-41d7-a07e-0a96a4bbe862",
+    "376cb873-0f33-43a5-bfac-14a59bb2e3e0",
+    "25ddd18e-f650-470e-811b-f7707f9ce74f",
+    "c940ae49-708b-47f2-9df0-7fc80a0141dd",
+    "35e20a4b-7306-4af1-bf92-52841b384649",
+    "39f4c86e-11a3-4a95-81a0-92a35a264f08",
+    "72dee79b-4b02-402a-b719-a0f900b497ab",
+    "5c02e624-e8c9-4cb8-b766-e63bc845a753",
+    "aab27f03-ad0e-4b2b-8b6e-9a28f55fed8e",
+    "5c27c334-e3c4-4a0b-be16-2ff860ad392d",
+    "fc96863c-635b-45df-902f-2c758be1596d",
+    "a0372134-ccdc-41c4-9252-e2736a13e8fa",
+    "c901f661-cb8c-4aac-9d06-9fc9bdbb4377",
+    "5ef0e4a6-f966-45c6-b701-04a4b52d53cc",
+    "49cddffd-34a9-4d9f-bf11-1198286943be",
+    "6ddbdd9b-d67b-4173-8aad-412520435510"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Prusament PLA Filament",
+    "description": "Compare 80 Prusament PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/prusament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Prusament"
+        }
+      ]
+    }
+  }
+}

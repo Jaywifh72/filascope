@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/geeetech",
+  "title": "Geeetech TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 20 Geeetech TPU filaments. Prices from $16.89 to $16.89. 10 colors available. 20 with HueForge TD values.",
+  "h1": "Geeetech TPU Filament",
+  "keywords": [
+    "Geeetech",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Geeetech",
+  "count": 20,
+  "min_price": 16.89,
+  "max_price": 16.89,
+  "color_count": 10,
+  "has_td": 20,
+  "filament_ids": [
+    "1eed9fea-8cee-478d-8ce7-34b7d4941b74",
+    "5092d6a2-91bd-4c6c-96ec-fdddfe0e751f",
+    "a262985d-8dcd-4ed7-9c47-4324a745dde6",
+    "8329b3cd-4f53-402f-8d41-5a3930481f8d",
+    "40346fdc-f3ff-402f-b68a-2221c2599196",
+    "b0b91349-40a4-48d5-992e-126aef7bed35",
+    "4c8a5e01-decd-42c1-a669-d84b112a9c89",
+    "63634fcd-d00f-48e4-94f1-914923a82b5a",
+    "7ebde2da-0713-4e5d-ae60-20583eff7cc5",
+    "90e6bf56-5d71-46a1-b2e8-3efc96fc30bf",
+    "c64b742f-2c14-489b-87b6-346a58b45310",
+    "4f25ec57-b33b-4ad4-aa1e-9c5b25521ec6",
+    "b474c2d2-0c77-4fff-95b9-0fa012320190",
+    "9c625a19-61f0-45cd-8e2b-e6a0c739a15a",
+    "52da5278-24ec-43da-9ed3-e141de9f59b6",
+    "7b639f29-add6-4642-bf70-ddbe533821b8",
+    "b16a6ee1-9b2d-45a9-a6b4-fe52f539ab04",
+    "c4c324a7-8df1-4dd4-bfa8-f1fe9238ee7c",
+    "6d2eb434-9111-4501-83fa-73c5106bb252",
+    "2e41984e-bea4-4a5f-8e1e-ab09cf40e50d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Geeetech TPU Filament",
+    "description": "Compare 20 Geeetech TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/geeetech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Geeetech"
+        }
+      ]
+    }
+  }
+}

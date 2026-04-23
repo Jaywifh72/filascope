@@ -1,0 +1,72 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/ninjatek",
+  "title": "NinjaTek PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 19 NinjaTek PLA filaments. Prices from $41.24 to $84.66. 17 colors available.",
+  "h1": "NinjaTek PLA Filament",
+  "keywords": [
+    "NinjaTek",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "NinjaTek",
+  "count": 19,
+  "min_price": 41.24,
+  "max_price": 84.66,
+  "color_count": 17,
+  "has_td": 0,
+  "filament_ids": [
+    "4a93dc75-3ca4-4045-b86e-6aa77104e952",
+    "77a31e3b-2923-4224-95d1-3c4e36f81bf6",
+    "ac111125-d754-4fe2-82d1-6db94222b153",
+    "c32e9e1d-8947-4838-b07d-d7db58c4ad0d",
+    "61de5a55-8736-4e77-8988-b2bc7edfe7b9",
+    "c0daa611-1f72-4c28-b97e-f4340eca0fd9",
+    "765e795f-3b35-4f7e-a527-5ca4874e638a",
+    "97ec19de-f40a-49ae-b29b-83c0fffcae32",
+    "ba836cf9-682c-4db8-b629-853d6b277ca3",
+    "ea896219-130f-4087-812a-f147d582ebc7",
+    "119e9037-f3d4-41d4-98b4-f14b3479b7c7",
+    "4e15ea7e-5e82-4abc-9c28-bd413052e30d",
+    "6141d091-4c99-4d75-8fef-ec08656a1bd6",
+    "a6351918-9f93-4df4-90e6-a77168ca762c",
+    "c42a4d12-890e-4066-8373-3bf4bee7b2d7",
+    "9b675cd7-59ff-4e2c-b429-008c0461d43f",
+    "67fd25e3-8fd8-4ca6-9230-0fb0fc9bb38f",
+    "2710013c-2554-465c-8422-d48160dd0635",
+    "e188bfd6-22a3-4e78-acb9-0ad849b2c4ce"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "NinjaTek PLA Filament",
+    "description": "Compare 19 NinjaTek PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/ninjatek",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "NinjaTek"
+        }
+      ]
+    }
+  }
+}

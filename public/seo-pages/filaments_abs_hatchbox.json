@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/hatchbox",
+  "title": "Hatchbox ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 60 Hatchbox ABS filaments. Prices from $21.99 to $42.99. 13 colors available.",
+  "h1": "Hatchbox ABS Filament",
+  "keywords": [
+    "Hatchbox",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Hatchbox",
+  "count": 60,
+  "min_price": 21.99,
+  "max_price": 42.99,
+  "color_count": 13,
+  "has_td": 0,
+  "filament_ids": [
+    "41005daf-4f95-4bb8-b979-24e8fa29a463",
+    "b2c2f21d-74dd-4d49-bc58-fa4cebffcf4e",
+    "1d82fc90-38f1-4161-a69c-33a0f126b007",
+    "26238cfc-780b-4303-9776-c091c0f74478",
+    "0307034b-55ec-41ff-bc9c-056d3f54dfed",
+    "2e29e6e7-4f2d-4f9f-8bda-7a12bb086fec",
+    "8d6b963d-9596-40b8-bbd1-55b3a72dc3a8",
+    "6a5a8d35-c240-4c01-a14c-defde0d6ec12",
+    "16c72c3a-5c6d-42cc-b9de-7689369c7ee3",
+    "8c2100cf-de7f-4858-af28-57cefae26424",
+    "3876934b-8eb6-425a-b550-f5ba8823c993",
+    "e8028f7c-9cea-4cdd-83bd-3a18d6783ce0",
+    "37864149-f880-4cc9-8d3d-6eaa08617f19",
+    "3f676428-816f-4c8d-940e-acf2361e800e",
+    "124a9817-3760-46a3-befb-19948d0756cf",
+    "1fc18c30-a763-474a-8638-52f254a90be3",
+    "30537514-1a89-4c27-877b-dfe5607786cb",
+    "3951049d-38ce-46e8-b345-d1172c1a3df4",
+    "b3017615-e0de-4721-b101-78f20ed9aa37",
+    "7719bfb4-6091-4bca-bc30-d0c3c61474cb"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Hatchbox ABS Filament",
+    "description": "Compare 60 Hatchbox ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/hatchbox",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Hatchbox"
+        }
+      ]
+    }
+  }
+}

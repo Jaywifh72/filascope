@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-wood-pla",
+  "title": "Best Wood PLA Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best Wood PLA filaments in 2026. 21 options from 5 brands, starting at $15.75. Expert picks, prices & specs.",
+  "h1": "Best Wood PLA Filament (2026)",
+  "keywords": [
+    "best Wood PLA",
+    "Wood PLA filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "Wood PLA",
+  "count": 21,
+  "brands": 5,
+  "min_price": 15.75,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best Wood PLA Filament 2026",
+    "description": "Expert comparison of 21 Wood PLA filaments",
+    "url": "https://filascope.com/best-wood-pla"
+  }
+}

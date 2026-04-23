@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/flashforge",
+  "title": "FlashForge PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 FlashForge PETG+ filaments. Prices from $26.99 to $29.94. 1 colors available.",
+  "h1": "FlashForge PETG+ Filament",
+  "keywords": [
+    "FlashForge",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "FlashForge",
+  "count": 3,
+  "min_price": 26.99,
+  "max_price": 29.94,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "8a6d7dbc-039c-482c-8736-af953c7ff161",
+    "eaff4434-0d34-48e1-be03-5cedba54e634",
+    "13482165-7d5c-4281-8cba-3addf6e34848"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FlashForge PETG+ Filament",
+    "description": "Compare 3 FlashForge PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/flashforge",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FlashForge"
+        }
+      ]
+    }
+  }
+}

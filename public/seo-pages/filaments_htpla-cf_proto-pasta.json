@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/htpla-cf/proto-pasta",
+  "title": "Proto-Pasta HTPLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Proto-Pasta HTPLA-CF filaments. Prices from $39.99 to $239.95. 1 colors available.",
+  "h1": "Proto-Pasta HTPLA-CF Filament",
+  "keywords": [
+    "Proto-Pasta",
+    "HTPLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "HTPLA-CF",
+  "vendor": "Proto-Pasta",
+  "count": 5,
+  "min_price": 39.99,
+  "max_price": 239.95,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "30d083c5-1f36-4b04-9275-c030b39c0fbd",
+    "c45adc35-bf55-44b5-bfb6-1cb070689adc",
+    "6645199d-7e2e-42c5-a2f9-d8a0c6c27e6e",
+    "803168f0-8f4c-4c72-a179-a0c44faeb1fc",
+    "40f6cb55-07a8-4b1b-92c6-fa00773b094b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Proto-Pasta HTPLA-CF Filament",
+    "description": "Compare 5 Proto-Pasta HTPLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/htpla-cf/proto-pasta",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "HTPLA-CF",
+          "item": "https://filascope.com/filaments/htpla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Proto-Pasta"
+        }
+      ]
+    }
+  }
+}

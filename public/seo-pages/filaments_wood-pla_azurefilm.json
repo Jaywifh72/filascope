@@ -1,0 +1,65 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/wood-pla/azurefilm",
+  "title": "AzureFilm Wood PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 12 AzureFilm Wood PLA filaments. Prices from $28.69 to $35.60. 8 colors available.",
+  "h1": "AzureFilm Wood PLA Filament",
+  "keywords": [
+    "AzureFilm",
+    "Wood PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Wood PLA",
+  "vendor": "AzureFilm",
+  "count": 12,
+  "min_price": 28.69,
+  "max_price": 35.6,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "ee351a81-7605-49a7-a974-efdd60d03d13",
+    "6788ef94-7895-4c7f-884c-768909bdc0ce",
+    "1a1c8568-cf94-46e8-9d10-c3ca9a119a22",
+    "d7eb5cc2-f179-4549-b00b-0242e3d690ce",
+    "99e10ee8-65f1-4c4a-a26f-7f807ff449f3",
+    "fdd53337-24b1-4243-973e-974080210f56",
+    "82014435-eb82-42e2-913f-f0b2a9490ad9",
+    "d0a158cd-6094-475e-922e-3a27adfd3f26",
+    "0c346755-16c5-436f-87ce-bc0f1e9c6f63",
+    "2c81c4ff-ea5b-433d-8922-e68d78b1e316",
+    "9ade8bfb-ebf6-42ab-a9e4-0dc86bbabd8c",
+    "a7a213ef-0334-42b6-a419-3bd9255a50b3"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "AzureFilm Wood PLA Filament",
+    "description": "Compare 12 AzureFilm Wood PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/wood-pla/azurefilm",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Wood PLA",
+          "item": "https://filascope.com/filaments/wood-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AzureFilm"
+        }
+      ]
+    }
+  }
+}

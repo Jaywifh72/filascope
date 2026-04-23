@@ -1,0 +1,70 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-silk/sovol",
+  "title": "Sovol PLA-Silk Filament — Prices, Specs & Reviews",
+  "description": "Compare 17 Sovol PLA-Silk filaments. Prices from $26.99 to $26.99. 17 colors available. 17 with HueForge TD values.",
+  "h1": "Sovol PLA-Silk Filament",
+  "keywords": [
+    "Sovol",
+    "PLA-Silk",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Silk",
+  "vendor": "Sovol",
+  "count": 17,
+  "min_price": 26.99,
+  "max_price": 26.99,
+  "color_count": 17,
+  "has_td": 17,
+  "filament_ids": [
+    "e4226e04-eb19-4ecf-8ce4-6fdea84067dd",
+    "cc44b62d-ab27-4677-9c83-89eeb1f87e81",
+    "620b8882-0218-40ff-b92d-30f7c3ae32e5",
+    "f46b76dd-ee9d-43f5-ba05-cdc27614be9b",
+    "908a09ba-faa7-411d-a869-f38612a7e3a7",
+    "1ce5e897-c2df-44d5-b8c0-3a2f435fab1e",
+    "f0dfc99a-e79e-48e7-ba20-c8d260cdd6e9",
+    "856bd9a1-508d-408c-bf09-e75f91879156",
+    "bb24f7c1-c3c7-4c3f-85bf-12e7a62f1107",
+    "ab3576b2-ad57-4092-ab9e-a7e73839bab3",
+    "52262a0a-77f1-441b-af2e-7d3c84491e8c",
+    "40c5a0bf-6746-486d-ac67-b794f9ceed92",
+    "6638b7bc-058f-4568-a0d5-99810d96e013",
+    "dfa93358-da9d-4713-9970-6c6724cb9243",
+    "f2ae8e26-58d7-48e0-bd49-237e328a8406",
+    "599e9b83-d494-4990-81a9-67fc98b1d6c9",
+    "1cb9edaa-2962-4bce-b129-7cabacac7939"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sovol PLA-Silk Filament",
+    "description": "Compare 17 Sovol PLA-Silk filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-silk/sovol",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Silk",
+          "item": "https://filascope.com/filaments/pla-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sovol"
+        }
+      ]
+    }
+  }
+}

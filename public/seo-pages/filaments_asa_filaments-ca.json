@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/filaments-ca",
+  "title": "Filaments.ca ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Filaments.ca ASA filaments. Prices from $17.99 to $17.99. 3 colors available. 3 with HueForge TD values.",
+  "h1": "Filaments.ca ASA Filament",
+  "keywords": [
+    "Filaments.ca",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Filaments.ca",
+  "count": 3,
+  "min_price": 17.99,
+  "max_price": 17.99,
+  "color_count": 3,
+  "has_td": 3,
+  "filament_ids": [
+    "c3cacbba-73d4-461b-8be4-47e4cb340444",
+    "8600af90-0b54-4339-b0f0-3e003b52027c",
+    "406b50cd-cdc8-4c23-8c7b-b0b16a0111cb"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Filaments.ca ASA Filament",
+    "description": "Compare 3 Filaments.ca ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/filaments-ca",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Filaments.ca"
+        }
+      ]
+    }
+  }
+}

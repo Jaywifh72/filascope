@@ -1,0 +1,64 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/matter3d",
+  "title": "Matter3D ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 11 Matter3D ABS filaments. Prices from $29.99 to $29.99. 11 colors available.",
+  "h1": "Matter3D ABS Filament",
+  "keywords": [
+    "Matter3D",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Matter3D",
+  "count": 11,
+  "min_price": 29.99,
+  "max_price": 29.99,
+  "color_count": 11,
+  "has_td": 0,
+  "filament_ids": [
+    "414a9ee2-b797-4b85-b9dc-cb7cf65c7feb",
+    "6a02452b-d596-4f03-9d53-f17d280997a5",
+    "d97817e6-8310-44f5-8856-18047157fcb2",
+    "0592b844-1c06-4c0d-bf62-678252a3e765",
+    "09262db7-f63f-4626-8bfa-e917b1288041",
+    "13718adf-0222-4147-8162-b3b664d4c2ae",
+    "9653c832-c3ad-4426-8e99-ca8fcde4abde",
+    "5205fda1-21f8-47fc-a1dd-b9a9c026bca4",
+    "9d149fe6-d9d5-4017-9c0d-43b9afc4bbdc",
+    "dd2cf21b-b3f1-4f00-82d5-eed41a6c307f",
+    "1a364f23-df62-4c63-8b1a-47aec5109aef"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Matter3D ABS Filament",
+    "description": "Compare 11 Matter3D ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/matter3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Matter3D"
+        }
+      ]
+    }
+  }
+}

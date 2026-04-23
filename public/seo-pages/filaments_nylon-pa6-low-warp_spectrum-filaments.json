@@ -1,0 +1,63 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/nylon-pa6-low-warp/spectrum-filaments",
+  "title": "Spectrum Filaments Nylon PA6 Low Warp Filament — Prices, Specs & Reviews",
+  "description": "Compare 10 Spectrum Filaments Nylon PA6 Low Warp filaments. Prices from $39.00 to $91.00. 5 colors available.",
+  "h1": "Spectrum Filaments Nylon PA6 Low Warp Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "Nylon PA6 Low Warp",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Nylon PA6 Low Warp",
+  "vendor": "Spectrum Filaments",
+  "count": 10,
+  "min_price": 39,
+  "max_price": 91,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "f663435c-c639-4b7d-a36d-69e9452642a7",
+    "d89d50c6-5b66-44db-9808-9e29748487e7",
+    "c7288e31-8338-4456-811b-0e1c7a0d0e17",
+    "7f4a018b-6dc2-4ca4-8a17-0f3c1cc5592d",
+    "4a34f5da-d682-4623-b7f3-62abc2677565",
+    "4c4592a9-0c6d-4ceb-af7e-f88afba955b5",
+    "2bc4e19b-2ab6-4656-8766-8de695f66a4b",
+    "d12bb8e0-6cfb-4cf6-87fe-72a72f280cee",
+    "dc1937c9-d328-497d-8039-6002e32550c3",
+    "3d89bb45-ce49-4315-9439-8127d88f764d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments Nylon PA6 Low Warp Filament",
+    "description": "Compare 10 Spectrum Filaments Nylon PA6 Low Warp filaments on FilaScope",
+    "url": "https://filascope.com/filaments/nylon-pa6-low-warp/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Nylon PA6 Low Warp",
+          "item": "https://filascope.com/filaments/nylon-pa6-low-warp"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

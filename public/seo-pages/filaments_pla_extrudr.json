@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/extrudr",
+  "title": "Extrudr PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 21 Extrudr PLA filaments. Prices from $29.90 to $29.90. 21 colors available. 7 with HueForge TD values.",
+  "h1": "Extrudr PLA Filament",
+  "keywords": [
+    "Extrudr",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Extrudr",
+  "count": 21,
+  "min_price": 29.9,
+  "max_price": 29.9,
+  "color_count": 21,
+  "has_td": 7,
+  "filament_ids": [
+    "0b7106c1-e42f-4657-acc1-f26d2a1b6e37",
+    "7d821fad-d7e1-45f5-90a3-ed3b535f67b5",
+    "d184ae7f-f1cb-4cef-a8f8-c657c58c7153",
+    "728693e1-728c-4ba0-bcfe-b15daeb5fc1f",
+    "908d67b9-0956-4eb8-a283-e51eba4e6986",
+    "ea49fa0f-14b6-49a0-a861-d1c08e5f055b",
+    "cc96726c-f98d-4a94-b1b2-3a040ba09e2d",
+    "73f7aa51-96f2-40bd-8dee-4cb6d1be037d",
+    "209ac811-8f87-4766-bb2c-5351e79dd636",
+    "6163d473-247c-4151-8347-39dc0ca88fec",
+    "f19d1211-4442-4065-9f82-9ba2ad3be83a",
+    "eb632677-3de5-4ebb-a2f6-545fce959435",
+    "6a83b24e-405b-47a3-a1a8-4890d559f890",
+    "60b7ae25-263d-4d75-b53e-6f81f92b02a4",
+    "a4e3ff08-8bc1-41dc-b890-53630e855629",
+    "fe91cd3e-9f72-4c55-b750-ce98566e3012",
+    "6a8a471a-2e9f-47e5-8413-0b1113433fdd",
+    "36e2b809-f6c5-487f-8b21-03dbcd58ba25",
+    "5d804608-d2b9-487f-92d4-68bedbb877f3",
+    "d0f37715-7055-49fe-b472-a5ab93532372"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Extrudr PLA Filament",
+    "description": "Compare 21 Extrudr PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/extrudr",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Extrudr"
+        }
+      ]
+    }
+  }
+}

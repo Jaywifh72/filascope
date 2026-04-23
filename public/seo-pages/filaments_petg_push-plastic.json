@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/push-plastic",
+  "title": "Push Plastic PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 152 Push Plastic PETG+ filaments. Prices from $14.99 to $10750.00. 19 colors available. 141 with HueForge TD values.",
+  "h1": "Push Plastic PETG+ Filament",
+  "keywords": [
+    "Push Plastic",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "Push Plastic",
+  "count": 152,
+  "min_price": 14.99,
+  "max_price": 10750,
+  "color_count": 19,
+  "has_td": 141,
+  "filament_ids": [
+    "5e255014-3c3e-4b09-8cb2-fbb6a4d6f806",
+    "db7096c6-5238-4adc-a32b-5ba717518a92",
+    "c0e9afb3-6faa-4cea-a904-db526cc74ab6",
+    "0dbd61f1-9d92-4cb8-bcfc-b47141123206",
+    "17756437-070a-477a-bee0-802c6d04b387",
+    "baa16e0d-67b1-4e59-8df2-49e97e9f6b6c",
+    "a6714680-3d7b-46eb-8b22-99b36e9050d6",
+    "a38834df-ae94-4561-b4fe-1957b3e364bb",
+    "9466cf40-eed7-443f-9c99-da644996a938",
+    "d533efbc-21aa-45f0-a81a-bf85e2886760",
+    "241b41bb-3f9d-4ad0-afbb-93c56b904e7f",
+    "636c1101-4dcd-4e36-9fe3-680632a6b98e",
+    "fedd3375-808b-467f-a027-c9db80463ee8",
+    "562eca69-3e2a-432a-9959-c974193ad2de",
+    "d084ec08-2e89-44df-88b3-84f377511161",
+    "69173eee-4703-4caf-8f9c-e55f762842b0",
+    "5711cce7-d266-4113-b2bc-99f257c9a787",
+    "dac7698f-3257-47d1-80fd-c43bda33f340",
+    "d77ef480-0168-4d8a-af19-dd577ca419f0",
+    "c5333580-8672-4779-b31e-3097d91fa9be"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic PETG+ Filament",
+    "description": "Compare 152 Push Plastic PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

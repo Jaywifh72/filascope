@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/flashforge",
+  "title": "FlashForge PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 FlashForge PLA+ filaments. Prices from $23.03 to $41.46. 4 colors available. 8 with HueForge TD values.",
+  "h1": "FlashForge PLA+ Filament",
+  "keywords": [
+    "FlashForge",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "FlashForge",
+  "count": 8,
+  "min_price": 23.03,
+  "max_price": 41.46,
+  "color_count": 4,
+  "has_td": 8,
+  "filament_ids": [
+    "1d3b6309-0222-4830-bf48-40096799b504",
+    "c29b9467-8744-4111-bfba-d14c8ebfe14e",
+    "c41445f5-f250-458e-9fdf-1e2027aa220c",
+    "0f312229-97f3-401d-9679-927424a126c4",
+    "098e984f-592d-4a6f-9468-f39a4acec09b",
+    "3faa9e44-64bc-41bd-a23a-b5ee44741fc1",
+    "96813070-77e1-4dd5-bca9-0fa6dd5a0101",
+    "5bd4f582-7e1c-421a-9f57-99274184df11"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FlashForge PLA+ Filament",
+    "description": "Compare 8 FlashForge PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/flashforge",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FlashForge"
+        }
+      ]
+    }
+  }
+}

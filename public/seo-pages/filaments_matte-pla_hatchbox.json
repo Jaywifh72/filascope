@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/matte-pla/hatchbox",
+  "title": "Hatchbox Matte PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 30 Hatchbox Matte PLA filaments. Prices from $28.00 to $28.00. 11 colors available.",
+  "h1": "Hatchbox Matte PLA Filament",
+  "keywords": [
+    "Hatchbox",
+    "Matte PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Matte PLA",
+  "vendor": "Hatchbox",
+  "count": 30,
+  "min_price": 28,
+  "max_price": 28,
+  "color_count": 11,
+  "has_td": 0,
+  "filament_ids": [
+    "0f983671-dea7-4dc7-8cc0-229c35c6b91e",
+    "1b362981-99d3-4013-80d7-37a76283fc00",
+    "2bebe436-9cdc-408a-b8dd-f3a1710743c0",
+    "3daa9e03-ea1b-4d60-9348-3dd7eb141245",
+    "3f797467-2ec9-40d9-8f09-c4f026a37451",
+    "6938bc81-e3f1-46dc-8042-c2eff35fded2",
+    "96e89918-01f7-4ac5-a3fe-f314793e4d4c",
+    "a6f3db1e-b609-4fc0-8dcb-ceca9546835c",
+    "ae44149f-23be-4c35-a253-81cf6f9e89a9",
+    "b015f3c9-82b3-4878-b6e2-df734f7693cf",
+    "66fb763b-5fd1-4695-b23e-733689cab610",
+    "84412300-5972-4d77-9232-f8d4ad580d0b",
+    "33f38332-4f9d-4868-b1c9-830c6e903724",
+    "bf27b8a0-699f-41da-b0ac-3659050c6f43",
+    "264aff40-f91b-467f-8a2c-e8302b8c3d71",
+    "2a345760-c46f-4446-927c-c4676347a3c4",
+    "33c1c7ae-c3ed-4217-a7f7-4a32a08d29e8",
+    "d5f643d8-4d6c-4427-8bae-8b0fc3d2cd39",
+    "50261e75-7181-40f6-b37c-360cf36473e5",
+    "523f96e5-ce0b-4221-ad3e-61b66f616046"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Hatchbox Matte PLA Filament",
+    "description": "Compare 30 Hatchbox Matte PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/matte-pla/hatchbox",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Matte PLA",
+          "item": "https://filascope.com/filaments/matte-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Hatchbox"
+        }
+      ]
+    }
+  }
+}

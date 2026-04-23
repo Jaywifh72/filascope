@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/ic3d-printers",
+  "title": "IC3D Printers PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 43 IC3D Printers PETG+ filaments. Prices from $16.50 to $49.99. 15 colors available. 39 with HueForge TD values.",
+  "h1": "IC3D Printers PETG+ Filament",
+  "keywords": [
+    "IC3D Printers",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "IC3D Printers",
+  "count": 43,
+  "min_price": 16.5,
+  "max_price": 49.99,
+  "color_count": 15,
+  "has_td": 39,
+  "filament_ids": [
+    "986fb452-76b1-4674-b115-7a407018bd54",
+    "3f23ed89-7dc6-48b3-9efc-e2d03a213f44",
+    "c967e548-0c90-41bc-9fd5-ccc57bf5d78d",
+    "855bb70b-5dca-4db4-8b90-3e3e6d7941ff",
+    "d38f2127-e151-4422-8a31-b2cae0c6fa59",
+    "d19bbf24-5f77-4c62-8879-cbef066621d7",
+    "530000fd-6450-441d-92b2-f743c1609c3f",
+    "013486d7-294e-4956-a6d6-8de8fb228f65",
+    "11ab53eb-ddf0-439d-b0ce-84fa72ab5f82",
+    "72a275a2-a150-4723-9d9c-d0bdbb3e4b4b",
+    "7353fec7-b526-478d-8f22-eb8348ea4a18",
+    "aa7af56d-8619-4b5c-b075-c3da5227c9d4",
+    "9743f596-4463-4631-a23d-cd685cfafa24",
+    "00120d15-c5f6-48ef-bdb6-6488c293700a",
+    "2374338d-96e1-4270-b6a8-cb27b78b9400",
+    "b3b900bb-cafb-436c-a779-7d17916cdeba",
+    "02a48f3c-60ae-4b39-9ce0-d1f6599cb370",
+    "295ae30c-70d1-45ea-a864-12573c4d7ffc",
+    "037ed034-8c34-43ba-bc5c-11ddee1c0a68",
+    "e04520ed-ceab-413a-8539-95792914858e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "IC3D Printers PETG+ Filament",
+    "description": "Compare 43 IC3D Printers PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/ic3d-printers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "IC3D Printers"
+        }
+      ]
+    }
+  }
+}

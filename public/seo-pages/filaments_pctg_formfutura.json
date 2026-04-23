@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pctg/formfutura",
+  "title": "FormFutura PCTG Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 FormFutura PCTG filaments. Prices from $40.26 to $40.26. 6 colors available. 6 with HueForge TD values.",
+  "h1": "FormFutura PCTG Filament",
+  "keywords": [
+    "FormFutura",
+    "PCTG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PCTG",
+  "vendor": "FormFutura",
+  "count": 6,
+  "min_price": 40.26,
+  "max_price": 40.26,
+  "color_count": 6,
+  "has_td": 6,
+  "filament_ids": [
+    "08b262eb-88b7-44d2-b0b2-c160699dedae",
+    "3d898aed-2a51-42e4-841e-f9c8fe790094",
+    "66b5c206-194b-40d8-8717-24d276e190bb",
+    "8f35f19b-253f-4d79-b9f0-802cdf3290fe",
+    "9b5b94da-cff3-4cb6-a032-80dfb3491dca",
+    "6f8c893d-f845-4802-a2e0-b3c332eaa40c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura PCTG Filament",
+    "description": "Compare 6 FormFutura PCTG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pctg/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PCTG",
+          "item": "https://filascope.com/filaments/pctg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

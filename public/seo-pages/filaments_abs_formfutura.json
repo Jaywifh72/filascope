@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/formfutura",
+  "title": "FormFutura ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 48 FormFutura ABS filaments. Prices from $24.75 to $38.04. 16 colors available. 48 with HueForge TD values.",
+  "h1": "FormFutura ABS Filament",
+  "keywords": [
+    "FormFutura",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "FormFutura",
+  "count": 48,
+  "min_price": 24.75,
+  "max_price": 38.04,
+  "color_count": 16,
+  "has_td": 48,
+  "filament_ids": [
+    "910c255b-fc54-479c-80b8-ac33dab42120",
+    "fb31bfd6-d591-44c2-b010-7d352d6f9ba5",
+    "9c96c4e9-a24e-4d71-b007-c1f9279536a7",
+    "85618d24-a829-45d6-9830-f14ce4bd99e2",
+    "1d1cbf11-f395-43b1-88a8-7f2c56c7d003",
+    "0ce5a9cb-d410-4b0e-804a-ad8b96f15963",
+    "cd06ba85-a69b-4509-94a9-89b47115acf9",
+    "9f1411bf-eb25-4d83-9315-944c6e1ae0b6",
+    "9159f2a7-9896-45cc-9784-3e0fc12cb584",
+    "4589e1f8-0bd9-4026-a159-5626435fd5b6",
+    "0db93f10-57ad-415a-a159-7edd5f84af9b",
+    "95b58900-a3e1-43b9-9b9c-5327bc64b561",
+    "5ec6753d-cc5f-4fb9-a30d-5e4fb0489867",
+    "9ab130ed-ea32-4ddc-b527-0d4ec822b63d",
+    "3221b291-f95e-4b39-b646-52cdf2b351e7",
+    "05bbedf0-1f02-4ea6-be0c-ee4e574e1082",
+    "ea0be725-1936-42e5-b34d-3472c679118b",
+    "78617905-1bdd-41b7-8d02-0dad2cf8449b",
+    "da081d35-b28e-409f-8a30-e37d253c77d7",
+    "9d075a10-505f-4076-9748-055fb8c8787e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura ABS Filament",
+    "description": "Compare 48 FormFutura ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

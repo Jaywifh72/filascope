@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/paramount-3d",
+  "title": "Paramount 3D PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 50 Paramount 3D PLA filaments. Prices from $24.99 to $24.99. 50 colors available. 6 with HueForge TD values.",
+  "h1": "Paramount 3D PLA Filament",
+  "keywords": [
+    "Paramount 3D",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Paramount 3D",
+  "count": 50,
+  "min_price": 24.99,
+  "max_price": 24.99,
+  "color_count": 50,
+  "has_td": 6,
+  "filament_ids": [
+    "947bd305-dc57-4f72-aa1f-b1a1799a3ee2",
+    "7392e2e2-51b6-46d1-8d76-a208ee73716c",
+    "a4acf3cb-58aa-4d3a-8020-e0aad14c3fa8",
+    "f77022ce-2ab8-42a3-a90d-006b91a3491b",
+    "0e866daf-5a4f-4c8f-8f5a-e3049a02a2d1",
+    "0c0799e4-449d-407e-bb64-641c32cc5a7d",
+    "e384cb81-e9fe-4d69-a212-418d4785b8d4",
+    "684f4714-abed-4d7e-8bb5-6576b6ad7306",
+    "90f74768-7688-4471-98a7-8bc74a764321",
+    "e6150a6c-db06-4155-b580-ec859197ae47",
+    "3101a69f-abab-4e19-b056-0db936babf97",
+    "f7560968-fdde-49d9-831b-cd8a89c734ff",
+    "c582d275-b575-44e8-805b-fd2621027412",
+    "5c9a7947-25df-463b-9741-537f28bea033",
+    "ce8ff5d0-1075-4072-9b7f-d1bfc9969168",
+    "a83576f1-046c-48c4-b216-1f66c4b7cd8c",
+    "bd4ec724-6b7e-44ac-99dd-15e8f396b4ea",
+    "a51070b0-a159-49cb-8e0c-efe0b2bbd56b",
+    "36c64f74-7eaa-4354-831c-1e7215a0b251",
+    "b41f210c-225a-41f6-a818-4fa7b8d57bd7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Paramount 3D PLA Filament",
+    "description": "Compare 50 Paramount 3D PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/paramount-3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Paramount 3D"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc/creality",
+  "title": "Creality PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Creality PC filaments. Prices from $22.99 to $29.99. 3 colors available. 2 with HueForge TD values.",
+  "h1": "Creality PC Filament",
+  "keywords": [
+    "Creality",
+    "PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC",
+  "vendor": "Creality",
+  "count": 3,
+  "min_price": 22.99,
+  "max_price": 29.99,
+  "color_count": 3,
+  "has_td": 2,
+  "filament_ids": [
+    "d585d6d5-4918-4b57-adc5-2de243bc020d",
+    "47a52804-9d7a-4c44-8da7-4f028b21bd34",
+    "abefcfd9-ba19-43e1-ba8d-59d594374db0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Creality PC Filament",
+    "description": "Compare 3 Creality PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc/creality",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC",
+          "item": "https://filascope.com/filaments/pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Creality"
+        }
+      ]
+    }
+  }
+}

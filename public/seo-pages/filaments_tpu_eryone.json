@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/eryone",
+  "title": "Eryone TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 Eryone TPU filaments. Prices from $19.99 to $38.99. 14 colors available.",
+  "h1": "Eryone TPU Filament",
+  "keywords": [
+    "Eryone",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Eryone",
+  "count": 14,
+  "min_price": 19.99,
+  "max_price": 38.99,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "bccf0e45-af8e-4230-a65e-1fc14188d8fc",
+    "23675441-63a2-49fd-ba95-005a0c681503",
+    "4c3b5052-c4e6-4d53-9377-6577350853c3",
+    "1fd95e62-baac-4ae0-9288-7853bb297366",
+    "8dcd1e6a-5d80-4de3-988d-3a874b597f6f",
+    "3901bf92-0db0-45bd-9f51-3efc28c33299",
+    "a2fb04bb-a35b-4068-8ce6-405ff4bbf4c5",
+    "d322d844-a712-4796-94cd-1ac22bffc6c7",
+    "bd64c91a-0b58-4849-8003-dff6fb80d7db",
+    "cacf244b-007a-4cf7-83f1-69bc101a39ff",
+    "fa530c20-6853-4154-8ec0-ca1982e94591",
+    "c1129921-87fa-4395-ad8a-aa7c8d91792e",
+    "626df604-adbd-40b6-a57c-772c05787906",
+    "6da9a15f-f5cf-4447-b053-d3da2ec377bd"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Eryone TPU Filament",
+    "description": "Compare 14 Eryone TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/eryone",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Eryone"
+        }
+      ]
+    }
+  }
+}

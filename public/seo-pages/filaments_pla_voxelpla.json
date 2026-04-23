@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/voxelpla",
+  "title": "VoxelPLA PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 23 VoxelPLA PLA+ filaments. Prices from $24.00 to $24.00. 14 colors available.",
+  "h1": "VoxelPLA PLA+ Filament",
+  "keywords": [
+    "VoxelPLA",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "VoxelPLA",
+  "count": 23,
+  "min_price": 24,
+  "max_price": 24,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "6d3d05b3-4b85-4cf4-8a8b-3535de0b0bd1",
+    "445cafd9-4223-4838-ba70-ed15797bc343",
+    "bb7507a7-3f16-4d46-812b-8f08bdeaabc4",
+    "abda913d-cbd8-488a-8fc8-c99c2dbbe9f9",
+    "06d2b9e3-a216-4dd2-a592-7fd0550e0303",
+    "73d95c16-b82f-4d83-888c-d06d5b46c02a",
+    "3f2efc33-c0b8-453b-a695-38e6c0191b1b",
+    "dc91d426-cb71-41dc-98a8-81a2b342e1b9",
+    "38236dec-b50c-4f86-b28c-96d6fbc53723",
+    "1864750b-69bd-4a0f-a5ce-c10b6bc6b4ea",
+    "7922f2f1-5375-4651-b081-4d3be3d039e6",
+    "39129b02-e777-4980-838e-8a1b717e6135",
+    "852768a3-0e5c-41bb-8885-b5dd153d964b",
+    "8804d917-592d-474d-bdca-738af7998354",
+    "7fb0fb67-f375-4f9b-a1dc-8b292ab2ab1b",
+    "cb2c6ba8-31ac-4258-8fde-841de4ab57e6",
+    "d5001676-a338-4217-9463-abf28ac55434",
+    "55bf6bad-a0ac-4417-9f4e-1af41fa939d3",
+    "2bff8543-9b7c-480c-90e2-09d03158d34f",
+    "b1e33091-9135-43d7-ba9d-27d39ac86858"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "VoxelPLA PLA+ Filament",
+    "description": "Compare 23 VoxelPLA PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/voxelpla",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "VoxelPLA"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/qidi",
+  "title": "QIDI PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 82 QIDI PLA filaments. Prices from $5.00 to $99.99. 16 colors available. 82 with HueForge TD values.",
+  "h1": "QIDI PLA Filament",
+  "keywords": [
+    "QIDI",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "QIDI",
+  "count": 82,
+  "min_price": 5,
+  "max_price": 99.99,
+  "color_count": 16,
+  "has_td": 82,
+  "filament_ids": [
+    "297ad243-798d-4dd3-ab51-a78c04c89be0",
+    "5e01fae9-7551-4cc4-911a-68c5b53d7e62",
+    "5df79c19-a5a2-4f0c-a9f2-04e4ff940932",
+    "193cd404-1512-4d5e-96bd-450b870c599d",
+    "7ac624cf-bb62-4c5c-b46f-c05174832224",
+    "29f9e04a-3145-42a0-b500-eee671eac4b0",
+    "9c8ee297-2e1c-4c25-889b-b4ba5d0f52b8",
+    "bcc9d861-ee3a-4f9f-9c0f-7d3a3c8971c3",
+    "3a3b10f7-82f0-4f2f-828e-07c242c02d11",
+    "3babeff2-ce78-4142-bd1c-37fcb176805a",
+    "3f48d21f-eed1-40d9-8e56-57f8dc1473a8",
+    "4566eadb-2a06-4e36-998d-537339c58ca7",
+    "457124f9-0fb6-4a24-b8e3-cdce38433470",
+    "5176e02f-bba4-4a02-b636-2a2382353c1a",
+    "6bf47813-c9fb-474d-a522-0a7aa33d35d4",
+    "5a538574-705e-417f-89d2-c0e9d46c64b1",
+    "62fb0b7b-5e6f-4cc5-81ca-b23d8904860f",
+    "72672b1f-f1b2-4e6a-b327-867f00353a7f",
+    "63ba03d6-9a09-4fc7-bd6a-e6e7cfd6c020",
+    "8a1227ef-cb67-442f-8353-835d25c4a445"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "QIDI PLA Filament",
+    "description": "Compare 82 QIDI PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/qidi",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "QIDI"
+        }
+      ]
+    }
+  }
+}

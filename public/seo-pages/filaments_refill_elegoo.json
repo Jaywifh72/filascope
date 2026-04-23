@@ -1,0 +1,71 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/refill/elegoo",
+  "title": "Elegoo REFILL Filament — Prices, Specs & Reviews",
+  "description": "Compare 18 Elegoo REFILL filaments. Prices from $13.19 to $13.99. 15 colors available.",
+  "h1": "Elegoo REFILL Filament",
+  "keywords": [
+    "Elegoo",
+    "REFILL",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "REFILL",
+  "vendor": "Elegoo",
+  "count": 18,
+  "min_price": 13.19,
+  "max_price": 13.99,
+  "color_count": 15,
+  "has_td": 0,
+  "filament_ids": [
+    "83b5b1e5-d629-48bb-9581-b4601c6173fa",
+    "8a2d2567-1cb0-4c3e-b6c1-d371c44240c2",
+    "3430dad7-302a-4bc3-9367-e85fdaa634a2",
+    "b4a9bb40-2837-45a9-b127-c7f67958f6f7",
+    "ce925807-d15c-4483-8058-aded70763f25",
+    "c8624931-61e7-4ab9-9ca2-a7a3bed2ec72",
+    "1abaa70c-2e10-4522-b156-948ab6f7f054",
+    "c704de43-c4f2-4789-b013-18fc261371a6",
+    "b5326947-608f-4848-9f37-c26f4bf6c139",
+    "6a4e1102-cb3b-4035-ae6a-93beea10075f",
+    "c015f064-27d9-4d71-9d55-1719c3e85804",
+    "2425ec57-d156-4cc2-945a-bf9c669fe755",
+    "3cd46e79-cf3c-4946-9a2b-678d460badf6",
+    "22ff321d-7f1c-46ca-817d-f469bdcf0640",
+    "8d1a4301-8b3e-455a-9c10-8c40ddba8532",
+    "93873eb2-72c9-4e60-a77c-9ce58caf65cf",
+    "ac264964-e830-41d7-8d12-204e830733db",
+    "fa60536b-d840-4063-9a08-e2b5c77b169c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo REFILL Filament",
+    "description": "Compare 18 Elegoo REFILL filaments on FilaScope",
+    "url": "https://filascope.com/filaments/refill/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "REFILL",
+          "item": "https://filascope.com/filaments/refill"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

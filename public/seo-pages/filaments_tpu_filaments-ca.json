@@ -1,0 +1,69 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/filaments-ca",
+  "title": "Filaments.ca TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 16 Filaments.ca TPU filaments. Prices from $19.00 to $47.00. 9 colors available. 16 with HueForge TD values.",
+  "h1": "Filaments.ca TPU Filament",
+  "keywords": [
+    "Filaments.ca",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Filaments.ca",
+  "count": 16,
+  "min_price": 19,
+  "max_price": 47,
+  "color_count": 9,
+  "has_td": 16,
+  "filament_ids": [
+    "460e531a-6b8c-41ee-8b05-2a5dab7df10c",
+    "aee17548-9e07-42d0-a206-108195da7067",
+    "06f424dc-f2ba-402a-9b0d-241905cbd30a",
+    "a3032d82-77e2-491b-99cb-8f5f93a2b708",
+    "a91bdb14-c186-41c7-b2e1-64d74ede89ee",
+    "19660ce9-d816-4948-8af8-e6e8d3a4952d",
+    "c74c6881-c8e6-44f0-b144-6412fbca5dbc",
+    "ae330230-b7c1-4ada-ba87-0c3bec6f7155",
+    "c06c2b64-4f91-43ab-abf6-d7253c094a28",
+    "af502879-5fd2-4b47-8cba-b2bab223d8f3",
+    "f2b217c8-357f-42b9-8d56-c96ca38a3f9e",
+    "189a04cd-b22f-4f52-803a-00b21ae35322",
+    "6521c210-d2ae-4af9-81c6-494d004352c8",
+    "dca34321-7760-41ac-95dd-40afb2df422f",
+    "e02d2656-4e01-4ae5-9d3a-72fb6bf09678",
+    "b77e2fe3-2af6-46b1-8b73-aa6631b0f9f3"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Filaments.ca TPU Filament",
+    "description": "Compare 16 Filaments.ca TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/filaments-ca",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Filaments.ca"
+        }
+      ]
+    }
+  }
+}

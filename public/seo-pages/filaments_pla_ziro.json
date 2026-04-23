@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/ziro",
+  "title": "Ziro PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 236 Ziro PLA filaments. Prices from $21.99 to $38.97. 17 colors available.",
+  "h1": "Ziro PLA Filament",
+  "keywords": [
+    "Ziro",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Ziro",
+  "count": 236,
+  "min_price": 21.99,
+  "max_price": 38.97,
+  "color_count": 17,
+  "has_td": 0,
+  "filament_ids": [
+    "5433b7f7-d9ed-469e-a0f4-6de3a5ecc3e1",
+    "003283e9-c3bf-49b1-867a-7b0b97ef3d99",
+    "742bf90a-6a9a-45d3-948d-00d12675c49c",
+    "dc09df86-9257-4697-8adf-c300327c1608",
+    "25632e6b-661f-4b0d-a084-a061e4713379",
+    "e18712ac-d8b5-4bec-8b9e-378e8b7dbd91",
+    "c5c602a9-3e52-4e89-b452-bd3c54444e4e",
+    "431ed65d-50d1-4c46-933b-b45110fa8736",
+    "f2a6acf6-cc0a-439a-b913-30107d96d421",
+    "8e5a79bc-b50d-46d3-9a78-53c62eb260cb",
+    "3ea310d9-3d26-4f51-b583-eef41a87317f",
+    "78a3b1c3-6f11-4134-ae2f-6f05e4fd1c06",
+    "3f2b6d31-5ce4-4130-9f04-a3ab63aa9b82",
+    "1c8cafe5-f521-4c2c-8688-3805bf4697a3",
+    "fa5df556-c1c0-4a61-abe0-e180fb3cc00e",
+    "8a5a8388-fc29-4f47-9c9e-a5315ee4f6fb",
+    "5e8b6b43-5bd1-413a-a7c0-2aabcaa41ec2",
+    "a2c3ecc2-d24c-4806-8625-268003461108",
+    "0cb684e3-d76e-418b-bf61-ea2fbc53dd82",
+    "12f07ad9-56af-4010-b6ae-941e53faa08c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Ziro PLA Filament",
+    "description": "Compare 236 Ziro PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/ziro",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Ziro"
+        }
+      ]
+    }
+  }
+}

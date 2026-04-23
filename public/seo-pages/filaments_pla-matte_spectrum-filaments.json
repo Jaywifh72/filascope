@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-matte/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Matte Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Spectrum Filaments PLA Matte filaments. Prices from $42.00 to $42.00. 8 colors available.",
+  "h1": "Spectrum Filaments PLA Matte Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Matte",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Matte",
+  "vendor": "Spectrum Filaments",
+  "count": 8,
+  "min_price": 42,
+  "max_price": 42,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "e87bf44a-d6f1-4345-8ef1-ea84e14566ef",
+    "fcf6d312-d97b-496b-b975-af994292fbe8",
+    "8a511084-c4bb-4230-91ee-a40e7a759ea8",
+    "04ddedf5-51b6-4d94-aaad-800cdc23b932",
+    "ee39571d-1953-40cc-a75d-e3adb761b8ec",
+    "a9eb8428-6daf-4be8-ba7d-c19f158e4ee8",
+    "282de218-9b10-4b8f-a265-ebd191583377",
+    "e64f47fa-e77b-4417-b3eb-f9b2bd158ed2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Matte Filament",
+    "description": "Compare 8 Spectrum Filaments PLA Matte filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-matte/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Matte",
+          "item": "https://filascope.com/filaments/pla-matte"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

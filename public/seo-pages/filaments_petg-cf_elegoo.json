@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-cf/elegoo",
+  "title": "Elegoo PETG-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 Elegoo PETG-CF filaments. Prices from $20.99 to $449.00. 6 colors available. 14 with HueForge TD values.",
+  "h1": "Elegoo PETG-CF Filament",
+  "keywords": [
+    "Elegoo",
+    "PETG-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-CF",
+  "vendor": "Elegoo",
+  "count": 14,
+  "min_price": 20.99,
+  "max_price": 449,
+  "color_count": 6,
+  "has_td": 14,
+  "filament_ids": [
+    "ac4c3aad-7724-48f7-b69d-0b37f7133cc7",
+    "0ba6bf89-3b11-4ba3-bcf0-0902f6e15db0",
+    "4f395e03-3e5f-4b2d-8561-e748266153b4",
+    "93ca5dc7-c873-448b-a8be-fbcd73644739",
+    "287af9d0-1a4b-4d23-b1e6-465bffbc6b1f",
+    "489c9d30-7b57-4934-b603-89c692f891cb",
+    "d535fc1d-832a-4293-9fca-7133475b48d3",
+    "c1543663-c1c4-41c3-bac2-68845e3f6857",
+    "64c8f9b8-afe5-404f-ba1a-ab578fd8894d",
+    "fb215b1a-80b0-402b-973b-a97f8af47719",
+    "884b1ecb-a0df-4bee-8afc-42d32437ea56",
+    "311ecfe1-35a5-4453-ac18-6bb24c7dddbb",
+    "9d18f712-f643-43f2-b317-1741d119fc73",
+    "04b9740d-b5cc-4a1d-a110-35e700f4481e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PETG-CF Filament",
+    "description": "Compare 14 Elegoo PETG-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-cf/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-CF",
+          "item": "https://filascope.com/filaments/petg-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/azurefilm",
+  "title": "AzureFilm ABS+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 65 AzureFilm ABS+ filaments. Prices from $17.15 to $45.97. 15 colors available. 51 with HueForge TD values.",
+  "h1": "AzureFilm ABS+ Filament",
+  "keywords": [
+    "AzureFilm",
+    "ABS+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS+",
+  "vendor": "AzureFilm",
+  "count": 65,
+  "min_price": 17.15,
+  "max_price": 45.97,
+  "color_count": 15,
+  "has_td": 51,
+  "filament_ids": [
+    "3e5ceadd-81f2-4624-817e-7e70db7c16bb",
+    "0012e5bc-5bb2-4845-9334-ee0c12b9277f",
+    "d9fdbd66-3309-4fc5-9773-5ac8e27ed9d3",
+    "c41a1673-eed5-483a-b549-0fd90497ae61",
+    "bab19f4f-cace-48f7-a63c-b0619d865129",
+    "dbd22d68-4c1b-4fef-ad51-96e0ddd3b8a9",
+    "52cacdc4-2274-43d2-8ca2-b115a3f88838",
+    "56283dee-67d9-49f4-b5f9-f30c4d0fd402",
+    "207b3764-57a4-4828-8b8c-67fd4ba2f6d1",
+    "ccdc1cde-2f25-4780-981a-79233b93a573",
+    "25845fdc-9ba8-46b9-a63b-3088512074fd",
+    "5259cb0b-c878-4d55-8b7c-0fdbd01c0d92",
+    "48be2d11-5f48-46e6-8e65-06b46bc05db1",
+    "dc3b1e96-b1ac-4052-96d4-aafbe6f0b6b9",
+    "21b7dcb0-bb6c-4ac7-bd1c-3b1012830746",
+    "09e9d8ff-be62-4ef7-9b81-f5595e829aa4",
+    "653647c2-dff0-4d84-8d03-468defc37316",
+    "08184ccc-c086-4dbf-b25d-238ae6351625",
+    "c71d99d9-2797-4607-8026-5d4cc9ea14b1",
+    "ae68e8ed-99b3-48af-934e-1a23243ba322"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "AzureFilm ABS+ Filament",
+    "description": "Compare 65 AzureFilm ABS+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/azurefilm",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS+",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AzureFilm"
+        }
+      ]
+    }
+  }
+}

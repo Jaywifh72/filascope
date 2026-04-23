@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-premium/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Premium Filament — Prices, Specs & Reviews",
+  "description": "Compare 74 Spectrum Filaments PLA Premium filaments. Prices from $24.00 to $80.00. 54 colors available.",
+  "h1": "Spectrum Filaments PLA Premium Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Premium",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Premium",
+  "vendor": "Spectrum Filaments",
+  "count": 74,
+  "min_price": 24,
+  "max_price": 80,
+  "color_count": 54,
+  "has_td": 0,
+  "filament_ids": [
+    "a56242fd-24e0-45f4-a181-289af352b1d4",
+    "b03dff7f-cdf4-4d5d-ba28-8099b08c8ea7",
+    "9266aa52-b62f-44b5-bf15-b2fab137e9fe",
+    "c0807237-e65b-4b02-a051-1ba1bc81e59a",
+    "1c8558f9-f191-49dc-9893-210efb4af80d",
+    "2fd85247-4e18-4452-b6c2-6b11903ce779",
+    "0c8c7227-d679-4c33-b2ba-bd4b84cef002",
+    "bc1c2c47-1517-4a60-9a1b-2c9cb24742b5",
+    "fd445f7f-24e9-40fe-ae0b-d5150f43288a",
+    "99fa360b-1b1b-46a2-8718-5d4de9508746",
+    "cd6956f3-1f64-43b2-935d-4fd65324cbda",
+    "7a03fb35-e703-4093-8ee8-932d62983f59",
+    "ed162f93-68f5-4d86-af10-91405f13720c",
+    "a40e3607-b04f-4c9d-b158-ac1ed013f58a",
+    "271ea896-aba6-45c4-abb2-110b11cc8e65",
+    "980c4b65-6de6-46cf-a8fb-4a92340fb4c2",
+    "4ae581e8-5bf3-4b32-9042-db2347c1a617",
+    "710f218a-6739-4848-a0aa-03f209fe6dfc",
+    "c0a1989a-d8f9-4c93-bf22-8919f0ef83fc",
+    "8a6f8e35-6332-4e40-b638-319c4b4dfbd8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Premium Filament",
+    "description": "Compare 74 Spectrum Filaments PLA Premium filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-premium/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Premium",
+          "item": "https://filascope.com/filaments/pla-premium"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

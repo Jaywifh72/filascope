@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/formfutura",
+  "title": "FormFutura PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 192 FormFutura PLA filaments. Prices from $3.30 to $69.07. 93 colors available. 192 with HueForge TD values.",
+  "h1": "FormFutura PLA Filament",
+  "keywords": [
+    "FormFutura",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "FormFutura",
+  "count": 192,
+  "min_price": 3.3,
+  "max_price": 69.07,
+  "color_count": 93,
+  "has_td": 192,
+  "filament_ids": [
+    "c0b18055-cb8e-4343-861c-615c3b35306a",
+    "976001b2-2746-4ff6-aa6e-d21ff51b73fb",
+    "ca675d3a-e7fd-48ab-9b5a-847868be4b98",
+    "7f6adffd-5957-465d-b03d-ce87fb72a6be",
+    "e7e78073-1228-427b-9c23-2afa54eeb360",
+    "4c025089-63ed-4e99-a920-dc9317cb0763",
+    "ab94b5e4-16e4-4acf-995f-6062ca30b61d",
+    "98a7ac90-d7dd-4308-9a80-f007f49e8205",
+    "8a233f27-86a7-4955-9914-acbb6a2bb8d6",
+    "af77b5c6-3f10-436b-ae91-68f746b66c98",
+    "8fc02f9c-8e7b-4765-8413-96e7e68760a0",
+    "9fd77051-08f0-441e-b62b-9f5f82e2a796",
+    "d6f6cd9d-260e-4d1c-91f7-1348b0689382",
+    "cd255ce2-39f2-4c92-8e33-10d7ba372844",
+    "5864d561-dfa2-4735-a7d6-d1d985900809",
+    "4b2d451f-1397-43e7-a5cf-54fb8cf0a0d9",
+    "d8261d8e-d453-424b-a8f4-cac3037cc481",
+    "dda35e6c-2883-4735-a0f7-49aae823e129",
+    "4e1ba80f-db7f-457e-b8f8-520faf104f64",
+    "88cbf024-4dc6-4fe6-9381-d9679d0ebe6b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura PLA Filament",
+    "description": "Compare 192 FormFutura PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs-gf/siraya-tech",
+  "title": "Siraya Tech ABS-GF Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Siraya Tech ABS-GF filaments. Prices from $24.49 to $27.74. 4 colors available.",
+  "h1": "Siraya Tech ABS-GF Filament",
+  "keywords": [
+    "Siraya Tech",
+    "ABS-GF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS-GF",
+  "vendor": "Siraya Tech",
+  "count": 4,
+  "min_price": 24.49,
+  "max_price": 27.74,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "17db1667-5e53-48ba-8ebe-e0fef8508dd8",
+    "872210df-e0f5-4166-b979-607bbbfc5c23",
+    "9e1fec25-961a-48dd-a758-f5575478c481",
+    "293c0fe8-a55f-4125-857d-015c6ab7c921"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Siraya Tech ABS-GF Filament",
+    "description": "Compare 4 Siraya Tech ABS-GF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs-gf/siraya-tech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS-GF",
+          "item": "https://filascope.com/filaments/abs-gf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Siraya Tech"
+        }
+      ]
+    }
+  }
+}

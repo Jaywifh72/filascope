@@ -1,0 +1,69 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/esun",
+  "title": "eSun TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 16 eSun TPU filaments. Prices from $19.99 to $29.99. 12 colors available. 16 with HueForge TD values.",
+  "h1": "eSun TPU Filament",
+  "keywords": [
+    "eSun",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "eSun",
+  "count": 16,
+  "min_price": 19.99,
+  "max_price": 29.99,
+  "color_count": 12,
+  "has_td": 16,
+  "filament_ids": [
+    "622ff1c7-ed2e-4eda-a256-2dbdb938578c",
+    "e2911bf5-b1bd-4d3a-8b95-417e5b2ab055",
+    "bd292ac9-d03f-4d46-bad2-63d9f1d9be44",
+    "db28df87-9cc3-45a2-bb14-b6e29cf08e2a",
+    "d01e41ce-98a8-43aa-b0b6-6f9b52946f2c",
+    "3ce4a68b-db4c-4b8d-bf96-8050037eb5f8",
+    "ee42c3a2-eedf-48c8-ae89-cb91504741a9",
+    "fee8ae19-fa21-4b79-a3a7-ce48851122d5",
+    "2fee431b-0924-48a8-ae31-69c7d6dc016a",
+    "f0f989ba-b132-43c9-bb66-7bf5405e6851",
+    "41aa0586-8127-45d8-8610-0ab6d2874799",
+    "d2bf9488-1415-4cf3-bc04-a1d7b58b9c21",
+    "c7ab7032-3e4a-4971-b63f-0d7cc2147e05",
+    "085c0cd5-fa8c-43cb-8e28-2cea88194ff4",
+    "e62a44b1-3ed4-4206-86ac-dbf8164bfa83",
+    "a47a0c15-b7b4-4e27-a95c-1c2afbcfde6c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "eSun TPU Filament",
+    "description": "Compare 16 eSun TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/esun",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "eSun"
+        }
+      ]
+    }
+  }
+}

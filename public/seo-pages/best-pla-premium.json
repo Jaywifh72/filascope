@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pla-premium",
+  "title": "Best PLA Premium Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PLA Premium filaments in 2026. 74 options from 1 brands, starting at $24.00. Expert picks, prices & specs.",
+  "h1": "Best PLA Premium Filament (2026)",
+  "keywords": [
+    "best PLA Premium",
+    "PLA Premium filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PLA Premium",
+  "count": 74,
+  "brands": 1,
+  "min_price": 24,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PLA Premium Filament 2026",
+    "description": "Expert comparison of 74 PLA Premium filaments",
+    "url": "https://filascope.com/best-pla-premium"
+  }
+}

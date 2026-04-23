@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/other/sainsmart",
+  "title": "SainSmart Other Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 SainSmart Other filaments. Prices from $44.99 to $167.00. 3 colors available. 5 with HueForge TD values.",
+  "h1": "SainSmart Other Filament",
+  "keywords": [
+    "SainSmart",
+    "Other",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Other",
+  "vendor": "SainSmart",
+  "count": 5,
+  "min_price": 44.99,
+  "max_price": 167,
+  "color_count": 3,
+  "has_td": 5,
+  "filament_ids": [
+    "22c7f93b-d579-4b23-859b-edfa9e1459ce",
+    "e8a22fd3-33d2-4f20-a6c7-f4720148e0be",
+    "a901fe68-537b-406c-9251-32d3eb533e60",
+    "05b20d7c-d714-413e-958e-a0ea80da26de",
+    "04aa436f-08e7-4c2b-a801-f015e0a4e802"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "SainSmart Other Filament",
+    "description": "Compare 5 SainSmart Other filaments on FilaScope",
+    "url": "https://filascope.com/filaments/other/sainsmart",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Other",
+          "item": "https://filascope.com/filaments/other"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "SainSmart"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa-cf/formfutura",
+  "title": "FormFutura ASA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 17 FormFutura ASA-CF filaments. Prices from $33.02 to $41.42. 9 colors available. 17 with HueForge TD values.",
+  "h1": "FormFutura ASA-CF Filament",
+  "keywords": [
+    "FormFutura",
+    "ASA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA-CF",
+  "vendor": "FormFutura",
+  "count": 17,
+  "min_price": 33.02,
+  "max_price": 41.42,
+  "color_count": 9,
+  "has_td": 17,
+  "filament_ids": [
+    "42a36a24-f86d-417e-8bfd-1dabf802f518",
+    "5fcfa014-2e0f-4646-a4aa-fdb6acb01b0e",
+    "c65b5786-256b-40c5-8c2f-0825acf24ec4",
+    "37edd8b8-cbe5-41e2-826c-23538f032000",
+    "9e99ad3d-9cca-4bdb-924d-2ddcb48c6a21",
+    "c135f881-3657-4615-9dd2-11bd8325dfb1",
+    "991cbc3a-9b7b-44d7-bd47-207b294cca21",
+    "c3a1d4bd-fb48-49ee-8b1f-94a84518b84e",
+    "6841369a-5927-4362-816a-bca3e308ad5d",
+    "62748b3d-16ab-458e-9ea5-1c8dcae18f46",
+    "2292ec58-3094-4706-beb0-839617cf263b",
+    "4fddc4e5-b5bd-40da-a9bf-43a45dc7b663",
+    "77e18ceb-4b64-4d29-9f65-5b4192b672d8",
+    "c5cabbd2-48e1-4c00-be68-8df2dbc0504f",
+    "42028aed-1835-44b1-9e5b-15acf14593a5",
+    "68b49a07-6a23-4127-8f8c-8b6e956267dd",
+    "5cad76f2-a6c9-411c-8327-22cc3a644dac"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura ASA-CF Filament",
+    "description": "Compare 17 FormFutura ASA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa-cf/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA-CF",
+          "item": "https://filascope.com/filaments/asa-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/fiberlogy",
+  "title": "Fiberlogy ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 Fiberlogy ASA filaments. Prices from $26.99 to $26.99. 14 colors available.",
+  "h1": "Fiberlogy ASA Filament",
+  "keywords": [
+    "Fiberlogy",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Fiberlogy",
+  "count": 14,
+  "min_price": 26.99,
+  "max_price": 26.99,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "8e689ae2-8ff5-46ce-a4c2-8827211ac14b",
+    "131fccb1-f360-4290-bf0a-ff57a3d9d020",
+    "c0d5d3af-3164-4aec-9640-9ab839539222",
+    "f80aa4f1-7a6f-4a52-9657-c5644f6785ce",
+    "45fe480f-ef63-47ff-b718-1aa7d412431a",
+    "1a4c2a1f-96af-4b87-86a4-9b2a4620ae3f",
+    "6575897c-ebb9-439d-88cf-3dd972b0dc5c",
+    "69b86b62-7a50-41f0-8224-e4c722845d99",
+    "69d43a9a-5a7d-4296-9ea2-ff25a6e53990",
+    "3b77e348-f807-4862-8fee-f813b4321259",
+    "51301df8-33ff-4ac5-a612-737cba229bd9",
+    "d9e0c9d2-6af0-4d95-a8f5-06f06b86b5d1",
+    "f84ad848-f252-483f-9054-8d704f5e9434",
+    "70ed0dbc-e53c-4f5c-ab16-a4667da025c2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy ASA Filament",
+    "description": "Compare 14 Fiberlogy ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

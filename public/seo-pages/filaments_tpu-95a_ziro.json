@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/ziro",
+  "title": "Ziro TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 20 Ziro TPU-95A filaments. Prices from $29.22 to $30.99. 14 colors available.",
+  "h1": "Ziro TPU-95A Filament",
+  "keywords": [
+    "Ziro",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "Ziro",
+  "count": 20,
+  "min_price": 29.22,
+  "max_price": 30.99,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "52abd939-27bc-44d1-b69b-0a8df0022154",
+    "9224d874-5ea1-4033-bbaa-e7aa219e5058",
+    "3bb449d2-f538-4f7b-a3c3-5c70f0ae4c06",
+    "f64060c2-255c-4953-8789-f76e10eb2cfa",
+    "22bef8da-46f9-4c79-822e-478bddf557a5",
+    "58daa63e-26ab-4775-9807-2b1490df8ba5",
+    "b5627292-6415-4991-a4ae-a98d534f27d3",
+    "4a17ee89-fc4f-41d7-8109-42d01f9215cc",
+    "6984c65c-9723-425b-bdf7-86fcbb34eede",
+    "02d9af08-cf02-41f4-a21c-a02a2d564b52",
+    "729b3c95-9ec5-4503-b5be-30b319a690e2",
+    "3307b58f-afac-4850-8bde-9240aaef74da",
+    "ef8b53f4-cca2-40fe-90d7-548fc3435013",
+    "11ad79f9-c959-4635-8ef8-212430ba3d7c",
+    "6aeb5205-74f5-4aa8-a790-07a2f2bb4f1b",
+    "196bc156-7a12-497b-823e-e55b052b9a4c",
+    "91d064fa-ad28-4831-ae23-65391f4e6405",
+    "47981fd5-34fc-4622-a446-4f1dd55265ef",
+    "9f81d888-aac9-4498-9869-8ed87252fb96",
+    "68c86890-d678-4ce3-9efe-c9c0a51fe2d4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Ziro TPU-95A Filament",
+    "description": "Compare 20 Ziro TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/ziro",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Ziro"
+        }
+      ]
+    }
+  }
+}

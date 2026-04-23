@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-silk/numakers",
+  "title": "Numakers PLA-SILK Filament — Prices, Specs & Reviews",
+  "description": "Compare 20 Numakers PLA-SILK filaments. Prices from $23.99 to $24.99. 20 colors available.",
+  "h1": "Numakers PLA-SILK Filament",
+  "keywords": [
+    "Numakers",
+    "PLA-SILK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-SILK",
+  "vendor": "Numakers",
+  "count": 20,
+  "min_price": 23.99,
+  "max_price": 24.99,
+  "color_count": 20,
+  "has_td": 0,
+  "filament_ids": [
+    "437999f6-6817-4a90-bf17-c4a73102a7d0",
+    "a5500930-87b3-4174-b54e-e6ef774902c5",
+    "e3256198-dbed-4a91-a821-c3d6653f6a6d",
+    "4009b949-64c6-4b0e-903f-d7a7f13d57ab",
+    "8a8dfaad-35c3-444c-82bb-7788f984e392",
+    "b031d54e-4a81-4e1b-a88d-d759991fb63c",
+    "66fd8892-f262-420e-a93f-5944d90397ef",
+    "2672a1c7-8cec-4301-8f34-3332dacf5979",
+    "c4a9d9b5-03e6-4308-8143-b87f3ac758e1",
+    "026b8d65-b12d-4fd0-9526-f4eeee05c1c6",
+    "befe71a1-ecc6-4152-9c9d-59de05c8e135",
+    "67b2ba83-bf75-44f8-9dd7-c7241e924325",
+    "fad8d5b1-e9b8-4e43-9344-f2a3dd6e6fea",
+    "34d4aed7-eb8c-4b2e-9abe-eba489068d9c",
+    "adbbddba-e4ff-47bc-b5df-eac8fd7ceb96",
+    "541be80e-2128-41ff-a08c-f1a1767f2c0f",
+    "868242bf-53ae-4a6c-aea5-16ebb10d28a6",
+    "f39dc891-b374-4c31-8c0d-7db5b8914df7",
+    "2b4a95d5-f764-4feb-9223-f101fea3b48b",
+    "c4a7cd89-5c24-4647-ac71-c5be9383755a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PLA-SILK Filament",
+    "description": "Compare 20 Numakers PLA-SILK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-silk/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-SILK",
+          "item": "https://filascope.com/filaments/pla-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

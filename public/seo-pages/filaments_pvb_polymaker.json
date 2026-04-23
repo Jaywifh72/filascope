@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pvb/polymaker",
+  "title": "Polymaker PVB Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Polymaker PVB filaments. Prices from $50.99 to $67.99. 13 colors available.",
+  "h1": "Polymaker PVB Filament",
+  "keywords": [
+    "Polymaker",
+    "PVB",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PVB",
+  "vendor": "Polymaker",
+  "count": 13,
+  "min_price": 50.99,
+  "max_price": 67.99,
+  "color_count": 13,
+  "has_td": 0,
+  "filament_ids": [
+    "ef81fd9f-9277-4f47-95ac-44156083ab15",
+    "9360da5e-be1c-47cb-a54d-17ad5dc5c073",
+    "82b2707c-f921-40b0-a80e-311ce635d4c3",
+    "c99d7167-6372-4248-996e-a50caab16a6c",
+    "7af3ee55-946e-4fc3-b469-c0b9722ca69a",
+    "d905eb51-00dd-484a-817d-b0dc051d6251",
+    "f4bb0427-4e84-4d55-a78c-e082d55f56f7",
+    "7aa28bc8-5a9c-47d7-a03c-e76a9744008b",
+    "a71d751f-b713-43f3-a0b1-dc28a1970fac",
+    "77722ffd-a50e-4ff3-ba37-e9a33176bcb7",
+    "09788642-8180-40fc-8405-980153bf2610",
+    "ad325a02-3b49-4cfc-854e-4a34045cb8d6",
+    "991ac60d-8eef-4cf4-b3f1-4af9a83cb59a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Polymaker PVB Filament",
+    "description": "Compare 13 Polymaker PVB filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pvb/polymaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PVB",
+          "item": "https://filascope.com/filaments/pvb"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polymaker"
+        }
+      ]
+    }
+  }
+}

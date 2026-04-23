@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/fr-pc/3dxtech",
+  "title": "3DXTech FR-PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 3DXTech FR-PC filaments. Prices from $168.00 to $168.00. 3 colors available.",
+  "h1": "3DXTech FR-PC Filament",
+  "keywords": [
+    "3DXTech",
+    "FR-PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "FR-PC",
+  "vendor": "3DXTech",
+  "count": 3,
+  "min_price": 168,
+  "max_price": 168,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "55d2ad10-e0d6-4dde-97e2-9c802e877553",
+    "521177ef-0073-48d4-94bd-191ebdbf43ea",
+    "505145c3-db38-459e-9727-283b60071088"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech FR-PC Filament",
+    "description": "Compare 3 3DXTech FR-PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/fr-pc/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "FR-PC",
+          "item": "https://filascope.com/filaments/fr-pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

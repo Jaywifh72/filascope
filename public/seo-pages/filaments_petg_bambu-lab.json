@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/bambu-lab",
+  "title": "Bambu Lab PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 50 Bambu Lab PETG filaments. Prices from $12.99 to $34.99. 29 colors available. 50 with HueForge TD values.",
+  "h1": "Bambu Lab PETG Filament",
+  "keywords": [
+    "Bambu Lab",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Bambu Lab",
+  "count": 50,
+  "min_price": 12.99,
+  "max_price": 34.99,
+  "color_count": 29,
+  "has_td": 50,
+  "filament_ids": [
+    "15d13b2d-f73a-49d3-8dcf-699ca3d8b7b9",
+    "dbb1d667-b05e-4e59-8d7f-c67da5a38fd7",
+    "79969472-825b-4b30-8ca0-18a599812f27",
+    "d0619c4e-b916-490c-b96c-3910c89d1487",
+    "b9e8f90f-75ae-43f2-b70e-d61222f72693",
+    "eb8cdfed-94fe-494b-bbfb-28dbc9b62f30",
+    "761a4b4c-3c7e-45f9-8c89-a7e45fe61bd1",
+    "b38504fa-85d5-4714-8f95-cf7b2abcd0cd",
+    "7ce2e1e6-2121-4aa7-8497-f5383f8578af",
+    "072466a3-7ca9-4e02-8e02-5b1c2d30c1b3",
+    "e13408f3-ec5a-4549-a186-3246d18d20db",
+    "98fc5c88-397e-4003-b1b6-424cc295ec68",
+    "46a58db6-6bc5-4612-ad33-6bb2a2becc61",
+    "45aa991b-fbf4-46fc-992e-5e0bff512344",
+    "bfc3f74d-5bda-4b1e-a74e-0c75589c0975",
+    "8be11533-f713-4889-b398-424d6fcd62c5",
+    "b22fc524-b69d-4390-9cef-53206c2d8dd4",
+    "a78da2ac-1b8c-4bb6-82fd-1652c11215ce",
+    "cfad9a93-329b-47d6-bba7-c3c31e1b9c81",
+    "7190577a-a9b3-49a4-a9ae-d955ff4693ab"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab PETG Filament",
+    "description": "Compare 50 Bambu Lab PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

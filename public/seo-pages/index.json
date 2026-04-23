@@ -1,0 +1,3872 @@
+[
+  {
+    "url": "/filaments/pctg/3d-fuel",
+    "type": "brand-material",
+    "title": "3D-Fuel PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/3d-fuel",
+    "type": "brand-material",
+    "title": "3D-Fuel PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hemp-pla/3d-fuel",
+    "type": "brand-material",
+    "title": "3D-Fuel Hemp-PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/3d-fuel",
+    "type": "brand-material",
+    "title": "3D-Fuel PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/3dhojor",
+    "type": "brand-material",
+    "title": "3DHoJor PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/3dhojor",
+    "type": "brand-material",
+    "title": "3DHoJor PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-hs/3dhojor",
+    "type": "brand-material",
+    "title": "3DHOJOR PLA-HS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/3dhojor",
+    "type": "brand-material",
+    "title": "3DHOJOR TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/matte-pla/3dhojor",
+    "type": "brand-material",
+    "title": "3DHOJOR Matte PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech ABS+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs-gf/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech ABS-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/esd-pei-1010/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech ESD-PEI-1010 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pei-9085/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PEI-9085 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa12/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PA12 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pei-1010/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PEI-1010 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/fr-pc/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech FR-PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/unknown/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech Unknown Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/peek/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PEEK Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pekk/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PEKK Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-tough/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PLA-Tough Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa6-gf/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PA6-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg/3dxtech",
+    "type": "brand-material",
+    "title": "3DXTech PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/amolen",
+    "type": "brand-material",
+    "title": "Amolen PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/amolen",
+    "type": "brand-material",
+    "title": "Amolen PLA-Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/amolen",
+    "type": "brand-material",
+    "title": "Amolen PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/amolen",
+    "type": "brand-material",
+    "title": "Amolen TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/other/amolen",
+    "type": "brand-material",
+    "title": "Amolen Other Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/amolen",
+    "type": "brand-material",
+    "title": "Amolen PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/amolen",
+    "type": "brand-material",
+    "title": "Amolen TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/peba/amolen",
+    "type": "brand-material",
+    "title": "Amolen PEBA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-glow/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic PLA-Glow Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/resin/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic RESIN Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/anycubic",
+    "type": "brand-material",
+    "title": "Anycubic PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/atomic-filament",
+    "type": "brand-material",
+    "title": "Atomic Filament PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/atomic-filament",
+    "type": "brand-material",
+    "title": "Atomic Filament ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/atomic-filament",
+    "type": "brand-material",
+    "title": "Atomic Filament ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/atomic-filament",
+    "type": "brand-material",
+    "title": "Atomic Filament PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk/atomic-filament",
+    "type": "brand-material",
+    "title": "Atomic Filament PLA Silk Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pei/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PEI Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm ABS+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc-abs/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PC-ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PLA-Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-glow/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PLA-Glow Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/matte-pla/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm Matte PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pet-cf/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PET-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/paht-cf/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PAHT-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pva/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm PVA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/wood-pla/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm Wood PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/silk-pla/azurefilm",
+    "type": "brand-material",
+    "title": "AzureFilm Silk PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/bambu-lab",
+    "type": "brand-material",
+    "title": "Bambu Lab PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/bambu-lab",
+    "type": "brand-material",
+    "title": "Bambu Lab PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/bambu-lab",
+    "type": "brand-material",
+    "title": "Bambu Lab ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/bambu-lab",
+    "type": "brand-material",
+    "title": "Bambu Lab ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/bambu-lab",
+    "type": "brand-material",
+    "title": "Bambu Lab TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-90a/bambu-lab",
+    "type": "brand-material",
+    "title": "Bambu Lab TPU-90A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/bambu-lab",
+    "type": "brand-material",
+    "title": "Bambu Lab PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pha/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PHA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-metal/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PLA-Metal Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/copolyester/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb Copolyester Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/lw-pla/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb LW-PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/lw-pla-ht/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb LW-PLA-HT Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-economy/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PETG Economy Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-economy/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PLA Economy Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-high-speed-pro/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PLA High Speed Pro Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PLA Silk Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-stone/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PLA-Stone Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/colorfabb",
+    "type": "brand-material",
+    "title": "ColorFabb PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/creality",
+    "type": "brand-material",
+    "title": "Creality PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/creality",
+    "type": "brand-material",
+    "title": "Creality PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/creality",
+    "type": "brand-material",
+    "title": "Creality ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/creality",
+    "type": "brand-material",
+    "title": "Creality TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/creality",
+    "type": "brand-material",
+    "title": "Creality ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/creality",
+    "type": "brand-material",
+    "title": "Creality PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/creality",
+    "type": "brand-material",
+    "title": "Creality PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-cf/creality",
+    "type": "brand-material",
+    "title": "Creality PETG-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/duramic-3d",
+    "type": "brand-material",
+    "title": "Duramic 3D PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/duramic-3d",
+    "type": "brand-material",
+    "title": "Duramic 3D PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/duramic-3d",
+    "type": "brand-material",
+    "title": "Duramic 3D TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/silk-pla/duramic-3d",
+    "type": "brand-material",
+    "title": "Duramic 3D Silk PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-marble/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PLA-Marble Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PLA-Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo ABS+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/rapid-pla-plus/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo RAPID PLA PLUS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/filament-with-spool/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo FILAMENT WITH SPOOL Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/rapid-petg/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo RAPID PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/rapid-pla/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo RAPID PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-galaxy/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PLA Galaxy Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-meta/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PLA Meta Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-cf/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo PETG-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/refill/elegoo",
+    "type": "brand-material",
+    "title": "Elegoo REFILL Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/eryone",
+    "type": "brand-material",
+    "title": "Eryone PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/eryone",
+    "type": "brand-material",
+    "title": "Eryone PLA-Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/eryone",
+    "type": "brand-material",
+    "title": "Eryone PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/eryone",
+    "type": "brand-material",
+    "title": "Eryone TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-metal/eryone",
+    "type": "brand-material",
+    "title": "Eryone PLA-Metal Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/eryone",
+    "type": "brand-material",
+    "title": "Eryone ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/eryone",
+    "type": "brand-material",
+    "title": "Eryone ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/eryone",
+    "type": "brand-material",
+    "title": "Eryone PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa-cf/eryone",
+    "type": "brand-material",
+    "title": "Eryone ASA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-gf/eryone",
+    "type": "brand-material",
+    "title": "Eryone PETG-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-cf/eryone",
+    "type": "brand-material",
+    "title": "Eryone PETG-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-85a/eryone",
+    "type": "brand-material",
+    "title": "Eryone TPU-85A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/esun",
+    "type": "brand-material",
+    "title": "eSun ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/esun",
+    "type": "brand-material",
+    "title": "eSun ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/esun",
+    "type": "brand-material",
+    "title": "eSun PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/esun",
+    "type": "brand-material",
+    "title": "eSun PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/esun",
+    "type": "brand-material",
+    "title": "eSun PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pet/esun",
+    "type": "brand-material",
+    "title": "eSun PET Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/esun",
+    "type": "brand-material",
+    "title": "eSun TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/silk-pla/esun",
+    "type": "brand-material",
+    "title": "eSun Silk PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/peba/esun",
+    "type": "brand-material",
+    "title": "eSun PEBA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-98a/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr TPU-98A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-92a/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr TPU-92A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-88a/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr TPU-88A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/bio/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr BIO Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/extrudr",
+    "type": "brand-material",
+    "title": "Extrudr PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-30d/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy TPU-30D Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-40d/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy TPU-40D Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy PLA-Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hips/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy HIPS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa12/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy PA12 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pp/fiberlogy",
+    "type": "brand-material",
+    "title": "Fiberlogy PP Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/htpla/filaments-ca",
+    "type": "brand-material",
+    "title": "Filaments.ca HTPLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/filaments-ca",
+    "type": "brand-material",
+    "title": "Filaments.ca PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/filaments-ca",
+    "type": "brand-material",
+    "title": "Filaments.ca TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/filaments-ca",
+    "type": "brand-material",
+    "title": "Filaments.ca PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/filaments-ca",
+    "type": "brand-material",
+    "title": "Filaments.ca ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum PLA-Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/cpe/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum CPE Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpe-90a/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum TPE-90A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpe-96a/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum TPE-96A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-92a/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum TPU-92A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-98a/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum TPU-98A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hips/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum HIPS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/fillamentum",
+    "type": "brand-material",
+    "title": "Fillamentum PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/flashforge",
+    "type": "brand-material",
+    "title": "FlashForge ABS+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/flashforge",
+    "type": "brand-material",
+    "title": "FlashForge PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/flashforge",
+    "type": "brand-material",
+    "title": "FlashForge PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/flashforge",
+    "type": "brand-material",
+    "title": "FlashForge PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/flsun",
+    "type": "brand-material",
+    "title": "FLSUN PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa-cf/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura ASA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa-gf/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura ASA-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PLA-Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hips/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura HIPS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpc/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura TPC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/paht-cf/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PAHT-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-metal/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PLA-Metal Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-90a/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura TPU-90A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-98a/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura TPU-98A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/rpla/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura rPLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/rpet/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura rPET Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-stone/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PLA-Stone Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg/formfutura",
+    "type": "brand-material",
+    "title": "FormFutura PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg/fusion-filaments",
+    "type": "brand-material",
+    "title": "Fusion Filaments PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/fusion-filaments",
+    "type": "brand-material",
+    "title": "Fusion Filaments ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/fusion-filaments",
+    "type": "brand-material",
+    "title": "Fusion Filaments PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/fusion-filaments",
+    "type": "brand-material",
+    "title": "Fusion Filaments ABS+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/other/fusion-filaments",
+    "type": "brand-material",
+    "title": "Fusion Filaments Other Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/fusion-filaments",
+    "type": "brand-material",
+    "title": "Fusion Filaments TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/fusion-filaments",
+    "type": "brand-material",
+    "title": "Fusion Filaments PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/silk-pla/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech Silk PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hspla/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech HSPLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/matte-pla/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech Matte PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/wood-pla/geeetech",
+    "type": "brand-material",
+    "title": "Geeetech Wood PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/other/geeetech",
+    "type": "brand-material",
+    "title": "GEEETECH Other Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk/geeetech",
+    "type": "brand-material",
+    "title": "GEEETECH PLA-SILK Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-matte/geeetech",
+    "type": "brand-material",
+    "title": "GEEETECH PLA-MATTE Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/geeetech",
+    "type": "brand-material",
+    "title": "GEEETECH PLA-WOOD Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/gizmo-dorks",
+    "type": "brand-material",
+    "title": "Gizmo Dorks ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/gizmo-dorks",
+    "type": "brand-material",
+    "title": "Gizmo Dorks PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hips/gizmo-dorks",
+    "type": "brand-material",
+    "title": "Gizmo Dorks HIPS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/gizmo-dorks",
+    "type": "brand-material",
+    "title": "Gizmo Dorks PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/gizmo-dorks",
+    "type": "brand-material",
+    "title": "Gizmo Dorks TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk/gizmo-dorks",
+    "type": "brand-material",
+    "title": "Gizmo Dorks PLA-SILK Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/silk-pla/gizmo-dorks",
+    "type": "brand-material",
+    "title": "Gizmo Dorks Silk PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/nylon/gizmo-dorks",
+    "type": "brand-material",
+    "title": "Gizmo Dorks NYLON Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/gst3d",
+    "type": "brand-material",
+    "title": "GST3D PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/gst3d",
+    "type": "brand-material",
+    "title": "GST3D PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/gst3d",
+    "type": "brand-material",
+    "title": "GST3D TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/hatchbox",
+    "type": "brand-material",
+    "title": "Hatchbox TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/hatchbox",
+    "type": "brand-material",
+    "title": "Hatchbox PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/hatchbox",
+    "type": "brand-material",
+    "title": "Hatchbox PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/hatchbox",
+    "type": "brand-material",
+    "title": "Hatchbox ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-hs/hatchbox",
+    "type": "brand-material",
+    "title": "Hatchbox PETG-HS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/hatchbox",
+    "type": "brand-material",
+    "title": "Hatchbox TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/matte-pla/hatchbox",
+    "type": "brand-material",
+    "title": "Hatchbox Matte PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/ic3d-printers",
+    "type": "brand-material",
+    "title": "IC3D Printers PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/ic3d-printers",
+    "type": "brand-material",
+    "title": "IC3D Printers ABS+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/ic3d-printers",
+    "type": "brand-material",
+    "title": "IC3D Printers PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/rpetg/ic3d-printers",
+    "type": "brand-material",
+    "title": "IC3D Printers rPETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/inland",
+    "type": "brand-material",
+    "title": "Inland PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-glow/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon PLA-Glow Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa-cf/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon PA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon PLA-SILK Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-matte/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon PLA-MATTE Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/nylon/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon NYLON Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/silk-pla/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon Silk PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/matte-pla/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon Matte PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hspla/kingroon",
+    "type": "brand-material",
+    "title": "Kingroon HSPLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/matter3d",
+    "type": "brand-material",
+    "title": "Matter3D PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/matter3d",
+    "type": "brand-material",
+    "title": "Matter3D PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/matter3d",
+    "type": "brand-material",
+    "title": "Matter3D PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/matter3d",
+    "type": "brand-material",
+    "title": "Matter3D ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/matter3d",
+    "type": "brand-material",
+    "title": "Matter3D ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-75d/ninjatek",
+    "type": "brand-material",
+    "title": "NinjaTek TPU-75D Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/ninjatek",
+    "type": "brand-material",
+    "title": "NinjaTek TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-75a/ninjatek",
+    "type": "brand-material",
+    "title": "NinjaTek TPU-75A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/ninjatek",
+    "type": "brand-material",
+    "title": "NinjaTek PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/ninjatek",
+    "type": "brand-material",
+    "title": "NinjaTek PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-85a/ninjatek",
+    "type": "brand-material",
+    "title": "NinjaTek TPU-85A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/numakers",
+    "type": "brand-material",
+    "title": "Numakers ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/numakers",
+    "type": "brand-material",
+    "title": "Numakers ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-hs/numakers",
+    "type": "brand-material",
+    "title": "Numakers PETG-HS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-translucent/numakers",
+    "type": "brand-material",
+    "title": "Numakers PETG-TRANSLUCENT Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/numakers",
+    "type": "brand-material",
+    "title": "Numakers PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-glow/numakers",
+    "type": "brand-material",
+    "title": "Numakers PLA-GLOW Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-matte/numakers",
+    "type": "brand-material",
+    "title": "Numakers PLA-MATTE Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk/numakers",
+    "type": "brand-material",
+    "title": "Numakers PLA-SILK Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-starlight/numakers",
+    "type": "brand-material",
+    "title": "Numakers PLA-STARLIGHT Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/numakers",
+    "type": "brand-material",
+    "title": "Numakers PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/overture",
+    "type": "brand-material",
+    "title": "Overture PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/overture",
+    "type": "brand-material",
+    "title": "Overture PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/overture",
+    "type": "brand-material",
+    "title": "Overture TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/paramount-3d",
+    "type": "brand-material",
+    "title": "Paramount 3D ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/paramount-3d",
+    "type": "brand-material",
+    "title": "Paramount 3D ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/flexpla/paramount-3d",
+    "type": "brand-material",
+    "title": "Paramount 3D FlexPLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/paramount-3d",
+    "type": "brand-material",
+    "title": "Paramount 3D PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/paramount-3d",
+    "type": "brand-material",
+    "title": "Paramount 3D PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/paramount-3d",
+    "type": "brand-material",
+    "title": "Paramount 3D TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-90a/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker TPU-90A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/lw-pla/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker LW-PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc-abs/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker PC-ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc-pbt/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker PC-PBT Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker ABS+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/support/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker Support Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa-cf/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker ASA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pet-gf/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker PET-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pvb/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker PVB Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/matte-pla/polymaker",
+    "type": "brand-material",
+    "title": "Polymaker Matte PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/other/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid Other Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pei/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid PEI Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-wood/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid PLA-Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/resin/printed-solid",
+    "type": "brand-material",
+    "title": "Printed Solid RESIN Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/htpla/proto-pasta",
+    "type": "brand-material",
+    "title": "Proto-Pasta HTPLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/htpla-cf/proto-pasta",
+    "type": "brand-material",
+    "title": "Proto-Pasta HTPLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/proto-pasta",
+    "type": "brand-material",
+    "title": "Proto-Pasta PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/proto-pasta",
+    "type": "brand-material",
+    "title": "Proto-Pasta PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-conductive/proto-pasta",
+    "type": "brand-material",
+    "title": "Proto-Pasta PLA-Conductive Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/prusament",
+    "type": "brand-material",
+    "title": "Prusament ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/prusament",
+    "type": "brand-material",
+    "title": "Prusament PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/prusament",
+    "type": "brand-material",
+    "title": "Prusament PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/prusament",
+    "type": "brand-material",
+    "title": "Prusament PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/rpla/prusament",
+    "type": "brand-material",
+    "title": "Prusament rPLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/woodfill/prusament",
+    "type": "brand-material",
+    "title": "Prusament Woodfill Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-galaxy/prusament",
+    "type": "brand-material",
+    "title": "Prusament PLA Galaxy Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic ABS+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hips/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic HIPS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc-pbt/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic PC+PBT Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-98a/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic TPU-98A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/nylon/push-plastic",
+    "type": "brand-material",
+    "title": "Push Plastic NYLON Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/qidi",
+    "type": "brand-material",
+    "title": "QIDI PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/qidi",
+    "type": "brand-material",
+    "title": "QIDI PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/qidi",
+    "type": "brand-material",
+    "title": "QIDI ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/qidi",
+    "type": "brand-material",
+    "title": "QIDI ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs-gf/qidi",
+    "type": "brand-material",
+    "title": "QIDI ABS-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/qidi",
+    "type": "brand-material",
+    "title": "QIDI PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/recreus",
+    "type": "brand-material",
+    "title": "Recreus TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/recreus",
+    "type": "brand-material",
+    "title": "Recreus PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/recreus",
+    "type": "brand-material",
+    "title": "Recreus PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-60a/recreus",
+    "type": "brand-material",
+    "title": "Recreus TPU-60A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-70a/recreus",
+    "type": "brand-material",
+    "title": "Recreus TPU-70A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-82a/recreus",
+    "type": "brand-material",
+    "title": "Recreus TPU-82A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/recreus",
+    "type": "brand-material",
+    "title": "Recreus TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a-foam/recreus",
+    "type": "brand-material",
+    "title": "Recreus TPU-95A-FOAM Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-foam/recreus",
+    "type": "brand-material",
+    "title": "Recreus TPU-FOAM Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/sainsmart",
+    "type": "brand-material",
+    "title": "SainSmart TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/sainsmart",
+    "type": "brand-material",
+    "title": "SainSmart PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/sainsmart",
+    "type": "brand-material",
+    "title": "SainSmart PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/sainsmart",
+    "type": "brand-material",
+    "title": "SainSmart PETG+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/other/sainsmart",
+    "type": "brand-material",
+    "title": "SainSmart Other Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/siraya-tech",
+    "type": "brand-material",
+    "title": "Siraya Tech PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/siraya-tech",
+    "type": "brand-material",
+    "title": "Siraya Tech TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs-gf/siraya-tech",
+    "type": "brand-material",
+    "title": "Siraya Tech ABS-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa-gf/siraya-tech",
+    "type": "brand-material",
+    "title": "Siraya Tech ASA-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pet-gf/siraya-tech",
+    "type": "brand-material",
+    "title": "Siraya Tech PET-GF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-cf/siraya-tech",
+    "type": "brand-material",
+    "title": "Siraya Tech PETG-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-85a/siraya-tech",
+    "type": "brand-material",
+    "title": "Siraya Tech TPU-85A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-foam/siraya-tech",
+    "type": "brand-material",
+    "title": "Siraya Tech TPU-FOAM Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/sovol",
+    "type": "brand-material",
+    "title": "Sovol PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/sovol",
+    "type": "brand-material",
+    "title": "Sovol PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk/sovol",
+    "type": "brand-material",
+    "title": "Sovol PLA-Silk Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa-275/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments ASA 275 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa-x-cf10/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments ASA-X CF10 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa-x-gf10/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments ASA-X GF10 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/flameguard-asa-275/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments FlameGuard ASA 275 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/flameguard-pla/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments FlameGuard PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/nylon-pa6-low-warp/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments Nylon PA6 Low Warp Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pastello-pla/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments Pastello PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc-275/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PC-275 Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg-premium/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PCTG Premium Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pet-g-glow-in-the-dark/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PET-G Glow in the Dark Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pet-g-premium/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PET-G Premium Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pet-g-premium-high-speed/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PET-G Premium High Speed Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-crystal/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Crystal Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-glitter/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Glitter Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-glow-in-the-dark/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Glow in the Dark Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-magic-silk/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Magic SILK Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-matte/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Matte Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-metal/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Metal Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-premium/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Premium Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-pro/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Pro Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA SILK Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-silk-rainbow/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA SILK Rainbow Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-stone-age/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Stone Age Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/premium-pla-high-speed/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments Premium PLA High Speed Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/r-pla/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments r-PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/rpetg/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments rPETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/s-flex-85a/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments S-Flex 85A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/s-flex-90a/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments S-Flex 90A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/s-flex-98a/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments S-Flex 98A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/safeguard-pla/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments SafeGuard PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/smart-abs/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments Smart ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/the-filament-petg/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments The Filament PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/the-filament-petg-cf/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments The Filament PETG CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/the-filament-pla/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments The Filament PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/the-filament-pla-cf/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments The Filament PLA CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/the-filament-pla-hs/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments The Filament PLA HS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/wood/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments Wood Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/nylon/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments NYLON Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pctg/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PCTG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-meta/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PLA Meta Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg-cf/spectrum-filaments",
+    "type": "brand-material",
+    "title": "Spectrum Filaments PETG-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/sunlu",
+    "type": "brand-material",
+    "title": "Sunlu PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/sunlu",
+    "type": "brand-material",
+    "title": "Sunlu PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/easy-abs/sunlu",
+    "type": "brand-material",
+    "title": "Sunlu Easy ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-glow/sunlu",
+    "type": "brand-material",
+    "title": "Sunlu PLA Glow Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/sunlu",
+    "type": "brand-material",
+    "title": "Sunlu TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-galaxy/sunlu",
+    "type": "brand-material",
+    "title": "Sunlu PLA Galaxy Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-matte-dual-color/sunlu",
+    "type": "brand-material",
+    "title": "Sunlu PLA Matte Dual-Color Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/taulman3d",
+    "type": "brand-material",
+    "title": "Taulman3D PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pet/taulman3d",
+    "type": "brand-material",
+    "title": "Taulman3D PET Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/taulman3d",
+    "type": "brand-material",
+    "title": "Taulman3D PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs-hs/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments ABS-HS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/hips/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments HIPS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa-cf/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments PA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpa/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments TPA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments TPU Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pp/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments PP Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-flex/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments PLA-Flex Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc-abs/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments PC-ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-hs/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments PLA-HS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpe-e/treed-filaments",
+    "type": "brand-material",
+    "title": "TreeD Filaments TPE-E Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker ABS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/abs-r/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker ABS-R Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/asa/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker ASA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pa/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker PA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/cpe/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker CPE Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pc/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker PC Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/ultimaker",
+    "type": "brand-material",
+    "title": "Ultimaker TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/voxelpla",
+    "type": "brand-material",
+    "title": "VoxelPLA PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/voxelpla",
+    "type": "brand-material",
+    "title": "VoxelPLA PLA+ Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/petg/yousu",
+    "type": "brand-material",
+    "title": "Yousu PETG Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/yousu",
+    "type": "brand-material",
+    "title": "Yousu PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/silk-pla/yousu",
+    "type": "brand-material",
+    "title": "Yousu Silk PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla/ziro",
+    "type": "brand-material",
+    "title": "Ziro PLA Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-cf/ziro",
+    "type": "brand-material",
+    "title": "Ziro PLA-CF Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/tpu-95a/ziro",
+    "type": "brand-material",
+    "title": "Ziro TPU-95A Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/filaments/pla-hs/ziro",
+    "type": "brand-material",
+    "title": "Ziro PLA-HS Filament — Prices, Specs & Reviews",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla",
+    "type": "best-material",
+    "title": "Best PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg",
+    "type": "best-material",
+    "title": "Best PETG Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla",
+    "type": "best-material",
+    "title": "Best PLA+ Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs",
+    "type": "best-material",
+    "title": "Best ABS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu",
+    "type": "best-material",
+    "title": "Best TPU Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa",
+    "type": "best-material",
+    "title": "Best ASA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pctg",
+    "type": "best-material",
+    "title": "Best PCTG Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-htpla",
+    "type": "best-material",
+    "title": "Best HTPLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg",
+    "type": "best-material",
+    "title": "Best PETG+ Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-95a",
+    "type": "best-material",
+    "title": "Best TPU-95A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pc",
+    "type": "best-material",
+    "title": "Best PC Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-matte-pla",
+    "type": "best-material",
+    "title": "Best Matte PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pa",
+    "type": "best-material",
+    "title": "Best PA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-cf",
+    "type": "best-material",
+    "title": "Best PLA-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-wood",
+    "type": "best-material",
+    "title": "Best PLA-Wood Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-silk-pla",
+    "type": "best-material",
+    "title": "Best Silk PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-premium",
+    "type": "best-material",
+    "title": "Best PLA Premium Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs",
+    "type": "best-material",
+    "title": "Best ABS+ Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pet-g-premium",
+    "type": "best-material",
+    "title": "Best PET-G Premium Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-cf",
+    "type": "best-material",
+    "title": "Best PETG-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-hips",
+    "type": "best-material",
+    "title": "Best HIPS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-silk",
+    "type": "best-material",
+    "title": "Best PLA-SILK Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-premium-pla-high-speed",
+    "type": "best-material",
+    "title": "Best Premium PLA High Speed Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pp",
+    "type": "best-material",
+    "title": "Best PP Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-magic-silk",
+    "type": "best-material",
+    "title": "Best PLA Magic SILK Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-other",
+    "type": "best-material",
+    "title": "Best Other Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-resin",
+    "type": "best-material",
+    "title": "Best RESIN Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-cf",
+    "type": "best-material",
+    "title": "Best ASA-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-98a",
+    "type": "best-material",
+    "title": "Best TPU-98A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-silk",
+    "type": "best-material",
+    "title": "Best PLA SILK Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-cpe",
+    "type": "best-material",
+    "title": "Best CPE Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-the-filament-pla",
+    "type": "best-material",
+    "title": "Best The Filament PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-nylon",
+    "type": "best-material",
+    "title": "Best NYLON Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-hs",
+    "type": "best-material",
+    "title": "Best PETG-HS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-the-filament-petg",
+    "type": "best-material",
+    "title": "Best The Filament PETG Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-40d",
+    "type": "best-material",
+    "title": "Best TPU-40D Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-85a",
+    "type": "best-material",
+    "title": "Best TPU-85A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-275",
+    "type": "best-material",
+    "title": "Best ASA 275 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-matte",
+    "type": "best-material",
+    "title": "Best PLA-MATTE Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-high-speed-pro",
+    "type": "best-material",
+    "title": "Best PLA High Speed Pro Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pa-cf",
+    "type": "best-material",
+    "title": "Best PA-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-the-filament-pla-hs",
+    "type": "best-material",
+    "title": "Best The Filament PLA HS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-hs",
+    "type": "best-material",
+    "title": "Best PLA-HS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-90a",
+    "type": "best-material",
+    "title": "Best TPU-90A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pastello-pla",
+    "type": "best-material",
+    "title": "Best Pastello PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pc-abs",
+    "type": "best-material",
+    "title": "Best PC-ABS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-rpetg",
+    "type": "best-material",
+    "title": "Best rPETG Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-glow",
+    "type": "best-material",
+    "title": "Best PLA-Glow Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-wood-pla",
+    "type": "best-material",
+    "title": "Best Wood PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-copolyester",
+    "type": "best-material",
+    "title": "Best Copolyester Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pa6-gf",
+    "type": "best-material",
+    "title": "Best PA6-GF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-gf",
+    "type": "best-material",
+    "title": "Best ABS-GF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pa12",
+    "type": "best-material",
+    "title": "Best PA12 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-filament-with-spool",
+    "type": "best-material",
+    "title": "Best FILAMENT WITH SPOOL Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-refill",
+    "type": "best-material",
+    "title": "Best REFILL Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-glitter",
+    "type": "best-material",
+    "title": "Best PLA Glitter Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-pro",
+    "type": "best-material",
+    "title": "Best PLA Pro Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pvb",
+    "type": "best-material",
+    "title": "Best PVB Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-silk",
+    "type": "best-material",
+    "title": "Best PLA-Silk Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pet",
+    "type": "best-material",
+    "title": "Best PET Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pctg-premium",
+    "type": "best-material",
+    "title": "Best PCTG Premium Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pva",
+    "type": "best-material",
+    "title": "Best PVA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-30d",
+    "type": "best-material",
+    "title": "Best TPU-30D Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-82a",
+    "type": "best-material",
+    "title": "Best TPU-82A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-paht-cf",
+    "type": "best-material",
+    "title": "Best PAHT-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-lw-pla",
+    "type": "best-material",
+    "title": "Best LW-PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-galaxy",
+    "type": "best-material",
+    "title": "Best PLA Galaxy Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-meta",
+    "type": "best-material",
+    "title": "Best PLA Meta Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-bio",
+    "type": "best-material",
+    "title": "Best BIO Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-the-filament-pla-cf",
+    "type": "best-material",
+    "title": "Best The Filament PLA CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-peba",
+    "type": "best-material",
+    "title": "Best PEBA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pet-cf",
+    "type": "best-material",
+    "title": "Best PET-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-metal",
+    "type": "best-material",
+    "title": "Best PLA-Metal Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-92a",
+    "type": "best-material",
+    "title": "Best TPU-92A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pet-gf",
+    "type": "best-material",
+    "title": "Best PET-GF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-smart-abs",
+    "type": "best-material",
+    "title": "Best Smart ABS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pei",
+    "type": "best-material",
+    "title": "Best PEI Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-rapid-pla",
+    "type": "best-material",
+    "title": "Best RAPID PLA+ Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-gf",
+    "type": "best-material",
+    "title": "Best ASA-GF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-rpla",
+    "type": "best-material",
+    "title": "Best rPLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-hspla",
+    "type": "best-material",
+    "title": "Best HSPLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-silk-rainbow",
+    "type": "best-material",
+    "title": "Best PLA SILK Rainbow Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-the-filament-petg-cf",
+    "type": "best-material",
+    "title": "Best The Filament PETG CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-rapid-pla-plus",
+    "type": "best-material",
+    "title": "Best RAPID PLA PLUS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-cf",
+    "type": "best-material",
+    "title": "Best ABS-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-foam",
+    "type": "best-material",
+    "title": "Best TPU-FOAM Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-nylon-pa6-low-warp",
+    "type": "best-material",
+    "title": "Best Nylon PA6 Low Warp Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pc-275",
+    "type": "best-material",
+    "title": "Best PC-275 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-silk",
+    "type": "best-material",
+    "title": "Best PLA Silk Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-75d",
+    "type": "best-material",
+    "title": "Best TPU-75D Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-translucent",
+    "type": "best-material",
+    "title": "Best PETG-TRANSLUCENT Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pc-pbt",
+    "type": "best-material",
+    "title": "Best PC+PBT Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pps",
+    "type": "best-material",
+    "title": "Best PPS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pei-9085",
+    "type": "best-material",
+    "title": "Best PEI-9085 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-marble",
+    "type": "best-material",
+    "title": "Best PLA-Marble Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pc-pbt",
+    "type": "best-material",
+    "title": "Best PC-PBT Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpc",
+    "type": "best-material",
+    "title": "Best TPC Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-flexpla",
+    "type": "best-material",
+    "title": "Best FlexPLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pet-g-premium-high-speed",
+    "type": "best-material",
+    "title": "Best PET-G Premium High Speed Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-matte",
+    "type": "best-material",
+    "title": "Best PLA Matte Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-s-flex-90a",
+    "type": "best-material",
+    "title": "Best S-Flex 90A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-s-flex-98a",
+    "type": "best-material",
+    "title": "Best S-Flex 98A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-fr-pc",
+    "type": "best-material",
+    "title": "Best FR-PC Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-stone",
+    "type": "best-material",
+    "title": "Best PLA-Stone Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-gf",
+    "type": "best-material",
+    "title": "Best PETG-GF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-r-pla",
+    "type": "best-material",
+    "title": "Best r-PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-s-flex-85a",
+    "type": "best-material",
+    "title": "Best S-Flex 85A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-peek",
+    "type": "best-material",
+    "title": "Best PEEK Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pekk",
+    "type": "best-material",
+    "title": "Best PEKK Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-70a",
+    "type": "best-material",
+    "title": "Best TPU-70A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-flameguard-asa-275",
+    "type": "best-material",
+    "title": "Best FlameGuard ASA 275 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-crystal",
+    "type": "best-material",
+    "title": "Best PLA Crystal Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-metal",
+    "type": "best-material",
+    "title": "Best PLA Metal Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-wood",
+    "type": "best-material",
+    "title": "Best Wood Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-flex",
+    "type": "best-material",
+    "title": "Best PLA-Flex Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pei-1010",
+    "type": "best-material",
+    "title": "Best PEI-1010 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-support",
+    "type": "best-material",
+    "title": "Best Support Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpe",
+    "type": "best-material",
+    "title": "Best TPE Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-wood",
+    "type": "best-material",
+    "title": "Best PLA-WOOD Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-88a",
+    "type": "best-material",
+    "title": "Best TPU-88A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpe-90a",
+    "type": "best-material",
+    "title": "Best TPE-90A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpe-96a",
+    "type": "best-material",
+    "title": "Best TPE-96A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pa-gf",
+    "type": "best-material",
+    "title": "Best PA-GF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-glow",
+    "type": "best-material",
+    "title": "Best PLA-GLOW Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-starlight",
+    "type": "best-material",
+    "title": "Best PLA-STARLIGHT Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-htpla-cf",
+    "type": "best-material",
+    "title": "Best HTPLA-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-flameguard-pla",
+    "type": "best-material",
+    "title": "Best FlameGuard PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-safeguard-pla",
+    "type": "best-material",
+    "title": "Best SafeGuard PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpa",
+    "type": "best-material",
+    "title": "Best TPA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-esd-pei-1010",
+    "type": "best-material",
+    "title": "Best ESD-PEI-1010 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-unknown",
+    "type": "best-material",
+    "title": "Best Unknown Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-ppa-gf",
+    "type": "best-material",
+    "title": "Best PPA-GF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-lw-pla-ht",
+    "type": "best-material",
+    "title": "Best LW-PLA-HT Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pa12-cf",
+    "type": "best-material",
+    "title": "Best PA12-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pp-cf",
+    "type": "best-material",
+    "title": "Best PP-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-conductive",
+    "type": "best-material",
+    "title": "Best PLA-Conductive Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-75a",
+    "type": "best-material",
+    "title": "Best TPU-75A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-95a-foam",
+    "type": "best-material",
+    "title": "Best TPU-95A-FOAM Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-x-gf10",
+    "type": "best-material",
+    "title": "Best ASA-X GF10 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pet-g-glow-in-the-dark",
+    "type": "best-material",
+    "title": "Best PET-G Glow in the Dark Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-glow-in-the-dark",
+    "type": "best-material",
+    "title": "Best PLA Glow in the Dark Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-stone-age",
+    "type": "best-material",
+    "title": "Best PLA Stone Age Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-easy-abs",
+    "type": "best-material",
+    "title": "Best Easy ABS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-matte-dual-color",
+    "type": "best-material",
+    "title": "Best PLA Matte Dual-Color Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpe-e",
+    "type": "best-material",
+    "title": "Best TPE-E Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-hemp-pla",
+    "type": "best-material",
+    "title": "Best Hemp-PLA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pa6-cf",
+    "type": "best-material",
+    "title": "Best PA6-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pc-cf",
+    "type": "best-material",
+    "title": "Best PC-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-tough",
+    "type": "best-material",
+    "title": "Best PLA-Tough Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pp-gf",
+    "type": "best-material",
+    "title": "Best PP-GF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-ppsu",
+    "type": "best-material",
+    "title": "Best PPSU Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-psu",
+    "type": "best-material",
+    "title": "Best PSU Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-ppa",
+    "type": "best-material",
+    "title": "Best PPA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pha",
+    "type": "best-material",
+    "title": "Best PHA Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-economy",
+    "type": "best-material",
+    "title": "Best PETG Economy Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-economy",
+    "type": "best-material",
+    "title": "Best PLA Economy Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-ppa-cf",
+    "type": "best-material",
+    "title": "Best PPA-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-rapid-petg",
+    "type": "best-material",
+    "title": "Best RAPID PETG Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-rpet",
+    "type": "best-material",
+    "title": "Best rPET Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pps-cf",
+    "type": "best-material",
+    "title": "Best PPS-CF Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-woodfill",
+    "type": "best-material",
+    "title": "Best Woodfill Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-60a",
+    "type": "best-material",
+    "title": "Best TPU-60A Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-x-cf10",
+    "type": "best-material",
+    "title": "Best ASA-X CF10 Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-glow",
+    "type": "best-material",
+    "title": "Best PLA Glow Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-hs",
+    "type": "best-material",
+    "title": "Best ABS-HS Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-r",
+    "type": "best-material",
+    "title": "Best ABS-R Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-cpe",
+    "type": "best-material",
+    "title": "Best CPE+ Filament 2026 — Top Picks & Prices",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-under-15",
+    "type": "price-target",
+    "title": "Best PLA Filament Under $15 — 701 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-under-20",
+    "type": "price-target",
+    "title": "Best PLA Filament Under $20 — 1471 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-under-25",
+    "type": "price-target",
+    "title": "Best PLA Filament Under $25 — 2621 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-under-30",
+    "type": "price-target",
+    "title": "Best PLA Filament Under $30 — 3930 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-pla-under-50",
+    "type": "price-target",
+    "title": "Best PLA Filament Under $50 — 5099 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-under-15",
+    "type": "price-target",
+    "title": "Best PETG Filament Under $15 — 207 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-under-20",
+    "type": "price-target",
+    "title": "Best PETG Filament Under $20 — 488 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-under-25",
+    "type": "price-target",
+    "title": "Best PETG Filament Under $25 — 842 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-under-30",
+    "type": "price-target",
+    "title": "Best PETG Filament Under $30 — 1119 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-petg-under-50",
+    "type": "price-target",
+    "title": "Best PETG Filament Under $50 — 1302 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-under-15",
+    "type": "price-target",
+    "title": "Best ABS Filament Under $15 — 39 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-under-20",
+    "type": "price-target",
+    "title": "Best ABS Filament Under $20 — 89 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-under-25",
+    "type": "price-target",
+    "title": "Best ABS Filament Under $25 — 334 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-under-30",
+    "type": "price-target",
+    "title": "Best ABS Filament Under $30 — 531 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-abs-under-50",
+    "type": "price-target",
+    "title": "Best ABS Filament Under $50 — 722 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-under-20",
+    "type": "price-target",
+    "title": "Best TPU Filament Under $20 — 54 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-under-25",
+    "type": "price-target",
+    "title": "Best TPU Filament Under $25 — 99 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-under-30",
+    "type": "price-target",
+    "title": "Best TPU Filament Under $30 — 192 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-tpu-under-50",
+    "type": "price-target",
+    "title": "Best TPU Filament Under $50 — 398 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-under-15",
+    "type": "price-target",
+    "title": "Best ASA Filament Under $15 — 10 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-under-20",
+    "type": "price-target",
+    "title": "Best ASA Filament Under $20 — 22 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-under-25",
+    "type": "price-target",
+    "title": "Best ASA Filament Under $25 — 111 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-under-30",
+    "type": "price-target",
+    "title": "Best ASA Filament Under $30 — 305 Options Compared",
+    "lastmod": "2026-04-21"
+  },
+  {
+    "url": "/best-asa-under-50",
+    "type": "price-target",
+    "title": "Best ASA Filament Under $50 — 442 Options Compared",
+    "lastmod": "2026-04-21"
+  }
+]

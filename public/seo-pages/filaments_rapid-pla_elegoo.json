@@ -1,0 +1,65 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/rapid-pla/elegoo",
+  "title": "Elegoo RAPID PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 12 Elegoo RAPID PLA+ filaments. Prices from $38.99 to $39.99. 12 colors available. 1 with HueForge TD values.",
+  "h1": "Elegoo RAPID PLA+ Filament",
+  "keywords": [
+    "Elegoo",
+    "RAPID PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "RAPID PLA+",
+  "vendor": "Elegoo",
+  "count": 12,
+  "min_price": 38.99,
+  "max_price": 39.99,
+  "color_count": 12,
+  "has_td": 1,
+  "filament_ids": [
+    "d4159d89-aed2-4063-8f20-7c78afd4cf78",
+    "8af845a6-bcba-48ae-ae88-7c83180ed469",
+    "e91acb0d-eb8c-42e8-aba8-8fd6abe50fcc",
+    "8f5e120c-0274-4547-aa28-32129b7bc910",
+    "eb4d6b37-8bf1-44c3-ba86-8d05a4581723",
+    "169f7fcb-9116-4d30-8132-b42f335a1d88",
+    "1e696d06-14d9-446c-947f-d4c99898033d",
+    "ddc172b1-f71e-42a4-8a16-aa6b3d31d6b9",
+    "22597f3f-b4e5-41c0-b790-51d90e27caea",
+    "832900bf-85c6-4a0c-b8f8-8176d79678fd",
+    "9df15bba-8164-4b08-b3bb-52184019db87",
+    "ed8bb818-26ca-41d4-9f3f-d7908701d836"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo RAPID PLA+ Filament",
+    "description": "Compare 12 Elegoo RAPID PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/rapid-pla/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "RAPID PLA+",
+          "item": "https://filascope.com/filaments/rapid-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

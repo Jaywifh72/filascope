@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-metal/eryone",
+  "title": "Eryone PLA-Metal Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Eryone PLA-Metal filaments. Prices from $26.99 to $49.99. 4 colors available.",
+  "h1": "Eryone PLA-Metal Filament",
+  "keywords": [
+    "Eryone",
+    "PLA-Metal",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Metal",
+  "vendor": "Eryone",
+  "count": 4,
+  "min_price": 26.99,
+  "max_price": 49.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "317e3b5f-8d16-4469-b877-c5a9d7ec6f16",
+    "4ecd02a1-2f38-4e2d-9fb1-c4da83d46dc6",
+    "1b95234c-d984-4ef1-b792-c226b6294db5",
+    "3fd75b83-5666-46e6-a8d2-9d0e12e0dadd"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Eryone PLA-Metal Filament",
+    "description": "Compare 4 Eryone PLA-Metal filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-metal/eryone",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Metal",
+          "item": "https://filascope.com/filaments/pla-metal"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Eryone"
+        }
+      ]
+    }
+  }
+}

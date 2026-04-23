@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-cf/ziro",
+  "title": "Ziro PLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Ziro PLA-CF filaments. Prices from $29.99 to $29.99. 4 colors available.",
+  "h1": "Ziro PLA-CF Filament",
+  "keywords": [
+    "Ziro",
+    "PLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-CF",
+  "vendor": "Ziro",
+  "count": 4,
+  "min_price": 29.99,
+  "max_price": 29.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "bbc37a70-1108-49fd-a65c-5741d7299577",
+    "137a5cbc-854f-4c71-9b2a-0d7f60442692",
+    "9325ec3a-9c7c-4dc5-8be9-44b7febefb22",
+    "53826662-a2f0-480c-974f-5344df93d36b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Ziro PLA-CF Filament",
+    "description": "Compare 4 Ziro PLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-cf/ziro",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-CF",
+          "item": "https://filascope.com/filaments/pla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Ziro"
+        }
+      ]
+    }
+  }
+}

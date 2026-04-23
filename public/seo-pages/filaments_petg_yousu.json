@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/yousu",
+  "title": "Yousu PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Yousu PETG filaments. Prices from $31.99 to $31.99. 0 colors available.",
+  "h1": "Yousu PETG Filament",
+  "keywords": [
+    "Yousu",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Yousu",
+  "count": 3,
+  "min_price": 31.99,
+  "max_price": 31.99,
+  "color_count": 0,
+  "has_td": 0,
+  "filament_ids": [
+    "bcf37b01-825c-4e20-941e-924a6c6a5148",
+    "6aa487a5-edd0-4d7e-aaab-bfa4ee220731",
+    "4588c236-9fd0-4b05-ab14-76a4487b82bb"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Yousu PETG Filament",
+    "description": "Compare 3 Yousu PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/yousu",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Yousu"
+        }
+      ]
+    }
+  }
+}

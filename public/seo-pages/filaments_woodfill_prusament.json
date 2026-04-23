@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/woodfill/prusament",
+  "title": "Prusament Woodfill Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Prusament Woodfill filaments. Prices from $43.19 to $43.19. 2 colors available. 3 with HueForge TD values.",
+  "h1": "Prusament Woodfill Filament",
+  "keywords": [
+    "Prusament",
+    "Woodfill",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Woodfill",
+  "vendor": "Prusament",
+  "count": 3,
+  "min_price": 43.19,
+  "max_price": 43.19,
+  "color_count": 2,
+  "has_td": 3,
+  "filament_ids": [
+    "8a7e41f4-728c-4d90-851a-c346017391e6",
+    "365d09b5-4fa0-448d-bb0e-85502df77e0b",
+    "d4f23083-317e-40d7-b6f3-a164a96364b7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Prusament Woodfill Filament",
+    "description": "Compare 3 Prusament Woodfill filaments on FilaScope",
+    "url": "https://filascope.com/filaments/woodfill/prusament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Woodfill",
+          "item": "https://filascope.com/filaments/woodfill"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Prusament"
+        }
+      ]
+    }
+  }
+}

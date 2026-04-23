@@ -1,0 +1,72 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/flsun",
+  "title": "FLSUN PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 19 FLSUN PLA filaments. Prices from $16.99 to $169.99. 6 colors available. 19 with HueForge TD values.",
+  "h1": "FLSUN PLA Filament",
+  "keywords": [
+    "FLSUN",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "FLSUN",
+  "count": 19,
+  "min_price": 16.99,
+  "max_price": 169.99,
+  "color_count": 6,
+  "has_td": 19,
+  "filament_ids": [
+    "181538b4-36b5-4232-8ac1-177a254d902e",
+    "1b1eec20-1685-4022-9bd6-b472d39d69df",
+    "1e3cb2f4-c1c2-4939-b5b9-16f91c058a75",
+    "4262be7f-7280-4f2f-8d89-44f3b7a5fa7b",
+    "4478c457-a472-4c6a-8d8d-68d7582d0a65",
+    "65efafa1-c630-4619-92a5-12a116570f8e",
+    "88223f99-bcaf-46ce-9eb4-798953c2fe22",
+    "a760f57d-117f-45e9-9a5d-197266cce9fa",
+    "a9b90d0c-1226-4cab-a156-b0774e2c3121",
+    "cef05bee-75b2-4410-be43-86f4319c9b69",
+    "3fdf930a-7dd2-427a-ab65-7f3a026de08b",
+    "fdc28358-c32f-4cb9-8b59-3383adc2e640",
+    "493f7c91-6532-4737-8106-11de05e163c3",
+    "a15eded3-01f9-44cd-8180-f42c77813550",
+    "04d2a8f9-1a63-424c-936a-2fff93f5b116",
+    "25cf1ddb-69a0-4ff4-8bfc-38be345e54c6",
+    "3d9cc2cf-9919-4f6b-ab82-e3a7868eb842",
+    "f3e02e11-c944-4fe5-a165-b383246f75b9",
+    "5e1843c6-b958-4b7d-bd23-0e538b7fc11a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FLSUN PLA Filament",
+    "description": "Compare 19 FLSUN PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/flsun",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FLSUN"
+        }
+      ]
+    }
+  }
+}

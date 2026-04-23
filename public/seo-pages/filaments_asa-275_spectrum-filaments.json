@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa-275/spectrum-filaments",
+  "title": "Spectrum Filaments ASA 275 Filament — Prices, Specs & Reviews",
+  "description": "Compare 25 Spectrum Filaments ASA 275 filaments. Prices from $42.00 to $96.00. 13 colors available.",
+  "h1": "Spectrum Filaments ASA 275 Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "ASA 275",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA 275",
+  "vendor": "Spectrum Filaments",
+  "count": 25,
+  "min_price": 42,
+  "max_price": 96,
+  "color_count": 13,
+  "has_td": 0,
+  "filament_ids": [
+    "ba85624e-ad20-4c79-be8a-b58311fde17c",
+    "81c8a7d4-c1c7-44bf-8c56-3251b6d61932",
+    "9f45d604-c2bc-4213-a870-5c1ebf68109a",
+    "8d0f4525-0701-4dd1-8784-e5aa6347cdc5",
+    "b572fa6b-3818-491c-88a1-a5de2a6287e6",
+    "fac17618-5910-46eb-87f7-d84675c4d22a",
+    "1272c35a-9f3e-4726-b382-64313961db5c",
+    "4de1a031-3773-4c5e-99fd-d429fcc38095",
+    "b5f2274c-5f6b-4f72-938b-44a594e624db",
+    "a79442ba-b000-4ed2-9641-26e09857727c",
+    "d38fd966-d1fd-428e-8cb7-ff51936bf780",
+    "4bae8c46-781e-4d39-8eec-d148e4484ada",
+    "f198f3fa-2c13-487c-aaaa-2c9a079e782a",
+    "6f816fc9-952a-4f72-8608-0665a42fc578",
+    "ed600aa1-186b-47c4-baa7-0c57296d11ab",
+    "e84caead-1813-46a4-881e-71c1aacce0d2",
+    "15498978-a229-4efa-ad58-19e14a7ed980",
+    "7fc9ca2c-0bd8-41ac-8659-ba0706371a6a",
+    "2056fb32-6aef-45e7-a394-aac83f455ed8",
+    "a5678293-60dc-44a5-a279-ba2a02c7c68c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments ASA 275 Filament",
+    "description": "Compare 25 Spectrum Filaments ASA 275 filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa-275/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA 275",
+          "item": "https://filascope.com/filaments/asa-275"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

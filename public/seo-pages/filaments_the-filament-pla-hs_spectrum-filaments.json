@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/the-filament-pla-hs/spectrum-filaments",
+  "title": "Spectrum Filaments The Filament PLA HS Filament — Prices, Specs & Reviews",
+  "description": "Compare 24 Spectrum Filaments The Filament PLA HS filaments. Prices from $25.00 to $26.00. 12 colors available.",
+  "h1": "Spectrum Filaments The Filament PLA HS Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "The Filament PLA HS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "The Filament PLA HS",
+  "vendor": "Spectrum Filaments",
+  "count": 24,
+  "min_price": 25,
+  "max_price": 26,
+  "color_count": 12,
+  "has_td": 0,
+  "filament_ids": [
+    "65d9cff1-6fd6-4346-89c3-b5eadc53e612",
+    "2cf6f3a0-ffa6-4152-a543-cd443075a7c5",
+    "ff44cd59-d514-43d9-b177-083c7a6fd1a2",
+    "4031530d-5b79-4246-9a53-7145be9ffad6",
+    "04173986-7e8d-4d69-98af-b333a8b3e846",
+    "8fda4f9a-cb4f-4257-b735-9810099f5952",
+    "5bc1ef45-94d9-4d2d-9364-ad8cd9d9cfd5",
+    "e627a3ef-17cd-4a16-8f62-a824d48f651a",
+    "a28cb21d-a9c5-48b7-8e69-bc4e1f71f814",
+    "267834a6-5535-4d1a-9fb8-c397f949af77",
+    "b92bc850-2181-4d82-9e33-d8d53a92cc7f",
+    "3a30605d-3999-4dfa-bd3d-ecdc85efd833",
+    "ba3106e9-9184-4670-a65c-1369be34f7d7",
+    "14ea0ba1-ff73-4b19-a288-958c06aa511d",
+    "0aeb1210-c7d7-4f13-902a-4db150ec04fb",
+    "24a4dd56-4ff3-4d72-946d-51ca81cd0bc8",
+    "2c6d9681-edf4-475e-8fe1-95709406e6dc",
+    "d2840f97-4995-46ea-a9dd-445ea62ccf31",
+    "614050cd-9ece-494f-b595-954263cfdf45",
+    "4c92ca2b-9914-4f35-822b-26b4a9a5628f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments The Filament PLA HS Filament",
+    "description": "Compare 24 Spectrum Filaments The Filament PLA HS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/the-filament-pla-hs/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "The Filament PLA HS",
+          "item": "https://filascope.com/filaments/the-filament-pla-hs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/inland",
+  "title": "Inland PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Inland PLA filaments. Prices from $14.99 to $19.99. 1 colors available. 3 with HueForge TD values.",
+  "h1": "Inland PLA Filament",
+  "keywords": [
+    "Inland",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Inland",
+  "count": 3,
+  "min_price": 14.99,
+  "max_price": 19.99,
+  "color_count": 1,
+  "has_td": 3,
+  "filament_ids": [
+    "eb7a3067-e9f3-450b-bbc8-5e28292a35d4",
+    "c9ad8555-887b-48d7-b77c-caba0691d44b",
+    "c61b1e16-0039-4227-91ce-b2b3e7d53b13"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Inland PLA Filament",
+    "description": "Compare 3 Inland PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/inland",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Inland"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-meta/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Meta Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Spectrum Filaments PLA Meta filaments. Prices from $83.00 to $150.00. 4 colors available.",
+  "h1": "Spectrum Filaments PLA Meta Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Meta",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Meta",
+  "vendor": "Spectrum Filaments",
+  "count": 6,
+  "min_price": 83,
+  "max_price": 150,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "e9a93964-9816-46e3-b63e-5b48f6f88994",
+    "87396d78-49c3-4bd8-8793-65920dec8bb1",
+    "99eef4e4-24e1-4900-9035-a18321d98663",
+    "568bc389-d8a2-41f7-bf5e-bf3e2c884503",
+    "a0380620-112d-4232-9e97-f5562e9063f2",
+    "9fa95d2e-b460-402c-b3c3-a2867c7e1eac"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Meta Filament",
+    "description": "Compare 6 Spectrum Filaments PLA Meta filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-meta/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Meta",
+          "item": "https://filascope.com/filaments/pla-meta"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

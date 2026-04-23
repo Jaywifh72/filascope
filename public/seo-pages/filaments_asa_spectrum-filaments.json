@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/spectrum-filaments",
+  "title": "Spectrum Filaments ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 43 Spectrum Filaments ASA filaments. Prices from $26.00 to $96.00. 15 colors available. 43 with HueForge TD values.",
+  "h1": "Spectrum Filaments ASA Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Spectrum Filaments",
+  "count": 43,
+  "min_price": 26,
+  "max_price": 96,
+  "color_count": 15,
+  "has_td": 43,
+  "filament_ids": [
+    "665498ab-ae52-4034-9d7e-b8afd889ad27",
+    "25f26c1f-ab25-47a8-8877-3858349c8ae7",
+    "fc90568d-95eb-46f5-b332-3c3bd2ac9358",
+    "94b9bc10-ef26-4a77-897d-b8717095af31",
+    "01248bbd-1d54-4024-865f-856d266ee769",
+    "9b738326-cb1f-4f6e-8c38-907e0ae490f1",
+    "0059ccdf-a75b-4d73-9432-d6ea8606e308",
+    "b5e898a8-d203-41da-86ae-66eb75c8168f",
+    "0207378e-c4d9-4eb1-80f4-9807932b3047",
+    "d87854bb-9007-4c7f-99d9-8add3736d0e4",
+    "28204a2e-e1b7-4000-89a8-c1e3f9ed6e50",
+    "fc3a0fa5-42af-43f8-a63e-5e0da9f9a271",
+    "1720ed85-bd54-4f4b-b2d0-49fafeee6a61",
+    "0f645a72-a338-4406-aa45-f47ba2f83fbf",
+    "3573d3e7-9d80-4a72-97e0-06325a353c56",
+    "27bd3d69-5425-4486-abf8-d60f15539560",
+    "2844733f-3444-4566-bd90-7356faa9234c",
+    "49cbf2cd-051e-481e-88de-7e8c7a9759fd",
+    "40562e81-2a9b-487e-a879-8835e77a949b",
+    "5f0f238d-30f4-4e60-9a16-b03b1468352d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments ASA Filament",
+    "description": "Compare 43 Spectrum Filaments ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

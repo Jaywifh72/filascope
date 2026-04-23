@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/bambu-lab",
+  "title": "Bambu Lab PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 201 Bambu Lab PLA filaments. Prices from $12.99 to $54.99. 112 colors available. 200 with HueForge TD values.",
+  "h1": "Bambu Lab PLA Filament",
+  "keywords": [
+    "Bambu Lab",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Bambu Lab",
+  "count": 201,
+  "min_price": 12.99,
+  "max_price": 54.99,
+  "color_count": 112,
+  "has_td": 200,
+  "filament_ids": [
+    "77dd8ee8-f74a-42c9-9961-1ff1ec71d8ff",
+    "3f4efdcc-eef1-40db-9f53-d8536f18ecaa",
+    "407c2f00-702a-42c8-bd41-f154189f95cb",
+    "0078fdfc-e768-4b9f-838b-46ffbf11c9b5",
+    "3198cd26-4a4f-4e7f-8b88-999e770ac6fe",
+    "db6b1909-cd2d-4712-b1e5-88a0706cfa21",
+    "d2998df0-5621-4377-9f6b-e1729a66ff6f",
+    "a4b5a0a4-03f0-4081-9fe4-9bb1434f36f2",
+    "d9f4c17f-4649-45b2-a880-0ae325098676",
+    "4ee6b379-f77c-4d30-aab3-7460ec54cf6e",
+    "a028e1a0-3e7a-4171-892c-0988819961ca",
+    "e6241c25-e680-49dd-a431-cd907ad93a31",
+    "11157afc-6ddf-45b1-a98c-4d24ab4808cc",
+    "09ca4ac4-cd4c-401a-91be-47897d65f352",
+    "cc0d238a-54aa-4669-802c-de3755215015",
+    "2e096fed-b952-4084-95f7-aba1b8bfbef7",
+    "fd69c3a1-e823-437f-b7ab-7b3cd46adda1",
+    "504997db-6ca0-4e00-9e14-931e410c0701",
+    "28018007-a0cf-4326-b22e-3a09dfae2940",
+    "aa1c4507-11e3-4a3b-8c71-85483ae1042b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab PLA Filament",
+    "description": "Compare 201 Bambu Lab PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

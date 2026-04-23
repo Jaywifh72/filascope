@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pha/colorfabb",
+  "title": "ColorFabb PHA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 ColorFabb PHA filaments. Prices from $38.07 to $38.07. 3 colors available.",
+  "h1": "ColorFabb PHA Filament",
+  "keywords": [
+    "ColorFabb",
+    "PHA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PHA",
+  "vendor": "ColorFabb",
+  "count": 3,
+  "min_price": 38.07,
+  "max_price": 38.07,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "98933a61-f8e8-42b9-9cda-6967688b820a",
+    "c434dcac-91a4-4a03-b4ca-398d9fc7dba6",
+    "021a7ca3-f870-489a-8b62-2aca447e6dd0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "ColorFabb PHA Filament",
+    "description": "Compare 3 ColorFabb PHA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pha/colorfabb",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PHA",
+          "item": "https://filascope.com/filaments/pha"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ColorFabb"
+        }
+      ]
+    }
+  }
+}

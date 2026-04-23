@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc-abs/polymaker",
+  "title": "Polymaker PC-ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Polymaker PC-ABS filaments. Prices from $67.99 to $67.99. 3 colors available. 1 with HueForge TD values.",
+  "h1": "Polymaker PC-ABS Filament",
+  "keywords": [
+    "Polymaker",
+    "PC-ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC-ABS",
+  "vendor": "Polymaker",
+  "count": 3,
+  "min_price": 67.99,
+  "max_price": 67.99,
+  "color_count": 3,
+  "has_td": 1,
+  "filament_ids": [
+    "630ecb5a-b327-4813-a9e7-d9b770b4648d",
+    "b94ad7fa-befc-4130-a903-717fb7876bed",
+    "17508e2c-f0d4-4ae0-84f5-21365d95fede"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Polymaker PC-ABS Filament",
+    "description": "Compare 3 Polymaker PC-ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc-abs/polymaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC-ABS",
+          "item": "https://filascope.com/filaments/pc-abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polymaker"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/hatchbox",
+  "title": "Hatchbox TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 37 Hatchbox TPU filaments. Prices from $37.00 to $37.00. 14 colors available.",
+  "h1": "Hatchbox TPU Filament",
+  "keywords": [
+    "Hatchbox",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Hatchbox",
+  "count": 37,
+  "min_price": 37,
+  "max_price": 37,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "d78488e5-8d55-4853-becf-2d6cced7ecb0",
+    "2534ff64-4e0c-4dcb-97e1-f341a66fcc60",
+    "fef410a4-83ef-4bc3-8d40-4b45a5319dfa",
+    "3d492dbd-f733-4e47-9016-66a70ee0a35b",
+    "8269f0f1-f454-43cc-810e-fd914bb993b9",
+    "0c4cf1a0-b5fb-4d01-bee8-5f631f7f740d",
+    "1f05087b-1efb-4ada-a8ca-3f9c019481b0",
+    "271091f4-15f8-43fa-bcfc-678965393a81",
+    "fe46e505-e2b2-4522-9360-36d67865dba9",
+    "380f0b89-65b8-4697-a6d1-b8eefb8236f1",
+    "39d23dda-e7ec-4394-b1be-e89aad0a1e25",
+    "3dca8975-9be1-4672-8a98-081d6e264d47",
+    "6745d11e-5c82-4982-a024-777b81199243",
+    "8531a04e-dd02-4aad-8b9e-dad0a5989773",
+    "943436d2-2ccd-4948-a1fe-ad251fd174dc",
+    "9a636352-4037-481d-92c5-418a19a12729",
+    "9b4a3310-681a-4469-bc5c-0a30aaef40e7",
+    "e5a98ab4-4376-4e8d-a447-858435d39d1e",
+    "04a295d3-eb19-4368-99a5-89fdd23cfae3",
+    "109b0a15-0508-46c7-8f99-5d92fcaac1aa"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Hatchbox TPU Filament",
+    "description": "Compare 37 Hatchbox TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/hatchbox",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Hatchbox"
+        }
+      ]
+    }
+  }
+}

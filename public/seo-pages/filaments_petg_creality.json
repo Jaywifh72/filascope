@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/creality",
+  "title": "Creality PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 29 Creality PETG filaments. Prices from $18.99 to $25.99. 19 colors available. 8 with HueForge TD values.",
+  "h1": "Creality PETG Filament",
+  "keywords": [
+    "Creality",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Creality",
+  "count": 29,
+  "min_price": 18.99,
+  "max_price": 25.99,
+  "color_count": 19,
+  "has_td": 8,
+  "filament_ids": [
+    "b9ce4b21-f123-4786-9eab-b5adc8560d7f",
+    "ea509244-0918-4c5c-8f2b-31c43768f7df",
+    "b5dcadea-13fe-4fd0-aee2-b21ac1f7a155",
+    "0db3b24b-a46e-43fb-9a67-c1606ff048e1",
+    "e449f4b0-93a1-4255-9676-4ddd42180d0b",
+    "38b923ad-8594-4a30-a190-9bbb26023bfe",
+    "52c13821-0b91-4e13-a294-96650c679a57",
+    "c8324997-4c73-4fb9-a455-df7f8771107c",
+    "64977631-d66a-494e-9fa5-ce980d1ca805",
+    "5ce4f8ad-3c49-437b-86a0-a06ed288e777",
+    "7ca7be92-aaee-4432-9120-c42bb7286f33",
+    "76b5fc6a-5637-47ce-b99a-faa70d3ab8ac",
+    "47a276a5-a472-40f9-b079-4f3dc72d983c",
+    "f7634ae8-3904-40f1-b4c6-48277e72fb12",
+    "a07f2861-fa61-4f97-9e9a-b4d0589777b7",
+    "73d55fc3-3774-48ab-91b5-559eb1d95d33",
+    "2fc7018e-f26e-4902-9864-f6608d982245",
+    "a87abdcd-eef3-4605-a673-e099730a1c65",
+    "9b6908ff-9c21-4052-9270-1e4bc0e24bcd",
+    "ae3dab5c-e015-4323-b970-2cd7118c8c33"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Creality PETG Filament",
+    "description": "Compare 29 Creality PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/creality",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Creality"
+        }
+      ]
+    }
+  }
+}

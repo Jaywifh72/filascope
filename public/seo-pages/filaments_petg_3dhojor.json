@@ -1,0 +1,64 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/3dhojor",
+  "title": "3DHoJor PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 11 3DHoJor PETG+ filaments. Prices from $14.99 to $17.99. 11 colors available. 10 with HueForge TD values.",
+  "h1": "3DHoJor PETG+ Filament",
+  "keywords": [
+    "3DHoJor",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "3DHoJor",
+  "count": 11,
+  "min_price": 14.99,
+  "max_price": 17.99,
+  "color_count": 11,
+  "has_td": 10,
+  "filament_ids": [
+    "9006bb55-79da-4182-b1f1-c4140d443c07",
+    "d986dba1-be4c-41ab-b783-acbd8802df3e",
+    "b628be53-1a65-4ed1-bb94-6127bda23138",
+    "e4a48938-8397-444c-a53f-c2c16109d43d",
+    "f5b95c5c-716c-4491-9398-0dbe1c344d44",
+    "a7fdfe65-d08b-436d-b9a8-3736cf56231c",
+    "85476210-6ccc-42a0-adf9-abacddfd3287",
+    "1daa5f0d-c6c0-41c4-b547-a80d39e53fb0",
+    "88edc2fb-3ee0-428f-85b2-5bd76fa3cf7f",
+    "87572fcd-e05e-4c5e-9bef-91da498846f6",
+    "d3e3c6fe-a7ab-4a90-b7cd-e7e85b1a8bd7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DHoJor PETG+ Filament",
+    "description": "Compare 11 3DHoJor PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/3dhojor",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DHoJor"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-petg",
+  "title": "Best PETG+ Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PETG+ filaments in 2026. 215 options from 17 brands, starting at $9.71. Expert picks, prices & specs.",
+  "h1": "Best PETG+ Filament (2026)",
+  "keywords": [
+    "best PETG+",
+    "PETG+ filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PETG+",
+  "count": 215,
+  "brands": 17,
+  "min_price": 9.71,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PETG+ Filament 2026",
+    "description": "Expert comparison of 215 PETG+ filaments",
+    "url": "https://filascope.com/best-petg"
+  }
+}

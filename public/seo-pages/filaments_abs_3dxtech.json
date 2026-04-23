@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/3dxtech",
+  "title": "3DXTech ABS+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 43 3DXTech ABS+ filaments. Prices from $13.49 to $1528.00. 14 colors available. 43 with HueForge TD values.",
+  "h1": "3DXTech ABS+ Filament",
+  "keywords": [
+    "3DXTech",
+    "ABS+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS+",
+  "vendor": "3DXTech",
+  "count": 43,
+  "min_price": 13.49,
+  "max_price": 1528,
+  "color_count": 14,
+  "has_td": 43,
+  "filament_ids": [
+    "4751c7d7-3447-485a-bb19-109e8a2453de",
+    "3e70ae5c-74b2-486e-a0e4-b17369af4eca",
+    "1fe201d7-ac4e-4792-9029-f927d90639b2",
+    "51885412-a541-467d-9c54-b4df06c6e9a8",
+    "ee9130ea-76a0-4a5c-8b73-5f5762b658e8",
+    "820d7118-078d-4f82-8c45-31d931c7c83e",
+    "0b9234aa-978b-4d8b-af26-f8f067259a6a",
+    "3c159dbc-0781-4107-8d24-598558728ea9",
+    "54e268d7-2464-4593-9b9b-c61f1f4efb34",
+    "1a9f7c03-c622-4313-93bd-d17e76e6bb08",
+    "5039e4bd-f96e-42a3-ad14-a425178b4a15",
+    "4633b215-e535-4e4f-bf18-0cf87e7f54b2",
+    "ad4c2204-8fc7-42be-8b04-032b0173ae23",
+    "bb1257a7-90a3-4f24-a077-f770f17471c2",
+    "c810899e-e49d-4f38-ada3-b84c32eaa2da",
+    "cb513e89-88b8-4698-8027-66660a62a3a3",
+    "245facc6-0a64-4305-8846-c49241f84ecc",
+    "2aa83924-b274-43bd-b7ba-69f847ed5688",
+    "e70a2ef9-4157-41b5-8fc0-c8a3d88fe180",
+    "9702b3bf-c589-42dd-ba27-404c73179c49"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech ABS+ Filament",
+    "description": "Compare 43 3DXTech ABS+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS+",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

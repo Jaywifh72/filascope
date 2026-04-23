@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-stone-age/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Stone Age Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Spectrum Filaments PLA Stone Age filaments. Prices from $18.00 to $28.00. 2 colors available.",
+  "h1": "Spectrum Filaments PLA Stone Age Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Stone Age",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Stone Age",
+  "vendor": "Spectrum Filaments",
+  "count": 4,
+  "min_price": 18,
+  "max_price": 28,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "da411cd4-e3d9-493b-9306-b1e0b755790c",
+    "ed2be998-be89-4807-91b3-2a98a41f1a44",
+    "a89957da-01b9-4313-b65c-ce709fe3568f",
+    "09792fc7-0be2-45de-8945-71f829e2db42"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Stone Age Filament",
+    "description": "Compare 4 Spectrum Filaments PLA Stone Age filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-stone-age/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Stone Age",
+          "item": "https://filascope.com/filaments/pla-stone-age"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

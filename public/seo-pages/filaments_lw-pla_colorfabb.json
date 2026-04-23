@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/lw-pla/colorfabb",
+  "title": "ColorFabb LW-PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 ColorFabb LW-PLA filaments. Prices from $37.50 to $37.50. 5 colors available.",
+  "h1": "ColorFabb LW-PLA Filament",
+  "keywords": [
+    "ColorFabb",
+    "LW-PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "LW-PLA",
+  "vendor": "ColorFabb",
+  "count": 5,
+  "min_price": 37.5,
+  "max_price": 37.5,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "2162a6b0-d205-4324-b5aa-960e435ca8d9",
+    "28205e9a-3dd3-467e-9470-220789e359cc",
+    "0712393b-d223-4f39-a474-98b4ab900a5d",
+    "fef1bdd1-3411-4cbb-a4bd-00596c7fdf91",
+    "a50c2116-9192-40b5-83b1-d6e83066d05b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "ColorFabb LW-PLA Filament",
+    "description": "Compare 5 ColorFabb LW-PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/lw-pla/colorfabb",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "LW-PLA",
+          "item": "https://filascope.com/filaments/lw-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ColorFabb"
+        }
+      ]
+    }
+  }
+}

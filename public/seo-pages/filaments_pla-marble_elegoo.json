@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-marble/elegoo",
+  "title": "Elegoo PLA-Marble Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Elegoo PLA-Marble filaments. Prices from $18.99 to $79.99. 5 colors available.",
+  "h1": "Elegoo PLA-Marble Filament",
+  "keywords": [
+    "Elegoo",
+    "PLA-Marble",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Marble",
+  "vendor": "Elegoo",
+  "count": 5,
+  "min_price": 18.99,
+  "max_price": 79.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "8e124cb8-1f8c-4e6f-8a77-7234513c5f28",
+    "3b6d0e4f-91c1-4757-984b-68231ad7e7c9",
+    "6fa7ec42-674b-4106-9d65-298e82a22a61",
+    "4c65bdd3-a28e-4c9f-97cc-3583d50ae1c9",
+    "0cc161d5-e095-42b6-b12f-1945cb54e359"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PLA-Marble Filament",
+    "description": "Compare 5 Elegoo PLA-Marble filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-marble/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Marble",
+          "item": "https://filascope.com/filaments/pla-marble"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

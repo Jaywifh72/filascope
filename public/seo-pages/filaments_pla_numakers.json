@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/numakers",
+  "title": "Numakers PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 35 Numakers PLA+ filaments. Prices from $19.99 to $19.99. 35 colors available.",
+  "h1": "Numakers PLA+ Filament",
+  "keywords": [
+    "Numakers",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Numakers",
+  "count": 35,
+  "min_price": 19.99,
+  "max_price": 19.99,
+  "color_count": 35,
+  "has_td": 0,
+  "filament_ids": [
+    "e3aabcf7-7a14-4d02-9fe9-7d0da3e23308",
+    "53fb0465-9ba0-45e4-87fc-cb658816053a",
+    "0f32b5d4-188f-44a7-997b-c503389d291d",
+    "53a6483e-d907-4f8d-9973-5d76243ef457",
+    "b4b1c2a2-7c65-49d7-829a-dd3872825cb9",
+    "d92813e5-c821-4403-9045-f133cd8cc4b6",
+    "7659b4b2-c0f1-4288-b1d7-d7bd9caab945",
+    "17e180be-85ac-4ad1-a108-7c58b6f2f7f4",
+    "0c3ac914-f860-4df3-85f2-6d59a0cf74dd",
+    "40288ddc-bba1-48f0-b8d5-58092110ee1b",
+    "38856293-a2c0-443c-b3ef-07beef7ee364",
+    "4b15fbec-2a94-4052-9d32-093b31cd483e",
+    "2439aadc-9614-4dfe-8fb1-862fa4e4be74",
+    "3e7eea91-2620-4349-97d8-4e322e1e5846",
+    "ca10ce07-eeb5-45be-b947-fb916aefd945",
+    "e9ff9546-e7b1-4adb-9f95-6fd980319be4",
+    "cbe4dc48-f4b0-40a3-b4eb-153a94aa954b",
+    "549c7111-ed9c-4959-a205-8d67522c9df6",
+    "8114680c-925a-4fb6-815f-5ed3529604a8",
+    "0a2763c5-cc0e-409b-b45b-f97a030fa2fe"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PLA+ Filament",
+    "description": "Compare 35 Numakers PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

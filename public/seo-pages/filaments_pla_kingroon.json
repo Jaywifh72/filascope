@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/kingroon",
+  "title": "Kingroon PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 280 Kingroon PLA+ filaments. Prices from $0.99 to $389.96. 31 colors available. 267 with HueForge TD values.",
+  "h1": "Kingroon PLA+ Filament",
+  "keywords": [
+    "Kingroon",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Kingroon",
+  "count": 280,
+  "min_price": 0.99,
+  "max_price": 389.96,
+  "color_count": 31,
+  "has_td": 267,
+  "filament_ids": [
+    "dce54cfb-a81f-4d38-a34d-ead4b837b0e2",
+    "29eda227-3629-44d4-95b7-9000ed3734f3",
+    "dd0a094c-d430-4d4d-be3d-0dd947420968",
+    "c21e4e94-3440-440a-99dc-8b5de44318c2",
+    "582fe330-5770-4598-8244-4892cd4fee94",
+    "3496b6e9-ae5a-4779-8e5c-832c3f9fccb6",
+    "f7310a77-e976-41b3-91a6-ea31dfde5576",
+    "ba1ef90d-0d46-4f6f-a2a8-5b8da2667c2d",
+    "5f07ffbd-392f-4ab6-ae7c-79a6bf5f4873",
+    "3a57c49d-b429-445c-8eb0-b7433db8b42e",
+    "5aae4eca-2e63-4776-a737-391fbeea89f1",
+    "3edaf15a-2f42-4fca-b18d-a8582268306e",
+    "852f7b01-286a-4b64-ba51-1e9dce33526e",
+    "0c13110d-e75a-4a58-b4dd-8e74c9db6330",
+    "f3ac259c-3c3a-4c32-a55f-14f3dba516d2",
+    "ec3d9e63-596a-4d26-b0f8-2cba3cdddd44",
+    "f8646b5a-679a-4318-8adc-10caf41efed3",
+    "104e3ba6-595d-4576-b5bd-c85fc5f7db07",
+    "1c85ae03-7893-4751-a049-51f684c6ccd3",
+    "a92ef3f5-0678-40ff-86e7-f20e4cc58d91"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon PLA+ Filament",
+    "description": "Compare 280 Kingroon PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

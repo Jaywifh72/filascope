@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-glow/sunlu",
+  "title": "Sunlu PLA Glow Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Sunlu PLA Glow filaments. Prices from $22.99 to $22.99. 3 colors available.",
+  "h1": "Sunlu PLA Glow Filament",
+  "keywords": [
+    "Sunlu",
+    "PLA Glow",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Glow",
+  "vendor": "Sunlu",
+  "count": 3,
+  "min_price": 22.99,
+  "max_price": 22.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "9e58e70e-b99f-49a2-a207-6b353ea97dcd",
+    "9fbfcefb-6488-4aa2-8bd5-b6f59f262c05",
+    "0f652399-0862-4802-8923-4c4a9f6269bd"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sunlu PLA Glow Filament",
+    "description": "Compare 3 Sunlu PLA Glow filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-glow/sunlu",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Glow",
+          "item": "https://filascope.com/filaments/pla-glow"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sunlu"
+        }
+      ]
+    }
+  }
+}

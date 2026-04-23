@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/kingroon",
+  "title": "Kingroon PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 109 Kingroon PETG filaments. Prices from $14.99 to $847.50. 23 colors available. 85 with HueForge TD values.",
+  "h1": "Kingroon PETG Filament",
+  "keywords": [
+    "Kingroon",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Kingroon",
+  "count": 109,
+  "min_price": 14.99,
+  "max_price": 847.5,
+  "color_count": 23,
+  "has_td": 85,
+  "filament_ids": [
+    "85721bc0-954d-4881-9016-e236a5e08301",
+    "4cc0ba28-6dac-46a3-896f-7ed0070e7b3a",
+    "d03c6268-6c65-43c9-ad25-35b3d4b51e75",
+    "ee2377b1-9eb6-4def-b2fe-1ef33765c9b9",
+    "9810baa4-b436-4f0d-9aa2-656aa1508391",
+    "480134dd-f32f-47bc-9074-6ced37d2f03d",
+    "162b84f6-d03c-4a2e-ba02-fd99a6ddf856",
+    "8f575bf3-1724-4c69-8149-fdfb9542e8e4",
+    "537b2e8a-4b93-4447-b46e-20175504ee1b",
+    "b3acf64f-d270-4e0d-9d0a-58b20d9f906d",
+    "6d2d0db9-65d7-4b80-a8cf-a8367b448b54",
+    "30637946-c3f6-45d9-9fae-8382dda685c5",
+    "caba5702-9f3c-4d02-b6ee-85c98c1c5ad7",
+    "28ee4379-3d07-4571-b65c-ba441e8a04df",
+    "4f4f9de4-39ac-473c-8a28-523ce193928d",
+    "d55c312d-1fb1-4d40-adf5-adbe33b4fedf",
+    "835fbd0b-2281-4c90-ba83-ba433369806d",
+    "06a2941b-f56d-48ef-baed-7e4c51e9659c",
+    "c216fd49-9a58-413a-87aa-aef1f354350a",
+    "c2a4660b-6f99-4038-81a2-81d6ad1c718c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon PETG Filament",
+    "description": "Compare 109 Kingroon PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

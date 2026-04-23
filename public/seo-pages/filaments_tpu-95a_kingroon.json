@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/kingroon",
+  "title": "Kingroon TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Kingroon TPU-95A filaments. Prices from $22.99 to $22.99. 1 colors available. 6 with HueForge TD values.",
+  "h1": "Kingroon TPU-95A Filament",
+  "keywords": [
+    "Kingroon",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "Kingroon",
+  "count": 6,
+  "min_price": 22.99,
+  "max_price": 22.99,
+  "color_count": 1,
+  "has_td": 6,
+  "filament_ids": [
+    "ae6e723f-03e0-4b8d-a1cd-388bc2558deb",
+    "77a0abdc-5b75-4dfa-8a4b-ce9ac08f3750",
+    "4ea7869d-91fd-4967-a808-54c32c610346",
+    "e057c2a5-004f-4a07-bf38-92a6a76f288c",
+    "bcfbf5a5-ea07-4009-bace-12b25639fd1c",
+    "dd969e61-e3fe-47c8-b9b3-c2191c7e84a5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon TPU-95A Filament",
+    "description": "Compare 6 Kingroon TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

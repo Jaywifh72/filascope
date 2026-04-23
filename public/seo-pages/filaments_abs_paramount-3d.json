@@ -1,0 +1,71 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/paramount-3d",
+  "title": "Paramount 3D ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 18 Paramount 3D ABS filaments. Prices from $24.99 to $24.99. 18 colors available. 8 with HueForge TD values.",
+  "h1": "Paramount 3D ABS Filament",
+  "keywords": [
+    "Paramount 3D",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Paramount 3D",
+  "count": 18,
+  "min_price": 24.99,
+  "max_price": 24.99,
+  "color_count": 18,
+  "has_td": 8,
+  "filament_ids": [
+    "6e04de53-67dd-4dac-bcaf-4f8a1c768419",
+    "d97b89b5-2388-4e9f-b920-50f4bd338bb3",
+    "6b7e6940-54e1-4b28-a294-dd7f0645a87a",
+    "d6583458-404e-4301-a5eb-343c31b3d36e",
+    "0d57ca80-0f32-407f-bc0a-6ad00d2af733",
+    "dcfbef0f-3c6a-46e7-8277-1ee7ed06fad2",
+    "d2c36915-348c-4dfb-bf19-7019c94e0c54",
+    "59ce9a6f-9766-421e-8612-4604699ddedb",
+    "14717498-237f-49e1-8051-6b4255a0d407",
+    "e6939081-81e4-44de-8dfd-c3f75a6a53ee",
+    "4f46f2a9-d559-4c82-a9dc-45a1213ebc4b",
+    "82bb027b-31ce-4a74-8041-d8c3b6f4702e",
+    "b431fb04-7278-44a6-8454-ffeec5836830",
+    "194a1f5e-5010-4e5d-8827-aa6cfe28c369",
+    "90ad47be-7206-4cf3-b413-6b83fab4d8d4",
+    "8bf761d3-72ae-4648-bc49-a8857a217cbc",
+    "a523fe53-2d52-4639-a13f-cacc772589fb",
+    "8361a86e-dc1f-4922-ba50-f641c839238c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Paramount 3D ABS Filament",
+    "description": "Compare 18 Paramount 3D ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/paramount-3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Paramount 3D"
+        }
+      ]
+    }
+  }
+}

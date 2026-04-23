@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/printed-solid",
+  "title": "Printed Solid PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 58 Printed Solid PETG+ filaments. Prices from $19.99 to $289.99. 18 colors available.",
+  "h1": "Printed Solid PETG+ Filament",
+  "keywords": [
+    "Printed Solid",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "Printed Solid",
+  "count": 58,
+  "min_price": 19.99,
+  "max_price": 289.99,
+  "color_count": 18,
+  "has_td": 0,
+  "filament_ids": [
+    "b845c021-d252-41be-96d2-14c626d0becd",
+    "024da043-faf1-40ef-8632-c1ab137caed3",
+    "2c056b47-e0dc-42db-9217-26d505fc7005",
+    "60f929e0-086a-47ba-ab0a-63b47a0f3e1a",
+    "34a71712-8b65-4986-a1c0-5e02286da370",
+    "d88ba9f6-d56d-47e8-bded-c5a16db9eb60",
+    "24f19778-176b-4260-8a22-5734bdfc9d9b",
+    "dbf867c6-2574-4bbd-94e4-6565044f68bf",
+    "c7d8c0ba-bf07-4df8-ac77-2127130bff8f",
+    "a4401292-0826-407f-863e-f1b91488d3d8",
+    "d3483860-cb17-464c-b3e1-a8bab48dfffa",
+    "f5171d56-99ac-415c-b09b-9ff3fc6ca8c4",
+    "da00d79b-90ad-4d1f-8e44-885ec44622ae",
+    "4c02ad5f-f60e-424d-91f3-4df68b1a74b9",
+    "5147f5bc-eacd-4fdd-9b60-f775760fc996",
+    "3535ea7e-d848-42c9-8c4b-99e5c13bda8a",
+    "f7651741-a920-4529-ab23-3a08b6b9367b",
+    "d100bff8-0799-4ea9-8921-fb87d7c5859a",
+    "98f8e3a7-fe82-4bb8-8a2e-d5806b2ab23d",
+    "03fc1c8c-a4e1-417c-92ca-7ec3db1017ee"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Printed Solid PETG+ Filament",
+    "description": "Compare 58 Printed Solid PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/printed-solid",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Printed Solid"
+        }
+      ]
+    }
+  }
+}

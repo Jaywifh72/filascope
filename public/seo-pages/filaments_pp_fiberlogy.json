@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pp/fiberlogy",
+  "title": "Fiberlogy PP Filament — Prices, Specs & Reviews",
+  "description": "Compare 21 Fiberlogy PP filaments. Prices from $29.99 to $29.99. 21 colors available.",
+  "h1": "Fiberlogy PP Filament",
+  "keywords": [
+    "Fiberlogy",
+    "PP",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PP",
+  "vendor": "Fiberlogy",
+  "count": 21,
+  "min_price": 29.99,
+  "max_price": 29.99,
+  "color_count": 21,
+  "has_td": 0,
+  "filament_ids": [
+    "ac44e98c-dfa6-4f67-b1f5-cae889c387b6",
+    "9900bfac-7177-48da-b902-ff01473783aa",
+    "e9dfdbae-ff32-4155-ba0a-a571364bd424",
+    "d8ea1513-b666-416b-b521-7c675edd2084",
+    "f68ff39c-d915-4a8f-ab36-e049936ce78b",
+    "8fb0a9db-a873-4f60-b579-3e42f5ed998e",
+    "ac8f1001-767a-4619-8d2c-443aed1d08e9",
+    "925d4442-5bec-4c42-9140-f0880b21f509",
+    "df98d1c0-949a-4fc9-af8b-12c6ab536913",
+    "69d05189-0553-425b-b2d9-8a4449293388",
+    "bf290831-2b85-4a33-920f-d549e0794323",
+    "d873bed7-14c6-43f6-95ce-e636d7d8ee7c",
+    "93860c64-6097-4bb9-bec8-db066b7632b7",
+    "052820b3-51a3-48df-b07a-afdc59fe784c",
+    "043c6c5e-9048-45a9-8b6a-d9d3e6df54d1",
+    "88299c17-6f39-4bce-a9c9-36992d858884",
+    "d8f29340-2e04-431e-8a01-fee4d0cea78a",
+    "3efda687-507e-45da-ac00-bc379006413a",
+    "69f11d38-71ba-4d98-b5d3-4d0a38624e73",
+    "479af72d-4e50-4b50-8b74-a9187a52a767"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy PP Filament",
+    "description": "Compare 21 Fiberlogy PP filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pp/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PP",
+          "item": "https://filascope.com/filaments/pp"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

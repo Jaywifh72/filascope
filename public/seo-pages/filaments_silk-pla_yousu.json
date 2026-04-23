@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/silk-pla/yousu",
+  "title": "Yousu Silk PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Yousu Silk PLA filaments. Prices from $31.99 to $31.99. 0 colors available.",
+  "h1": "Yousu Silk PLA Filament",
+  "keywords": [
+    "Yousu",
+    "Silk PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Silk PLA",
+  "vendor": "Yousu",
+  "count": 3,
+  "min_price": 31.99,
+  "max_price": 31.99,
+  "color_count": 0,
+  "has_td": 0,
+  "filament_ids": [
+    "4ce002c3-d4da-4f1f-9cc6-4156b0c34248",
+    "b295db50-abe7-4040-a9ee-675e4a380649",
+    "8e09552b-9e50-46c7-a912-c40c6e0ead1f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Yousu Silk PLA Filament",
+    "description": "Compare 3 Yousu Silk PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/silk-pla/yousu",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Silk PLA",
+          "item": "https://filascope.com/filaments/silk-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Yousu"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-gf/eryone",
+  "title": "Eryone PETG-GF Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Eryone PETG-GF filaments. Prices from $31.99 to $32.99. 5 colors available.",
+  "h1": "Eryone PETG-GF Filament",
+  "keywords": [
+    "Eryone",
+    "PETG-GF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-GF",
+  "vendor": "Eryone",
+  "count": 5,
+  "min_price": 31.99,
+  "max_price": 32.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "df6f4af0-568e-4ac8-9842-5a7f1cf645b8",
+    "a3e35a4c-9cbd-4abd-8cf7-21e3a2562826",
+    "8ab14def-57d4-4b56-9fe1-86b51a03a554",
+    "a0ce9c8d-205e-414d-b8bf-ce15a3d71edc",
+    "2807a11c-66c6-4e8c-a560-77e707234fda"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Eryone PETG-GF Filament",
+    "description": "Compare 5 Eryone PETG-GF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-gf/eryone",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-GF",
+          "item": "https://filascope.com/filaments/petg-gf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Eryone"
+        }
+      ]
+    }
+  }
+}

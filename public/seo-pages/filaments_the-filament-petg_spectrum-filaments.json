@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/the-filament-petg/spectrum-filaments",
+  "title": "Spectrum Filaments The Filament PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 28 Spectrum Filaments The Filament PETG filaments. Prices from $20.00 to $21.00. 14 colors available.",
+  "h1": "Spectrum Filaments The Filament PETG Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "The Filament PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "The Filament PETG",
+  "vendor": "Spectrum Filaments",
+  "count": 28,
+  "min_price": 20,
+  "max_price": 21,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "3ac9f4fb-0a36-4ad6-8acb-b79dc88d8752",
+    "ffeba43c-f902-4e1e-865b-337b6c1a1f8a",
+    "a28326e4-7ca7-4c53-a7fb-1ad2d5974c34",
+    "5af83e79-2370-41b6-8ca7-4a01ab672c7a",
+    "fdf063c9-2842-4ad7-baa8-e06f981a5188",
+    "c6fc5f2d-03b8-4d52-8d11-7c4614beedbd",
+    "c7f1e63e-a7e2-439d-9fbb-f760c1e1b1eb",
+    "8273cc5b-6fcf-4d83-b85f-edc5752f1d73",
+    "ffba3ee4-1586-4d9d-9f5e-4c081dc5d1f5",
+    "0b7ae3d4-b376-4462-add4-02b2daf44010",
+    "ff78acf6-2b51-496f-a4ff-4cf95a4a0dfb",
+    "75cbebb0-3a92-4829-a489-3cfaa1f3f03a",
+    "42583e5d-b011-4ae6-9dc6-82e69069f0db",
+    "1d967890-3e07-473b-b1f3-5cde47ee9cab",
+    "5d9f98f3-f6b8-4135-a1a3-ef2bef9a4279",
+    "e72636b6-2c84-47d8-aff7-836ce9f581c4",
+    "d275ee2e-fbad-453c-b1ba-29b4c05ea961",
+    "4fd773b3-78d7-4106-825e-6b833a771a09",
+    "18ede0f2-0ab5-431c-a0fa-9a67c0a895a4",
+    "32b1bd1e-04d7-4b96-9ed0-c7be9fe1ba2e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments The Filament PETG Filament",
+    "description": "Compare 28 Spectrum Filaments The Filament PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/the-filament-petg/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "The Filament PETG",
+          "item": "https://filascope.com/filaments/the-filament-petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

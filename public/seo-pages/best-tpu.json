@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-tpu",
+  "title": "Best TPU Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best TPU filaments in 2026. 520 options from 32 brands, starting at $15.99. Expert picks, prices & specs.",
+  "h1": "Best TPU Filament (2026)",
+  "keywords": [
+    "best TPU",
+    "TPU filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "TPU",
+  "count": 520,
+  "brands": 32,
+  "min_price": 15.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best TPU Filament 2026",
+    "description": "Expert comparison of 520 TPU filaments",
+    "url": "https://filascope.com/best-tpu"
+  }
+}

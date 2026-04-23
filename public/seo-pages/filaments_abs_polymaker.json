@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/polymaker",
+  "title": "Polymaker ABS+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 29 Polymaker ABS+ filaments. Prices from $24.99 to $33.99. 16 colors available. 1 with HueForge TD values.",
+  "h1": "Polymaker ABS+ Filament",
+  "keywords": [
+    "Polymaker",
+    "ABS+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS+",
+  "vendor": "Polymaker",
+  "count": 29,
+  "min_price": 24.99,
+  "max_price": 33.99,
+  "color_count": 16,
+  "has_td": 1,
+  "filament_ids": [
+    "e46b26fd-8499-4772-9cd0-180771418a7f",
+    "fec9ecee-b8f6-4a15-bada-f8e5f3ac9691",
+    "796e9f7f-73d4-4c0e-84f1-71ea1ad692d7",
+    "fe70e0d6-f517-4d45-ae8e-426161e1abd4",
+    "126b56b2-6fef-480c-bc7b-daaa93d810db",
+    "9ed05952-1683-4ffe-96c8-dd519c62792d",
+    "d8c470d1-88d8-4817-a22f-c8783cc7ebbf",
+    "de10e51d-7fa0-42f1-ab51-1418562adcba",
+    "48cc561c-fc3b-4b6d-8d56-e095eff9574d",
+    "4b742b7d-cf4e-4da3-a226-cf9e53b6d569",
+    "aa098655-ee04-4d4a-95ed-2e8b74537df0",
+    "0c42ea9b-7afd-4f18-8912-ef65088c430a",
+    "7af20128-b18f-4b0e-9e41-590ce48795ce",
+    "f7179bc6-d486-4c7e-aadf-f58c7f2d430a",
+    "c888e1d8-9baa-436d-8143-a5a869b18ecd",
+    "df93f72a-22db-447c-bef4-553ed3b22232",
+    "c371213f-2b2a-498c-955a-ab07d4a90ac7",
+    "a2728c92-ecb1-4767-9c82-f0933fb6285f",
+    "65d7613a-b3e0-4844-8c92-ffde6dc4910e",
+    "fda93579-c448-4782-a6fe-86d990f3f783"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Polymaker ABS+ Filament",
+    "description": "Compare 29 Polymaker ABS+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/polymaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS+",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polymaker"
+        }
+      ]
+    }
+  }
+}

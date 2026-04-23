@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/3dhojor",
+  "title": "3DHOJOR TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 3DHOJOR TPU-95A filaments. Prices from $25.99 to $25.99. 6 colors available. 6 with HueForge TD values.",
+  "h1": "3DHOJOR TPU-95A Filament",
+  "keywords": [
+    "3DHOJOR",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "3DHOJOR",
+  "count": 6,
+  "min_price": 25.99,
+  "max_price": 25.99,
+  "color_count": 6,
+  "has_td": 6,
+  "filament_ids": [
+    "cbfe68dd-5948-4112-95b2-cb6e865b1bf7",
+    "c7641a98-71ab-4aaf-82cc-4abcc6241a68",
+    "2d56ab79-f492-4012-a7f4-3e83ec95ddd7",
+    "7f557c6a-e94d-4295-acad-f1e7098f9645",
+    "0a581a04-2682-4ec9-8bb4-625abfd0d0aa",
+    "40d4bc86-9c60-4bed-b4cd-035d5db1f5b9"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DHOJOR TPU-95A Filament",
+    "description": "Compare 6 3DHOJOR TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/3dhojor",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DHOJOR"
+        }
+      ]
+    }
+  }
+}

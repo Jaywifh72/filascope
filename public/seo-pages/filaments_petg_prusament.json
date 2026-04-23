@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/prusament",
+  "title": "Prusament PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 53 Prusament PETG filaments. Prices from $21.00 to $115.20. 12 colors available. 53 with HueForge TD values.",
+  "h1": "Prusament PETG Filament",
+  "keywords": [
+    "Prusament",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Prusament",
+  "count": 53,
+  "min_price": 21,
+  "max_price": 115.2,
+  "color_count": 12,
+  "has_td": 53,
+  "filament_ids": [
+    "205b75f5-bb63-4ad1-8ebe-e8976d27d5e4",
+    "bc9c57de-1d9f-4dd0-a751-3f16b28e65a1",
+    "90a76bc1-d09a-4d5f-8238-6c6ef70c52e2",
+    "577e908c-a0a3-40bf-b301-6a99568ea155",
+    "a36aa19b-780e-435e-b1e6-c48c4dfcd50f",
+    "9b4430a4-784d-45b4-b128-e6226ef1e99f",
+    "c24d0c39-4b17-42b7-8b38-dd6bef5782f9",
+    "7a1eb9cf-889a-48bb-9833-05c40c45b080",
+    "d8c7759c-df05-4c77-aa1a-43e073c9ec46",
+    "417f6e57-c75b-4dc0-968e-3916d128fc17",
+    "072be5c4-fe44-4559-801d-0bb865aa8b61",
+    "a3a6a8e9-0b0e-42c1-9cd8-8abab08b2398",
+    "536580a3-2786-460b-8bac-2b68cf2fb656",
+    "deb9812b-4a0b-4a74-973b-f7eb9ee006f1",
+    "e15fc222-e71c-4078-b919-66a163873102",
+    "7e09d2a7-de1a-4a2a-9bec-a1cbd1060047",
+    "39bee363-d3d8-41e3-9c4b-355288613a2c",
+    "398fbf46-ff9f-4b9e-8618-732f11fdd463",
+    "3edffc4c-68f5-4240-b469-cd4d2420d40c",
+    "2392839a-8dd2-42f1-9cb0-3d53f84190fd"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Prusament PETG Filament",
+    "description": "Compare 53 Prusament PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/prusament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Prusament"
+        }
+      ]
+    }
+  }
+}

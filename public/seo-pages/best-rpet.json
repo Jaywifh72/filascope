@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-rpet",
+  "title": "Best rPET Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best rPET filaments in 2026. 3 options from 1 brands, starting at $16.52. Expert picks, prices & specs.",
+  "h1": "Best rPET Filament (2026)",
+  "keywords": [
+    "best rPET",
+    "rPET filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "rPET",
+  "count": 3,
+  "brands": 1,
+  "min_price": 16.52,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best rPET Filament 2026",
+    "description": "Expert comparison of 3 rPET filaments",
+    "url": "https://filascope.com/best-rpet"
+  }
+}

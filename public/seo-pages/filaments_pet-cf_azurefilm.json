@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pet-cf/azurefilm",
+  "title": "AzureFilm PET-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 AzureFilm PET-CF filaments. Prices from $32.18 to $43.37. 1 colors available.",
+  "h1": "AzureFilm PET-CF Filament",
+  "keywords": [
+    "AzureFilm",
+    "PET-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PET-CF",
+  "vendor": "AzureFilm",
+  "count": 3,
+  "min_price": 32.18,
+  "max_price": 43.37,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "5b9e1c61-a430-4394-ba76-2e52f56f3e10",
+    "95512ba7-f40f-4a7e-8b76-e29790f58c82",
+    "fbad9e12-7a29-49a1-9775-f3718ce4aeef"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "AzureFilm PET-CF Filament",
+    "description": "Compare 3 AzureFilm PET-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pet-cf/azurefilm",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PET-CF",
+          "item": "https://filascope.com/filaments/pet-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AzureFilm"
+        }
+      ]
+    }
+  }
+}

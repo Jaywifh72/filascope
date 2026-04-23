@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/esun",
+  "title": "eSun PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 262 eSun PLA filaments. Prices from $16.99 to $55.99. 22 colors available. 261 with HueForge TD values.",
+  "h1": "eSun PLA Filament",
+  "keywords": [
+    "eSun",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "eSun",
+  "count": 262,
+  "min_price": 16.99,
+  "max_price": 55.99,
+  "color_count": 22,
+  "has_td": 261,
+  "filament_ids": [
+    "d729ed22-be27-4a51-a267-67841fd69d74",
+    "0d86f2ef-1a21-4fba-a064-2833f5630f55",
+    "0ce575f1-7316-42a1-85bd-9d8c3964b332",
+    "b5ce088d-898a-47d0-827b-83aaa0c9eb3d",
+    "2649e5f1-f2cf-4750-aff8-ec9251004034",
+    "bb8ea6fe-09b6-4bdb-aee8-b1590d3d9461",
+    "96a1c1ea-e515-4917-97e4-410a653137d8",
+    "10b0b61d-72ff-4157-ba16-47e47234b812",
+    "5d636d8c-662d-4d6f-994c-61ba07feb74c",
+    "99339e84-71c0-4e9c-adce-9387fc5c9e15",
+    "f21decb3-cc84-4e5d-b2f1-8dbf71cd23ae",
+    "a47334c2-6efc-44c6-b4a5-144bd023be51",
+    "fd55f78a-1a8b-436a-8165-88c154b14441",
+    "e3c090fa-3990-4b6a-8034-c9877c4a0956",
+    "6e67a612-075a-48a9-b921-430d70972c1e",
+    "125d0254-6a6b-4849-aad3-028ed1a4078e",
+    "02ff507c-5b2f-46de-b776-ad5247d72dbc",
+    "5319c378-ab28-4fde-a161-45d4c78e0fe0",
+    "f7986332-d307-4559-8618-0eefb471cec6",
+    "61067a36-cd01-4cee-a696-61901c862a00"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "eSun PLA Filament",
+    "description": "Compare 262 eSun PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/esun",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "eSun"
+        }
+      ]
+    }
+  }
+}

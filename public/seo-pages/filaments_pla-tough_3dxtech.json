@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-tough/3dxtech",
+  "title": "3DXTech PLA-Tough Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 3DXTech PLA-Tough filaments. Prices from $28.00 to $28.00. 3 colors available.",
+  "h1": "3DXTech PLA-Tough Filament",
+  "keywords": [
+    "3DXTech",
+    "PLA-Tough",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Tough",
+  "vendor": "3DXTech",
+  "count": 3,
+  "min_price": 28,
+  "max_price": 28,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "cda09ea8-d7ab-447b-968e-b110a8b7136a",
+    "aeebb00d-c187-4342-8149-dd255485f448",
+    "fb464860-25d9-41a3-a1cc-28e2ef677baa"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech PLA-Tough Filament",
+    "description": "Compare 3 3DXTech PLA-Tough filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-tough/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Tough",
+          "item": "https://filascope.com/filaments/pla-tough"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

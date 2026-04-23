@@ -1,0 +1,72 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/sainsmart",
+  "title": "SainSmart PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 19 SainSmart PLA filaments. Prices from $1.00 to $8171.00. 9 colors available. 19 with HueForge TD values.",
+  "h1": "SainSmart PLA Filament",
+  "keywords": [
+    "SainSmart",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "SainSmart",
+  "count": 19,
+  "min_price": 1,
+  "max_price": 8171,
+  "color_count": 9,
+  "has_td": 19,
+  "filament_ids": [
+    "8f83b379-05c7-42f1-9f82-41ac1548bdbd",
+    "fb260e60-1fbd-4651-814b-868927b117d1",
+    "1456ea29-8c52-4cbe-8652-786727cff21c",
+    "f548dca8-f8cd-40a8-98e3-f1045e5c5db1",
+    "16320707-d46d-41cf-980d-77265dd470c3",
+    "d12f8cd1-fe82-436d-b5ea-162f3045b979",
+    "acb2da1c-6595-4212-9b94-944e98106632",
+    "757227e4-2917-404c-9871-d6a6881efe7b",
+    "7861c2e5-091a-4f82-a97a-f0847f1b0df3",
+    "6eaa1a96-73e8-44b0-a8e9-6110e48d90bb",
+    "b294dc7e-c1c5-404d-bbbb-b379943a2c23",
+    "9385bf5b-2ca8-4d1d-83f5-b3bddff36fdd",
+    "f04bdb42-1558-484c-b464-c3ccc16cb33a",
+    "f54a28a9-62c9-48e1-91a9-f065a6c93612",
+    "ce308844-30cc-4b5c-800a-4cda3bfee005",
+    "9430b10f-42ce-4df6-b411-11d5ebceb1ee",
+    "c5f70429-93ea-4ddf-94d8-5203bc410846",
+    "a54a7668-8a37-4ebb-b303-6e8267869db9",
+    "50f97337-938c-4b8c-965c-ea0aa867cdd7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "SainSmart PLA Filament",
+    "description": "Compare 19 SainSmart PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/sainsmart",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "SainSmart"
+        }
+      ]
+    }
+  }
+}

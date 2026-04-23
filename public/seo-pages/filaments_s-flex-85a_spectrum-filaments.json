@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/s-flex-85a/spectrum-filaments",
+  "title": "Spectrum Filaments S-Flex 85A Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 Spectrum Filaments S-Flex 85A filaments. Prices from $37.00 to $37.00. 7 colors available.",
+  "h1": "Spectrum Filaments S-Flex 85A Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "S-Flex 85A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "S-Flex 85A",
+  "vendor": "Spectrum Filaments",
+  "count": 7,
+  "min_price": 37,
+  "max_price": 37,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "3ee7cf13-4aa2-4dcd-a73c-84b94f1df5b4",
+    "18883959-e1f8-49e1-9fc8-b26f11512115",
+    "4829a622-206f-4367-9bc4-6b90e81631af",
+    "ce9120b3-f061-4e9f-8b32-ee0843108e3e",
+    "0cb9417d-f010-4f0e-bbef-06de6058fcb2",
+    "c22342dc-6292-4aba-b4e9-7ed4bbd758e3",
+    "b75f40c5-f825-48b6-a49b-fcd8fc73fde3"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments S-Flex 85A Filament",
+    "description": "Compare 7 Spectrum Filaments S-Flex 85A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/s-flex-85a/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "S-Flex 85A",
+          "item": "https://filascope.com/filaments/s-flex-85a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

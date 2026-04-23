@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/treed-filaments",
+  "title": "TreeD Filaments TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 TreeD Filaments TPU filaments. Prices from $60.39 to $65.89. 3 colors available.",
+  "h1": "TreeD Filaments TPU Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "TreeD Filaments",
+  "count": 7,
+  "min_price": 60.39,
+  "max_price": 65.89,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "41e6f721-f81c-4185-8070-ffbfc35da08b",
+    "5ad3927c-5a93-4357-a742-1ac4b828ab5b",
+    "e016c9e8-d9c0-44d7-8ef6-55792ff9353d",
+    "6c77c82c-e8da-4896-a16a-0b33eb4095d3",
+    "91dc5978-3ee7-481f-8828-f4ff0e3dbbf4",
+    "af3649ad-c367-4602-bcb5-ef105fbc3a9a",
+    "49e3abc5-56e6-4466-9681-fd0d7af74c2f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments TPU Filament",
+    "description": "Compare 7 TreeD Filaments TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

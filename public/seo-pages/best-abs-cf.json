@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-abs-cf",
+  "title": "Best ABS-CF Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best ABS-CF filaments in 2026. 10 options from 8 brands, starting at $27.99. Expert picks, prices & specs.",
+  "h1": "Best ABS-CF Filament (2026)",
+  "keywords": [
+    "best ABS-CF",
+    "ABS-CF filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "ABS-CF",
+  "count": 10,
+  "brands": 8,
+  "min_price": 27.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best ABS-CF Filament 2026",
+    "description": "Expert comparison of 10 ABS-CF filaments",
+    "url": "https://filascope.com/best-abs-cf"
+  }
+}

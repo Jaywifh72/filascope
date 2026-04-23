@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/gst3d",
+  "title": "GST3D PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 79 GST3D PLA+ filaments. Prices from $8.91 to $78.83. 20 colors available. 79 with HueForge TD values.",
+  "h1": "GST3D PLA+ Filament",
+  "keywords": [
+    "GST3D",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "GST3D",
+  "count": 79,
+  "min_price": 8.91,
+  "max_price": 78.83,
+  "color_count": 20,
+  "has_td": 79,
+  "filament_ids": [
+    "0bc99cce-cce2-4ea7-8c73-5da0c14f8d6b",
+    "22bd77b2-4fde-49ad-8849-1eb484dabda8",
+    "6167bf3c-89f5-486d-9fc7-1bc058448e24",
+    "70b26681-71ea-47b6-af99-f67c07af0183",
+    "80df0c74-0759-4aea-b86e-09eb895c2568",
+    "60090218-21a0-478d-8b56-30b18767a8ad",
+    "b66c6eab-ff52-4e7e-bb53-17aa73d10706",
+    "3f03d499-a212-4a82-8657-b85c788c8272",
+    "45863115-5d26-4823-aaa3-e50055b56e44",
+    "18dc1577-f26d-4c62-8d92-58b027ad088f",
+    "66d488b4-a926-48d3-8858-6049990e664f",
+    "80da9585-f1cc-4264-960f-67e672770aa6",
+    "bffdac33-30b4-4812-a525-f3c7c134f24b",
+    "d21ea3cb-ace8-4a44-9d64-fbafe62b30cb",
+    "491d28b8-1cf2-4c34-bd46-e006961f7928",
+    "7baa58b8-4e6e-44d2-a704-119adfbd8571",
+    "eacd0669-362a-44c0-ae3e-9712bf9f9eee",
+    "30084124-a741-4a0c-9bc4-1da396c66715",
+    "2c68aee1-8127-4aab-a578-0f28d41ac9cf",
+    "279dc476-1c6a-4efc-b1aa-306afaaf9255"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "GST3D PLA+ Filament",
+    "description": "Compare 79 GST3D PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/gst3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GST3D"
+        }
+      ]
+    }
+  }
+}

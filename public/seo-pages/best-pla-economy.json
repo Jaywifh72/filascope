@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pla-economy",
+  "title": "Best PLA Economy Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PLA Economy filaments in 2026. 3 options from 1 brands, starting at $24.95. Expert picks, prices & specs.",
+  "h1": "Best PLA Economy Filament (2026)",
+  "keywords": [
+    "best PLA Economy",
+    "PLA Economy filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PLA Economy",
+  "count": 3,
+  "brands": 1,
+  "min_price": 24.95,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PLA Economy Filament 2026",
+    "description": "Expert comparison of 3 PLA Economy filaments",
+    "url": "https://filascope.com/best-pla-economy"
+  }
+}

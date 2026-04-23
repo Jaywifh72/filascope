@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pp/treed-filaments",
+  "title": "TreeD Filaments PP Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 TreeD Filaments PP filaments. Prices from $49.39 to $60.39. 3 colors available.",
+  "h1": "TreeD Filaments PP Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "PP",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PP",
+  "vendor": "TreeD Filaments",
+  "count": 6,
+  "min_price": 49.39,
+  "max_price": 60.39,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "1e2cd303-7611-4e7a-86fa-d22cea32db47",
+    "5c39dd29-7273-4e0f-85f5-73678c5fe4f6",
+    "aa94ceb8-1886-460b-85b5-508ce31b5a68",
+    "f788f207-57ae-4d72-b0a3-f29d1e7e67f3",
+    "2762d8bf-da61-4ad6-95a6-399ba6bbe7a5",
+    "1056a2bb-abd0-42c9-acc5-5bfbc860a110"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments PP Filament",
+    "description": "Compare 6 TreeD Filaments PP filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pp/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PP",
+          "item": "https://filascope.com/filaments/pp"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/s-flex-98a/spectrum-filaments",
+  "title": "Spectrum Filaments S-Flex 98A Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Spectrum Filaments S-Flex 98A filaments. Prices from $37.00 to $80.00. 8 colors available.",
+  "h1": "Spectrum Filaments S-Flex 98A Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "S-Flex 98A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "S-Flex 98A",
+  "vendor": "Spectrum Filaments",
+  "count": 8,
+  "min_price": 37,
+  "max_price": 80,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "e08d15e8-94ae-4a93-acb5-b57da172d180",
+    "4ecde599-f705-4f01-813d-d9c1c4e5bc85",
+    "daac01a5-1cfa-49b4-b48f-45582ad9f782",
+    "bdf542d7-c844-4b33-890b-24bea21b4e4a",
+    "801542fc-c6a3-403d-b56d-27a5ce9bb4b6",
+    "1042fcff-517e-4194-a3f5-308f896fe17d",
+    "9ee8a746-e694-4dee-8dc1-f990f1958d7f",
+    "53af25d0-74ea-4bb3-9d34-3571c0192059"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments S-Flex 98A Filament",
+    "description": "Compare 8 Spectrum Filaments S-Flex 98A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/s-flex-98a/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "S-Flex 98A",
+          "item": "https://filascope.com/filaments/s-flex-98a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pc-abs",
+  "title": "Best PC-ABS Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PC-ABS filaments in 2026. 21 options from 6 brands, starting at $39.99. Expert picks, prices & specs.",
+  "h1": "Best PC-ABS Filament (2026)",
+  "keywords": [
+    "best PC-ABS",
+    "PC-ABS filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PC-ABS",
+  "count": 21,
+  "brands": 6,
+  "min_price": 39.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PC-ABS Filament 2026",
+    "description": "Expert comparison of 21 PC-ABS filaments",
+    "url": "https://filascope.com/best-pc-abs"
+  }
+}

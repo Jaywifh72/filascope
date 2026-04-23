@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-glow/numakers",
+  "title": "Numakers PLA-GLOW Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Numakers PLA-GLOW filaments. Prices from $24.99 to $24.99. 5 colors available.",
+  "h1": "Numakers PLA-GLOW Filament",
+  "keywords": [
+    "Numakers",
+    "PLA-GLOW",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-GLOW",
+  "vendor": "Numakers",
+  "count": 5,
+  "min_price": 24.99,
+  "max_price": 24.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "9aad2f74-5373-4523-b54c-fa2490142aba",
+    "43dea89b-7855-436b-9e79-96396ffe011a",
+    "98875465-cae0-4696-a4e7-c9947855a04c",
+    "b0037549-c482-4b97-846e-2c02fa53188c",
+    "59c2ac08-9343-4c12-82ed-0a70cb4fcf47"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PLA-GLOW Filament",
+    "description": "Compare 5 Numakers PLA-GLOW filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-glow/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-GLOW",
+          "item": "https://filascope.com/filaments/pla-glow"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

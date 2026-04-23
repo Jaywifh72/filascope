@@ -1,0 +1,72 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/amolen",
+  "title": "Amolen TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 19 Amolen TPU filaments. Prices from $28.00 to $43.00. 10 colors available. 19 with HueForge TD values.",
+  "h1": "Amolen TPU Filament",
+  "keywords": [
+    "Amolen",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Amolen",
+  "count": 19,
+  "min_price": 28,
+  "max_price": 43,
+  "color_count": 10,
+  "has_td": 19,
+  "filament_ids": [
+    "490ef5ca-9cdc-4bc5-9aca-77e3c1302f6a",
+    "24b9739a-9dac-466c-ba6b-e9ed2405f2cd",
+    "4ba31ba5-77d9-4734-ab06-997c8155a972",
+    "344f485f-80f4-455d-8863-0e23411e3bd8",
+    "8ec3d2bd-0657-45b7-b6e7-e5f53e00a997",
+    "f437c153-d966-4633-926e-e9e8f5a919e6",
+    "6df7e20e-fc13-4249-95a4-71aa8c3c2eeb",
+    "89b59f8e-d9e5-401e-8923-c277a65cdd35",
+    "ee10b7a9-05d6-4c66-b430-14de6d52154b",
+    "a306b35e-823d-432d-905a-f84e7b2aadaf",
+    "3a0fecdc-1261-4c54-b5b1-565d978373b2",
+    "6f8978a2-b0fd-4eec-914a-477c548413a2",
+    "f296fcdc-c8bd-446e-95e2-42a68702258d",
+    "68396048-98fb-4189-a8d9-6069bf9d88b5",
+    "ae0d166b-67ec-48ec-a4de-e9f9a7f776f5",
+    "4dd75523-1e7b-4393-a2c3-499396a7491f",
+    "5814c342-5fb6-409c-b33e-a40a51179676",
+    "949c75ef-d764-455d-8b77-0cfc2b8a7bac",
+    "f8028ccc-eda9-4624-b44e-ef40c8ab9dd5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Amolen TPU Filament",
+    "description": "Compare 19 Amolen TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/amolen",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Amolen"
+        }
+      ]
+    }
+  }
+}

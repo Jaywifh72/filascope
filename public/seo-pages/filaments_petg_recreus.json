@@ -1,0 +1,63 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/recreus",
+  "title": "Recreus PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 10 Recreus PETG filaments. Prices from $32.00 to $32.00. 8 colors available. 10 with HueForge TD values.",
+  "h1": "Recreus PETG Filament",
+  "keywords": [
+    "Recreus",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Recreus",
+  "count": 10,
+  "min_price": 32,
+  "max_price": 32,
+  "color_count": 8,
+  "has_td": 10,
+  "filament_ids": [
+    "c8d6804f-0f75-4991-b748-09a0c12b4fe4",
+    "849b45bb-8927-4d14-bd6b-8fca12cfd608",
+    "520f3ef8-08eb-4924-bd96-5278bb505773",
+    "833a84bf-9f44-4ad9-b5a3-e5f3e7ac4734",
+    "3cdcb3d1-36a6-42fb-bfe1-781c447c4013",
+    "3a57756f-8452-4f32-b162-16d01fdf1828",
+    "0aa05987-9f41-48cf-9bed-2dde6030b404",
+    "09fdc3cb-1372-4f66-858e-48353f697808",
+    "44afe31b-780c-4315-9961-ebf0cf86d090",
+    "2cf43dca-2657-49f3-81d8-ff723ab73e6e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Recreus PETG Filament",
+    "description": "Compare 10 Recreus PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/recreus",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recreus"
+        }
+      ]
+    }
+  }
+}

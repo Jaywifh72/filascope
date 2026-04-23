@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/3dxtech",
+  "title": "3DXTech PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 56 3DXTech PLA filaments. Prices from $13.49 to $299.00. 19 colors available. 56 with HueForge TD values.",
+  "h1": "3DXTech PLA Filament",
+  "keywords": [
+    "3DXTech",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "3DXTech",
+  "count": 56,
+  "min_price": 13.49,
+  "max_price": 299,
+  "color_count": 19,
+  "has_td": 56,
+  "filament_ids": [
+    "7df09419-0a97-4fc5-bc7c-09af1f4ea0fb",
+    "0ef12fec-4537-499f-b085-7ba22770a509",
+    "4e31fcd5-61fb-46af-a96e-898bd93ce3dc",
+    "2f2f2fa6-5286-4651-8501-5f289f148ff1",
+    "affcd891-06e6-4059-a33e-1eec05cc2373",
+    "87d96e51-8966-4cb7-8488-5f51a1b08164",
+    "8b9059f8-d74f-4667-8d52-29de2fcb6fb7",
+    "37bca657-1e42-4870-baff-14173aa3b8fd",
+    "321c9133-d0bd-4fbf-b6b6-fe9f05f2a476",
+    "367320bb-2f15-42b1-aa1d-84339f47128c",
+    "46f4b107-28a2-41e4-a99a-c19d4cd1d7f0",
+    "51078d92-8618-48ca-82fd-bab4d7ca5ac0",
+    "2984bea2-55d5-41cf-9c16-eb97a39f238d",
+    "3c80bd95-cd06-4c69-8196-1e9bbbdc8764",
+    "82775f67-5749-498a-9b46-c10d804b6333",
+    "235f45b7-e1e1-4f6f-9a90-188a222ca0fe",
+    "012b039d-9d20-4c17-afe2-f094bf95dbd6",
+    "13477ef7-e44a-4ae8-92ef-c2f1c39f57cc",
+    "76510e72-dd66-444c-abd0-b629e2a2ba8e",
+    "751fdbf1-958d-4a43-bbc6-911587628260"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech PLA Filament",
+    "description": "Compare 56 3DXTech PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

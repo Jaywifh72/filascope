@@ -1,0 +1,68 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pctg/fiberlogy",
+  "title": "Fiberlogy PCTG Filament — Prices, Specs & Reviews",
+  "description": "Compare 15 Fiberlogy PCTG filaments. Prices from $27.99 to $27.99. 15 colors available.",
+  "h1": "Fiberlogy PCTG Filament",
+  "keywords": [
+    "Fiberlogy",
+    "PCTG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PCTG",
+  "vendor": "Fiberlogy",
+  "count": 15,
+  "min_price": 27.99,
+  "max_price": 27.99,
+  "color_count": 15,
+  "has_td": 0,
+  "filament_ids": [
+    "1f25029f-913e-4560-86cf-df9a5724fbd7",
+    "52db60f5-7e91-4434-adcd-91c6534ff3e9",
+    "38243df5-1396-4777-ab36-b2512eebd2dd",
+    "dfc467f8-cbd7-4956-8598-2843035765fc",
+    "e4626276-8bb4-4262-8e50-392778753001",
+    "1118369d-363e-4ffa-8524-848ccfe996ab",
+    "96f4b048-f270-47b0-bfa8-265dc0dbe560",
+    "8667c69f-7c58-4025-880d-5e6fdcf6078c",
+    "bae75b85-ff3e-423a-bdbb-1379e696e337",
+    "5fe78a31-0aca-4a16-aca2-e1e3ad8c064f",
+    "fdda5f92-25b5-40e3-af7b-62a6bd951a8c",
+    "6635a479-60b3-4b51-be08-9a95839155f6",
+    "341a2d6e-8780-4c5a-9eb9-132bf55d5aca",
+    "318ad414-96cd-43dd-ad6f-723e6d52ff58",
+    "da5adb1a-ee2f-4f7f-b51a-85a5a7ffe715"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy PCTG Filament",
+    "description": "Compare 15 Fiberlogy PCTG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pctg/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PCTG",
+          "item": "https://filascope.com/filaments/pctg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

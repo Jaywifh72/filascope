@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc/flashforge",
+  "title": "FlashForge PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 FlashForge PC filaments. Prices from $9.90 to $22.93. 2 colors available. 2 with HueForge TD values.",
+  "h1": "FlashForge PC Filament",
+  "keywords": [
+    "FlashForge",
+    "PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC",
+  "vendor": "FlashForge",
+  "count": 3,
+  "min_price": 9.9,
+  "max_price": 22.93,
+  "color_count": 2,
+  "has_td": 2,
+  "filament_ids": [
+    "bb2eda0c-b9c8-4ba3-8db1-aa032a8903c0",
+    "90a2b8ca-856e-43df-a45c-df68660168a7",
+    "ec42f5d9-79e2-426d-b59f-95bc1d92f6ca"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FlashForge PC Filament",
+    "description": "Compare 3 FlashForge PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc/flashforge",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC",
+          "item": "https://filascope.com/filaments/pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FlashForge"
+        }
+      ]
+    }
+  }
+}

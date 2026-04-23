@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/formfutura",
+  "title": "FormFutura PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 50 FormFutura PETG filaments. Prices from $3.30 to $34.50. 27 colors available. 50 with HueForge TD values.",
+  "h1": "FormFutura PETG Filament",
+  "keywords": [
+    "FormFutura",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "FormFutura",
+  "count": 50,
+  "min_price": 3.3,
+  "max_price": 34.5,
+  "color_count": 27,
+  "has_td": 50,
+  "filament_ids": [
+    "efe11aae-52e4-48de-a20f-1d8f37a8a095",
+    "9e75e141-c045-4b97-bc8e-64f253b87684",
+    "14074b30-43b7-467c-8f2c-96718fc5423d",
+    "5dfbb0ca-47f4-4089-a0ca-3ca7a85b3155",
+    "ed793af3-21fa-4c25-bec8-b54f0b37158d",
+    "16f6b4da-f66d-4211-9396-9fe46107ccc4",
+    "7869da1b-24e4-4c8b-bfe2-05246b0776b0",
+    "cbc744df-6433-45bc-934f-05cb423cb25c",
+    "971c9dda-b16c-41f7-8d30-e8d21ad5eb90",
+    "6b889a34-2039-4f4d-9585-bef701633eb0",
+    "9cc1021c-0c4c-4746-a42e-c7ed89d30cc0",
+    "24d56fe1-962c-45bd-a981-91ce7e284da0",
+    "78e76249-637c-4c45-80a8-c96a3eb1fb0d",
+    "2462d77b-27f0-4257-8f7b-02a7e0257b79",
+    "37c0dfcd-d63b-45d2-a0da-34ec3624a371",
+    "61d3ae43-18ea-46f4-b6c4-8a48d41e72fd",
+    "9d566a7e-6e1d-4fb6-b540-1889f488bb3f",
+    "9aafac37-bdd1-499c-acc5-ef723de9fe5e",
+    "81df974c-d51e-4a8c-8d58-daa24c22ceb6",
+    "5041a70d-4888-41bb-b589-0985698e4958"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura PETG Filament",
+    "description": "Compare 50 FormFutura PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

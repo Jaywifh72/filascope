@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/flameguard-asa-275/spectrum-filaments",
+  "title": "Spectrum Filaments FlameGuard ASA 275 Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Spectrum Filaments FlameGuard ASA 275 filaments. Prices from $76.00 to $76.00. 6 colors available.",
+  "h1": "Spectrum Filaments FlameGuard ASA 275 Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "FlameGuard ASA 275",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "FlameGuard ASA 275",
+  "vendor": "Spectrum Filaments",
+  "count": 6,
+  "min_price": 76,
+  "max_price": 76,
+  "color_count": 6,
+  "has_td": 0,
+  "filament_ids": [
+    "74d85d0e-bee9-4d0a-ba34-f99dffc24de7",
+    "05d8398b-57c6-472a-a966-8e7a48b0b350",
+    "1535e25d-bcdd-4660-bb87-b5a2bee40545",
+    "8a23b11a-7e0f-44ae-8df9-849c6a58dde1",
+    "c0985c7f-f650-4a8d-b821-83995c4e0042",
+    "13cfdc0e-44f4-44b9-b79a-aa78a2ec986b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments FlameGuard ASA 275 Filament",
+    "description": "Compare 6 Spectrum Filaments FlameGuard ASA 275 filaments on FilaScope",
+    "url": "https://filascope.com/filaments/flameguard-asa-275/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "FlameGuard ASA 275",
+          "item": "https://filascope.com/filaments/flameguard-asa-275"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

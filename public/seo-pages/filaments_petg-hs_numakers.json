@@ -1,0 +1,69 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-hs/numakers",
+  "title": "Numakers PETG-HS Filament — Prices, Specs & Reviews",
+  "description": "Compare 16 Numakers PETG-HS filaments. Prices from $21.99 to $21.99. 16 colors available.",
+  "h1": "Numakers PETG-HS Filament",
+  "keywords": [
+    "Numakers",
+    "PETG-HS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-HS",
+  "vendor": "Numakers",
+  "count": 16,
+  "min_price": 21.99,
+  "max_price": 21.99,
+  "color_count": 16,
+  "has_td": 0,
+  "filament_ids": [
+    "10ffc373-1ea2-4298-a116-83237bd49177",
+    "a06c5e48-802b-4584-8b46-34e19d2880cf",
+    "35657612-2008-4fe9-a7cd-a327877ee302",
+    "69028ad8-6305-4b44-8d66-c894391b6d38",
+    "9799196f-eaef-491c-8f0a-10f222b6d204",
+    "753c7d06-d8a9-4694-95fe-8bf745420c3e",
+    "211f99c8-acb2-4741-9fb9-2d8241a3cf5e",
+    "3d84f03c-2df5-4ddc-b314-738a1efc9d68",
+    "2d421718-cc50-472e-baf3-b44022ed8291",
+    "ece6ccaa-b476-4c11-bd49-7b9e82ec3b73",
+    "73a4072c-95f4-494b-a29b-101f2f060e81",
+    "578c00e7-aa55-4d5e-a008-98af53732df9",
+    "538c23aa-a492-47fe-9b35-5a03759e23ff",
+    "e4ad9929-d5c5-43a5-ab68-25363fe8e9fa",
+    "5524030e-1b71-4536-bf76-93b8980769a8",
+    "65151780-250a-4dac-983d-6a87d7197c61"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PETG-HS Filament",
+    "description": "Compare 16 Numakers PETG-HS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-hs/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-HS",
+          "item": "https://filascope.com/filaments/petg-hs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

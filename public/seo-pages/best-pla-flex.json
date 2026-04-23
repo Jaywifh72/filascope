@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pla-flex",
+  "title": "Best PLA-Flex Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PLA-Flex filaments in 2026. 6 options from 1 brands, starting at $43.89. Expert picks, prices & specs.",
+  "h1": "Best PLA-Flex Filament (2026)",
+  "keywords": [
+    "best PLA-Flex",
+    "PLA-Flex filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PLA-Flex",
+  "count": 6,
+  "brands": 1,
+  "min_price": 43.89,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PLA-Flex Filament 2026",
+    "description": "Expert comparison of 6 PLA-Flex filaments",
+    "url": "https://filascope.com/best-pla-flex"
+  }
+}

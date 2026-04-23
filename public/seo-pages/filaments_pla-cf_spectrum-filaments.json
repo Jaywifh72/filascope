@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-cf/spectrum-filaments",
+  "title": "Spectrum Filaments PLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 Spectrum Filaments PLA-CF filaments. Prices from $44.00 to $46.00. 7 colors available. 14 with HueForge TD values.",
+  "h1": "Spectrum Filaments PLA-CF Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-CF",
+  "vendor": "Spectrum Filaments",
+  "count": 14,
+  "min_price": 44,
+  "max_price": 46,
+  "color_count": 7,
+  "has_td": 14,
+  "filament_ids": [
+    "380107af-d44a-4fd2-956b-608906b13b45",
+    "35d678b3-1c18-4623-8db7-5225095327da",
+    "498e9150-cfca-418c-8879-93d08e9b7a2f",
+    "73e7b06d-d2de-4a74-abcd-112b3ff25bbf",
+    "baaee465-103f-4859-aa25-48a6d81e17ab",
+    "1ca73797-1cfc-45b7-aadc-05b097355058",
+    "32c12073-6fde-4af9-b030-a9ea11c3f256",
+    "5fe44e62-0aba-4716-bfe2-76388962fbe4",
+    "5bbaf8b6-d8b1-4306-b1b6-054eff2c71a6",
+    "464d7e59-42af-42c1-ba6b-2ee60ec19e8b",
+    "57a83de9-e892-48ef-baa2-0652bbda2b7b",
+    "6e4c5790-76e9-416b-a3b2-8536d08b7feb",
+    "9346d2f6-ca82-4506-9034-0b517bf4938a",
+    "b330c995-b51d-4140-84a9-e8c044f1269d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA-CF Filament",
+    "description": "Compare 14 Spectrum Filaments PLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-cf/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-CF",
+          "item": "https://filascope.com/filaments/pla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

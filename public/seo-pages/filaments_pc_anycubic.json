@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc/anycubic",
+  "title": "Anycubic PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Anycubic PC filaments. Prices from $18.99 to $234.99. 3 colors available. 5 with HueForge TD values.",
+  "h1": "Anycubic PC Filament",
+  "keywords": [
+    "Anycubic",
+    "PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC",
+  "vendor": "Anycubic",
+  "count": 5,
+  "min_price": 18.99,
+  "max_price": 234.99,
+  "color_count": 3,
+  "has_td": 5,
+  "filament_ids": [
+    "4c9afca5-285a-40dd-a93f-5161ce49a0c6",
+    "b3d7b741-357f-49b6-b6c4-9f0e7968572c",
+    "182b1304-e9ef-4bd4-8969-11c3dc5ba6f4",
+    "3644d040-ee43-4aaf-8800-51c2a3c67c1b",
+    "c7e4629d-b207-46b8-997a-3136fe34db31"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic PC Filament",
+    "description": "Compare 5 Anycubic PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC",
+          "item": "https://filascope.com/filaments/pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

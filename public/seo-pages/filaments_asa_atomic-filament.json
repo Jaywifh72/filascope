@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/atomic-filament",
+  "title": "Atomic Filament ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Atomic Filament ASA filaments. Prices from $32.99 to $49.99. 7 colors available.",
+  "h1": "Atomic Filament ASA Filament",
+  "keywords": [
+    "Atomic Filament",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Atomic Filament",
+  "count": 9,
+  "min_price": 32.99,
+  "max_price": 49.99,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "c0e61501-64a9-40da-9066-8e3b54c39187",
+    "fba3165e-a613-4b19-91e0-ab1f7ec461fd",
+    "e82b7406-dd8f-4cf3-ab9b-9dd522b1604f",
+    "4c06571f-9cf6-44c7-b64e-0df70766594a",
+    "d56769c0-f4c5-4ef4-b4a2-75fc4e791d85",
+    "dd8136a2-e41d-4496-abaf-cdbff013a759",
+    "bcb3514b-27fb-4540-87a3-d1b2ed66cc12",
+    "62f5c56a-8fd6-4777-b622-203d129aac1a",
+    "2ad524e4-b100-47c5-aba8-95c2f09111b1"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Atomic Filament ASA Filament",
+    "description": "Compare 9 Atomic Filament ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/atomic-filament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Atomic Filament"
+        }
+      ]
+    }
+  }
+}

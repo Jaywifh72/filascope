@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/extrudr",
+  "title": "Extrudr ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Extrudr ABS filaments. Prices from $29.90 to $29.90. 9 colors available.",
+  "h1": "Extrudr ABS Filament",
+  "keywords": [
+    "Extrudr",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Extrudr",
+  "count": 9,
+  "min_price": 29.9,
+  "max_price": 29.9,
+  "color_count": 9,
+  "has_td": 0,
+  "filament_ids": [
+    "2a75040c-9098-4423-abe9-24446827f665",
+    "0f8ed967-e8e8-4f36-836d-dd63ffb6733d",
+    "50ad3110-3587-49f0-89e3-e16781162082",
+    "0f16f80e-94b8-4ec1-b7da-989f015b7bf1",
+    "2a4991c1-f78c-4a1f-9066-fda56a482b65",
+    "e0214118-8a7a-48db-97b3-7a349eed2195",
+    "73797fe4-8a96-444c-b8c4-09e4b1403529",
+    "cf82ef21-1da6-4d23-b411-d3648531c77f",
+    "9607e9d8-05c9-4fdb-8fad-cdc9c3587dde"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Extrudr ABS Filament",
+    "description": "Compare 9 Extrudr ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/extrudr",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Extrudr"
+        }
+      ]
+    }
+  }
+}

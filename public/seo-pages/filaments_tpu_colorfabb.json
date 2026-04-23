@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/colorfabb",
+  "title": "ColorFabb TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 21 ColorFabb TPU filaments. Prices from $43.41 to $59.70. 13 colors available. 21 with HueForge TD values.",
+  "h1": "ColorFabb TPU Filament",
+  "keywords": [
+    "ColorFabb",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "ColorFabb",
+  "count": 21,
+  "min_price": 43.41,
+  "max_price": 59.7,
+  "color_count": 13,
+  "has_td": 21,
+  "filament_ids": [
+    "1e299645-424c-4762-a249-cdb40c33c850",
+    "48f9ea95-7f88-4606-98e5-a5d70b2ce47e",
+    "208ff3e0-3c39-4288-8a5b-a82555da2d12",
+    "7ded8237-fd23-4776-99b9-86f137c6ad49",
+    "2cbfa684-35df-40af-b600-5dc153c7246e",
+    "8da7ca3f-8cab-4d43-8a2c-d6f5b0ca9314",
+    "d76e4f4e-464a-4bce-8221-88dcef5d4425",
+    "07213681-ccd5-4cc9-9896-b381db6a7807",
+    "ea180165-f29d-424c-a3be-676c28b6797c",
+    "6a903f96-237d-4423-8823-eed2153c2644",
+    "1e7d504b-2c7a-401f-8697-c5a3c1e60930",
+    "0a2d0027-b788-4cc2-900d-5254af6e0c5d",
+    "158f9072-541c-4c35-9380-3ed29abc46b5",
+    "8f05d1a5-5067-46ee-8fb3-e44119ab92e3",
+    "caddc3bf-eb93-4633-b361-c46b760a7944",
+    "e96fa457-28fb-4496-925b-da0d3a510b30",
+    "01bb5e44-c241-43a9-af42-7bad39b48063",
+    "17353d48-e4c2-4872-9f29-096f5ec690a6",
+    "88e92eb5-2af9-4aee-9228-dd687666a6dd",
+    "ab93723a-5730-4336-8caf-a73f5ec0370f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "ColorFabb TPU Filament",
+    "description": "Compare 21 ColorFabb TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/colorfabb",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ColorFabb"
+        }
+      ]
+    }
+  }
+}

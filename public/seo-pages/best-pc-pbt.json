@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pc-pbt",
+  "title": "Best PC-PBT Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PC-PBT filaments in 2026. 8 options from 4 brands, starting at $49.90. Expert picks, prices & specs.",
+  "h1": "Best PC-PBT Filament (2026)",
+  "keywords": [
+    "best PC-PBT",
+    "PC-PBT filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PC-PBT",
+  "count": 8,
+  "brands": 4,
+  "min_price": 49.9,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PC-PBT Filament 2026",
+    "description": "Expert comparison of 8 PC-PBT filaments",
+    "url": "https://filascope.com/best-pc-pbt"
+  }
+}

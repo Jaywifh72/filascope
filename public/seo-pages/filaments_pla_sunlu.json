@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/sunlu",
+  "title": "Sunlu PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 86 Sunlu PLA filaments. Prices from $9.49 to $59.99. 13 colors available. 1 with HueForge TD values.",
+  "h1": "Sunlu PLA Filament",
+  "keywords": [
+    "Sunlu",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Sunlu",
+  "count": 86,
+  "min_price": 9.49,
+  "max_price": 59.99,
+  "color_count": 13,
+  "has_td": 1,
+  "filament_ids": [
+    "a51a886b-40e6-4129-8a53-d94752455070",
+    "2fcd7f4c-1085-4ff0-ae3c-29db784c402d",
+    "10f8403a-9426-4dd6-bfb7-0cee26abae59",
+    "60944aa1-bf5e-4d7f-a56f-1d0d681b1b29",
+    "06afc215-f378-488a-99c9-eb121ff11eb2",
+    "a89ddad2-78be-4401-a647-5f1612054f16",
+    "01d5b02b-30ac-40c9-a3a0-6444373bdc7a",
+    "7b2159b3-a1ff-4617-8dea-31666072443a",
+    "a38485fc-383e-4bfc-83ff-c0e12e9f6cc9",
+    "4f07fc93-0170-49f3-a041-e1a768fb5e41",
+    "26fa4da8-2f5d-4a2b-925f-aa3203829116",
+    "2ececb8e-742c-4276-a06f-8ab4a2bf86e7",
+    "07551890-acfd-4437-a0c2-301caf90beb2",
+    "1e633540-c02f-411a-a892-45d710f593fa",
+    "37066170-363d-4478-ba24-a4d18aa18ac7",
+    "6769bcfe-9418-418f-aa0c-e72944d04be6",
+    "c021d348-2d25-4f9f-b843-15291ae45b1b",
+    "56f7aa5e-6a90-4baa-b813-efdb66e6c18a",
+    "06492805-0d19-46c9-a3b2-96d617534e17",
+    "c8eb5020-b9e9-49f2-b495-0d2b15a5f2ec"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sunlu PLA Filament",
+    "description": "Compare 86 Sunlu PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/sunlu",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sunlu"
+        }
+      ]
+    }
+  }
+}

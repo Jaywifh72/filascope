@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-rpetg",
+  "title": "Best rPETG Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best rPETG filaments in 2026. 21 options from 3 brands, starting at $26.00. Expert picks, prices & specs.",
+  "h1": "Best rPETG Filament (2026)",
+  "keywords": [
+    "best rPETG",
+    "rPETG filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "rPETG",
+  "count": 21,
+  "brands": 3,
+  "min_price": 26,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best rPETG Filament 2026",
+    "description": "Expert comparison of 21 rPETG filaments",
+    "url": "https://filascope.com/best-rpetg"
+  }
+}

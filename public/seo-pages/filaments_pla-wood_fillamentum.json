@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-wood/fillamentum",
+  "title": "Fillamentum PLA-Wood Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Fillamentum PLA-Wood filaments. Prices from $32.99 to $32.99. 5 colors available.",
+  "h1": "Fillamentum PLA-Wood Filament",
+  "keywords": [
+    "Fillamentum",
+    "PLA-Wood",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Wood",
+  "vendor": "Fillamentum",
+  "count": 8,
+  "min_price": 32.99,
+  "max_price": 32.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "58042db1-365f-43ef-b6f8-960a271bedae",
+    "625075e7-e026-46f4-83b0-7ad7fb3f98cc",
+    "ecaefa3c-9c6f-427a-9b6b-c1d0082e98e1",
+    "7b67e486-ebc5-4c71-8636-5e0264961261",
+    "17a52a0e-dce9-4f64-8b9b-c5d9af798be3",
+    "86da13c5-e740-4c4b-8520-513e47bc2fae",
+    "17af7924-0a90-4ba8-9d75-844b982da70f",
+    "3721a460-bbe2-4ad0-9f4f-9d42f7c73156"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum PLA-Wood Filament",
+    "description": "Compare 8 Fillamentum PLA-Wood filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-wood/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Wood",
+          "item": "https://filascope.com/filaments/pla-wood"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/hemp-pla/3d-fuel",
+  "title": "3D-Fuel Hemp-PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 3D-Fuel Hemp-PLA filaments. Prices from $40.00 to $260.00. 1 colors available.",
+  "h1": "3D-Fuel Hemp-PLA Filament",
+  "keywords": [
+    "3D-Fuel",
+    "Hemp-PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Hemp-PLA",
+  "vendor": "3D-Fuel",
+  "count": 3,
+  "min_price": 40,
+  "max_price": 260,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "a89863d1-5308-40cc-b55d-175ead601c6a",
+    "5ce21665-2de7-4960-beba-7704b8a4c9cc",
+    "0255e0e7-e3ce-469d-ada6-78d0e78aa9fb"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3D-Fuel Hemp-PLA Filament",
+    "description": "Compare 3 3D-Fuel Hemp-PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/hemp-pla/3d-fuel",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Hemp-PLA",
+          "item": "https://filascope.com/filaments/hemp-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3D-Fuel"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/hips/gizmo-dorks",
+  "title": "Gizmo Dorks HIPS Filament — Prices, Specs & Reviews",
+  "description": "Compare 24 Gizmo Dorks HIPS filaments. Prices from $20.95 to $104.95. 12 colors available. 24 with HueForge TD values.",
+  "h1": "Gizmo Dorks HIPS Filament",
+  "keywords": [
+    "Gizmo Dorks",
+    "HIPS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "HIPS",
+  "vendor": "Gizmo Dorks",
+  "count": 24,
+  "min_price": 20.95,
+  "max_price": 104.95,
+  "color_count": 12,
+  "has_td": 24,
+  "filament_ids": [
+    "7361b855-e5b6-4276-9b2c-2128467c4c35",
+    "4f42a6cb-2e34-4dcc-bf53-35f8f26edd9c",
+    "56bab8f4-146c-48b1-a191-5695ca6cc922",
+    "eb48948e-9761-4bb8-8a0a-c22a215aad88",
+    "82c3206b-7895-481c-9396-3f636c85160d",
+    "0888ed07-90d7-4f34-8fc3-091db9815d71",
+    "5904fd99-2211-40ff-8478-696ae77773fa",
+    "acf14919-de93-4e6c-b429-517c13cbe2d6",
+    "ee62b777-5bda-4847-b0da-e4e522d5224a",
+    "e064f1c1-200a-4b86-92aa-2f0b8c37de46",
+    "4ebbc704-72c8-4951-ae5f-0aa9716f8e99",
+    "5fb76283-ae69-4bb8-8383-549814c67b87",
+    "cc93a9cf-a204-4004-90c8-73e6d39caa2f",
+    "e3e3b5e7-79de-44a9-ac78-602f581967c4",
+    "a0735c20-d267-4396-b091-3a3966701242",
+    "d93b049e-3b4e-4f31-a364-83d4be637a5e",
+    "085a2f3b-f93c-41d3-9358-229b17ff032a",
+    "460a8482-e840-465b-a1b0-bd5876a3f84b",
+    "2129d086-857e-4554-b7f0-ed7c914f1dec",
+    "35e213bd-ec32-4123-8b38-a2a77d890898"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Gizmo Dorks HIPS Filament",
+    "description": "Compare 24 Gizmo Dorks HIPS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/hips/gizmo-dorks",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "HIPS",
+          "item": "https://filascope.com/filaments/hips"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Gizmo Dorks"
+        }
+      ]
+    }
+  }
+}

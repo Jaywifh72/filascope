@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/anycubic",
+  "title": "Anycubic ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Anycubic ASA filaments. Prices from $25.99 to $25.99. 4 colors available. 4 with HueForge TD values.",
+  "h1": "Anycubic ASA Filament",
+  "keywords": [
+    "Anycubic",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Anycubic",
+  "count": 4,
+  "min_price": 25.99,
+  "max_price": 25.99,
+  "color_count": 4,
+  "has_td": 4,
+  "filament_ids": [
+    "12ea7627-0beb-4641-aa5c-b86952414468",
+    "3d350677-e8ae-4e09-80bf-c33fc8ab0987",
+    "163e4c3b-0d49-4ab7-b315-f283803df45b",
+    "aa9687f6-1818-439e-8af3-ecad1d8de490"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic ASA Filament",
+    "description": "Compare 4 Anycubic ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

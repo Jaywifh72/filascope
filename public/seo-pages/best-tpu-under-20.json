@@ -1,0 +1,23 @@
+{
+  "type": "price-target",
+  "url": "/best-tpu-under-20",
+  "title": "Best TPU Filament Under $20 — 54 Options Compared",
+  "description": "54 TPU filaments under $20 from 9 brands. Find the best value TPU for your 3D printer.",
+  "h1": "Best TPU Filament Under $20",
+  "keywords": [
+    "best TPU under $20",
+    "cheap TPU",
+    "TPU filament",
+    "budget"
+  ],
+  "material": "TPU",
+  "max_price": 20,
+  "count": 54,
+  "brands": 9,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best TPU Filament Under $20",
+    "url": "https://filascope.com/best-tpu-under-20"
+  }
+}

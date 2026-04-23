@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-translucent/numakers",
+  "title": "Numakers PETG-TRANSLUCENT Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Numakers PETG-TRANSLUCENT filaments. Prices from $21.99 to $21.99. 9 colors available.",
+  "h1": "Numakers PETG-TRANSLUCENT Filament",
+  "keywords": [
+    "Numakers",
+    "PETG-TRANSLUCENT",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-TRANSLUCENT",
+  "vendor": "Numakers",
+  "count": 9,
+  "min_price": 21.99,
+  "max_price": 21.99,
+  "color_count": 9,
+  "has_td": 0,
+  "filament_ids": [
+    "44c19750-d7d5-44d8-a429-5111eadd7417",
+    "5c9a944b-bc78-4ba7-87cc-a918e5f28a97",
+    "90e31e70-efce-410a-b3a4-4e29b861709e",
+    "c2b6e3aa-63e1-43b4-9125-c891cdb5510c",
+    "4dba676c-0c92-4c52-8da2-c26f7bdef55c",
+    "f887c791-aaa0-4a07-93ab-22f6392bf54e",
+    "8ed702c6-1058-4b1e-89d0-049f755d24e8",
+    "9cb79906-47e1-46ad-90ba-4dc44f6b9a9c",
+    "6ff0c941-52b1-457e-8276-267e84ce392d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PETG-TRANSLUCENT Filament",
+    "description": "Compare 9 Numakers PETG-TRANSLUCENT filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-translucent/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-TRANSLUCENT",
+          "item": "https://filascope.com/filaments/petg-translucent"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

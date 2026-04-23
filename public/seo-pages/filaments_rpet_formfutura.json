@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/rpet/formfutura",
+  "title": "FormFutura rPET Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 FormFutura rPET filaments. Prices from $16.52 to $19.03. 3 colors available.",
+  "h1": "FormFutura rPET Filament",
+  "keywords": [
+    "FormFutura",
+    "rPET",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "rPET",
+  "vendor": "FormFutura",
+  "count": 3,
+  "min_price": 16.52,
+  "max_price": 19.03,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "bf3f2cd6-5230-4b6c-b72d-cb6a6f2a6754",
+    "767ad8cb-3859-4d2b-a096-fa5ec5fb6a58",
+    "bb3e0311-9de3-4aa9-b2e4-fa2fb5c25c2d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura rPET Filament",
+    "description": "Compare 3 FormFutura rPET filaments on FilaScope",
+    "url": "https://filascope.com/filaments/rpet/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "rPET",
+          "item": "https://filascope.com/filaments/rpet"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

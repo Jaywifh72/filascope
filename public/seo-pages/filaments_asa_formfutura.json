@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/formfutura",
+  "title": "FormFutura ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 61 FormFutura ASA filaments. Prices from $24.75 to $38.04. 18 colors available. 61 with HueForge TD values.",
+  "h1": "FormFutura ASA Filament",
+  "keywords": [
+    "FormFutura",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "FormFutura",
+  "count": 61,
+  "min_price": 24.75,
+  "max_price": 38.04,
+  "color_count": 18,
+  "has_td": 61,
+  "filament_ids": [
+    "cc0efba6-bdb9-4227-a562-7aa9feddbdb3",
+    "b9549d2c-8f8f-4157-aa61-b429b543ae15",
+    "d18dae31-2875-4af2-a220-3f44bb1b4b2c",
+    "7148e334-0ed1-480f-bd13-97b30127bf0d",
+    "c2c54792-fbbc-4a05-ba68-3d25d3f3931d",
+    "68fbb653-056b-40c7-985a-6e03949fe362",
+    "019579ea-e3f9-45aa-a3f3-87ff0f9edc70",
+    "92c4daf0-9667-4f3d-80af-88dee0831b1e",
+    "fa34a1b9-97ba-4750-84d0-387f9341eaac",
+    "4f06b15e-9715-441c-8683-9d46c5aea0f7",
+    "7ec1543a-a25b-47ee-ad73-b0c562d895ca",
+    "7520de05-7fa5-449b-9d7d-22db97ac3038",
+    "8ee3c303-a335-4e04-ba2d-da2ffcdb6480",
+    "d24bf7c8-3711-4718-97fa-f326733ffde6",
+    "7f97ece3-da6a-444c-9703-2f8e1b112206",
+    "25d3b2b7-28e2-44bf-b681-3f336868d315",
+    "97ffd765-5188-4b8a-82b7-85771cb72fac",
+    "0aab33be-8a65-49a6-9f45-a79fffd57641",
+    "c05bfb49-f2ca-4cf2-bfcd-5337c62b9ed5",
+    "ceea202f-fa5b-4824-8362-3259a38e91e2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura ASA Filament",
+    "description": "Compare 61 FormFutura ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

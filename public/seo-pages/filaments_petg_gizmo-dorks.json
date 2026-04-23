@@ -1,0 +1,72 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/gizmo-dorks",
+  "title": "Gizmo Dorks PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 19 Gizmo Dorks PETG filaments. Prices from $22.95 to $109.95. 12 colors available. 19 with HueForge TD values.",
+  "h1": "Gizmo Dorks PETG Filament",
+  "keywords": [
+    "Gizmo Dorks",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Gizmo Dorks",
+  "count": 19,
+  "min_price": 22.95,
+  "max_price": 109.95,
+  "color_count": 12,
+  "has_td": 19,
+  "filament_ids": [
+    "891e6b0a-04b7-4d41-9349-fe115d7ecc7e",
+    "aacc7615-2c8f-4ab5-a770-6dca25a9a732",
+    "33f6c981-8f62-4483-b075-44dc7f37d33c",
+    "2730d20f-c074-451d-8971-0b81f6c28606",
+    "025b6e0c-68fe-4c77-be42-ad3ba27225e5",
+    "e532dfa4-c2a2-4762-8c02-c4cf047a6c35",
+    "b39a9f32-7050-4328-a13d-3700c5ff3bb2",
+    "5678d515-fa21-4b15-a8e9-6e44449cb83a",
+    "42a44107-5925-4fae-9c8e-d0353895996f",
+    "e11878d7-de5e-4556-a8e4-e9b3bbd53090",
+    "e6a1432c-5172-452a-8f38-0f510336099c",
+    "d7c04485-062b-415b-b3dd-d6352b92bd9a",
+    "555eacb5-65df-4846-bd86-f792c382322d",
+    "5fbd33c0-a32e-4148-a5f8-96efdd3c17cd",
+    "8f16ba1b-6dbc-4a0e-a935-2b8667cacd04",
+    "98eb2b52-7fe4-4637-b85c-9106c4dd910d",
+    "9f2ae9db-69d7-4602-8104-0f015ee35926",
+    "e8f25ada-3b29-423b-bdc5-915ab607f96e",
+    "a73b1e8d-2262-457e-b10e-73b4ab809148"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Gizmo Dorks PETG Filament",
+    "description": "Compare 19 Gizmo Dorks PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/gizmo-dorks",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Gizmo Dorks"
+        }
+      ]
+    }
+  }
+}

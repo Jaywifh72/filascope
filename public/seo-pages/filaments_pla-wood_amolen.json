@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-wood/amolen",
+  "title": "Amolen PLA-Wood Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Amolen PLA-Wood filaments. Prices from $29.99 to $42.00. 13 colors available.",
+  "h1": "Amolen PLA-Wood Filament",
+  "keywords": [
+    "Amolen",
+    "PLA-Wood",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Wood",
+  "vendor": "Amolen",
+  "count": 13,
+  "min_price": 29.99,
+  "max_price": 42,
+  "color_count": 13,
+  "has_td": 0,
+  "filament_ids": [
+    "33d9bf7c-e5ae-41b3-8bf8-03b7a7491dbd",
+    "8c06e1da-12e5-4cba-885e-ca496dea2249",
+    "d9c0db77-1844-451d-a635-4a29ff085b42",
+    "88734168-8efb-4bcf-9b98-a4cec980dc3a",
+    "1e34a748-49c5-4bc3-8ebc-ba87c76d7701",
+    "ca023ff8-b5f2-4729-a8d7-98697bace941",
+    "77481f72-53f0-476b-b66c-5b764487576b",
+    "509cff09-e291-41de-9e45-fa6383963a6e",
+    "38667f07-e5c6-4a8e-8571-77e392e80fec",
+    "7f35aed1-1a12-43cb-a7d7-3d53699072ce",
+    "cd9d70d1-82ae-4a0c-b9ad-f0f9c6ae213d",
+    "4082e27d-ee55-4a70-9126-1c0266d30029",
+    "07ae4d2c-e284-42cf-9c32-857865a44621"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Amolen PLA-Wood Filament",
+    "description": "Compare 13 Amolen PLA-Wood filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-wood/amolen",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Wood",
+          "item": "https://filascope.com/filaments/pla-wood"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Amolen"
+        }
+      ]
+    }
+  }
+}

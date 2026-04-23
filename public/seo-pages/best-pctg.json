@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pctg",
+  "title": "Best PCTG Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PCTG filaments in 2026. 408 options from 9 brands, starting at $7.22. Expert picks, prices & specs.",
+  "h1": "Best PCTG Filament (2026)",
+  "keywords": [
+    "best PCTG",
+    "PCTG filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PCTG",
+  "count": 408,
+  "brands": 9,
+  "min_price": 7.22,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PCTG Filament 2026",
+    "description": "Expert comparison of 408 PCTG filaments",
+    "url": "https://filascope.com/best-pctg"
+  }
+}

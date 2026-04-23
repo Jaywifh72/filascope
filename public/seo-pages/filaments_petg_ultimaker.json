@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/ultimaker",
+  "title": "Ultimaker PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Ultimaker PETG filaments. Prices from $44.99 to $44.99. 3 colors available. 4 with HueForge TD values.",
+  "h1": "Ultimaker PETG Filament",
+  "keywords": [
+    "Ultimaker",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Ultimaker",
+  "count": 4,
+  "min_price": 44.99,
+  "max_price": 44.99,
+  "color_count": 3,
+  "has_td": 4,
+  "filament_ids": [
+    "e4fd6c76-e139-41e6-b24c-7a257647c6be",
+    "94dd2ddb-0b63-4ddb-93a7-bbb4534364fa",
+    "70c31586-86ea-4b74-82a7-3bcd50821594",
+    "b1c551ac-1f5c-4375-9e61-855d1cd0ab70"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Ultimaker PETG Filament",
+    "description": "Compare 4 Ultimaker PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/ultimaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Ultimaker"
+        }
+      ]
+    }
+  }
+}

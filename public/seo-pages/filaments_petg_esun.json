@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/esun",
+  "title": "eSun PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 54 eSun PETG filaments. Prices from $19.99 to $39.99. 13 colors available. 54 with HueForge TD values.",
+  "h1": "eSun PETG Filament",
+  "keywords": [
+    "eSun",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "eSun",
+  "count": 54,
+  "min_price": 19.99,
+  "max_price": 39.99,
+  "color_count": 13,
+  "has_td": 54,
+  "filament_ids": [
+    "9aef560f-db51-495d-88dd-0b241518aa2c",
+    "b5a1c677-f4e7-4b3a-aa1f-a47c38e080a1",
+    "81f09f3c-b849-4f0a-912a-dcd07b302c1f",
+    "4be7e7a3-c2ef-4aef-8759-9a419208fd19",
+    "8c5178cc-acbf-427d-b4a1-756d97adacf4",
+    "a2dc328b-eaec-4d17-be5b-263416fd0866",
+    "69999ff8-66c4-4fde-b495-d4b3f73d6022",
+    "5b398c29-648a-4c64-8c0a-8a096272da6e",
+    "11fca3aa-6d4d-4f99-a4cf-061caf03dd45",
+    "eb04eb32-9872-4cfc-bd29-0cdfb9e21f79",
+    "bca7acaa-8fbf-45ed-abb3-ae453cd862ca",
+    "eea9fe05-2df2-4694-a92b-f90ee35da833",
+    "a047b3ac-49db-486e-8f7f-a7fe99cefa5f",
+    "f093a221-4482-4678-b67e-7e397918114f",
+    "bcd17b8c-6627-4f45-bf5b-0081a2b04a4c",
+    "0e5265b0-dcd8-4e51-ad8d-51399f308c71",
+    "7cee66e7-60c3-4472-9ff7-100dc605e166",
+    "ddb2b70f-d286-4a0d-b6c4-ac545de6e245",
+    "a117d54c-30e5-45b8-9160-e882fe7e54bd",
+    "39ce59c7-156d-48f9-a22f-03b470929283"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "eSun PETG Filament",
+    "description": "Compare 54 eSun PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/esun",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "eSun"
+        }
+      ]
+    }
+  }
+}

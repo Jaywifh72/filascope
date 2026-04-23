@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-silk/colorfabb",
+  "title": "ColorFabb PLA Silk Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 ColorFabb PLA Silk filaments. Prices from $23.83 to $23.83. 3 colors available.",
+  "h1": "ColorFabb PLA Silk Filament",
+  "keywords": [
+    "ColorFabb",
+    "PLA Silk",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Silk",
+  "vendor": "ColorFabb",
+  "count": 3,
+  "min_price": 23.83,
+  "max_price": 23.83,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "5a5cf7eb-e337-4635-b217-694b6308d5a0",
+    "dfbdb8ec-7d17-4054-9388-fb11a9c55d36",
+    "7ae6e470-da08-4179-94a4-94b1e0e74674"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "ColorFabb PLA Silk Filament",
+    "description": "Compare 3 ColorFabb PLA Silk filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-silk/colorfabb",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Silk",
+          "item": "https://filascope.com/filaments/pla-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ColorFabb"
+        }
+      ]
+    }
+  }
+}

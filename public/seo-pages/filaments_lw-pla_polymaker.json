@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/lw-pla/polymaker",
+  "title": "Polymaker LW-PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Polymaker LW-PLA filaments. Prices from $40.99 to $40.99. 7 colors available.",
+  "h1": "Polymaker LW-PLA Filament",
+  "keywords": [
+    "Polymaker",
+    "LW-PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "LW-PLA",
+  "vendor": "Polymaker",
+  "count": 9,
+  "min_price": 40.99,
+  "max_price": 40.99,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "8ada6b5c-ad45-4f52-92fe-cc06d1beba13",
+    "82a78546-733e-49f0-b2f7-0896d16f173a",
+    "34e5b0a6-f106-4a4b-ac00-a462cdce9ce0",
+    "9dd33dd1-7070-402e-a644-ce5444e92189",
+    "e701ddc9-21b9-4adf-b8e8-23bf4931dc12",
+    "635ad6aa-5973-4a78-9706-586d62d76ca7",
+    "ffe295e4-2c87-4c6b-a5a0-dcc8e7f560d4",
+    "1ce1300a-332a-4d93-a039-4e34df2d1ed6",
+    "df984a7c-fbf5-4725-ba0a-77cd4659c56b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Polymaker LW-PLA Filament",
+    "description": "Compare 9 Polymaker LW-PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/lw-pla/polymaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "LW-PLA",
+          "item": "https://filascope.com/filaments/lw-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polymaker"
+        }
+      ]
+    }
+  }
+}

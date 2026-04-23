@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/resin/anycubic",
+  "title": "Anycubic RESIN Filament — Prices, Specs & Reviews",
+  "description": "Compare 29 Anycubic RESIN filaments. Prices from $19.99 to $669.73. 3 colors available.",
+  "h1": "Anycubic RESIN Filament",
+  "keywords": [
+    "Anycubic",
+    "RESIN",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "RESIN",
+  "vendor": "Anycubic",
+  "count": 29,
+  "min_price": 19.99,
+  "max_price": 669.73,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "a9831567-8ae4-45aa-9299-a0991e2a2682",
+    "b40246da-0d3f-4eaf-8062-45743d834021",
+    "bbdb5365-e5d4-43eb-977a-1e46683b17ca",
+    "7405b540-5f45-4d7a-af67-3f64afc8f1cc",
+    "fccc6945-44b3-4587-9793-73c901ba0a55",
+    "1a484d12-5004-44cc-b36c-1bb6c60fb905",
+    "dcd88545-b2e8-4956-a34e-35cc0c0d2841",
+    "bb01d398-b6c1-462c-b4cd-f4011fcc9a72",
+    "1164c835-a9f6-4551-8e89-272ea79e0780",
+    "bb2aedbd-dbf2-4704-a79e-95e098d179e6",
+    "7fb64b7d-abbf-46fa-a0eb-21a35ddca407",
+    "1a05d548-fcf6-4200-a4bd-952b71e4df26",
+    "08cc54e6-ae0e-4a37-b276-f62df22388b1",
+    "6dda1734-4f29-4c9b-856a-12989e9ca7fb",
+    "d976954a-67bc-4268-b481-d2fdd54c4b12",
+    "b5fd18f5-f158-4074-96a4-3b27b5f4c773",
+    "07bcba83-727d-472a-b74c-0e6f41a26628",
+    "5ddfbf95-31bb-4325-b157-b200481536ae",
+    "13330b70-affc-41aa-af68-1611f4b2b2e5",
+    "f94fe800-3f4d-4fc3-8347-e937e9ec0b01"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic RESIN Filament",
+    "description": "Compare 29 Anycubic RESIN filaments on FilaScope",
+    "url": "https://filascope.com/filaments/resin/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "RESIN",
+          "item": "https://filascope.com/filaments/resin"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

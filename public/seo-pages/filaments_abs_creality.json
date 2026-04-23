@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/creality",
+  "title": "Creality ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 Creality ABS filaments. Prices from $18.99 to $24.99. 5 colors available. 4 with HueForge TD values.",
+  "h1": "Creality ABS Filament",
+  "keywords": [
+    "Creality",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Creality",
+  "count": 7,
+  "min_price": 18.99,
+  "max_price": 24.99,
+  "color_count": 5,
+  "has_td": 4,
+  "filament_ids": [
+    "4cdb1c96-a580-43ff-8d22-e9317d5802c6",
+    "bd303910-e810-4bde-aaa3-ebd8548a128d",
+    "973073a7-d2d4-4f77-975b-3bb201071643",
+    "6b97a4a0-3922-4b04-97aa-0de7aba62503",
+    "298e02b0-aa7f-40e9-9473-28c84412d839",
+    "c7183566-f154-4590-8935-3936b10e2285",
+    "96d43fef-0c58-464b-b9f2-5add9af94a4c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Creality ABS Filament",
+    "description": "Compare 7 Creality ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/creality",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Creality"
+        }
+      ]
+    }
+  }
+}

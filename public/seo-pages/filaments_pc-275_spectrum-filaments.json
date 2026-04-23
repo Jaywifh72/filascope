@@ -1,0 +1,63 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc-275/spectrum-filaments",
+  "title": "Spectrum Filaments PC-275 Filament — Prices, Specs & Reviews",
+  "description": "Compare 10 Spectrum Filaments PC-275 filaments. Prices from $55.00 to $55.00. 10 colors available.",
+  "h1": "Spectrum Filaments PC-275 Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PC-275",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC-275",
+  "vendor": "Spectrum Filaments",
+  "count": 10,
+  "min_price": 55,
+  "max_price": 55,
+  "color_count": 10,
+  "has_td": 0,
+  "filament_ids": [
+    "0fa3ed66-1913-4bb5-b2f7-8576afa07299",
+    "102dd460-0bac-42c0-937f-cf43a3ac0f67",
+    "87e1dc5a-7dcf-4185-984a-8c7f33d81f9f",
+    "65ae4fe3-41fb-4bfd-b018-2c995dfca469",
+    "754762cc-751f-41a1-b479-18a562afdd78",
+    "3939786e-76cf-42ad-8315-45f75e961908",
+    "5ed70bb5-cc76-4d03-85b0-47d2d6deeafd",
+    "c9ac0283-ca6b-49f4-a8d6-c25e4e3933a2",
+    "8cf1764d-632b-47d9-a3d3-e143c80648e8",
+    "09402568-fa90-4b1e-a20f-6bdad195de54"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PC-275 Filament",
+    "description": "Compare 10 Spectrum Filaments PC-275 filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc-275/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC-275",
+          "item": "https://filascope.com/filaments/pc-275"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

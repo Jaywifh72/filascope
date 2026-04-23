@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc/push-plastic",
+  "title": "Push Plastic PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 24 Push Plastic PC filaments. Prices from $39.99 to $999.99. 9 colors available. 24 with HueForge TD values.",
+  "h1": "Push Plastic PC Filament",
+  "keywords": [
+    "Push Plastic",
+    "PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC",
+  "vendor": "Push Plastic",
+  "count": 24,
+  "min_price": 39.99,
+  "max_price": 999.99,
+  "color_count": 9,
+  "has_td": 24,
+  "filament_ids": [
+    "8dafded1-e52f-4802-b731-78f7e23eaea0",
+    "b3c2a131-71e0-4234-aaf3-cb12f9963131",
+    "9e5ef926-4539-4a6a-8089-f37ba60f28bc",
+    "41a4b146-b196-4369-9684-53fc7a56a8ec",
+    "2fe23040-1551-4a40-b841-feec193b4d3e",
+    "72cfe5e5-0f62-44a0-910a-5b7180e0f82b",
+    "06a9215d-3986-4ea3-91ff-8bc8b001933b",
+    "8e61c6c1-8d92-4547-8b7a-c6cf212105e7",
+    "b26bc0a2-a1b9-42b6-b38f-fa80be9302ad",
+    "203871de-03e7-485c-b203-0cc15f648fd6",
+    "ccf27f09-d36a-47c7-9750-d019e5ec2d0e",
+    "52c2bf67-6d46-4083-bf73-bfe78470d895",
+    "778cd382-dd37-491e-9329-0391c189e6d8",
+    "09910da4-3051-4d7a-ba60-768ca27ff72e",
+    "1ddb356a-ad72-4d62-ad88-413888e9998a",
+    "371961c0-f2c6-4ffd-bced-85b97b53ab47",
+    "3d2df43c-8aed-43c0-b2ba-3e3efae164c5",
+    "5f26c1e3-2959-4b44-a9f0-cd120e8ed7e0",
+    "61490b4c-4847-4616-9f51-2d6b8da2e4c5",
+    "71d8c436-91d5-4671-8e9a-a133592262d4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic PC Filament",
+    "description": "Compare 24 Push Plastic PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC",
+          "item": "https://filascope.com/filaments/pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

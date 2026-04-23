@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa12/3dxtech",
+  "title": "3DXTech PA12 Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 3DXTech PA12 filaments. Prices from $88.00 to $495.00. 1 colors available. 5 with HueForge TD values.",
+  "h1": "3DXTech PA12 Filament",
+  "keywords": [
+    "3DXTech",
+    "PA12",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA12",
+  "vendor": "3DXTech",
+  "count": 5,
+  "min_price": 88,
+  "max_price": 495,
+  "color_count": 1,
+  "has_td": 5,
+  "filament_ids": [
+    "61c2d8a5-f185-40b7-a917-b96d604f2dbf",
+    "e07fd4dd-b647-4562-9627-3137bcd2a24d",
+    "cecb5d4b-1a08-467a-9aba-49019c8dd5f4",
+    "9b2d651c-b4c9-4e34-be3e-3b98d01d76fa",
+    "bbcd26c3-1f5b-406c-9923-5465ca8c354c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech PA12 Filament",
+    "description": "Compare 5 3DXTech PA12 filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa12/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA12",
+          "item": "https://filascope.com/filaments/pa12"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

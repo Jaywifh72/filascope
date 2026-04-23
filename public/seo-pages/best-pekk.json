@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pekk",
+  "title": "Best PEKK Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PEKK filaments in 2026. 6 options from 2 brands, starting at $88.00. Expert picks, prices & specs.",
+  "h1": "Best PEKK Filament (2026)",
+  "keywords": [
+    "best PEKK",
+    "PEKK filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PEKK",
+  "count": 6,
+  "brands": 2,
+  "min_price": 88,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PEKK Filament 2026",
+    "description": "Expert comparison of 6 PEKK filaments",
+    "url": "https://filascope.com/best-pekk"
+  }
+}

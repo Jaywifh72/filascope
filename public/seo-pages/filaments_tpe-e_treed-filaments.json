@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpe-e/treed-filaments",
+  "title": "TreeD Filaments TPE-E Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 TreeD Filaments TPE-E filaments. Prices from $65.89 to $71.39. 2 colors available.",
+  "h1": "TreeD Filaments TPE-E Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "TPE-E",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPE-E",
+  "vendor": "TreeD Filaments",
+  "count": 4,
+  "min_price": 65.89,
+  "max_price": 71.39,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "dda0f216-eb90-48a3-a6f9-59acabcda31f",
+    "6c2b850a-244b-488b-b0bb-e0cc86fdaca1",
+    "741fb043-0674-4384-8587-c0a8cc6b727a",
+    "b1a3f570-5374-41dc-af8b-3be0f94e34de"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments TPE-E Filament",
+    "description": "Compare 4 TreeD Filaments TPE-E filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpe-e/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPE-E",
+          "item": "https://filascope.com/filaments/tpe-e"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

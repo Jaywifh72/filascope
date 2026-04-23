@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-tpc",
+  "title": "Best TPC Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best TPC filaments in 2026. 8 options from 1 brands, starting at $30.99. Expert picks, prices & specs.",
+  "h1": "Best TPC Filament (2026)",
+  "keywords": [
+    "best TPC",
+    "TPC filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "TPC",
+  "count": 8,
+  "brands": 1,
+  "min_price": 30.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best TPC Filament 2026",
+    "description": "Expert comparison of 8 TPC filaments",
+    "url": "https://filascope.com/best-tpc"
+  }
+}

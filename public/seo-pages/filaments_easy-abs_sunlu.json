@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/easy-abs/sunlu",
+  "title": "Sunlu Easy ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Sunlu Easy ABS filaments. Prices from $15.99 to $15.99. 4 colors available.",
+  "h1": "Sunlu Easy ABS Filament",
+  "keywords": [
+    "Sunlu",
+    "Easy ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Easy ABS",
+  "vendor": "Sunlu",
+  "count": 4,
+  "min_price": 15.99,
+  "max_price": 15.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "82191937-0286-4d5a-91aa-58bb4bcaad6a",
+    "447d96d5-48aa-4bbb-a16b-23118f3d2c28",
+    "fffc75f5-8c87-407b-9f1b-73d1c64cbcd8",
+    "037ca80a-33b6-45a2-8b85-be212cb387eb"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sunlu Easy ABS Filament",
+    "description": "Compare 4 Sunlu Easy ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/easy-abs/sunlu",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Easy ABS",
+          "item": "https://filascope.com/filaments/easy-abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sunlu"
+        }
+      ]
+    }
+  }
+}

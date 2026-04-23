@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-glow/anycubic",
+  "title": "Anycubic PLA-Glow Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Anycubic PLA-Glow filaments. Prices from $23.99 to $23.99. 4 colors available.",
+  "h1": "Anycubic PLA-Glow Filament",
+  "keywords": [
+    "Anycubic",
+    "PLA-Glow",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Glow",
+  "vendor": "Anycubic",
+  "count": 4,
+  "min_price": 23.99,
+  "max_price": 23.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "2ba66549-4a5b-4e25-9226-e1348bd73e98",
+    "be7c70a3-c2cd-4fb9-918d-7f4195154d96",
+    "0af4a422-1f29-41b1-b57d-a0a17391e13c",
+    "06570c32-a755-4115-8fec-a21f1ebba072"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic PLA-Glow Filament",
+    "description": "Compare 4 Anycubic PLA-Glow filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-glow/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Glow",
+          "item": "https://filascope.com/filaments/pla-glow"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

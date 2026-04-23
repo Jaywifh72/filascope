@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/silk-pla/duramic-3d",
+  "title": "Duramic 3D Silk PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Duramic 3D Silk PLA filaments. Prices from $22.49 to $23.99. 5 colors available.",
+  "h1": "Duramic 3D Silk PLA Filament",
+  "keywords": [
+    "Duramic 3D",
+    "Silk PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Silk PLA",
+  "vendor": "Duramic 3D",
+  "count": 9,
+  "min_price": 22.49,
+  "max_price": 23.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "ac826396-89ea-4e9c-bcac-61003ce3f535",
+    "bb86209a-23c8-467a-b067-d15ec326a733",
+    "fb0b629b-cfb5-4820-8f0b-e05dbf97931e",
+    "57dc79ba-3008-460f-a8b4-90c05ab78294",
+    "b51ff09b-eded-489d-8dea-56cb58eeb24d",
+    "9df480ea-2ff8-49bf-8337-5bd48146e641",
+    "df61e203-6011-44ba-b92c-bc9f341440ee",
+    "cedd6ff0-5dee-413a-bee3-7632d9c868db",
+    "45e5f76f-83e9-4efa-a51d-24eb9f55ff57"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Duramic 3D Silk PLA Filament",
+    "description": "Compare 9 Duramic 3D Silk PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/silk-pla/duramic-3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Silk PLA",
+          "item": "https://filascope.com/filaments/silk-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Duramic 3D"
+        }
+      ]
+    }
+  }
+}

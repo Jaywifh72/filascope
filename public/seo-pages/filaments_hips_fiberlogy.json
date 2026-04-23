@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/hips/fiberlogy",
+  "title": "Fiberlogy HIPS Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Fiberlogy HIPS filaments. Prices from $21.99 to $21.99. 4 colors available.",
+  "h1": "Fiberlogy HIPS Filament",
+  "keywords": [
+    "Fiberlogy",
+    "HIPS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "HIPS",
+  "vendor": "Fiberlogy",
+  "count": 4,
+  "min_price": 21.99,
+  "max_price": 21.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "6f57708e-3a79-46f0-9eb6-3c48d33700b9",
+    "28ba19ed-c52e-4768-98d0-e358c553bdd5",
+    "d38bbf66-9f7c-4890-9e53-ce16cdca7534",
+    "a4d0bdbd-a3ad-44c6-a726-c435450e8197"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy HIPS Filament",
+    "description": "Compare 4 Fiberlogy HIPS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/hips/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "HIPS",
+          "item": "https://filascope.com/filaments/hips"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

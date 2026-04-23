@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/copolyester/colorfabb",
+  "title": "ColorFabb Copolyester Filament — Prices, Specs & Reviews",
+  "description": "Compare 20 ColorFabb Copolyester filaments. Prices from $32.98 to $65.00. 12 colors available.",
+  "h1": "ColorFabb Copolyester Filament",
+  "keywords": [
+    "ColorFabb",
+    "Copolyester",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Copolyester",
+  "vendor": "ColorFabb",
+  "count": 20,
+  "min_price": 32.98,
+  "max_price": 65,
+  "color_count": 12,
+  "has_td": 0,
+  "filament_ids": [
+    "2a54b329-1ee1-4849-a553-6dfc874fb67b",
+    "8f1eb104-7d90-4f86-b040-38ba352ba7be",
+    "c45a0994-6c65-4f3b-b08b-259f55804774",
+    "7973e7cd-6d6e-42dd-8c6a-be292387ecae",
+    "aa16f4c5-344e-4a72-a3ab-f3a517748991",
+    "ce19c329-022c-496b-a7ed-af0407f23a99",
+    "b07ba727-bca6-4883-83f0-1590489d18a4",
+    "3c601090-11b3-41d0-be06-2347d137ff09",
+    "1ca48507-636e-4ab9-bdd2-84783cade190",
+    "2b77d8ac-9b91-47ca-ac81-004c9d59862f",
+    "9aa99db6-a87b-4936-9a0a-af046230dbd1",
+    "d72d00dc-3a3d-420e-aa2c-5bb0beb31dd1",
+    "8c5bbce4-f6bd-4a65-87e1-5bd76714ca56",
+    "38005fa7-985e-4cf1-88df-a3050ef6d172",
+    "d889e41f-56b2-486d-bb8b-d3b74f118e50",
+    "b025c0f8-73d0-4723-896b-0c215055799c",
+    "81787c86-f5a7-4925-8d6b-7fd7c82c897c",
+    "b7d1dfcc-ef23-4639-b4dd-74c28969ca01",
+    "676fb787-ef71-4707-aed0-505c59f8deb7",
+    "f1ced24b-9dfd-4b3b-a47a-d4599427dc51"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "ColorFabb Copolyester Filament",
+    "description": "Compare 20 ColorFabb Copolyester filaments on FilaScope",
+    "url": "https://filascope.com/filaments/copolyester/colorfabb",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Copolyester",
+          "item": "https://filascope.com/filaments/copolyester"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ColorFabb"
+        }
+      ]
+    }
+  }
+}

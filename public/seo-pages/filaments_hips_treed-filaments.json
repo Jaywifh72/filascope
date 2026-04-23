@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/hips/treed-filaments",
+  "title": "TreeD Filaments HIPS Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 TreeD Filaments HIPS filaments. Prices from $27.39 to $32.89. 6 colors available.",
+  "h1": "TreeD Filaments HIPS Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "HIPS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "HIPS",
+  "vendor": "TreeD Filaments",
+  "count": 8,
+  "min_price": 27.39,
+  "max_price": 32.89,
+  "color_count": 6,
+  "has_td": 0,
+  "filament_ids": [
+    "27e60950-101c-4e49-8ba5-f07fd888f31c",
+    "a38ac6cc-3674-445d-941c-fd8b9b194766",
+    "cdf9504d-7af5-4ae2-8a97-05e203725659",
+    "5d418c91-6afa-4620-84a9-7964641c0c12",
+    "b39f6eca-1796-4145-9fb0-717bde715774",
+    "a80863ef-c59f-493d-9ff3-4217ec037974",
+    "d1931401-aa3b-40bc-8c74-4b92577c9f8b",
+    "b8b8c3a9-1cf7-4bbb-9799-763a3fd64ca1"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments HIPS Filament",
+    "description": "Compare 8 TreeD Filaments HIPS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/hips/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "HIPS",
+          "item": "https://filascope.com/filaments/hips"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

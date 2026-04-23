@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/3dxtech",
+  "title": "3DXTech ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 27 3DXTech ASA filaments. Prices from $42.00 to $1528.00. 9 colors available. 27 with HueForge TD values.",
+  "h1": "3DXTech ASA Filament",
+  "keywords": [
+    "3DXTech",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "3DXTech",
+  "count": 27,
+  "min_price": 42,
+  "max_price": 1528,
+  "color_count": 9,
+  "has_td": 27,
+  "filament_ids": [
+    "2171570a-dd43-40af-9f01-23715d02ab1e",
+    "0dd279d9-e132-4681-85cc-a1b78adb2c5e",
+    "ef299dab-9d65-4a8c-bf35-475382272d2f",
+    "18b3c47d-67d3-40ed-b5eb-1075da4e9082",
+    "7ca97c68-b646-4530-8bb9-5ead7fb1a6df",
+    "b2431d64-db0b-47e2-a660-15448a0d90ed",
+    "015bdac5-036b-4214-9d88-e5e81356682f",
+    "39a75073-82c2-4265-bbd2-cf6e8c98a802",
+    "e7b27199-af3e-438e-9eae-6163f64fe6df",
+    "e1035ae0-798c-47ac-8b4f-84a00872ba15",
+    "da102c8e-d159-4b50-ad8c-bd1d7bd2791b",
+    "bf9e5abb-ef62-4b2d-82f5-987aae17ea08",
+    "92314e0e-12af-436f-af51-0db73cbf0f1b",
+    "8a6f8758-8b6e-40d1-a7cb-e6d0b77d08c3",
+    "7b06ef8e-de1a-4072-9fda-9310db765e55",
+    "2696086a-226b-4fc3-b5a6-7902d8c6c8e0",
+    "482cb376-1bc1-46d6-990a-4ceff325cd11",
+    "140067d2-0b93-4fe0-b3f7-913b9cfafded",
+    "d66b509d-84e0-4498-8c74-8015fdf54ddf",
+    "63f08598-1e95-4dae-b588-b7918c34e12b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech ASA Filament",
+    "description": "Compare 27 3DXTech ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

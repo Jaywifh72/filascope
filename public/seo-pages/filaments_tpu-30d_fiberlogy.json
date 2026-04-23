@@ -1,0 +1,68 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-30d/fiberlogy",
+  "title": "Fiberlogy TPU-30D Filament — Prices, Specs & Reviews",
+  "description": "Compare 15 Fiberlogy TPU-30D filaments. Prices from $29.99 to $29.99. 15 colors available.",
+  "h1": "Fiberlogy TPU-30D Filament",
+  "keywords": [
+    "Fiberlogy",
+    "TPU-30D",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-30D",
+  "vendor": "Fiberlogy",
+  "count": 15,
+  "min_price": 29.99,
+  "max_price": 29.99,
+  "color_count": 15,
+  "has_td": 0,
+  "filament_ids": [
+    "a2e7a2ed-b685-468a-ba2b-09fc33cc190c",
+    "0810996a-bbe6-4a91-b41c-4e0469329b78",
+    "5df8553b-bfcf-46a1-8dff-950d4ab2dd54",
+    "67475077-31ef-4c55-a0a7-b99380a2af9e",
+    "ac626c11-951e-452a-91a7-6250879723aa",
+    "cee73ca1-eae4-4233-a034-a0a9709cc31e",
+    "c0619bc6-3567-45d6-9fd5-921106cdf4b0",
+    "e74bc575-39c2-4fb9-929e-7899a2ef37ac",
+    "736252a0-49b3-4a23-b954-d970a7ed15b2",
+    "e073bca1-ecd7-4c5b-83ad-5d789647d165",
+    "edb5f93d-cb0e-47fd-8f97-1eafc2201e38",
+    "b119eb2d-b3cc-47e9-924e-d962ffd33795",
+    "c0f44d8e-2f99-41c8-a90f-31a69255752b",
+    "03013cb8-9554-4c06-9a2f-750af36867b4",
+    "55514d30-2570-465e-9ce4-ad6709b7c2d0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy TPU-30D Filament",
+    "description": "Compare 15 Fiberlogy TPU-30D filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-30d/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-30D",
+          "item": "https://filascope.com/filaments/tpu-30d"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

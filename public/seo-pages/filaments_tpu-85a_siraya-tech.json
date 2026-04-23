@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-85a/siraya-tech",
+  "title": "Siraya Tech TPU-85A Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Siraya Tech TPU-85A filaments. Prices from $31.99 to $31.99. 4 colors available. 4 with HueForge TD values.",
+  "h1": "Siraya Tech TPU-85A Filament",
+  "keywords": [
+    "Siraya Tech",
+    "TPU-85A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-85A",
+  "vendor": "Siraya Tech",
+  "count": 4,
+  "min_price": 31.99,
+  "max_price": 31.99,
+  "color_count": 4,
+  "has_td": 4,
+  "filament_ids": [
+    "8877e6b6-0230-4a9a-a9b2-226702f0bef2",
+    "0eea0dbe-2213-4d01-9ec6-edc150b063b4",
+    "60a37b3b-8aec-4e51-910c-8b6f8bdf31b3",
+    "e0b60e19-9794-4df9-9934-8ecb278d6a71"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Siraya Tech TPU-85A Filament",
+    "description": "Compare 4 Siraya Tech TPU-85A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-85a/siraya-tech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-85A",
+          "item": "https://filascope.com/filaments/tpu-85a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Siraya Tech"
+        }
+      ]
+    }
+  }
+}

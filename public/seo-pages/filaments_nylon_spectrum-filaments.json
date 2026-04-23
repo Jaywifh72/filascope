@@ -1,0 +1,63 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/nylon/spectrum-filaments",
+  "title": "Spectrum Filaments NYLON Filament — Prices, Specs & Reviews",
+  "description": "Compare 10 Spectrum Filaments NYLON filaments. Prices from $39.00 to $91.00. 5 colors available. 10 with HueForge TD values.",
+  "h1": "Spectrum Filaments NYLON Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "NYLON",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "NYLON",
+  "vendor": "Spectrum Filaments",
+  "count": 10,
+  "min_price": 39,
+  "max_price": 91,
+  "color_count": 5,
+  "has_td": 10,
+  "filament_ids": [
+    "33aa991a-f12b-49b2-b0f7-23366ffb1a26",
+    "1026e79f-b80d-4a67-bd20-582106b6eb8d",
+    "3b87ba80-2fc8-41c8-8b05-646832a39fab",
+    "7fb7e682-2573-4c98-8201-ebff9f52ad15",
+    "65e82cfd-99d3-4b8e-af36-da55423fbae4",
+    "c0a78d8a-578b-4e3e-886a-86b77cafefde",
+    "c621fa94-144a-4452-9c4a-0395c45583e3",
+    "d8f1832b-1a7f-45e6-8c09-7b08c13d62a1",
+    "deda3dc1-ac04-43b9-8e03-05fc6d26b7fe",
+    "fad673f1-9763-48ae-a683-6b450a4105dd"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments NYLON Filament",
+    "description": "Compare 10 Spectrum Filaments NYLON filaments on FilaScope",
+    "url": "https://filascope.com/filaments/nylon/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "NYLON",
+          "item": "https://filascope.com/filaments/nylon"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

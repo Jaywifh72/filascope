@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/atomic-filament",
+  "title": "Atomic Filament PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 58 Atomic Filament PETG filaments. Prices from $32.99 to $49.99. 18 colors available.",
+  "h1": "Atomic Filament PETG Filament",
+  "keywords": [
+    "Atomic Filament",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Atomic Filament",
+  "count": 58,
+  "min_price": 32.99,
+  "max_price": 49.99,
+  "color_count": 18,
+  "has_td": 0,
+  "filament_ids": [
+    "b2677d98-a17e-414f-9bd0-85986758cbd9",
+    "59db0efc-3199-417f-b857-ad0958683d78",
+    "b9dd0980-114d-4b97-af1e-276f8d348d36",
+    "e77c6310-6fd2-4d5f-b8da-6eea2a8a1d8e",
+    "4c26c427-ca51-4378-832b-685eb05244ce",
+    "bc385db5-8ca6-4609-93f8-651ada971585",
+    "784a420f-25b0-47e1-990d-32ac603d2b76",
+    "40a1ae5a-9e76-4805-89dc-c6f904d8a8cb",
+    "ce9da746-7fc6-4dc7-bbdb-843a519ce388",
+    "d8be22b2-3aee-460b-98d7-8caf2feea0ef",
+    "2dd3b13c-c21b-4fbf-880a-6e09c9a5d028",
+    "a8b541ab-0f2c-4f68-bdc2-dc4a0087e3ab",
+    "1b4aad99-6605-4414-a6e8-63890925969b",
+    "07deadcc-9aa7-44d7-9a8c-2fc89666e6ec",
+    "3ce270e2-0f7e-44cb-ac0b-26eaea2bfed8",
+    "ae978a27-ea44-4218-a284-cae6e791834b",
+    "f478d10d-23c2-4e6b-b2cc-e5b83abddb89",
+    "0ce89da4-726e-477b-92cc-337464cdc95b",
+    "9bee3d07-5da5-4dc1-ae13-81faf646d96e",
+    "4d461b83-ce7d-4ff4-92e8-046847945de9"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Atomic Filament PETG Filament",
+    "description": "Compare 58 Atomic Filament PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/atomic-filament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Atomic Filament"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-wood/azurefilm",
+  "title": "AzureFilm PLA-Wood Filament — Prices, Specs & Reviews",
+  "description": "Compare 25 AzureFilm PLA-Wood filaments. Prices from $29.05 to $30.99. 11 colors available.",
+  "h1": "AzureFilm PLA-Wood Filament",
+  "keywords": [
+    "AzureFilm",
+    "PLA-Wood",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Wood",
+  "vendor": "AzureFilm",
+  "count": 25,
+  "min_price": 29.05,
+  "max_price": 30.99,
+  "color_count": 11,
+  "has_td": 0,
+  "filament_ids": [
+    "1e8d20a5-0d3c-4581-a61d-7318bf471648",
+    "3c84477a-1827-418d-991f-e77d5d692458",
+    "0ada1473-52ed-4af6-bf8e-8dc0359d5648",
+    "9efcf382-4039-48f2-837e-4dbde9db064c",
+    "b226453f-b9ee-46d2-a117-9725dde34b75",
+    "1f3abcff-cd8f-4201-a4cd-75272a9fb3d0",
+    "45386949-acb7-4145-8323-abb913dc5958",
+    "0f955594-e673-4a6d-a4c0-c2fee5c35dd7",
+    "af83a941-b7b9-4a7e-af44-e5230ed8f5bb",
+    "9ea5021f-5193-4c0b-a024-73961f30e685",
+    "f2416f37-adf4-4f5e-8c24-a7414d4869df",
+    "3b73fe6d-623f-495e-a2fb-dc7a042dfb30",
+    "dc57110c-a048-419b-a02f-31898de708ba",
+    "4efd900e-edfc-4f65-9c87-51762a690c8f",
+    "d6aae2db-687f-4a25-923e-369da02c0fbc",
+    "c91af9e2-c692-4165-ab98-f57987e0cc2c",
+    "c33a7a4a-f337-4909-97a1-317786c89d3a",
+    "002555dc-69e5-48d2-9e24-7157aa4fa77c",
+    "40fca7ad-bd79-46ac-b536-79796960f923",
+    "398b9aeb-6f3a-4bcd-a169-c9af0629997d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "AzureFilm PLA-Wood Filament",
+    "description": "Compare 25 AzureFilm PLA-Wood filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-wood/azurefilm",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Wood",
+          "item": "https://filascope.com/filaments/pla-wood"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AzureFilm"
+        }
+      ]
+    }
+  }
+}

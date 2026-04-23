@@ -1,0 +1,65 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/siraya-tech",
+  "title": "Siraya Tech PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 12 Siraya Tech PLA filaments. Prices from $16.99 to $822.25. 7 colors available. 12 with HueForge TD values.",
+  "h1": "Siraya Tech PLA Filament",
+  "keywords": [
+    "Siraya Tech",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Siraya Tech",
+  "count": 12,
+  "min_price": 16.99,
+  "max_price": 822.25,
+  "color_count": 7,
+  "has_td": 12,
+  "filament_ids": [
+    "ba63fd21-f4c2-4529-9893-146b8bcc6c97",
+    "ce09ac78-39a9-4fff-86be-b9a4ecac64cf",
+    "2dd47000-06b1-412f-af99-8327c787f2e5",
+    "340e18e4-4d89-4eb3-950b-75c9165283a3",
+    "28426d62-7877-4c51-bd98-f8695e2c1937",
+    "401a5c22-abb6-4d65-a01c-a86753cf628a",
+    "1c42efcf-4e12-4ea4-bc5f-0a8a7f17e512",
+    "d8949be6-df70-4dab-bacc-275418256e2f",
+    "7f770448-a284-4302-841a-7cd731ba3b05",
+    "22963f06-31d6-4bb6-8877-4c5909609fc9",
+    "818243fa-624f-44a3-baeb-d703fe316b06",
+    "dca90f86-05eb-4bee-9be5-fbe3a99d717f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Siraya Tech PLA Filament",
+    "description": "Compare 12 Siraya Tech PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/siraya-tech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Siraya Tech"
+        }
+      ]
+    }
+  }
+}

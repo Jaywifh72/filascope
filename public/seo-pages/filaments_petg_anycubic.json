@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/anycubic",
+  "title": "Anycubic PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 26 Anycubic PETG filaments. Prices from $15.99 to $107.99. 13 colors available. 26 with HueForge TD values.",
+  "h1": "Anycubic PETG Filament",
+  "keywords": [
+    "Anycubic",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Anycubic",
+  "count": 26,
+  "min_price": 15.99,
+  "max_price": 107.99,
+  "color_count": 13,
+  "has_td": 26,
+  "filament_ids": [
+    "51b46be5-8b26-4682-92a6-f1db9208f86b",
+    "a593a239-a2f8-4d36-94f8-5c4be4141688",
+    "016eb0ec-9e55-47ae-8f4e-6ebe62c758e6",
+    "6405cb1a-4e16-4a03-bce5-3ff2a41cc15f",
+    "f49cdca5-bfaf-413f-91bf-a0791e9d7956",
+    "a25d877e-40d7-4492-bae5-8dceb5550cb9",
+    "19bdd052-5378-41f2-b231-81cc7c83cf88",
+    "a6082c6b-b49a-41c2-bd96-6c62ec50db85",
+    "80790210-b716-4d5b-a885-eb8a2c02c249",
+    "d3826ea3-27b8-4609-8c81-509726cca6e6",
+    "a5b34e00-b4cc-49ac-92ab-3ec9ee9f691e",
+    "dd0728ef-18cb-4ca0-ae9c-d0ee3b14d426",
+    "1e9acc0e-07a3-4400-a2b2-9a1e726aab01",
+    "1469709f-54fc-4e04-bc73-dd651abfa88c",
+    "647696ae-3c6b-46d8-8cfa-44daa697aa52",
+    "e19ac2b8-d8d4-4d9c-b5c6-00650aae65be",
+    "af2ca636-f3f7-4f46-9816-0a9645187edc",
+    "d87d0842-913d-4573-9a4b-d4b36d6b7ac8",
+    "7779203f-c6a9-4a58-ab81-c2bfc770ff68",
+    "868c1a43-a080-4c8a-9b70-0d17306c282e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic PETG Filament",
+    "description": "Compare 26 Anycubic PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

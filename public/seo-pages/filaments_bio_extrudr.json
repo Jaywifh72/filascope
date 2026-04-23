@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/bio/extrudr",
+  "title": "Extrudr BIO Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 Extrudr BIO filaments. Prices from $34.90 to $34.90. 8 colors available.",
+  "h1": "Extrudr BIO Filament",
+  "keywords": [
+    "Extrudr",
+    "BIO",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "BIO",
+  "vendor": "Extrudr",
+  "count": 14,
+  "min_price": 34.9,
+  "max_price": 34.9,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "86811e58-ee6e-4255-80f7-3dd0c9ef7a1e",
+    "2ba1396d-584d-462f-988b-c618a1960466",
+    "7cf56ffe-ed68-4614-bcf6-2ef81efa05bb",
+    "a0ed5934-8c41-4e94-b114-fd0cc6f67f93",
+    "6d86e621-08b8-47ff-bdd7-9f6194898849",
+    "98d93985-01d6-4626-a606-5964d580e2be",
+    "f82d9034-0162-41d6-82b1-924d26dc7c44",
+    "49c1069e-cb78-4d5c-b371-f56a34344618",
+    "15e94871-af77-437c-98ee-7157c7f5ce50",
+    "401003ba-c4ae-427c-a537-d5817c393803",
+    "deeaab8e-968a-4b4b-b80c-1b31d2d67d76",
+    "2a6d610b-c680-40c3-a19f-ca4f864cd927",
+    "eb4f8e99-4768-4241-a421-89e4bbeffab2",
+    "04d7d44e-e521-4e87-895f-72582bf9917f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Extrudr BIO Filament",
+    "description": "Compare 14 Extrudr BIO filaments on FilaScope",
+    "url": "https://filascope.com/filaments/bio/extrudr",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "BIO",
+          "item": "https://filascope.com/filaments/bio"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Extrudr"
+        }
+      ]
+    }
+  }
+}

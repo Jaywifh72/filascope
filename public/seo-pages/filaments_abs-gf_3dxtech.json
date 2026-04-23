@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs-gf/3dxtech",
+  "title": "3DXTech ABS-GF Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 3DXTech ABS-GF filaments. Prices from $55.00 to $295.00. 5 colors available.",
+  "h1": "3DXTech ABS-GF Filament",
+  "keywords": [
+    "3DXTech",
+    "ABS-GF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS-GF",
+  "vendor": "3DXTech",
+  "count": 6,
+  "min_price": 55,
+  "max_price": 295,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "8b891f19-7ce4-4c3d-87b2-c4cc08f59c8e",
+    "48d612c4-06ef-4df9-a378-a02fa6aea9ea",
+    "97d9281a-bcb1-4a22-9444-8335c768c780",
+    "c534d313-22f0-4e18-93a4-313ede47d0de",
+    "45599850-9fff-44b0-852b-871899e85f1a",
+    "60790c57-15ea-420d-b2c1-2ac6a83d7d0e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech ABS-GF Filament",
+    "description": "Compare 6 3DXTech ABS-GF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs-gf/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS-GF",
+          "item": "https://filascope.com/filaments/abs-gf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

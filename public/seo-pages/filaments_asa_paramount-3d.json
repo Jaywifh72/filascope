@@ -1,0 +1,65 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/paramount-3d",
+  "title": "Paramount 3D ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 12 Paramount 3D ASA filaments. Prices from $29.99 to $29.99. 12 colors available. 8 with HueForge TD values.",
+  "h1": "Paramount 3D ASA Filament",
+  "keywords": [
+    "Paramount 3D",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Paramount 3D",
+  "count": 12,
+  "min_price": 29.99,
+  "max_price": 29.99,
+  "color_count": 12,
+  "has_td": 8,
+  "filament_ids": [
+    "3f116671-721b-4457-bee0-046e69808601",
+    "dcdce7f8-3377-46d4-91ec-4f3d1c699f32",
+    "ddd6b72e-97d6-412a-991c-4cc9e943214f",
+    "db825c82-9515-4fcd-b240-ec3f306cf84f",
+    "7e2a2761-4a3b-4897-bc42-b767778d6ddd",
+    "b886fd62-9eb7-49a7-b69d-b5deeb0e036d",
+    "8b3150f5-3628-4c53-bfef-dd873aee931d",
+    "315d2441-d90a-49e5-ade8-1efb84ae3a42",
+    "f2bb9cd2-0bb2-422f-addf-9e7553bdaf2e",
+    "542c900a-8e3a-418b-8c31-332af0072aab",
+    "84d6518d-f787-4df0-a666-0ff95ca78129",
+    "bf761026-80a0-4154-a191-5b8074c62d01"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Paramount 3D ASA Filament",
+    "description": "Compare 12 Paramount 3D ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/paramount-3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Paramount 3D"
+        }
+      ]
+    }
+  }
+}

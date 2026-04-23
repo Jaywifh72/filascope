@@ -1,0 +1,63 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-cf/elegoo",
+  "title": "Elegoo PLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 10 Elegoo PLA-CF filaments. Prices from $21.99 to $501.00. 4 colors available. 10 with HueForge TD values.",
+  "h1": "Elegoo PLA-CF Filament",
+  "keywords": [
+    "Elegoo",
+    "PLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-CF",
+  "vendor": "Elegoo",
+  "count": 10,
+  "min_price": 21.99,
+  "max_price": 501,
+  "color_count": 4,
+  "has_td": 10,
+  "filament_ids": [
+    "2df89d78-e983-4d08-ba30-bec9bf03a976",
+    "3f47ce75-5ee5-4092-aa71-4b93bcd780de",
+    "4b91b006-8b6f-4db5-9f0a-20d03d3c9b28",
+    "da9ce297-32e7-4ce6-80a4-f484c8a74a03",
+    "91ab0b18-cf29-48fb-a5c3-28bbf24b0ebf",
+    "2c66283b-ea3e-4560-b883-f9a8ef873217",
+    "c7c226fa-d4b0-4b2e-b8bd-a6c31648a875",
+    "d3cc8bd6-c2de-48b8-8dc9-738ba2eb5726",
+    "b087bf75-6f25-4f54-a7af-6253f34ee3f6",
+    "892e054a-f163-43af-a650-272f13b0860c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PLA-CF Filament",
+    "description": "Compare 10 Elegoo PLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-cf/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-CF",
+          "item": "https://filascope.com/filaments/pla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

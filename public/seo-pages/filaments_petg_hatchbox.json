@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/hatchbox",
+  "title": "Hatchbox PETG+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 92 Hatchbox PETG+ filaments. Prices from $25.00 to $26.00. 15 colors available.",
+  "h1": "Hatchbox PETG+ Filament",
+  "keywords": [
+    "Hatchbox",
+    "PETG+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG+",
+  "vendor": "Hatchbox",
+  "count": 92,
+  "min_price": 25,
+  "max_price": 26,
+  "color_count": 15,
+  "has_td": 0,
+  "filament_ids": [
+    "19e55b7d-5c9f-4738-a804-a30e589e4e68",
+    "d57d6cc0-f822-45dd-8303-abbfa281e0a4",
+    "b8d61625-a674-498e-9731-334fe9bc239a",
+    "74c2058e-22d0-4556-be28-0995f67b4f3a",
+    "b934e0d4-8759-49ce-bb09-19668dd2407f",
+    "45efb94c-c431-40a2-bffb-ce6f3639b175",
+    "d4f2dd3e-421e-4cac-b947-759499d3ced2",
+    "4340ee28-3510-4e25-8693-0237ba7ca7e0",
+    "375b5cfa-89c1-441f-96ff-3499ae676164",
+    "0070ce43-5e59-4005-9e29-a86aa77acd96",
+    "cfa3b32b-3f17-4bfa-8957-fc9ad5f3592c",
+    "5a6fad09-f439-44ef-8a59-63258a0ebbad",
+    "40ddb7ba-4f60-40d8-9eef-6713ed30624d",
+    "80b542a7-42aa-4182-ab62-2f545bb9a7b1",
+    "b756b9d7-fd59-471e-9809-ed2e28ab4823",
+    "20418f9c-16cb-4e62-b4ad-8defefe91c64",
+    "783ec134-5154-4d02-96a8-8cdaedeb2be7",
+    "feca5ff5-7de6-4dc7-be52-0f3e90703782",
+    "748ce7fa-2323-4d96-a680-75822fad6fef",
+    "453717eb-030b-420b-a4e0-ac2bc589c18c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Hatchbox PETG+ Filament",
+    "description": "Compare 92 Hatchbox PETG+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/hatchbox",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG+",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Hatchbox"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-hs/treed-filaments",
+  "title": "TreeD Filaments PLA-HS Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 TreeD Filaments PLA-HS filaments. Prices from $38.39 to $38.39. 8 colors available.",
+  "h1": "TreeD Filaments PLA-HS Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "PLA-HS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-HS",
+  "vendor": "TreeD Filaments",
+  "count": 8,
+  "min_price": 38.39,
+  "max_price": 38.39,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "c1979714-5667-4937-9ab7-5ae505fc6813",
+    "47a824ad-609f-42c4-ac82-ec088ad96d8d",
+    "c2ae025a-dbf2-440a-ab4f-637e9f32fbac",
+    "d1cb5feb-b734-4fc8-bcc7-037dc9fde892",
+    "104d4630-f09c-4340-b267-44eb5f2b9691",
+    "5dd21d5b-6aa8-4508-b6f2-b0a5c3e9b9bb",
+    "d98b62e3-11f8-4869-9c4e-73204f32b797",
+    "82890e07-8041-4f17-8cad-3d6d70453db2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments PLA-HS Filament",
+    "description": "Compare 8 TreeD Filaments PLA-HS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-hs/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-HS",
+          "item": "https://filascope.com/filaments/pla-hs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

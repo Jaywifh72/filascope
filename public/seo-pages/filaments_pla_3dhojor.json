@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/3dhojor",
+  "title": "3DHoJor PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 119 3DHoJor PLA+ filaments. Prices from $12.99 to $25.99. 106 colors available. 119 with HueForge TD values.",
+  "h1": "3DHoJor PLA+ Filament",
+  "keywords": [
+    "3DHoJor",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "3DHoJor",
+  "count": 119,
+  "min_price": 12.99,
+  "max_price": 25.99,
+  "color_count": 106,
+  "has_td": 119,
+  "filament_ids": [
+    "e43258bc-37f4-48ef-ba14-e1c04100c312",
+    "f8f63fd6-84bc-4693-a636-7b124f722458",
+    "e045c867-3f11-495d-b370-54a41ec5ed5d",
+    "da4a14cc-df82-418e-9411-256bfbea4ec7",
+    "949226ed-89bc-4c6e-899b-9bb792b5d5ec",
+    "8505359f-8656-4999-8b26-6229d2ea5bdf",
+    "d61f1065-98fa-41f3-bfca-d36ab9e0d491",
+    "fc40d852-5f1d-41dd-ba6a-754d92c94bad",
+    "e89e69bb-392f-4a7b-a15d-d2e754dd3d28",
+    "5adaf8ed-ccbf-4c93-b1b2-727169159393",
+    "e944fb01-fd5f-4544-b8fc-a6cb51a709c1",
+    "f7a402ba-d287-42e7-9e53-23ebd2e629e6",
+    "85fafbd0-a674-42a8-8d01-020b1127976e",
+    "053ee883-8a8a-48f8-8a06-6520461eb78e",
+    "98b59f99-4eee-4042-8c04-ca5bfbf7123a",
+    "7f571ca8-f6d0-47a1-b787-ec6c7f06cc31",
+    "aa0b0911-4a21-4496-92de-21329d3fb374",
+    "ea0aa080-565b-4fb3-90cb-f7b7949826b7",
+    "9d6abf7f-0e41-4d0c-b1d5-be7baf3909e9",
+    "aad08cfb-7c7a-4a9d-a78e-87c7813fd874"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DHoJor PLA+ Filament",
+    "description": "Compare 119 3DHoJor PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/3dhojor",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DHoJor"
+        }
+      ]
+    }
+  }
+}

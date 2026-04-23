@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/amolen",
+  "title": "Amolen PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 340 Amolen PLA+ filaments. Prices from $19.99 to $287.90. 213 colors available. 338 with HueForge TD values.",
+  "h1": "Amolen PLA+ Filament",
+  "keywords": [
+    "Amolen",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Amolen",
+  "count": 340,
+  "min_price": 19.99,
+  "max_price": 287.9,
+  "color_count": 213,
+  "has_td": 338,
+  "filament_ids": [
+    "999e2932-e469-4bc6-8064-41ddb660eaa4",
+    "6f7b4b3a-c6a9-4078-b085-5a5ce06430d4",
+    "537e40de-7d0a-47ab-9d05-27c81715330d",
+    "b4a9d503-9a50-432b-a9e2-d40c334777d8",
+    "7a82e3f6-4ea2-4ac5-8f79-54fa287b07f9",
+    "4c528dc6-d1a6-4ce5-9dfb-b4496c46c858",
+    "4d7bfefb-07b1-4f30-988f-1d996b856fb2",
+    "54f7b1de-7661-4def-93fd-058432347a86",
+    "fbd042a9-d1a0-4e9a-a620-d73989d25f17",
+    "eeccf493-b85a-4b04-aa0f-4af3d304cc10",
+    "ab03ac8a-3cdd-4688-bc93-a27918d61f89",
+    "9892df3f-3c32-41eb-b23a-1f24c5ca6fc4",
+    "25dbeb41-486e-427b-b3b6-b62e84c2673a",
+    "648ea67c-3970-48e0-8e4b-f8bfe59e3feb",
+    "f1d8696d-f5f6-466a-b3ed-791db0f799b6",
+    "fdecfe23-9061-43ee-bd3a-0b6c9012675e",
+    "f86a6300-e98d-47e1-8168-26d5da4289e9",
+    "f7256e83-a8b8-4b0e-b0e4-a70a96f12700",
+    "e869fe93-bf37-4d0c-906b-a6ad2c81ed3e",
+    "bbfed2e8-145c-4dd0-b3f4-fdf8ee8e9e81"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Amolen PLA+ Filament",
+    "description": "Compare 340 Amolen PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/amolen",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Amolen"
+        }
+      ]
+    }
+  }
+}

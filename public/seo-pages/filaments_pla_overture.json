@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/overture",
+  "title": "Overture PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 130 Overture PLA filaments. Prices from $17.99 to $24.99. 97 colors available.",
+  "h1": "Overture PLA Filament",
+  "keywords": [
+    "Overture",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Overture",
+  "count": 130,
+  "min_price": 17.99,
+  "max_price": 24.99,
+  "color_count": 97,
+  "has_td": 0,
+  "filament_ids": [
+    "e5f318d0-0246-4b5c-a3e7-94624a2e1bc9",
+    "04f6c7df-2bae-4950-99dd-b4e275f64723",
+    "762d0624-a3b3-470b-a633-946312da655b",
+    "90f98b24-b7a4-4ef8-9755-00a712dde19e",
+    "429a3790-2751-4c82-970f-1307a515ce90",
+    "4bcd8e37-7564-4bca-bc0c-629af07f8c89",
+    "b2d89626-2203-4f8e-bf86-eb5410d6051a",
+    "bfd66912-4e7a-4417-a9b9-871356965396",
+    "c4077ad3-7a7b-4551-acd1-09c3789b1026",
+    "3ab8a210-6f2a-4a2b-bbb3-a1fa38dabe0a",
+    "1f0f0f0b-88b6-493a-86bd-4827caeefddc",
+    "69c6bb22-ccd0-472c-a950-008282dba557",
+    "752c9b71-67dc-4061-8acc-5d0421f0ee43",
+    "ebec9af4-6243-430e-8e28-c083a9e6ff10",
+    "a9cd54a5-74be-4880-8353-50f1cdc12971",
+    "3638f483-868a-4a7a-a9b5-18b5366e62af",
+    "97ba08ba-f4f3-4938-9505-d5dbdd3b9c10",
+    "7c0b256d-1c61-4dbe-8561-295a2798e429",
+    "0923b9d6-d1b3-45d1-a7fc-0a94c7c43e92",
+    "1992e4c4-d38a-475b-9455-4f864e6bb576"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Overture PLA Filament",
+    "description": "Compare 130 Overture PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/overture",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Overture"
+        }
+      ]
+    }
+  }
+}

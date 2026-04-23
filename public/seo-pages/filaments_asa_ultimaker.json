@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/ultimaker",
+  "title": "Ultimaker ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Ultimaker ASA filaments. Prices from $59.95 to $59.95. 3 colors available.",
+  "h1": "Ultimaker ASA Filament",
+  "keywords": [
+    "Ultimaker",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Ultimaker",
+  "count": 3,
+  "min_price": 59.95,
+  "max_price": 59.95,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "cc1bd5e1-144a-48cb-9c31-a1b15e7a6ce9",
+    "34acebc2-08cc-420a-8d0a-70a404e05f14",
+    "7c4e07fd-2362-41e9-abe7-a36ee1cb1fd0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Ultimaker ASA Filament",
+    "description": "Compare 3 Ultimaker ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/ultimaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Ultimaker"
+        }
+      ]
+    }
+  }
+}

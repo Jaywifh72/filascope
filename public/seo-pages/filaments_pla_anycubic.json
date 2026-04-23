@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/anycubic",
+  "title": "Anycubic PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 107 Anycubic PLA+ filaments. Prices from $16.99 to $169.99. 14 colors available. 106 with HueForge TD values.",
+  "h1": "Anycubic PLA+ Filament",
+  "keywords": [
+    "Anycubic",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Anycubic",
+  "count": 107,
+  "min_price": 16.99,
+  "max_price": 169.99,
+  "color_count": 14,
+  "has_td": 106,
+  "filament_ids": [
+    "42b77e9a-9aa9-4433-b4f4-9365c9bdf4f0",
+    "c74107e1-ed74-4ac8-861a-ada793d733f5",
+    "a2301341-d626-49e6-b177-63d3cfc90e7f",
+    "4845389d-f921-4c85-aeba-a1fbb807c820",
+    "b8d88a54-6801-4f70-b6eb-8550995946b6",
+    "7c6fde20-d71c-4bbd-93cd-4bda87f5a0f4",
+    "7c167ffc-edca-4265-87a8-3e90d1f85e96",
+    "a0bd3801-3c1a-4fb7-9726-2e44cd7e22f8",
+    "78c082c3-9cb7-44a3-b06a-00fb5d996d0e",
+    "8abb4e37-ee63-42f8-a106-615802114502",
+    "608602e3-eb24-473d-9e4e-073ec43543a3",
+    "61ef14e1-be31-4bfb-9d5f-7d56768f1a12",
+    "3ad4cce5-6d24-403c-8ef7-b1b7a5dcf1dc",
+    "d80e051e-3d7c-48b7-a85b-a6f14d09abcc",
+    "cff3c637-7995-422e-9989-241f4c034e92",
+    "17e82f2b-b2ee-4880-afeb-d10e681404e5",
+    "d658bd53-411d-435e-9ec4-b00eda952c57",
+    "5853f3d2-600a-4f46-9712-cf261f28b626",
+    "3b9e648d-288b-48d3-81df-71c6d68c4b92",
+    "5d7f2816-e1c6-428f-8184-068711db3c1a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic PLA+ Filament",
+    "description": "Compare 107 Anycubic PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-40d/fiberlogy",
+  "title": "Fiberlogy TPU-40D Filament — Prices, Specs & Reviews",
+  "description": "Compare 26 Fiberlogy TPU-40D filaments. Prices from $29.99 to $29.99. 21 colors available.",
+  "h1": "Fiberlogy TPU-40D Filament",
+  "keywords": [
+    "Fiberlogy",
+    "TPU-40D",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-40D",
+  "vendor": "Fiberlogy",
+  "count": 26,
+  "min_price": 29.99,
+  "max_price": 29.99,
+  "color_count": 21,
+  "has_td": 0,
+  "filament_ids": [
+    "8c422eb1-ba71-44cb-841e-06b47def3d97",
+    "c7b9eea2-e74b-4dd1-9740-6e6a6a7252b4",
+    "895c0f8a-bd2f-4446-96ed-761ebd594112",
+    "3aa116b6-c103-4db9-b36e-e36f4f88fd0a",
+    "edbabb29-2148-4c6e-942f-8aed543619d0",
+    "2380f4ca-3a24-44c4-be85-8a6aa1e2bce0",
+    "6d1b1bce-32c9-4e9a-bdd0-65138a446534",
+    "f8aa06d6-9203-44c5-a0d4-15e51d1a228b",
+    "4de52239-ee86-4dfb-a604-5cd662cef1e2",
+    "5102aae9-2a57-4748-b940-7be643064143",
+    "3d2c48ef-8596-4236-8146-5a0200f6bcff",
+    "ad552474-7f14-4325-bea0-e7a840d89623",
+    "f199c7c4-9e78-48c4-b650-f629f4ee26d4",
+    "0cfdcfa0-4f28-42bb-b35c-63d3bc683eaa",
+    "6a6ba4fc-ccf9-45f6-998f-48201128bc94",
+    "adac47a1-a513-47e6-862d-e452e5defc52",
+    "2f96fb2d-40d2-427e-a25b-1e37b5b64a40",
+    "7b83d29e-a045-49da-93e3-23a71b17f6b0",
+    "c71e57ce-1205-444c-bd20-a16c04471137",
+    "983f330e-6701-424a-9614-46c80c927e54"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy TPU-40D Filament",
+    "description": "Compare 26 Fiberlogy TPU-40D filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-40d/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-40D",
+          "item": "https://filascope.com/filaments/tpu-40d"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa/eryone",
+  "title": "Eryone PA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Eryone PA filaments. Prices from $32.99 to $32.99. 3 colors available.",
+  "h1": "Eryone PA Filament",
+  "keywords": [
+    "Eryone",
+    "PA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA",
+  "vendor": "Eryone",
+  "count": 3,
+  "min_price": 32.99,
+  "max_price": 32.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "3835c6a1-1521-4543-998b-d14df0fbe012",
+    "e6e45fe3-e45a-44fa-ae0f-92670d5df741",
+    "ffcf55db-4106-418f-a5d0-01b415541d3b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Eryone PA Filament",
+    "description": "Compare 3 Eryone PA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa/eryone",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA",
+          "item": "https://filascope.com/filaments/pa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Eryone"
+        }
+      ]
+    }
+  }
+}

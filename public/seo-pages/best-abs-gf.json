@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-abs-gf",
+  "title": "Best ABS-GF Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best ABS-GF filaments in 2026. 18 options from 5 brands, starting at $15.99. Expert picks, prices & specs.",
+  "h1": "Best ABS-GF Filament (2026)",
+  "keywords": [
+    "best ABS-GF",
+    "ABS-GF filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "ABS-GF",
+  "count": 18,
+  "brands": 5,
+  "min_price": 15.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best ABS-GF Filament 2026",
+    "description": "Expert comparison of 18 ABS-GF filaments",
+    "url": "https://filascope.com/best-abs-gf"
+  }
+}

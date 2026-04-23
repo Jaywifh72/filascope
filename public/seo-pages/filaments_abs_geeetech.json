@@ -1,0 +1,70 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/geeetech",
+  "title": "Geeetech ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 17 Geeetech ABS filaments. Prices from $10.69 to $12.99. 15 colors available. 17 with HueForge TD values.",
+  "h1": "Geeetech ABS Filament",
+  "keywords": [
+    "Geeetech",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Geeetech",
+  "count": 17,
+  "min_price": 10.69,
+  "max_price": 12.99,
+  "color_count": 15,
+  "has_td": 17,
+  "filament_ids": [
+    "97f60836-1ccd-4f4b-9d3b-20afa32b3291",
+    "a5d145b6-cf89-42fc-87da-a935a6ecccb8",
+    "fa4c4e96-69dd-43b2-8f61-4430fef602ce",
+    "60454a6a-5e57-4ec1-a594-c2fc998469d1",
+    "c0a0e9b4-457e-4b0f-bc48-69d574c7077f",
+    "10622be7-cfe6-4025-85ba-d7ad67ab1e04",
+    "0e2282ec-9da1-42da-9aaf-f37e5bf5f634",
+    "1ab46e2e-a6ea-4770-bc3f-325aeee28b5f",
+    "bd4264d9-69a9-49b4-ba4c-b0d5801512ba",
+    "bf8438fd-9c7a-431a-a504-1fec244eb02f",
+    "015ce6d5-bcac-4e5d-9ef5-1c2078c7872a",
+    "a082340a-470d-4e2b-8203-ce1c2657f330",
+    "f3d64d07-9831-4e2a-af12-193acbec2982",
+    "6be76f89-2739-4955-ba2f-16e5c8130364",
+    "2fa3ffb2-d6d6-483d-84eb-32df486946c7",
+    "be3c034f-6a80-4127-91b1-0e0b3e2b8f98",
+    "c62185d6-0fa6-41c3-a7db-9e334b7d453c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Geeetech ABS Filament",
+    "description": "Compare 17 Geeetech ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/geeetech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Geeetech"
+        }
+      ]
+    }
+  }
+}

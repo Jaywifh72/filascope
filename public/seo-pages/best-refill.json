@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-refill",
+  "title": "Best REFILL Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best REFILL filaments in 2026. 18 options from 1 brands, starting at $13.19. Expert picks, prices & specs.",
+  "h1": "Best REFILL Filament (2026)",
+  "keywords": [
+    "best REFILL",
+    "REFILL filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "REFILL",
+  "count": 18,
+  "brands": 1,
+  "min_price": 13.19,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best REFILL Filament 2026",
+    "description": "Expert comparison of 18 REFILL filaments",
+    "url": "https://filascope.com/best-refill"
+  }
+}

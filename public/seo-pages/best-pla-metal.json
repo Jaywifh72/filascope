@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pla-metal",
+  "title": "Best PLA Metal Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PLA Metal filaments in 2026. 6 options from 1 brands, starting at $83.00. Expert picks, prices & specs.",
+  "h1": "Best PLA Metal Filament (2026)",
+  "keywords": [
+    "best PLA Metal",
+    "PLA Metal filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PLA Metal",
+  "count": 6,
+  "brands": 1,
+  "min_price": 83,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PLA Metal Filament 2026",
+    "description": "Expert comparison of 6 PLA Metal filaments",
+    "url": "https://filascope.com/best-pla-metal"
+  }
+}

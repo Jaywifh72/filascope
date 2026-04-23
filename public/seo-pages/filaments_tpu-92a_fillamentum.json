@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-92a/fillamentum",
+  "title": "Fillamentum TPU-92A Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 Fillamentum TPU-92A filaments. Prices from $36.99 to $36.99. 7 colors available.",
+  "h1": "Fillamentum TPU-92A Filament",
+  "keywords": [
+    "Fillamentum",
+    "TPU-92A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-92A",
+  "vendor": "Fillamentum",
+  "count": 7,
+  "min_price": 36.99,
+  "max_price": 36.99,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "a34f429e-7006-46bb-ab48-a1a97b9a4124",
+    "a621b8bd-9d3c-4f72-a5a2-e4c0aa3a1a81",
+    "d6dbab01-5265-41b4-a4a4-d7e90c5b9b96",
+    "23cbc714-d8ec-420d-89b4-087d3f219070",
+    "52f30d7f-1c3b-4db4-b28f-e7758f707a5b",
+    "fbaf070b-154f-4052-a587-78d81b083ae1",
+    "d34bc378-ab4b-40d8-a1b0-ffcc80ee3645"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum TPU-92A Filament",
+    "description": "Compare 7 Fillamentum TPU-92A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-92a/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-92A",
+          "item": "https://filascope.com/filaments/tpu-92a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

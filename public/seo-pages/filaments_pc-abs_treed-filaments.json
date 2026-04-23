@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc-abs/treed-filaments",
+  "title": "TreeD Filaments PC-ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 TreeD Filaments PC-ABS filaments. Prices from $71.39 to $76.89. 3 colors available.",
+  "h1": "TreeD Filaments PC-ABS Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "PC-ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC-ABS",
+  "vendor": "TreeD Filaments",
+  "count": 3,
+  "min_price": 71.39,
+  "max_price": 76.89,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "327ae3ba-8813-424f-bf5a-b6a8208744b8",
+    "8de774e6-f96f-4590-820d-1f10c2cf468a",
+    "6fe07be3-f33e-4f39-b7bb-039fe9a904f4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments PC-ABS Filament",
+    "description": "Compare 3 TreeD Filaments PC-ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc-abs/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC-ABS",
+          "item": "https://filascope.com/filaments/pc-abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

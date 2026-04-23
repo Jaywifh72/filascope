@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa/fillamentum",
+  "title": "Fillamentum PA Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 Fillamentum PA filaments. Prices from $39.99 to $39.99. 5 colors available.",
+  "h1": "Fillamentum PA Filament",
+  "keywords": [
+    "Fillamentum",
+    "PA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA",
+  "vendor": "Fillamentum",
+  "count": 7,
+  "min_price": 39.99,
+  "max_price": 39.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "563f5cfd-caaf-494c-9e58-93a8a5a4eb4c",
+    "ca5b9b5c-b65d-4022-bd81-83606327f16e",
+    "453bc6d1-5dad-4f3b-8500-fccc6b27fd30",
+    "4fd5d6dc-89c5-48b3-ac90-4ccb38eda0b2",
+    "1e067129-eb97-4256-9f3b-649ed308cdbc",
+    "4a890ecd-7219-46da-8f51-081948a9773a",
+    "e42ffa5b-1250-443f-8f14-19513de45508"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum PA Filament",
+    "description": "Compare 7 Fillamentum PA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA",
+          "item": "https://filascope.com/filaments/pa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pei",
+  "title": "Best PEI Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PEI filaments in 2026. 12 options from 6 brands, starting at $17.13. Expert picks, prices & specs.",
+  "h1": "Best PEI Filament (2026)",
+  "keywords": [
+    "best PEI",
+    "PEI filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PEI",
+  "count": 12,
+  "brands": 6,
+  "min_price": 17.13,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PEI Filament 2026",
+    "description": "Expert comparison of 12 PEI filaments",
+    "url": "https://filascope.com/best-pei"
+  }
+}

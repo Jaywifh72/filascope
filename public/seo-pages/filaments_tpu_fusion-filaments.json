@@ -1,0 +1,68 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/fusion-filaments",
+  "title": "Fusion Filaments TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 15 Fusion Filaments TPU filaments. Prices from $34.94 to $34.94. 9 colors available. 15 with HueForge TD values.",
+  "h1": "Fusion Filaments TPU Filament",
+  "keywords": [
+    "Fusion Filaments",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Fusion Filaments",
+  "count": 15,
+  "min_price": 34.94,
+  "max_price": 34.94,
+  "color_count": 9,
+  "has_td": 15,
+  "filament_ids": [
+    "026896a5-8bc3-4c1e-b172-b0fe12e5d9b7",
+    "00302b5e-051a-45af-8ae4-403c760602bb",
+    "cffb3c47-46df-487d-a13b-83ec3cafa6e8",
+    "9951e929-6ad3-41a9-8b3a-427d4747f363",
+    "b16620ab-b0a4-48e2-95b0-6069ce87e68c",
+    "b0155993-7557-4926-9b31-570d5243b4b4",
+    "98da14b2-4b8e-4616-b545-0a99dfd9c2d1",
+    "4af1d1d6-21c1-4f15-931d-ce42eca44933",
+    "2c393713-d4f6-4b24-8728-b61474e7ba0b",
+    "a6a3a527-5783-4311-a3dc-41c8b616faae",
+    "fc59999f-35c8-418e-a528-2307449d1955",
+    "7f45b880-c993-4807-9354-86647f13cb1c",
+    "0cabc41d-3040-402d-b10a-2603d9e15ce5",
+    "943dfe6d-f95c-4e50-af04-39aaa2d710f1",
+    "6f9bbad7-17c7-45f5-b4d5-47617ac89712"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fusion Filaments TPU Filament",
+    "description": "Compare 15 Fusion Filaments TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/fusion-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fusion Filaments"
+        }
+      ]
+    }
+  }
+}

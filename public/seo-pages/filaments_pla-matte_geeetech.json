@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-matte/geeetech",
+  "title": "GEEETECH PLA-MATTE Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 GEEETECH PLA-MATTE filaments. Prices from $12.49 to $12.49. 2 colors available. 7 with HueForge TD values.",
+  "h1": "GEEETECH PLA-MATTE Filament",
+  "keywords": [
+    "GEEETECH",
+    "PLA-MATTE",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-MATTE",
+  "vendor": "GEEETECH",
+  "count": 7,
+  "min_price": 12.49,
+  "max_price": 12.49,
+  "color_count": 2,
+  "has_td": 7,
+  "filament_ids": [
+    "b21f081d-df47-4afe-a073-4b99b59d9229",
+    "e38fe27c-e581-42db-85e1-76f5228be73b",
+    "2a0789ce-8802-4d2d-9b0f-c9f1c32283f5",
+    "e0fbb85b-bc0b-40b3-9e11-5a8ff58b566a",
+    "b785fdbd-375b-43b6-91c2-d1cfb1e5fb7f",
+    "8f3e83d0-7dc3-4535-a9c1-34c1364ba5ea",
+    "197a039e-9d4a-4d33-9c01-c371741e5735"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "GEEETECH PLA-MATTE Filament",
+    "description": "Compare 7 GEEETECH PLA-MATTE filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-matte/geeetech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-MATTE",
+          "item": "https://filascope.com/filaments/pla-matte"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GEEETECH"
+        }
+      ]
+    }
+  }
+}

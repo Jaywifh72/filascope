@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-wood/elegoo",
+  "title": "Elegoo PLA-Wood Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 Elegoo PLA-Wood filaments. Prices from $18.99 to $25.99. 7 colors available.",
+  "h1": "Elegoo PLA-Wood Filament",
+  "keywords": [
+    "Elegoo",
+    "PLA-Wood",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Wood",
+  "vendor": "Elegoo",
+  "count": 7,
+  "min_price": 18.99,
+  "max_price": 25.99,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "2601cc7b-8b8a-4663-aed2-504b23daef7f",
+    "17777f13-fb61-4b3c-b862-a69f61db280f",
+    "c2000527-1b8f-4490-b40d-2921af2efaed",
+    "c2baa0a7-f92b-47b5-a1b5-888ddf7b5711",
+    "caa6be29-0da2-4a33-bdd6-cdf5622cef9c",
+    "57467fe0-88ef-4d7a-ae86-10c3ef123b3d",
+    "cd87678f-49e0-4ed2-9de3-6988a3325877"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PLA-Wood Filament",
+    "description": "Compare 7 Elegoo PLA-Wood filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-wood/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Wood",
+          "item": "https://filascope.com/filaments/pla-wood"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-hs/3dhojor",
+  "title": "3DHOJOR PLA-HS Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 3DHOJOR PLA-HS filaments. Prices from $14.99 to $17.99. 7 colors available. 7 with HueForge TD values.",
+  "h1": "3DHOJOR PLA-HS Filament",
+  "keywords": [
+    "3DHOJOR",
+    "PLA-HS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-HS",
+  "vendor": "3DHOJOR",
+  "count": 7,
+  "min_price": 14.99,
+  "max_price": 17.99,
+  "color_count": 7,
+  "has_td": 7,
+  "filament_ids": [
+    "5d055087-702e-4216-87db-131b166a3e80",
+    "3e7b5fa9-8aae-4dfc-bb9d-68f8f77e6a6c",
+    "30628da3-04d1-4306-a2b5-afcf942953c0",
+    "43006b4a-87bf-4f46-99cd-c04ae03830f5",
+    "e87271be-63a8-429f-bc76-f00c9f24a956",
+    "4d10e382-5212-4c62-8708-bc56f9470963",
+    "d6ad0936-623a-426b-92b1-a96d571487c8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DHOJOR PLA-HS Filament",
+    "description": "Compare 7 3DHOJOR PLA-HS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-hs/3dhojor",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-HS",
+          "item": "https://filascope.com/filaments/pla-hs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DHOJOR"
+        }
+      ]
+    }
+  }
+}

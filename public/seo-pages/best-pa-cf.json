@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pa-cf",
+  "title": "Best PA-CF Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PA-CF filaments in 2026. 24 options from 11 brands, starting at $27.99. Expert picks, prices & specs.",
+  "h1": "Best PA-CF Filament (2026)",
+  "keywords": [
+    "best PA-CF",
+    "PA-CF filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PA-CF",
+  "count": 24,
+  "brands": 11,
+  "min_price": 27.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PA-CF Filament 2026",
+    "description": "Expert comparison of 24 PA-CF filaments",
+    "url": "https://filascope.com/best-pa-cf"
+  }
+}

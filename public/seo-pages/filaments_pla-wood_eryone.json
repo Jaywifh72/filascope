@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-wood/eryone",
+  "title": "Eryone PLA-Wood Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Eryone PLA-Wood filaments. Prices from $24.99 to $32.99. 6 colors available.",
+  "h1": "Eryone PLA-Wood Filament",
+  "keywords": [
+    "Eryone",
+    "PLA-Wood",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Wood",
+  "vendor": "Eryone",
+  "count": 6,
+  "min_price": 24.99,
+  "max_price": 32.99,
+  "color_count": 6,
+  "has_td": 0,
+  "filament_ids": [
+    "fbd841b7-5400-4d14-ae0a-a39c25325b3c",
+    "fff73f09-0969-4a3e-8f3a-648bff8f3de0",
+    "f75a14c0-05f6-4e83-a55b-37cfaf00775a",
+    "d2688139-96ec-46b0-a8ea-8e45e9c01ac4",
+    "7f585acd-ab5f-495c-9d9e-e70d4c900e2d",
+    "fb51df1a-caa0-42db-92cb-27e4ce874fb5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Eryone PLA-Wood Filament",
+    "description": "Compare 6 Eryone PLA-Wood filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-wood/eryone",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Wood",
+          "item": "https://filascope.com/filaments/pla-wood"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Eryone"
+        }
+      ]
+    }
+  }
+}

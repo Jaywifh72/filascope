@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/treed-filaments",
+  "title": "TreeD Filaments PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 27 TreeD Filaments PLA filaments. Prices from $32.89 to $38.39. 8 colors available.",
+  "h1": "TreeD Filaments PLA Filament",
+  "keywords": [
+    "TreeD Filaments",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "TreeD Filaments",
+  "count": 27,
+  "min_price": 32.89,
+  "max_price": 38.39,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "0416d440-6519-47da-8f6a-c910e20fc2c7",
+    "ce27243e-c683-4da7-8426-90423b675c04",
+    "587d599b-5346-4cbf-b3c0-a02922c33f3d",
+    "27644b48-8c34-4515-aa3b-9a4971129959",
+    "7ae4f1ee-69e9-4f22-9ebd-d6abb42ef46a",
+    "e86be9f9-ff09-4f74-a4b5-184bbafefef3",
+    "a4277e16-b664-4f7f-bd21-2b5676c1909a",
+    "b1d9c64b-0218-4ae4-b90b-bc70785282e5",
+    "ae98e30a-3e44-4eb4-a1b3-6479f66b9d58",
+    "dddbd995-9fdc-4798-ab6a-f1837e336b09",
+    "d63e412f-7806-40d7-b693-69dd7d462365",
+    "f56353cc-cb2b-49a1-a998-21671e8610c9",
+    "6baab289-86a4-455a-88f0-f834458ea7a9",
+    "44369307-8f01-4599-9836-265f2a4eefef",
+    "e74f2259-4803-429a-aae8-c36451ca6fc7",
+    "d1212e65-e748-4b90-af90-e1c3fed246d0",
+    "ae69b315-a73b-4d66-8afb-9b2836e0e122",
+    "73124461-d4b5-496e-8954-e20b509a6ef4",
+    "111dda78-9112-4745-8d16-e82678f11a13",
+    "5388dea1-342f-40b9-b700-604c15148f91"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "TreeD Filaments PLA Filament",
+    "description": "Compare 27 TreeD Filaments PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/treed-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "TreeD Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-galaxy/prusament",
+  "title": "Prusament PLA Galaxy Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Prusament PLA Galaxy filaments. Prices from $28.79 to $28.79. 2 colors available.",
+  "h1": "Prusament PLA Galaxy Filament",
+  "keywords": [
+    "Prusament",
+    "PLA Galaxy",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Galaxy",
+  "vendor": "Prusament",
+  "count": 4,
+  "min_price": 28.79,
+  "max_price": 28.79,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "56899f50-1be8-43e1-9368-50923b04b6d9",
+    "80c9afb6-9159-42e1-9f5b-09b19a6e3fdf",
+    "d9097114-1fa8-4d50-b4b0-8ae1257809cf",
+    "b895c016-6b3a-47ae-b0bd-cc5d96a9dd54"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Prusament PLA Galaxy Filament",
+    "description": "Compare 4 Prusament PLA Galaxy filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-galaxy/prusament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Galaxy",
+          "item": "https://filascope.com/filaments/pla-galaxy"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Prusament"
+        }
+      ]
+    }
+  }
+}

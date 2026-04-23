@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-asa-cf",
+  "title": "Best ASA-CF Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best ASA-CF filaments in 2026. 33 options from 5 brands, starting at $25.99. Expert picks, prices & specs.",
+  "h1": "Best ASA-CF Filament (2026)",
+  "keywords": [
+    "best ASA-CF",
+    "ASA-CF filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "ASA-CF",
+  "count": 33,
+  "brands": 5,
+  "min_price": 25.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best ASA-CF Filament 2026",
+    "description": "Expert comparison of 33 ASA-CF filaments",
+    "url": "https://filascope.com/best-asa-cf"
+  }
+}

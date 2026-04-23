@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa-gf/formfutura",
+  "title": "FormFutura ASA-GF Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 FormFutura ASA-GF filaments. Prices from $35.95 to $41.42. 7 colors available.",
+  "h1": "FormFutura ASA-GF Filament",
+  "keywords": [
+    "FormFutura",
+    "ASA-GF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA-GF",
+  "vendor": "FormFutura",
+  "count": 7,
+  "min_price": 35.95,
+  "max_price": 41.42,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "40020bbe-27a8-4b85-b886-84f5f4d59b78",
+    "06db4537-cd4f-4fe4-b0f9-01a16ecf418f",
+    "294ccb42-4df2-4f4f-9ada-06673133357a",
+    "47e3da21-7b6a-4b3d-a064-efe8df0ea2dd",
+    "62dccd7d-1449-4682-9f29-0001cbe6bd40",
+    "a51a6584-b4e2-4234-8472-ef588d19325c",
+    "d3c69cad-ef46-43c9-90ca-68cfed6f62c6"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura ASA-GF Filament",
+    "description": "Compare 7 FormFutura ASA-GF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa-gf/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA-GF",
+          "item": "https://filascope.com/filaments/asa-gf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

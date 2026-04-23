@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-75a/ninjatek",
+  "title": "NinjaTek TPU-75A Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 NinjaTek TPU-75A filaments. Prices from $24.99 to $24.99. 4 colors available.",
+  "h1": "NinjaTek TPU-75A Filament",
+  "keywords": [
+    "NinjaTek",
+    "TPU-75A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-75A",
+  "vendor": "NinjaTek",
+  "count": 4,
+  "min_price": 24.99,
+  "max_price": 24.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "ce2d6b7a-9ada-4e55-814f-f7765217864f",
+    "ba019d35-41e5-4976-aebd-617012e9ef6c",
+    "682d8321-ce70-47e6-93a3-ccd4b557f506",
+    "ad01d012-ce3b-4a8e-9aca-50b7f53e3b16"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "NinjaTek TPU-75A Filament",
+    "description": "Compare 4 NinjaTek TPU-75A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-75a/ninjatek",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-75A",
+          "item": "https://filascope.com/filaments/tpu-75a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "NinjaTek"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-metal/colorfabb",
+  "title": "ColorFabb PLA-Metal Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 ColorFabb PLA-Metal filaments. Prices from $62.97 to $62.97. 3 colors available.",
+  "h1": "ColorFabb PLA-Metal Filament",
+  "keywords": [
+    "ColorFabb",
+    "PLA-Metal",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Metal",
+  "vendor": "ColorFabb",
+  "count": 3,
+  "min_price": 62.97,
+  "max_price": 62.97,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "f5282091-8c42-42ad-934c-9abbfeff4414",
+    "1b2c95ed-acc6-4ff0-9df3-70ac683b7b4e",
+    "910f4965-1651-4153-b015-4d5e96160acf"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "ColorFabb PLA-Metal Filament",
+    "description": "Compare 3 ColorFabb PLA-Metal filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-metal/colorfabb",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Metal",
+          "item": "https://filascope.com/filaments/pla-metal"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ColorFabb"
+        }
+      ]
+    }
+  }
+}

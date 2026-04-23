@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/hatchbox",
+  "title": "Hatchbox TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Hatchbox TPU-95A filaments. Prices from $37.00 to $37.00. 0 colors available.",
+  "h1": "Hatchbox TPU-95A Filament",
+  "keywords": [
+    "Hatchbox",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "Hatchbox",
+  "count": 13,
+  "min_price": 37,
+  "max_price": 37,
+  "color_count": 0,
+  "has_td": 0,
+  "filament_ids": [
+    "cca89393-65cf-44fb-8b01-a6f0e96bc682",
+    "0c8c1fed-5c69-405a-a3e2-6be53170d582",
+    "97fac781-45dc-49eb-af86-5224af715dd3",
+    "a37feae4-c1e3-464f-8125-0e26a576ea43",
+    "e7f9b62b-2643-4712-9cab-db9071c41f71",
+    "64d05e01-081c-4d82-9037-7edecb8ee8d4",
+    "00f2e26e-bb7b-4dc3-ab14-cd08d988b420",
+    "5f756f3e-e22c-4c19-9797-ec123afd5783",
+    "0c3da5e9-5dfe-44d5-82a3-c51737aac174",
+    "6cd4ffb4-52d4-4981-86d7-6ea402844b2d",
+    "e070c878-fa02-4e64-bc5f-e42973c5d63a",
+    "b5215d8e-7b8c-449c-bc2d-ccce6bd3d003",
+    "5d7023bc-a90c-451d-a770-298e996b6c55"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Hatchbox TPU-95A Filament",
+    "description": "Compare 13 Hatchbox TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/hatchbox",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Hatchbox"
+        }
+      ]
+    }
+  }
+}

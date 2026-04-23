@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/premium-pla-high-speed/spectrum-filaments",
+  "title": "Spectrum Filaments Premium PLA High Speed Filament — Prices, Specs & Reviews",
+  "description": "Compare 40 Spectrum Filaments Premium PLA High Speed filaments. Prices from $28.00 to $29.00. 23 colors available.",
+  "h1": "Spectrum Filaments Premium PLA High Speed Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "Premium PLA High Speed",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Premium PLA High Speed",
+  "vendor": "Spectrum Filaments",
+  "count": 40,
+  "min_price": 28,
+  "max_price": 29,
+  "color_count": 23,
+  "has_td": 0,
+  "filament_ids": [
+    "1ca057de-7eda-4e32-acf4-9c3d76fb0b45",
+    "197aebc2-3c36-471f-a866-d164813dbd54",
+    "3c18d581-6c39-4e49-a211-e41c54d3401a",
+    "e57be601-4770-49a4-b066-277c2205b7ca",
+    "6fe259b9-b48c-4b29-88f0-6915d0a5cf33",
+    "12575642-cec8-4791-b252-0815bd45ab96",
+    "7a6c724e-262e-4557-b7ee-27c1041d91f8",
+    "04c7d553-6239-40d0-8971-5751dd1cdb10",
+    "47e3b67e-e807-4b94-a65c-79d1a1fbc352",
+    "58697c5a-261d-4432-adc9-e2adea569110",
+    "57f24b06-49fc-429a-ab3f-fdfc91a798df",
+    "68b8c7a6-1434-4089-978e-5bc4c6868b7a",
+    "b784446e-c8d7-4f61-bb0a-efb29a769068",
+    "5488722c-ce4f-42ba-b306-7f0eca903b09",
+    "7f0a5dad-e44d-4c92-b738-892cc41cccea",
+    "92fa217b-1cd4-4bdb-b6a8-28b0da087af2",
+    "9c37a2e3-bf5c-4795-9fa8-c5d69756e4c5",
+    "6d6af98a-0ea9-4e3e-b270-dbad65702e7a",
+    "ce52eefc-7ac0-46e2-adc1-49edb4a9f9c9",
+    "8ebe2aee-8736-4e37-8938-3a8955a0a1da"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments Premium PLA High Speed Filament",
+    "description": "Compare 40 Spectrum Filaments Premium PLA High Speed filaments on FilaScope",
+    "url": "https://filascope.com/filaments/premium-pla-high-speed/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Premium PLA High Speed",
+          "item": "https://filascope.com/filaments/premium-pla-high-speed"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

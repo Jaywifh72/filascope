@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pet-g-glow-in-the-dark/spectrum-filaments",
+  "title": "Spectrum Filaments PET-G Glow in the Dark Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Spectrum Filaments PET-G Glow in the Dark filaments. Prices from $46.00 to $69.00. 2 colors available.",
+  "h1": "Spectrum Filaments PET-G Glow in the Dark Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PET-G Glow in the Dark",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PET-G Glow in the Dark",
+  "vendor": "Spectrum Filaments",
+  "count": 4,
+  "min_price": 46,
+  "max_price": 69,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "ec8d620d-a3be-4d0a-9cbc-6690bb9a2834",
+    "ea56ba28-60c2-4340-b2a4-f0032e88b817",
+    "15c2610f-7c2a-4f7e-ab01-abd980947881",
+    "75dc5bcb-924f-4945-9643-568a221719c7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PET-G Glow in the Dark Filament",
+    "description": "Compare 4 Spectrum Filaments PET-G Glow in the Dark filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pet-g-glow-in-the-dark/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PET-G Glow in the Dark",
+          "item": "https://filascope.com/filaments/pet-g-glow-in-the-dark"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

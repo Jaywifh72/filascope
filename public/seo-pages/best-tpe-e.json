@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-tpe-e",
+  "title": "Best TPE-E Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best TPE-E filaments in 2026. 4 options from 1 brands, starting at $65.89. Expert picks, prices & specs.",
+  "h1": "Best TPE-E Filament (2026)",
+  "keywords": [
+    "best TPE-E",
+    "TPE-E filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "TPE-E",
+  "count": 4,
+  "brands": 1,
+  "min_price": 65.89,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best TPE-E Filament 2026",
+    "description": "Expert comparison of 4 TPE-E filaments",
+    "url": "https://filascope.com/best-tpe-e"
+  }
+}

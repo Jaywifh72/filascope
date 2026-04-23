@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/hatchbox",
+  "title": "Hatchbox PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 394 Hatchbox PLA+ filaments. Prices from $19.99 to $99.99. 17 colors available. 2 with HueForge TD values.",
+  "h1": "Hatchbox PLA+ Filament",
+  "keywords": [
+    "Hatchbox",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Hatchbox",
+  "count": 394,
+  "min_price": 19.99,
+  "max_price": 99.99,
+  "color_count": 17,
+  "has_td": 2,
+  "filament_ids": [
+    "9f498bac-8b60-44e7-a618-f25f57350d90",
+    "819d461b-fb16-454b-bfd7-cb4c4ec92060",
+    "2f3148fe-d89a-4af9-a335-849a1a0d3828",
+    "35f9e5b5-d73c-419a-9c9f-a428f37bf176",
+    "70ea1902-528e-491f-be5e-933692366f6b",
+    "9b7bd7c7-bf61-4489-b1e5-b6396acdd934",
+    "ed57c8c7-f573-4c4d-9cab-72b1bfcab8bf",
+    "c430ee09-1cf8-44aa-94d1-92a921a0274a",
+    "8dacabba-884d-4a59-9f55-d7b62065afbb",
+    "eff365b1-347f-4043-8651-5645f0e05cd0",
+    "ba42aceb-4ffc-4ac7-ba8e-43cbd2ff37d1",
+    "6132660c-0fc5-4e67-9b38-70c06219db4c",
+    "95e33924-cb31-443a-8fcd-74ae8e4b8f68",
+    "eb67b8dd-96a9-46af-a76d-c7429782944a",
+    "2a9c857f-3f05-472f-94d8-2a1e45c5c9b4",
+    "25468eab-fed7-495e-b4f7-3fee620ac9ff",
+    "b1ae8524-15cb-464d-ba3c-aafa0e264f20",
+    "f811b326-db6d-441d-986d-c529fc172c5a",
+    "9e036bda-a315-4fde-b2ad-54023d7e2a26",
+    "407bbf24-c605-4b9b-aca7-4508d611c714"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Hatchbox PLA+ Filament",
+    "description": "Compare 394 Hatchbox PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/hatchbox",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Hatchbox"
+        }
+      ]
+    }
+  }
+}

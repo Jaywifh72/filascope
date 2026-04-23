@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/fusion-filaments",
+  "title": "Fusion Filaments PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 49 Fusion Filaments PLA filaments. Prices from $24.99 to $29.99. 41 colors available. 49 with HueForge TD values.",
+  "h1": "Fusion Filaments PLA Filament",
+  "keywords": [
+    "Fusion Filaments",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Fusion Filaments",
+  "count": 49,
+  "min_price": 24.99,
+  "max_price": 29.99,
+  "color_count": 41,
+  "has_td": 49,
+  "filament_ids": [
+    "0ecb8e2a-e47c-48b4-9ece-7afae6b71f09",
+    "0c90d618-5194-4f3d-853b-ecd830f80d9a",
+    "06db258c-7ef4-4d84-95de-95dcbe013b6b",
+    "1ab7c4f4-2145-4b22-b086-7d930050b4dd",
+    "009d245e-2618-4f1d-94a9-0de3fdc84318",
+    "dbc63447-5bed-4edd-80a3-c99a2d0d7ff8",
+    "26f5cb44-3254-40f9-94ff-10df0e0d8c6c",
+    "a476c5a7-764d-469c-8091-023bd5704d2b",
+    "9f7788e1-413f-479a-8648-b8224046b1d4",
+    "f61bfe12-1220-4eaf-b166-2a75a2c844cb",
+    "7c299dfc-69e5-4328-bb07-ffdec6972dec",
+    "be538046-53c0-4bab-b2b9-9608686c3ebf",
+    "27398797-c153-40d4-bcdc-2f8aa26f9dcd",
+    "739574ce-fb5c-42b0-b251-528f1fc312b0",
+    "146f0c7a-e0bd-416f-b22e-a25a8a9cef3e",
+    "ca2895fb-b0d0-4fa4-9758-827a2a4c3ac2",
+    "f7fa892c-3163-4c96-85e9-ee5e349f6e3b",
+    "1db77498-e334-4cfd-ac14-8c6dff0ff240",
+    "ef567f70-535c-4e08-bc1c-ec906f7e148d",
+    "f0b1076b-cb2c-43e4-abf0-124a1303e76a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fusion Filaments PLA Filament",
+    "description": "Compare 49 Fusion Filaments PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/fusion-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fusion Filaments"
+        }
+      ]
+    }
+  }
+}

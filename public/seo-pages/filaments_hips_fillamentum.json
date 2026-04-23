@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/hips/fillamentum",
+  "title": "Fillamentum HIPS Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Fillamentum HIPS filaments. Prices from $24.99 to $24.99. 5 colors available.",
+  "h1": "Fillamentum HIPS Filament",
+  "keywords": [
+    "Fillamentum",
+    "HIPS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "HIPS",
+  "vendor": "Fillamentum",
+  "count": 5,
+  "min_price": 24.99,
+  "max_price": 24.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "1e14135b-6063-48cb-8cf7-7a26ffd2915e",
+    "df378fbd-9ee5-4577-bd86-999478f36d08",
+    "92d0afb2-f606-451f-a95d-55347dce63da",
+    "ed0fb0b0-5295-49b0-a47c-9ae0b7a898a2",
+    "8e05c37d-da29-4956-b645-14fdaec4de15"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum HIPS Filament",
+    "description": "Compare 5 Fillamentum HIPS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/hips/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "HIPS",
+          "item": "https://filascope.com/filaments/hips"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

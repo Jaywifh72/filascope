@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/sovol",
+  "title": "Sovol PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Sovol PETG filaments. Prices from $24.99 to $29.00. 4 colors available. 4 with HueForge TD values.",
+  "h1": "Sovol PETG Filament",
+  "keywords": [
+    "Sovol",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Sovol",
+  "count": 4,
+  "min_price": 24.99,
+  "max_price": 29,
+  "color_count": 4,
+  "has_td": 4,
+  "filament_ids": [
+    "4499055c-7b55-4b9a-a716-51b2e96aff46",
+    "6f6f8c20-76e8-4cdb-b5e0-2adac7d94cff",
+    "6c6b748d-a252-49ac-b061-2519469e39d0",
+    "b6811403-3889-4d8f-9517-20028fd3bb56"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sovol PETG Filament",
+    "description": "Compare 4 Sovol PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/sovol",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sovol"
+        }
+      ]
+    }
+  }
+}

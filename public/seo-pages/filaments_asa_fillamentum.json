@@ -1,0 +1,68 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/fillamentum",
+  "title": "Fillamentum ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 15 Fillamentum ASA filaments. Prices from $28.99 to $28.99. 9 colors available. 15 with HueForge TD values.",
+  "h1": "Fillamentum ASA Filament",
+  "keywords": [
+    "Fillamentum",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Fillamentum",
+  "count": 15,
+  "min_price": 28.99,
+  "max_price": 28.99,
+  "color_count": 9,
+  "has_td": 15,
+  "filament_ids": [
+    "45bf4e45-99d5-49d7-9b17-925952860eb1",
+    "2989435a-606c-4cc1-8303-78b1a3fd1cde",
+    "65cbe6df-08f6-429b-8a01-a2363ff87eb7",
+    "07ea62b8-0374-472b-8dbb-ef1f2205a6c0",
+    "6401b7f8-04fc-4448-96fd-c663a89b072d",
+    "5cc51bac-d9fe-4e31-b768-c84f15083c47",
+    "6d8fb766-f98f-46cc-a0dc-36b6ae960e63",
+    "f53ce56c-8971-49f4-9654-652f0e119b28",
+    "172f396a-3f8c-4ecd-a779-d193f7aadfa4",
+    "a68f936a-0bbb-4ded-b222-8c24bfa3469e",
+    "0045f6a5-b15e-4835-b33a-76016952b000",
+    "a8c097bb-9204-49ec-a1ce-bbaac8f84800",
+    "6538103f-41e7-4238-b553-752cd3091ac5",
+    "43142b2b-0d45-48ac-a2e4-c658affc7e4a",
+    "a2835c6a-42a0-4edb-a9b7-77ddd1e9026a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum ASA Filament",
+    "description": "Compare 15 Fillamentum ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

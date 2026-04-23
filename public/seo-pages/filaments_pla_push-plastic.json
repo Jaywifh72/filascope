@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/push-plastic",
+  "title": "Push Plastic PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 72 Push Plastic PLA+ filaments. Prices from $24.99 to $44.99. 15 colors available. 72 with HueForge TD values.",
+  "h1": "Push Plastic PLA+ Filament",
+  "keywords": [
+    "Push Plastic",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Push Plastic",
+  "count": 72,
+  "min_price": 24.99,
+  "max_price": 44.99,
+  "color_count": 15,
+  "has_td": 72,
+  "filament_ids": [
+    "1712e101-be07-4d7a-b1fc-842d1aa8fa4e",
+    "337cb992-1426-4087-9cbc-fe2dd1c07d5c",
+    "50d427ba-4997-45e0-b299-cdce38b0470a",
+    "46fb8e4c-d8d4-4ded-9c5d-5fc3a7b20560",
+    "b138dc9a-26f0-4780-b31f-fe8dd7a283f4",
+    "d9166952-2ffd-49fb-a2df-9bcd3f7ec3f6",
+    "a7c99e13-33f2-4126-8071-30ef6ced8747",
+    "eadb3f4b-f227-4f93-a3db-66de042e73ac",
+    "2ec3509a-58ce-4766-b7fb-00f30819fd4b",
+    "917246ce-64df-425a-b9c9-07a41bcc523d",
+    "bb71ac41-77af-4102-b75e-64105c85051c",
+    "f4a7de04-14b0-4c8e-8070-a2dea89307a1",
+    "ce8ddf15-7941-46e4-abba-08c3b4d5858d",
+    "e4c1c75d-954e-4958-aa3e-56423c7d6524",
+    "6d7a1029-c3b4-476b-aa9c-d93f62437337",
+    "ccc622fa-939a-4168-9b81-dd5be4ba3e8e",
+    "2add179c-ee2d-4584-948b-630c31f1a336",
+    "d07ada76-2634-4f84-9a3f-328be6b2e427",
+    "9d526b7f-0dbf-4a73-a269-ca69bfeb06c2",
+    "6de623bf-871d-47d7-994a-70c3d72c7a8f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic PLA+ Filament",
+    "description": "Compare 72 Push Plastic PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

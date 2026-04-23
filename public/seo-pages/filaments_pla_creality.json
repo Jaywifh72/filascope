@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/creality",
+  "title": "Creality PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 183 Creality PLA+ filaments. Prices from $5.90 to $4346.74. 59 colors available. 102 with HueForge TD values.",
+  "h1": "Creality PLA+ Filament",
+  "keywords": [
+    "Creality",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Creality",
+  "count": 183,
+  "min_price": 5.9,
+  "max_price": 4346.74,
+  "color_count": 59,
+  "has_td": 102,
+  "filament_ids": [
+    "b6c9825f-0844-4d98-ac55-9398c10fe72a",
+    "4958d1f7-3b66-4c05-9f6a-e0a7dc4704a4",
+    "73a46098-6f65-45c8-b743-1a20e8244221",
+    "e3e6a8ec-1a43-4278-825c-f2887760102a",
+    "b581db69-59fd-49bc-bdfb-73a0f260bf64",
+    "81072a19-11c6-4795-b346-6c3bf5421f41",
+    "7aab6f02-f8b8-4d59-91c6-858210d1f6dc",
+    "589d9a23-221a-4f4b-acb4-bbcd57b424c1",
+    "95a0bbbe-be2b-4e53-8c9c-1044659ad6d9",
+    "c55619d4-4fbd-4a30-86c1-cd497cccc3e2",
+    "353452a3-3aaf-404c-9292-c2c83a9a5615",
+    "b4ef900d-247b-4707-a03e-57b1edafe241",
+    "883e4ce2-21d4-4210-8b0c-009f977ed78a",
+    "5ca0d2b8-faa2-4092-8237-c9789d02b30f",
+    "0dfc0a06-aa4f-4ce1-8dec-7f1d3c56307a",
+    "d12fa4bf-2c15-4d58-8d79-16fb96ae32b3",
+    "36e67178-6544-4ca0-bbe1-d81c5a4274df",
+    "1ec34faf-0242-4554-8abb-1e1d9f111bbd",
+    "44340f66-35df-4323-b081-5976867c50fe",
+    "cab18e54-c554-4203-9cca-769e4e62235d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Creality PLA+ Filament",
+    "description": "Compare 183 Creality PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/creality",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Creality"
+        }
+      ]
+    }
+  }
+}

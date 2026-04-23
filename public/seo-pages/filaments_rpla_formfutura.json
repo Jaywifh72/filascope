@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/rpla/formfutura",
+  "title": "FormFutura rPLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 FormFutura rPLA filaments. Prices from $16.52 to $33.32. 5 colors available.",
+  "h1": "FormFutura rPLA Filament",
+  "keywords": [
+    "FormFutura",
+    "rPLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "rPLA",
+  "vendor": "FormFutura",
+  "count": 8,
+  "min_price": 16.52,
+  "max_price": 33.32,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "cc89e502-d81c-4572-98db-ef158857aad7",
+    "134c8a47-5408-4b48-a9bd-562a08b09e56",
+    "b901916e-40d4-4280-ba17-394f0be7708b",
+    "614ba894-6c6a-487f-9266-17d2c2aee521",
+    "4523cec4-5914-491d-8c5d-8f03bc63796b",
+    "1cbc02ce-ce54-4a73-8fe7-f5a6d9a98159",
+    "c4307123-d163-4539-852b-590b342733f4",
+    "f37aebae-20c3-4825-873a-6929e418e3c7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura rPLA Filament",
+    "description": "Compare 8 FormFutura rPLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/rpla/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "rPLA",
+          "item": "https://filascope.com/filaments/rpla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-galaxy/sunlu",
+  "title": "Sunlu PLA Galaxy Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Sunlu PLA Galaxy filaments. Prices from $19.99 to $19.99. 4 colors available.",
+  "h1": "Sunlu PLA Galaxy Filament",
+  "keywords": [
+    "Sunlu",
+    "PLA Galaxy",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Galaxy",
+  "vendor": "Sunlu",
+  "count": 4,
+  "min_price": 19.99,
+  "max_price": 19.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "ca727408-7c70-47c0-af82-830c01793563",
+    "4f00da56-2cb6-41e9-93fd-f6ef277ed4d3",
+    "bc13c928-826a-4262-b1d3-0e29b973b526",
+    "e2dfa1e9-1026-451d-ba2b-1ab105639cc8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sunlu PLA Galaxy Filament",
+    "description": "Compare 4 Sunlu PLA Galaxy filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-galaxy/sunlu",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Galaxy",
+          "item": "https://filascope.com/filaments/pla-galaxy"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sunlu"
+        }
+      ]
+    }
+  }
+}

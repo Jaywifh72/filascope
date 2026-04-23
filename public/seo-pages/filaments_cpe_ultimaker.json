@@ -1,0 +1,64 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/cpe/ultimaker",
+  "title": "Ultimaker CPE Filament — Prices, Specs & Reviews",
+  "description": "Compare 11 Ultimaker CPE filaments. Prices from $59.95 to $69.95. 8 colors available.",
+  "h1": "Ultimaker CPE Filament",
+  "keywords": [
+    "Ultimaker",
+    "CPE",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "CPE",
+  "vendor": "Ultimaker",
+  "count": 11,
+  "min_price": 59.95,
+  "max_price": 69.95,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "1826fcf9-1476-4ba6-b0f8-fbcdd384a60f",
+    "8d0ea6b5-949b-47d9-b8dc-e0389264e920",
+    "d8c27110-1e7a-44d5-8ff1-833b3be6a210",
+    "6070d0e3-42bf-46be-8c4e-791bde7a56d1",
+    "ab439782-300b-49fd-a25c-57994890293d",
+    "74bc9443-f7e4-493b-9f4e-2df621a6c21a",
+    "7118ee27-6800-4bb9-9024-742f30c26b70",
+    "f452673b-ef53-4ee9-984c-8d667b6bbefa",
+    "d29ce19a-b9c4-46d6-bac3-50ecc83b623c",
+    "71c68aa0-b7cf-4ccd-9816-1bf0e9101e27",
+    "74f9340a-e0ea-49cb-b699-1e4e42a3f978"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Ultimaker CPE Filament",
+    "description": "Compare 11 Ultimaker CPE filaments on FilaScope",
+    "url": "https://filascope.com/filaments/cpe/ultimaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "CPE",
+          "item": "https://filascope.com/filaments/cpe"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Ultimaker"
+        }
+      ]
+    }
+  }
+}

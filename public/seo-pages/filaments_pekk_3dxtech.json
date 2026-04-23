@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pekk/3dxtech",
+  "title": "3DXTech PEKK Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 3DXTech PEKK filaments. Prices from $88.00 to $695.00. 2 colors available.",
+  "h1": "3DXTech PEKK Filament",
+  "keywords": [
+    "3DXTech",
+    "PEKK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PEKK",
+  "vendor": "3DXTech",
+  "count": 5,
+  "min_price": 88,
+  "max_price": 695,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "d5addcff-b19c-4beb-b5fc-4db95e0a32c6",
+    "ebd4f3b8-008f-4b2d-a12e-b5bd0aa084a7",
+    "033c3fbf-2217-41b4-85c1-30bec360ac66",
+    "19b01d31-6027-4228-8126-85d157265e49",
+    "2fd288a8-e6f6-465b-bbaf-fa0f47a99fe2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech PEKK Filament",
+    "description": "Compare 5 3DXTech PEKK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pekk/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PEKK",
+          "item": "https://filascope.com/filaments/pekk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-cpe",
+  "title": "Best CPE+ Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best CPE+ filaments in 2026. 3 options from 1 brands, starting at $69.95. Expert picks, prices & specs.",
+  "h1": "Best CPE+ Filament (2026)",
+  "keywords": [
+    "best CPE+",
+    "CPE+ filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "CPE+",
+  "count": 3,
+  "brands": 1,
+  "min_price": 69.95,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best CPE+ Filament 2026",
+    "description": "Expert comparison of 3 CPE+ filaments",
+    "url": "https://filascope.com/best-cpe"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/gizmo-dorks",
+  "title": "Gizmo Dorks ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 73 Gizmo Dorks ABS filaments. Prices from $20.95 to $104.95. 21 colors available. 73 with HueForge TD values.",
+  "h1": "Gizmo Dorks ABS Filament",
+  "keywords": [
+    "Gizmo Dorks",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Gizmo Dorks",
+  "count": 73,
+  "min_price": 20.95,
+  "max_price": 104.95,
+  "color_count": 21,
+  "has_td": 73,
+  "filament_ids": [
+    "54add717-4cbd-4601-83d4-9544c91aa8b6",
+    "4bbdd880-36d3-4668-b654-a19355aa830d",
+    "9610a277-c9d8-41c7-8d5a-90aa6c1b9706",
+    "34b94b64-d9a4-427d-a183-2498ef57af54",
+    "74bf5e48-1de1-4ed6-bc88-f86670acb021",
+    "6fdb86d5-68c3-427e-b39d-06d6813adcae",
+    "2e3d8b5c-45aa-4b9b-8b42-a9388a2ab0b3",
+    "97bc2446-63fa-44cc-bc5a-31f7130a3238",
+    "83b440ce-6faa-46bb-8fa6-ddc5a9905457",
+    "f80a2ead-887c-43b7-9659-89953ba5b2e3",
+    "a34ddf92-355d-40da-a862-454c9c9ca468",
+    "0c8109aa-0922-4eae-ad38-9b210d5eef35",
+    "eec31e45-9a10-4538-8238-a15c6b8cf5e7",
+    "bd39ffc4-2341-4d90-831a-290bb0650ce0",
+    "c92250b9-02f4-4dcd-92bd-c925be8f2f07",
+    "b6ac2734-bc8a-495b-81bf-97579ba52956",
+    "b59219e4-5439-4a16-9005-d89bff75cf75",
+    "e38f3df9-3e86-4dcf-92a5-ad52df863a39",
+    "748f5160-e75a-4c4e-9319-432b2e476aa3",
+    "6086b682-13c0-4fe8-8676-d1061d68534c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Gizmo Dorks ABS Filament",
+    "description": "Compare 73 Gizmo Dorks ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/gizmo-dorks",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Gizmo Dorks"
+        }
+      ]
+    }
+  }
+}

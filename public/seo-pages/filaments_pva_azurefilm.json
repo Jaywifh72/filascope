@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pva/azurefilm",
+  "title": "AzureFilm PVA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 AzureFilm PVA filaments. Prices from $42.01 to $44.82. 1 colors available. 2 with HueForge TD values.",
+  "h1": "AzureFilm PVA Filament",
+  "keywords": [
+    "AzureFilm",
+    "PVA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PVA",
+  "vendor": "AzureFilm",
+  "count": 3,
+  "min_price": 42.01,
+  "max_price": 44.82,
+  "color_count": 1,
+  "has_td": 2,
+  "filament_ids": [
+    "8ffd28e7-8b72-4cdf-a96d-f86f910462a6",
+    "325b394b-052f-4d24-a32f-d0dac3db5110",
+    "02022c3b-ee28-4b60-8750-5151221146ca"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "AzureFilm PVA Filament",
+    "description": "Compare 3 AzureFilm PVA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pva/azurefilm",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PVA",
+          "item": "https://filascope.com/filaments/pva"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AzureFilm"
+        }
+      ]
+    }
+  }
+}

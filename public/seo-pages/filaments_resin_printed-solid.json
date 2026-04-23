@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/resin/printed-solid",
+  "title": "Printed Solid RESIN Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Printed Solid RESIN filaments. Prices from $79.99 to $229.00. 0 colors available.",
+  "h1": "Printed Solid RESIN Filament",
+  "keywords": [
+    "Printed Solid",
+    "RESIN",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "RESIN",
+  "vendor": "Printed Solid",
+  "count": 5,
+  "min_price": 79.99,
+  "max_price": 229,
+  "color_count": 0,
+  "has_td": 0,
+  "filament_ids": [
+    "5c81a770-4c5f-4f14-b628-880274653729",
+    "643e9e24-4890-48a8-811d-a304913daab8",
+    "d57a45ce-6001-40c3-a12f-00ae75cfbda3",
+    "5fa24e6b-84e1-4ce6-84da-0616713c4283",
+    "3aa242b9-fb53-4d2e-b21b-cd463ea7fcaa"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Printed Solid RESIN Filament",
+    "description": "Compare 5 Printed Solid RESIN filaments on FilaScope",
+    "url": "https://filascope.com/filaments/resin/printed-solid",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "RESIN",
+          "item": "https://filascope.com/filaments/resin"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Printed Solid"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-cf/amolen",
+  "title": "Amolen PLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Amolen PLA-CF filaments. Prices from $42.00 to $42.00. 8 colors available. 8 with HueForge TD values.",
+  "h1": "Amolen PLA-CF Filament",
+  "keywords": [
+    "Amolen",
+    "PLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-CF",
+  "vendor": "Amolen",
+  "count": 8,
+  "min_price": 42,
+  "max_price": 42,
+  "color_count": 8,
+  "has_td": 8,
+  "filament_ids": [
+    "ccea92bd-90e4-4b4a-8dc3-55c0dc8dfc07",
+    "48140afc-f505-406d-a5a6-487c9198d373",
+    "498aebaa-7b6d-4f52-ae56-17e850ff839f",
+    "aeb7254c-85c7-40b4-988e-e9a1b7e52e98",
+    "8c954f70-6c8e-4cd9-bbd6-8faa37cd9033",
+    "9e004342-49b3-4f6f-9dbe-f6c682740ce8",
+    "b13f4b4a-b900-48e8-99ff-f8958dc11160",
+    "2370be7e-1c25-4b4b-adbe-adbd39a977f2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Amolen PLA-CF Filament",
+    "description": "Compare 8 Amolen PLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-cf/amolen",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-CF",
+          "item": "https://filascope.com/filaments/pla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Amolen"
+        }
+      ]
+    }
+  }
+}

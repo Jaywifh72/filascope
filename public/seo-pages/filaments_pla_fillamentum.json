@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/fillamentum",
+  "title": "Fillamentum PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 61 Fillamentum PLA filaments. Prices from $24.99 to $34.99. 13 colors available. 34 with HueForge TD values.",
+  "h1": "Fillamentum PLA Filament",
+  "keywords": [
+    "Fillamentum",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Fillamentum",
+  "count": 61,
+  "min_price": 24.99,
+  "max_price": 34.99,
+  "color_count": 13,
+  "has_td": 34,
+  "filament_ids": [
+    "9762c0f6-e675-46bf-b82d-07f918fc8427",
+    "b941c542-1f16-4636-b29f-57bdd328a331",
+    "abedd61f-c3d2-4ad4-991c-14cc24ae7136",
+    "6074ed06-1e67-4eee-a996-b8bcee8a45ae",
+    "7a01330d-1768-43d3-a8ce-91fa52d1e47d",
+    "e9eb36fc-8c6c-4c89-9eaf-c715ceb7b755",
+    "0fb47d11-6754-4c4d-bcd8-adaceea4a57c",
+    "aad31d23-b3ed-4a76-a73a-726a7856bc13",
+    "2faceb2d-6929-40b3-ad28-dfbece3656a6",
+    "8e208684-aa8d-4780-88ec-069fa0baa285",
+    "156f4bea-0c2b-4217-9b60-d22935bc3021",
+    "089cd8ee-50fa-4a0f-8ff3-ba78ca4e5fb9",
+    "dd93e9c1-bcfe-401b-aa3f-9cec19335d3c",
+    "681ccc20-b16b-4467-930e-1875d44d65aa",
+    "347a3eca-78e9-4a32-86c6-fccfbfa10265",
+    "d7c6a272-4326-438e-8a7d-0cd748c177c1",
+    "6446ea17-c6e8-45e7-ab2b-ccd73b5988e9",
+    "aa6ea5b4-cb1a-40bd-90e5-a9187afebda6",
+    "1c7d5b10-d252-400d-be29-36c6cecf4e9a",
+    "f8b8d7e0-f9bc-4afd-8047-bbd2387a4f51"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum PLA Filament",
+    "description": "Compare 61 Fillamentum PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

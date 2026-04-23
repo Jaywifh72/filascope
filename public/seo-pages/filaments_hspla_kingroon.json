@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/hspla/kingroon",
+  "title": "Kingroon HSPLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Kingroon HSPLA filaments. Prices from $16.99 to $16.99. 3 colors available.",
+  "h1": "Kingroon HSPLA Filament",
+  "keywords": [
+    "Kingroon",
+    "HSPLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "HSPLA",
+  "vendor": "Kingroon",
+  "count": 3,
+  "min_price": 16.99,
+  "max_price": 16.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "ddb031fb-7f60-42e5-9989-78ed24e61478",
+    "ca6a1754-2d86-4a4c-b2ac-82fb4330028b",
+    "087bf84f-0c07-485b-9606-9e9aa8dfa2ca"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon HSPLA Filament",
+    "description": "Compare 3 Kingroon HSPLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/hspla/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "HSPLA",
+          "item": "https://filascope.com/filaments/hspla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-unknown",
+  "title": "Best Unknown Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best Unknown filaments in 2026. 4 options from 1 brands, starting at $70.00. Expert picks, prices & specs.",
+  "h1": "Best Unknown Filament (2026)",
+  "keywords": [
+    "best Unknown",
+    "Unknown filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "Unknown",
+  "count": 4,
+  "brands": 1,
+  "min_price": 70,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best Unknown Filament 2026",
+    "description": "Expert comparison of 4 Unknown filaments",
+    "url": "https://filascope.com/best-unknown"
+  }
+}

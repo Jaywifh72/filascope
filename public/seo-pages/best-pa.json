@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pa",
+  "title": "Best PA Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PA filaments in 2026. 90 options from 20 brands, starting at $19.99. Expert picks, prices & specs.",
+  "h1": "Best PA Filament (2026)",
+  "keywords": [
+    "best PA",
+    "PA filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PA",
+  "count": 90,
+  "brands": 20,
+  "min_price": 19.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PA Filament 2026",
+    "description": "Expert comparison of 90 PA filaments",
+    "url": "https://filascope.com/best-pa"
+  }
+}

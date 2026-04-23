@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-glow-in-the-dark/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Glow in the Dark Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Spectrum Filaments PLA Glow in the Dark filaments. Prices from $46.00 to $69.00. 2 colors available.",
+  "h1": "Spectrum Filaments PLA Glow in the Dark Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Glow in the Dark",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Glow in the Dark",
+  "vendor": "Spectrum Filaments",
+  "count": 4,
+  "min_price": 46,
+  "max_price": 69,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "a59868a7-15fa-4d6b-9230-459446288465",
+    "4dab7d50-e0e1-4c2e-bb4d-d2a895a302c4",
+    "3d98d3ff-b24e-41dd-ae28-e25efeb706e3",
+    "8cdf78e5-c94f-4bd9-81d3-8971a8b47db1"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Glow in the Dark Filament",
+    "description": "Compare 4 Spectrum Filaments PLA Glow in the Dark filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-glow-in-the-dark/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Glow in the Dark",
+          "item": "https://filascope.com/filaments/pla-glow-in-the-dark"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/siraya-tech",
+  "title": "Siraya Tech TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Siraya Tech TPU filaments. Prices from $31.56 to $61.99. 5 colors available. 8 with HueForge TD values.",
+  "h1": "Siraya Tech TPU Filament",
+  "keywords": [
+    "Siraya Tech",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Siraya Tech",
+  "count": 8,
+  "min_price": 31.56,
+  "max_price": 61.99,
+  "color_count": 5,
+  "has_td": 8,
+  "filament_ids": [
+    "e445d091-5bbf-4874-97f0-40f60ef5a48b",
+    "14c4cff6-93b6-4ba3-a3f0-9c2feec8e87a",
+    "0c7b4d3f-eb68-4833-91f4-1f2ca52f4ec3",
+    "036b390d-872c-48ba-bb47-f5f11a41823f",
+    "8dd79ad2-059a-4073-ba41-646e224036b2",
+    "c664fb03-14ec-491b-a5f6-58c69c6778c9",
+    "8d8dd093-7f22-49d5-9efa-16ab780c7b65",
+    "4909ed20-a038-4be9-9ab8-445021bde82e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Siraya Tech TPU Filament",
+    "description": "Compare 8 Siraya Tech TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/siraya-tech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Siraya Tech"
+        }
+      ]
+    }
+  }
+}

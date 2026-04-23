@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-cf/numakers",
+  "title": "Numakers PLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Numakers PLA-CF filaments. Prices from $32.99 to $32.99. 4 colors available.",
+  "h1": "Numakers PLA-CF Filament",
+  "keywords": [
+    "Numakers",
+    "PLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-CF",
+  "vendor": "Numakers",
+  "count": 4,
+  "min_price": 32.99,
+  "max_price": 32.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "eaea8c6c-3f9e-485b-bf1d-9e91a20da2f1",
+    "5b535f81-73cd-499b-a24f-f9bb756847e3",
+    "5548bbbc-ab34-4c2c-b365-0d4591b82a3b",
+    "4f576ff5-71ab-48d0-a816-6713778c6a88"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PLA-CF Filament",
+    "description": "Compare 4 Numakers PLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-cf/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-CF",
+          "item": "https://filascope.com/filaments/pla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

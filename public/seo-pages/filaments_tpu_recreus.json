@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/recreus",
+  "title": "Recreus TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 139 Recreus TPU filaments. Prices from $22.90 to $236.40. 24 colors available. 134 with HueForge TD values.",
+  "h1": "Recreus TPU Filament",
+  "keywords": [
+    "Recreus",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Recreus",
+  "count": 139,
+  "min_price": 22.9,
+  "max_price": 236.4,
+  "color_count": 24,
+  "has_td": 134,
+  "filament_ids": [
+    "66389530-0d44-4c25-bcf6-63eccf174966",
+    "1f546178-e050-429a-9e61-b49840afdf93",
+    "cdb65145-e8a5-450a-9bcc-e790363d08e5",
+    "8971b193-3066-407a-8b08-75d404962b92",
+    "b33e7a02-4eb5-4514-9676-3c9bcac1bafa",
+    "a759db3e-fa56-4e90-873c-d624e717d24b",
+    "f871d988-8e2d-49ce-aae7-b5df2f7f1ed8",
+    "a76616e2-2869-470d-8742-271847e6e5f6",
+    "2d5bf8d2-1eec-4292-8c54-f38950f41b67",
+    "a2434342-3674-4830-ad95-45c3f8e1a2e4",
+    "c94ba962-de70-43aa-9e1a-6d1ebf30fb0a",
+    "8a2eccec-89e0-4f3c-9a89-ff44f8139cb8",
+    "6c8a1dbf-157d-4def-9471-3b9df7652495",
+    "0e49cf7d-8a08-4ca5-825a-38d7f7209a72",
+    "1d94c656-ef7f-467d-9ebe-6f80b35d62b6",
+    "e522244b-ed5a-4cce-881d-f686e56d38b3",
+    "4b26ec26-ba37-4803-af6f-6844c5b4eb04",
+    "22d3f56e-bce0-4afb-b65f-881077a71a86",
+    "6c045ec8-dd9f-4567-adaa-de8cfe39dc53",
+    "b85156b9-a80d-4fb0-b488-b28d40380e19"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Recreus TPU Filament",
+    "description": "Compare 139 Recreus TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/recreus",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recreus"
+        }
+      ]
+    }
+  }
+}

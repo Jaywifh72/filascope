@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/elegoo",
+  "title": "Elegoo PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 439 Elegoo PLA+ filaments. Prices from $13.99 to $2538.00. 76 colors available. 439 with HueForge TD values.",
+  "h1": "Elegoo PLA+ Filament",
+  "keywords": [
+    "Elegoo",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Elegoo",
+  "count": 439,
+  "min_price": 13.99,
+  "max_price": 2538,
+  "color_count": 76,
+  "has_td": 439,
+  "filament_ids": [
+    "64fbaf51-d48c-417e-afef-70cc435d7eb0",
+    "cb975573-2f0e-4714-8733-339a287261b9",
+    "5e123150-0daf-48cf-8a45-033297b35fa5",
+    "a18e2a2c-89b7-4b83-aa81-ac838137663d",
+    "8077ecc0-229f-49cf-bbb5-dfed44802385",
+    "4d78766a-a70c-44f6-9ad0-23ed8c4181a5",
+    "133ba7ed-8dc8-4f2b-bc7a-22244c1c9029",
+    "5ca0bee3-74de-4401-8e7a-025f98bcb414",
+    "dbd2342a-c29f-4322-89aa-2e8392b12e71",
+    "a4e12f9d-88bc-476c-b1b9-a912aaca4c2f",
+    "ae567ee1-fbe8-4cb4-ab17-8363566a9501",
+    "544c1cc1-71c0-4b1a-a7fe-cd6829374107",
+    "d92058fb-2cc8-4453-8a04-0b4ef738efb2",
+    "ee1f3bdb-af16-4029-a266-c6aca89d2b02",
+    "46a146f2-53e1-4ad8-bb9a-42d20a08308e",
+    "ace154eb-bc4b-4a44-96fa-7913bd17148d",
+    "505e5db3-21b9-4e9b-ba3b-c41da2fd306b",
+    "1892553f-a457-4a1f-bfc1-71aca9546784",
+    "8abfb07e-db37-4658-ad98-1ef57e0076a5",
+    "e0556a6e-03d5-4df0-b89b-be56c7a2f2b7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PLA+ Filament",
+    "description": "Compare 439 Elegoo PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

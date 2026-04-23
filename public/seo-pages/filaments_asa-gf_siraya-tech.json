@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa-gf/siraya-tech",
+  "title": "Siraya Tech ASA-GF Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Siraya Tech ASA-GF filaments. Prices from $27.99 to $31.97. 3 colors available.",
+  "h1": "Siraya Tech ASA-GF Filament",
+  "keywords": [
+    "Siraya Tech",
+    "ASA-GF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA-GF",
+  "vendor": "Siraya Tech",
+  "count": 3,
+  "min_price": 27.99,
+  "max_price": 31.97,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "507ae5d9-8f3c-4db0-b317-4ca4c5745dc8",
+    "809961b5-a895-4d60-a4e2-e57bcfdb450d",
+    "75c662e6-21dd-4385-aea9-afb494f2434b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Siraya Tech ASA-GF Filament",
+    "description": "Compare 3 Siraya Tech ASA-GF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa-gf/siraya-tech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA-GF",
+          "item": "https://filascope.com/filaments/asa-gf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Siraya Tech"
+        }
+      ]
+    }
+  }
+}

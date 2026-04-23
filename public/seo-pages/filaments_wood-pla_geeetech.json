@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/wood-pla/geeetech",
+  "title": "Geeetech Wood PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Geeetech Wood PLA filaments. Prices from $15.75 to $15.75. 4 colors available.",
+  "h1": "Geeetech Wood PLA Filament",
+  "keywords": [
+    "Geeetech",
+    "Wood PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Wood PLA",
+  "vendor": "Geeetech",
+  "count": 4,
+  "min_price": 15.75,
+  "max_price": 15.75,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "438a11d1-ebbf-4cd8-aceb-b21d5247c21c",
+    "c7cb8fee-99f0-4957-b398-eadd0a982c93",
+    "6566555e-13a1-4232-8bc0-bae528b0576b",
+    "a37d7d98-a6dc-4107-984b-39aa4fdd6eac"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Geeetech Wood PLA Filament",
+    "description": "Compare 4 Geeetech Wood PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/wood-pla/geeetech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Wood PLA",
+          "item": "https://filascope.com/filaments/wood-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Geeetech"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/kingroon",
+  "title": "Kingroon ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Kingroon ABS filaments. Prices from $16.99 to $22.99. 1 colors available. 5 with HueForge TD values.",
+  "h1": "Kingroon ABS Filament",
+  "keywords": [
+    "Kingroon",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Kingroon",
+  "count": 6,
+  "min_price": 16.99,
+  "max_price": 22.99,
+  "color_count": 1,
+  "has_td": 5,
+  "filament_ids": [
+    "05e1dbf7-38b0-4da6-bb53-c356665f52e8",
+    "eead7f84-dbab-4ff4-b635-e8da3b7becf7",
+    "116e2ffe-5904-4191-b610-1e44e40f9dbd",
+    "5957d99f-0580-4f00-bd30-1387b5b880d2",
+    "040011d4-bfc8-4fbb-b234-0cf19618bef3",
+    "cd70f39c-84aa-4466-899a-0046e838d967"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon ABS Filament",
+    "description": "Compare 6 Kingroon ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

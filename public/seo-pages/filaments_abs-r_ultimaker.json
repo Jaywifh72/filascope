@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs-r/ultimaker",
+  "title": "Ultimaker ABS-R Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Ultimaker ABS-R filaments. Prices from $54.99 to $54.99. 3 colors available.",
+  "h1": "Ultimaker ABS-R Filament",
+  "keywords": [
+    "Ultimaker",
+    "ABS-R",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS-R",
+  "vendor": "Ultimaker",
+  "count": 3,
+  "min_price": 54.99,
+  "max_price": 54.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "e079f7f1-84e1-4298-9eda-0f4f3713a1dd",
+    "1c27cc1f-da66-4b02-9f39-1cfeef5ad2bb",
+    "a1e6c111-4d37-4ac9-a69a-7b8d17c1dc7f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Ultimaker ABS-R Filament",
+    "description": "Compare 3 Ultimaker ABS-R filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs-r/ultimaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS-R",
+          "item": "https://filascope.com/filaments/abs-r"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Ultimaker"
+        }
+      ]
+    }
+  }
+}

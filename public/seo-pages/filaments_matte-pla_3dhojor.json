@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/matte-pla/3dhojor",
+  "title": "3DHOJOR Matte PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 3DHOJOR Matte PLA filaments. Prices from $14.99 to $16.99. 2 colors available.",
+  "h1": "3DHOJOR Matte PLA Filament",
+  "keywords": [
+    "3DHOJOR",
+    "Matte PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Matte PLA",
+  "vendor": "3DHOJOR",
+  "count": 5,
+  "min_price": 14.99,
+  "max_price": 16.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "57976a9d-1700-4906-abe6-acbbae2e1a52",
+    "1f1fffc2-b687-4073-8fda-203b157c9905",
+    "8a1584a0-3095-458f-ac78-01ab0d632799",
+    "983a7e86-2e6e-4049-9762-259dc24321c7",
+    "f4bfde1b-db76-4ca9-ba43-f5801b9b2343"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DHOJOR Matte PLA Filament",
+    "description": "Compare 5 3DHOJOR Matte PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/matte-pla/3dhojor",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Matte PLA",
+          "item": "https://filascope.com/filaments/matte-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DHOJOR"
+        }
+      ]
+    }
+  }
+}

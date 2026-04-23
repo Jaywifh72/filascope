@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-abs",
+  "title": "Best ABS+ Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best ABS+ filaments in 2026. 68 options from 14 brands, starting at $13.49. Expert picks, prices & specs.",
+  "h1": "Best ABS+ Filament (2026)",
+  "keywords": [
+    "best ABS+",
+    "ABS+ filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "ABS+",
+  "count": 68,
+  "brands": 14,
+  "min_price": 13.49,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best ABS+ Filament 2026",
+    "description": "Expert comparison of 68 ABS+ filaments",
+    "url": "https://filascope.com/best-abs"
+  }
+}

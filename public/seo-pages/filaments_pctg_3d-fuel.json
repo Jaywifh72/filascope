@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pctg/3d-fuel",
+  "title": "3D-Fuel PCTG Filament — Prices, Specs & Reviews",
+  "description": "Compare 95 3D-Fuel PCTG filaments. Prices from $7.22 to $159.90. 16 colors available. 95 with HueForge TD values.",
+  "h1": "3D-Fuel PCTG Filament",
+  "keywords": [
+    "3D-Fuel",
+    "PCTG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PCTG",
+  "vendor": "3D-Fuel",
+  "count": 95,
+  "min_price": 7.22,
+  "max_price": 159.9,
+  "color_count": 16,
+  "has_td": 95,
+  "filament_ids": [
+    "bdfd26b3-3025-4e64-b15d-295fe883d482",
+    "131ad967-5c32-40d3-b36a-e15cc7ce78a3",
+    "c3df2a40-691f-4e63-812c-057a4f6b333f",
+    "1e5655b6-290d-4b3f-b5a1-1fb40a27892d",
+    "d76b1931-76ed-4ee6-9ff9-acb08f9a099f",
+    "9d85a523-db41-4aac-8a1f-9e5c3f42f35a",
+    "5c873e1a-96de-4b95-85d4-4613102a1914",
+    "faffe02e-788e-432d-9080-21ace662540a",
+    "720d9644-91bd-4019-87b4-7457b70fecc4",
+    "c64f27cf-7665-4b5a-ac8b-226cee96ec72",
+    "957533dc-0206-41b8-a131-cfa776ad234d",
+    "ac94d663-d5dc-4d85-9ce7-eb4af1a96ed7",
+    "b18021f2-2102-4dae-b8a7-56a2a1464670",
+    "c8f6bc9c-04e2-4388-9bca-e79fd099e24e",
+    "d2bf16e1-80ba-46ab-bb7d-2bc63be6436e",
+    "96d5dbc2-57d9-4f98-a5ab-6326a4d15618",
+    "6f0551bb-e34c-4c14-8c93-4d09c8b4ca10",
+    "371a4c8b-1cd4-4477-aae4-0bc82534800c",
+    "227c643c-645d-42bf-8c6f-dd0faa0d6ba6",
+    "e1326024-2b55-4ed0-a03c-c4d2e5cb00e2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3D-Fuel PCTG Filament",
+    "description": "Compare 95 3D-Fuel PCTG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pctg/3d-fuel",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PCTG",
+          "item": "https://filascope.com/filaments/pctg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3D-Fuel"
+        }
+      ]
+    }
+  }
+}

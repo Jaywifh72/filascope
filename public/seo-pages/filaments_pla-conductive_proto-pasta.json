@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-conductive/proto-pasta",
+  "title": "Proto-Pasta PLA-Conductive Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Proto-Pasta PLA-Conductive filaments. Prices from $49.99 to $199.95. 1 colors available.",
+  "h1": "Proto-Pasta PLA-Conductive Filament",
+  "keywords": [
+    "Proto-Pasta",
+    "PLA-Conductive",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Conductive",
+  "vendor": "Proto-Pasta",
+  "count": 3,
+  "min_price": 49.99,
+  "max_price": 199.95,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "ac4a8842-64c3-4111-815c-100d2c54b589",
+    "5851df3e-3a0f-493b-8cfc-b0ef86c7a1ea",
+    "3c909a3e-0e17-42db-b8a3-818d3dfb0a1b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Proto-Pasta PLA-Conductive Filament",
+    "description": "Compare 3 Proto-Pasta PLA-Conductive filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-conductive/proto-pasta",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Conductive",
+          "item": "https://filascope.com/filaments/pla-conductive"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Proto-Pasta"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa/esun",
+  "title": "eSun PA Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 eSun PA filaments. Prices from $19.99 to $59.99. 0 colors available.",
+  "h1": "eSun PA Filament",
+  "keywords": [
+    "eSun",
+    "PA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA",
+  "vendor": "eSun",
+  "count": 4,
+  "min_price": 19.99,
+  "max_price": 59.99,
+  "color_count": 0,
+  "has_td": 0,
+  "filament_ids": [
+    "14e5ef41-f229-453a-9e88-cdb91173d41c",
+    "51b75e08-cb64-4a11-b141-541d0e7ae5c6",
+    "98dfdc6f-c641-4505-9c38-f4913e5ed82d",
+    "45d93a08-7fff-4ce8-9c29-f932eaeda525"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "eSun PA Filament",
+    "description": "Compare 4 eSun PA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa/esun",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA",
+          "item": "https://filascope.com/filaments/pa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "eSun"
+        }
+      ]
+    }
+  }
+}

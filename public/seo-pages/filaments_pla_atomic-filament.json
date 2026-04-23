@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/atomic-filament",
+  "title": "Atomic Filament PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 70 Atomic Filament PLA filaments. Prices from $21.99 to $89.99. 22 colors available.",
+  "h1": "Atomic Filament PLA Filament",
+  "keywords": [
+    "Atomic Filament",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Atomic Filament",
+  "count": 70,
+  "min_price": 21.99,
+  "max_price": 89.99,
+  "color_count": 22,
+  "has_td": 0,
+  "filament_ids": [
+    "8f5fc15a-9f3f-49c0-a944-adbe8ab5dfb9",
+    "98f5fc4f-92c8-4f09-a60f-34b196c59b4a",
+    "67e08a52-2491-4701-bde5-6807149a889c",
+    "9279a6ea-7dcc-42e2-a5f9-447eaf85bc86",
+    "11f689ce-1c01-4b28-ad51-3bd8a55fdce1",
+    "17a8e873-1a95-4f11-9ce7-f060367f36c1",
+    "f610347a-45b4-4d5b-b141-f96849bbae34",
+    "c7c53199-2198-4681-9c4a-737a8e30ea15",
+    "f82b427e-a388-4f83-93bf-d22d7e9bf8fd",
+    "c134b4d3-0f11-44be-84b3-2c612ded08b5",
+    "aebc605a-04a4-4ae3-a73d-605a9052287c",
+    "e44df023-76c3-41e4-860b-fd6aa3f24160",
+    "5e31c002-4235-4a94-982e-ee1896cae7f2",
+    "bab884ef-6024-4bcf-8bc1-a4aa03c111d8",
+    "a486ada1-cb1c-4c26-af7a-e56494d93b7d",
+    "f32ac368-26d0-4164-9f30-9a4122db3aea",
+    "18ccb046-183f-4488-a758-cec34518b218",
+    "d927836c-8071-4451-b201-3a721158c1b6",
+    "7d790716-5cc2-448c-8dfc-2e868add393f",
+    "b0515805-7598-4688-88bf-ab1f76893425"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Atomic Filament PLA Filament",
+    "description": "Compare 70 Atomic Filament PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/atomic-filament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Atomic Filament"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/flameguard-pla/spectrum-filaments",
+  "title": "Spectrum Filaments FlameGuard PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Spectrum Filaments FlameGuard PLA filaments. Prices from $48.00 to $48.00. 5 colors available.",
+  "h1": "Spectrum Filaments FlameGuard PLA Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "FlameGuard PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "FlameGuard PLA",
+  "vendor": "Spectrum Filaments",
+  "count": 5,
+  "min_price": 48,
+  "max_price": 48,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "7d8ddcc1-9a28-4978-92a2-d3b4827fba0c",
+    "78e28005-a2be-4a35-adb1-6079692ec347",
+    "2ba641ee-1182-448c-9ff1-87015abd1c41",
+    "8137aa97-e8d4-4c7a-8a98-fd536406d512",
+    "9b9ed3eb-7354-4c28-9ada-ad3fa8c512f1"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments FlameGuard PLA Filament",
+    "description": "Compare 5 Spectrum Filaments FlameGuard PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/flameguard-pla/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "FlameGuard PLA",
+          "item": "https://filascope.com/filaments/flameguard-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-easy-abs",
+  "title": "Best Easy ABS Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best Easy ABS filaments in 2026. 4 options from 1 brands, starting at $15.99. Expert picks, prices & specs.",
+  "h1": "Best Easy ABS Filament (2026)",
+  "keywords": [
+    "best Easy ABS",
+    "Easy ABS filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "Easy ABS",
+  "count": 4,
+  "brands": 1,
+  "min_price": 15.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best Easy ABS Filament 2026",
+    "description": "Expert comparison of 4 Easy ABS filaments",
+    "url": "https://filascope.com/best-easy-abs"
+  }
+}

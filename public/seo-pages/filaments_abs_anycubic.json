@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/anycubic",
+  "title": "Anycubic ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Anycubic ABS filaments. Prices from $21.99 to $21.99. 8 colors available. 9 with HueForge TD values.",
+  "h1": "Anycubic ABS Filament",
+  "keywords": [
+    "Anycubic",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Anycubic",
+  "count": 9,
+  "min_price": 21.99,
+  "max_price": 21.99,
+  "color_count": 8,
+  "has_td": 9,
+  "filament_ids": [
+    "49711a2d-00e9-4ce8-bdc2-98f022b30975",
+    "702b0b0a-5174-4877-8028-d19d7b3d30a8",
+    "6715d5d4-53c4-40a7-b78f-ea36ad28863d",
+    "5c2ede21-b623-42b4-8fd3-8dbf8723b0a1",
+    "5daa0f7e-633c-40e9-aeaa-bbfc038a95f7",
+    "6d39ed3f-22ef-445f-9d3c-1b9cf6063ffb",
+    "a7c1bc0d-66ba-42cc-9e23-2225a013ff0c",
+    "076b5717-af0e-474c-8a32-e2aa0d4ff4a5",
+    "8d1fbc80-024d-4745-a3e1-4b53dbfdb0d8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic ABS Filament",
+    "description": "Compare 9 Anycubic ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

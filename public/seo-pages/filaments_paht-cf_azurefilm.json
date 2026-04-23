@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/paht-cf/azurefilm",
+  "title": "AzureFilm PAHT-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 AzureFilm PAHT-CF filaments. Prices from $41.50 to $44.27. 1 colors available.",
+  "h1": "AzureFilm PAHT-CF Filament",
+  "keywords": [
+    "AzureFilm",
+    "PAHT-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PAHT-CF",
+  "vendor": "AzureFilm",
+  "count": 3,
+  "min_price": 41.5,
+  "max_price": 44.27,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "78758215-a885-49fb-aceb-0bf0f84f6d00",
+    "d9d1e5f5-7b49-410d-a422-69dea010d9f5",
+    "4c32b087-d2dd-48bd-85d9-dbd1d197e3c9"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "AzureFilm PAHT-CF Filament",
+    "description": "Compare 3 AzureFilm PAHT-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/paht-cf/azurefilm",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PAHT-CF",
+          "item": "https://filascope.com/filaments/paht-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AzureFilm"
+        }
+      ]
+    }
+  }
+}

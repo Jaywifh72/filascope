@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-98a/fillamentum",
+  "title": "Fillamentum TPU-98A Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Fillamentum TPU-98A filaments. Prices from $36.99 to $36.99. 10 colors available.",
+  "h1": "Fillamentum TPU-98A Filament",
+  "keywords": [
+    "Fillamentum",
+    "TPU-98A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-98A",
+  "vendor": "Fillamentum",
+  "count": 13,
+  "min_price": 36.99,
+  "max_price": 36.99,
+  "color_count": 10,
+  "has_td": 0,
+  "filament_ids": [
+    "12b09d04-07a3-4e29-a64c-4dabfcba1601",
+    "7cac4986-a239-4412-a1fd-847aeb0df8c8",
+    "8c9a33f9-ebeb-4279-86ff-9fc4f549ba03",
+    "a658bca6-e109-4fca-bdb1-ff0afbc6ffe2",
+    "5ce3f897-c877-48a9-bdea-66a8e7f61da9",
+    "85470841-4f4b-48f2-bba2-c361ed5508a2",
+    "0bee2501-2488-499f-bd70-1360d0c122a4",
+    "e8f00571-6488-48eb-9308-4ca8889f38f7",
+    "afb05869-4d84-4b22-8d0a-709687ea6248",
+    "55c758d4-950f-4fbf-b588-461ab2835080",
+    "6f6021f3-1b4c-4717-bcf7-1a09c3ac7de1",
+    "f3631a2b-6c56-49a8-b5c0-e4acf28a2b4e",
+    "582e6d15-3946-49ab-8e6d-8b06407b32f4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum TPU-98A Filament",
+    "description": "Compare 13 Fillamentum TPU-98A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-98a/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-98A",
+          "item": "https://filascope.com/filaments/tpu-98a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

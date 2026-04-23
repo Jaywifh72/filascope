@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-98a/extrudr",
+  "title": "Extrudr TPU-98A Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Extrudr TPU-98A filaments. Prices from $39.90 to $39.90. 6 colors available.",
+  "h1": "Extrudr TPU-98A Filament",
+  "keywords": [
+    "Extrudr",
+    "TPU-98A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-98A",
+  "vendor": "Extrudr",
+  "count": 6,
+  "min_price": 39.9,
+  "max_price": 39.9,
+  "color_count": 6,
+  "has_td": 0,
+  "filament_ids": [
+    "85291bbf-c345-4b63-916b-02b6b63fbade",
+    "bd280a22-608d-4797-8110-e68ab51f00ae",
+    "ec9903da-e6a6-400e-9388-7fc763d4b952",
+    "ce2c74b2-351c-432b-a1ca-6b543ee9701f",
+    "038172c1-b47a-497a-b5c6-ea6d1f27684e",
+    "1ce35c15-28b7-4dc1-aea6-85539bc550e0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Extrudr TPU-98A Filament",
+    "description": "Compare 6 Extrudr TPU-98A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-98a/extrudr",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-98A",
+          "item": "https://filascope.com/filaments/tpu-98a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Extrudr"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/fiberlogy",
+  "title": "Fiberlogy PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 38 Fiberlogy PETG filaments. Prices from $21.99 to $22.99. 25 colors available.",
+  "h1": "Fiberlogy PETG Filament",
+  "keywords": [
+    "Fiberlogy",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Fiberlogy",
+  "count": 38,
+  "min_price": 21.99,
+  "max_price": 22.99,
+  "color_count": 25,
+  "has_td": 0,
+  "filament_ids": [
+    "a54811d9-1caf-4f90-a43e-eea700cbf605",
+    "14b08d9b-15c4-4339-8676-5a689a7cf219",
+    "36bad879-dcc0-4ffc-859d-7c1ede8b2092",
+    "b8e95841-48b5-41a4-8b3e-f017f817f360",
+    "b2afa38c-5c87-4252-91b7-8672cab43b6f",
+    "e85011be-2ca9-4a38-a774-daaebdcafc71",
+    "116376dd-21ec-4673-8ce9-97cf867c971b",
+    "67381c68-2e24-494c-a8dd-0c7a2bf15100",
+    "2912e7eb-ab87-431c-b4a9-e002f450a4d5",
+    "b7fbe50a-d0bd-4c59-9cee-b8d05cc35844",
+    "6147effc-d146-4b74-9762-1443c0960e6b",
+    "8ac29cb3-f3dc-457b-9e25-bb260d675afe",
+    "82c2bf8f-5b82-4376-8a4e-a2b21ddc12d6",
+    "77ab9bd7-b613-499f-8a96-3375eba73d80",
+    "606d31ab-c1dc-4252-9f46-0573e13d58cd",
+    "2872b2be-4154-4802-a5bc-2ae6fbffbc87",
+    "529e7864-abb3-489b-a94d-14ace11182dd",
+    "7c38bb3e-84ac-4129-b2bd-0c09c7eda2c3",
+    "c329b1ca-09d2-4118-aa73-c01274682481",
+    "10800c50-5094-4f4e-956c-389018b532e5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy PETG Filament",
+    "description": "Compare 38 Fiberlogy PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

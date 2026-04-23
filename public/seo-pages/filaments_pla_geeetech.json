@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/geeetech",
+  "title": "Geeetech PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 123 Geeetech PLA filaments. Prices from $8.99 to $17.99. 65 colors available. 123 with HueForge TD values.",
+  "h1": "Geeetech PLA Filament",
+  "keywords": [
+    "Geeetech",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Geeetech",
+  "count": 123,
+  "min_price": 8.99,
+  "max_price": 17.99,
+  "color_count": 65,
+  "has_td": 123,
+  "filament_ids": [
+    "8aa0709c-8c97-49ae-8748-c72fab5eb481",
+    "40eb1091-b4b5-415b-a800-344d273088d0",
+    "62792bf5-5256-4c3c-8936-6dd245cc1004",
+    "eb23a62f-1d24-46a0-8b15-61044c5e747b",
+    "d17fa271-c12c-4dd6-bf5f-f29d730eb505",
+    "f4495d39-7f29-4136-b414-9d5b04035e40",
+    "58f61348-31f3-49eb-b73a-701b88c2826e",
+    "312f69cc-9bb6-477b-8a6a-90e6a11ffe19",
+    "74760297-3d77-4fa2-a994-e452a9177c51",
+    "e1b9f1cb-84d2-4554-9bda-38bac6ba2f33",
+    "826eb64d-0734-4a22-95f9-7b0d754273de",
+    "ab1509b9-ac64-4237-824b-3853819dc805",
+    "673876d4-05b6-4241-b2bd-804a37c26ab6",
+    "19447de7-9dda-476d-b409-2375b72a811f",
+    "111a52bb-0bd5-4813-b90a-b781ec508e3b",
+    "8856c489-dd91-4d4f-b84c-2b423ee4291a",
+    "1e32bb38-44aa-4900-9b07-0ef1ad7bf61e",
+    "eecefe26-e5c2-497f-91f1-59b907724fc7",
+    "e3742a28-e664-4fdf-a574-fa4276c92162",
+    "519b1f0a-36f7-4be3-873a-e33d3f2ab2e7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Geeetech PLA Filament",
+    "description": "Compare 123 Geeetech PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/geeetech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Geeetech"
+        }
+      ]
+    }
+  }
+}

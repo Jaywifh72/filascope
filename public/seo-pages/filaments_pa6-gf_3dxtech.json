@@ -1,0 +1,70 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa6-gf/3dxtech",
+  "title": "3DXTech PA6-GF Filament — Prices, Specs & Reviews",
+  "description": "Compare 17 3DXTech PA6-GF filaments. Prices from $38.00 to $130.00. 9 colors available.",
+  "h1": "3DXTech PA6-GF Filament",
+  "keywords": [
+    "3DXTech",
+    "PA6-GF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA6-GF",
+  "vendor": "3DXTech",
+  "count": 17,
+  "min_price": 38,
+  "max_price": 130,
+  "color_count": 9,
+  "has_td": 0,
+  "filament_ids": [
+    "159ad9b2-eb32-4c88-8ccf-b1704062c451",
+    "ec615929-fccb-4b10-a0d9-96483c7aedad",
+    "1dd87aa0-b0ef-49cb-8517-286c327d14bd",
+    "7ca22a95-9ba5-4852-a76d-3f87568d7cce",
+    "27eb7b30-31c6-4d8d-adfd-b0b1575071bb",
+    "f2628305-7107-4f0f-95fc-d2bd581d7a1e",
+    "169e5d09-bc2e-4c6e-99e2-1bebe0474aa2",
+    "cf985b0e-fb41-47f9-be2b-2c7d1b28b423",
+    "2e4becc9-dc65-4b3c-805a-a5390b895547",
+    "d46dbed0-4a6d-4222-929f-80d4befb2e13",
+    "5cc337d3-e4a1-4643-91b3-8925f3d4e6fa",
+    "660c7c1c-3758-478f-b1be-d0857800e91f",
+    "740046b7-aab5-46ef-91f8-9ef56174bd7e",
+    "e0ed3988-cc5e-4de0-897f-7356f554d4c9",
+    "139730aa-a98d-4f6d-96a2-84cd67c1f7ff",
+    "4fd8828c-321f-4672-8c32-3a4687803720",
+    "8da1ff32-331e-4bc7-8059-984d450a422a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech PA6-GF Filament",
+    "description": "Compare 17 3DXTech PA6-GF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa6-gf/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA6-GF",
+          "item": "https://filascope.com/filaments/pa6-gf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

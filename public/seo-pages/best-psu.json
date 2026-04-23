@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-psu",
+  "title": "Best PSU Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PSU filaments in 2026. 3 options from 2 brands, starting at $42.00. Expert picks, prices & specs.",
+  "h1": "Best PSU Filament (2026)",
+  "keywords": [
+    "best PSU",
+    "PSU filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PSU",
+  "count": 3,
+  "brands": 2,
+  "min_price": 42,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PSU Filament 2026",
+    "description": "Expert comparison of 3 PSU filaments",
+    "url": "https://filascope.com/best-psu"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-ppa",
+  "title": "Best PPA Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PPA filaments in 2026. 3 options from 2 brands, starting at $48.74. Expert picks, prices & specs.",
+  "h1": "Best PPA Filament (2026)",
+  "keywords": [
+    "best PPA",
+    "PPA filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PPA",
+  "count": 3,
+  "brands": 2,
+  "min_price": 48.74,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PPA Filament 2026",
+    "description": "Expert comparison of 3 PPA filaments",
+    "url": "https://filascope.com/best-ppa"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/anycubic",
+  "title": "Anycubic TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Anycubic TPU filaments. Prices from $25.99 to $179.99. 7 colors available. 8 with HueForge TD values.",
+  "h1": "Anycubic TPU Filament",
+  "keywords": [
+    "Anycubic",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "Anycubic",
+  "count": 8,
+  "min_price": 25.99,
+  "max_price": 179.99,
+  "color_count": 7,
+  "has_td": 8,
+  "filament_ids": [
+    "96fd32a9-1bd0-4853-afda-66e83409c4ad",
+    "bfd88ebb-49a8-47cb-a336-da865c5ab6a3",
+    "8282833d-6bd0-4875-9399-0974245ef6a0",
+    "c7804b7b-7aba-4c95-b22e-5a5fd98a3f52",
+    "d0eb9b0f-010b-4b54-ab71-205f2fa2e614",
+    "4e264215-78c1-485d-ba31-74ee9188cdfd",
+    "2b41bbb4-0bb3-4e68-8168-78b7d9bec5e4",
+    "074e5373-8314-44a9-a431-0aa46e3d16e8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic TPU Filament",
+    "description": "Compare 8 Anycubic TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

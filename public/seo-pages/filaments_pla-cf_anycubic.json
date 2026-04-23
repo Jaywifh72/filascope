@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-cf/anycubic",
+  "title": "Anycubic PLA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Anycubic PLA-CF filaments. Prices from $26.99 to $189.99. 0 colors available. 3 with HueForge TD values.",
+  "h1": "Anycubic PLA-CF Filament",
+  "keywords": [
+    "Anycubic",
+    "PLA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-CF",
+  "vendor": "Anycubic",
+  "count": 3,
+  "min_price": 26.99,
+  "max_price": 189.99,
+  "color_count": 0,
+  "has_td": 3,
+  "filament_ids": [
+    "d74117f3-c39b-4f57-9339-b5872ad79e6b",
+    "abd63265-1926-47e9-900d-ca3ea7bf2901",
+    "0ad66c04-bfa4-4502-8ef0-27f78fecfcb0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic PLA-CF Filament",
+    "description": "Compare 3 Anycubic PLA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-cf/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-CF",
+          "item": "https://filascope.com/filaments/pla-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

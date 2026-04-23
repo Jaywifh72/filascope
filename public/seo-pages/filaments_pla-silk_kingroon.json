@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-silk/kingroon",
+  "title": "Kingroon PLA-SILK Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Kingroon PLA-SILK filaments. Prices from $112.99 to $139.99. 0 colors available.",
+  "h1": "Kingroon PLA-SILK Filament",
+  "keywords": [
+    "Kingroon",
+    "PLA-SILK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-SILK",
+  "vendor": "Kingroon",
+  "count": 3,
+  "min_price": 112.99,
+  "max_price": 139.99,
+  "color_count": 0,
+  "has_td": 0,
+  "filament_ids": [
+    "abc21cd9-dca6-42b8-9d54-83d47d25452b",
+    "d91ce933-819b-4af7-8710-4b9f83a8ed38",
+    "61c87514-81c9-4a3c-aece-2b90006c2bf4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon PLA-SILK Filament",
+    "description": "Compare 3 Kingroon PLA-SILK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-silk/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-SILK",
+          "item": "https://filascope.com/filaments/pla-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

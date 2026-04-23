@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/cpe/fillamentum",
+  "title": "Fillamentum CPE Filament — Prices, Specs & Reviews",
+  "description": "Compare 23 Fillamentum CPE filaments. Prices from $32.99 to $32.99. 12 colors available.",
+  "h1": "Fillamentum CPE Filament",
+  "keywords": [
+    "Fillamentum",
+    "CPE",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "CPE",
+  "vendor": "Fillamentum",
+  "count": 23,
+  "min_price": 32.99,
+  "max_price": 32.99,
+  "color_count": 12,
+  "has_td": 0,
+  "filament_ids": [
+    "03ca62be-b316-4c76-b409-c72d38effe9a",
+    "2201fd6a-c59a-4f86-abf6-72dff730bef8",
+    "600a0e9e-fb69-487c-b106-f10fa3421c36",
+    "63cd7359-5b2e-4729-88e3-52d254df2406",
+    "4bb8868a-23af-4724-911e-b70edaebde40",
+    "12ce370f-c76e-4507-a1a0-9ded646b9b7b",
+    "f4a7abba-e7ac-4d3b-a06e-038cddde329a",
+    "ff189123-15ac-4d23-9cd1-d62567d99ca7",
+    "2101762c-ad36-4fd2-97c4-255e803bb647",
+    "1afa4608-d433-48ff-a0ea-9c358075f6d0",
+    "8e6a5b05-e277-4096-89a1-c9002ff18674",
+    "d43ef81d-9b04-419c-96e6-f48c6e3c751a",
+    "aee56cfb-fae3-4f92-89a3-390d6e6817b5",
+    "71299d4e-61c8-445f-9224-f509f339e9a1",
+    "589fdd6d-740e-4611-b8b2-ac8139f16e5a",
+    "c2e0c7d2-25f4-45a0-8f0f-d7ade2393554",
+    "7a5e496a-98e6-4e4f-b9d4-aa8160be48a8",
+    "1a2a1338-cc65-44c6-ad3a-3d22f0c22113",
+    "fff75229-a551-4c17-b826-76cf1f2c6d92",
+    "1fa42224-44b8-4a33-a8f7-ed7d6717750e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum CPE Filament",
+    "description": "Compare 23 Fillamentum CPE filaments on FilaScope",
+    "url": "https://filascope.com/filaments/cpe/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "CPE",
+          "item": "https://filascope.com/filaments/cpe"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

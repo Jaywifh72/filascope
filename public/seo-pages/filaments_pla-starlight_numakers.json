@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-starlight/numakers",
+  "title": "Numakers PLA-STARLIGHT Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Numakers PLA-STARLIGHT filaments. Prices from $23.99 to $23.99. 5 colors available.",
+  "h1": "Numakers PLA-STARLIGHT Filament",
+  "keywords": [
+    "Numakers",
+    "PLA-STARLIGHT",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-STARLIGHT",
+  "vendor": "Numakers",
+  "count": 5,
+  "min_price": 23.99,
+  "max_price": 23.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "518efe4a-d1bd-4171-ba88-0a25baff10c6",
+    "4406973c-a87c-41cc-8f13-ee85b14e8ccb",
+    "49d5816e-53b1-454b-9290-056f609a1eed",
+    "760c059c-ccd7-48a5-bac7-120acbac9ef5",
+    "b8ff0177-b415-494f-b762-10474ab8ff9b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PLA-STARLIGHT Filament",
+    "description": "Compare 5 Numakers PLA-STARLIGHT filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-starlight/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-STARLIGHT",
+          "item": "https://filascope.com/filaments/pla-starlight"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pctg/azurefilm",
+  "title": "AzureFilm PCTG Filament — Prices, Specs & Reviews",
+  "description": "Compare 31 AzureFilm PCTG filaments. Prices from $23.65 to $28.69. 6 colors available. 23 with HueForge TD values.",
+  "h1": "AzureFilm PCTG Filament",
+  "keywords": [
+    "AzureFilm",
+    "PCTG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PCTG",
+  "vendor": "AzureFilm",
+  "count": 31,
+  "min_price": 23.65,
+  "max_price": 28.69,
+  "color_count": 6,
+  "has_td": 23,
+  "filament_ids": [
+    "851fcea3-a7d7-4798-857c-db3ba999c411",
+    "544c4cfe-fe66-4e8c-87e0-45856755e913",
+    "91f6f3bc-1e36-4e7f-b9ee-6029c8b4c6de",
+    "6c8cbb96-ac5c-4b89-bd27-5ef3685cedba",
+    "5689f435-0d80-4b5b-befa-f3d371f387c7",
+    "660592c0-d024-4945-a01f-b0f1d323665d",
+    "5feedc12-ccb1-49d7-9d98-c592cd22ee6a",
+    "46c9fc35-d417-49b0-ad11-a2560126027d",
+    "c6224f94-079a-46b5-9490-90ecf9df099b",
+    "b6948de0-bd48-4d98-bd3e-91c09ee8eb9a",
+    "141cdc46-594e-4eca-b669-1ec3615a6ccb",
+    "4fd6a236-93e4-406a-87c0-754fb8935032",
+    "fc7a83e0-ae0b-47bc-bf73-5c1ab7d28d90",
+    "f54436f3-f1e8-4c3e-b77c-1f51c68c3fdd",
+    "c03984c5-e853-4b9a-8799-88e1af742a1f",
+    "c6def86d-ae96-4334-977d-c8d5ecf83f94",
+    "e4139faa-20e9-40d9-9cc8-c452be53d63b",
+    "26f5d9f8-aba5-4d06-bf03-4acdfe088da6",
+    "444cc920-2c19-4c11-9f8d-151f2cf67d43",
+    "26e12bc6-cc68-4fcf-a4c8-75b5f51f7c4c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "AzureFilm PCTG Filament",
+    "description": "Compare 31 AzureFilm PCTG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pctg/azurefilm",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PCTG",
+          "item": "https://filascope.com/filaments/pctg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AzureFilm"
+        }
+      ]
+    }
+  }
+}

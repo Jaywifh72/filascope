@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/matter3d",
+  "title": "Matter3D PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 81 Matter3D PLA filaments. Prices from $17.65 to $69.99. 12 colors available.",
+  "h1": "Matter3D PLA Filament",
+  "keywords": [
+    "Matter3D",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Matter3D",
+  "count": 81,
+  "min_price": 17.65,
+  "max_price": 69.99,
+  "color_count": 12,
+  "has_td": 0,
+  "filament_ids": [
+    "41aa5493-781d-4803-8665-030912126a0d",
+    "95595989-6978-4fb5-8920-e4ece53f0183",
+    "4da37baf-6329-45f8-a971-693f036980b1",
+    "1e6f60ad-5ef7-47f2-8e91-bf95e905c918",
+    "45ca50bd-2e10-44af-8c49-57badb9f3384",
+    "0dba8e67-316b-45cb-970b-9856ff85090c",
+    "e43d0e72-0f49-48de-ac7b-0c1cad601815",
+    "ec62f0a0-fdd5-4c65-8548-f5a94a8caea6",
+    "4151f691-2b4d-42bf-a393-b27402c45a71",
+    "09a210a0-3984-41a7-8e4b-72b6302f44d8",
+    "60e4f54e-9676-4a13-83ae-ab8e3cd79129",
+    "9cdf818f-9f0b-4bec-bbe8-0bb4a0c20976",
+    "a1ee27a6-d793-430d-aac9-f6e142c3affe",
+    "cd2c51b7-9992-4e41-8b5a-6a9e111b8638",
+    "ce9984c4-7e51-450c-a169-35deacde35c6",
+    "ae9af346-6410-44be-ab22-1af4327f4545",
+    "11cd9cee-47e7-4564-b393-50ad4a1c0a72",
+    "4037fd64-4338-410a-8b04-2c64af065215",
+    "49df306d-ad46-4284-a8ea-737570d12044",
+    "4112f473-47ca-437b-8f82-7e1a74be2ff6"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Matter3D PLA Filament",
+    "description": "Compare 81 Matter3D PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/matter3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Matter3D"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa-cf/eryone",
+  "title": "Eryone ASA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Eryone ASA-CF filaments. Prices from $34.99 to $34.99. 5 colors available.",
+  "h1": "Eryone ASA-CF Filament",
+  "keywords": [
+    "Eryone",
+    "ASA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA-CF",
+  "vendor": "Eryone",
+  "count": 5,
+  "min_price": 34.99,
+  "max_price": 34.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "b9b26caf-cdf2-4bad-a4b3-9160847c9c5a",
+    "ff207bba-665f-4cd9-912b-9ff445674e77",
+    "c1e3d566-ff29-43aa-8fd0-934f38d82590",
+    "9a6720f2-5670-4689-af9f-9a32e91da71d",
+    "8ac7c609-da34-4925-954c-1a6427149528"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Eryone ASA-CF Filament",
+    "description": "Compare 5 Eryone ASA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa-cf/eryone",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA-CF",
+          "item": "https://filascope.com/filaments/asa-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Eryone"
+        }
+      ]
+    }
+  }
+}

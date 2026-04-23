@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/printed-solid",
+  "title": "Printed Solid PLA+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 90 Printed Solid PLA+ filaments. Prices from $19.99 to $999.00. 16 colors available. 90 with HueForge TD values.",
+  "h1": "Printed Solid PLA+ Filament",
+  "keywords": [
+    "Printed Solid",
+    "PLA+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA+",
+  "vendor": "Printed Solid",
+  "count": 90,
+  "min_price": 19.99,
+  "max_price": 999,
+  "color_count": 16,
+  "has_td": 90,
+  "filament_ids": [
+    "f5ef1778-1acb-49a9-a760-6f5e8757b1c5",
+    "3ce3faa6-2e6b-4bd4-991e-d41bcda14316",
+    "1513b31b-ebb4-4e3b-b661-0913ee6545f5",
+    "8d1857ae-9cbf-4b94-ac48-2f280be87c34",
+    "d288edd8-95cd-4d70-b750-d00cb5a9195e",
+    "796c3892-0b8e-4b06-be4f-0cd85a45f926",
+    "34059a7f-e657-435f-8177-9f633ba81488",
+    "d938884c-7929-4227-a389-f5bab901a889",
+    "8f051708-0e5a-4ca9-bd6c-f29c73ffbd67",
+    "453d2f26-05b0-44c9-a49b-32390ec21c98",
+    "6d0b599d-28a1-47c4-8cac-6a3b5c459d35",
+    "28e2da7c-e754-43fe-9065-d8ad5403e656",
+    "6a4a5368-c532-481f-a076-752670eaa3a5",
+    "0b4357eb-7096-4ea8-9a1f-3baa27ec5121",
+    "9e6bb14f-5a9e-4482-b208-82e59da18ef0",
+    "c4fca937-d410-4140-9844-4feeabd9e6ed",
+    "ff852deb-f8ff-4a8d-b667-8e6977f6b02c",
+    "6f509ca2-36d4-4f47-8367-bf57dc6b4b3d",
+    "390a8aea-49d9-421d-a9d2-db88fae1a77a",
+    "eaceb4e6-35c9-4931-b995-7766a31d1489"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Printed Solid PLA+ Filament",
+    "description": "Compare 90 Printed Solid PLA+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/printed-solid",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA+",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Printed Solid"
+        }
+      ]
+    }
+  }
+}

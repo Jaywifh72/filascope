@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pet-g-premium/spectrum-filaments",
+  "title": "Spectrum Filaments PET-G Premium Filament — Prices, Specs & Reviews",
+  "description": "Compare 65 Spectrum Filaments PET-G Premium filaments. Prices from $24.00 to $83.00. 44 colors available.",
+  "h1": "Spectrum Filaments PET-G Premium Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PET-G Premium",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PET-G Premium",
+  "vendor": "Spectrum Filaments",
+  "count": 65,
+  "min_price": 24,
+  "max_price": 83,
+  "color_count": 44,
+  "has_td": 0,
+  "filament_ids": [
+    "23e4bbd3-27bb-4c36-ac44-92da956e0426",
+    "3d95d877-3f03-4890-ad0f-fb65906a322d",
+    "56a6fa29-bdc0-4549-b98f-a3bc70a9529b",
+    "de7aa0c1-20b2-4ef4-8434-fe7892e4be9c",
+    "9bb34cb6-4f6d-45ca-966e-488984e527b9",
+    "1cb1351a-f8dd-4285-8273-47c83617aa07",
+    "3189d4b9-32a8-4d0d-8b5a-6476b05cf000",
+    "e4830eba-ef0c-489e-94da-60fdae069dfe",
+    "6246f5da-3762-4917-8199-8f108a3eadf0",
+    "ec681351-9c37-4091-bba2-75b4f102bf4a",
+    "c9017a2f-2687-4f22-8317-7c6f4ec3bf67",
+    "192d62a0-7f11-40ab-8c9a-04580859a9d9",
+    "77a23fa5-7b6c-4611-84e1-51e7c43a9aa4",
+    "173990f3-0bf4-4f74-8cb6-c67aeabc4552",
+    "86c6ca7f-330b-4c47-95bf-e62e0040248a",
+    "b518ed11-ec71-4cea-ad56-02cc39adbcef",
+    "c5c763bb-55de-4039-98d0-799fed96674d",
+    "16e2dcce-5315-4543-a69f-1f55c4189e92",
+    "a1337ead-0c8a-4635-9342-9b195ce3c0e0",
+    "7478748f-ecaf-441c-b0cb-d8aa1b41e19c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PET-G Premium Filament",
+    "description": "Compare 65 Spectrum Filaments PET-G Premium filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pet-g-premium/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PET-G Premium",
+          "item": "https://filascope.com/filaments/pet-g-premium"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

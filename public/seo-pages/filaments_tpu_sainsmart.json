@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/sainsmart",
+  "title": "SainSmart TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 68 SainSmart TPU filaments. Prices from $15.99 to $84.00. 18 colors available. 68 with HueForge TD values.",
+  "h1": "SainSmart TPU Filament",
+  "keywords": [
+    "SainSmart",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "SainSmart",
+  "count": 68,
+  "min_price": 15.99,
+  "max_price": 84,
+  "color_count": 18,
+  "has_td": 68,
+  "filament_ids": [
+    "ff8ef0ec-fc1c-46af-97e5-bdc2fbf599e7",
+    "06d12270-ae5b-4d64-85b9-c4db529474b4",
+    "7b028309-c4f2-4f60-b37f-217f38f7b767",
+    "3ea76b7f-2302-4c29-92f5-dadbd23c11f7",
+    "6e4c8a5e-ec76-4c61-9855-4c8841c74715",
+    "292a81b3-b02a-4ed1-9668-c5185a20fac5",
+    "26f0cccf-94e9-47c6-9e2f-bfbc1ca90c89",
+    "6b60234c-bad3-4bd5-b400-7a110a18e055",
+    "b0d2751f-ebda-4f18-9028-812a7899e50f",
+    "00b49c8d-b4f9-48d1-ba21-45e128cc7800",
+    "fe27eec8-a08e-48ab-b4a0-61a8cd5e7a85",
+    "a3185771-c52e-4690-bef2-1b4ebeec3b67",
+    "808b951d-1394-489f-9dac-8344827f1044",
+    "1e9426b8-1c71-490a-94fd-6760826a994d",
+    "4eede901-37ea-4420-aa60-682b249902e5",
+    "10cc3f7d-d798-4801-8bbf-a1327d702ea9",
+    "35a98885-8239-43dc-bcfd-51766aaade01",
+    "7dcac11b-1af9-4b16-aa55-5f40e7959e88",
+    "e1fc8cb6-0f4a-4947-bdc0-63dcd2b81c33",
+    "5ab8bbb3-fc62-4073-a28a-533d141a8aa6"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "SainSmart TPU Filament",
+    "description": "Compare 68 SainSmart TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/sainsmart",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "SainSmart"
+        }
+      ]
+    }
+  }
+}

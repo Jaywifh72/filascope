@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-90a/formfutura",
+  "title": "FormFutura TPU-90A Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 FormFutura TPU-90A filaments. Prices from $30.99 to $35.70. 7 colors available. 7 with HueForge TD values.",
+  "h1": "FormFutura TPU-90A Filament",
+  "keywords": [
+    "FormFutura",
+    "TPU-90A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-90A",
+  "vendor": "FormFutura",
+  "count": 7,
+  "min_price": 30.99,
+  "max_price": 35.7,
+  "color_count": 7,
+  "has_td": 7,
+  "filament_ids": [
+    "7a1eb81f-6c36-4396-b8db-cb316bd58562",
+    "4aa9ea05-35e6-46c2-b744-fc1a8a1c0336",
+    "52b1cc69-0080-40c0-9dcc-07dada26a729",
+    "a1633a45-6f3e-4283-91ab-fb1a578c42cf",
+    "382509f4-ebd2-480a-93b2-50583f1a0958",
+    "9cbb91c6-3783-40ba-8cab-ed72201e49a9",
+    "6ae14629-f7f2-4b2f-bdd5-91f353427b0a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura TPU-90A Filament",
+    "description": "Compare 7 FormFutura TPU-90A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-90a/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-90A",
+          "item": "https://filascope.com/filaments/tpu-90a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

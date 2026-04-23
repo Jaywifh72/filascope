@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/extrudr",
+  "title": "Extrudr PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 39 Extrudr PETG filaments. Prices from $29.90 to $29.90. 34 colors available. 2 with HueForge TD values.",
+  "h1": "Extrudr PETG Filament",
+  "keywords": [
+    "Extrudr",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Extrudr",
+  "count": 39,
+  "min_price": 29.9,
+  "max_price": 29.9,
+  "color_count": 34,
+  "has_td": 2,
+  "filament_ids": [
+    "1218f879-cb1b-40c5-b57f-77affebac912",
+    "5fe2df39-d098-44a1-80bf-32d32e4334a9",
+    "d54b293c-17a8-4121-b082-c39f57cadfd3",
+    "441d89bc-e6be-402d-bedf-86ccc9b6e949",
+    "c49295d3-0739-4573-a6de-cbf31dffab42",
+    "fda12de3-64d6-4b64-a70c-7afffd218f67",
+    "1a3e415d-ba45-4abf-bf92-c8c53d107c91",
+    "fd22d584-5e69-47bd-a311-b401dd3e56fb",
+    "7dae61bc-a12e-427a-a037-27c98b26baa4",
+    "2bb298a6-390a-4bc7-89b5-de48c1564b3c",
+    "1ba7f3fb-328f-4cbd-b0aa-b37d48043c6d",
+    "263bcb5d-034b-4308-a2e2-f9e59cf9d80c",
+    "2dde34a1-2514-499e-9627-2eda566674ca",
+    "2260160b-f65f-475d-8784-bdff1101750e",
+    "f93e912f-cb2a-48d9-a6dd-708709a37a56",
+    "a6d07ba4-e9c4-47c0-add3-95d280a072fa",
+    "2fd0b718-0cf6-4bee-a17f-c0ecd2553150",
+    "ab518b35-cea8-44f6-aaba-e68ab2a121c7",
+    "1c15bc6c-1375-4618-bf3b-83b89955dfd0",
+    "0a2ca824-535c-4296-bacc-a608084881cb"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Extrudr PETG Filament",
+    "description": "Compare 39 Extrudr PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/extrudr",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Extrudr"
+        }
+      ]
+    }
+  }
+}

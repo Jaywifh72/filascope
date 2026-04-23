@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/rpla/prusament",
+  "title": "Prusament rPLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Prusament rPLA filaments. Prices from $29.40 to $29.40. 4 colors available.",
+  "h1": "Prusament rPLA Filament",
+  "keywords": [
+    "Prusament",
+    "rPLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "rPLA",
+  "vendor": "Prusament",
+  "count": 4,
+  "min_price": 29.4,
+  "max_price": 29.4,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "25cc942c-c6da-4552-961c-614515cc335e",
+    "e674a522-ebe1-4001-b059-89d7cc1c2f25",
+    "b86df935-5027-4a40-84ed-5be9500a7d7a",
+    "5a5b33cc-064c-425b-a2a9-6b69fefafc40"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Prusament rPLA Filament",
+    "description": "Compare 4 Prusament rPLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/rpla/prusament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "rPLA",
+          "item": "https://filascope.com/filaments/rpla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Prusament"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-metal/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Metal Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Spectrum Filaments PLA Metal filaments. Prices from $83.00 to $150.00. 3 colors available.",
+  "h1": "Spectrum Filaments PLA Metal Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Metal",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Metal",
+  "vendor": "Spectrum Filaments",
+  "count": 6,
+  "min_price": 83,
+  "max_price": 150,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "c14c1b48-9b46-4919-873d-3182130cc823",
+    "04a26a77-058e-43fe-8e06-bf0e28f9f950",
+    "acea9589-c8b4-4d5b-8cf6-b1ee1a2987f6",
+    "590bbef6-77df-4bbb-ae3b-13183cecb4a1",
+    "4e822721-3b93-4760-8c0b-392707bee243",
+    "2b141e91-e802-49b3-a5f0-9b08824e7256"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Metal Filament",
+    "description": "Compare 6 Spectrum Filaments PLA Metal filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-metal/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Metal",
+          "item": "https://filascope.com/filaments/pla-metal"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/colorfabb",
+  "title": "ColorFabb PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 501 ColorFabb PLA filaments. Prices from $13.94 to $182.89. 28 colors available. 501 with HueForge TD values.",
+  "h1": "ColorFabb PLA Filament",
+  "keywords": [
+    "ColorFabb",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "ColorFabb",
+  "count": 501,
+  "min_price": 13.94,
+  "max_price": 182.89,
+  "color_count": 28,
+  "has_td": 501,
+  "filament_ids": [
+    "cdd87d45-4314-4941-b83c-fdca2041679f",
+    "bb9e403d-7dc2-4879-a818-86263a5f9409",
+    "2c7cf41a-cfe6-432d-81f4-2e8ae46e895d",
+    "035f9acb-130b-449a-94ae-d9933f802474",
+    "03db2e16-2c29-4ef1-9338-93670a0fb98b",
+    "15c9abfd-4677-493c-b5fe-a533f79a7a99",
+    "142c51cc-8d9e-47ab-ac03-ac453567c4b2",
+    "337c92a9-872f-4636-8e25-769f890fc8a1",
+    "53c684cc-a97b-4cf2-8278-6b1be97625d6",
+    "36b44dbe-5146-457e-aa14-5052d2c81e4f",
+    "65bd2334-d7cb-4bee-bd79-cc77aa19cbad",
+    "75c9600b-0283-45f7-9ae0-8aa7a30d6814",
+    "175b5d9c-fbea-41db-89af-61968237a0b1",
+    "8a52490d-a2a9-46c1-be46-6251b3cc0922",
+    "38fa1fa5-982a-4b86-9beb-8d39cb5c15a0",
+    "51dc990e-6591-4d2e-a812-d84640b957c0",
+    "251c28e4-2d34-4257-9fc9-3fc6754ef2df",
+    "44a7b730-ee57-4e16-86b0-8ff0b30b83af",
+    "45e7ce6a-d270-4b44-a69d-b47dc47bb5c5",
+    "5214e685-6c0d-4fbc-bed6-475060e1c8f3"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "ColorFabb PLA Filament",
+    "description": "Compare 501 ColorFabb PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/colorfabb",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ColorFabb"
+        }
+      ]
+    }
+  }
+}

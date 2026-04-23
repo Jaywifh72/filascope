@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpe-96a/fillamentum",
+  "title": "Fillamentum TPE-96A Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Fillamentum TPE-96A filaments. Prices from $36.99 to $36.99. 5 colors available.",
+  "h1": "Fillamentum TPE-96A Filament",
+  "keywords": [
+    "Fillamentum",
+    "TPE-96A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPE-96A",
+  "vendor": "Fillamentum",
+  "count": 5,
+  "min_price": 36.99,
+  "max_price": 36.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "ed8ad7b5-4802-4dac-95bc-8721d524d5fb",
+    "01fa9745-ee3f-402f-a1e7-801d9e3a9e21",
+    "db316107-f821-48ad-9360-6b2ede5dc3a3",
+    "7e7a5658-e2d5-41a2-a617-05481cf2e0f8",
+    "44eb7d25-cca0-46d1-9f99-c2f5abbf1dc6"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum TPE-96A Filament",
+    "description": "Compare 5 Fillamentum TPE-96A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpe-96a/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPE-96A",
+          "item": "https://filascope.com/filaments/tpe-96a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

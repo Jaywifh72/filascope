@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc/formfutura",
+  "title": "FormFutura PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 FormFutura PC filaments. Prices from $33.02 to $38.04. 3 colors available. 3 with HueForge TD values.",
+  "h1": "FormFutura PC Filament",
+  "keywords": [
+    "FormFutura",
+    "PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC",
+  "vendor": "FormFutura",
+  "count": 3,
+  "min_price": 33.02,
+  "max_price": 38.04,
+  "color_count": 3,
+  "has_td": 3,
+  "filament_ids": [
+    "ecefcc1e-fd78-4e88-bc82-7172fa266870",
+    "8e3a9e14-48f3-4ee3-ab56-718581d1e78f",
+    "c1de5e3d-8696-482d-9239-654eeab7f616"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "FormFutura PC Filament",
+    "description": "Compare 3 FormFutura PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc/formfutura",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC",
+          "item": "https://filascope.com/filaments/pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "FormFutura"
+        }
+      ]
+    }
+  }
+}

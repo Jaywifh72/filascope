@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-magic-silk/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Magic SILK Filament — Prices, Specs & Reviews",
+  "description": "Compare 37 Spectrum Filaments PLA Magic SILK filaments. Prices from $31.00 to $146.00. 15 colors available.",
+  "h1": "Spectrum Filaments PLA Magic SILK Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Magic SILK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Magic SILK",
+  "vendor": "Spectrum Filaments",
+  "count": 37,
+  "min_price": 31,
+  "max_price": 146,
+  "color_count": 15,
+  "has_td": 0,
+  "filament_ids": [
+    "94c50008-759b-4378-bc04-99209b686881",
+    "95ddfcdf-10db-4ef1-af9b-62d4d9bb95ea",
+    "43cd0161-404e-4091-a01f-3fb69c4909e8",
+    "d5b66d8e-8ba2-4fee-bc63-0b9329c9233c",
+    "f17747ac-472d-4603-b035-b762a14ffb4c",
+    "7933a40a-18ca-4a30-baa3-ed003a54888f",
+    "966386f2-68cc-4351-9c94-0cacbd88912d",
+    "fc246f61-98a9-4797-97fb-238019a851b6",
+    "97331cd3-9349-432c-867d-9b0cb191cb6e",
+    "6753c61c-03a0-4f95-a248-d9eb180ba6c6",
+    "80e7e782-ff74-4c20-8010-aae92badf563",
+    "c7026724-bcea-4252-9f4c-f3e953bd70a9",
+    "bf230aea-40d9-49e3-bbc5-62eb8c9a816a",
+    "7217a86c-844c-4c65-8188-5595005c805d",
+    "5b782c96-bf9c-4db8-9501-cfdda7436a0b",
+    "1d54a649-06bb-4b73-83a3-6ba54e176cbc",
+    "66472af7-1e8c-4df7-890b-598638b0a24e",
+    "c8943994-244c-44e7-ab98-10d9082ee5b9",
+    "f5e6984a-113f-42d0-bfd5-918286f56164",
+    "4a358db2-40a8-436a-9c43-645e740ed0c1"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Magic SILK Filament",
+    "description": "Compare 37 Spectrum Filaments PLA Magic SILK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-magic-silk/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Magic SILK",
+          "item": "https://filascope.com/filaments/pla-magic-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

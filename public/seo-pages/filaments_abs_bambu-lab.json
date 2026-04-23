@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/bambu-lab",
+  "title": "Bambu Lab ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 33 Bambu Lab ABS filaments. Prices from $12.99 to $29.99. 15 colors available. 33 with HueForge TD values.",
+  "h1": "Bambu Lab ABS Filament",
+  "keywords": [
+    "Bambu Lab",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Bambu Lab",
+  "count": 33,
+  "min_price": 12.99,
+  "max_price": 29.99,
+  "color_count": 15,
+  "has_td": 33,
+  "filament_ids": [
+    "0e783cb3-e468-40e4-9316-e1635e94b040",
+    "4f22f40d-db3f-48a6-9a2b-fae5adf94fc0",
+    "2ff3a0ac-5c91-46e0-8095-cfe0506e7621",
+    "0b95b53b-2609-47b1-a864-32346c1a621d",
+    "965cc2c0-f0ad-438a-b66b-5c977e6f8b9f",
+    "379c7054-3e64-4ae2-be3d-b8c0c4d61390",
+    "f41cd0e7-65d9-4764-b1c4-ef7a06a89a78",
+    "f077f4b8-43e6-48fc-be16-8583974de1a2",
+    "ffe9ba8b-7704-4f06-8cb1-13be55350733",
+    "3bcfd742-a85d-40bd-9e29-178f7c2d560a",
+    "f5e9c5bd-74db-4297-84e1-f71024ab7a8e",
+    "0fc5949b-05e5-4dab-9854-ccb699926a56",
+    "3e75adb3-35cc-46dd-b87a-af72a210cee4",
+    "54ed65a2-e885-4ed5-a0b8-9a09ec89a5e0",
+    "de991cf5-3984-40a8-9a8d-af2cc8b2368f",
+    "02ebe30d-c8bc-47ff-b784-029be2f3b6da",
+    "026d884e-a82e-4c53-954b-97b65b6f339c",
+    "eda3fbe8-e4b7-4dff-9cc5-fad71a8994a9",
+    "e6119905-0f66-451a-a964-b91f122cc2e2",
+    "e2fcd7fc-5327-458e-a06b-25fbd1501cd4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab ABS Filament",
+    "description": "Compare 33 Bambu Lab ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

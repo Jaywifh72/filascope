@@ -1,0 +1,23 @@
+{
+  "type": "price-target",
+  "url": "/best-petg-under-50",
+  "title": "Best PETG Filament Under $50 — 1302 Options Compared",
+  "description": "1302 PETG filaments under $50 from 46 brands. Find the best value PETG for your 3D printer.",
+  "h1": "Best PETG Filament Under $50",
+  "keywords": [
+    "best PETG under $50",
+    "cheap PETG",
+    "PETG filament",
+    "budget"
+  ],
+  "material": "PETG",
+  "max_price": 50,
+  "count": 1302,
+  "brands": 46,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PETG Filament Under $50",
+    "url": "https://filascope.com/best-petg-under-50"
+  }
+}

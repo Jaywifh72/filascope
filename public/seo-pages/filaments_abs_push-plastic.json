@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/push-plastic",
+  "title": "Push Plastic ABS+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 225 Push Plastic ABS+ filaments. Prices from $7.00 to $10750.00. 23 colors available. 225 with HueForge TD values.",
+  "h1": "Push Plastic ABS+ Filament",
+  "keywords": [
+    "Push Plastic",
+    "ABS+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS+",
+  "vendor": "Push Plastic",
+  "count": 225,
+  "min_price": 7,
+  "max_price": 10750,
+  "color_count": 23,
+  "has_td": 225,
+  "filament_ids": [
+    "4c7359df-94dc-497e-8a9c-6c6ecdc0d9a6",
+    "9f0af04d-0f18-4471-9532-2e566db0ac85",
+    "06003416-cd49-42da-8d6a-eefbbbdb6308",
+    "804d22a0-f231-4707-8a11-a96d68438aea",
+    "e36c27ab-c2d9-42fe-a4a6-5dfe89a52707",
+    "c4bb497e-d9b9-43c4-b6c7-f7979f89c512",
+    "8d6586fc-5a52-4ba8-9f26-b8a0d2204007",
+    "9b5151f3-3ed3-41c7-a531-4e674890f65d",
+    "2bc6c10c-8471-4d99-8a10-b78eab28302f",
+    "15fd1134-5d11-41ee-b2d8-b9e96299e3a6",
+    "2405bef9-5780-43fc-8ea8-45f156485aba",
+    "6085cd1e-5803-4571-9dcb-5546192e0295",
+    "23e3dde6-e31f-471b-9861-c8bd52a1dc3f",
+    "a340fa86-4515-489a-bf7d-97dbdf45764e",
+    "ab9250da-5828-4794-89cc-ac8922eac315",
+    "d4f5fe92-4eea-410c-88b0-30891c9c941d",
+    "d3bb069a-e0ca-47c1-895f-a740934321ad",
+    "04c3d4e7-16f6-4bf3-9807-92470565e9c7",
+    "e07d0cfd-0481-4a86-b736-38317fc9a709",
+    "1a237639-1fdf-4998-b898-76975e71cddf"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic ABS+ Filament",
+    "description": "Compare 225 Push Plastic ABS+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS+",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/recreus",
+  "title": "Recreus TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Recreus TPU-95A filaments. Prices from $42.00 to $42.00. 8 colors available. 9 with HueForge TD values.",
+  "h1": "Recreus TPU-95A Filament",
+  "keywords": [
+    "Recreus",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "Recreus",
+  "count": 9,
+  "min_price": 42,
+  "max_price": 42,
+  "color_count": 8,
+  "has_td": 9,
+  "filament_ids": [
+    "760a4b1a-e0a4-4207-818e-591de8c50517",
+    "fa6ecb38-4242-49b1-8e68-d3cc3741b6d9",
+    "8f0a055d-6f17-466f-8113-8119f38e1fd2",
+    "75a114a0-5486-4004-9718-f5cd70424550",
+    "06eba0af-5635-4569-b657-8b021349cac3",
+    "043e7efa-b6d2-4b43-b000-7ff1abeb94b0",
+    "63467b71-59dc-436d-af13-598e87175983",
+    "3f1b547c-fc11-401f-962b-c60206e727bf",
+    "e1aa95aa-6167-4477-a218-7a6fd5cc756f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Recreus TPU-95A Filament",
+    "description": "Compare 9 Recreus TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/recreus",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recreus"
+        }
+      ]
+    }
+  }
+}

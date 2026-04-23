@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/fiberlogy",
+  "title": "Fiberlogy ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 29 Fiberlogy ABS filaments. Prices from $22.99 to $22.99. 22 colors available.",
+  "h1": "Fiberlogy ABS Filament",
+  "keywords": [
+    "Fiberlogy",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Fiberlogy",
+  "count": 29,
+  "min_price": 22.99,
+  "max_price": 22.99,
+  "color_count": 22,
+  "has_td": 0,
+  "filament_ids": [
+    "05950cae-eafc-4cfa-a396-b5f52f54baa7",
+    "7436f8f1-0814-4c4c-ba11-d1f16df56ff1",
+    "b1ad38ce-039a-4208-ad90-e3adcfc442b3",
+    "857793cd-7075-4c50-8f18-5a6362281319",
+    "adabc91e-2f5f-4cd8-ba40-1f129ea4875e",
+    "e4971ad9-9340-4014-bf14-d5b3f67a48b5",
+    "bb8c0c4b-36bb-42bf-b038-9e0a52ead5d5",
+    "5117e7e3-5de8-4e37-a2b9-b1ca89aadb90",
+    "d248d389-b4ae-42fc-a52b-92b6843e4fb4",
+    "a58c39fe-4707-4fd6-a592-c53888374349",
+    "24a6e38e-5ede-4f88-8c7a-09f7c75b9944",
+    "60519555-ea38-451a-ac26-0791b015a1f5",
+    "ea1f8089-661f-4ffb-ad16-609a6a250599",
+    "03595c39-4b05-4a8a-a253-ec20f055d154",
+    "76a50756-5fa0-4052-8ee2-9c38a0b28440",
+    "95bf7dd9-898a-4a9f-a3c2-169e0fbfc659",
+    "3dacd1e9-2173-4b40-b7c3-d87bbcfda0ea",
+    "ee5fc5c8-c646-4866-83df-997f02358170",
+    "63a70970-590f-40f2-9428-ad582cf5d559",
+    "33f09845-4c4b-46d8-9b7f-bc04d4ed0cd5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fiberlogy ABS Filament",
+    "description": "Compare 29 Fiberlogy ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/fiberlogy",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fiberlogy"
+        }
+      ]
+    }
+  }
+}

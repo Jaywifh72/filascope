@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/printed-solid",
+  "title": "Printed Solid ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Printed Solid ASA filaments. Prices from $32.99 to $35.99. 4 colors available. 6 with HueForge TD values.",
+  "h1": "Printed Solid ASA Filament",
+  "keywords": [
+    "Printed Solid",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Printed Solid",
+  "count": 6,
+  "min_price": 32.99,
+  "max_price": 35.99,
+  "color_count": 4,
+  "has_td": 6,
+  "filament_ids": [
+    "0582fcd1-566a-489d-9029-d4b02715b19c",
+    "a46f7509-2b29-43ec-973f-64070d2f3ee5",
+    "a3a802c8-d6ac-40cd-86a8-da61df498353",
+    "df8b7b7d-9a8f-4a9e-81e4-98b09354125c",
+    "695ed30d-d0bb-4e5f-b16d-ca4355a6b42c",
+    "ced3f529-7457-4fc0-989f-f7d87cd49c37"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Printed Solid ASA Filament",
+    "description": "Compare 6 Printed Solid ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/printed-solid",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Printed Solid"
+        }
+      ]
+    }
+  }
+}

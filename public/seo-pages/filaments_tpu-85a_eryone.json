@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-85a/eryone",
+  "title": "Eryone TPU-85A Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Eryone TPU-85A filaments. Prices from $29.99 to $36.99. 6 colors available.",
+  "h1": "Eryone TPU-85A Filament",
+  "keywords": [
+    "Eryone",
+    "TPU-85A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-85A",
+  "vendor": "Eryone",
+  "count": 6,
+  "min_price": 29.99,
+  "max_price": 36.99,
+  "color_count": 6,
+  "has_td": 0,
+  "filament_ids": [
+    "d52e3c1e-9d11-48da-a099-fa50e3c01c3a",
+    "174f3bd2-7923-4ec5-a1d8-28ce0cce4c1b",
+    "6206d473-eda2-40df-a9be-234b95c37d2e",
+    "d407fa25-250b-4eb5-b746-c455378e6c47",
+    "1f14218d-42ff-4a57-860f-46c516853cb7",
+    "b38bc189-078d-4de4-a8f2-1b2b9ed64731"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Eryone TPU-85A Filament",
+    "description": "Compare 6 Eryone TPU-85A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-85a/eryone",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-85A",
+          "item": "https://filascope.com/filaments/tpu-85a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Eryone"
+        }
+      ]
+    }
+  }
+}

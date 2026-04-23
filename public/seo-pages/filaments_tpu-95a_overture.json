@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/overture",
+  "title": "Overture TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 22 Overture TPU-95A filaments. Prices from $26.99 to $29.99. 18 colors available.",
+  "h1": "Overture TPU-95A Filament",
+  "keywords": [
+    "Overture",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "Overture",
+  "count": 22,
+  "min_price": 26.99,
+  "max_price": 29.99,
+  "color_count": 18,
+  "has_td": 0,
+  "filament_ids": [
+    "c2cffc3a-bcc6-46ee-94ba-342771b0bcc2",
+    "06c7ccdb-85c4-452d-8f95-9923929072f8",
+    "58708005-cdec-44ce-a852-add04b6b686b",
+    "6b08630a-5f90-40bb-946f-39fb3629c4d2",
+    "b8bb4606-85d1-4198-88dd-c46b8e6c1fd5",
+    "fd892a48-7c37-482d-b8ac-8d438356197e",
+    "25dcf234-c62f-4d0f-9b19-4307c7985fd2",
+    "1fa1bab2-af4c-4afb-acc0-478adc41436f",
+    "ab0b0fd0-3355-4abf-8a69-3bac788fa548",
+    "807c6ec3-6886-42f1-b86f-b208d26f5ecf",
+    "f4b55fb4-0b88-482c-a8af-a26c1233044f",
+    "5d60fa12-388e-479a-8f30-af0f0cc7a424",
+    "f645e010-e27c-4eb3-a380-53cdab5722bc",
+    "676b2ec4-b760-4794-9c1d-c009c14d01f7",
+    "77d071a5-48b0-4831-8ae4-ae5851abc464",
+    "986ab1c2-0e39-44c4-bb4f-88fcbff6752d",
+    "b6fde64c-1bb1-4656-b52e-669d7f8dc7eb",
+    "18ce0187-c698-472d-b0b3-50f1de12a2f7",
+    "e3c336ed-60b7-4738-bc9f-23aa1c4973f4",
+    "a9ce63ce-eb2e-4580-9e4e-75efe3e4fba8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Overture TPU-95A Filament",
+    "description": "Compare 22 Overture TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/overture",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Overture"
+        }
+      ]
+    }
+  }
+}

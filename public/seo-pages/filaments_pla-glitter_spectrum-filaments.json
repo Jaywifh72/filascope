@@ -1,0 +1,71 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-glitter/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Glitter Filament — Prices, Specs & Reviews",
+  "description": "Compare 18 Spectrum Filaments PLA Glitter filaments. Prices from $22.00 to $36.00. 9 colors available.",
+  "h1": "Spectrum Filaments PLA Glitter Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Glitter",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Glitter",
+  "vendor": "Spectrum Filaments",
+  "count": 18,
+  "min_price": 22,
+  "max_price": 36,
+  "color_count": 9,
+  "has_td": 0,
+  "filament_ids": [
+    "9e849e40-1dec-4d2e-b7fa-baad698ca907",
+    "2a173bd2-93cf-446d-8b46-e8008c9486d2",
+    "9d480e4f-6f58-4696-8bf2-2c4ed7dbc514",
+    "cb18b2c7-dc77-4945-b2ea-dff747e3b7d8",
+    "67990d37-c86f-494d-8c83-e7636d719d9b",
+    "e44d4049-3520-42d3-a878-e7265e65ff56",
+    "aadb81f1-488a-4ab0-8932-6849baccae1a",
+    "cc6d2adb-64b2-4c31-a5cf-2d6d23211985",
+    "f074d66f-8977-4c9d-83de-e8c8c02280a8",
+    "b0f0dbfd-cdc8-4b63-ae40-1a3df86a641a",
+    "bcb0a95f-1763-4a66-8672-31bf100ae3b5",
+    "53de06f4-b632-4427-a8f4-3ab684286b6d",
+    "246a22b4-a3a2-4b24-a220-ea04ef244014",
+    "b073e7f7-9dba-44aa-a53a-2b8f1ef70eee",
+    "fa632fe8-f596-4190-a17f-843c75016328",
+    "d2801f53-7e6e-43de-ba29-8aac5bcb9f23",
+    "ba03bdb0-5578-4985-a846-8d21b6ee92e8",
+    "39d1c335-9dd5-48c9-b641-da29a88a4401"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Glitter Filament",
+    "description": "Compare 18 Spectrum Filaments PLA Glitter filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-glitter/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Glitter",
+          "item": "https://filascope.com/filaments/pla-glitter"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-stone/colorfabb",
+  "title": "ColorFabb PLA-Stone Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 ColorFabb PLA-Stone filaments. Prices from $43.84 to $43.84. 3 colors available.",
+  "h1": "ColorFabb PLA-Stone Filament",
+  "keywords": [
+    "ColorFabb",
+    "PLA-Stone",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Stone",
+  "vendor": "ColorFabb",
+  "count": 3,
+  "min_price": 43.84,
+  "max_price": 43.84,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "09b0b4fd-bb52-42e1-a4a1-a86e754000fb",
+    "00b2a3ec-faef-49fd-9501-d3d67071b60e",
+    "7acb3f99-0591-4825-8fce-27db25556eab"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "ColorFabb PLA-Stone Filament",
+    "description": "Compare 3 ColorFabb PLA-Stone filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-stone/colorfabb",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Stone",
+          "item": "https://filascope.com/filaments/pla-stone"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ColorFabb"
+        }
+      ]
+    }
+  }
+}

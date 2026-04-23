@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpe-90a/fillamentum",
+  "title": "Fillamentum TPE-90A Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Fillamentum TPE-90A filaments. Prices from $36.99 to $36.99. 5 colors available.",
+  "h1": "Fillamentum TPE-90A Filament",
+  "keywords": [
+    "Fillamentum",
+    "TPE-90A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPE-90A",
+  "vendor": "Fillamentum",
+  "count": 5,
+  "min_price": 36.99,
+  "max_price": 36.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "07ac25fa-c9b0-439c-afb4-6879e31b8c1e",
+    "c1bf80bc-aa5c-43b3-9b07-f0dbc09b870b",
+    "10d98b62-d02a-4680-a4ce-8b97c611988f",
+    "ea090786-cbca-4f81-a134-cf9674ac2908",
+    "6b663902-dfc0-4ab2-bc9b-4937370cf9dc"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Fillamentum TPE-90A Filament",
+    "description": "Compare 5 Fillamentum TPE-90A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpe-90a/fillamentum",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPE-90A",
+          "item": "https://filascope.com/filaments/tpe-90a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Fillamentum"
+        }
+      ]
+    }
+  }
+}

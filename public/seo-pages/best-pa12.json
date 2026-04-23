@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pa12",
+  "title": "Best PA12 Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PA12 filaments in 2026. 18 options from 4 brands, starting at $31.99. Expert picks, prices & specs.",
+  "h1": "Best PA12 Filament (2026)",
+  "keywords": [
+    "best PA12",
+    "PA12 filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PA12",
+  "count": 18,
+  "brands": 4,
+  "min_price": 31.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PA12 Filament 2026",
+    "description": "Expert comparison of 18 PA12 filaments",
+    "url": "https://filascope.com/best-pa12"
+  }
+}

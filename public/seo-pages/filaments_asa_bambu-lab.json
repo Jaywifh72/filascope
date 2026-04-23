@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/bambu-lab",
+  "title": "Bambu Lab ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 Bambu Lab ASA filaments. Prices from $29.99 to $49.99. 6 colors available. 8 with HueForge TD values.",
+  "h1": "Bambu Lab ASA Filament",
+  "keywords": [
+    "Bambu Lab",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Bambu Lab",
+  "count": 8,
+  "min_price": 29.99,
+  "max_price": 49.99,
+  "color_count": 6,
+  "has_td": 8,
+  "filament_ids": [
+    "03a6bcac-87d5-49fd-af6a-c852dfe01f03",
+    "4c918a8e-cba4-4572-b4a5-929872afc6b5",
+    "3dd9b104-c129-4371-86a6-fd1713f466bf",
+    "2b010ccb-027b-49dd-be04-c2b1eec50fb1",
+    "bc98d424-ef10-4247-a198-9b3232f2a4f5",
+    "5eacc215-079d-487a-9984-0479e5d02560",
+    "6518a36f-ce79-4dbc-a04b-42a98439ffb8",
+    "fe9a5b7a-7b3c-484a-a0e8-49c7cbd6316c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab ASA Filament",
+    "description": "Compare 8 Bambu Lab ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

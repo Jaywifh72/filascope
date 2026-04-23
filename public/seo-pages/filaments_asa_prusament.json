@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/prusament",
+  "title": "Prusament ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Prusament ASA filaments. Prices from $26.04 to $34.55. 8 colors available. 9 with HueForge TD values.",
+  "h1": "Prusament ASA Filament",
+  "keywords": [
+    "Prusament",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Prusament",
+  "count": 9,
+  "min_price": 26.04,
+  "max_price": 34.55,
+  "color_count": 8,
+  "has_td": 9,
+  "filament_ids": [
+    "7991fd06-52b8-4b91-a930-8d8cc1a6588c",
+    "9a14f958-720f-41c2-9ec4-c7fed0ac74fb",
+    "972593a2-e1bc-4d7a-94a4-8fef082a1822",
+    "dfa5dc5d-4c7c-48e5-b91c-bce08ae52495",
+    "dc54b7a8-525e-44b0-b13c-2f12ae8f7889",
+    "07926b6a-1fdb-490b-8791-bbf767273efe",
+    "c13eb135-7d36-42dd-afe4-65eac9a6cf15",
+    "6191de74-3370-4288-87fb-6fcce71d43b8",
+    "401cf4fc-e819-47a6-a2ec-1105d0a02b64"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Prusament ASA Filament",
+    "description": "Compare 9 Prusament ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/prusament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Prusament"
+        }
+      ]
+    }
+  }
+}

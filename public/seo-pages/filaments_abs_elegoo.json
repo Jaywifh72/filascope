@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/elegoo",
+  "title": "Elegoo ABS+ Filament — Prices, Specs & Reviews",
+  "description": "Compare 28 Elegoo ABS+ filaments. Prices from $18.99 to $149.99. 10 colors available. 28 with HueForge TD values.",
+  "h1": "Elegoo ABS+ Filament",
+  "keywords": [
+    "Elegoo",
+    "ABS+",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS+",
+  "vendor": "Elegoo",
+  "count": 28,
+  "min_price": 18.99,
+  "max_price": 149.99,
+  "color_count": 10,
+  "has_td": 28,
+  "filament_ids": [
+    "2c6b47e3-c538-4e38-8bf1-60e14b5ee5e9",
+    "d45f66e1-2923-4bd2-abdb-0daf7e7d28d9",
+    "289ff2dc-71c8-4fe9-9a7b-241795cdf0eb",
+    "0522c114-04a4-4631-8e68-38b498141af0",
+    "08941414-602a-41a5-aa46-b5e9e6c34625",
+    "9334a81d-2218-41b7-bfe4-476f59782bac",
+    "a99d7588-a915-4bd2-be8c-75cb4b1b7834",
+    "697c31e2-c230-478f-9b61-eacb43d3cd9b",
+    "1b306fa4-f46d-479e-84f0-e6219039cd06",
+    "54db83ca-db5a-4120-ace0-eb2a5bc5ac50",
+    "bea7b4df-bb40-4d51-a1c1-e8902265c3cb",
+    "3e1f84f9-f1a1-407b-9fa1-5e07617c1fef",
+    "334d5225-5a05-4da6-a0b7-a7b5f3116dc5",
+    "c77f6bc2-2351-4d2b-89f1-09d24ea7f10a",
+    "fdf8aeda-fe98-43e6-a410-8a476ffef43b",
+    "bd780518-43d2-40ff-8343-0991ba096959",
+    "f992d1b5-7a0e-4e04-9de2-d71eda3ea9be",
+    "d0304142-a494-4bc1-a7b7-feb0467ec04c",
+    "75dcc09c-4fbc-4a74-8dfb-3d955009a37a",
+    "6ed46e44-d686-4711-b02f-49f7b609b087"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo ABS+ Filament",
+    "description": "Compare 28 Elegoo ABS+ filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS+",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

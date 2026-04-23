@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/push-plastic",
+  "title": "Push Plastic ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 34 Push Plastic ASA filaments. Prices from $7.50 to $109.99. 11 colors available. 34 with HueForge TD values.",
+  "h1": "Push Plastic ASA Filament",
+  "keywords": [
+    "Push Plastic",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Push Plastic",
+  "count": 34,
+  "min_price": 7.5,
+  "max_price": 109.99,
+  "color_count": 11,
+  "has_td": 34,
+  "filament_ids": [
+    "e319936b-7f01-4432-a988-1f0edda975d8",
+    "b5897a52-eba0-4014-a35c-9407a4db6407",
+    "7f6664e5-25a9-4882-88af-8301a655f2bf",
+    "5133946a-01ff-4432-9ba4-7b1f682e345a",
+    "c2a4bb45-ebd4-4031-b1a1-56534921d219",
+    "4322e099-5864-4644-8153-7cba387f7ec4",
+    "6ddb18f1-8bdd-4997-8c75-46e226ab7ccd",
+    "36cbdd0c-ad1f-4ee1-814c-6eb8d1f5d6f8",
+    "78da4224-143d-4f07-89c2-067f283b8aab",
+    "6e2b9e86-fd03-45a6-b508-89bf86f5e74d",
+    "b275a6df-58a9-4891-8f42-e52ebb6e4df8",
+    "7845e0c2-95f9-467d-8e77-d7c9c326c91c",
+    "fad23eeb-1abe-4e4c-99cf-5f27832de161",
+    "004af475-fb6f-4779-90fa-9b82fb558d6a",
+    "2b024332-c806-411a-9d1e-cf5266469b68",
+    "48f13ce4-5b5a-4701-98b5-c5feff8bf1de",
+    "548990f4-6475-40a8-8a8d-40c48facf363",
+    "9f58b455-4cd1-4d3e-b306-065c955b7c76",
+    "c10f5298-18c4-463b-b014-63773b377139",
+    "90268552-e7a8-4f41-99a5-1dc2709a8150"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic ASA Filament",
+    "description": "Compare 34 Push Plastic ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

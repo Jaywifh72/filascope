@@ -1,0 +1,68 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-82a/recreus",
+  "title": "Recreus TPU-82A Filament — Prices, Specs & Reviews",
+  "description": "Compare 15 Recreus TPU-82A filaments. Prices from $45.00 to $45.00. 14 colors available.",
+  "h1": "Recreus TPU-82A Filament",
+  "keywords": [
+    "Recreus",
+    "TPU-82A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-82A",
+  "vendor": "Recreus",
+  "count": 15,
+  "min_price": 45,
+  "max_price": 45,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "bbd3c0c5-b7b6-4c54-8394-f3896845d054",
+    "277ccbf6-8b91-4a52-9f9e-08ec2a212553",
+    "8596ce3f-bb5f-4d70-972e-e1c2c8e577cb",
+    "4a00f4f8-3e3b-40ea-8d7d-65d558b36ee9",
+    "d6ac9422-784c-4ba3-9820-16231cfe5614",
+    "a7373147-47dc-4acd-9a42-29006f09a55b",
+    "4ccab14f-bc1b-41aa-960a-22f1d183be67",
+    "3af960af-7fec-4b4d-8398-ba5b90d1ad72",
+    "ba77fbd2-92b0-4b06-87bc-c5e0fa2a2c18",
+    "f07fe6e9-40ae-4e60-965a-fca14bb759ce",
+    "14eeb72f-a7ee-4397-b9b6-4ab62e295858",
+    "c9b2ccf4-7670-491c-a860-2a8b477ed9be",
+    "2fbcb079-94c9-4195-870d-c050262eb2e4",
+    "468f05ac-2443-4c22-83ce-0f50f7f4ddb9",
+    "54500e2b-1210-4b9a-9579-4a29fa49224a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Recreus TPU-82A Filament",
+    "description": "Compare 15 Recreus TPU-82A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-82a/recreus",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-82A",
+          "item": "https://filascope.com/filaments/tpu-82a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recreus"
+        }
+      ]
+    }
+  }
+}

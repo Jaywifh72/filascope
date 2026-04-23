@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-flexpla",
+  "title": "Best FlexPLA Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best FlexPLA filaments in 2026. 8 options from 1 brands, starting at $29.99. Expert picks, prices & specs.",
+  "h1": "Best FlexPLA Filament (2026)",
+  "keywords": [
+    "best FlexPLA",
+    "FlexPLA filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "FlexPLA",
+  "count": 8,
+  "brands": 1,
+  "min_price": 29.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best FlexPLA Filament 2026",
+    "description": "Expert comparison of 8 FlexPLA filaments",
+    "url": "https://filascope.com/best-flexpla"
+  }
+}

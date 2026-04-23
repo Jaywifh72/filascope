@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/sunlu",
+  "title": "Sunlu PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 87 Sunlu PETG filaments. Prices from $10.49 to $18.99. 15 colors available.",
+  "h1": "Sunlu PETG Filament",
+  "keywords": [
+    "Sunlu",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Sunlu",
+  "count": 87,
+  "min_price": 10.49,
+  "max_price": 18.99,
+  "color_count": 15,
+  "has_td": 0,
+  "filament_ids": [
+    "49c0d8d8-fc8f-4e87-a143-d89e2fb0d911",
+    "b0dad3ed-81e0-4885-a9ce-734fbb2f1b9d",
+    "00ed379f-dfce-41d3-bb20-a05243aa23cb",
+    "ba1646f6-4932-4fb8-af32-749828859178",
+    "8f4b2cd8-4ecd-4987-94eb-afa74e70b2f4",
+    "970db6d7-c6ac-42ac-87fc-1e27f36af03d",
+    "b9983886-9bac-40d1-861f-54859aa97ac7",
+    "828389e1-b51b-4d3f-bf95-c05a7862e6ea",
+    "da582a16-89d9-4af0-997a-4e15ca3074d7",
+    "069e3336-bf31-4a85-9b82-e26dafcb42b4",
+    "24f6c25b-6427-4041-b3a6-0d6440c4d9da",
+    "9833ea03-be8a-4ed8-ade0-22469772fb8c",
+    "2c900cef-50ed-4910-bb48-bbd901724150",
+    "50b158a1-dd74-4f51-8b44-eb1c8fff2d35",
+    "bf5c0f7c-1a42-4699-949f-f84b39ddff9a",
+    "2a4691c8-14f4-4ca0-99c4-bc1eee4e7a79",
+    "b1b6bb09-3f39-4ab6-b4a9-5d2756b5e403",
+    "1a1d84d4-203b-4054-9548-2cc52cf358de",
+    "1b630e5b-dbef-4953-91b9-25ba730f9d2b",
+    "c6a275fb-4f64-4bb2-bd67-4eebb281eb00"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sunlu PETG Filament",
+    "description": "Compare 87 Sunlu PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/sunlu",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sunlu"
+        }
+      ]
+    }
+  }
+}

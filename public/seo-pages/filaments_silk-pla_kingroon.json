@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/silk-pla/kingroon",
+  "title": "Kingroon Silk PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 20 Kingroon Silk PLA filaments. Prices from $39.00 to $139.99. 3 colors available.",
+  "h1": "Kingroon Silk PLA Filament",
+  "keywords": [
+    "Kingroon",
+    "Silk PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Silk PLA",
+  "vendor": "Kingroon",
+  "count": 20,
+  "min_price": 39,
+  "max_price": 139.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "ae5336c6-4b5c-406f-9399-a89f8553fe03",
+    "ef8cc892-495d-44cd-b754-faa9af0c70b1",
+    "09fe0138-d2d1-488b-b10e-e43ad4b5c6a2",
+    "5bd85a29-3192-4759-8789-d784b1c15219",
+    "53013348-0467-4366-8bbe-6ddc352d217b",
+    "6b6c768f-987e-4a72-8750-cae8bda2ac69",
+    "237bf83a-616e-4948-9640-35c47e69450c",
+    "c32e6bb4-4578-4676-b1b1-2f9346994854",
+    "946ae874-7bce-4be9-906c-231e516253ae",
+    "bfb38561-c627-4386-be60-fcf261592995",
+    "33115fae-f1b6-4f86-b7a5-f4cd06bd0031",
+    "ccbc4972-3d86-483d-b0c3-21194fdc4abe",
+    "58dd20b0-369c-4b1f-a1f7-2cdf5a5a54c7",
+    "8f0d3fdd-99c8-4f40-8e21-04a5e7b59456",
+    "4fffa6fc-b231-4159-a1f0-6fd1c91f82a1",
+    "921689d9-587b-4ba8-a58f-d8e981749abf",
+    "40d13c7a-b24a-43f0-97e2-c6fb5c138832",
+    "c95d05a5-dbe4-4f36-9a70-8e1812afe371",
+    "74e99613-15cf-4a74-89aa-78575a0e41b7",
+    "a8c11025-0123-4a18-9d4d-55c6121e6e8c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Kingroon Silk PLA Filament",
+    "description": "Compare 20 Kingroon Silk PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/silk-pla/kingroon",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Silk PLA",
+          "item": "https://filascope.com/filaments/silk-pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kingroon"
+        }
+      ]
+    }
+  }
+}

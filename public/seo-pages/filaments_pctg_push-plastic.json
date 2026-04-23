@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pctg/push-plastic",
+  "title": "Push Plastic PCTG Filament — Prices, Specs & Reviews",
+  "description": "Compare 213 Push Plastic PCTG filaments. Prices from $9.00 to $699.99. 24 colors available. 213 with HueForge TD values.",
+  "h1": "Push Plastic PCTG Filament",
+  "keywords": [
+    "Push Plastic",
+    "PCTG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PCTG",
+  "vendor": "Push Plastic",
+  "count": 213,
+  "min_price": 9,
+  "max_price": 699.99,
+  "color_count": 24,
+  "has_td": 213,
+  "filament_ids": [
+    "c5252dc0-849d-49fa-8766-022d368c3e88",
+    "a8b07641-1e29-411f-91fd-bacf4f1defcf",
+    "49d1a322-8cf5-48ea-a77d-de26642dbc1f",
+    "0fcb9f6b-2c2e-4338-bad9-341be02f695b",
+    "ffb883c9-0d3f-4623-9e99-0eaf507bbc9b",
+    "68c09420-c8b2-4131-8317-bf61d2fcf972",
+    "78c93d75-2a7f-4a9a-9ca9-d3929d71e45d",
+    "28427ee7-bb00-4a8c-974a-a65c8023ea32",
+    "c40c57bd-be50-4a23-9463-e0dd49c017b1",
+    "50d6caba-ea3f-4d30-b9c3-0e233f7c9cc9",
+    "a708ef4c-0250-44f8-83f6-5f872a8b1cfb",
+    "9da9b7d8-06ad-4d2f-b06d-0b07aa69dd81",
+    "c36045f4-ee01-4d64-95e2-be51ffacc7f9",
+    "438280fe-a824-400c-a3b9-baefc22067d8",
+    "a5098d88-ca11-47f5-8aa3-1b9c1bfc8570",
+    "9ca65abf-3ef5-4895-9b64-6f93ac57abcd",
+    "710dccff-772a-4155-9ffc-e3862d285532",
+    "b7a25c85-94e3-46c3-bd29-351006b19f2c",
+    "52bddecc-cac3-4728-972c-75f1e79c29a7",
+    "f28e3e6d-07f0-49fd-aa39-5bbcd5b84e9b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic PCTG Filament",
+    "description": "Compare 213 Push Plastic PCTG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pctg/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PCTG",
+          "item": "https://filascope.com/filaments/pctg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

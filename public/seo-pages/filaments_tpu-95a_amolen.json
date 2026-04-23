@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/amolen",
+  "title": "Amolen TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 29 Amolen TPU-95A filaments. Prices from $28.00 to $46.00. 27 colors available. 29 with HueForge TD values.",
+  "h1": "Amolen TPU-95A Filament",
+  "keywords": [
+    "Amolen",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "Amolen",
+  "count": 29,
+  "min_price": 28,
+  "max_price": 46,
+  "color_count": 27,
+  "has_td": 29,
+  "filament_ids": [
+    "0b072de3-4c22-4775-b507-52efa121ecbb",
+    "6e48137e-12fe-4e44-bb0c-cdf389b1a582",
+    "44a69aff-168b-41bc-bbde-b4773000a8c6",
+    "45ba1a29-49b6-4241-9576-c34b90fb2f1d",
+    "c858ecae-fea0-4cbf-a680-c20bd0a15139",
+    "3dc44a46-22b7-4d45-a077-b38bb5026df5",
+    "71608225-e196-473b-bcc9-4e2341ad2f90",
+    "b8a5803b-c4b6-4620-b4aa-62dfa6044267",
+    "90026633-b094-47fd-ade3-88130cffc737",
+    "9cea39c9-7bdf-429e-87b4-6cb6ffd158ff",
+    "7f1d1418-842a-4ee0-8ff6-d91e4d99889d",
+    "c1a302bf-a1cd-4e78-9f7f-2061d8c3d336",
+    "bf7c3d85-4356-48b6-9fa5-c66789b402be",
+    "e184732a-f9c8-4c5c-90a6-cb40a698e2f5",
+    "a9300ed6-c7a2-4a0b-9938-7056a0b951dd",
+    "82c06dfa-e5ff-4ce4-abaf-cd80f2e7f2fa",
+    "5f5a3a8b-6dc4-43e4-84dd-d8d0142d1f40",
+    "311a1aa4-7ea3-46e2-ac54-6bf6fc00fdff",
+    "b25130c3-9f8e-4093-bde0-d5cffac4077d",
+    "540e5e51-11af-44e4-a256-6a6eed55c301"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Amolen TPU-95A Filament",
+    "description": "Compare 29 Amolen TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/amolen",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Amolen"
+        }
+      ]
+    }
+  }
+}

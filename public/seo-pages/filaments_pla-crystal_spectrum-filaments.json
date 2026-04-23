@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-crystal/spectrum-filaments",
+  "title": "Spectrum Filaments PLA Crystal Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Spectrum Filaments PLA Crystal filaments. Prices from $29.00 to $29.00. 6 colors available.",
+  "h1": "Spectrum Filaments PLA Crystal Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PLA Crystal",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA Crystal",
+  "vendor": "Spectrum Filaments",
+  "count": 6,
+  "min_price": 29,
+  "max_price": 29,
+  "color_count": 6,
+  "has_td": 0,
+  "filament_ids": [
+    "05c4aaac-a034-46d9-9967-7d13a06522d8",
+    "66520245-19c7-4b36-80f7-08d63f3b1ce3",
+    "ca53a006-1e86-4812-a0b7-a68dd70f3cd6",
+    "d6df34d2-eaa9-477f-b79b-0a09a3089416",
+    "3590b9ff-8233-46d7-9a11-a8430a6c2a65",
+    "a287141a-58ff-4e52-a415-5a89a66c70ca"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PLA Crystal Filament",
+    "description": "Compare 6 Spectrum Filaments PLA Crystal filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-crystal/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA Crystal",
+          "item": "https://filascope.com/filaments/pla-crystal"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/sovol",
+  "title": "Sovol PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Sovol PLA filaments. Prices from $36.99 to $36.99. 3 colors available. 3 with HueForge TD values.",
+  "h1": "Sovol PLA Filament",
+  "keywords": [
+    "Sovol",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "Sovol",
+  "count": 3,
+  "min_price": 36.99,
+  "max_price": 36.99,
+  "color_count": 3,
+  "has_td": 3,
+  "filament_ids": [
+    "d0f9cb65-0110-4721-903b-2978bdb4d24d",
+    "62a7fdca-32d7-4c1e-a188-aad7dc485c48",
+    "8160b8c2-e9f7-450e-ae38-7a70396a3252"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Sovol PLA Filament",
+    "description": "Compare 3 Sovol PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/sovol",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sovol"
+        }
+      ]
+    }
+  }
+}

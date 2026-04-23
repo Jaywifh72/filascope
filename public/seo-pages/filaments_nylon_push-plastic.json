@@ -1,0 +1,63 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/nylon/push-plastic",
+  "title": "Push Plastic NYLON Filament — Prices, Specs & Reviews",
+  "description": "Compare 10 Push Plastic NYLON filaments. Prices from $9.00 to $999.99. 5 colors available. 10 with HueForge TD values.",
+  "h1": "Push Plastic NYLON Filament",
+  "keywords": [
+    "Push Plastic",
+    "NYLON",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "NYLON",
+  "vendor": "Push Plastic",
+  "count": 10,
+  "min_price": 9,
+  "max_price": 999.99,
+  "color_count": 5,
+  "has_td": 10,
+  "filament_ids": [
+    "9d0c39dd-2811-4920-b6c1-c9b40eb818f9",
+    "0eed1593-52a0-4708-b4d9-44fdec32db47",
+    "f84ef5fe-52e4-4808-9f55-e4b0f8fc3fe4",
+    "9c3df8c7-e724-4568-8721-ad7aae197cd5",
+    "95172e91-8f3c-4ab6-a584-98138cacebe2",
+    "194180cd-3f02-4dc9-b9e9-532db0a16ad4",
+    "2abe7bc5-0866-4cd7-b9fc-0f58a077a461",
+    "8543ceb8-4f2d-44c7-a266-299bba61c9fd",
+    "09013fe1-3062-4030-b470-c01890681c87",
+    "1168f42c-72f2-4c33-b507-43999be5acd9"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic NYLON Filament",
+    "description": "Compare 10 Push Plastic NYLON filaments on FilaScope",
+    "url": "https://filascope.com/filaments/nylon/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "NYLON",
+          "item": "https://filascope.com/filaments/nylon"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/elegoo",
+  "title": "Elegoo TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Elegoo TPU-95A filaments. Prices from $20.73 to $20.73. 3 colors available. 3 with HueForge TD values.",
+  "h1": "Elegoo TPU-95A Filament",
+  "keywords": [
+    "Elegoo",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "Elegoo",
+  "count": 3,
+  "min_price": 20.73,
+  "max_price": 20.73,
+  "color_count": 3,
+  "has_td": 3,
+  "filament_ids": [
+    "1199ff63-a720-4226-8082-6231c547b475",
+    "0156a9b9-8a87-46f7-bb16-515ec0b54ff8",
+    "15c41616-4957-4a1e-b88a-494870d7f4a5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo TPU-95A Filament",
+    "description": "Compare 3 Elegoo TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

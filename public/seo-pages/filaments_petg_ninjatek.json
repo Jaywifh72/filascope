@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/ninjatek",
+  "title": "NinjaTek PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 NinjaTek PETG filaments. Prices from $24.99 to $24.99. 14 colors available.",
+  "h1": "NinjaTek PETG Filament",
+  "keywords": [
+    "NinjaTek",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "NinjaTek",
+  "count": 14,
+  "min_price": 24.99,
+  "max_price": 24.99,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "507d0e0e-0792-4141-990c-f44621360331",
+    "ac80edca-9e20-41df-b5a9-01fb5e6a9386",
+    "77cfd22b-f9c3-473e-85b4-28a81a9bc85c",
+    "729df51a-75c2-4f1f-8de7-970c7ec3a18f",
+    "fcd8a2b6-40dc-4525-a690-999ee1ad0b25",
+    "afcd095d-6d9b-4fbe-81d8-4270c5815661",
+    "120d5695-2a95-4266-9cad-8d10625cddc8",
+    "75aa394b-bf44-495e-9285-80b0e007120b",
+    "f1ff5965-b4ee-4bfa-b1d2-f143556293cb",
+    "ca3c2942-b6fb-4da6-9fbb-0e237bbbe2a1",
+    "e4b17338-0d77-4434-98a3-93dd29c6e006",
+    "28033e67-e655-4bdd-9980-c8a2de1b16c8",
+    "53d86982-a840-4834-9e3f-c9521b2bf8eb",
+    "d43222a9-4f84-4231-97de-eda1705f26ed"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "NinjaTek PETG Filament",
+    "description": "Compare 14 NinjaTek PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/ninjatek",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "NinjaTek"
+        }
+      ]
+    }
+  }
+}

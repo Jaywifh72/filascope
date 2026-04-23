@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/extrudr",
+  "title": "Extrudr ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 Extrudr ASA filaments. Prices from $32.90 to $32.90. 14 colors available.",
+  "h1": "Extrudr ASA Filament",
+  "keywords": [
+    "Extrudr",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Extrudr",
+  "count": 14,
+  "min_price": 32.9,
+  "max_price": 32.9,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "c004f882-c4d8-4396-bcfe-e405cd311740",
+    "f799ef8b-2639-410b-aec0-9a42fe03c76c",
+    "58b5f880-d1c3-4cb4-b8f1-1d29c26496fe",
+    "bc893706-44b0-4f25-aef8-0145a4936ea5",
+    "afd1d131-e3c4-4a6a-842c-2229c2936c86",
+    "01a89394-5648-479d-a410-647355d2c7dd",
+    "5ea74fe4-e025-4f58-b542-e3db89f98dc4",
+    "d804f970-2a21-44df-b9aa-6d19e786c613",
+    "4ec5c816-be12-43bf-a36c-2320ee5b8fe1",
+    "3e304a83-52b4-4d69-a76c-63b9369826c3",
+    "8fca8060-1d77-4ec1-93c9-dea679ab61e2",
+    "cd31e833-e340-40dc-82e1-dc0b54afa60e",
+    "67d48286-3f93-4473-b9a9-78fcb53592d9",
+    "00ee324c-32d4-49bb-b9ea-06b3ac253ae4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Extrudr ASA Filament",
+    "description": "Compare 14 Extrudr ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/extrudr",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Extrudr"
+        }
+      ]
+    }
+  }
+}

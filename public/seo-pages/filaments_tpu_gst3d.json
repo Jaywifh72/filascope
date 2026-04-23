@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/gst3d",
+  "title": "GST3D TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 GST3D TPU filaments. Prices from $19.98 to $19.98. 6 colors available. 6 with HueForge TD values.",
+  "h1": "GST3D TPU Filament",
+  "keywords": [
+    "GST3D",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "GST3D",
+  "count": 6,
+  "min_price": 19.98,
+  "max_price": 19.98,
+  "color_count": 6,
+  "has_td": 6,
+  "filament_ids": [
+    "ddb6ce11-85f0-4b90-bac2-749f7f252f91",
+    "d2d24350-6639-4e35-ac0b-78a486bfa955",
+    "7df95278-ef90-4a7a-928c-496b72f7f083",
+    "c2091083-6d56-4264-beae-57b9b99a105a",
+    "ff28827d-b535-44ad-b0d5-a221f492590a",
+    "12b41916-6202-4103-8977-f9a23e74b6bd"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "GST3D TPU Filament",
+    "description": "Compare 6 GST3D TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/gst3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GST3D"
+        }
+      ]
+    }
+  }
+}

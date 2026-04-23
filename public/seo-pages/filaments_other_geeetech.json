@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/other/geeetech",
+  "title": "GEEETECH Other Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 GEEETECH Other filaments. Prices from $11.49 to $11.49. 3 colors available.",
+  "h1": "GEEETECH Other Filament",
+  "keywords": [
+    "GEEETECH",
+    "Other",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Other",
+  "vendor": "GEEETECH",
+  "count": 3,
+  "min_price": 11.49,
+  "max_price": 11.49,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "9ec5cb50-af4f-4922-9a22-21e34781735d",
+    "d9714205-b9dc-457a-a4aa-a2d7feb06036",
+    "e6567d85-da94-4b0c-8e25-5d698df2696f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "GEEETECH Other Filament",
+    "description": "Compare 3 GEEETECH Other filaments on FilaScope",
+    "url": "https://filascope.com/filaments/other/geeetech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Other",
+          "item": "https://filascope.com/filaments/other"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GEEETECH"
+        }
+      ]
+    }
+  }
+}

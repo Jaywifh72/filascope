@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-foam/siraya-tech",
+  "title": "Siraya Tech TPU-FOAM Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Siraya Tech TPU-FOAM filaments. Prices from $43.99 to $43.99. 3 colors available.",
+  "h1": "Siraya Tech TPU-FOAM Filament",
+  "keywords": [
+    "Siraya Tech",
+    "TPU-FOAM",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-FOAM",
+  "vendor": "Siraya Tech",
+  "count": 3,
+  "min_price": 43.99,
+  "max_price": 43.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "e31ca790-d680-40f3-9887-5798b4ad412d",
+    "07981ebc-91eb-41c4-8743-3bbd2f05943e",
+    "b1b38201-8eea-4e77-9cf0-f52d2d94b889"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Siraya Tech TPU-FOAM Filament",
+    "description": "Compare 3 Siraya Tech TPU-FOAM filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-foam/siraya-tech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-FOAM",
+          "item": "https://filascope.com/filaments/tpu-foam"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Siraya Tech"
+        }
+      ]
+    }
+  }
+}

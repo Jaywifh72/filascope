@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa/ultimaker",
+  "title": "Ultimaker PA Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Ultimaker PA filaments. Prices from $69.95 to $69.95. 3 colors available.",
+  "h1": "Ultimaker PA Filament",
+  "keywords": [
+    "Ultimaker",
+    "PA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA",
+  "vendor": "Ultimaker",
+  "count": 4,
+  "min_price": 69.95,
+  "max_price": 69.95,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "7af8ed7b-990e-48a0-92a3-a20a7e14b931",
+    "76099ffa-6d2e-4d7b-aeae-5f7febb43134",
+    "a9f54162-5c4d-4504-bd56-51ed7af97dd3",
+    "ac5a2eb2-1dd3-4702-b248-572a9f3a14a0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Ultimaker PA Filament",
+    "description": "Compare 4 Ultimaker PA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa/ultimaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA",
+          "item": "https://filascope.com/filaments/pa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Ultimaker"
+        }
+      ]
+    }
+  }
+}
