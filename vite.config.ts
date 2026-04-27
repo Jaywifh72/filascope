@@ -136,7 +136,20 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Let Vite/Rollup handle code splitting automatically
-    // to avoid circular chunk dependencies
+    rollupOptions: {
+      output: {
+        // Reduce chunk count (135 JS files on filament detail = too many HTTP requests)
+        manualChunks(id) {
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router')) return 'vendor-react';
+          if (id.includes('node_modules/@radix-ui/')) return 'vendor-radix';
+          if (id.includes('node_modules/@tanstack/')) return 'vendor-query';
+          if (id.includes('node_modules/lucide-react')) return 'vendor-icons';
+          if (id.includes('node_modules/recharts')) return 'vendor-charts';
+          if (id.includes('node_modules/@supabase/')) return 'vendor-supabase';
+          if (id.includes('node_modules/date-fns/')) return 'vendor-dates';
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   },
 }));
