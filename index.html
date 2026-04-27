@@ -1,13 +1,30 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q96R53VCKM"></script>
+    <!-- Google Tag Manager: deferred to avoid blocking first paint -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-Q96R53VCKM');
+      // Defer GTM loading until page is interactive (saves ~155KB + exec during parse)
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(function() {
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-Q96R53VCKM';
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-Q96R53VCKM');
+        });
+      } else {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-Q96R53VCKM';
+        document.head.appendChild(s);
+        gtag('js', new Date());
+        gtag('config', 'G-Q96R53VCKM');
+      }
     </script>
     <meta name="impact-site-verification" value="43b87347-ca63-497e-9ba2-7285a6ec3a82" />
     <meta charset="UTF-8" />
