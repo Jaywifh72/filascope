@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pc/ultimaker",
   "title": "Ultimaker PC Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Ultimaker PC filaments. Prices from $69.95 to $69.95. 3 colors available. 3 with HueForge TD values.",
+  "description": "Compare 3 Ultimaker PC filaments. Prices from $69.95 to $69.95. 3 colors available.",
   "h1": "Ultimaker PC Filament",
   "keywords": [
     "Ultimaker",
@@ -18,11 +18,11 @@
   "min_price": 69.95,
   "max_price": 69.95,
   "color_count": 3,
-  "has_td": 3,
+  "has_td": 0,
   "filament_ids": [
-    "29865606-52ac-46d9-bab6-3082295d8092",
-    "034c71b8-4f8e-46a2-b232-22e857ec23b0",
-    "d9b9045c-a3a8-4ba8-b295-cdc649f77f93"
+    "5b8390f4-fcf5-4d7c-bf18-1bf6e27acd28",
+    "097ef4f6-8595-4501-b304-adcc1b1014e2",
+    "b6bc5998-42ec-4724-bf3c-329c809cbf53"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-support",
   "title": "Best Support Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best Support filaments in 2026. 5 options from 3 brands, starting at $22.99. Expert picks, prices & specs.",
+  "description": "Compare the best Support filaments in 2026. 7 options from 3 brands, starting at $22.99. Expert picks, prices & specs.",
   "h1": "Best Support Filament (2026)",
   "keywords": [
     "best Support",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "Support",
-  "count": 5,
+  "count": 7,
   "brands": 3,
   "min_price": 22.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best Support Filament 2026",
-    "description": "Expert comparison of 5 Support filaments",
+    "description": "Expert comparison of 7 Support filaments",
     "url": "https://filascope.com/best-support"
   }
 }

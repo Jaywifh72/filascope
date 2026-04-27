@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/abs/flashforge",
   "title": "FlashForge ABS+ Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 FlashForge ABS+ filaments. Prices from $22.99 to $25.99. 1 colors available. 3 with HueForge TD values.",
+  "description": "Compare 3 FlashForge ABS+ filaments. Prices from $22.99 to $23.03. 1 colors available. 3 with HueForge TD values.",
   "h1": "FlashForge ABS+ Filament",
   "keywords": [
     "FlashForge",
@@ -16,12 +16,12 @@
   "vendor": "FlashForge",
   "count": 3,
   "min_price": 22.99,
-  "max_price": 25.99,
+  "max_price": 23.03,
   "color_count": 1,
   "has_td": 3,
   "filament_ids": [
-    "4a7d78bb-a914-44b2-9d93-2f1efe5ae308",
     "9d2dc6af-51a6-4474-825e-e7c14db2e8cc",
+    "4a7d78bb-a914-44b2-9d93-2f1efe5ae308",
     "16327465-5197-41bc-9f23-4b101c553711"
   ],
   "jsonLd": {

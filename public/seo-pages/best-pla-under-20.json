@@ -1,8 +1,8 @@
 {
   "type": "price-target",
   "url": "/best-pla-under-20",
-  "title": "Best PLA Filament Under $20 — 1471 Options Compared",
-  "description": "1471 PLA filaments under $20 from 34 brands. Find the best value PLA for your 3D printer.",
+  "title": "Best PLA Filament Under $20 — 2229 Options Compared",
+  "description": "2229 PLA filaments under $20 from 42 brands. Find the best value PLA for your 3D printer.",
   "h1": "Best PLA Filament Under $20",
   "keywords": [
     "best PLA under $20",
@@ -12,8 +12,8 @@
   ],
   "material": "PLA",
   "max_price": 20,
-  "count": 1471,
-  "brands": 34,
+  "count": 2229,
+  "brands": 42,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",

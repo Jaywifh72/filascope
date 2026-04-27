@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/qidi",
+  "title": "QIDI TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 QIDI TPU filaments. Prices from $39.99 to $42.99. 2 colors available. 2 with HueForge TD values.",
+  "h1": "QIDI TPU Filament",
+  "keywords": [
+    "QIDI",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "QIDI",
+  "count": 4,
+  "min_price": 39.99,
+  "max_price": 42.99,
+  "color_count": 2,
+  "has_td": 2,
+  "filament_ids": [
+    "c3b9f79f-8f14-4627-9a1e-df2f347b6dbd",
+    "af9c11c0-1f44-446e-8ef4-63860a6ced0b",
+    "e8541e72-5aca-49b8-b616-f60c65760525",
+    "00c7edf3-d9a8-4993-a7b0-e765c6e7fe90"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "QIDI TPU Filament",
+    "description": "Compare 4 QIDI TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/qidi",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "QIDI"
+        }
+      ]
+    }
+  }
+}

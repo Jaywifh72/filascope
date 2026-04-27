@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/petg/ultimaker",
   "title": "Ultimaker PETG Filament — Prices, Specs & Reviews",
-  "description": "Compare 4 Ultimaker PETG filaments. Prices from $44.99 to $44.99. 3 colors available. 4 with HueForge TD values.",
+  "description": "Compare 4 Ultimaker PETG filaments. Prices from $44.99 to $44.99. 3 colors available.",
   "h1": "Ultimaker PETG Filament",
   "keywords": [
     "Ultimaker",
@@ -18,12 +18,12 @@
   "min_price": 44.99,
   "max_price": 44.99,
   "color_count": 3,
-  "has_td": 4,
+  "has_td": 0,
   "filament_ids": [
-    "e4fd6c76-e139-41e6-b24c-7a257647c6be",
-    "94dd2ddb-0b63-4ddb-93a7-bbb4534364fa",
-    "70c31586-86ea-4b74-82a7-3bcd50821594",
-    "b1c551ac-1f5c-4375-9e61-855d1cd0ab70"
+    "3ea5fb0a-e702-421e-a061-2f5a59c8b2aa",
+    "fa482b4c-c8c1-42a3-a4bd-c01229989c36",
+    "bd65fc89-e173-4111-8a40-2eb30ea67932",
+    "81a25f0f-3bf2-46ed-896d-5ed750085d11"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pei/printed-solid",
   "title": "Printed Solid PEI Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Printed Solid PEI filaments. Prices from $79.99 to $110.00. 1 colors available. 2 with HueForge TD values.",
+  "description": "Compare 3 Printed Solid PEI filaments. Prices from $79.99 to $110.00. 2 colors available. 3 with HueForge TD values.",
   "h1": "Printed Solid PEI Filament",
   "keywords": [
     "Printed Solid",
@@ -17,8 +17,8 @@
   "count": 3,
   "min_price": 79.99,
   "max_price": 110,
-  "color_count": 1,
-  "has_td": 2,
+  "color_count": 2,
+  "has_td": 3,
   "filament_ids": [
     "5f535573-4d2c-481d-b704-4d90872f2f91",
     "b02fecb0-331f-49c5-87f7-3cc501f1f365",

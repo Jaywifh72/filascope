@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/overture",
+  "title": "Overture ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Overture ABS filaments. Prices from $17.99 to $24.99. 10 colors available.",
+  "h1": "Overture ABS Filament",
+  "keywords": [
+    "Overture",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Overture",
+  "count": 13,
+  "min_price": 17.99,
+  "max_price": 24.99,
+  "color_count": 10,
+  "has_td": 0,
+  "filament_ids": [
+    "684686ed-8d32-4c10-8d5d-7da4d90c41c0",
+    "77f409ff-e0a7-412e-ad8f-f137782841be",
+    "c72badb0-7d15-45be-86db-ad86012821e2",
+    "0e6c71d6-8c2c-474d-a4ab-17771d0c4556",
+    "80d12648-1273-4aaf-b287-19886170d80f",
+    "a8ab424b-5dce-44ec-b28a-42f941745df1",
+    "aa9c2c66-f407-4e98-9421-56cf5ffeab9c",
+    "f736bf99-c468-4ba7-a2c9-06f3e2e9e689",
+    "519438ba-ac90-4271-b4e5-de31eeaf4916",
+    "73de1dc7-2f27-4454-9649-7d149bb1b41e",
+    "c0a5da01-56e2-41f5-b1b5-e9b5e810ed27",
+    "38b816d6-58fd-40d4-8121-9c995a5e6535",
+    "97f4215b-c028-4009-83fd-2f5a3c34a22b"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Overture ABS Filament",
+    "description": "Compare 13 Overture ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/overture",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Overture"
+        }
+      ]
+    }
+  }
+}

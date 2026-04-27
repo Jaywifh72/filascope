@@ -40,15 +40,15 @@ function buildAffiliateUrl(
   const awinPublisherId = program.awin_publisher_id as string | null;
   if (linkGenerationMethod === "awin_redirect" && awinMerchantId && awinPublisherId) {
     const storeBaseUrl = program.store_base_url as string;
-    const destinationUrl = path ? `${storeBaseUrl}${path}` : storeBaseUrl;
-    let url = `https://www.awin1.com/cread.php?awinmid=${awinMerchantId}&awinaffid=${awinPublisherId}&ued=${encodeURIComponent(destinationUrl)}`;
-    if (sourceValue) {
-      url += `&clickref=${encodeURIComponent(sourceValue)}`;
-    }
-    if (utmCampaign) {
-      url += `&clickref2=${encodeURIComponent(utmCampaign)}`;
-    }
-    return url;
+    // Use full URL if provided, otherwise combine storeBaseUrl + path
+    const destinationUrl = path && (path.startsWith("http://") || path.startsWith("https://"))
+      ? path
+      : path
+        ? `${storeBaseUrl}${path}`
+        : storeBaseUrl;
+    const clickref = sourceValue ? `&clickref=${encodeURIComponent(sourceValue)}` : '';
+    const clickref2 = utmCampaign ? `&clickref2=${encodeURIComponent(utmCampaign)}` : '';
+    return `https://www.awin1.com/cread.php?awinmid=${awinMerchantId}&awinaffid=${awinPublisherId}&ued=${encodeURIComponent(destinationUrl)}${clickref}${clickref2}`;
   }
 
   // URL parameter mode

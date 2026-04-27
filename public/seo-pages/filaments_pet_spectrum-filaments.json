@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pet/spectrum-filaments",
+  "title": "Spectrum Filaments PET Filament — Prices, Specs & Reviews",
+  "description": "Compare 67 Spectrum Filaments PET filaments. Prices from $18.90 to $104.90. 14 colors available.",
+  "h1": "Spectrum Filaments PET Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PET",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PET",
+  "vendor": "Spectrum Filaments",
+  "count": 67,
+  "min_price": 18.9,
+  "max_price": 104.9,
+  "color_count": 14,
+  "has_td": 0,
+  "filament_ids": [
+    "39d64cef-9da4-4977-9180-26b9b5b90471",
+    "11ee9711-56aa-4ddc-ae6d-25bb9a340714",
+    "53cecd27-4c77-4860-a0fd-aa0a334d24b5",
+    "78710e59-bb97-4522-b42b-9b9b4e9f7150",
+    "25d4cf76-1f4b-47f7-8f50-6245e3eab64c",
+    "600899bd-cf04-4063-bb5c-05df4131258b",
+    "60a048e9-564f-406f-879b-2f732304e0ba",
+    "08b4e2d1-094e-4962-8cdb-262db81bb99f",
+    "da3642ba-e607-4400-8db1-1d6f6b0c818b",
+    "a60cb333-dc56-4bda-8ebc-f6106de8b2c1",
+    "fef27508-8279-45a0-ba73-1eb192a8fb7f",
+    "f2377058-0170-4a77-8903-150961cf66e6",
+    "81ac0adf-278c-48c7-993e-f485c3c79c37",
+    "67bcd0fa-9dee-41d2-b1d1-e758f3b5433a",
+    "6254f767-3709-4016-a22a-6188f4c11293",
+    "4170408c-a252-41e9-899f-be979373eed5",
+    "3d65fab6-ac31-4f96-a8c5-da1b00c1b116",
+    "e0f3d4be-3bb1-4367-8038-06ef7248ec71",
+    "b1e7a395-d040-4530-b5c8-42fc0f40d14d",
+    "d630a72e-070e-41a6-9b61-c4920ac03660"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PET Filament",
+    "description": "Compare 67 Spectrum Filaments PET filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pet/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PET",
+          "item": "https://filascope.com/filaments/pet"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

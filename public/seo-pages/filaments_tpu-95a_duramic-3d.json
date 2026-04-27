@@ -1,0 +1,65 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/duramic-3d",
+  "title": "DURAMIC 3D TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 12 DURAMIC 3D TPU-95A filaments. Prices from $23.99 to $24.99. 11 colors available. 11 with HueForge TD values.",
+  "h1": "DURAMIC 3D TPU-95A Filament",
+  "keywords": [
+    "DURAMIC 3D",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "DURAMIC 3D",
+  "count": 12,
+  "min_price": 23.99,
+  "max_price": 24.99,
+  "color_count": 11,
+  "has_td": 11,
+  "filament_ids": [
+    "8427a0e6-9d77-4bd2-97f1-1c17977fa3de",
+    "02e498b8-8f26-489e-b73e-f20429e295e8",
+    "ea8eaa03-ae79-40d2-a73a-daf6e0b33915",
+    "e9588b36-90f9-43c5-86c4-949ca038d905",
+    "3a6b7d27-cbe3-445e-bb8f-4ba93327d600",
+    "c3493631-cdbe-40bd-94e8-f5b39cfc0582",
+    "00db0076-1178-4f54-b019-00df354b352c",
+    "700cdac8-6467-4f3e-b5c9-41b8a36faafc",
+    "c40ae341-fdad-49a0-9770-e13b58fe856b",
+    "f003a438-6097-4e0f-84db-b0a8f17834e0",
+    "71f56df2-3c08-49f8-9adc-d7d24c88a05c",
+    "9a3ae9cc-72ae-4372-be4b-54a9640ec78e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "DURAMIC 3D TPU-95A Filament",
+    "description": "Compare 12 DURAMIC 3D TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/duramic-3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "DURAMIC 3D"
+        }
+      ]
+    }
+  }
+}

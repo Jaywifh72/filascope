@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pa-gf",
   "title": "Best PA-GF Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PA-GF filaments in 2026. 5 options from 4 brands, starting at $40.99. Expert picks, prices & specs.",
+  "description": "Compare the best PA-GF filaments in 2026. 9 options from 5 brands, starting at $40.99. Expert picks, prices & specs.",
   "h1": "Best PA-GF Filament (2026)",
   "keywords": [
     "best PA-GF",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PA-GF",
-  "count": 5,
-  "brands": 4,
+  "count": 9,
+  "brands": 5,
   "min_price": 40.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PA-GF Filament 2026",
-    "description": "Expert comparison of 5 PA-GF filaments",
+    "description": "Expert comparison of 9 PA-GF filaments",
     "url": "https://filascope.com/best-pa-gf"
   }
 }

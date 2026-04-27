@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-petg-hf",
+  "title": "Best PETG HF Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PETG HF filaments in 2026. 30 options from 2 brands, starting at $19.90. Expert picks, prices & specs.",
+  "h1": "Best PETG HF Filament (2026)",
+  "keywords": [
+    "best PETG HF",
+    "PETG HF filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PETG HF",
+  "count": 30,
+  "brands": 2,
+  "min_price": 19.9,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PETG HF Filament 2026",
+    "description": "Expert comparison of 30 PETG HF filaments",
+    "url": "https://filascope.com/best-petg-hf"
+  }
+}

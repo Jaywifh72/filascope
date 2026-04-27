@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pet-cf",
   "title": "Best PET-CF Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PET-CF filaments in 2026. 13 options from 8 brands, starting at $29.99. Expert picks, prices & specs.",
+  "description": "Compare the best PET-CF filaments in 2026. 20 options from 8 brands, starting at $26.99. Expert picks, prices & specs.",
   "h1": "Best PET-CF Filament (2026)",
   "keywords": [
     "best PET-CF",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PET-CF",
-  "count": 13,
+  "count": 20,
   "brands": 8,
-  "min_price": 29.99,
+  "min_price": 26.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PET-CF Filament 2026",
-    "description": "Expert comparison of 13 PET-CF filaments",
+    "description": "Expert comparison of 20 PET-CF filaments",
     "url": "https://filascope.com/best-pet-cf"
   }
 }

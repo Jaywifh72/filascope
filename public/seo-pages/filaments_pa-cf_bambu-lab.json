@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa-cf/bambu-lab",
+  "title": "Bambu Lab PA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Bambu Lab PA-CF filaments. Prices from $42.99 to $94.99. 2 colors available.",
+  "h1": "Bambu Lab PA-CF Filament",
+  "keywords": [
+    "Bambu Lab",
+    "PA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA-CF",
+  "vendor": "Bambu Lab",
+  "count": 5,
+  "min_price": 42.99,
+  "max_price": 94.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "4aae9f74-2e5f-4c30-b91d-cdbeb8b8bd1a",
+    "130322cd-de86-4249-8b2f-03345022fe6e",
+    "6e122f81-c2fc-4567-81e5-b2167143d108",
+    "e80b845c-0152-4404-b9c2-f09b870b9efa",
+    "4aae9f74-2e5f-4c30-b91d-cdbeb8b8bd1a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab PA-CF Filament",
+    "description": "Compare 5 Bambu Lab PA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa-cf/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA-CF",
+          "item": "https://filascope.com/filaments/pa-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pc-abs/treed-filaments",
   "title": "TreeD Filaments PC-ABS Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 TreeD Filaments PC-ABS filaments. Prices from $71.39 to $76.89. 3 colors available.",
+  "description": "Compare 3 TreeD Filaments PC-ABS filaments. Prices from $71.39 to $76.89. 3 colors available. 1 with HueForge TD values.",
   "h1": "TreeD Filaments PC-ABS Filament",
   "keywords": [
     "TreeD Filaments",
@@ -18,11 +18,11 @@
   "min_price": 71.39,
   "max_price": 76.89,
   "color_count": 3,
-  "has_td": 0,
+  "has_td": 1,
   "filament_ids": [
-    "327ae3ba-8813-424f-bf5a-b6a8208744b8",
-    "8de774e6-f96f-4590-820d-1f10c2cf468a",
-    "6fe07be3-f33e-4f39-b7bb-039fe9a904f4"
+    "98d2dbfa-278c-410d-878d-edfede115c41",
+    "bc6c03b3-6f98-43e5-92bf-174feced9dc4",
+    "c8e09ce9-25b1-423d-8e8e-1de306814487"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

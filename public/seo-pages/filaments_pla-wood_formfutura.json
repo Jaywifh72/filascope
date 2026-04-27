@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pla-wood/formfutura",
   "title": "FormFutura PLA-Wood Filament — Prices, Specs & Reviews",
-  "description": "Compare 6 FormFutura PLA-Wood filaments. Prices from $15.70 to $28.51. 6 colors available.",
+  "description": "Compare 6 FormFutura PLA-Wood filaments. Prices from $28.56 to $38.37. 6 colors available.",
   "h1": "FormFutura PLA-Wood Filament",
   "keywords": [
     "FormFutura",
@@ -15,17 +15,17 @@
   "material": "PLA-Wood",
   "vendor": "FormFutura",
   "count": 6,
-  "min_price": 15.7,
-  "max_price": 28.51,
+  "min_price": 28.56,
+  "max_price": 38.37,
   "color_count": 6,
   "has_td": 0,
   "filament_ids": [
-    "bd563318-dbb7-45fd-9ab0-fb936e27a5df",
-    "a4dc8bfd-cc0e-4a7e-a5e4-e828883afaf2",
-    "1989e4fa-91ff-4884-bae9-64ae1ad57e07",
-    "2974d4ad-07bc-432c-8360-69f364826af6",
-    "cb143802-1b06-4ce3-8852-74274953f61c",
-    "295c8f4f-fa66-4b14-af2c-a4607d295b05"
+    "ddbcc59d-f2ae-4ccb-bd34-fb2e0f02ebcb",
+    "9a978566-0a13-4082-b7ad-fe8a88770315",
+    "af6ecd63-40f5-4dde-908b-9bbbcc803c17",
+    "ac60f277-7659-4f2d-9fa2-ec260817ee0b",
+    "9eef0fb5-6dc8-4e5e-9c4a-8c5a4d05986c",
+    "5c2810ac-a9ce-4b11-9f09-4ae04a996f77"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

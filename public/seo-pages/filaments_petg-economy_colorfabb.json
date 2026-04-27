@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/petg-economy/colorfabb",
   "title": "ColorFabb PETG Economy Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 ColorFabb PETG Economy filaments. Prices from $24.95 to $24.95. 3 colors available.",
+  "description": "Compare 4 ColorFabb PETG Economy filaments. Prices from $24.95 to $24.95. 3 colors available.",
   "h1": "ColorFabb PETG Economy Filament",
   "keywords": [
     "ColorFabb",
@@ -14,21 +14,22 @@
   ],
   "material": "PETG Economy",
   "vendor": "ColorFabb",
-  "count": 3,
+  "count": 4,
   "min_price": 24.95,
   "max_price": 24.95,
   "color_count": 3,
   "has_td": 0,
   "filament_ids": [
+    "de93a89d-e121-4f3f-a387-ab0f5599d572",
     "3ddaeb43-abfd-4f37-83fa-3532a1add4d1",
     "ec5af6b1-49f2-40ac-bc32-f003707fbc78",
-    "de93a89d-e121-4f3f-a387-ab0f5599d572"
+    "ec5af6b1-49f2-40ac-bc32-f003707fbc78"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "ColorFabb PETG Economy Filament",
-    "description": "Compare 3 ColorFabb PETG Economy filaments on FilaScope",
+    "description": "Compare 4 ColorFabb PETG Economy filaments on FilaScope",
     "url": "https://filascope.com/filaments/petg-economy/colorfabb",
     "breadcrumb": {
       "@type": "BreadcrumbList",

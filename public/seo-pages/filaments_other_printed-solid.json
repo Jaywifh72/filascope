@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/other/printed-solid",
   "title": "Printed Solid Other Filament — Prices, Specs & Reviews",
-  "description": "Compare 5 Printed Solid Other filaments. Prices from $24.99 to $345.00. 2 colors available.",
+  "description": "Compare 4 Printed Solid Other filaments. Prices from $67.50 to $345.00. 1 colors available.",
   "h1": "Printed Solid Other Filament",
   "keywords": [
     "Printed Solid",
@@ -14,23 +14,22 @@
   ],
   "material": "Other",
   "vendor": "Printed Solid",
-  "count": 5,
-  "min_price": 24.99,
+  "count": 4,
+  "min_price": 67.5,
   "max_price": 345,
-  "color_count": 2,
+  "color_count": 1,
   "has_td": 0,
   "filament_ids": [
-    "3948ce6d-773d-47c1-bd38-37adcd15e5fc",
     "84249669-fa02-4db2-90c1-be65dbd12857",
+    "6467869e-f2d2-449d-badb-dab35df5d2dd",
     "e5260a2a-8e88-4526-bb94-95ac1d4bd08c",
-    "4482f5a3-e852-4dc2-9408-0d2c96fe7659",
-    "6467869e-f2d2-449d-badb-dab35df5d2dd"
+    "4482f5a3-e852-4dc2-9408-0d2c96fe7659"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Printed Solid Other Filament",
-    "description": "Compare 5 Printed Solid Other filaments on FilaScope",
+    "description": "Compare 4 Printed Solid Other filaments on FilaScope",
     "url": "https://filascope.com/filaments/other/printed-solid",
     "breadcrumb": {
       "@type": "BreadcrumbList",

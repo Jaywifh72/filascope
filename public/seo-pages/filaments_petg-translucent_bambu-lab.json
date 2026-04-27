@@ -1,0 +1,63 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-translucent/bambu-lab",
+  "title": "Bambu Lab PETG Translucent Filament — Prices, Specs & Reviews",
+  "description": "Compare 10 Bambu Lab PETG Translucent filaments. Prices from $19.99 to $22.99. 6 colors available. 7 with HueForge TD values.",
+  "h1": "Bambu Lab PETG Translucent Filament",
+  "keywords": [
+    "Bambu Lab",
+    "PETG Translucent",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG Translucent",
+  "vendor": "Bambu Lab",
+  "count": 10,
+  "min_price": 19.99,
+  "max_price": 22.99,
+  "color_count": 6,
+  "has_td": 7,
+  "filament_ids": [
+    "e4126db2-95a8-46f9-a67d-041bb3453ba6",
+    "d3c5aa72-0a16-4e99-87aa-6e1f7e45a3ed",
+    "12b9eaa9-eddd-402b-b68d-ad48c16acd55",
+    "f546ef5d-d23d-4ac8-bf4f-c8c2a18fb185",
+    "f546ef5d-d23d-4ac8-bf4f-c8c2a18fb185",
+    "62a0ce06-c6f0-4e91-97cc-34c6b7d3c698",
+    "786da85d-2b10-4238-b307-d7bc0ba1a08d",
+    "e4f4f29d-7df2-41ac-9a68-7ccccce15d8d",
+    "ec1ab763-b0c3-4c10-a956-a45ae02f48bd",
+    "c468efaa-a877-44f3-9d9e-f29ea40a6876"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab PETG Translucent Filament",
+    "description": "Compare 10 Bambu Lab PETG Translucent filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-translucent/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG Translucent",
+          "item": "https://filascope.com/filaments/petg-translucent"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

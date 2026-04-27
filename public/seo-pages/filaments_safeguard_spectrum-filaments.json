@@ -1,0 +1,64 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/safeguard/spectrum-filaments",
+  "title": "Spectrum Filaments SafeGuard Filament — Prices, Specs & Reviews",
+  "description": "Compare 11 Spectrum Filaments SafeGuard filaments. Prices from $12.90 to $36.99. 7 colors available.",
+  "h1": "Spectrum Filaments SafeGuard Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "SafeGuard",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "SafeGuard",
+  "vendor": "Spectrum Filaments",
+  "count": 11,
+  "min_price": 12.9,
+  "max_price": 36.99,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "8475d73a-fa6f-4d27-a5c8-52390601bec1",
+    "6a0985b9-d303-41b8-82ed-fcbaa73b3312",
+    "26c84a77-2fb8-4346-a67e-1308a02f4330",
+    "66cf37e2-f5ca-48e3-8d53-c37ea1d5119d",
+    "c71c79bb-dceb-4e1e-abd2-8d5c41bc7121",
+    "e4ee2f8f-853e-4c80-87aa-7840b0bbd3c4",
+    "26c2dd85-24c8-47f1-a8a0-dfcc72d71ebf",
+    "73307725-9364-4cfb-a81b-af16d0d468a7",
+    "44cc07a3-54ab-4ba6-90fb-089acb78cabe",
+    "2496e2f6-ba46-48c0-98e1-bde85be6813f",
+    "b0769a44-6e1f-4893-a395-2d306ad76da2"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments SafeGuard Filament",
+    "description": "Compare 11 Spectrum Filaments SafeGuard filaments on FilaScope",
+    "url": "https://filascope.com/filaments/safeguard/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "SafeGuard",
+          "item": "https://filascope.com/filaments/safeguard"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

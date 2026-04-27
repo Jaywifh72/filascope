@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/tpu/paramount-3d",
   "title": "Paramount 3D TPU Filament — Prices, Specs & Reviews",
-  "description": "Compare 4 Paramount 3D TPU filaments. Prices from $34.99 to $34.99. 4 colors available. 3 with HueForge TD values.",
+  "description": "Compare 4 Paramount 3D TPU filaments. Prices from $34.99 to $34.99. 4 colors available.",
   "h1": "Paramount 3D TPU Filament",
   "keywords": [
     "Paramount 3D",
@@ -18,12 +18,12 @@
   "min_price": 34.99,
   "max_price": 34.99,
   "color_count": 4,
-  "has_td": 3,
+  "has_td": 0,
   "filament_ids": [
-    "80a44f69-144c-48a2-92ec-822a486057b4",
-    "d95b62fc-aa46-439c-a837-6fa3273d2b0f",
-    "dfcf751a-1d83-46c8-be0f-a42de480e5a6",
-    "212ac0d8-e41a-4f75-b066-dbe87847b1ce"
+    "e7fce33b-b1b4-4d77-8358-f8f6a0763748",
+    "57219469-50c9-4c4f-b914-3eca664355c7",
+    "195b3ebd-2a0a-4a70-99c1-bf0cd7cbe6be",
+    "62756cc2-98b5-4651-9404-08eb658e1d2d"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

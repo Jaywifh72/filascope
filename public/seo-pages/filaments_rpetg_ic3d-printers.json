@@ -20,18 +20,18 @@
   "color_count": 10,
   "has_td": 0,
   "filament_ids": [
-    "88bf8663-bda9-4cf3-817a-c3b359b8e0ab",
+    "0cb04ef9-b715-4f86-9eab-f84566822b47",
     "86041aea-97a4-454a-87a8-95feb0a64898",
-    "4b8bb100-ebbd-45c1-98f9-6078d45e84e2",
-    "b6afcf09-2fba-4aec-933e-7e619c9a4826",
-    "cc9c84b4-d204-4d07-a87b-30a0529f85b4",
-    "d30e4be4-f32d-4e16-866e-9a3068082210",
-    "4a977dd5-2b9f-41a9-8e75-0d2d809cde7b",
     "15b93e7e-71ce-40d9-b8e4-d53bc6b05012",
     "8a64ae86-3145-4a58-8343-c786f63a5bb7",
-    "7c4a01eb-71cb-4c31-8709-8f4b7e43887d",
+    "88bf8663-bda9-4cf3-817a-c3b359b8e0ab",
+    "cc9c84b4-d204-4d07-a87b-30a0529f85b4",
+    "4a977dd5-2b9f-41a9-8e75-0d2d809cde7b",
+    "d30e4be4-f32d-4e16-866e-9a3068082210",
+    "4b8bb100-ebbd-45c1-98f9-6078d45e84e2",
+    "b6afcf09-2fba-4aec-933e-7e619c9a4826",
     "ed9245bf-4096-419f-9e34-c14d7e5b6f52",
-    "0cb04ef9-b715-4f86-9eab-f84566822b47"
+    "7c4a01eb-71cb-4c31-8709-8f4b7e43887d"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

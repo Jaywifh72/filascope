@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-multicolor/polymaker",
+  "title": "Polymaker PLA-MULTICOLOR Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Polymaker PLA-MULTICOLOR filaments. Prices from $50.99 to $100.00. 3 colors available. 6 with HueForge TD values.",
+  "h1": "Polymaker PLA-MULTICOLOR Filament",
+  "keywords": [
+    "Polymaker",
+    "PLA-MULTICOLOR",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-MULTICOLOR",
+  "vendor": "Polymaker",
+  "count": 6,
+  "min_price": 50.99,
+  "max_price": 100,
+  "color_count": 3,
+  "has_td": 6,
+  "filament_ids": [
+    "fa17ef7f-4c13-4879-954f-a1922b3ec979",
+    "407abdd5-ce49-48e1-b27b-037a11c4953d",
+    "05bda613-4d53-4c19-8b61-e1227646f83e",
+    "66fae21f-bd6f-4e1e-8f12-9368615d319d",
+    "788c77e7-46b3-4dbd-bcbd-3a3497a3b912",
+    "4f24b39e-9e2b-436c-9070-e842c50b4d73"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Polymaker PLA-MULTICOLOR Filament",
+    "description": "Compare 6 Polymaker PLA-MULTICOLOR filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-multicolor/polymaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-MULTICOLOR",
+          "item": "https://filascope.com/filaments/pla-multicolor"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polymaker"
+        }
+      ]
+    }
+  }
+}

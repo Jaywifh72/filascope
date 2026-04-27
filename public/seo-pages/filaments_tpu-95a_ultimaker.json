@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/tpu-95a/ultimaker",
   "title": "Ultimaker TPU-95A Filament — Prices, Specs & Reviews",
-  "description": "Compare 4 Ultimaker TPU-95A filaments. Prices from $79.00 to $79.00. 4 colors available. 4 with HueForge TD values.",
+  "description": "Compare 4 Ultimaker TPU-95A filaments. Prices from $79.00 to $79.00. 4 colors available.",
   "h1": "Ultimaker TPU-95A Filament",
   "keywords": [
     "Ultimaker",
@@ -18,12 +18,12 @@
   "min_price": 79,
   "max_price": 79,
   "color_count": 4,
-  "has_td": 4,
+  "has_td": 0,
   "filament_ids": [
-    "0e4598cc-e809-4a29-a9f8-cd54a0876afc",
-    "0d4dfabc-e099-4a82-9eee-a8b98879bf37",
-    "662dffb1-3a6b-40f9-a9a0-3b68ba9d7fab",
-    "7daeb0cb-72cd-4e21-bfb8-4441edbf3f71"
+    "d157b9e2-2e6c-4eb8-b5a8-855672c7f01f",
+    "3777b2ab-3f15-49bc-8896-74bdaef93cf9",
+    "4fd40ce5-81c2-4b89-ae71-1ae72fe8fd7a",
+    "362bf87c-4f4d-4436-b2af-451fa08f6d47"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

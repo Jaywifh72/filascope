@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-safeguard",
+  "title": "Best SafeGuard Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best SafeGuard filaments in 2026. 11 options from 1 brands, starting at $12.90. Expert picks, prices & specs.",
+  "h1": "Best SafeGuard Filament (2026)",
+  "keywords": [
+    "best SafeGuard",
+    "SafeGuard filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "SafeGuard",
+  "count": 11,
+  "brands": 1,
+  "min_price": 12.9,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best SafeGuard Filament 2026",
+    "description": "Expert comparison of 11 SafeGuard filaments",
+    "url": "https://filascope.com/best-safeguard"
+  }
+}

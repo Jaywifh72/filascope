@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/asa-gf/formfutura",
   "title": "FormFutura ASA-GF Filament — Prices, Specs & Reviews",
-  "description": "Compare 7 FormFutura ASA-GF filaments. Prices from $35.95 to $41.42. 7 colors available.",
+  "description": "Compare 7 FormFutura ASA-GF filaments. Prices from $42.84 to $42.84. 7 colors available.",
   "h1": "FormFutura ASA-GF Filament",
   "keywords": [
     "FormFutura",
@@ -15,18 +15,18 @@
   "material": "ASA-GF",
   "vendor": "FormFutura",
   "count": 7,
-  "min_price": 35.95,
-  "max_price": 41.42,
+  "min_price": 42.84,
+  "max_price": 42.84,
   "color_count": 7,
   "has_td": 0,
   "filament_ids": [
-    "40020bbe-27a8-4b85-b886-84f5f4d59b78",
-    "06db4537-cd4f-4fe4-b0f9-01a16ecf418f",
-    "294ccb42-4df2-4f4f-9ada-06673133357a",
-    "47e3da21-7b6a-4b3d-a064-efe8df0ea2dd",
-    "62dccd7d-1449-4682-9f29-0001cbe6bd40",
-    "a51a6584-b4e2-4234-8472-ef588d19325c",
-    "d3c69cad-ef46-43c9-90ca-68cfed6f62c6"
+    "2af6d7b2-bbb2-4042-afd3-76444870579a",
+    "5ee1efa1-825c-459d-8645-c2e2fc0b17ea",
+    "0807867e-0ddc-41cb-9641-14eebc1fc415",
+    "6bc0db67-ec2b-4950-aac9-50408288bd9d",
+    "374d01d0-40ce-4d94-92bd-66e92bb85a42",
+    "e7751327-3985-480e-94be-9efc9c335978",
+    "23e63e60-2629-40df-bc65-be137cec5b34"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

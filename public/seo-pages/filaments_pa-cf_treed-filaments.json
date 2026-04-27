@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pa-cf/treed-filaments",
   "title": "TreeD Filaments PA-CF Filament — Prices, Specs & Reviews",
-  "description": "Compare 7 TreeD Filaments PA-CF filaments. Prices from $131.89 to $164.89. 4 colors available.",
+  "description": "Compare 7 TreeD Filaments PA-CF filaments. Prices from $131.89 to $164.89. 4 colors available. 2 with HueForge TD values.",
   "h1": "TreeD Filaments PA-CF Filament",
   "keywords": [
     "TreeD Filaments",
@@ -18,15 +18,15 @@
   "min_price": 131.89,
   "max_price": 164.89,
   "color_count": 4,
-  "has_td": 0,
+  "has_td": 2,
   "filament_ids": [
-    "3845b4e8-92bb-4214-93d8-94e430a3c1e5",
-    "c8372688-8dd8-4291-8057-13bd235f1617",
-    "f7d3c690-c9a8-442b-a8e3-f930f94a94d1",
-    "de6d79e6-e265-4821-9a50-65ebb615fe78",
-    "3cbf4f01-de9a-44a5-ae17-1c5414503c76",
-    "a1ff092f-a406-46c4-9ac1-30ec86281099",
-    "6d614086-69e9-4805-8428-e7613b8efcb8"
+    "8ee1baaf-a8fa-450f-a77c-82805941e8ef",
+    "97fa2f32-bb26-4950-be9c-f5594183327d",
+    "4851e70c-548c-4f06-87a5-206534a9823c",
+    "57643cf7-f1e5-41e4-8187-5a385d15cd2b",
+    "ee0a53bc-ef60-4668-ba31-9bcac9fb00fa",
+    "b6161638-e874-454f-b1d4-87b1e496a157",
+    "3097f38b-ca7f-4100-867b-584abb055d39"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

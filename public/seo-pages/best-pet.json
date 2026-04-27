@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pet",
   "title": "Best PET Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PET filaments in 2026. 16 options from 4 brands, starting at $19.99. Expert picks, prices & specs.",
+  "description": "Compare the best PET filaments in 2026. 81 options from 5 brands, starting at $18.90. Expert picks, prices & specs.",
   "h1": "Best PET Filament (2026)",
   "keywords": [
     "best PET",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PET",
-  "count": 16,
-  "brands": 4,
-  "min_price": 19.99,
+  "count": 81,
+  "brands": 5,
+  "min_price": 18.9,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PET Filament 2026",
-    "description": "Expert comparison of 16 PET filaments",
+    "description": "Expert comparison of 81 PET filaments",
     "url": "https://filascope.com/best-pet"
   }
 }

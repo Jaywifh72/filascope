@@ -1,0 +1,21 @@
+slug,target_query,suggested_infographic_concept,languages
+hueforge-td-database,filament td database,Comparison chart: top 20 filaments by TD (transmission distance) value with brand/color breakdown,en+de+fr+ja
+colors,filament color matcher,Visual color grid: 12 popular filament colors with hex codes, brand names, and compatibility icons,en+de+fr+ja
+homepage,filascope filament finder,Hero comparison: top 8 filament brands by price/quality with FilaScore badges,en+de+fr+ja
+guides/best-tpu-filaments,best tpu 95a filament,Buying guide: TPU 95A vs 85A vs 98A flexibility comparison with brand rankings,en+de+fr+ja
+guides/hueforge-filaments,best filament for hueforge,HueForge filament comparison: TD values, layer height compatibility, and brightness ratings by brand,en+de+fr+ja
+guides/best-filament-for-creality-k1,best filament for creality k1,Creality K1 compatibility chart: approved filament types with recommended settings and brand suggestions,en+de+fr+ja
+guides/best-filaments-for-lithophanes,best lithophane filament,Lithophane material showdown: light transmission quality by filament type with example photos,en+de+fr+ja
+guides/best-filaments-for-miniatures,best filament for fdm minis,Miniature printing comparison: fine-detail score by filament brand with layer height and nozzle recommendations,en+de+fr+ja
+guides/hueforge-filaments-redirect,best filament for hueforge,HueForge filament guide: TD performance tiers, best-use cases, and top-rated brands per category,en+de+fr+ja
+best-white-filaments,best white filament,White filament comparison: opacity, brightness, and yellowing resistance ratings across top brands,en+de+fr+ja
+guides/hueforge-beginners-guide,hueforge for beginners,HueForge getting started path: beginner to advanced workflow with recommended first filament projects,en+de+fr+ja
+guides/silk-pla-comparison,best silk pla filament,Silk PLA shine comparison: glossiness ratings across 10 brands with printer settings and price per spool,en+de+fr+ja
+filament/ziro-fast-gradient-silk-pla-filament-1-75mm-rainbow,ziro silk pla silk pla rainbow,Gradient silk filament showcase: color transition spectrum with print samples and recommended settings,en+de+fr+ja
+filament/bambu-lab-pla-iridium-gold-metallic,bambu lab iridium gold metallic filament,Metallic PLA comparison: reflectivity and layer adhesion across top metallic filament brands,en+de+fr+ja
+filament/098ea7dd-0ee2-4860-a665-225a457c5142,pla filament brand color,Top PLA filaments by color category: brand comparison chart with FilaScore and price per kg,en+de+fr+ja
+filament/8a8e6a0d-96a4-423a-913d-c5e8c5991921,pla filament brand color,Top filaments by print quality: brand rankings across detail, strength, and ease of use,en+de+fr+ja
+filament/96b223ef-8bd1-44d6-800c-84dc861a6d39,pla filament brand color,Best value filaments: price vs quality scatter plot with top brand recommendations,en+de+fr+ja
+filament/a38cacbb-bf09-486f-8e68-65cc92803124,pla filament brand color,Filament diameter consistency comparison: tolerance accuracy across budget vs premium brands,en+de+fr+ja
+filament/anycubic-petg-red,anycubic petg red filament,Color filament value comparison: red PETG price-per-meter across Anycubic, eSUN, and Polymaker,en+de+fr+ja
+filament/carbon-fiber-nylon-filament-1-75mm-500g,carbon fiber nylon filament,Carbon fiber nylon comparison: strength-to-weight ratio across CF-Nylon brands with nozzle recommendations,en+de+fr+ja

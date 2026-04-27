@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pet-cf/polymaker",
+  "title": "Polymaker PET-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Polymaker PET-CF filaments. Prices from $33.99 to $61.99. 2 colors available.",
+  "h1": "Polymaker PET-CF Filament",
+  "keywords": [
+    "Polymaker",
+    "PET-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PET-CF",
+  "vendor": "Polymaker",
+  "count": 3,
+  "min_price": 33.99,
+  "max_price": 61.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "fe41b916-8858-4ac1-8fc1-fb8c9d86f890",
+    "ceed6d66-3244-46f7-8425-17dd0e02dff4",
+    "920b9ac5-9913-4fc8-b060-aab1a820d321"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Polymaker PET-CF Filament",
+    "description": "Compare 3 Polymaker PET-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pet-cf/polymaker",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PET-CF",
+          "item": "https://filascope.com/filaments/pet-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polymaker"
+        }
+      ]
+    }
+  }
+}

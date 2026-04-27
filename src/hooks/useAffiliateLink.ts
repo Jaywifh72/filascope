@@ -237,7 +237,9 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
       });
 
       if (program) {
-        trackAffiliateClick(program.id, finalUrl, {
+        // Track the original product URL, NOT the Awin-wrapped URL.
+        // The affiliate link (finalUrl) is opened in the browser; we log where it leads.
+        trackAffiliateClick(program.id, url, {
           brandName: program.brand_name,
           regionCode: program.region_code,
           productName: metadata.productName,

@@ -1,0 +1,68 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-hf/spectrum-filaments",
+  "title": "Spectrum Filaments PETG HF Filament — Prices, Specs & Reviews",
+  "description": "Compare 15 Spectrum Filaments PETG HF filaments. Prices from $19.90 to $20.99. 8 colors available.",
+  "h1": "Spectrum Filaments PETG HF Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "PETG HF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG HF",
+  "vendor": "Spectrum Filaments",
+  "count": 15,
+  "min_price": 19.9,
+  "max_price": 20.99,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "3b0ff57f-0242-4031-b0d9-63d9a838c4f1",
+    "787d0fd0-eff2-46af-a9d9-e1f1d2783947",
+    "3b538cbf-3003-4edb-b5c3-f01684e3a801",
+    "2a91bc38-a049-49fb-bdda-a972ac52a62c",
+    "55cd1316-29a7-412e-97eb-9ad0bc33121a",
+    "9f4602b2-60f2-47ae-b512-74400ba41d66",
+    "06ef3c1c-dfd1-4576-8f7e-0dcbdb08054e",
+    "8538ecd1-6a69-4e30-b647-a1106a503171",
+    "b600c241-fc0f-4985-b933-e6c1fdb63c40",
+    "c451e2b0-c343-4b09-b890-b706915e2667",
+    "55536e76-b3c9-4ba5-86df-55122891cc88",
+    "fc6c3203-7bf3-428e-a01b-6484b0491f0d",
+    "06272278-99c1-434f-9c3a-f99b5fd6ee71",
+    "597f1d77-bbd7-45d8-86d8-94e34fff4fb8",
+    "e37f86e4-6f2e-4777-8fd2-8f850834057e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments PETG HF Filament",
+    "description": "Compare 15 Spectrum Filaments PETG HF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-hf/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG HF",
+          "item": "https://filascope.com/filaments/petg-hf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

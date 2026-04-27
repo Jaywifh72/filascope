@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pla-wood",
   "title": "Best PLA-WOOD Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PLA-WOOD filaments in 2026. 5 options from 3 brands, starting at $15.75. Expert picks, prices & specs.",
+  "description": "Compare the best PLA-WOOD filaments in 2026. 7 options from 4 brands, starting at $15.75. Expert picks, prices & specs.",
   "h1": "Best PLA-WOOD Filament (2026)",
   "keywords": [
     "best PLA-WOOD",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PLA-WOOD",
-  "count": 5,
-  "brands": 3,
+  "count": 7,
+  "brands": 4,
   "min_price": 15.75,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PLA-WOOD Filament 2026",
-    "description": "Expert comparison of 5 PLA-WOOD filaments",
+    "description": "Expert comparison of 7 PLA-WOOD filaments",
     "url": "https://filascope.com/best-pla-wood"
   }
 }

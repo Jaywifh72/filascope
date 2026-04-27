@@ -1,35 +1,44 @@
 {
   "type": "brand-material",
   "url": "/filaments/pla/taulman3d",
-  "title": "Taulman3D PLA+ Filament — Prices, Specs & Reviews",
-  "description": "Compare 4 Taulman3D PLA+ filaments. Prices from $25.00 to $25.00. 4 colors available. 4 with HueForge TD values.",
-  "h1": "Taulman3D PLA+ Filament",
+  "title": "Taulman3D PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Taulman3D PLA filaments. Prices from $18.00 to $149.99. 6 colors available. 13 with HueForge TD values.",
+  "h1": "Taulman3D PLA Filament",
   "keywords": [
     "Taulman3D",
-    "PLA+",
+    "PLA",
     "filament",
     "3d printing",
     "price",
     "compare"
   ],
-  "material": "PLA+",
+  "material": "PLA",
   "vendor": "Taulman3D",
-  "count": 4,
-  "min_price": 25,
-  "max_price": 25,
-  "color_count": 4,
-  "has_td": 4,
+  "count": 13,
+  "min_price": 18,
+  "max_price": 149.99,
+  "color_count": 6,
+  "has_td": 13,
   "filament_ids": [
-    "746f39ab-c57f-4e1b-a50f-82d88d1af73e",
-    "a5c47086-ec50-4e4f-9cb9-0c986591a931",
+    "d21047b7-8502-48c7-9bb5-2e0d12cae87f",
+    "fdac01ed-9a79-404e-9060-61cbbfc73f82",
     "8f7ceee6-4f6b-4358-bace-7a8b59279c1a",
-    "86451fbc-a639-401e-ac3e-59339daebfbb"
+    "746f39ab-c57f-4e1b-a50f-82d88d1af73e",
+    "86451fbc-a639-401e-ac3e-59339daebfbb",
+    "c0df7996-3c5f-4f4e-b07a-9f02ba48b438",
+    "9cda83b2-4a69-40e5-aa47-7dc90a6f3de9",
+    "f700d878-ed17-407c-8312-ab941df82421",
+    "d0ca9913-8f59-4919-9137-020199e36866",
+    "35810a81-2677-47f4-858b-7f3687a7b746",
+    "a5c47086-ec50-4e4f-9cb9-0c986591a931",
+    "ae58a5b5-c7e9-4c42-aeb4-48e45e8f4fe2",
+    "88279087-39ac-4e62-8ba9-7fe04d25b072"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "name": "Taulman3D PLA+ Filament",
-    "description": "Compare 4 Taulman3D PLA+ filaments on FilaScope",
+    "name": "Taulman3D PLA Filament",
+    "description": "Compare 13 Taulman3D PLA filaments on FilaScope",
     "url": "https://filascope.com/filaments/pla/taulman3d",
     "breadcrumb": {
       "@type": "BreadcrumbList",
@@ -43,7 +52,7 @@
         {
           "@type": "ListItem",
           "position": 2,
-          "name": "PLA+",
+          "name": "PLA",
           "item": "https://filascope.com/filaments/pla"
         },
         {

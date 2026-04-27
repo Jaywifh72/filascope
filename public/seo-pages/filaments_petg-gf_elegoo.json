@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-gf/elegoo",
+  "title": "Elegoo PETG-GF Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Elegoo PETG-GF filaments. Prices from $18.99 to $81.99. 3 colors available.",
+  "h1": "Elegoo PETG-GF Filament",
+  "keywords": [
+    "Elegoo",
+    "PETG-GF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-GF",
+  "vendor": "Elegoo",
+  "count": 4,
+  "min_price": 18.99,
+  "max_price": 81.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "ecb7a6e4-bb18-4b00-8f98-a78fa0cec1dc",
+    "257c10b6-47ee-4c6b-826e-ae3aa5f06f99",
+    "dffaf78c-3d89-4266-ace9-7ee4e851de9a",
+    "c0b25186-09d7-4eea-971f-f7cec2a338e4"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PETG-GF Filament",
+    "description": "Compare 4 Elegoo PETG-GF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-gf/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-GF",
+          "item": "https://filascope.com/filaments/petg-gf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

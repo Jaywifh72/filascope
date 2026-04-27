@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/matterhackers",
+  "title": "MatterHackers ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 MatterHackers ASA filaments. Prices from $31.99 to $31.99. 3 colors available.",
+  "h1": "MatterHackers ASA Filament",
+  "keywords": [
+    "MatterHackers",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "MatterHackers",
+  "count": 4,
+  "min_price": 31.99,
+  "max_price": 31.99,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "c8d6cfb4-eff1-4ae2-af3a-ae186a43e77f",
+    "b8484f5e-4a5d-43a0-ad46-146d444c1fc6",
+    "d17f86b2-a7a0-4ad2-827a-d5293d88ad85",
+    "f8ae200f-efd5-4ab8-83df-2992878f0b14"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "MatterHackers ASA Filament",
+    "description": "Compare 4 MatterHackers ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/matterhackers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "MatterHackers"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/refill/spectrum-filaments",
+  "title": "Spectrum Filaments ReFill Filament — Prices, Specs & Reviews",
+  "description": "Compare 52 Spectrum Filaments ReFill filaments. Prices from $16.90 to $48.90. 13 colors available.",
+  "h1": "Spectrum Filaments ReFill Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "ReFill",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ReFill",
+  "vendor": "Spectrum Filaments",
+  "count": 52,
+  "min_price": 16.9,
+  "max_price": 48.9,
+  "color_count": 13,
+  "has_td": 0,
+  "filament_ids": [
+    "027c3b17-9eaf-4686-b13c-8520a14100bf",
+    "2f31f32d-ff44-4d79-b20d-c6303532b5fd",
+    "a5129987-91ab-44b7-a25c-0f1aad7c2662",
+    "8ef5cdd3-74ef-4f51-815d-05d6d3f64f1b",
+    "e515c37a-8b63-4708-8bd9-bdebb5a7b0aa",
+    "f4730a18-8414-495b-a793-e6313351263d",
+    "2cea5c98-ecd4-480b-9b01-89e765ab3e5d",
+    "01c17bc1-c889-4c23-b309-581722c22765",
+    "79a4bea3-8929-4a4c-afed-89f703deec3b",
+    "bafec28f-3d50-4b08-974c-cd2d174e46e9",
+    "42515c76-ef80-4e7f-a698-f87fd285974c",
+    "bfd1bbb6-0078-437b-a244-8cfc4a42d422",
+    "831a6128-b628-4c9e-85c1-b0f614ab4fab",
+    "894c6cb9-e172-4ed9-ab8d-5164b5cbecfe",
+    "3c31d4c8-6376-4f0a-9326-d69a677e6e94",
+    "8742eff5-0cb7-4cb1-9bb7-e786a6492216",
+    "1196db2f-d765-49fb-bc36-2ddea54bece6",
+    "ee53e9e1-d116-4d37-934c-b0d17c26190b",
+    "ff2c362e-44de-4732-966f-0f57f316fa83",
+    "6f9b82cf-d186-4bce-bee3-08a119c8d73d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments ReFill Filament",
+    "description": "Compare 52 Spectrum Filaments ReFill filaments on FilaScope",
+    "url": "https://filascope.com/filaments/refill/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ReFill",
+          "item": "https://filascope.com/filaments/refill"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

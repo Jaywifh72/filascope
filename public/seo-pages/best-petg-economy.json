@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-petg-economy",
   "title": "Best PETG Economy Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PETG Economy filaments in 2026. 3 options from 1 brands, starting at $24.95. Expert picks, prices & specs.",
+  "description": "Compare the best PETG Economy filaments in 2026. 4 options from 1 brands, starting at $24.95. Expert picks, prices & specs.",
   "h1": "Best PETG Economy Filament (2026)",
   "keywords": [
     "best PETG Economy",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PETG Economy",
-  "count": 3,
+  "count": 4,
   "brands": 1,
   "min_price": 24.95,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PETG Economy Filament 2026",
-    "description": "Expert comparison of 3 PETG Economy filaments",
+    "description": "Expert comparison of 4 PETG Economy filaments",
     "url": "https://filascope.com/best-petg-economy"
   }
 }

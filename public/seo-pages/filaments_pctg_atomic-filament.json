@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pctg/atomic-filament",
+  "title": "Atomic Filament PCTG Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Atomic Filament PCTG filaments. Prices from $34.49 to $34.49. 3 colors available.",
+  "h1": "Atomic Filament PCTG Filament",
+  "keywords": [
+    "Atomic Filament",
+    "PCTG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PCTG",
+  "vendor": "Atomic Filament",
+  "count": 3,
+  "min_price": 34.49,
+  "max_price": 34.49,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "4f4018e7-b8de-4137-ac21-ba40d89128e1",
+    "1b658f8f-75ec-4ee1-bea3-3bce858118d3",
+    "d264dd0a-22b2-4779-a2b7-eac16de50143"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Atomic Filament PCTG Filament",
+    "description": "Compare 3 Atomic Filament PCTG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pctg/atomic-filament",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PCTG",
+          "item": "https://filascope.com/filaments/pctg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Atomic Filament"
+        }
+      ]
+    }
+  }
+}

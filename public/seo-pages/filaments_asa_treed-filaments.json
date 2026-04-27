@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/asa/treed-filaments",
   "title": "TreeD Filaments ASA Filament — Prices, Specs & Reviews",
-  "description": "Compare 5 TreeD Filaments ASA filaments. Prices from $38.39 to $43.89. 4 colors available.",
+  "description": "Compare 5 TreeD Filaments ASA filaments. Prices from $38.39 to $43.89. 4 colors available. 4 with HueForge TD values.",
   "h1": "TreeD Filaments ASA Filament",
   "keywords": [
     "TreeD Filaments",
@@ -18,13 +18,13 @@
   "min_price": 38.39,
   "max_price": 43.89,
   "color_count": 4,
-  "has_td": 0,
+  "has_td": 4,
   "filament_ids": [
-    "b216b388-8f03-4580-9c35-23b468d1694f",
-    "a184e1cf-8762-4adf-ac07-dc264e6bbd2b",
-    "1ecf7704-79ac-4dc8-a733-5323f5060e7a",
-    "4bfd85fb-ec6b-4a34-a839-52424b55d288",
-    "2af33655-3a66-4c84-a84e-3605a7f142a7"
+    "8d00d7b1-23f5-47e4-815f-ac0baed37b93",
+    "b6c98073-5971-4915-8513-4439828af58a",
+    "d5c0a18a-6341-4a48-8ae1-11300af2a275",
+    "caf3f080-75bf-4d3c-b6b9-f0905aee4e07",
+    "a4b6eee9-3bb7-4b83-8b7c-ebd4bd60b886"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

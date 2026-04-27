@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-resin",
   "title": "Best RESIN Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best RESIN filaments in 2026. 34 options from 2 brands, starting at $19.99. Expert picks, prices & specs.",
+  "description": "Compare the best RESIN filaments in 2026. 54 options from 3 brands, starting at $19.99. Expert picks, prices & specs.",
   "h1": "Best RESIN Filament (2026)",
   "keywords": [
     "best RESIN",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "RESIN",
-  "count": 34,
-  "brands": 2,
+  "count": 54,
+  "brands": 3,
   "min_price": 19.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best RESIN Filament 2026",
-    "description": "Expert comparison of 34 RESIN filaments",
+    "description": "Expert comparison of 54 RESIN filaments",
     "url": "https://filascope.com/best-resin"
   }
 }

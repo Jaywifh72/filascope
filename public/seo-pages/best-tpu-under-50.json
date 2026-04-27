@@ -1,8 +1,8 @@
 {
   "type": "price-target",
   "url": "/best-tpu-under-50",
-  "title": "Best TPU Filament Under $50 — 398 Options Compared",
-  "description": "398 TPU filaments under $50 from 30 brands. Find the best value TPU for your 3D printer.",
+  "title": "Best TPU Filament Under $50 — 442 Options Compared",
+  "description": "442 TPU filaments under $50 from 31 brands. Find the best value TPU for your 3D printer.",
   "h1": "Best TPU Filament Under $50",
   "keywords": [
     "best TPU under $50",
@@ -12,8 +12,8 @@
   ],
   "material": "TPU",
   "max_price": 50,
-  "count": 398,
-  "brands": 30,
+  "count": 442,
+  "brands": 31,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",

@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-petg-gf",
   "title": "Best PETG-GF Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PETG-GF filaments in 2026. 7 options from 2 brands, starting at $18.99. Expert picks, prices & specs.",
+  "description": "Compare the best PETG-GF filaments in 2026. 13 options from 3 brands, starting at $18.99. Expert picks, prices & specs.",
   "h1": "Best PETG-GF Filament (2026)",
   "keywords": [
     "best PETG-GF",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PETG-GF",
-  "count": 7,
-  "brands": 2,
+  "count": 13,
+  "brands": 3,
   "min_price": 18.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PETG-GF Filament 2026",
-    "description": "Expert comparison of 7 PETG-GF filaments",
+    "description": "Expert comparison of 13 PETG-GF filaments",
     "url": "https://filascope.com/best-petg-gf"
   }
 }

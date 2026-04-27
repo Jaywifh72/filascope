@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/tpu-98a/push-plastic",
   "title": "Push Plastic TPU-98A Filament — Prices, Specs & Reviews",
-  "description": "Compare 6 Push Plastic TPU-98A filaments. Prices from $49.99 to $49.99. 0 colors available.",
+  "description": "Compare 6 Push Plastic TPU-98A filaments. Prices from $49.99 to $49.99. 1 colors available.",
   "h1": "Push Plastic TPU-98A Filament",
   "keywords": [
     "Push Plastic",
@@ -17,15 +17,15 @@
   "count": 6,
   "min_price": 49.99,
   "max_price": 49.99,
-  "color_count": 0,
+  "color_count": 1,
   "has_td": 0,
   "filament_ids": [
+    "5bdaaafc-ac71-4ed1-b984-397ed4c44ff3",
     "7b53dfae-7f44-436d-ba00-744507c1aba4",
-    "03fa0779-973b-4528-8fed-421c3edbd16c",
+    "c01b56a6-a481-4272-bd5a-6c1dad2105a7",
     "8f2dfd46-8704-4370-8d4a-2f33120ca6cc",
     "e75d71a1-6fec-4b29-9970-83ad09266601",
-    "c01b56a6-a481-4272-bd5a-6c1dad2105a7",
-    "5bdaaafc-ac71-4ed1-b984-397ed4c44ff3"
+    "03fa0779-973b-4528-8fed-421c3edbd16c"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

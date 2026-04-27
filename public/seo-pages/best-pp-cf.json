@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pp-cf",
   "title": "Best PP-CF Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PP-CF filaments in 2026. 4 options from 4 brands, starting at $31.99. Expert picks, prices & specs.",
+  "description": "Compare the best PP-CF filaments in 2026. 5 options from 4 brands, starting at $31.99. Expert picks, prices & specs.",
   "h1": "Best PP-CF Filament (2026)",
   "keywords": [
     "best PP-CF",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PP-CF",
-  "count": 4,
+  "count": 5,
   "brands": 4,
   "min_price": 31.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PP-CF Filament 2026",
-    "description": "Expert comparison of 4 PP-CF filaments",
+    "description": "Expert comparison of 5 PP-CF filaments",
     "url": "https://filascope.com/best-pp-cf"
   }
 }

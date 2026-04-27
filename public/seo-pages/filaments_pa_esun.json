@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pa/esun",
   "title": "eSun PA Filament — Prices, Specs & Reviews",
-  "description": "Compare 4 eSun PA filaments. Prices from $19.99 to $59.99. 0 colors available.",
+  "description": "Compare 4 eSun PA filaments. Prices from $44.99 to $59.99. 1 colors available.",
   "h1": "eSun PA Filament",
   "keywords": [
     "eSun",
@@ -15,15 +15,15 @@
   "material": "PA",
   "vendor": "eSun",
   "count": 4,
-  "min_price": 19.99,
+  "min_price": 44.99,
   "max_price": 59.99,
-  "color_count": 0,
+  "color_count": 1,
   "has_td": 0,
   "filament_ids": [
-    "14e5ef41-f229-453a-9e88-cdb91173d41c",
     "51b75e08-cb64-4a11-b141-541d0e7ae5c6",
-    "98dfdc6f-c641-4505-9c38-f4913e5ed82d",
-    "45d93a08-7fff-4ce8-9c29-f932eaeda525"
+    "51b75e08-cb64-4a11-b141-541d0e7ae5c6",
+    "14e5ef41-f229-453a-9e88-cdb91173d41c",
+    "98dfdc6f-c641-4505-9c38-f4913e5ed82d"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

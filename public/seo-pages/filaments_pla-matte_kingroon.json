@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pla-matte/kingroon",
   "title": "Kingroon PLA-MATTE Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Kingroon PLA-MATTE filaments. Prices from $99.99 to $129.99. 0 colors available.",
+  "description": "Compare 3 Kingroon PLA-MATTE filaments. Prices from $99.99 to $129.99. 1 colors available. 3 with HueForge TD values.",
   "h1": "Kingroon PLA-MATTE Filament",
   "keywords": [
     "Kingroon",
@@ -17,12 +17,12 @@
   "count": 3,
   "min_price": 99.99,
   "max_price": 129.99,
-  "color_count": 0,
-  "has_td": 0,
+  "color_count": 1,
+  "has_td": 3,
   "filament_ids": [
+    "9cc68ce2-78d7-4343-8029-25f2d0ec090d",
     "9b06dd80-fe21-4f2c-81ab-27358a6c843a",
-    "500d8602-42cc-4839-afad-d1090080012c",
-    "9cc68ce2-78d7-4343-8029-25f2d0ec090d"
+    "500d8602-42cc-4839-afad-d1090080012c"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

@@ -1,0 +1,65 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pei/push-plastic",
+  "title": "Push Plastic PEI Filament — Prices, Specs & Reviews",
+  "description": "Compare 12 Push Plastic PEI filaments. Prices from $99.99 to $599.99. 2 colors available. 4 with HueForge TD values.",
+  "h1": "Push Plastic PEI Filament",
+  "keywords": [
+    "Push Plastic",
+    "PEI",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PEI",
+  "vendor": "Push Plastic",
+  "count": 12,
+  "min_price": 99.99,
+  "max_price": 599.99,
+  "color_count": 2,
+  "has_td": 4,
+  "filament_ids": [
+    "722d55f4-1107-4f98-ab33-ff7dece2ec3b",
+    "387e5fc0-dbf4-4df3-95ab-095874c43b62",
+    "dedd14b8-4dd0-4700-b6f1-f351f750259d",
+    "4d6a970a-7462-4d31-bf05-0207bf9409f5",
+    "77dd276c-f401-4c7f-96ec-2785dd864acb",
+    "c9743b92-0d52-4255-8fa7-ae57c6c032f0",
+    "7e236c4f-ce29-4118-b3f7-536618864cc6",
+    "28850fb6-07ac-4836-97f4-03cbf3bcde98",
+    "ab733afb-ea03-42fa-a9f9-9b41c2eae442",
+    "e1f54d19-b6e1-4854-aea9-7a9b37923977",
+    "765204e4-9cf6-48d5-b3f2-fcc3b349cfa5",
+    "11af4ef5-db6d-40de-931e-1632584376a9"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic PEI Filament",
+    "description": "Compare 12 Push Plastic PEI filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pei/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PEI",
+          "item": "https://filascope.com/filaments/pei"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

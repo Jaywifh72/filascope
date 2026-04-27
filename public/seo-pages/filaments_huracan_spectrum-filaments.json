@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/huracan/spectrum-filaments",
+  "title": "Spectrum Filaments Huracan Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 Spectrum Filaments Huracan filaments. Prices from $27.90 to $27.90. 11 colors available.",
+  "h1": "Spectrum Filaments Huracan Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "Huracan",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "Huracan",
+  "vendor": "Spectrum Filaments",
+  "count": 14,
+  "min_price": 27.9,
+  "max_price": 27.9,
+  "color_count": 11,
+  "has_td": 0,
+  "filament_ids": [
+    "f9db937f-5bd5-4d3e-abdd-a072a66b452c",
+    "ea3f4c59-2131-4893-8c31-671d5e89d2d9",
+    "c6636a8f-5ffe-4799-b70a-93e3ac9f26b1",
+    "43303fc7-371f-40bb-b610-17c5c9391675",
+    "d241f39b-acb6-4714-9e7e-81f79015fab7",
+    "20900a29-a21a-4045-8e64-adb33acd91a1",
+    "0a7bf2a9-0519-404a-b4b6-9de883645e0b",
+    "cb350b89-e8f0-420b-8541-f4322116de14",
+    "bb9eec44-1f16-4bc8-91ac-6d14bc12aa72",
+    "07c4f88d-d4ed-4afe-84df-5e18555d65bc",
+    "51dc1602-a42e-42ba-94b6-380a45afd79b",
+    "0048256d-19d0-495f-98a9-d4413efd454a",
+    "d096bf8e-1790-4aa5-a3dd-27592772ca5b",
+    "3504daaf-4669-4b93-ad4d-b6cf3ec39848"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments Huracan Filament",
+    "description": "Compare 14 Spectrum Filaments Huracan filaments on FilaScope",
+    "url": "https://filascope.com/filaments/huracan/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Huracan",
+          "item": "https://filascope.com/filaments/huracan"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

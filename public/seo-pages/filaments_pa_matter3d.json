@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pa/matter3d",
   "title": "Matter3D PA Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Matter3D PA filaments. Prices from $39.99 to $39.99. 3 colors available.",
+  "description": "Compare 3 Matter3D PA filaments. Prices from $24.99 to $24.99. 3 colors available.",
   "h1": "Matter3D PA Filament",
   "keywords": [
     "Matter3D",
@@ -15,14 +15,14 @@
   "material": "PA",
   "vendor": "Matter3D",
   "count": 3,
-  "min_price": 39.99,
-  "max_price": 39.99,
+  "min_price": 24.99,
+  "max_price": 24.99,
   "color_count": 3,
   "has_td": 0,
   "filament_ids": [
-    "3bf62e21-2153-42df-83b1-7da99b33f3f0",
-    "bdad0383-28e8-48d2-9d5b-ba31ed9ab972",
-    "49bcaefb-a47d-4bd2-bcf1-c713bb2bf260"
+    "79fdea31-bdda-449e-a1d4-641264ec8ab3",
+    "213cf433-bea4-4e9e-a73d-3beb69303e8a",
+    "8c8e3961-d4d7-4f4d-92b3-3969352897ef"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

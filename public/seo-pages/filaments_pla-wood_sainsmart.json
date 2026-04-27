@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-wood/sainsmart",
+  "title": "SainSmart PLA-Wood Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 SainSmart PLA-Wood filaments. Prices from $95.00 to $803.00. 3 colors available. 4 with HueForge TD values.",
+  "h1": "SainSmart PLA-Wood Filament",
+  "keywords": [
+    "SainSmart",
+    "PLA-Wood",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Wood",
+  "vendor": "SainSmart",
+  "count": 4,
+  "min_price": 95,
+  "max_price": 803,
+  "color_count": 3,
+  "has_td": 4,
+  "filament_ids": [
+    "8cdc9696-7d22-4f68-af26-0c0190cfe6d3",
+    "2d5eb2b3-b883-4148-b96a-10e2852adca1",
+    "a31d8735-aee8-4074-b3ad-d22e0923c766",
+    "c161394b-b264-47f1-8bcf-8b9b41a22313"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "SainSmart PLA-Wood Filament",
+    "description": "Compare 4 SainSmart PLA-Wood filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-wood/sainsmart",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Wood",
+          "item": "https://filascope.com/filaments/pla-wood"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "SainSmart"
+        }
+      ]
+    }
+  }
+}

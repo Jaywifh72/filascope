@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pet-cf/elegoo",
+  "title": "Elegoo PET-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Elegoo PET-CF filaments. Prices from $29.99 to $259.99. 2 colors available.",
+  "h1": "Elegoo PET-CF Filament",
+  "keywords": [
+    "Elegoo",
+    "PET-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PET-CF",
+  "vendor": "Elegoo",
+  "count": 3,
+  "min_price": 29.99,
+  "max_price": 259.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "64f59674-6541-47da-bd34-8562b140a0a6",
+    "64f59674-6541-47da-bd34-8562b140a0a6",
+    "f6e4cfbd-738d-4239-b959-a2e7a0ed932c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PET-CF Filament",
+    "description": "Compare 3 Elegoo PET-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pet-cf/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PET-CF",
+          "item": "https://filascope.com/filaments/pet-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

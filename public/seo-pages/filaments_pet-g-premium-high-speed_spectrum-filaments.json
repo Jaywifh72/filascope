@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pet-g-premium-high-speed/spectrum-filaments",
   "title": "Spectrum Filaments PET-G Premium High Speed Filament — Prices, Specs & Reviews",
-  "description": "Compare 8 Spectrum Filaments PET-G Premium High Speed filaments. Prices from $29.00 to $29.00. 8 colors available.",
+  "description": "Compare 8 Spectrum Filaments PET-G Premium High Speed filaments. Prices from $20.99 to $29.00. 8 colors available.",
   "h1": "Spectrum Filaments PET-G Premium High Speed Filament",
   "keywords": [
     "Spectrum Filaments",
@@ -15,19 +15,19 @@
   "material": "PET-G Premium High Speed",
   "vendor": "Spectrum Filaments",
   "count": 8,
-  "min_price": 29,
+  "min_price": 20.99,
   "max_price": 29,
   "color_count": 8,
   "has_td": 0,
   "filament_ids": [
-    "fd4f227a-eb38-4f4a-b636-98e3bbda328b",
-    "d83286c2-7db8-4ecc-a573-04362682a343",
     "34cc6006-39dd-4e55-b5a4-731fc688cc2e",
     "5d7b3c92-5ea3-4c85-8508-77d46357a44c",
     "b8af4d18-1ddb-4914-ac3e-6d94bcb3771b",
+    "8feed1e6-220d-48dd-92ed-5f482e25f43c",
     "8349bd96-789f-4901-93da-de4d646be35b",
+    "d83286c2-7db8-4ecc-a573-04362682a343",
     "0fe9637d-09e7-4732-aac0-e90c1bf9a44d",
-    "8feed1e6-220d-48dd-92ed-5f482e25f43c"
+    "fd4f227a-eb38-4f4a-b636-98e3bbda328b"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

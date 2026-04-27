@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pp",
   "title": "Best PP Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PP filaments in 2026. 39 options from 11 brands, starting at $25.99. Expert picks, prices & specs.",
+  "description": "Compare the best PP filaments in 2026. 41 options from 11 brands, starting at $25.99. Expert picks, prices & specs.",
   "h1": "Best PP Filament (2026)",
   "keywords": [
     "best PP",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PP",
-  "count": 39,
+  "count": 41,
   "brands": 11,
   "min_price": 25.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PP Filament 2026",
-    "description": "Expert comparison of 39 PP filaments",
+    "description": "Expert comparison of 41 PP filaments",
     "url": "https://filascope.com/best-pp"
   }
 }

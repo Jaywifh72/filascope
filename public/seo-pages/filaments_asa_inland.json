@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/inland",
+  "title": "Inland ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Inland ASA filaments. Prices from $24.99 to $24.99. 5 colors available.",
+  "h1": "Inland ASA Filament",
+  "keywords": [
+    "Inland",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Inland",
+  "count": 5,
+  "min_price": 24.99,
+  "max_price": 24.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "006531b4-77fc-4b94-b076-d4ae7bee335a",
+    "904da633-7f26-4b97-8a59-2c84744133db",
+    "fd2899b1-d44a-4e5b-8a9c-b36ec21c278e",
+    "b05d9b55-cd1d-4741-8cbc-bc20eecd0a2c",
+    "0460fd73-f08a-4615-a0bd-efc7ed19bc37"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Inland ASA Filament",
+    "description": "Compare 5 Inland ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/inland",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Inland"
+        }
+      ]
+    }
+  }
+}

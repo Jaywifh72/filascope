@@ -20,14 +20,14 @@
   "color_count": 6,
   "has_td": 2,
   "filament_ids": [
-    "069093c5-bb64-4471-8c0d-f55bb3adcfeb",
-    "178f2fbb-4a56-468b-917e-5b29544c2252",
     "8de306fa-d6fa-418d-b6ba-e86b5e3d6c5e",
     "714d1725-c7d3-42c0-9e6a-17f18aaac150",
-    "d3dfe0ee-b7ce-4315-bc79-4cc7be710f60",
-    "0deb4455-9aaa-4710-ba83-7773c16bfc64",
     "838779e1-5d5e-45c5-a590-dbca211f00ac",
-    "caa4ff39-336a-4c8c-bcad-508fd810453b"
+    "caa4ff39-336a-4c8c-bcad-508fd810453b",
+    "0deb4455-9aaa-4710-ba83-7773c16bfc64",
+    "069093c5-bb64-4471-8c0d-f55bb3adcfeb",
+    "d3dfe0ee-b7ce-4315-bc79-4cc7be710f60",
+    "178f2fbb-4a56-468b-917e-5b29544c2252"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

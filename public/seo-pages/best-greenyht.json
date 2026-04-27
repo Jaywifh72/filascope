@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-greenyht",
+  "title": "Best GreenyHT Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best GreenyHT filaments in 2026. 5 options from 1 brands, starting at $36.90. Expert picks, prices & specs.",
+  "h1": "Best GreenyHT Filament (2026)",
+  "keywords": [
+    "best GreenyHT",
+    "GreenyHT filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "GreenyHT",
+  "count": 5,
+  "brands": 1,
+  "min_price": 36.9,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best GreenyHT Filament 2026",
+    "description": "Expert comparison of 5 GreenyHT filaments",
+    "url": "https://filascope.com/best-greenyht"
+  }
+}

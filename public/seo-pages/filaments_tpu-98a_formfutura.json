@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/tpu-98a/formfutura",
   "title": "FormFutura TPU-98A Filament — Prices, Specs & Reviews",
-  "description": "Compare 7 FormFutura TPU-98A filaments. Prices from $30.99 to $35.70. 7 colors available.",
+  "description": "Compare 7 FormFutura TPU-98A filaments. Prices from $38.37 to $38.37. 7 colors available.",
   "h1": "FormFutura TPU-98A Filament",
   "keywords": [
     "FormFutura",
@@ -15,18 +15,18 @@
   "material": "TPU-98A",
   "vendor": "FormFutura",
   "count": 7,
-  "min_price": 30.99,
-  "max_price": 35.7,
+  "min_price": 38.37,
+  "max_price": 38.37,
   "color_count": 7,
   "has_td": 0,
   "filament_ids": [
-    "22bb2000-5779-4ea9-9f48-722a4eab01f4",
-    "69e2396a-06e6-4584-a64e-02b91b4b0fe8",
-    "9ef50ebe-2be0-44e5-a440-1f51ba8b8d46",
-    "b4d2baf0-80a8-4332-974d-15b958fd54e4",
-    "0bc0c6b2-02ba-4af1-903c-f59e101a6e3f",
-    "e6d7c152-aced-49bb-bd70-af2c8a65d6f6",
-    "cf8b2044-c277-4c64-89ab-35882ca577b5"
+    "77a89d6b-250f-43f0-8d0e-53d5bca9971a",
+    "0704f61e-9eae-4ae6-9c45-32b92a064467",
+    "93384e8b-7cca-4a99-89c9-5ea32dc5f1c6",
+    "53a19112-7159-4fe0-8ab7-1e8ef7093ec4",
+    "fbafb9b2-292c-430a-be05-1e347fda5c2c",
+    "f52f6e70-7649-4ee1-805f-c007b38b7a0f",
+    "cc73d627-eaa6-42f3-b838-dda04f113157"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

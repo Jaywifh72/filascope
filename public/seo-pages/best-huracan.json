@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-huracan",
+  "title": "Best Huracan Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best Huracan filaments in 2026. 14 options from 1 brands, starting at $27.90. Expert picks, prices & specs.",
+  "h1": "Best Huracan Filament (2026)",
+  "keywords": [
+    "best Huracan",
+    "Huracan filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "Huracan",
+  "count": 14,
+  "brands": 1,
+  "min_price": 27.9,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best Huracan Filament 2026",
+    "description": "Expert comparison of 14 Huracan filaments",
+    "url": "https://filascope.com/best-huracan"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc/sainsmart",
+  "title": "SainSmart PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 29 SainSmart PC filaments. Prices from $14.00 to $144.00. 10 colors available. 29 with HueForge TD values.",
+  "h1": "SainSmart PC Filament",
+  "keywords": [
+    "SainSmart",
+    "PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC",
+  "vendor": "SainSmart",
+  "count": 29,
+  "min_price": 14,
+  "max_price": 144,
+  "color_count": 10,
+  "has_td": 29,
+  "filament_ids": [
+    "4116f057-8772-4030-b357-01dc34e45cd5",
+    "ea2e01f5-25e3-43a9-a5ac-336e330e43ea",
+    "58919b59-ad63-491b-ac5c-3e440d5600a0",
+    "df9c1239-06cc-4af1-85fe-98d65e279cba",
+    "cff593bd-42a1-403c-bf80-42ef80c41f4f",
+    "85925a50-935f-411f-94c2-6b39f90faca7",
+    "65dfa281-69ee-4556-af52-6a8874dcf3f0",
+    "eb4d9e67-fa12-43eb-bd7f-a3aa13078d1f",
+    "6c2379ea-ffad-4700-92ee-91858d052196",
+    "7070ad78-1739-46ad-8db7-fbb63d7cef40",
+    "93a89e03-51af-4672-9dd6-2c1d7dbda464",
+    "a67c21c9-f19f-467e-98fb-ad766758866b",
+    "580f720d-e6c2-41cf-8fe5-30986017c08b",
+    "2dc1b650-623c-4104-a18b-9b00063c4af6",
+    "facf1fd5-34d7-4e29-bad1-97bf99f33e7a",
+    "33eb9ffe-a936-4bc9-9fea-7ee78991fa5c",
+    "c1e4f5d7-a238-4409-a3e2-d91f1bf56e1b",
+    "f5a9c33c-abb8-44c5-b985-8ffa9cbe72ad",
+    "0d8ee0d6-fb64-4da4-9d59-6bf2096d8f69",
+    "f7ffffd6-469f-42cb-a0b7-1fa8a25611b7"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "SainSmart PC Filament",
+    "description": "Compare 29 SainSmart PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc/sainsmart",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC",
+          "item": "https://filascope.com/filaments/pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "SainSmart"
+        }
+      ]
+    }
+  }
+}

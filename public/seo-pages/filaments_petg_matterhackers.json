@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/matterhackers",
+  "title": "MatterHackers PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 MatterHackers PETG filaments. Prices from $22.99 to $120.00. 8 colors available. 1 with HueForge TD values.",
+  "h1": "MatterHackers PETG Filament",
+  "keywords": [
+    "MatterHackers",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "MatterHackers",
+  "count": 14,
+  "min_price": 22.99,
+  "max_price": 120,
+  "color_count": 8,
+  "has_td": 1,
+  "filament_ids": [
+    "6242cf64-e0af-499c-9d3f-20ba110c9367",
+    "e8d4798d-8a0e-47db-a209-72fe1671aa0f",
+    "462c329a-2950-43eb-9a64-1ed9b4888800",
+    "a7fd6b5a-f40c-498c-91e9-0c85fd434bdb",
+    "89b18d65-1155-4065-b0b9-fe409ee8b927",
+    "7f0b7d19-7034-4482-8888-4fab1f79cc19",
+    "f2f4c271-f796-46e0-8e87-00f0deb6faff",
+    "8f471998-5e29-42b2-bb03-9e30e3176f30",
+    "c21cac4d-84c9-45cf-80c8-f123a1c4ad97",
+    "475bb31b-faa3-4ada-af63-68228bd39788",
+    "4d47610e-e1a9-49ee-86a8-7b3b17fd5405",
+    "58364285-4125-47f9-b9ab-ee8a0f6f8f55",
+    "45d8f00a-837f-4515-af90-34ea920b0573",
+    "2c3d89fd-34ef-4ad3-9a53-a113e574125d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "MatterHackers PETG Filament",
+    "description": "Compare 14 MatterHackers PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/matterhackers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "MatterHackers"
+        }
+      ]
+    }
+  }
+}

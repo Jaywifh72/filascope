@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pla-hs/treed-filaments",
   "title": "TreeD Filaments PLA-HS Filament — Prices, Specs & Reviews",
-  "description": "Compare 8 TreeD Filaments PLA-HS filaments. Prices from $38.39 to $38.39. 8 colors available.",
+  "description": "Compare 8 TreeD Filaments PLA-HS filaments. Prices from $38.39 to $38.39. 8 colors available. 6 with HueForge TD values.",
   "h1": "TreeD Filaments PLA-HS Filament",
   "keywords": [
     "TreeD Filaments",
@@ -18,16 +18,16 @@
   "min_price": 38.39,
   "max_price": 38.39,
   "color_count": 8,
-  "has_td": 0,
+  "has_td": 6,
   "filament_ids": [
-    "c1979714-5667-4937-9ab7-5ae505fc6813",
-    "47a824ad-609f-42c4-ac82-ec088ad96d8d",
-    "c2ae025a-dbf2-440a-ab4f-637e9f32fbac",
-    "d1cb5feb-b734-4fc8-bcc7-037dc9fde892",
-    "104d4630-f09c-4340-b267-44eb5f2b9691",
-    "5dd21d5b-6aa8-4508-b6f2-b0a5c3e9b9bb",
-    "d98b62e3-11f8-4869-9c4e-73204f32b797",
-    "82890e07-8041-4f17-8cad-3d6d70453db2"
+    "691b547a-55a4-435c-97bf-3f1c14c68705",
+    "91595f86-b0a0-4b86-b831-617fcde7d811",
+    "9999d9e6-8287-4184-9589-57badb34a03c",
+    "9b077823-f5b9-47e4-ac0d-6fcaffcd7900",
+    "11ea8049-a81b-4b0f-aeda-465b1ea2ea03",
+    "171deb3f-9416-4bd2-bae8-319f069705e1",
+    "f4a8d4c7-708f-4d17-a132-7320343f13a7",
+    "34226a6a-4311-445f-af8e-902be8a99ab0"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

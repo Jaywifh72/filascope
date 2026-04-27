@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pla-cf",
   "title": "Best PLA-CF Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PLA-CF filaments in 2026. 87 options from 16 brands, starting at $20.62. Expert picks, prices & specs.",
+  "description": "Compare the best PLA-CF filaments in 2026. 124 options from 18 brands, starting at $4.00. Expert picks, prices & specs.",
   "h1": "Best PLA-CF Filament (2026)",
   "keywords": [
     "best PLA-CF",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PLA-CF",
-  "count": 87,
-  "brands": 16,
-  "min_price": 20.62,
+  "count": 124,
+  "brands": 18,
+  "min_price": 4,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PLA-CF Filament 2026",
-    "description": "Expert comparison of 87 PLA-CF filaments",
+    "description": "Expert comparison of 124 PLA-CF filaments",
     "url": "https://filascope.com/best-pla-cf"
   }
 }

@@ -21,8 +21,8 @@
   "has_td": 3,
   "filament_ids": [
     "66a6e08b-7a62-47d8-88cc-3c59eadc9ff2",
-    "34597a29-09e5-4073-9d2f-35c6ed9d3b49",
-    "9fa1ba54-d660-42c2-be22-42beafb15322"
+    "9fa1ba54-d660-42c2-be22-42beafb15322",
+    "34597a29-09e5-4073-9d2f-35c6ed9d3b49"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/hips/formfutura",
   "title": "FormFutura HIPS Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 FormFutura HIPS filaments. Prices from $24.75 to $28.51. 3 colors available. 3 with HueForge TD values.",
+  "description": "Compare 3 FormFutura HIPS filaments. Prices from $19.63 to $19.63. 3 colors available. 1 with HueForge TD values.",
   "h1": "FormFutura HIPS Filament",
   "keywords": [
     "FormFutura",
@@ -15,14 +15,14 @@
   "material": "HIPS",
   "vendor": "FormFutura",
   "count": 3,
-  "min_price": 24.75,
-  "max_price": 28.51,
+  "min_price": 19.63,
+  "max_price": 19.63,
   "color_count": 3,
-  "has_td": 3,
+  "has_td": 1,
   "filament_ids": [
-    "bf04a375-6e5b-4628-8c8b-953ae10e435e",
-    "928c9841-85eb-4b9a-8f91-c7b13ae9dbdb",
-    "690d3dd7-4d02-4101-a0e7-9c8d4e5f7772"
+    "ca713fd7-d064-41ca-a2ff-4687a76a75df",
+    "1ce60e83-acfc-49f4-b1a1-852b4e1a1ac6",
+    "ce3e9e78-0c3e-4134-acc7-4a36550b9bd5"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

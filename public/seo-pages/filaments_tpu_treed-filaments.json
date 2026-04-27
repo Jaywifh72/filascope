@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/tpu/treed-filaments",
   "title": "TreeD Filaments TPU Filament — Prices, Specs & Reviews",
-  "description": "Compare 7 TreeD Filaments TPU filaments. Prices from $60.39 to $65.89. 3 colors available.",
+  "description": "Compare 7 TreeD Filaments TPU filaments. Prices from $60.39 to $65.89. 3 colors available. 4 with HueForge TD values.",
   "h1": "TreeD Filaments TPU Filament",
   "keywords": [
     "TreeD Filaments",
@@ -18,15 +18,15 @@
   "min_price": 60.39,
   "max_price": 65.89,
   "color_count": 3,
-  "has_td": 0,
+  "has_td": 4,
   "filament_ids": [
-    "41e6f721-f81c-4185-8070-ffbfc35da08b",
-    "5ad3927c-5a93-4357-a742-1ac4b828ab5b",
-    "e016c9e8-d9c0-44d7-8ef6-55792ff9353d",
-    "6c77c82c-e8da-4896-a16a-0b33eb4095d3",
-    "91dc5978-3ee7-481f-8828-f4ff0e3dbbf4",
-    "af3649ad-c367-4602-bcb5-ef105fbc3a9a",
-    "49e3abc5-56e6-4466-9681-fd0d7af74c2f"
+    "af388013-a373-4e89-a731-c6ef38bcdf3f",
+    "67b5e555-d2a8-4fc1-ab83-b3569abcb9b3",
+    "3bc2f843-a5d6-41cd-b322-0de133342ce9",
+    "19c0b1a3-8f7a-433b-b409-5200bc9f0368",
+    "11ec0d78-7218-4753-aece-1034b3f22181",
+    "5d14ac70-6521-4750-a02e-6957aa03ce73",
+    "ebf85a2b-69ee-46b2-a330-1740ebcc79bd"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

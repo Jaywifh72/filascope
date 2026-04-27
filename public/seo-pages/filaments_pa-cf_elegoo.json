@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa-cf/elegoo",
+  "title": "Elegoo PA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Elegoo PA-CF filaments. Prices from $45.99 to $378.99. 2 colors available. 1 with HueForge TD values.",
+  "h1": "Elegoo PA-CF Filament",
+  "keywords": [
+    "Elegoo",
+    "PA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA-CF",
+  "vendor": "Elegoo",
+  "count": 3,
+  "min_price": 45.99,
+  "max_price": 378.99,
+  "color_count": 2,
+  "has_td": 1,
+  "filament_ids": [
+    "c4838cc4-4b6b-442d-8289-adb99bc9603e",
+    "93fd56ab-b571-46a3-91a8-05d1ea9d0d03",
+    "c4838cc4-4b6b-442d-8289-adb99bc9603e"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PA-CF Filament",
+    "description": "Compare 3 Elegoo PA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa-cf/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA-CF",
+          "item": "https://filascope.com/filaments/pa-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

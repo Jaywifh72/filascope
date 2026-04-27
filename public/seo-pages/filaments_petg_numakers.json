@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/numakers",
+  "title": "Numakers PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 Numakers PETG filaments. Prices from $15.99 to $15.99. 7 colors available.",
+  "h1": "Numakers PETG Filament",
+  "keywords": [
+    "Numakers",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Numakers",
+  "count": 7,
+  "min_price": 15.99,
+  "max_price": 15.99,
+  "color_count": 7,
+  "has_td": 0,
+  "filament_ids": [
+    "2da8ba4f-cbed-45c9-bc29-0675046fc746",
+    "5179b4d9-5b12-4a4d-bbd0-a02efb0ff068",
+    "a2f7e56f-fd3e-4aa9-9017-96156810eada",
+    "e952ffdb-129d-4438-8837-2f71e8e0fb67",
+    "825ded6e-6dd7-4a3b-b65f-909f8a1e206e",
+    "82cb9764-750e-4db1-94b6-d658dfbbf5fd",
+    "450b514f-c09e-4b5b-adc4-50509374fe87"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Numakers PETG Filament",
+    "description": "Compare 7 Numakers PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/numakers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numakers"
+        }
+      ]
+    }
+  }
+}

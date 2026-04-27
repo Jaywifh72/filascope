@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pps/qidi",
+  "title": "QIDI PPS Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 QIDI PPS filaments. Prices from $59.99 to $104.99. 2 colors available.",
+  "h1": "QIDI PPS Filament",
+  "keywords": [
+    "QIDI",
+    "PPS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PPS",
+  "vendor": "QIDI",
+  "count": 3,
+  "min_price": 59.99,
+  "max_price": 104.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "afa52a58-2511-4cbb-b144-1ff4c62918ce",
+    "d4fab656-1399-48fe-a2bd-b23163c4774a",
+    "e08d7cec-8893-4763-b34c-d90305296838"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "QIDI PPS Filament",
+    "description": "Compare 3 QIDI PPS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pps/qidi",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PPS",
+          "item": "https://filascope.com/filaments/pps"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "QIDI"
+        }
+      ]
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pla-hs/ziro",
   "title": "Ziro PLA-HS Filament — Prices, Specs & Reviews",
-  "description": "Compare 6 Ziro PLA-HS filaments. Prices from $27.83 to $27.83. 6 colors available.",
+  "description": "Compare 6 Ziro PLA-HS filaments. Prices from $27.86 to $27.86. 6 colors available.",
   "h1": "Ziro PLA-HS Filament",
   "keywords": [
     "Ziro",
@@ -15,17 +15,17 @@
   "material": "PLA-HS",
   "vendor": "Ziro",
   "count": 6,
-  "min_price": 27.83,
-  "max_price": 27.83,
+  "min_price": 27.86,
+  "max_price": 27.86,
   "color_count": 6,
   "has_td": 0,
   "filament_ids": [
-    "a03ecb01-73fc-4411-98aa-ebca62171222",
-    "72c9659c-8f37-4cbd-b44c-c0a43ee92e57",
-    "921fb66b-702e-4d6e-b6f5-7b56f99a65fe",
-    "3b16a6d7-47a2-46f8-ab32-fb325239a013",
-    "3ed6a02e-3c5b-463b-9182-d11412acd069",
-    "a085ac66-c225-4473-a884-a8ba01c887b3"
+    "44a5ca38-7e17-444d-9ac2-6276705d4ae4",
+    "d605ce40-8349-45b1-b33c-5a18ff4dd7c4",
+    "b0f00ba7-8815-4c22-bb14-abc5b86a9dbf",
+    "60ce2963-8a5e-4886-bdf9-1cabf1ce64ea",
+    "2d8be234-704b-411f-a2a6-39b1acc1d922",
+    "df5bd28a-a09c-4447-bccb-ac3c9722f07d"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

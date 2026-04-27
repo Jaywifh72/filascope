@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa-gf/bambu-lab",
+  "title": "Bambu Lab PA-GF Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Bambu Lab PA-GF filaments. Prices from $59.99 to $59.99. 4 colors available.",
+  "h1": "Bambu Lab PA-GF Filament",
+  "keywords": [
+    "Bambu Lab",
+    "PA-GF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA-GF",
+  "vendor": "Bambu Lab",
+  "count": 4,
+  "min_price": 59.99,
+  "max_price": 59.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "9345aab2-5870-46fc-b155-00fe97346f9b",
+    "fe3d1b07-2fe6-4678-b46b-1cd055e97bf8",
+    "5fe64d5d-0007-4957-9f82-bad2abd1bbc3",
+    "bae94c6d-509c-4885-a087-176e91108e5f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab PA-GF Filament",
+    "description": "Compare 4 Bambu Lab PA-GF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa-gf/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA-GF",
+          "item": "https://filascope.com/filaments/pa-gf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

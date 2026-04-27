@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/sebs/recreus",
+  "title": "Recreus SEBS Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Recreus SEBS filaments. Prices from $33.90 to $130.90. 2 colors available.",
+  "h1": "Recreus SEBS Filament",
+  "keywords": [
+    "Recreus",
+    "SEBS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "SEBS",
+  "vendor": "Recreus",
+  "count": 4,
+  "min_price": 33.9,
+  "max_price": 130.9,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "ac656bef-4602-4044-bde0-815907d616b8",
+    "89b85b8a-67c9-4603-b778-84673d2556bd",
+    "eb15691a-4737-46d2-a679-000d94f7df3c",
+    "ddf1f998-ec7c-4528-81fe-a0b0b9a9d7a9"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Recreus SEBS Filament",
+    "description": "Compare 4 Recreus SEBS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/sebs/recreus",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "SEBS",
+          "item": "https://filascope.com/filaments/sebs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recreus"
+        }
+      ]
+    }
+  }
+}

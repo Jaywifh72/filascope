@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/rapid-petg/elegoo",
   "title": "Elegoo RAPID PETG Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Elegoo RAPID PETG filaments. Prices from $34.99 to $34.99. 3 colors available.",
+  "description": "Compare 5 Elegoo RAPID PETG filaments. Prices from $34.99 to $34.99. 3 colors available.",
   "h1": "Elegoo RAPID PETG Filament",
   "keywords": [
     "Elegoo",
@@ -14,21 +14,23 @@
   ],
   "material": "RAPID PETG",
   "vendor": "Elegoo",
-  "count": 3,
+  "count": 5,
   "min_price": 34.99,
   "max_price": 34.99,
   "color_count": 3,
   "has_td": 0,
   "filament_ids": [
     "48e2f369-169a-4cbd-b95c-593d82831a54",
+    "2ace1f30-0b15-445f-aadd-412f44c668a3",
     "2ef687fb-435d-4360-91aa-c5ea58f6e890",
-    "2ace1f30-0b15-445f-aadd-412f44c668a3"
+    "2ace1f30-0b15-445f-aadd-412f44c668a3",
+    "2ef687fb-435d-4360-91aa-c5ea58f6e890"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Elegoo RAPID PETG Filament",
-    "description": "Compare 3 Elegoo RAPID PETG filaments on FilaScope",
+    "description": "Compare 5 Elegoo RAPID PETG filaments on FilaScope",
     "url": "https://filascope.com/filaments/rapid-petg/elegoo",
     "breadcrumb": {
       "@type": "BreadcrumbList",

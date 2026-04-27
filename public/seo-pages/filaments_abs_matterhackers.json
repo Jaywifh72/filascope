@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/matterhackers",
+  "title": "MatterHackers ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 MatterHackers ABS filaments. Prices from $22.99 to $24.99. 5 colors available. 1 with HueForge TD values.",
+  "h1": "MatterHackers ABS Filament",
+  "keywords": [
+    "MatterHackers",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "MatterHackers",
+  "count": 7,
+  "min_price": 22.99,
+  "max_price": 24.99,
+  "color_count": 5,
+  "has_td": 1,
+  "filament_ids": [
+    "35bf44db-7b6d-4bae-9f3b-7a553d5798d8",
+    "af6986d5-f09a-4511-8fad-6e356f3e73d7",
+    "9a1e8bbd-2e24-4042-8008-23f3cd4df46f",
+    "ba1fd0d7-0847-4df8-831c-c6475bc747fe",
+    "81d4b85a-e1dc-45de-aa9a-bc26170e671b",
+    "def2a868-2e23-4344-ae06-2b672081ce4c",
+    "144da5ee-6002-4c7f-9999-964df34c90b5"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "MatterHackers ABS Filament",
+    "description": "Compare 7 MatterHackers ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/matterhackers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "MatterHackers"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/overture",
+  "title": "Overture ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 14 Overture ASA filaments. Prices from $19.99 to $29.99. 10 colors available.",
+  "h1": "Overture ASA Filament",
+  "keywords": [
+    "Overture",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "Overture",
+  "count": 14,
+  "min_price": 19.99,
+  "max_price": 29.99,
+  "color_count": 10,
+  "has_td": 0,
+  "filament_ids": [
+    "a3692960-c1ca-4c73-9919-3362bba52476",
+    "bbb6bc64-9f68-4f1f-8a33-f714a7d2941a",
+    "6ad10f78-438c-4f07-b27d-260d633bac5e",
+    "f356c6b4-6569-46b1-ad3e-007d26ba02bc",
+    "bdda3f8b-9d4c-460f-aabe-df130342ca69",
+    "43f209a1-3a03-445a-a74a-c53f22b9e898",
+    "a3074ec4-785e-4296-bf7a-59faaa654f39",
+    "2f4e2df4-eb1b-4d12-bb06-687b13f72b2a",
+    "2f733d0a-65e0-4d47-8f32-4de97443df1e",
+    "89318b89-6ac4-4a94-be76-dc7e3835cd76",
+    "f9e77535-6e62-4200-b2ff-3d58679157f8",
+    "df9c1ca3-f454-4b9c-bbbc-b41add8b4e83",
+    "e24983f0-16ad-47f9-9010-0338d75d3ce3",
+    "f8dfbbf7-8231-4317-b22e-f813241f0458"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Overture ASA Filament",
+    "description": "Compare 14 Overture ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/overture",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Overture"
+        }
+      ]
+    }
+  }
+}

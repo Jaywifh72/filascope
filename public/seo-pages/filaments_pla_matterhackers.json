@@ -1,0 +1,73 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla/matterhackers",
+  "title": "MatterHackers PLA Filament — Prices, Specs & Reviews",
+  "description": "Compare 36 MatterHackers PLA filaments. Prices from $20.87 to $99.99. 10 colors available. 2 with HueForge TD values.",
+  "h1": "MatterHackers PLA Filament",
+  "keywords": [
+    "MatterHackers",
+    "PLA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA",
+  "vendor": "MatterHackers",
+  "count": 36,
+  "min_price": 20.87,
+  "max_price": 99.99,
+  "color_count": 10,
+  "has_td": 2,
+  "filament_ids": [
+    "6efe7601-aba1-4b46-a8c3-e2684964b851",
+    "51e8eb77-f8e6-4658-9808-0ba31a05e13d",
+    "fbe5368b-8e04-42ff-9c67-f3016c509ab4",
+    "dbb7ec95-6ae5-4afa-be62-ad75cf148d17",
+    "a8d38941-66aa-4856-98f8-bc0464be4135",
+    "a27a782f-9cac-427d-898d-6201ee57c989",
+    "249e8f4c-d91b-45d7-bbac-2ed634c18747",
+    "75207696-8890-4a48-a3d2-c146afe436f1",
+    "80062ed3-2240-4131-8d68-6fff2471234d",
+    "47040bf9-1403-4a58-8b5c-0171cc7a0333",
+    "17dc7339-0534-4a3d-9673-965d2084efd5",
+    "95fda44a-bf24-4dba-83cc-2c6c3f246b09",
+    "0de7fea6-a7c4-494a-9f7f-e5a9396ea082",
+    "085f1fd9-4255-4f2b-a2ea-1d10db530eb8",
+    "8aed13b2-99a9-4099-9777-d8dcc5370513",
+    "1c787649-478a-428c-8ae7-5a36b5fc92b4",
+    "7f477f4a-76d5-4107-a931-fb070245791c",
+    "c4b97700-1d99-4b89-8e0f-df92d1142cbd",
+    "fac7f413-7cc2-449f-84bc-5f6177c757f3",
+    "c354489c-e27e-456b-b51d-760b92635fca"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "MatterHackers PLA Filament",
+    "description": "Compare 36 MatterHackers PLA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla/matterhackers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA",
+          "item": "https://filascope.com/filaments/pla"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "MatterHackers"
+        }
+      ]
+    }
+  }
+}

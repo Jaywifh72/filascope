@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pet/esun",
   "title": "eSun PET Filament — Prices, Specs & Reviews",
-  "description": "Compare 8 eSun PET filaments. Prices from $24.99 to $24.99. 6 colors available.",
+  "description": "Compare 7 eSun PET filaments. Prices from $24.99 to $24.99. 5 colors available.",
   "h1": "eSun PET Filament",
   "keywords": [
     "eSun",
@@ -14,26 +14,25 @@
   ],
   "material": "PET",
   "vendor": "eSun",
-  "count": 8,
+  "count": 7,
   "min_price": 24.99,
   "max_price": 24.99,
-  "color_count": 6,
+  "color_count": 5,
   "has_td": 0,
   "filament_ids": [
-    "ed7ce2ad-b3e9-4ca9-b2a0-6f1db7e6ee23",
-    "21124570-d3a8-4832-8889-8ed3da357fd8",
-    "c9279688-fc11-4a10-ad38-612993c4bf58",
     "17d72d37-b917-4dbb-8645-602bbc178725",
+    "ed7ce2ad-b3e9-4ca9-b2a0-6f1db7e6ee23",
     "610249d1-0333-4b75-ae04-51bd5b03f59f",
-    "2b916f8f-81a4-4dae-91ea-14cb5f867a47",
+    "c9279688-fc11-4a10-ad38-612993c4bf58",
     "e986e236-3aab-4edf-b498-af21416462b1",
-    "fcdaad70-4b48-4df2-ac22-23a2739f7490"
+    "fcdaad70-4b48-4df2-ac22-23a2739f7490",
+    "2b916f8f-81a4-4dae-91ea-14cb5f867a47"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "eSun PET Filament",
-    "description": "Compare 8 eSun PET filaments on FilaScope",
+    "description": "Compare 7 eSun PET filaments on FilaScope",
     "url": "https://filascope.com/filaments/pet/esun",
     "breadcrumb": {
       "@type": "BreadcrumbList",

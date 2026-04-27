@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/fr-pc/elegoo",
+  "title": "Elegoo FR-PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Elegoo FR-PC filaments. Prices from $34.99 to $152.71. 2 colors available.",
+  "h1": "Elegoo FR-PC Filament",
+  "keywords": [
+    "Elegoo",
+    "FR-PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "FR-PC",
+  "vendor": "Elegoo",
+  "count": 3,
+  "min_price": 34.99,
+  "max_price": 152.71,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "9e6ff110-3a3b-4917-a94f-3c1f80bd7502",
+    "a40a3a7c-c634-467b-9e00-7cea7f38d3aa",
+    "9e6ff110-3a3b-4917-a94f-3c1f80bd7502"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo FR-PC Filament",
+    "description": "Compare 3 Elegoo FR-PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/fr-pc/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "FR-PC",
+          "item": "https://filascope.com/filaments/fr-pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

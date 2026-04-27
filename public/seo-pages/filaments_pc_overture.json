@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pc/overture",
+  "title": "Overture PC Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Overture PC filaments. Prices from $26.99 to $38.99. 4 colors available.",
+  "h1": "Overture PC Filament",
+  "keywords": [
+    "Overture",
+    "PC",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PC",
+  "vendor": "Overture",
+  "count": 4,
+  "min_price": 26.99,
+  "max_price": 38.99,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "bb28ec1f-7158-464e-80ab-de2ab7439a3c",
+    "e3f93576-8f0e-4b48-a969-82c4f3209a5a",
+    "c34c8c5c-2eb9-4517-b278-b18995a70e00",
+    "b3b8488a-07df-448e-aef8-56131328e85d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Overture PC Filament",
+    "description": "Compare 4 Overture PC filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pc/overture",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PC",
+          "item": "https://filascope.com/filaments/pc"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Overture"
+        }
+      ]
+    }
+  }
+}

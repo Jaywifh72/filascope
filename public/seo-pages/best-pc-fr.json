@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pc-fr",
+  "title": "Best PC-FR Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PC-FR filaments in 2026. 4 options from 1 brands, starting at $219.99. Expert picks, prices & specs.",
+  "h1": "Best PC-FR Filament (2026)",
+  "keywords": [
+    "best PC-FR",
+    "PC-FR filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PC-FR",
+  "count": 4,
+  "brands": 1,
+  "min_price": 219.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PC-FR Filament 2026",
+    "description": "Expert comparison of 4 PC-FR filaments",
+    "url": "https://filascope.com/best-pc-fr"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-85a/bambu-lab",
+  "title": "Bambu Lab TPU 85A Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Bambu Lab TPU 85A filaments. Prices from $44.99 to $59.99. 1 colors available.",
+  "h1": "Bambu Lab TPU 85A Filament",
+  "keywords": [
+    "Bambu Lab",
+    "TPU 85A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU 85A",
+  "vendor": "Bambu Lab",
+  "count": 13,
+  "min_price": 44.99,
+  "max_price": 59.99,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "f142a9b1-9d20-4f74-b7eb-5e057a50ad91",
+    "a92cdcac-781e-4f6a-a3ff-b780d8a60f70",
+    "34422c4f-4047-4485-9856-e60b32d9fc5e",
+    "c91d7233-073f-4311-9449-1c10ec8f2eb7",
+    "d08bed3b-ceed-4c9a-b961-8515e159b750",
+    "c22c7b54-430e-4ec5-9328-d864785fb7bd",
+    "fbe9c2a8-0c5d-4f97-8ef0-0da3c594b3de",
+    "418a379e-c6c1-4f1e-807f-6577f83dbf90",
+    "0a0a2509-5868-4967-a63d-01ee30d4937b",
+    "233035d0-acdf-4290-a791-c7c6a5fa6c32",
+    "062089ee-6066-48f1-9379-1756e7b021fc",
+    "b2504c8d-a888-4a7a-9254-f84e4ca169f7",
+    "2d0cd5e9-8bdf-4d43-aabb-96cccb355715"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab TPU 85A Filament",
+    "description": "Compare 13 Bambu Lab TPU 85A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-85a/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU 85A",
+          "item": "https://filascope.com/filaments/tpu-85a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

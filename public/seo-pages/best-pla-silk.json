@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pla-silk",
   "title": "Best PLA Silk Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PLA Silk filaments in 2026. 9 options from 2 brands, starting at $23.83. Expert picks, prices & specs.",
+  "description": "Compare the best PLA Silk filaments in 2026. 6 options from 2 brands, starting at $23.83. Expert picks, prices & specs.",
   "h1": "Best PLA Silk Filament (2026)",
   "keywords": [
     "best PLA Silk",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PLA Silk",
-  "count": 9,
+  "count": 6,
   "brands": 2,
   "min_price": 23.83,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PLA Silk Filament 2026",
-    "description": "Expert comparison of 9 PLA Silk filaments",
+    "description": "Expert comparison of 6 PLA Silk filaments",
     "url": "https://filascope.com/best-pla-silk"
   }
 }

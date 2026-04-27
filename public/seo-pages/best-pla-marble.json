@@ -1,24 +1,24 @@
 {
   "type": "best-material",
   "url": "/best-pla-marble",
-  "title": "Best PLA-Marble Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PLA-Marble filaments in 2026. 8 options from 4 brands, starting at $18.99. Expert picks, prices & specs.",
-  "h1": "Best PLA-Marble Filament (2026)",
+  "title": "Best PLA-MARBLE Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PLA-MARBLE filaments in 2026. 3 options from 2 brands, starting at $22.99. Expert picks, prices & specs.",
+  "h1": "Best PLA-MARBLE Filament (2026)",
   "keywords": [
-    "best PLA-Marble",
-    "PLA-Marble filament",
+    "best PLA-MARBLE",
+    "PLA-MARBLE filament",
     "3d printing",
     "top picks"
   ],
-  "material": "PLA-Marble",
-  "count": 8,
-  "brands": 4,
-  "min_price": 18.99,
+  "material": "PLA-MARBLE",
+  "count": 3,
+  "brands": 2,
+  "min_price": 22.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "name": "Best PLA-Marble Filament 2026",
-    "description": "Expert comparison of 8 PLA-Marble filaments",
+    "name": "Best PLA-MARBLE Filament 2026",
+    "description": "Expert comparison of 3 PLA-MARBLE filaments",
     "url": "https://filascope.com/best-pla-marble"
   }
 }

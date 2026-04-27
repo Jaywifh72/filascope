@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/tpu-60a/recreus",
   "title": "Recreus TPU-60A Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Recreus TPU-60A filaments. Prices from $45.00 to $45.00. 3 colors available.",
+  "description": "Compare 9 Recreus TPU-60A filaments. Prices from $45.00 to $218.89. 4 colors available.",
   "h1": "Recreus TPU-60A Filament",
   "keywords": [
     "Recreus",
@@ -14,21 +14,27 @@
   ],
   "material": "TPU-60A",
   "vendor": "Recreus",
-  "count": 3,
+  "count": 9,
   "min_price": 45,
-  "max_price": 45,
-  "color_count": 3,
+  "max_price": 218.89,
+  "color_count": 4,
   "has_td": 0,
   "filament_ids": [
-    "328c28e7-74a7-4c81-8eee-07ae7e98335a",
+    "ce98f250-719a-4262-a5c6-59d352b62476",
+    "04c9c70a-e3b8-4bb7-8ad8-ee1fd427de0c",
+    "a5864abb-74ef-4a0c-a598-d083d93bc265",
+    "9d843b77-7bea-400b-ba95-ad2f33073cc7",
+    "0e6a18a2-dce6-42c9-a154-91ff8fa35884",
+    "b236f9ed-2b75-4864-8dd8-abad3ef40230",
     "23725021-4f07-44e8-ab49-b45372d8e01b",
-    "ce98f250-719a-4262-a5c6-59d352b62476"
+    "48af1ca2-36bf-48df-a7a6-66a0408b4de8",
+    "328c28e7-74a7-4c81-8eee-07ae7e98335a"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Recreus TPU-60A Filament",
-    "description": "Compare 3 Recreus TPU-60A filaments on FilaScope",
+    "description": "Compare 9 Recreus TPU-60A filaments on FilaScope",
     "url": "https://filascope.com/filaments/tpu-60a/recreus",
     "breadcrumb": {
       "@type": "BreadcrumbList",

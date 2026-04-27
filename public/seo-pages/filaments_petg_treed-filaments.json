@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/petg/treed-filaments",
   "title": "TreeD Filaments PETG Filament — Prices, Specs & Reviews",
-  "description": "Compare 9 TreeD Filaments PETG filaments. Prices from $32.89 to $32.89. 9 colors available.",
+  "description": "Compare 9 TreeD Filaments PETG filaments. Prices from $32.89 to $32.89. 9 colors available. 7 with HueForge TD values.",
   "h1": "TreeD Filaments PETG Filament",
   "keywords": [
     "TreeD Filaments",
@@ -18,17 +18,17 @@
   "min_price": 32.89,
   "max_price": 32.89,
   "color_count": 9,
-  "has_td": 0,
+  "has_td": 7,
   "filament_ids": [
-    "b3ec4631-6371-4d01-b5d8-5cb5bd287ea0",
-    "8a93e177-f7fa-4793-93e4-9cfb61cee674",
-    "b8009619-bac7-4c10-ad0f-e1e94da4a8f9",
-    "9515e14b-077e-4986-b6dd-b8c203f2a520",
-    "299651e6-0ba9-46b7-93e1-bdc6207802ca",
-    "de2fef09-f01a-4b49-be1a-a5d723f0ae40",
-    "f5c231a5-81d1-41f8-9b00-ebfb4ada1bc8",
-    "5cb137ed-dc9c-4642-994b-1ed68a7e9765",
-    "4feffc80-a7b2-43a4-be1a-0155e1846a48"
+    "06c5b5e7-6a74-49be-a9ca-3a4037091c92",
+    "c64f3f7b-63b9-46a7-97bf-cfec94d037f6",
+    "88f1dbef-5ce8-4a88-8f01-9633f482ed9c",
+    "396a741c-c8fa-4fe5-bce2-9944cfde0930",
+    "9e269580-a611-4907-a1ca-282fe8dc9f97",
+    "95a7ecc4-9766-4dc0-8af7-260b413be881",
+    "52e43a71-2ef7-4904-85d0-cb69ecffafb9",
+    "94faa6ae-93f7-483e-aa1d-316a3c13343d",
+    "65774cc5-d195-468c-95a7-27a5e5e8009b"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

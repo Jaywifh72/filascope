@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pps-cf",
   "title": "Best PPS-CF Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PPS-CF filaments in 2026. 3 options from 3 brands, starting at $95.99. Expert picks, prices & specs.",
+  "description": "Compare the best PPS-CF filaments in 2026. 4 options from 4 brands, starting at $95.99. Expert picks, prices & specs.",
   "h1": "Best PPS-CF Filament (2026)",
   "keywords": [
     "best PPS-CF",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PPS-CF",
-  "count": 3,
-  "brands": 3,
+  "count": 4,
+  "brands": 4,
   "min_price": 95.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PPS-CF Filament 2026",
-    "description": "Expert comparison of 3 PPS-CF filaments",
+    "description": "Expert comparison of 4 PPS-CF filaments",
     "url": "https://filascope.com/best-pps-cf"
   }
 }

@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pet-cf/qidi",
+  "title": "QIDI PET-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 QIDI PET-CF filaments. Prices from $26.99 to $39.99. 2 colors available.",
+  "h1": "QIDI PET-CF Filament",
+  "keywords": [
+    "QIDI",
+    "PET-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PET-CF",
+  "vendor": "QIDI",
+  "count": 3,
+  "min_price": 26.99,
+  "max_price": 39.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "94863037-c589-4b13-9f77-2bef1c398182",
+    "0c561a57-0da8-4445-9186-35940ab9d55f",
+    "d769770e-9c07-4b90-a8e6-9ea043315ee8"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "QIDI PET-CF Filament",
+    "description": "Compare 3 QIDI PET-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pet-cf/qidi",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PET-CF",
+          "item": "https://filascope.com/filaments/pet-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "QIDI"
+        }
+      ]
+    }
+  }
+}

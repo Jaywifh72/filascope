@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/asa/gst3d",
+  "title": "GST3D ASA Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 GST3D ASA filaments. Prices from $16.50 to $18.90. 2 colors available. 1 with HueForge TD values.",
+  "h1": "GST3D ASA Filament",
+  "keywords": [
+    "GST3D",
+    "ASA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ASA",
+  "vendor": "GST3D",
+  "count": 5,
+  "min_price": 16.5,
+  "max_price": 18.9,
+  "color_count": 2,
+  "has_td": 1,
+  "filament_ids": [
+    "661d19ac-5aad-435a-a5ec-706f10ae47db",
+    "d1ccab71-bbd0-4310-b25e-3743c4ea654b",
+    "cbfa0b3c-75a6-45e8-b43e-aafc508e746f",
+    "a6d5e61a-9fbc-43b4-a604-351ce3ed76c5",
+    "69b85608-b2bc-4783-b629-319efcd52641"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "GST3D ASA Filament",
+    "description": "Compare 5 GST3D ASA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/asa/gst3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ASA",
+          "item": "https://filascope.com/filaments/asa"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GST3D"
+        }
+      ]
+    }
+  }
+}

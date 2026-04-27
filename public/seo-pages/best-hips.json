@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-hips",
   "title": "Best HIPS Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best HIPS filaments in 2026. 58 options from 10 brands, starting at $7.00. Expert picks, prices & specs.",
+  "description": "Compare the best HIPS filaments in 2026. 64 options from 10 brands, starting at $7.00. Expert picks, prices & specs.",
   "h1": "Best HIPS Filament (2026)",
   "keywords": [
     "best HIPS",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "HIPS",
-  "count": 58,
+  "count": 64,
   "brands": 10,
   "min_price": 7,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best HIPS Filament 2026",
-    "description": "Expert comparison of 58 HIPS filaments",
+    "description": "Expert comparison of 64 HIPS filaments",
     "url": "https://filascope.com/best-hips"
   }
 }

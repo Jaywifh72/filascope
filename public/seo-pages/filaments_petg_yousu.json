@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/petg/yousu",
   "title": "Yousu PETG Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Yousu PETG filaments. Prices from $31.99 to $31.99. 0 colors available.",
+  "description": "Compare 3 Yousu PETG filaments. Prices from $31.99 to $31.99. 1 colors available. 3 with HueForge TD values.",
   "h1": "Yousu PETG Filament",
   "keywords": [
     "Yousu",
@@ -17,8 +17,8 @@
   "count": 3,
   "min_price": 31.99,
   "max_price": 31.99,
-  "color_count": 0,
-  "has_td": 0,
+  "color_count": 1,
+  "has_td": 3,
   "filament_ids": [
     "bcf37b01-825c-4e20-941e-924a6c6a5148",
     "6aa487a5-edd0-4d7e-aaab-bfa4ee220731",

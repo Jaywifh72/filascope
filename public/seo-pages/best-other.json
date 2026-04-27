@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-other",
   "title": "Best Other Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best Other filaments in 2026. 36 options from 14 brands, starting at $9.47. Expert picks, prices & specs.",
+  "description": "Compare the best Other filaments in 2026. 50 options from 13 brands, starting at $9.81. Expert picks, prices & specs.",
   "h1": "Best Other Filament (2026)",
   "keywords": [
     "best Other",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "Other",
-  "count": 36,
-  "brands": 14,
-  "min_price": 9.47,
+  "count": 50,
+  "brands": 13,
+  "min_price": 9.81,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best Other Filament 2026",
-    "description": "Expert comparison of 36 Other filaments",
+    "description": "Expert comparison of 50 Other filaments",
     "url": "https://filascope.com/best-other"
   }
 }

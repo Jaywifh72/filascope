@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/asa/matter3d",
   "title": "Matter3D ASA Filament — Prices, Specs & Reviews",
-  "description": "Compare 5 Matter3D ASA filaments. Prices from $24.99 to $24.99. 5 colors available.",
+  "description": "Compare 5 Matter3D ASA filaments. Prices from $17.99 to $17.99. 5 colors available.",
   "h1": "Matter3D ASA Filament",
   "keywords": [
     "Matter3D",
@@ -15,16 +15,16 @@
   "material": "ASA",
   "vendor": "Matter3D",
   "count": 5,
-  "min_price": 24.99,
-  "max_price": 24.99,
+  "min_price": 17.99,
+  "max_price": 17.99,
   "color_count": 5,
   "has_td": 0,
   "filament_ids": [
-    "33f82662-715f-4be1-9ee0-864ee0a321ce",
-    "0dfe9839-15df-4f0c-a83d-10aedebcf2cd",
-    "49dbbe59-8b21-4b29-b79f-aa1fcec15265",
-    "afa94cb4-059b-43ee-bb2a-02a043c455de",
-    "dd72c303-2259-452f-b0bb-3a31d5690ef0"
+    "2b83f88a-14d9-4f4e-a8cb-ee5d659f75e2",
+    "f150abda-9c73-4a0f-a98e-2f9be34269c7",
+    "33d142cc-6d0c-4e41-a5ab-acc74d75974d",
+    "11362446-0350-4be6-bc48-6b556ba7650b",
+    "df77df10-ede8-4c32-9aa0-2eb4b91ff784"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

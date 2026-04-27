@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-cf/anycubic",
+  "title": "Anycubic PETG-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Anycubic PETG-CF filaments. Prices from $25.99 to $179.99. 5 colors available. 3 with HueForge TD values.",
+  "h1": "Anycubic PETG-CF Filament",
+  "keywords": [
+    "Anycubic",
+    "PETG-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-CF",
+  "vendor": "Anycubic",
+  "count": 9,
+  "min_price": 25.99,
+  "max_price": 179.99,
+  "color_count": 5,
+  "has_td": 3,
+  "filament_ids": [
+    "40246700-0b9f-47fc-a04c-db6d1b5398d7",
+    "dff7fd16-6f8c-4d30-b246-c3c741cb4664",
+    "6e119263-ac00-41eb-bfc7-aa68b21415d5",
+    "593384d2-f05f-429e-9a98-a66f05deeb23",
+    "b337d9f2-4ef9-4aab-b35c-a43bb987ead8",
+    "8c66e522-3a7b-4184-b107-c80c4cccb9c6",
+    "0c71edba-f1ac-4f6f-a7ca-f4eb41b1555b",
+    "986f750a-9a9c-4079-8e84-cf760fca22c8",
+    "c4549ce9-7604-41d7-ac8e-bb2911f73f17"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic PETG-CF Filament",
+    "description": "Compare 9 Anycubic PETG-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-cf/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-CF",
+          "item": "https://filascope.com/filaments/petg-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

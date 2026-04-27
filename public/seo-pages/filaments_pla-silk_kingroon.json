@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pla-silk/kingroon",
   "title": "Kingroon PLA-SILK Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Kingroon PLA-SILK filaments. Prices from $112.99 to $139.99. 0 colors available.",
+  "description": "Compare 3 Kingroon PLA-SILK filaments. Prices from $112.99 to $139.99. 2 colors available. 3 with HueForge TD values.",
   "h1": "Kingroon PLA-SILK Filament",
   "keywords": [
     "Kingroon",
@@ -17,12 +17,12 @@
   "count": 3,
   "min_price": 112.99,
   "max_price": 139.99,
-  "color_count": 0,
-  "has_td": 0,
+  "color_count": 2,
+  "has_td": 3,
   "filament_ids": [
+    "61c87514-81c9-4a3c-aece-2b90006c2bf4",
     "abc21cd9-dca6-42b8-9d54-83d47d25452b",
-    "d91ce933-819b-4af7-8710-4b9f83a8ed38",
-    "61c87514-81c9-4a3c-aece-2b90006c2bf4"
+    "d91ce933-819b-4af7-8710-4b9f83a8ed38"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

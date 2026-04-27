@@ -1,0 +1,69 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/taulman3d",
+  "title": "Taulman3D PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 16 Taulman3D PETG filaments. Prices from $19.99 to $189.99. 8 colors available. 16 with HueForge TD values.",
+  "h1": "Taulman3D PETG Filament",
+  "keywords": [
+    "Taulman3D",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Taulman3D",
+  "count": 16,
+  "min_price": 19.99,
+  "max_price": 189.99,
+  "color_count": 8,
+  "has_td": 16,
+  "filament_ids": [
+    "94eaaf99-56f8-43ae-8e59-8d2cd6732d62",
+    "fe01c633-e28c-468c-9d04-badba201e7eb",
+    "dbab3590-a31b-4e2d-8b48-eff1ba322d13",
+    "65c5d550-7a5b-42ce-a1b3-69ab83ee05f5",
+    "9be7fd38-b9b0-4481-ae4c-53f6f2073c5d",
+    "c7967367-53d2-4b4b-b0a9-370d3678f300",
+    "f8560f11-612b-4609-9f8c-5d2ab0b09dd8",
+    "32a742eb-95f9-49d2-ae07-da02b4167d12",
+    "295bf0bb-c304-44cd-bd0d-ab9a8eddc599",
+    "dd87af6c-7f1e-443c-8548-6fc1e7199260",
+    "2c39623c-cb79-41c9-a4ab-428e9f174e66",
+    "02c2611d-bb58-49b6-a1fb-cab1f49d5888",
+    "9da0930b-0001-4f59-bed6-5bd2a6548fce",
+    "1c49d30c-3161-463e-bc54-45157e0f1eb5",
+    "d617c88f-2d77-4a1b-92b8-adbe8690d8b3",
+    "4404428c-5d28-45fe-8677-1920e7ceba27"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Taulman3D PETG Filament",
+    "description": "Compare 16 Taulman3D PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/taulman3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Taulman3D"
+        }
+      ]
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/asa/colorfabb",
   "title": "ColorFabb ASA Filament — Prices, Specs & Reviews",
-  "description": "Compare 6 ColorFabb ASA filaments. Prices from $29.26 to $37.50. 5 colors available. 6 with HueForge TD values.",
+  "description": "Compare 7 ColorFabb ASA filaments. Prices from $29.26 to $37.50. 5 colors available. 7 with HueForge TD values.",
   "h1": "ColorFabb ASA Filament",
   "keywords": [
     "ColorFabb",
@@ -14,24 +14,25 @@
   ],
   "material": "ASA",
   "vendor": "ColorFabb",
-  "count": 6,
+  "count": 7,
   "min_price": 29.26,
   "max_price": 37.5,
   "color_count": 5,
-  "has_td": 6,
+  "has_td": 7,
   "filament_ids": [
-    "b1fdb6d7-34a0-4cde-93df-a63e30d96ccb",
-    "6f1eaab3-5640-4e31-a776-4db0a5037914",
     "717c2d7e-de04-4746-964e-d5e391d6bd00",
-    "11dd6876-9a2a-41dd-b235-43d8de993f91",
+    "6f1eaab3-5640-4e31-a776-4db0a5037914",
+    "7cc82cee-e92f-4254-9c38-52f74153a2eb",
     "6846765c-8592-4143-8a00-a2f24ea7f297",
-    "7cc82cee-e92f-4254-9c38-52f74153a2eb"
+    "b1fdb6d7-34a0-4cde-93df-a63e30d96ccb",
+    "11dd6876-9a2a-41dd-b235-43d8de993f91",
+    "6846765c-8592-4143-8a00-a2f24ea7f297"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "ColorFabb ASA Filament",
-    "description": "Compare 6 ColorFabb ASA filaments on FilaScope",
+    "description": "Compare 7 ColorFabb ASA filaments on FilaScope",
     "url": "https://filascope.com/filaments/asa/colorfabb",
     "breadcrumb": {
       "@type": "BreadcrumbList",

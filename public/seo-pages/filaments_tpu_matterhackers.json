@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu/matterhackers",
+  "title": "MatterHackers TPU Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 MatterHackers TPU filaments. Prices from $36.99 to $38.99. 5 colors available.",
+  "h1": "MatterHackers TPU Filament",
+  "keywords": [
+    "MatterHackers",
+    "TPU",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU",
+  "vendor": "MatterHackers",
+  "count": 5,
+  "min_price": 36.99,
+  "max_price": 38.99,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "7bdbe0c8-6585-4aba-9184-8529f36ee997",
+    "d198235f-3e4e-4cce-87f3-9ccd4b9319f8",
+    "fe7ea087-1c97-41e4-b946-d2f88b376932",
+    "107a95ba-750e-4e51-9154-6b973729524b",
+    "28ae2988-5acc-4cd4-ba41-8f4d75419583"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "MatterHackers TPU Filament",
+    "description": "Compare 5 MatterHackers TPU filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu/matterhackers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU",
+          "item": "https://filascope.com/filaments/tpu"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "MatterHackers"
+        }
+      ]
+    }
+  }
+}

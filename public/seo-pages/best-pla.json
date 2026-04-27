@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pla",
   "title": "Best PLA+ Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PLA+ filaments in 2026. 1087 options from 32 brands, starting at $2.05. Expert picks, prices & specs.",
+  "description": "Compare the best PLA+ filaments in 2026. 1230 options from 35 brands, starting at $2.05. Expert picks, prices & specs.",
   "h1": "Best PLA+ Filament (2026)",
   "keywords": [
     "best PLA+",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PLA+",
-  "count": 1087,
-  "brands": 32,
+  "count": 1230,
+  "brands": 35,
   "min_price": 2.05,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PLA+ Filament 2026",
-    "description": "Expert comparison of 1087 PLA+ filaments",
+    "description": "Expert comparison of 1230 PLA+ filaments",
     "url": "https://filascope.com/best-pla"
   }
 }

@@ -1,0 +1,60 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-cf/bambu-lab",
+  "title": "Bambu Lab PETG-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 7 Bambu Lab PETG-CF filaments. Prices from $31.99 to $34.99. 6 colors available. 6 with HueForge TD values.",
+  "h1": "Bambu Lab PETG-CF Filament",
+  "keywords": [
+    "Bambu Lab",
+    "PETG-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-CF",
+  "vendor": "Bambu Lab",
+  "count": 7,
+  "min_price": 31.99,
+  "max_price": 34.99,
+  "color_count": 6,
+  "has_td": 6,
+  "filament_ids": [
+    "ea539a57-128f-4945-8d6a-6754d66b60bc",
+    "3c889fd1-8608-41b1-b62c-b8d661fadd6b",
+    "1c311d3c-d5b2-4f4d-9b4d-1969d6353fc1",
+    "32d74173-d5ae-4ddb-91b3-d977effb31e4",
+    "1c9fdada-495c-4252-933a-239b2191997f",
+    "84a97580-6464-4b64-bf8a-39c1715f9d1e",
+    "918a876b-dc5d-401e-ab29-78874899549c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab PETG-CF Filament",
+    "description": "Compare 7 Bambu Lab PETG-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-cf/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-CF",
+          "item": "https://filascope.com/filaments/petg-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

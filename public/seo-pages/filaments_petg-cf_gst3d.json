@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-cf/gst3d",
+  "title": "GST3D PETG-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 GST3D PETG-CF filaments. Prices from $18.99 to $97.19. 3 colors available. 2 with HueForge TD values.",
+  "h1": "GST3D PETG-CF Filament",
+  "keywords": [
+    "GST3D",
+    "PETG-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-CF",
+  "vendor": "GST3D",
+  "count": 6,
+  "min_price": 18.99,
+  "max_price": 97.19,
+  "color_count": 3,
+  "has_td": 2,
+  "filament_ids": [
+    "3cb23799-e596-416b-87ab-0e80e4f09b55",
+    "e44a0783-be84-44b3-b596-03106c2ef985",
+    "2a4292dc-8eeb-4891-ae5a-8c6099de6677",
+    "d3adb3f4-7d6e-431d-8818-92aeeae1ee46",
+    "70c96002-3b4a-48ad-bc74-41e9eb9ffc2d",
+    "93534273-4696-4314-b90a-fa4b79fddde0"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "GST3D PETG-CF Filament",
+    "description": "Compare 6 GST3D PETG-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-cf/gst3d",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-CF",
+          "item": "https://filascope.com/filaments/petg-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GST3D"
+        }
+      ]
+    }
+  }
+}

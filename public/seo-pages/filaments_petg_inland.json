@@ -1,0 +1,66 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/inland",
+  "title": "Inland PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 13 Inland PETG filaments. Prices from $19.99 to $19.99. 12 colors available. 1 with HueForge TD values.",
+  "h1": "Inland PETG Filament",
+  "keywords": [
+    "Inland",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Inland",
+  "count": 13,
+  "min_price": 19.99,
+  "max_price": 19.99,
+  "color_count": 12,
+  "has_td": 1,
+  "filament_ids": [
+    "f3021926-eb70-4277-b330-7a1eb5f2cc22",
+    "da932b11-46a3-4922-af66-84e6b0e62e97",
+    "3c6f647a-c880-49da-83df-c00f08d79d3b",
+    "9aef3aeb-748c-4229-9d2c-c69d8c26ffbe",
+    "99b3594c-4a50-4102-8909-8d6cf8f20221",
+    "ae79d136-2ede-4af1-983d-0f13e20157ca",
+    "56787795-6e38-408d-830f-c22088bf9a09",
+    "1d3aa717-2bca-482e-b9ba-802505ea1d0e",
+    "3e068cd0-1276-40dd-bd5e-bd702feac294",
+    "250826ef-655a-4316-845f-10b266d4c246",
+    "32c619a5-7d5a-403c-b403-1b3e1abb53af",
+    "81baf908-e6fe-4753-be4c-436d435aeb09",
+    "0376f200-aedc-4a32-a9f1-9e6523e01325"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Inland PETG Filament",
+    "description": "Compare 13 Inland PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/inland",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Inland"
+        }
+      ]
+    }
+  }
+}

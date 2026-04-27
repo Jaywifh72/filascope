@@ -1,24 +1,24 @@
 {
   "type": "best-material",
   "url": "/best-nylon",
-  "title": "Best NYLON Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best NYLON filaments in 2026. 29 options from 6 brands, starting at $9.00. Expert picks, prices & specs.",
-  "h1": "Best NYLON Filament (2026)",
+  "title": "Best Nylon Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best Nylon filaments in 2026. 21 options from 3 brands, starting at $32.99. Expert picks, prices & specs.",
+  "h1": "Best Nylon Filament (2026)",
   "keywords": [
-    "best NYLON",
-    "NYLON filament",
+    "best Nylon",
+    "Nylon filament",
     "3d printing",
     "top picks"
   ],
-  "material": "NYLON",
-  "count": 29,
-  "brands": 6,
-  "min_price": 9,
+  "material": "Nylon",
+  "count": 21,
+  "brands": 3,
+  "min_price": 32.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "name": "Best NYLON Filament 2026",
-    "description": "Expert comparison of 29 NYLON filaments",
+    "name": "Best Nylon Filament 2026",
+    "description": "Expert comparison of 21 Nylon filaments",
     "url": "https://filascope.com/best-nylon"
   }
 }

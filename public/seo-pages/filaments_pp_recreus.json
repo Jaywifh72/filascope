@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pp/recreus",
+  "title": "Recreus PP Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Recreus PP filaments. Prices from $39.91 to $149.89. 3 colors available.",
+  "h1": "Recreus PP Filament",
+  "keywords": [
+    "Recreus",
+    "PP",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PP",
+  "vendor": "Recreus",
+  "count": 4,
+  "min_price": 39.91,
+  "max_price": 149.89,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "b321efc8-afda-42aa-85b9-800f4b5bd8a6",
+    "fc43ba75-3914-4237-ac10-0258dc52d777",
+    "ad6fbaf7-4b4e-486e-b952-40bdf45f9001",
+    "69da7950-bc3b-436e-a542-54d07009b26c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Recreus PP Filament",
+    "description": "Compare 4 Recreus PP filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pp/recreus",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PP",
+          "item": "https://filascope.com/filaments/pp"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recreus"
+        }
+      ]
+    }
+  }
+}

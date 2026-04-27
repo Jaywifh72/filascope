@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/silk-pla/esun",
   "title": "eSun Silk PLA Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 eSun Silk PLA filaments. Prices from $25.99 to $27.99. 1 colors available.",
+  "description": "Compare 4 eSun Silk PLA filaments. Prices from $25.99 to $27.99. 1 colors available.",
   "h1": "eSun Silk PLA Filament",
   "keywords": [
     "eSun",
@@ -14,12 +14,13 @@
   ],
   "material": "Silk PLA",
   "vendor": "eSun",
-  "count": 3,
+  "count": 4,
   "min_price": 25.99,
   "max_price": 27.99,
   "color_count": 1,
   "has_td": 0,
   "filament_ids": [
+    "2cbd3b6f-7c89-42d7-a21b-71f30d5f8d88",
     "10982b83-41ec-46ff-8c61-b0721910708a",
     "2cbd3b6f-7c89-42d7-a21b-71f30d5f8d88",
     "158b3957-f886-4d1e-a066-e654aadad847"
@@ -28,7 +29,7 @@
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "eSun Silk PLA Filament",
-    "description": "Compare 3 eSun Silk PLA filaments on FilaScope",
+    "description": "Compare 4 eSun Silk PLA filaments on FilaScope",
     "url": "https://filascope.com/filaments/silk-pla/esun",
     "breadcrumb": {
       "@type": "BreadcrumbList",

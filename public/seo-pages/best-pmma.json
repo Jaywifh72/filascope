@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pmma",
+  "title": "Best PMMA Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PMMA filaments in 2026. 5 options from 2 brands, starting at $49.99. Expert picks, prices & specs.",
+  "h1": "Best PMMA Filament (2026)",
+  "keywords": [
+    "best PMMA",
+    "PMMA filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PMMA",
+  "count": 5,
+  "brands": 2,
+  "min_price": 49.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PMMA Filament 2026",
+    "description": "Expert comparison of 5 PMMA filaments",
+    "url": "https://filascope.com/best-pmma"
+  }
+}

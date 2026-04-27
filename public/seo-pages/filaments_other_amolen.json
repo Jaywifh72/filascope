@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/other/amolen",
   "title": "Amolen Other Filament — Prices, Specs & Reviews",
-  "description": "Compare 7 Amolen Other filaments. Prices from $29.99 to $43.00. 7 colors available.",
+  "description": "Compare 8 Amolen Other filaments. Prices from $29.99 to $43.00. 5 colors available.",
   "h1": "Amolen Other Filament",
   "keywords": [
     "Amolen",
@@ -14,25 +14,26 @@
   ],
   "material": "Other",
   "vendor": "Amolen",
-  "count": 7,
+  "count": 8,
   "min_price": 29.99,
   "max_price": 43,
-  "color_count": 7,
+  "color_count": 5,
   "has_td": 0,
   "filament_ids": [
-    "2ae1b421-3357-40e7-861f-5b92a9c3965e",
-    "c55e5f76-295f-485f-9f5e-837cdd72657d",
-    "8006f4ad-8315-4e38-821a-0120fbe4731a",
-    "61eed50c-fb63-4c03-90a1-9606ac4a2fff",
     "945c10d1-b7b5-4222-a675-66919a244d34",
+    "2ae1b421-3357-40e7-861f-5b92a9c3965e",
+    "61eed50c-fb63-4c03-90a1-9606ac4a2fff",
     "321d0bf3-dff7-4bad-b182-b61f72577cb7",
-    "72ee03f0-26e0-4839-8b50-d77583d9ed23"
+    "c55e5f76-295f-485f-9f5e-837cdd72657d",
+    "945c10d1-b7b5-4222-a675-66919a244d34",
+    "61eed50c-fb63-4c03-90a1-9606ac4a2fff",
+    "2ae1b421-3357-40e7-861f-5b92a9c3965e"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Amolen Other Filament",
-    "description": "Compare 7 Amolen Other filaments on FilaScope",
+    "description": "Compare 8 Amolen Other filaments on FilaScope",
     "url": "https://filascope.com/filaments/other/amolen",
     "breadcrumb": {
       "@type": "BreadcrumbList",

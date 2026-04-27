@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-pvb",
   "title": "Best PVB Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PVB filaments in 2026. 17 options from 4 brands, starting at $31.99. Expert picks, prices & specs.",
+  "description": "Compare the best PVB filaments in 2026. 31 options from 4 brands, starting at $30.55. Expert picks, prices & specs.",
   "h1": "Best PVB Filament (2026)",
   "keywords": [
     "best PVB",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PVB",
-  "count": 17,
+  "count": 31,
   "brands": 4,
-  "min_price": 31.99,
+  "min_price": 30.55,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PVB Filament 2026",
-    "description": "Expert comparison of 17 PVB filaments",
+    "description": "Expert comparison of 31 PVB filaments",
     "url": "https://filascope.com/best-pvb"
   }
 }

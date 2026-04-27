@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pet-cf/bambu-lab",
+  "title": "Bambu Lab PET-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Bambu Lab PET-CF filaments. Prices from $44.99 to $84.99. 1 colors available.",
+  "h1": "Bambu Lab PET-CF Filament",
+  "keywords": [
+    "Bambu Lab",
+    "PET-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PET-CF",
+  "vendor": "Bambu Lab",
+  "count": 4,
+  "min_price": 44.99,
+  "max_price": 84.99,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "cbceff9d-3355-4f92-b41e-c46302db9d72",
+    "e671e3ab-76e7-49b3-8966-5a99434232ad",
+    "cbceff9d-3355-4f92-b41e-c46302db9d72",
+    "b9994a32-b31a-45c9-afd6-951a9c1137bb"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab PET-CF Filament",
+    "description": "Compare 4 Bambu Lab PET-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pet-cf/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PET-CF",
+          "item": "https://filascope.com/filaments/pet-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/support/polymaker",
   "title": "Polymaker Support Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Polymaker Support filaments. Prices from $40.99 to $54.99. 3 colors available.",
+  "description": "Compare 5 Polymaker Support filaments. Prices from $29.99 to $54.99. 4 colors available.",
   "h1": "Polymaker Support Filament",
   "keywords": [
     "Polymaker",
@@ -14,21 +14,23 @@
   ],
   "material": "Support",
   "vendor": "Polymaker",
-  "count": 3,
-  "min_price": 40.99,
+  "count": 5,
+  "min_price": 29.99,
   "max_price": 54.99,
-  "color_count": 3,
+  "color_count": 4,
   "has_td": 0,
   "filament_ids": [
+    "4cb0607d-bccb-458b-828c-882d6c67c9d5",
     "fd3102d9-6042-4067-8362-c6e6f51df86f",
+    "19520dc2-8833-4143-9bc6-d61ac4122bd3",
     "b4880878-13d2-4727-b719-28b95d42d520",
-    "4cb0607d-bccb-458b-828c-882d6c67c9d5"
+    "e4e60983-43a7-429c-9eb1-9fb2adb1d620"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Polymaker Support Filament",
-    "description": "Compare 3 Polymaker Support filaments on FilaScope",
+    "description": "Compare 5 Polymaker Support filaments on FilaScope",
     "url": "https://filascope.com/filaments/support/polymaker",
     "breadcrumb": {
       "@type": "BreadcrumbList",

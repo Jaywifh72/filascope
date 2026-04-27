@@ -19,7 +19,53 @@ interface BrandEntry {
 // Brands handled by OpenClaw skills (system cron, not edge functions).
 // The orchestrator MUST skip these — the skill owns its own sync cadence.
 const OPENCLAW_SKILL_BRANDS = new Set<string>([
-  'bambu-lab',  // skill: filascope-bambu-lab-scraper (2026-04-22)
+  // --- Wired 2026-04-22 ---
+  'bambu-lab',          // filascope-bambu-lab-scraper
+  'polymaker',          // filascope-polymaker-scraper
+  'elegoo',             // filascope-elegoo-scraper
+  'spectrum-filaments', // filascope-spectrum-scraper
+  // --- Wired 2026-04-24 ---
+  'hatchbox',           // filascope-hatchbox-scraper
+  'creality',           // filascope-creality-scraper
+  'anycubic',           // filascope-anycubic-scraper
+  'azurefilm',          // filascope-azurefilm-scraper
+  'push-plastic',       // filascope-push-plastic-scraper
+  'siraya-tech',        // filascope-siraya-tech-scraper
+  'prusament',          // filascope-prusament-scraper
+  'sovol',              // filascope-sovol-scraper
+  'recreus',            // filascope-recreus-scraper
+  // --- Wired 2026-04-25 (all verified ready) ---
+  '3d-fuel',            // filascope-3d-fuel-scraper
+  '3dhojor',            // filascope-3dhojor-scraper
+  '3dxtech',            // filascope-3dxtech-scraper
+  'amolen',             // filascope-amolen-scraper
+  'atomic-filament',    // filascope-atomic-filament-scraper
+  'colorfabb',          // filascope-colorfabb-scraper
+  'duramic-3d',         // filascope-duramic-scraper
+  'eryone',             // filascope-eryone-scraper
+  'esun',               // filascope-esun-scraper
+  'extrudr',            // filascope-extrudr-scraper
+  'fiberlogy',          // filascope-fiberlogy-scraper
+  'filaments-ca',       // filascope-filaments-ca-scraper
+  'fillamentum',        // filascope-fillamentum-scraper
+  'flashforge',         // filascope-flashforge-scraper
+  'flsun',              // filascope-flsun-scraper
+  'formfutura',         // filascope-formfutura-scraper
+  'fusion-filaments',   // filascope-fusion-filaments-scraper
+  'geeetech',           // filascope-geeetech-scraper
+  'gizmo-dorks',        // filascope-gizmo-dorks-scraper
+  'gst3d',              // filascope-gst3d-scraper
+  'ic3d-printers',      // filascope-ic3d-printers-scraper
+  'inland',             // filascope-inland-scraper
+  'kingroon',           // filascope-kingroon-scraper
+  'matter3d',           // filascope-matter3d-scraper
+  'matterhackers',      // filascope-matterhackers-scraper
+  'ninjatek',           // filascope-ninjatek-scraper
+  'numakers',           // filascope-numakers-scraper
+  'overture-3d',        // filascope-overture-3d-scraper
+  'paramount-3d',       // filascope-paramount-3d-scraper
+  'printed-solid',      // filascope-printed-solid-scraper
+  'proto-pasta',        // filascope-proto-pasta-scraper
 ]);
 
 const SLUG_TO_FUNCTION: Record<string, string> = {

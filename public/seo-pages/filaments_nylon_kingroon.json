@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/nylon/kingroon",
   "title": "Kingroon NYLON Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 Kingroon NYLON filaments. Prices from $39.99 to $49.99. 2 colors available. 2 with HueForge TD values.",
+  "description": "Compare 4 Kingroon NYLON filaments. Prices from $1.49 to $49.99. 3 colors available. 4 with HueForge TD values.",
   "h1": "Kingroon NYLON Filament",
   "keywords": [
     "Kingroon",
@@ -14,21 +14,22 @@
   ],
   "material": "NYLON",
   "vendor": "Kingroon",
-  "count": 3,
-  "min_price": 39.99,
+  "count": 4,
+  "min_price": 1.49,
   "max_price": 49.99,
-  "color_count": 2,
-  "has_td": 2,
+  "color_count": 3,
+  "has_td": 4,
   "filament_ids": [
     "8a61f7b4-65fd-4ed4-a849-11bfd4c07e94",
     "0f0f3269-7f43-49d4-b839-d9167973f8d9",
-    "59f4c192-9d9d-4221-9106-2a31adc7af76"
+    "59f4c192-9d9d-4221-9106-2a31adc7af76",
+    "e6ba5f03-de84-4c38-9369-a8afb75bda2e"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Kingroon NYLON Filament",
-    "description": "Compare 3 Kingroon NYLON filaments on FilaScope",
+    "description": "Compare 4 Kingroon NYLON filaments on FilaScope",
     "url": "https://filascope.com/filaments/nylon/kingroon",
     "breadcrumb": {
       "@type": "BreadcrumbList",

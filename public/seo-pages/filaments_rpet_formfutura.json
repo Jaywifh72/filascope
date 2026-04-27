@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/rpet/formfutura",
   "title": "FormFutura rPET Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 FormFutura rPET filaments. Prices from $16.52 to $19.03. 3 colors available.",
+  "description": "Compare 3 FormFutura rPET filaments. Prices from $24.54 to $24.54. 3 colors available.",
   "h1": "FormFutura rPET Filament",
   "keywords": [
     "FormFutura",
@@ -15,14 +15,14 @@
   "material": "rPET",
   "vendor": "FormFutura",
   "count": 3,
-  "min_price": 16.52,
-  "max_price": 19.03,
+  "min_price": 24.54,
+  "max_price": 24.54,
   "color_count": 3,
   "has_td": 0,
   "filament_ids": [
-    "bf3f2cd6-5230-4b6c-b72d-cb6a6f2a6754",
-    "767ad8cb-3859-4d2b-a096-fa5ec5fb6a58",
-    "bb3e0311-9de3-4aa9-b2e4-fa2fb5c25c2d"
+    "0d5ced5b-f630-4c4f-b0c7-2ee91d1f354c",
+    "f3ead91e-1821-46cd-b11c-f9230c82eb02",
+    "de1e53ca-5a7b-419c-a12b-d4ffaa762d11"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

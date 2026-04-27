@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-premium",
+  "title": "Best Premium Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best Premium filaments in 2026. 12 options from 1 brands, starting at $35.90. Expert picks, prices & specs.",
+  "h1": "Best Premium Filament (2026)",
+  "keywords": [
+    "best Premium",
+    "Premium filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "Premium",
+  "count": 12,
+  "brands": 1,
+  "min_price": 35.9,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best Premium Filament 2026",
+    "description": "Expert comparison of 12 Premium filaments",
+    "url": "https://filascope.com/best-premium"
+  }
+}

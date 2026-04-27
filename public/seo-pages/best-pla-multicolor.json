@@ -1,0 +1,24 @@
+{
+  "type": "best-material",
+  "url": "/best-pla-multicolor",
+  "title": "Best PLA-MULTICOLOR Filament 2026 — Top Picks & Prices",
+  "description": "Compare the best PLA-MULTICOLOR filaments in 2026. 7 options from 2 brands, starting at $50.99. Expert picks, prices & specs.",
+  "h1": "Best PLA-MULTICOLOR Filament (2026)",
+  "keywords": [
+    "best PLA-MULTICOLOR",
+    "PLA-MULTICOLOR filament",
+    "3d printing",
+    "top picks"
+  ],
+  "material": "PLA-MULTICOLOR",
+  "count": 7,
+  "brands": 2,
+  "min_price": 50.99,
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Best PLA-MULTICOLOR Filament 2026",
+    "description": "Expert comparison of 7 PLA-MULTICOLOR filaments",
+    "url": "https://filascope.com/best-pla-multicolor"
+  }
+}

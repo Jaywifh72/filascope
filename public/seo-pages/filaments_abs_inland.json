@@ -1,0 +1,62 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/abs/inland",
+  "title": "Inland ABS Filament — Prices, Specs & Reviews",
+  "description": "Compare 9 Inland ABS filaments. Prices from $18.99 to $18.99. 8 colors available. 1 with HueForge TD values.",
+  "h1": "Inland ABS Filament",
+  "keywords": [
+    "Inland",
+    "ABS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "ABS",
+  "vendor": "Inland",
+  "count": 9,
+  "min_price": 18.99,
+  "max_price": 18.99,
+  "color_count": 8,
+  "has_td": 1,
+  "filament_ids": [
+    "d5a8d6db-9468-4c56-b25e-603725346a19",
+    "9791fc44-4517-4eb6-98fd-e262faea5052",
+    "28f15607-70ea-462c-991c-737d06cdbd30",
+    "801f41de-bab3-4d27-bd32-9ef7dd753d07",
+    "a1f4d915-5d89-4232-9616-2f1d8a450aaf",
+    "219a435d-6040-486f-9989-d4f56d4e793c",
+    "51fbc32e-2294-4582-8b3e-33fdfb2dc133",
+    "34714ee8-d8dd-4d84-acd8-249766eefb35",
+    "ddc8744b-4f42-42cd-b2a6-d47c00dd7c6d"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Inland ABS Filament",
+    "description": "Compare 9 Inland ABS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/abs/inland",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ABS",
+          "item": "https://filascope.com/filaments/abs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Inland"
+        }
+      ]
+    }
+  }
+}

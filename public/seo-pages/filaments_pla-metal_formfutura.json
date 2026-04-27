@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pla-metal/formfutura",
   "title": "FormFutura PLA-Metal Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 FormFutura PLA-Metal filaments. Prices from $26.19 to $26.19. 3 colors available.",
+  "description": "Compare 3 FormFutura PLA-Metal filaments. Prices from $66.04 to $66.04. 3 colors available.",
   "h1": "FormFutura PLA-Metal Filament",
   "keywords": [
     "FormFutura",
@@ -15,14 +15,14 @@
   "material": "PLA-Metal",
   "vendor": "FormFutura",
   "count": 3,
-  "min_price": 26.19,
-  "max_price": 26.19,
+  "min_price": 66.04,
+  "max_price": 66.04,
   "color_count": 3,
   "has_td": 0,
   "filament_ids": [
-    "047ad9de-fd16-47e6-a396-087ec1129814",
-    "1e6c57b0-1dbb-406a-90d4-6e099305a88f",
-    "f48e4058-0499-41f7-bd3c-0c63ecd87474"
+    "3a20105b-a90a-423c-9ca0-1079e2034607",
+    "635b4474-db66-4272-b30b-0f3bff97ee4d",
+    "f3a88ec1-5c16-4bc3-9ef5-d037061e54af"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

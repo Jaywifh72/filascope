@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/greenyht/spectrum-filaments",
+  "title": "Spectrum Filaments GreenyHT Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Spectrum Filaments GreenyHT filaments. Prices from $36.90 to $36.90. 5 colors available.",
+  "h1": "Spectrum Filaments GreenyHT Filament",
+  "keywords": [
+    "Spectrum Filaments",
+    "GreenyHT",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "GreenyHT",
+  "vendor": "Spectrum Filaments",
+  "count": 5,
+  "min_price": 36.9,
+  "max_price": 36.9,
+  "color_count": 5,
+  "has_td": 0,
+  "filament_ids": [
+    "66af2d99-960c-48d6-a3bf-779e34d1290e",
+    "a89ae762-97ef-4f22-9668-fef757637c9b",
+    "8a3ce516-7924-4a24-afc2-e6d3909d79de",
+    "276a277c-c253-46c7-9887-15f795eccb09",
+    "5a64cee9-8866-4909-92e5-b4ebcc062472"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Spectrum Filaments GreenyHT Filament",
+    "description": "Compare 5 Spectrum Filaments GreenyHT filaments on FilaScope",
+    "url": "https://filascope.com/filaments/greenyht/spectrum-filaments",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "GreenyHT",
+          "item": "https://filascope.com/filaments/greenyht"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Spectrum Filaments"
+        }
+      ]
+    }
+  }
+}

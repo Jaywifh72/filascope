@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa-cf/3dxtech",
+  "title": "3DXTech PA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 3DXTech PA-CF filaments. Prices from $38.00 to $158.00. 1 colors available.",
+  "h1": "3DXTech PA-CF Filament",
+  "keywords": [
+    "3DXTech",
+    "PA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA-CF",
+  "vendor": "3DXTech",
+  "count": 5,
+  "min_price": 38,
+  "max_price": 158,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "012d8262-e9b4-4342-a5fa-f6dd2291ed73",
+    "f1269a24-12df-4763-b9aa-42390b763ef7",
+    "9e17d02f-0337-4a3e-8253-e5b8ffcba298",
+    "29db2793-d935-4023-b825-b20fc46601f8",
+    "832e8a86-7706-4f7d-8fdb-4b571553e05a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "3DXTech PA-CF Filament",
+    "description": "Compare 5 3DXTech PA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa-cf/3dxtech",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA-CF",
+          "item": "https://filascope.com/filaments/pa-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "3DXTech"
+        }
+      ]
+    }
+  }
+}

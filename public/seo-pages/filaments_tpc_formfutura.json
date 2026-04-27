@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/tpc/formfutura",
   "title": "FormFutura TPC Filament — Prices, Specs & Reviews",
-  "description": "Compare 8 FormFutura TPC filaments. Prices from $30.99 to $35.70. 4 colors available.",
+  "description": "Compare 8 FormFutura TPC filaments. Prices from $38.37 to $38.37. 4 colors available.",
   "h1": "FormFutura TPC Filament",
   "keywords": [
     "FormFutura",
@@ -15,19 +15,19 @@
   "material": "TPC",
   "vendor": "FormFutura",
   "count": 8,
-  "min_price": 30.99,
-  "max_price": 35.7,
+  "min_price": 38.37,
+  "max_price": 38.37,
   "color_count": 4,
   "has_td": 0,
   "filament_ids": [
-    "d84c7a3a-d0ff-4359-b8fd-a184bab7b957",
-    "e817389d-d5df-462b-92af-d2dbb8fe262a",
-    "1dfbce14-a39f-406c-8fb7-56369d5491fc",
-    "81aa8e8e-69ef-4783-ac4a-31ddef706acb",
-    "fe82c284-fe67-441c-8dfe-fe96ddce7f68",
-    "dd37c279-2194-4911-94b5-4b585312a269",
-    "8e198c64-57da-4cf2-88d3-e80557b01bc0",
-    "d17ac286-9c0e-4d6b-8c41-64a2f8902263"
+    "5051cfb5-e1fb-4e87-b232-e1c403490b1b",
+    "0c93e4b8-d0be-4056-98a8-09521b3aff17",
+    "3e6e16e3-bd39-441c-ad18-5e0bbf1eb3ed",
+    "5ee83868-7caf-43c7-bb47-66ed390a71e3",
+    "b20c5e7f-a7c7-4831-bd9e-a014ab95a9ec",
+    "87baa08d-f0ba-475c-b95e-2e1218b89c53",
+    "c3247ef5-46f8-4ff5-ab58-d4e6e99fac21",
+    "d82b1708-183a-40d6-b432-ee4df3ec3747"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

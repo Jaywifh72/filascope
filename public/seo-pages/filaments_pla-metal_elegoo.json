@@ -1,0 +1,56 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-metal/elegoo",
+  "title": "Elegoo PLA-Metal Filament — Prices, Specs & Reviews",
+  "description": "Compare 3 Elegoo PLA-Metal filaments. Prices from $18.99 to $79.67. 1 colors available.",
+  "h1": "Elegoo PLA-Metal Filament",
+  "keywords": [
+    "Elegoo",
+    "PLA-Metal",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-Metal",
+  "vendor": "Elegoo",
+  "count": 3,
+  "min_price": 18.99,
+  "max_price": 79.67,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "44dc6d97-adcf-45a1-96e7-0da9701037b3",
+    "6759100e-b4a8-4f82-9aae-2ce2d7565f73",
+    "44dc6d97-adcf-45a1-96e7-0da9701037b3"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Elegoo PLA-Metal Filament",
+    "description": "Compare 3 Elegoo PLA-Metal filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-metal/elegoo",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-Metal",
+          "item": "https://filascope.com/filaments/pla-metal"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Elegoo"
+        }
+      ]
+    }
+  }
+}

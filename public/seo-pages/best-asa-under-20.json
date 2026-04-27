@@ -1,8 +1,8 @@
 {
   "type": "price-target",
   "url": "/best-asa-under-20",
-  "title": "Best ASA Filament Under $20 — 22 Options Compared",
-  "description": "22 ASA filaments under $20 from 7 brands. Find the best value ASA for your 3D printer.",
+  "title": "Best ASA Filament Under $20 — 48 Options Compared",
+  "description": "48 ASA filaments under $20 from 11 brands. Find the best value ASA for your 3D printer.",
   "h1": "Best ASA Filament Under $20",
   "keywords": [
     "best ASA under $20",
@@ -12,8 +12,8 @@
   ],
   "material": "ASA",
   "max_price": 20,
-  "count": 22,
-  "brands": 7,
+  "count": 48,
+  "brands": 11,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",

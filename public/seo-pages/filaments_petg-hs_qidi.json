@@ -1,0 +1,61 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-hs/qidi",
+  "title": "QIDI PETG-HS Filament — Prices, Specs & Reviews",
+  "description": "Compare 8 QIDI PETG-HS filaments. Prices from $17.99 to $17.99. 8 colors available.",
+  "h1": "QIDI PETG-HS Filament",
+  "keywords": [
+    "QIDI",
+    "PETG-HS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG-HS",
+  "vendor": "QIDI",
+  "count": 8,
+  "min_price": 17.99,
+  "max_price": 17.99,
+  "color_count": 8,
+  "has_td": 0,
+  "filament_ids": [
+    "7bcec795-2074-48e9-9f21-6068f09931d0",
+    "2a324dbe-30ca-46f2-83fb-8b77894f831a",
+    "5882c885-c533-4272-a174-add324037aaf",
+    "59ec9e3e-f69e-4ec3-803b-ebd5e61321c7",
+    "1404c794-1bdc-43e9-83ed-7fd2063f4dfb",
+    "3941f3bb-35d6-4603-8bea-7abd2bf06b5d",
+    "580b4e82-3f32-4fc1-a35a-c289b16e770c",
+    "9e474a58-5446-4f96-9d49-a1f1c51b983a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "QIDI PETG-HS Filament",
+    "description": "Compare 8 QIDI PETG-HS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-hs/qidi",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG-HS",
+          "item": "https://filascope.com/filaments/petg-hs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "QIDI"
+        }
+      ]
+    }
+  }
+}

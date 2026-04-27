@@ -1,0 +1,59 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/tpu-95a/inland",
+  "title": "Inland TPU-95A Filament — Prices, Specs & Reviews",
+  "description": "Compare 6 Inland TPU-95A filaments. Prices from $24.99 to $24.99. 6 colors available.",
+  "h1": "Inland TPU-95A Filament",
+  "keywords": [
+    "Inland",
+    "TPU-95A",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "TPU-95A",
+  "vendor": "Inland",
+  "count": 6,
+  "min_price": 24.99,
+  "max_price": 24.99,
+  "color_count": 6,
+  "has_td": 0,
+  "filament_ids": [
+    "ce81b9c9-b793-4be3-a72b-0e26e205a7ef",
+    "f367ac1b-41f3-4069-ad93-a89be23341ff",
+    "e95aa5c9-09a9-4826-a325-d491877519e0",
+    "13f4f258-78f9-449b-859d-bf5a115f2484",
+    "312659af-be53-4a60-ae06-603c01c37b02",
+    "7fa8e833-1c30-434a-ab5e-d1bdf286d664"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Inland TPU-95A Filament",
+    "description": "Compare 6 Inland TPU-95A filaments on FilaScope",
+    "url": "https://filascope.com/filaments/tpu-95a/inland",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "TPU-95A",
+          "item": "https://filascope.com/filaments/tpu-95a"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Inland"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg/proto-pasta",
+  "title": "Proto-Pasta PETG Filament — Prices, Specs & Reviews",
+  "description": "Compare 11 Proto-Pasta PETG filaments. Prices from $4.00 to $124.95. 4 colors available.",
+  "h1": "Proto-Pasta PETG Filament",
+  "keywords": [
+    "Proto-Pasta",
+    "PETG",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG",
+  "vendor": "Proto-Pasta",
+  "count": 11,
+  "min_price": 4,
+  "max_price": 124.95,
+  "color_count": 4,
+  "has_td": 0,
+  "filament_ids": [
+    "22fbddfb-72d6-4b00-be6a-699d3e5c22cf",
+    "7b7b99da-5022-4483-bf24-e487ccabb2ee",
+    "437967c4-77ba-446f-b8b3-932e97d6a22d",
+    "23a5d1e2-1510-4ab9-9107-a742cc2b7af9",
+    "ac3149c6-0d5f-4309-a93f-26a5010c3aab",
+    "75171fa1-81d3-4f97-b76b-d02a84ae9943",
+    "842ee2df-a27f-4710-b4ba-113d5dfb8493",
+    "acd68fcc-b6d8-4d24-a593-4161da5d5cad",
+    "8aab7f9e-d024-45d0-9352-04a11e9034f0",
+    "975e69e0-7ad4-485e-bd35-1981adf8165a",
+    "efe9c67c-624d-4d66-9abf-29b8497c8738"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Proto-Pasta PETG Filament",
+    "description": "Compare 11 Proto-Pasta PETG filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg/proto-pasta",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG",
+          "item": "https://filascope.com/filaments/petg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Proto-Pasta"
+        }
+      ]
+    }
+  }
+}

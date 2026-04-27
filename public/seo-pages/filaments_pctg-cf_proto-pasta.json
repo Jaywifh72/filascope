@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pctg-cf/proto-pasta",
+  "title": "Proto-Pasta PCTG-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Proto-Pasta PCTG-CF filaments. Prices from $5.00 to $34.99. 2 colors available.",
+  "h1": "Proto-Pasta PCTG-CF Filament",
+  "keywords": [
+    "Proto-Pasta",
+    "PCTG-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PCTG-CF",
+  "vendor": "Proto-Pasta",
+  "count": 4,
+  "min_price": 5,
+  "max_price": 34.99,
+  "color_count": 2,
+  "has_td": 0,
+  "filament_ids": [
+    "537c5b09-7042-47dc-91c3-7946e22dcbf6",
+    "972856e7-528d-47ff-8078-a1f7f1462a54",
+    "af057b99-46be-4ba4-95a6-09c6a37fadfc",
+    "aed5df6f-c2ed-47bf-9df4-e0f0c75f043c"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Proto-Pasta PCTG-CF Filament",
+    "description": "Compare 4 Proto-Pasta PCTG-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pctg-cf/proto-pasta",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PCTG-CF",
+          "item": "https://filascope.com/filaments/pctg-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Proto-Pasta"
+        }
+      ]
+    }
+  }
+}

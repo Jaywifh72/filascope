@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pla-silk/atomic-filament",
   "title": "Atomic Filament PLA Silk Filament — Prices, Specs & Reviews",
-  "description": "Compare 6 Atomic Filament PLA Silk filaments. Prices from $34.99 to $34.99. 5 colors available.",
+  "description": "Compare 3 Atomic Filament PLA Silk filaments. Prices from $34.99 to $34.99. 3 colors available.",
   "h1": "Atomic Filament PLA Silk Filament",
   "keywords": [
     "Atomic Filament",
@@ -14,24 +14,21 @@
   ],
   "material": "PLA Silk",
   "vendor": "Atomic Filament",
-  "count": 6,
+  "count": 3,
   "min_price": 34.99,
   "max_price": 34.99,
-  "color_count": 5,
+  "color_count": 3,
   "has_td": 0,
   "filament_ids": [
-    "d28627c4-106f-484b-9e78-aa0e39c1764d",
-    "a0412c65-b8b4-4e3c-9e5c-bc4d1600ac13",
-    "1f3ff30a-2ae7-4012-9d14-cc1bd64e4bcc",
-    "f50c5c0f-b574-40e1-8c04-8c3d1eb0b88c",
-    "08869098-3dcd-4e88-be35-a01c77244663",
-    "8f93b559-403e-4817-9fdc-f7f4aab8cc37"
+    "7912e84f-e8dd-41c7-8e4b-de0c312ae8ee",
+    "9d64a52a-f21a-4c86-99ee-ead90ef23941",
+    "87acecaa-64c2-46cc-a78b-da0f79105c0e"
   ],
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Atomic Filament PLA Silk Filament",
-    "description": "Compare 6 Atomic Filament PLA Silk filaments on FilaScope",
+    "description": "Compare 3 Atomic Filament PLA Silk filaments on FilaScope",
     "url": "https://filascope.com/filaments/pla-silk/atomic-filament",
     "breadcrumb": {
       "@type": "BreadcrumbList",

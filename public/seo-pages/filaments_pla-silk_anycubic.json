@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-silk/anycubic",
+  "title": "Anycubic PLA-SILK Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 Anycubic PLA-SILK filaments. Prices from $19.99 to $129.99. 1 colors available. 5 with HueForge TD values.",
+  "h1": "Anycubic PLA-SILK Filament",
+  "keywords": [
+    "Anycubic",
+    "PLA-SILK",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-SILK",
+  "vendor": "Anycubic",
+  "count": 5,
+  "min_price": 19.99,
+  "max_price": 129.99,
+  "color_count": 1,
+  "has_td": 5,
+  "filament_ids": [
+    "6ceed7b6-c9be-41eb-9fad-183aba962dbe",
+    "e4d0a31f-9edc-4a6f-ae09-1346d2113c44",
+    "503c9b07-97ea-4852-ba32-8cc82677353f",
+    "dcfb843b-fe29-4dd1-a7c3-7cfdd5a0ee10",
+    "0eae1ca8-b29c-45c6-800f-8b42cfbbf22a"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Anycubic PLA-SILK Filament",
+    "description": "Compare 5 Anycubic PLA-SILK filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-silk/anycubic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-SILK",
+          "item": "https://filascope.com/filaments/pla-silk"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Anycubic"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pmma/push-plastic",
+  "title": "Push Plastic PMMA Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 Push Plastic PMMA filaments. Prices from $49.99 to $149.99. 1 colors available.",
+  "h1": "Push Plastic PMMA Filament",
+  "keywords": [
+    "Push Plastic",
+    "PMMA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PMMA",
+  "vendor": "Push Plastic",
+  "count": 4,
+  "min_price": 49.99,
+  "max_price": 149.99,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "adc0e25d-429f-450b-97f8-03a2cc0520b7",
+    "fc671de2-b561-41fd-96ca-a064f964cbba",
+    "6afb6058-a0ff-4a91-b621-0429e2b1ed18",
+    "797af320-ae57-40ec-937e-429319d44678"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Push Plastic PMMA Filament",
+    "description": "Compare 4 Push Plastic PMMA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pmma/push-plastic",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PMMA",
+          "item": "https://filascope.com/filaments/pmma"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Push Plastic"
+        }
+      ]
+    }
+  }
+}

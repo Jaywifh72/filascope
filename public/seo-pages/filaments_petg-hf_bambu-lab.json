@@ -1,0 +1,68 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/petg-hf/bambu-lab",
+  "title": "Bambu Lab PETG HF Filament — Prices, Specs & Reviews",
+  "description": "Compare 15 Bambu Lab PETG HF filaments. Prices from $19.99 to $22.99. 10 colors available.",
+  "h1": "Bambu Lab PETG HF Filament",
+  "keywords": [
+    "Bambu Lab",
+    "PETG HF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PETG HF",
+  "vendor": "Bambu Lab",
+  "count": 15,
+  "min_price": 19.99,
+  "max_price": 22.99,
+  "color_count": 10,
+  "has_td": 0,
+  "filament_ids": [
+    "4d7cce4d-f501-422f-91c4-8aba318fd60b",
+    "e1ff4d9f-8605-40d7-aaa7-0049a3eb0e0b",
+    "e7320748-866e-433f-b4d5-c24f8090ffb2",
+    "f85947c6-e642-4af2-aa14-737acc49cb8d",
+    "83816da7-8554-4993-a6d5-5a297ed62d86",
+    "6d67e0ec-2268-4f32-aa50-b26c9c3ee790",
+    "e65b0129-ee3c-4c34-9907-214c280e4144",
+    "95e2a84d-6e7d-4e5a-af56-2dd1ef4cb4b5",
+    "191ac6be-afa6-42f0-be74-57f41582ee98",
+    "e8eb693f-08fa-427d-a605-28778e00372c",
+    "566489db-fcf5-45d0-a078-392f29dc1818",
+    "0724f0c3-24ef-476c-a64f-642aed574313",
+    "ccb12436-d696-41e5-8977-82691af3521e",
+    "179f5f9a-4d3e-4c25-9be0-7a3fe1b73d6c",
+    "145be034-e70a-481b-a944-5fc2832b300f"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Bambu Lab PETG HF Filament",
+    "description": "Compare 15 Bambu Lab PETG HF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/petg-hf/bambu-lab",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PETG HF",
+          "item": "https://filascope.com/filaments/petg-hf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bambu Lab"
+        }
+      ]
+    }
+  }
+}

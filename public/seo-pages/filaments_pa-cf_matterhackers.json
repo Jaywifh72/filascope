@@ -1,0 +1,58 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pa-cf/matterhackers",
+  "title": "MatterHackers PA-CF Filament — Prices, Specs & Reviews",
+  "description": "Compare 5 MatterHackers PA-CF filaments. Prices from $40.45 to $362.00. 3 colors available.",
+  "h1": "MatterHackers PA-CF Filament",
+  "keywords": [
+    "MatterHackers",
+    "PA-CF",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PA-CF",
+  "vendor": "MatterHackers",
+  "count": 5,
+  "min_price": 40.45,
+  "max_price": 362,
+  "color_count": 3,
+  "has_td": 0,
+  "filament_ids": [
+    "d4450e3c-769a-4de3-83a1-45592a4b8881",
+    "af079dde-8d4f-4676-a2c9-89a3e6ed9c88",
+    "43d30aba-73d7-46ce-9fae-874247ca880e",
+    "e3ce4edf-ba1d-4782-8789-4c9baf36595e",
+    "5468828d-f7f4-4641-b155-86e4940d4f79"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "MatterHackers PA-CF Filament",
+    "description": "Compare 5 MatterHackers PA-CF filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pa-cf/matterhackers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PA-CF",
+          "item": "https://filascope.com/filaments/pa-cf"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "MatterHackers"
+        }
+      ]
+    }
+  }
+}

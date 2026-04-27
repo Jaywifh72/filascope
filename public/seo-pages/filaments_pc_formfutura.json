@@ -2,7 +2,7 @@
   "type": "brand-material",
   "url": "/filaments/pc/formfutura",
   "title": "FormFutura PC Filament — Prices, Specs & Reviews",
-  "description": "Compare 3 FormFutura PC filaments. Prices from $33.02 to $38.04. 3 colors available. 3 with HueForge TD values.",
+  "description": "Compare 3 FormFutura PC filaments. Prices from $33.91 to $33.91. 3 colors available.",
   "h1": "FormFutura PC Filament",
   "keywords": [
     "FormFutura",
@@ -15,14 +15,14 @@
   "material": "PC",
   "vendor": "FormFutura",
   "count": 3,
-  "min_price": 33.02,
-  "max_price": 38.04,
+  "min_price": 33.91,
+  "max_price": 33.91,
   "color_count": 3,
-  "has_td": 3,
+  "has_td": 0,
   "filament_ids": [
-    "ecefcc1e-fd78-4e88-bc82-7172fa266870",
-    "8e3a9e14-48f3-4ee3-ab56-718581d1e78f",
-    "c1de5e3d-8696-482d-9239-654eeab7f616"
+    "68e5336b-e057-4ec1-906d-64cb0a2ecd08",
+    "384b1c94-6bca-4fc2-8316-b71fd3334cb4",
+    "1934b530-65e4-418e-984c-78757537ec1b"
   ],
   "jsonLd": {
     "@context": "https://schema.org",

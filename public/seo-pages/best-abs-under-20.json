@@ -1,8 +1,8 @@
 {
   "type": "price-target",
   "url": "/best-abs-under-20",
-  "title": "Best ABS Filament Under $20 — 89 Options Compared",
-  "description": "89 ABS filaments under $20 from 15 brands. Find the best value ABS for your 3D printer.",
+  "title": "Best ABS Filament Under $20 — 130 Options Compared",
+  "description": "130 ABS filaments under $20 from 19 brands. Find the best value ABS for your 3D printer.",
   "h1": "Best ABS Filament Under $20",
   "keywords": [
     "best ABS under $20",
@@ -12,8 +12,8 @@
   ],
   "material": "ABS",
   "max_price": 20,
-  "count": 89,
-  "brands": 15,
+  "count": 130,
+  "brands": 19,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",

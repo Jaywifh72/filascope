@@ -2,7 +2,7 @@
   "type": "best-material",
   "url": "/best-peba",
   "title": "Best PEBA Filament 2026 — Top Picks & Prices",
-  "description": "Compare the best PEBA filaments in 2026. 13 options from 4 brands, starting at $45.99. Expert picks, prices & specs.",
+  "description": "Compare the best PEBA filaments in 2026. 15 options from 4 brands, starting at $45.99. Expert picks, prices & specs.",
   "h1": "Best PEBA Filament (2026)",
   "keywords": [
     "best PEBA",
@@ -11,14 +11,14 @@
     "top picks"
   ],
   "material": "PEBA",
-  "count": 13,
+  "count": 15,
   "brands": 4,
   "min_price": 45.99,
   "jsonLd": {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Best PEBA Filament 2026",
-    "description": "Expert comparison of 13 PEBA filaments",
+    "description": "Expert comparison of 15 PEBA filaments",
     "url": "https://filascope.com/best-peba"
   }
 }

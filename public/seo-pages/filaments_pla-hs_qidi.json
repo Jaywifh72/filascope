@@ -1,0 +1,70 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pla-hs/qidi",
+  "title": "QIDI PLA-HS Filament — Prices, Specs & Reviews",
+  "description": "Compare 17 QIDI PLA-HS filaments. Prices from $17.99 to $17.99. 12 colors available.",
+  "h1": "QIDI PLA-HS Filament",
+  "keywords": [
+    "QIDI",
+    "PLA-HS",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PLA-HS",
+  "vendor": "QIDI",
+  "count": 17,
+  "min_price": 17.99,
+  "max_price": 17.99,
+  "color_count": 12,
+  "has_td": 0,
+  "filament_ids": [
+    "94443d1a-1b1f-4189-b3b7-d66127f1521a",
+    "555d4795-08b8-4cdf-8313-c4c25e71f3e7",
+    "64d2e7cf-ffeb-476f-9b75-d1eba698a889",
+    "9a25af1f-c6b6-4924-bc36-7c3ac90279f8",
+    "6713b045-88b8-486f-bd9a-779290096070",
+    "be379201-baff-4537-baa0-209e8e812f64",
+    "62999c50-88bf-4928-8bda-bfb11b656062",
+    "8a1a9784-1487-4e07-8cf8-cdce80383296",
+    "09766a2b-dd17-4384-927f-6a70d7c3722c",
+    "01601776-551a-4b41-aa60-f8320dd7c8cc",
+    "9799777d-272c-4336-963a-6e78febc9730",
+    "0c331d5a-f42e-4f8f-8622-f413f30a591b",
+    "25fc4c72-b145-4f51-9360-0f7e98174b8f",
+    "1893e22a-fe38-4005-864e-3a180ad1b790",
+    "105cd9c1-0cd1-4f26-a026-7cfd4cb8f747",
+    "2c618539-8a10-4358-9dac-10b86f07499f",
+    "5a00282c-9713-46b6-98ec-dce9a2b3e887"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "QIDI PLA-HS Filament",
+    "description": "Compare 17 QIDI PLA-HS filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pla-hs/qidi",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PLA-HS",
+          "item": "https://filascope.com/filaments/pla-hs"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "QIDI"
+        }
+      ]
+    }
+  }
+}

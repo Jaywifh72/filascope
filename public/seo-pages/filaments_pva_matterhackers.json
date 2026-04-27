@@ -1,0 +1,57 @@
+{
+  "type": "brand-material",
+  "url": "/filaments/pva/matterhackers",
+  "title": "MatterHackers PVA Filament — Prices, Specs & Reviews",
+  "description": "Compare 4 MatterHackers PVA filaments. Prices from $49.99 to $90.00. 1 colors available.",
+  "h1": "MatterHackers PVA Filament",
+  "keywords": [
+    "MatterHackers",
+    "PVA",
+    "filament",
+    "3d printing",
+    "price",
+    "compare"
+  ],
+  "material": "PVA",
+  "vendor": "MatterHackers",
+  "count": 4,
+  "min_price": 49.99,
+  "max_price": 90,
+  "color_count": 1,
+  "has_td": 0,
+  "filament_ids": [
+    "5e2ff109-ae54-49b4-97f1-7c946352564b",
+    "16891ca7-8f87-4ef6-92d3-2e624f581557",
+    "857a9bd1-3a0d-4cad-9806-e8417e3935cf",
+    "4923db0f-b10d-4a8b-8202-8f3a4734b2cc"
+  ],
+  "jsonLd": {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "MatterHackers PVA Filament",
+    "description": "Compare 4 MatterHackers PVA filaments on FilaScope",
+    "url": "https://filascope.com/filaments/pva/matterhackers",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://filascope.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "PVA",
+          "item": "https://filascope.com/filaments/pva"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "MatterHackers"
+        }
+      ]
+    }
+  }
+}

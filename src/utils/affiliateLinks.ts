@@ -74,11 +74,8 @@ export function buildAffiliateLinkLocal(
       : path
         ? `${program.store_base_url}${path}`
         : program.store_base_url;
-    let url = `https://www.awin1.com/cread.php?awinmid=${program.awin_merchant_id}&awinaffid=${program.awin_publisher_id}&ued=${encodeURIComponent(destinationUrl)}`;
-    if (program.source_value) {
-      url += `&clickref=${program.source_value}`;
-    }
-    return url;
+    const clickref = program.source_value ? `&clickref=${encodeURIComponent(program.source_value)}` : '';
+    return `https://www.awin1.com/cread.php?awinmid=${program.awin_merchant_id}&awinaffid=${program.awin_publisher_id}&ued=${encodeURIComponent(destinationUrl)}${clickref}`;
   }
 
   if (!program.link_template) {
