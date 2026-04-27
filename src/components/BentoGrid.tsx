@@ -144,6 +144,10 @@ const BentoGrid = () => {
                   <img 
                     src={featuredFilament.featured_image} 
                     alt={featuredFilament.product_title}
+                    width={600}
+                    height={400}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
@@ -288,6 +292,10 @@ const BentoGrid = () => {
                   <img 
                     src={newArrival.featured_image} 
                     alt={newArrival.product_title}
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    decoding="async"
                     className="w-12 h-12 object-cover rounded-lg border border-border/50"
                   />
                 ) : (

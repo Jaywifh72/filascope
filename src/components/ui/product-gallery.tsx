@@ -139,8 +139,7 @@ export function ProductGallery({
       <div
         ref={containerRef}
         className={cn(
-          "relative bg-gradient-to-b from-muted/5 to-muted/10 border border-border/50 rounded-xl overflow-hidden group",
-          validImages.length === 1 ? "max-h-[400px]" : "aspect-square"
+          "relative bg-gradient-to-b from-muted/5 to-muted/10 border border-border/50 rounded-xl overflow-hidden group aspect-square"
         )}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

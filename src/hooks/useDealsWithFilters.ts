@@ -68,7 +68,7 @@ export function useDealsWithFilters() {
   const { data: rawDeals = [], isLoading } = useQuery({
     queryKey: ["deals-page-enhanced"],
     queryFn: () => withRetry(async () => {
-      // Paginate through ALL deals to match useDealsCount totals
+      // Paginate through deals — server-side filters reduce payload significantly
       let allData: DealFilament[] = [];
       let offset = 0;
       const batchSize = 1000;
@@ -83,6 +83,7 @@ export function useDealsWithFilters() {
           .not("variant_compare_at_price", "is", null)
           .not("variant_price", "is", null)
           .gt("variant_compare_at_price", 0)
+          .lte("variant_compare_at_price", 200) // Filter bad data server-side
           .or("net_weight_g.is.null,net_weight_g.gte.300")
           .order("variant_compare_at_price", { ascending: false })
           .range(offset, offset + batchSize - 1);
@@ -98,25 +99,14 @@ export function useDealsWithFilters() {
         }
       }
 
-      // Filter to only show items where compare_at_price > variant_price
-      const onSaleItems = allData.filter(
-        (item) =>
-          item.variant_compare_at_price !== null &&
-          item.variant_price !== null &&
-          item.variant_compare_at_price > item.variant_price
-      );
-
-      // Sanity check: exclude bad compare_at_price data
-      // - compare_at_price > $200 USD = almost certainly bad data (JPY stored as USD, etc.)
-      // - discount > 75%: statistically implausible for commodity filament sales
-      // - discount < 5%: too small to surface as a "deal"
-      const sanitizedDeals = onSaleItems.filter((item) => {
+      // Server filters: compare_at_price <= 200 (removes bad data early)
+      // Client-side: actual deal check + discount percentage (5-75%)
+      const sanitizedDeals = allData.filter((item) => {
         const cap = item.variant_compare_at_price!;
         const cur = item.variant_price!;
+        if (cap <= cur) return false; // Not actually a deal
         const discountPct = ((cap - cur) / cap) * 100;
-        if (cap > 200) return false;
-        if (discountPct > 75 || discountPct < 5) return false;
-        return true;
+        return discountPct >= 5 && discountPct <= 75;
       });
 
       // Add discount calculation, urgency data, and store info
