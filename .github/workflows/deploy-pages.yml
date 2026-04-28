@@ -40,6 +40,12 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      - name: Post-Deploy Smoke Test
+        if: success()
+        run: |
+          sleep 10  # Wait for Cloudflare propagation
+          bash scripts/post-deploy-smoke-test.sh
+
       - name: Notify OpenClaw — success
         if: success()
         env:
