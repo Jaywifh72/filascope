@@ -51,7 +51,6 @@ export default function About() {
       <Helmet>
         <title>About FilaScope — The 3D Printer Filament Comparison Platform</title>
         <meta name="description" content={ENTITY_DESCRIPTION} />
-        <link rel="canonical" href="https://filascope.com/about" />
       </Helmet>
 
       <OrganizationSchema
