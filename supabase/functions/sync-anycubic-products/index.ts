@@ -116,9 +116,11 @@ Deno.serve(async (req) => {
     // Verify admin role OR service role key
     const authHeader = req.headers.get('Authorization') || '';
     const apiKey = req.headers.get('apikey') || '';
-    
-    // Allow service role key to bypass user auth
-    const isServiceRole = authHeader.includes('service_role') || apiKey === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+
+    // Strip 'Bearer ' prefix if present to get raw key
+    const rawKey = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    const isServiceRole = rawKey === serviceRoleKey || apiKey === serviceRoleKey;
     
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Authorization required' }), {

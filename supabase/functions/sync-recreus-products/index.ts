@@ -140,26 +140,41 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Batch upsert (insert or update if exists)
-    const batchSize = 50;
-    for (let i = 0; i < filamentRows.length; i += batchSize) {
-      const batch = filamentRows.slice(i, i + batchSize);
-      const { error: insertError, data } = await supabase
-        .from('filaments')
-        .upsert(batch, {
-          onConflict: 'product_id',
-          ignoreDuplicates: false
-        })
-        .select('id');
-      if (insertError) {
-        errors.push(`Batch ${i / batchSize + 1}: ${insertError.message}`);
-        productsFailed += batch.length;
-      } else {
-        // Count actual created vs updated
-        const insertedCount = data?.filter((row: any) => row.created_at === row.updated_at).length || batch.length;
-        const updatedCount = (data?.length || batch.length) - insertedCount;
-        productsCreated += insertedCount;
-        // We don't track productsUpdated separately in this seed-based sync
+    // SELECT-then-UPDATE/INSERT per row (avoids reliance on non-existent ON CONFLICT constraint)
+    for (const row of filamentRows) {
+      try {
+        const { data: existing } = await supabase
+          .from('filaments')
+          .select('id')
+          .eq('product_id', row.product_id)
+          .limit(1);
+
+        if (existing && existing.length > 0) {
+          const { error: updateError } = await supabase
+            .from('filaments')
+            .update(row)
+            .eq('id', existing[0].id);
+          if (updateError) {
+            errors.push(`Update ${row.product_id}: ${updateError.message}`);
+            productsFailed++;
+          } else {
+            productsUpdated++;
+          }
+        } else {
+          const { error: insertError } = await supabase
+            .from('filaments')
+            .insert(row);
+          if (insertError) {
+            errors.push(`Insert ${row.product_id}: ${insertError.message}`);
+            productsFailed++;
+          } else {
+            productsCreated++;
+          }
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`Row error ${row.product_id}: ${msg}`);
+        productsFailed++;
       }
     }
 

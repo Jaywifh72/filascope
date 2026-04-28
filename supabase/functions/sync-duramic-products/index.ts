@@ -167,20 +167,39 @@ Deno.serve(async (req) => {
                 console.log(`  - Product Line: ${filamentData.product_line_id}`);
                 stats.productsCreated++;
               } else {
-                const { error } = await supabase
+                // SELECT-then-UPDATE/INSERT (avoids reliance on non-existent ON CONFLICT constraint)
+                const { data: existing } = await supabase
                   .from('filaments')
-                  .upsert(filamentData, { 
-                    onConflict: 'vendor,product_id',
-                    ignoreDuplicates: false 
-                  });
-                
-                if (error) {
-                  console.error(`[Duramic Sync] Error upserting ${productId}:`, error.message);
-                  errors.push(`Failed to upsert ${productId}: ${error.message}`);
-                  stats.productsFailed++;
+                  .select('id')
+                  .eq('product_id', productId)
+                  .limit(1);
+
+                if (existing && existing.length > 0) {
+                  // Update existing record (preserve created_at)
+                  const { error: updateError } = await supabase
+                    .from('filaments')
+                    .update({ ...filamentData, id: existing[0].id })
+                    .eq('id', existing[0].id);
+                  if (updateError) {
+                    console.error(`[Duramic Sync] Error updating ${productId}:`, updateError.message);
+                    errors.push(`Failed to update ${productId}: ${updateError.message}`);
+                    stats.productsFailed++;
+                  } else {
+                    stats.productsUpdated++;
+                  }
                 } else {
-                  stats.productsCreated++;
-                  if (colorHex) stats.colorsExtracted++;
+                  // Insert new record
+                  const { error: insertError } = await supabase
+                    .from('filaments')
+                    .insert(filamentData);
+                  if (insertError) {
+                    console.error(`[Duramic Sync] Error inserting ${productId}:`, insertError.message);
+                    errors.push(`Failed to insert ${productId}: ${insertError.message}`);
+                    stats.productsFailed++;
+                  } else {
+                    stats.productsCreated++;
+                    if (colorHex) stats.colorsExtracted++;
+                  }
                 }
               }
             }
