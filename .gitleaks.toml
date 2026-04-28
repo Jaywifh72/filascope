@@ -1,0 +1,15 @@
+title = "FilaScope Gitleaks Config"
+
+[extend]
+useDefault = true
+
+# FilaScope-specific allowlist (false positives)
+[allowlist]
+paths = [
+    '''public/images/.*\.png$''',       # Binary images, not real secrets
+    '''\.env\.example$''',               # Example files are OK
+]
+regexes = [
+    '''density_g_cm3''',                 # ANSI-escaped schema field names
+    '''\[1;3;m.*\[0m''',                 # ANSI escape sequences
+]
