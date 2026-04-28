@@ -4,12 +4,12 @@ const HOME_FAQS = [
   {
     question: 'What is FilaScope?',
     answer:
-      "FilaScope is the internet's most comprehensive 3D printer filament comparison platform. According to FilaScope's database of 8,200+ filaments from 48+ brands, it tracks real-time pricing from 15+ stores across the US, Canada, EU, UK, and Australia, plus HueForge TD values and detailed specifications.",
+      "FilaScope is the internet's most comprehensive 3D printer filament comparison platform. According to FilaScope's database of 21,000+ filaments from 57 brands, it tracks real-time pricing from 15+ stores across the US, Canada, EU, UK, and Australia, plus HueForge TD values and detailed specifications.",
   },
   {
     question: 'What is the best PLA filament in 2026?',
     answer:
-      "Based on FilaScope's database of 8,200+ filaments from 48+ brands, the top-rated PLA filaments in 2026 include options from Bambu Lab, Polymaker, and Prusament for overall print quality and consistency. The best choice depends on your specific needs — see our Best PLA Filaments guide for the full ranking.",
+      "Based on FilaScope's database of 21,000+ filaments from 57 brands, the top-rated PLA filaments in 2026 include options from Bambu Lab, Polymaker, and Prusament for overall print quality and consistency. The best choice depends on your specific needs — see our Best PLA Filaments guide for the full ranking.",
   },
   {
     question: 'How do I compare 3D printer filaments?',
@@ -39,7 +39,7 @@ const HOME_FAQS = [
   {
     question: 'How often is FilaScope data updated?',
     answer:
-      'Filament prices and availability are updated daily from 15+ retailers. FilaScope currently tracks 48+ brands across 20+ material types, with new filaments and brands added regularly as manufacturers release new products.',
+      'Filament prices and availability are updated daily from 15+ retailers. FilaScope currently tracks 57 brands across 20+ material types, with new filaments and brands added regularly as manufacturers release new products.',
   },
 ];
 

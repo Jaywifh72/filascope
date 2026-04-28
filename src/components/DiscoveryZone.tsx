@@ -131,7 +131,7 @@ export function DiscoveryZone({ resetFilters, updateFilter, unfilteredProductCou
 
   const countLabel = unfilteredProductCount
     ? `${unfilteredProductCount.toLocaleString()}+ filaments`
-    : "1,000+ filaments";
+    : "21,000+ filaments";
 
   return (
     <section className="w-full bg-gray-900/50 border-y border-gray-800 py-10 px-4">

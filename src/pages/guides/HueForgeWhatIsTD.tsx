@@ -213,7 +213,7 @@ export default function HueForgeWhatIsTD() {
                 {
                   icon: Target,
                   title: '1. Search the FilaScope TD Database',
-                  desc: 'The fastest way to find a verified TD value. FilaScope maintains the largest public HueForge TD database with measurements for hundreds of filaments from 48+ brands.',
+                  desc: 'The fastest way to find a verified TD value. FilaScope maintains the largest public HueForge TD database with measurements for hundreds of filaments from 57 brands.',
                   link: { to: '/hueforge-td-database', label: 'Search TD Database →' },
                 },
                 {

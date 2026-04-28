@@ -5,13 +5,13 @@ import { useJsonLd, JsonLd } from '@/components/seo/useJsonLd';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ENTITY_DESCRIPTION =
-  'Learn about FilaScope, the most comprehensive 3D printer filament comparison tool with 8,200+ products from 48+ brands, live pricing, and HueForge TD values.';
+  'Learn about FilaScope, the most comprehensive 3D printer filament comparison tool with 21,000+ products from 57 brands, live pricing, and HueForge TD values.';
 
 const FAQS = [
   {
     question: 'What is FilaScope?',
     answer:
-      'FilaScope is a free 3D printer filament database and comparison tool. It indexes over 1,080 filaments from 48+ manufacturers, tracking specifications, real-time pricing across 6 regions (US, CA, UK, EU, AU, JP), and HueForge Transmissivity Distance (TD) values so makers can find the right filament at the best price without opening dozens of browser tabs.',
+      'FilaScope is a free 3D printer filament database and comparison tool. It indexes over 21,000 filaments from 48+ manufacturers, tracking specifications, real-time pricing across 6 regions (US, CA, UK, EU, AU, JP), and HueForge Transmissivity Distance (TD) values so makers can find the right filament at the best price without opening dozens of browser tabs.',
   },
   {
     question: 'Is FilaScope free to use?',
@@ -144,7 +144,7 @@ export default function About() {
           {/* Mission Paragraphs */}
           <section className="mb-10">
             <p className="text-muted-foreground leading-relaxed mb-4">
-              FilaScope is a 3D printer filament comparison platform that helps makers find the right filament for their projects. Our database includes over 8,200 filaments from 48+ brands with live pricing from multiple online retailers.
+              FilaScope is a 3D printer filament comparison platform that helps makers find the right filament for their projects. Our database includes over 21,000 filaments from 57 brands with live pricing from multiple online retailers.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
               FilaScope was built to solve a simple problem: comparing 3D printer filaments across brands is tedious. Specifications are scattered across manufacturer websites, pricing varies between stores, and HueForge TD values are hard to find. FilaScope brings all this data into one searchable, filterable database.
@@ -177,7 +177,7 @@ export default function About() {
             <ul className="space-y-2 text-muted-foreground text-sm list-none pl-0">
               {[
                 '8,000+ filament SKUs indexed across PLA, PETG, ABS, TPU, ASA, Nylon, and specialty materials.',
-                '48+ brands tracked with direct pricing from manufacturer stores and major retailers.',
+                '57 brands tracked with direct pricing from manufacturer stores and major retailers.',
                 '6 supported regions — US, CA, UK, EU, AU, and JP — with localized pricing and daily exchange-rate refresh.',
                 '15+ retailers monitored, including brand-direct stores and Amazon storefronts.',
                 'Automated price checks supplemented by manual verification to maintain accuracy.',

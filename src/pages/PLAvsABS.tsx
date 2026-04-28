@@ -131,7 +131,7 @@ export default function PLAvsABS() {
             PLA and ABS are two of the most established FDM filaments — but they're suited for very different workflows. PLA excels in ease-of-use and surface quality, while ABS offers superior heat and impact resistance. This data-driven comparison covers print settings, mechanical properties, post-processing, and cost.
           </p>
           <p className="text-sm text-muted-foreground mt-3">
-            This comparison uses data from FilaScope's database of 8,200+ filaments across 48+ brands, with real-time pricing from 15+ retailers.
+            This comparison uses data from FilaScope's database of 21,000+ filaments across 57 brands, with real-time pricing from 15+ retailers.
           </p>
         </header>
 

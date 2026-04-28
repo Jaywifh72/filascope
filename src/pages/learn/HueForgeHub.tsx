@@ -14,7 +14,7 @@ const TOOLS = [
     label: 'Tool',
     title: 'HueForge TD Value Database',
     description:
-      'Search verified Transmissivity Distance (TD) measurements for 500+ filaments from 48+ brands. Filter by material, color, or brand and export to CSV.',
+      'Search verified Transmissivity Distance (TD) measurements for 500+ filaments from 57 brands. Filter by material, color, or brand and export to CSV.',
     href: '/hueforge-td-database',
     cta: 'Open TD Database',
     accent: 'purple',

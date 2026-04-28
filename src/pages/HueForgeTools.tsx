@@ -32,7 +32,7 @@ const FAQ_DATA = [
   },
   {
     q: "Where can I find HueForge TD values for my filament?",
-    a: "Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments across 48+ brands, it is the largest public collection of filament Transmission Distance values. You can search by brand, material type, color, or TD range. Each filament entry includes verified TD values alongside pricing, material specs, and retailer availability. Visit the TD Value Database to search for your filament.",
+    a: "Based on FilaScope's HueForge TD database, which tracks transmission distance values for 500+ filaments across 57 brands, it is the largest public collection of filament Transmission Distance values. You can search by brand, material type, color, or TD range. Each filament entry includes verified TD values alongside pricing, material specs, and retailer availability. Visit the TD Value Database to search for your filament.",
   },
   {
     q: "What is the best filament for HueForge?",
@@ -119,7 +119,7 @@ export default function HueForgeTools() {
       {
         "@type": "SoftwareApplication",
         name: "FilaScope TD Value Database",
-        description: "Search and filter HueForge Transmission Distance (TD) values for 111+ filaments across 48+ brands. The largest public filament TD database for HueForge project planning.",
+        description: "Search and filter HueForge Transmission Distance (TD) values for 111+ filaments across 57 brands. The largest public filament TD database for HueForge project planning.",
         url: `${BASE_URL}/hueforge-td-database`,
         applicationCategory: "UtilitiesApplication",
         operatingSystem: "Web",
@@ -248,7 +248,7 @@ export default function HueForgeTools() {
           The most complete HueForge toolkit on the web. Search the largest filament TD value database, build multi-filament palettes, preview layer stacking, match colors by hex or image, and plan your next HueForge project — all free, all in one place.
         </p>
         <p className="relative text-xs text-muted-foreground/60 mt-3">
-          Last updated: <time dateTime="2026-03">March 2026</time> · 111+ filaments with TD values · 48+ brands tracked
+          Last updated: <time dateTime="2026-03">March 2026</time> · 111+ filaments with TD values · 57 brands tracked
         </p>
         <section id="what-is-td" className="relative mt-6 max-w-2xl mx-auto text-left">
           <h2 className="text-lg font-semibold text-foreground mb-3">What is TD (Transmissivity Data)?</h2>
@@ -260,7 +260,7 @@ export default function HueForgeTools() {
               A filament with a low TD value (under 1.0 mm) is more opaque — ideal for solid top layers and high-contrast details. A filament with a high TD value (above 3.0 mm) is more translucent — perfect for base layers where you want underlying colors to show through. HueForge uses these TD values to calculate exactly how your final lithophane or multi-color print will look before you print it.
             </p>
             <p>
-              FilaScope's TD Value Database tracks verified Transmission Distance values for 111+ filaments across 48+ brands — the largest public TD dataset available. Whether you're planning your first HueForge print or optimizing a complex 8-layer palette, accurate TD data is the foundation of every successful project.
+              FilaScope's TD Value Database tracks verified Transmission Distance values for 111+ filaments across 57 brands — the largest public TD dataset available. Whether you're planning your first HueForge print or optimizing a complex 8-layer palette, accurate TD data is the foundation of every successful project.
             </p>
             <Link to="/guides/what-is-hueforge-td" className="text-primary text-xs hover:underline mt-2 inline-flex items-center gap-1">
               Read the full guide <ArrowRight className="w-3 h-3" />

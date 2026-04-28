@@ -370,9 +370,9 @@ export default function LearningCenter() {
     <>
     <DocumentHead
       title="3D Printing Guides, Tutorials & Buying Advice | FilaScope"
-      description="Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by data from 24,000+ filaments across 49+ brands."
+      description="Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by data from 21,000+ filaments across 57 brands."
       ogTitle="3D Printing Guides, Tutorials & Buying Advice | FilaScope"
-      ogDescription="Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by data from 24,000+ filaments across 49+ brands."
+      ogDescription="Free 3D printing guides: filament buying advice, material comparisons, HueForge tutorials, and troubleshooting — backed by data from 21,000+ filaments across 57 brands."
     />
     <CollectionPageSchema
       name="3D Printing Guides, Tutorials & Buying Advice"
@@ -413,7 +413,7 @@ export default function LearningCenter() {
             </h1>
             
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              FilaScope's library of <strong className="text-foreground">3D printing guides</strong> covers everything from material comparisons and <strong className="text-foreground">filament buying guide</strong> content to <strong className="text-foreground">HueForge tutorial</strong> walkthroughs and troubleshooting tips. Every recommendation is backed by real data from our database of 8,200+ filaments across 48+ brands. Whether you need a quick <strong className="text-foreground">filament comparison</strong> between PLA and PETG, a deep-dive into TD values for lithophane printing, or curated picks for a specific printer, you'll find actionable, data-driven advice here — always free, always up to date.
+              FilaScope's library of <strong className="text-foreground">3D printing guides</strong> covers everything from material comparisons and <strong className="text-foreground">filament buying guide</strong> content to <strong className="text-foreground">HueForge tutorial</strong> walkthroughs and troubleshooting tips. Every recommendation is backed by real data from our database of 21,000+ filaments across 57 brands. Whether you need a quick <strong className="text-foreground">filament comparison</strong> between PLA and PETG, a deep-dive into TD values for lithophane printing, or curated picks for a specific printer, you'll find actionable, data-driven advice here — always free, always up to date.
             </p>
             
             {/* Search Bar */}

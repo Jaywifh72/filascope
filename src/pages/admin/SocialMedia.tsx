@@ -105,40 +105,40 @@ interface PlatformBio {
 }
 
 const CORE_TAGLINE =
-  'Compare 1,000+ 3D printing filaments & 90+ printers. Real prices. Real data.';
+  'Compare 21,000+ 3D printing filaments & 90+ printers. Real prices. Real data.';
 
 const PLATFORM_BIOS: PlatformBio[] = [
   {
     platform: 'TikTok',
     charLimit: 80,
-    bio: 'Compare 1,000+ 3D printing filaments & 90+ printers \uD83C\uDFAF\nfilascope.com',
+    bio: 'Compare 21,000+ 3D printing filaments & 90+ printers \uD83C\uDFAF\nfilascope.com',
   },
   {
     platform: 'Instagram / Threads',
     charLimit: 150,
-    bio: 'Compare 1,000+ filaments from 50+ brands \uD83D\uDCE2\nHueForge TD values \u00B7 Real-time pricing \u00B7 90+ printers\nBuilt for makers \uD83D\uDD27\n\uD83D\uDD17 filascope.com',
+    bio: 'Compare 21,000+ filaments from 50+ brands \uD83D\uDCE2\nHueForge TD values \u00B7 Real-time pricing \u00B7 90+ printers\nBuilt for makers \uD83D\uDD27\n\uD83D\uDD17 filascope.com',
   },
   {
     platform: 'X / Twitter',
     charLimit: 160,
-    bio: 'Compare 1,000+ 3D printing filaments from 50+ brands. HueForge TD values, real-time pricing & 90+ printer specs. The data platform built for makers.\nfilascope.com',
+    bio: 'Compare 21,000+ 3D printing filaments from 50+ brands. HueForge TD values, real-time pricing & 90+ printer specs. The data platform built for makers.\nfilascope.com',
   },
   {
     platform: 'Bluesky',
     charLimit: 256,
-    bio: 'The 3D printing filament & printer comparison platform. Compare 1,000+ filaments from 50+ brands with HueForge Transmission Distance values, real-time multi-region pricing, and a database of 90+ printers. Built for makers who want real data.\nfilascope.com',
+    bio: 'The 3D printing filament & printer comparison platform. Compare 21,000+ filaments from 50+ brands with HueForge Transmission Distance values, real-time multi-region pricing, and a database of 90+ printers. Built for makers who want real data.\nfilascope.com',
   },
   {
     platform: 'Facebook (Short)',
     charLimit: 155,
-    bio: 'Compare 1,000+ 3D printing filaments & 90+ printers. HueForge TD values, real-time pricing, and specs from 50+ brands. The data platform for makers.',
+    bio: 'Compare 21,000+ 3D printing filaments & 90+ printers. HueForge TD values, real-time pricing, and specs from 50+ brands. The data platform for makers.',
   },
   {
     platform: 'Facebook (Long / About)',
     charLimit: 2000,
     bio: `FilaScope is the 3D printing filament and printer comparison platform built for makers who want real data, not guesswork.
 
-\uD83D\uDCE2 1,000+ filaments from 50+ brands
+\uD83D\uDCE2 21,000+ filaments from 50+ brands
 \uD83D\uDDA8\uFE0F 90+ printers across 22+ brands
 \uD83C\uDFAF HueForge Transmission Distance (TD) values
 \uD83D\uDCB0 Real-time pricing across multiple regions
@@ -153,7 +153,7 @@ Whether you\u2019re dialing in a HueForge project, choosing your next spool, or 
     charLimit: 1000,
     bio: `FilaScope is the 3D printing filament and printer comparison platform \u2014 built for makers who want real data, not guesswork.
 
-We track 1,000+ filaments from 50+ brands with specs you won\u2019t find anywhere else, including HueForge Transmission Distance (TD) values, real-time multi-region pricing, and detailed material properties.
+We track 21,000+ filaments from 50+ brands with specs you won\u2019t find anywhere else, including HueForge Transmission Distance (TD) values, real-time multi-region pricing, and detailed material properties.
 
 Our printer database covers 90+ models across 22+ brands with full spec comparisons so you can find the right machine for your workflow.
 
@@ -166,7 +166,7 @@ Whether you\u2019re picking the perfect filament for a HueForge project, hunting
     charLimit: 2000,
     bio: `FilaScope is the data-driven comparison platform for the 3D printing community.
 
-We aggregate and organize the specs, pricing, and performance data that makers need to make informed decisions \u2014 covering 1,000+ filaments from 50+ brands and 90+ printers across 22+ manufacturers.
+We aggregate and organize the specs, pricing, and performance data that makers need to make informed decisions \u2014 covering 21,000+ filaments from 50+ brands and 90+ printers across 22+ manufacturers.
 
 What sets FilaScope apart:
 - HueForge Transmission Distance (TD) values \u2014 a critical spec for lithophane and HueForge projects that\u2019s difficult to find elsewhere
@@ -181,12 +181,12 @@ FilaScope was built by a maker, for makers. We believe the 3D printing community
   {
     platform: 'Pinterest',
     charLimit: 500,
-    bio: 'FilaScope is the 3D printing filament and printer comparison platform. Compare 1,000+ filaments from 50+ brands with HueForge TD values, real-time pricing, and detailed material specs. Our printer database covers 90+ models across 22+ brands. Built for makers who want real data. filascope.com',
+    bio: 'FilaScope is the 3D printing filament and printer comparison platform. Compare 21,000+ filaments from 50+ brands with HueForge TD values, real-time pricing, and detailed material specs. Our printer database covers 90+ models across 22+ brands. Built for makers who want real data. filascope.com',
   },
   {
     platform: 'Reddit',
     charLimit: 200,
-    bio: 'Builder of FilaScope \u2014 the filament & printer comparison platform. 1,000+ filaments, 90+ printers, HueForge TD values, real-time pricing. filascope.com',
+    bio: 'Builder of FilaScope \u2014 the filament & printer comparison platform. 21,000+ filaments, 90+ printers, HueForge TD values, real-time pricing. filascope.com',
   },
 ];
 

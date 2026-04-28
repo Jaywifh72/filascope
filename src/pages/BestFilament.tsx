@@ -114,7 +114,7 @@ export default function BestFilament() {
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
               Choosing the right filament is the most impactful decision you can make for your 3D printing results.
-              We've ranked the top filaments from 48+ brands using our FilaScore algorithm — weighing quality consistency,
+              We've ranked the top filaments from 57 brands using our FilaScore algorithm — weighing quality consistency,
               pricing, regional availability, documentation quality, and community data — so you don't have to guess.
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function BestFilament() {
                 The 3D printing filament market has grown dramatically. There are now thousands of options across hundreds
                 of brands, making it genuinely difficult to separate quality filament from cheap alternatives that ship
                 with inconsistent diameter, poor adhesion, and no technical data sheets. That's why FilaScope indexes
-                specifications, prices, and community data from 48+ brands into one searchable database.
+                specifications, prices, and community data from 57 brands into one searchable database.
               </p>
               <p>
                 <strong className="text-foreground">For most people, the decision tree is simple:</strong> Start with PLA.

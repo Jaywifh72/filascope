@@ -193,7 +193,7 @@ export default function BestFilamentsForHueForge() {
           </h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
             HueForge lithophanes live and die by Transmission Distance (TD) values. We've ranked the
-            top 3D printing filaments from 48+ brands by their verified TD data, so you can build
+            top 3D printing filaments from 57 brands by their verified TD data, so you can build
             perfect lithophane stacks without guesswork.
           </p>
           <div className="flex flex-wrap gap-3 mt-4">

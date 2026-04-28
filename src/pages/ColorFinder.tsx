@@ -25,7 +25,7 @@ type Mode = 'single' | 'hueforge';
 const COLOR_FINDER_FAQS = [
   {
     q: "How does FilaScope's color matching work?",
-    a: "According to FilaScope's database of 1,080+ filaments, our color matching tool compares filament colors across 48+ brands using hex codes and visual swatches. Search by color name, hex code, or use our visual color picker to find the closest matching filaments.",
+    a: "According to FilaScope's database of 21,000+ filaments, our color matching tool compares filament colors across 57 brands using hex codes and visual swatches. Search by color name, hex code, or use our visual color picker to find the closest matching filaments.",
   },
   {
     q: "Can I match filament colors across different brands?",
@@ -108,11 +108,11 @@ export default function ColorFinder() {
   return (
     <>
       <DocumentHead
-        title="3D Printer Filament Color Finder — Match Any Shade to 24,000+ Filaments"
-        description="Free filament color finder tool — match any hex color to 24,000+ 3D printer filaments from 49+ brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
+        title="3D Printer Filament Color Finder — Match Any Shade to 21,000+ Filaments"
+        description="Free filament color finder tool — match any hex color to 21,000+ 3D printer filaments from 57 brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
         canonical="https://filascope.com/colors"
-        ogTitle="3D Printer Filament Color Finder — Match Any Shade to 24,000+ Filaments"
-        ogDescription="Free filament color finder tool — match any hex color to 24,000+ 3D printer filaments from 49+ brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
+        ogTitle="3D Printer Filament Color Finder — Match Any Shade to 21,000+ Filaments"
+        ogDescription="Free filament color finder tool — match any hex color to 21,000+ 3D printer filaments from 57 brands. Visual color picker, HueForge TD data, and brand comparison. Find your exact color match."
         keywords="filament color finder, 3d printer filament color picker, filament color match, hex to filament, 3D printing color tool, HueForge color finder, filament color comparison"
       />
       <BreadcrumbSchema items={[{ name: 'Home', url: '/' }, { name: 'Color Finder', url: '/colors' }]} />
@@ -141,7 +141,7 @@ export default function ColorFinder() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Color Finder</h1>
             <p className="text-sm text-muted-foreground">
-              Match any color to 24,000+ filaments across 49+ brands. Pick a color or enter a hex code.
+              Match any color to 21,000+ filaments across 57 brands. Pick a color or enter a hex code.
             </p>
           </div>
           </div>
@@ -257,7 +257,7 @@ export default function ColorFinder() {
               How Color Matching Works
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
-              FilaScope's color matching tool compares filament colors across 48+ brands by analyzing hex color codes and computing perceptual color distance (Delta E). When you pick a target color — via hex input, visual picker, or popular presets — the tool ranks every filament in the database by how closely its measured swatch matches your selection. Results update instantly so you can find exact or near-exact color matches across manufacturers like Prusament, Polymaker, Bambu Lab, Hatchbox, and more.
+              FilaScope's color matching tool compares filament colors across 57 brands by analyzing hex color codes and computing perceptual color distance (Delta E). When you pick a target color — via hex input, visual picker, or popular presets — the tool ranks every filament in the database by how closely its measured swatch matches your selection. Results update instantly so you can find exact or near-exact color matches across manufacturers like Prusament, Polymaker, Bambu Lab, Hatchbox, and more.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl mt-2">
               You can also filter results by material type (PLA, PETG, ABS, TPU) and brand to narrow down options for your specific printer and project requirements. Looking for full filament specs?{' '}
@@ -331,7 +331,7 @@ export default function ColorFinder() {
             <h2 className="text-lg font-semibold mb-4">Related Resources</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { to: '/filaments', label: 'Browse 24,000+ Filaments by Spec' },
+                { to: '/filaments', label: 'Browse 21,000+ Filaments by Spec' },
                 { to: '/filament-temperature-chart', label: '3D Filament Temperature Chart' },
                 { to: '/guides/best-pla-filaments', label: 'Best PLA Filaments 2026' },
                 { to: '/guides/pla-vs-petg', label: 'PLA vs PETG Comparison' },

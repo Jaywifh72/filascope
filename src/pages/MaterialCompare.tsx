@@ -1603,7 +1603,7 @@ const MaterialCompare = () => {
     ? `${matA} vs ${matB} — 3D Filament Comparison | FilaScope`
     : "Material Knowledge Base — Filament Reference & Comparison | FilaScope";
   const pageDescription = matA && matB
-    ? `${matA} vs ${matB} compared: strength, flexibility, print settings, price & more. Data-driven comparison from FilaScope's database of 1,080+ filaments.`
+    ? `${matA} vs ${matB} compared: strength, flexibility, print settings, price & more. Data-driven comparison from FilaScope's database of 21,000+ filaments.`
     : "Compare 3D printing material properties side by side. Explore strength, flexibility, temperature resistance, and printability across PLA, PETG, ABS, TPU, and more.";
 
   const handleTabChange = (value: string) => {

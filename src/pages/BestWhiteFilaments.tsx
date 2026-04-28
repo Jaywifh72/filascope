@@ -159,7 +159,7 @@ export default function BestWhiteFilaments() {
         <header className="mb-10">
           <h1 className="text-3xl font-bold mb-3">Best White Filaments for 3D Printing &amp; HueForge</h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            White filaments are the most critical choice for HueForge lithophanes — they act as your light-transmitting base layer. We've ranked the best white and natural filaments by TD value using verified data from 48+ brands.
+            White filaments are the most critical choice for HueForge lithophanes — they act as your light-transmitting base layer. We've ranked the best white and natural filaments by TD value using verified data from 57 brands.
           </p>
           <div className="flex flex-wrap gap-3 mt-4">
             <Link to="/hueforge-td-database" className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:text-purple-300 transition-colors">

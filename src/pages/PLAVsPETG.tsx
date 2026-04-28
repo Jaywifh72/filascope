@@ -216,7 +216,7 @@ export default function PLAVsPETG() {
         <header className="mb-10">
           <h1 className="text-3xl font-bold mb-3">PLA vs PETG — Which 3D Printer Filament Is Right for You?</h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            PLA and PETG are the two most popular 3D printing filaments — but they serve very different purposes. This data-driven comparison breaks down print settings, strength, HueForge TD values, and price using live data from FilaScope's 1,080+ filament database.
+            PLA and PETG are the two most popular 3D printing filaments — but they serve very different purposes. This data-driven comparison breaks down print settings, strength, HueForge TD values, and price using live data from FilaScope's 21,000+ filament database.
           </p>
         </header>
 

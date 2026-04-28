@@ -448,7 +448,7 @@ function generateMaterialCategoryFAQs(
   if (materialStats?.topBrands && materialStats.topBrands.length > 0) {
     faqs.push({
       question: `What brands make ${label} filament?`,
-      answer: `FilaScope currently tracks 48+ brands across 20+ material types. Popular ${label} filament brands include ${materialStats.topBrands.join(', ')}, and many more. You can compare specs and prices side by side.`,
+      answer: `FilaScope currently tracks 57 brands across 20+ material types. Popular ${label} filament brands include ${materialStats.topBrands.join(', ')}, and many more. You can compare specs and prices side by side.`,
     });
   }
 
@@ -911,7 +911,7 @@ export default function FilamentCategoryPage() {
             <article>
               <h2 className="text-2xl font-bold text-foreground mb-4">The Complete 3D Printer Filament Comparison Database</h2>
               <p className="text-muted-foreground leading-relaxed">
-                FilaScope is the most comprehensive <strong>3D printer filament comparison</strong> tool available, tracking 8,200+ filaments from 48+ brands with real-time pricing across 15+ retailers worldwide. Whether you need to <strong>compare filaments</strong> by tensile strength, print temperature, HueForge TD value, or price per kilogram, our <strong>filament database</strong> puts every datapoint at your fingertips. Each product page includes detailed <strong>filament specifications</strong> — nozzle and bed temperatures, mechanical properties, spool weight, color options, and community ratings. Prices update automatically so you always see the latest deals. Use the filters above to narrow by material, brand, price, color, or printer compatibility, or try the{' '}
+                FilaScope is the most comprehensive <strong>3D printer filament comparison</strong> tool available, tracking 21,000+ filaments from 57 brands with real-time pricing across 15+ retailers worldwide. Whether you need to <strong>compare filaments</strong> by tensile strength, print temperature, HueForge TD value, or price per kilogram, our <strong>filament database</strong> puts every datapoint at your fingertips. Each product page includes detailed <strong>filament specifications</strong> — nozzle and bed temperatures, mechanical properties, spool weight, color options, and community ratings. Prices update automatically so you always see the latest deals. Use the filters above to narrow by material, brand, price, color, or printer compatibility, or try the{' '}
                 <a href="/wizard" className="text-primary hover:underline font-medium">guided filament finder</a> for personalized recommendations.
               </p>
             </article>
@@ -943,10 +943,10 @@ export default function FilamentCategoryPage() {
             <article>
               <h2 className="text-2xl font-bold text-foreground mb-4">What Is PLA Filament and Why Is It the Most Popular?</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                PLA (Polylactic Acid) is the most popular 3D printing filament material, known for its ease of use, low warping, and wide color selection. PLA prints at 190–220°C nozzle temperature with 25–60°C bed temperature and does not require an enclosure. It is biodegradable, ideal for beginners and decorative prints. FilaScope indexes 4,296+ PLA filament variants from 48+ brands with real-time pricing.
+                PLA (Polylactic Acid) is the most popular 3D printing filament material, known for its ease of use, low warping, and wide color selection. PLA prints at 190–220°C nozzle temperature with 25–60°C bed temperature and does not require an enclosure. It is biodegradable, ideal for beginners and decorative prints. FilaScope indexes 4,296+ PLA filament variants from 57 brands with real-time pricing.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                <strong>PLA filament</strong> is the most widely used FDM 3D printing material worldwide, and for good reason. Made from renewable resources like corn starch, PLA is biodegradable, low-odor, and incredibly easy to print. It extrudes at just 190–220°C, doesn't require a heated bed or enclosure, and produces sharp, detailed prints on virtually any FDM printer. Whether you're a beginner looking for the <strong>best PLA filament</strong> or an experienced maker comparing options, FilaScope's <strong>PLA filament comparison</strong> tools let you evaluate specs, colors, and <strong>PLA filament prices</strong> across 48+ brands. PLA is ideal for prototypes, cosplay props, decorative models, miniatures, and HueForge lithophanes thanks to its excellent layer adhesion and vibrant color range.
+                <strong>PLA filament</strong> is the most widely used FDM 3D printing material worldwide, and for good reason. Made from renewable resources like corn starch, PLA is biodegradable, low-odor, and incredibly easy to print. It extrudes at just 190–220°C, doesn't require a heated bed or enclosure, and produces sharp, detailed prints on virtually any FDM printer. Whether you're a beginner looking for the <strong>best PLA filament</strong> or an experienced maker comparing options, FilaScope's <strong>PLA filament comparison</strong> tools let you evaluate specs, colors, and <strong>PLA filament prices</strong> across 57 brands. PLA is ideal for prototypes, cosplay props, decorative models, miniatures, and HueForge lithophanes thanks to its excellent layer adhesion and vibrant color range.
               </p>
             </article>
             <article>

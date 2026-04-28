@@ -48,7 +48,7 @@ export function OrganizationSchema({
   logoWidth,
   logoHeight,
   image,
-  description = 'The most comprehensive 3D printer filament database. Compare prices, materials, specifications, and HueForge TD values across 1,080+ filaments from 48+ brands.',
+  description = 'The most comprehensive 3D printer filament database. Compare prices, materials, specifications, and HueForge TD values across 21,000+ filaments from 57 brands.',
   sameAs = [
     'https://twitter.com/filascope',
     'https://discord.gg/filascope',

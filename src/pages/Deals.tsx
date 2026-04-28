@@ -499,7 +499,7 @@ const Deals = () => {
                     <Link to="/finder" className="group p-3 rounded-lg border border-border hover:border-primary/30 transition-colors text-center">
                       <Package className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground group-hover:text-primary transition-colors" />
                       <p className="text-xs font-medium text-foreground">Browse Filaments</p>
-                      <p className="text-[10px] text-muted-foreground">1,080+ products</p>
+                      <p className="text-[10px] text-muted-foreground">21,000+ products</p>
                     </Link>
                     <Link to="/printers" className="group p-3 rounded-lg border border-border hover:border-primary/30 transition-colors text-center">
                       <Printer className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -539,7 +539,7 @@ const Deals = () => {
               title="Filament Pricing FAQ"
               faqs={[
                 { question: 'How often are filament prices updated?', answer: 'Based on FilaScope\'s real-time price tracking across 15+ stores in 5 regions, prices are checked from major filament retailers multiple times per week. Sale prices and limited-time discounts are captured as soon as they appear in our data feeds, so deals on this page are typically current within 24–48 hours.' },
-                { question: 'Which regions does FilaScope track prices for?', answer: 'According to FilaScope\'s database of 8,200+ filaments from 48+ brands, we currently track filament prices across five regions: the United States, Canada, the United Kingdom, Europe (EU), and Australia. Each region shows prices in the local currency with links to the appropriate regional storefront.' },
+                { question: 'Which regions does FilaScope track prices for?', answer: 'According to FilaScope\'s database of 21,000+ filaments from 57 brands, we currently track filament prices across five regions: the United States, Canada, the United Kingdom, Europe (EU), and Australia. Each region shows prices in the local currency with links to the appropriate regional storefront.' },
                 { question: 'How do I find the cheapest PLA filament?', answer: 'Use the material filter chips above the deal grid and select "PLA," then sort by "Price: Low to High." You can also browse our full PLA catalog at /filaments/pla or read our Best PLA Filaments guide for curated recommendations.' },
                 { question: 'Are FilaScope prices affiliate links?', answer: 'Some outbound links on FilaScope are affiliate links, meaning we may earn a small commission if you make a purchase — at no extra cost to you. This helps support the site. All prices shown are the actual retail prices from the store; we never inflate them.' },
                 { question: "What's the average price of PLA filament per kilogram?", answer: 'Based on FilaScope\'s real-time price tracking across 15+ stores in 5 regions, PLA filament typically ranges from $15–$30 USD per kilogram depending on the brand, color, and retailer. Budget brands can go as low as $12/kg, while specialty or composite PLAs may exceed $40/kg. Check our deals page for current discounts.' },

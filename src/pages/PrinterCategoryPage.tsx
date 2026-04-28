@@ -213,7 +213,7 @@ const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
     h1: (n) => `3D Printers Under $300 — ${n} Models Compared`,
     title: (n) => `Best 3D Printers Under $300 — ${n} Options | FilaScope`,
     description: (n) => `Compare ${n} 3D printers under $300 with detailed specs and filament compatibility. Find the best budget printer for your needs. Updated pricing daily.`,
-    intro: "Budget 3D printers under $300 have improved dramatically in recent years. Today's sub-$300 options often include auto bed leveling, direct drive extruders, and decent print speeds that were reserved for $1,000+ machines just a few years ago.",
+    intro: "Budget 3D printers under $300 have improved dramatically in recent years. Today's sub-$300 options often include auto bed leveling, direct drive extruders, and decent print speeds that were reserved for $21,000+ machines just a few years ago.",
     filter: (p) => getPrice(p) <= 300,
     aboutHeading: "About Budget 3D Printers Under $300",
     aboutParagraphs: [
@@ -300,7 +300,7 @@ const BRAND_CONFIGS: Record<string, BrandConfig> = {
   },
   "creality": {
     displayName: "Creality",
-    intro: "Creality is one of the world's largest 3D printer manufacturers, offering a wide range of FDM printers from the iconic Ender series to the high-speed K1 CoreXY lineup, covering budgets from $150 to $1,000+.",
+    intro: "Creality is one of the world's largest 3D printer manufacturers, offering a wide range of FDM printers from the iconic Ender series to the high-speed K1 CoreXY lineup, covering budgets from $150 to $21,000+.",
     faqItems: [
       {
         question: "What is the difference between Creality Ender and K1 series?",

@@ -6,20 +6,20 @@ import { useEffect } from 'react';
  * from a detail page restores the homepage defaults.
  */
 const DEFAULTS = {
-  title: 'FilaScope — Compare 24,000+ 3D Printer Filaments | Specs, Prices & TD Values',
+  title: 'FilaScope — Compare 21,000+ 3D Printer Filaments | Specs, Prices & TD Values',
   description:
-    'Compare 24,000+ 3D printer filaments from 49+ brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & specs. The most comprehensive filament database online.',
+    'Compare 21,000+ 3D printer filaments from 57 brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & specs. The most comprehensive filament database online.',
   canonical: 'https://filascope.com/',
-  ogTitle: 'FilaScope — Compare 24,000+ 3D Printer Filaments | Specs, Prices & TD Values',
-  ogDescription: 'Compare 24,000+ 3D printer filaments from 49+ brands.',
+  ogTitle: 'FilaScope — Compare 21,000+ 3D Printer Filaments | Specs, Prices & TD Values',
+  ogDescription: 'Compare 21,000+ 3D printer filaments from 57 brands.',
   ogUrl: 'https://filascope.com/',
   ogType: 'website',
   ogImage: 'https://filascope.com/og-image.png',
   ogSiteName: 'FilaScope',
   twitterCard: 'summary_large_image',
   twitterSite: '@FilaScope',
-  twitterTitle: 'FilaScope — Compare 24,000+ 3D Printer Filaments | Specs, Prices & TD Values',
-  twitterDescription: 'Compare 24,000+ 3D printer filaments from 49+ brands.',
+  twitterTitle: 'FilaScope — Compare 21,000+ 3D Printer Filaments | Specs, Prices & TD Values',
+  twitterDescription: 'Compare 21,000+ 3D printer filaments from 57 brands.',
   twitterImage: 'https://filascope.com/og-image.png',
 } as const;
 

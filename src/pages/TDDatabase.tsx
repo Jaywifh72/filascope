@@ -397,7 +397,7 @@ export default function TDDatabase() {
           <p>HueForge Transmission Distance (TD) measures how much light passes through a 3D printed filament layer, expressed in millimeters. Higher TD values mean more light transmission, creating brighter colors in HueForge lithophane prints.</p>
 
           <h2>FilaScope HueForge TD Database</h2>
-          <p>FilaScope maintains the largest database of measured TD values across 24,000+ filaments from 50+ brands. Currently showing {filaments?.length || 0} filaments with verified TD values.</p>
+          <p>FilaScope maintains the largest database of measured TD values across 21,000+ filaments from 50+ brands. Currently showing {filaments?.length || 0} filaments with verified TD values.</p>
 
           <h2>How to Use TD Values</h2>
           <ul>

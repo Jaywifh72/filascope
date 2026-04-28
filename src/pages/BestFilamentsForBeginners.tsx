@@ -119,13 +119,13 @@ export default function BestFilamentsForBeginners() {
     <>
       <DocumentHead
         title="Best Filaments for Beginners 2026 — Easiest to Print | FilaScope"
-        description="The best 3D printer filaments for beginners in 2026. Start with easy-to-print PLA picks from 48+ brands, with tips, temperature guides, and storage advice."
+        description="The best 3D printer filaments for beginners in 2026. Start with easy-to-print PLA picks from 57 brands, with tips, temperature guides, and storage advice."
         ogTitle="Best 3D Printer Filaments for Beginners in 2026"
         ogDescription="Curated PLA picks, beginner tips, temperature guides, and storage advice for new 3D printer owners."
       />
       <ArticleSchema
         headline="Best 3D Printer Filaments for Beginners in 2026"
-        description="The best 3D printer filaments for beginners in 2026. Start with easy-to-print PLA picks from 48+ brands, with tips, temperature guides, and storage advice."
+        description="The best 3D printer filaments for beginners in 2026. Start with easy-to-print PLA picks from 57 brands, with tips, temperature guides, and storage advice."
         datePublished="2026-01-10"
         dateModified="2026-02-20"
         url="/guides/best-filaments-for-beginners"

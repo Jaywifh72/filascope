@@ -132,7 +132,7 @@ export default function PETGvsTpu() {
             PETG and TPU are both popular choices for functional 3D prints, but they serve very different purposes — one is rigid and strong, the other flexible and impact-resistant. This comparison covers printability, mechanical properties, and the best use cases for each material.
           </p>
           <p className="text-sm text-muted-foreground mt-3">
-            This comparison uses data from FilaScope's database of 8,200+ filaments across 48+ brands, with real-time pricing from 15+ retailers.
+            This comparison uses data from FilaScope's database of 21,000+ filaments across 57 brands, with real-time pricing from 15+ retailers.
           </p>
         </header>
 

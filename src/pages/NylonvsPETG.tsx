@@ -133,7 +133,7 @@ export default function NylonvsPETG() {
           </p>
           <p className="text-xs text-muted-foreground mt-2">* Nylon heat resistance varies by grade: PA6 ~80°C, PA12 ~140°C, PA6-CF ~180°C.</p>
           <p className="text-sm text-muted-foreground mt-3">
-            This comparison uses data from FilaScope's database of 8,200+ filaments across 48+ brands, with real-time pricing from 15+ retailers.
+            This comparison uses data from FilaScope's database of 21,000+ filaments across 57 brands, with real-time pricing from 15+ retailers.
           </p>
         </header>
 

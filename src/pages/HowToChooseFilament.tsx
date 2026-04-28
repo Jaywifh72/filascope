@@ -52,7 +52,7 @@ const FAQS = [
   { question: 'Can I use any filament in my 3D printer?', answer: 'No — your printer\'s maximum nozzle temperature, heated bed, and enclosure determine which materials you can use. Most printers handle PLA and PETG. ABS and ASA need an enclosure. Nylon and PC require all-metal hotends capable of 260°C+.' },
   { question: 'What filament is best for outdoor use?', answer: 'ASA is the gold standard for outdoor prints — it combines ABS-like strength with excellent UV resistance. PETG is a good alternative that\'s easier to print. Avoid PLA outdoors; it degrades in sunlight and softens above 60°C.' },
   { question: 'How should I store 3D printer filament?', answer: 'Keep filament in an airtight container with desiccant. Nylon and TPU are especially hygroscopic — they absorb moisture within hours. Wet filament causes bubbling, stringing, and poor adhesion. Use a filament dryer before printing if you hear popping sounds.' },
-  { question: 'What is TD value in filament?', answer: 'TD (Transmission Distance) measures how much light passes through a filament at a given thickness, measured in millimeters. It\'s critical for HueForge lithophanes — lower TD means more opaque (good for dark layers), higher TD means more translucent. FilaScope tracks TD values for 1,000+ filaments.' },
+  { question: 'What is TD value in filament?', answer: 'TD (Transmission Distance) measures how much light passes through a filament at a given thickness, measured in millimeters. It\'s critical for HueForge lithophanes — lower TD means more opaque (good for dark layers), higher TD means more translucent. FilaScope tracks TD values for 21,000+ filaments.' },
   { question: 'PLA vs PETG — which is better overall?', answer: 'Neither is universally better — it depends on your use case. PLA is easier to print, cheaper, and better for detail work and HueForge. PETG is stronger, more heat-resistant, and better for functional and outdoor parts. Most makers keep both on hand.' },
 ];
 
@@ -118,7 +118,7 @@ export default function HowToChooseFilament() {
             With dozens of filament materials, hundreds of brands, and thousands of color options, choosing the right 3D printer filament can feel overwhelming. This data-backed guide from FilaScope breaks down every factor — from material strength and print difficulty to cost and use case — so you can pick the perfect filament for your project. Whether you're a beginner printing your first benchy or an engineer designing load-bearing parts, we've got you covered.
           </p>
           <p className="text-sm text-muted-foreground mt-3">
-            Last updated: February 2026 · Based on data from <Link to="/filaments" className="text-primary hover:underline">1,080+ filaments</Link> tracked on FilaScope
+            Last updated: February 2026 · Based on data from <Link to="/filaments" className="text-primary hover:underline">21,000+ filaments</Link> tracked on FilaScope
           </p>
         </header>
 
@@ -253,7 +253,7 @@ export default function HowToChooseFilament() {
             </div>
             <div className="rounded-lg border border-border p-4">
               <h3 className="font-semibold mb-1">TD Value (Transmission Distance)</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Unique to HueForge and lithophane work, TD measures light transmission in millimeters. Lower values (0.5–2.0) create opaque layers; higher values (4.0–6.0) allow light through. FilaScope tracks TD for 1,000+ filaments. <Link to="/hueforge-td-database" className="text-primary hover:underline">Browse our TD database →</Link></p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Unique to HueForge and lithophane work, TD measures light transmission in millimeters. Lower values (0.5–2.0) create opaque layers; higher values (4.0–6.0) allow light through. FilaScope tracks TD for 21,000+ filaments. <Link to="/hueforge-td-database" className="text-primary hover:underline">Browse our TD database →</Link></p>
             </div>
           </div>
           <p className="text-sm text-muted-foreground mt-3">

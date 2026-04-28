@@ -15,7 +15,7 @@ const FAQS = [
   {
     question: 'How many filaments are in the FilaScope database?',
     answer:
-      'FilaScope indexes 1,080+ 3D printer filaments across 48+ brands. The database covers PLA, PETG, ABS, TPU, ASA, Nylon, PC, and specialty materials. Each product includes available specs like nozzle/bed temperature, diameter, net weight, density, mechanical properties, regional pricing, and where available, HueForge TD values.',
+      'FilaScope indexes 21,000+ 3D printer filaments across 57 brands. The database covers PLA, PETG, ABS, TPU, ASA, Nylon, PC, and specialty materials. Each product includes available specs like nozzle/bed temperature, diameter, net weight, density, mechanical properties, regional pricing, and where available, HueForge TD values.',
   },
   {
     question: 'How do I filter filaments by material or brand?',
@@ -117,14 +117,14 @@ export default function FilamentDatabase() {
     { name: 'Filament Database', url: '/filament-database' },
   ];
 
-  const displayTotal = statsLoading ? '1,080' : stats?.total.toLocaleString();
+  const displayTotal = statsLoading ? '21,000' : stats?.total.toLocaleString();
   const displayBrands = statsLoading ? '48' : String(stats?.brands);
 
   return (
     <div className="min-h-screen bg-background">
       <DocumentHead
-        title="3D Printer Filament Database — Search 24,000+ Filaments by Spec"
-        description="Searchable database of 24,000+ 3D printer filaments with material specs, temperatures, prices, and HueForge TD values. Filter by brand, material, color, and more."
+        title="3D Printer Filament Database — Search 21,000+ Filaments by Spec"
+        description="Searchable database of 21,000+ 3D printer filaments with material specs, temperatures, prices, and HueForge TD values. Filter by brand, material, color, and more."
         ogType="website"
         keywords="3D printer filament database, search filaments, filament specs, filament prices, PLA filament, PETG filament, filament comparison tool, HueForge TD values"
       />
@@ -154,7 +154,7 @@ export default function FilamentDatabase() {
           </p>
           <p className="text-muted-foreground text-lg leading-relaxed mb-6">
             The most comprehensive 3D printer filament database. Compare{' '}
-            {statsLoading ? '1,080+' : `${stats?.total.toLocaleString()}+`} filaments across{' '}
+            {statsLoading ? '21,000+' : `${stats?.total.toLocaleString()}+`} filaments across{' '}
             {statsLoading ? '48+' : `${stats?.brands}+`} brands by specs, price, HueForge TD values,
             and printer compatibility — all in one place.
           </p>
@@ -162,7 +162,7 @@ export default function FilamentDatabase() {
           {/* Stats row */}
           <div className="flex flex-wrap gap-4 mb-6">
             {[
-              { icon: Database, label: statsLoading ? '1,080+' : `${stats?.total.toLocaleString()}+`, desc: 'Filaments indexed' },
+              { icon: Database, label: statsLoading ? '21,000+' : `${stats?.total.toLocaleString()}+`, desc: 'Filaments indexed' },
               { icon: Tag, label: statsLoading ? '48+' : `${stats?.brands}+`, desc: 'Brands covered' },
               { icon: Layers, label: statsLoading ? '500+' : `${stats?.withTD}+`, desc: 'With TD values' },
             ].map(({ icon: Icon, label, desc }) => (
@@ -276,7 +276,7 @@ export default function FilamentDatabase() {
           <h2 className="text-lg font-semibold mb-3">About the FilaScope Database</h2>
           <p className="text-muted-foreground text-sm leading-relaxed mb-3">
             FilaScope is the most comprehensive free 3D printer filament database. We automatically 
-            scrape and verify data from 48+ brand websites, aggregating specs, pricing, and availability 
+            scrape and verify data from 57 brand websites, aggregating specs, pricing, and availability 
             across multiple regions (US, EU, UK, CA, AU, JP).
           </p>
           <p className="text-muted-foreground text-sm leading-relaxed mb-3">
