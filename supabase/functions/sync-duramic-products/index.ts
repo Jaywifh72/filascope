@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
                     .limit(1);
 
                   if (dupe && dupe.length > 0) {
-                    // Another record already has these values — skip to avoid unique constraint violation
+                    // Another record already has the same values — skip to avoid unique constraint violation
                     console.log(`[Duramic Sync] Skipping ${productId}: duplicate of ${dupe[0].id}`);
                     stats.productsUpdated++;
                   } else {
@@ -197,9 +197,16 @@ Deno.serve(async (req) => {
                       .update(filamentData)
                       .eq('id', existing[0].id);
                     if (updateError) {
-                      console.error(`[Duramic Sync] Error updating ${productId}:`, updateError.message);
-                      errors.push(`Failed to update ${productId}: ${updateError.message}`);
-                      stats.productsFailed++;
+                      // Unique constraint violation — another row has the same (vendor, title, price, color_hex)
+                      // Treat as already-up-to-date rather than a failure
+                      if (updateError.code === '23505' || updateError.message.includes('duplicate')) {
+                        console.log(`[Duramic Sync] Unique constraint hit on ${productId}, counting as updated`);
+                        stats.productsUpdated++;
+                      } else {
+                        console.error(`[Duramic Sync] Error updating ${productId}:`, updateError.message);
+                        errors.push(`Failed to update ${productId}: ${updateError.message}`);
+                        stats.productsFailed++;
+                      }
                     } else {
                       stats.productsUpdated++;
                     }
