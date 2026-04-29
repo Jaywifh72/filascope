@@ -400,44 +400,39 @@ Deno.serve(async (req) => {
     // =========================================================================
     // STEP 6: FIX DUPLICATE HEX CODES
     // =========================================================================
-    console.log(`[sync-esun-products] Checking for duplicate hex codes...`);
-    
-    const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', { p_vendor: 'eSun' });
-    
-    if (duplicates && duplicates.length > 0) {
-      console.log(`[sync-esun-products] Found ${duplicates.length} duplicate hex entries, fixing...`);
+    try {
+      console.log(`[sync-esun-products] Checking for duplicate hex codes...`);
+      const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', { p_vendor: 'eSun' }).single();
       
-      const grouped = new Map<string, typeof duplicates>();
-      for (const dup of duplicates) {
-        const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
-        if (!grouped.has(key)) grouped.set(key, []);
-        grouped.get(key)!.push(dup);
-      }
-      
-      for (const [, items] of grouped) {
-        if (items.length > 1) {
-          for (let i = 1; i < items.length; i++) {
-            const item = items[i];
-            const baseHex = item.color_hex?.replace('#', '') || 'CCCCCC';
-            
-            const r = parseInt(baseHex.slice(0, 2), 16);
-            const g = parseInt(baseHex.slice(2, 4), 16);
-            const b = parseInt(baseHex.slice(4, 6), 16);
-            
-            const newR = Math.min(255, Math.max(0, r + (i * 5)));
-            const newG = Math.min(255, Math.max(0, g + (i * 3)));
-            const newB = Math.min(255, Math.max(0, b + (i * 2)));
-            
-            const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`.toUpperCase();
-            
-            await supabase
-              .from('filaments')
-              .update({ color_hex: newHex })
-              .eq('id', item.id);
+      if (duplicates && duplicates.length > 0) {
+        console.log(`[sync-esun-products] Found ${duplicates.length} duplicate hex entries, fixing...`);
+        
+        // Group by (product_line_id, lower(color_hex))
+        const grouped = new Map<string, typeof duplicates>();
+        for (const dup of duplicates) {
+          const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key)!.push(dup);
+        }
+        
+        for (const [, items] of grouped) {
+          if (items.length > 1) {
+            for (let i = 1; i < items.length; i++) {
+              const item = items[i];
+              const baseHex = (item.color_hex || 'CCCCCC').replace('#', '');
+              const r = Math.min(255, parseInt(baseHex.slice(0, 2), 16) + i * 5);
+              const g = Math.min(255, parseInt(baseHex.slice(2, 4), 16) + i * 3);
+              const b = Math.min(255, parseInt(baseHex.slice(4, 6), 16) + i * 2);
+              const newHex = `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`.toUpperCase();
+              await supabase.from('filaments').update({ color_hex: newHex }).eq('id', item.id);
+            }
           }
         }
+        console.log(`[sync-esun-products] Duplicate hex codes fixed`);
       }
-      console.log(`[sync-esun-products] Duplicate hex codes fixed`);
+    } catch (rpcErr) {
+      // find_duplicate_hexes RPC may not exist in this environment — skip gracefully
+      console.warn(`[sync-esun-products] Duplicate hex fix skipped (RPC unavailable): ${rpcErr}`);
     }
 
     // =========================================================================
