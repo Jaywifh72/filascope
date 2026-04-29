@@ -310,48 +310,72 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[sync-esun-products] Prepared ${productsToInsert.length} products for insertion`);
+    console.log(`[sync-esun-products] Prepared ${productsToInsert.length} products for insertion (${existingProductIds.size} existing in DB)`);
     console.log(`[sync-esun-products] Product lines: ${Object.keys(productLineStats).length}`);
 
     // =========================================================================
-    // STEP 4: BATCH INSERT
+    // STEP 4: INSERT NEW + UPDATE EXISTING (no upsert, avoids onConflict issues)
     // =========================================================================
-    const BATCH_SIZE = 50;
-    for (let i = 0; i < productsToInsert.length; i += BATCH_SIZE) {
-      const batch = productsToInsert.slice(i, i + BATCH_SIZE);
+    const newProducts = productsToInsert.filter(f => !existingProductIds.has(f.product_id as string));
+    const existingProducts = productsToInsert.filter(f => existingProductIds.has(f.product_id as string));
 
-      const { error: upsertError, data: upsertData } = await supabase
-        .from('filaments')
-        .upsert(batch, { onConflict: 'vendor,product_id', ignoreDuplicates: false })
-        .select('id');
+    console.log(`[sync-esun-products] New: ${newProducts.length}, Existing: ${existingProducts.length}`);
 
-      if (upsertError) {
-        // Batch failed — fall back to individual rows, catching product_id collisions
-        console.warn(`[sync-esun-products] Batch ${Math.floor(i / BATCH_SIZE) + 1} failed (${upsertError.message}), falling back to individual upserts`);
-        for (const row of batch) {
-          const { error: rowError } = await supabase
-            .from('filaments')
-            .upsert(row, { onConflict: 'vendor,product_id', ignoreDuplicates: false })
-            .select('id');
-          if (rowError) {
-            if (rowError.code === '23505' || rowError.message.includes('duplicate')) {
-              // product_id already exists — count as updated
-              stats.updated++;
-            } else {
-              console.error(`[sync-esun-products] Row error for ${row.product_id}:`, rowError.message);
+    // INSERT new products in batches
+    if (newProducts.length > 0) {
+      const INSERT_BATCH = 50;
+      for (let i = 0; i < newProducts.length; i += INSERT_BATCH) {
+        const batch = newProducts.slice(i, i + INSERT_BATCH);
+        const { error: insertError, data: insertData } = await supabase
+          .from('filaments')
+          .insert(batch)
+          .select('id');
+        if (insertError) {
+          console.error(`[sync-esun-products] INSERT batch ${Math.floor(i / INSERT_BATCH) + 1} failed: ${insertError.message}`);
+          // Fall back to individual inserts
+          for (const row of batch) {
+            const { error: rowErr } = await supabase.from('filaments').insert(row).select('id');
+            if (rowErr) {
+              console.error(`[sync-esun-products] INSERT error for ${row.product_id}: ${rowErr.message}`);
               stats.errors++;
+            } else {
+              stats.created++;
             }
-          } else {
-            stats.created++;
           }
+        } else {
+          stats.created += insertData?.length || batch.length;
+          console.log(`[sync-esun-products] Inserted batch ${Math.floor(i / INSERT_BATCH) + 1}/${Math.ceil(newProducts.length / INSERT_BATCH)} (${insertData?.length || batch.length} rows)`);
         }
-      } else {
-        const newInBatch = batch.filter(f => !existingProductIds.has(f.product_id as string)).length;
-        stats.created += newInBatch;
-        stats.updated += batch.length - newInBatch;
-        console.log(`[sync-esun-products] Upserted batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(productsToInsert.length / BATCH_SIZE)} (${upsertData?.length || batch.length} rows)`);
       }
     }
+
+    // UPDATE existing products in batches
+    if (existingProducts.length > 0) {
+      const UPDATE_BATCH = 50;
+      for (let i = 0; i < existingProducts.length; i += UPDATE_BATCH) {
+        const batch = existingProducts.slice(i, i + UPDATE_BATCH);
+        const ids = batch.map(r => r.product_id);
+        const { error: updateError } = await supabase
+          .from('filaments')
+          .update({ 
+            variant_price: batch[0].variant_price,
+            featured_image: batch[0].featured_image,
+            product_url: batch[0].product_url,
+            auto_updated: true,
+            last_scraped_at: new Date().toISOString(),
+          })
+          .in('product_id', ids)
+          .eq('vendor', 'eSun');
+        if (updateError) {
+          console.error(`[sync-esun-products] UPDATE batch ${Math.floor(i / UPDATE_BATCH) + 1} failed: ${updateError.message}`);
+          stats.errors += batch.length;
+        } else {
+          stats.updated += batch.length;
+        }
+      }
+    }
+
+    console.log(`[sync-esun-products] Final stats: created=${stats.created}, updated=${stats.updated}, errors=${stats.errors}`);
 
     // =========================================================================
     // STEP 5: UPDATE BRAND STATS
