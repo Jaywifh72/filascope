@@ -319,15 +319,32 @@ Deno.serve(async (req) => {
     const BATCH_SIZE = 50;
     for (let i = 0; i < productsToInsert.length; i += BATCH_SIZE) {
       const batch = productsToInsert.slice(i, i + BATCH_SIZE);
-      
+
       const { error: upsertError, data: upsertData } = await supabase
         .from('filaments')
         .upsert(batch, { onConflict: 'vendor,product_id', ignoreDuplicates: false })
         .select('id');
 
       if (upsertError) {
-        console.error(`[sync-esun-products] Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, upsertError.message);
-        stats.errors += batch.length;
+        // Batch failed — fall back to individual rows, catching product_id collisions
+        console.warn(`[sync-esun-products] Batch ${Math.floor(i / BATCH_SIZE) + 1} failed (${upsertError.message}), falling back to individual upserts`);
+        for (const row of batch) {
+          const { error: rowError } = await supabase
+            .from('filaments')
+            .upsert(row, { onConflict: 'vendor,product_id', ignoreDuplicates: false })
+            .select('id');
+          if (rowError) {
+            if (rowError.code === '23505' || rowError.message.includes('duplicate')) {
+              // product_id already exists — count as updated
+              stats.updated++;
+            } else {
+              console.error(`[sync-esun-products] Row error for ${row.product_id}:`, rowError.message);
+              stats.errors++;
+            }
+          } else {
+            stats.created++;
+          }
+        }
       } else {
         const newInBatch = batch.filter(f => !existingProductIds.has(f.product_id as string)).length;
         stats.created += newInBatch;
