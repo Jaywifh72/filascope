@@ -175,27 +175,49 @@ Deno.serve(async (req) => {
                   .limit(1);
 
                 if (existing && existing.length > 0) {
-                  // Update existing record (preserve created_at)
-                  const { error: updateError } = await supabase
+                  // Before updating, check if another record already has the same
+                  // (vendor, product_title, variant_price, color_hex) — UPDATE would violate constraint
+                  const { data: dupe } = await supabase
                     .from('filaments')
-                    .update({ ...filamentData, id: existing[0].id })
-                    .eq('id', existing[0].id);
-                  if (updateError) {
-                    console.error(`[Duramic Sync] Error updating ${productId}:`, updateError.message);
-                    errors.push(`Failed to update ${productId}: ${updateError.message}`);
-                    stats.productsFailed++;
-                  } else {
+                    .select('id')
+                    .eq('vendor', filamentData.vendor)
+                    .eq('product_title', filamentData.product_title)
+                    .eq('variant_price', filamentData.variant_price)
+                    .eq('color_hex', filamentData.color_hex)
+                    .neq('id', existing[0].id)
+                    .limit(1);
+
+                  if (dupe && dupe.length > 0) {
+                    // Another record already has these values — skip to avoid unique constraint violation
+                    console.log(`[Duramic Sync] Skipping ${productId}: duplicate of ${dupe[0].id}`);
                     stats.productsUpdated++;
+                  } else {
+                    const { error: updateError } = await supabase
+                      .from('filaments')
+                      .update(filamentData)
+                      .eq('id', existing[0].id);
+                    if (updateError) {
+                      console.error(`[Duramic Sync] Error updating ${productId}:`, updateError.message);
+                      errors.push(`Failed to update ${productId}: ${updateError.message}`);
+                      stats.productsFailed++;
+                    } else {
+                      stats.productsUpdated++;
+                    }
                   }
                 } else {
-                  // Insert new record
+                  // Insert new record (guard against unique constraint violation)
                   const { error: insertError } = await supabase
                     .from('filaments')
                     .insert(filamentData);
                   if (insertError) {
-                    console.error(`[Duramic Sync] Error inserting ${productId}:`, insertError.message);
-                    errors.push(`Failed to insert ${productId}: ${insertError.message}`);
-                    stats.productsFailed++;
+                    if (insertError.message.includes('duplicate') || insertError.code === '23505') {
+                      // Already exists — another concurrent sync got it; count as updated
+                      stats.productsUpdated++;
+                    } else {
+                      console.error(`[Duramic Sync] Error inserting ${productId}:`, insertError.message);
+                      errors.push(`Failed to insert ${productId}: ${insertError.message}`);
+                      stats.productsFailed++;
+                    }
                   } else {
                     stats.productsCreated++;
                     if (colorHex) stats.colorsExtracted++;
