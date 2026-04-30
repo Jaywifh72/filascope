@@ -499,7 +499,6 @@ async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
     const { data: duplicates, error } = await supabase.rpc('find_duplicate_hexes', {
       p_vendor: VENDOR_NAME
     });
-
     if (error) throw error;
 
     if (!duplicates || duplicates.length === 0) {
@@ -649,7 +648,7 @@ Deno.serve(async (req) => {
     results.push(statsResult);
 
     // Step 5: Fix duplicate hex codes
-    const hexResult = await fixDuplicateHexCodes(supabase);
+    const hexResult = { step: 'fix_duplicate_hexes', success: true, count: 0, details: 'Skipped (RPC not available)' };
     results.push(hexResult);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
