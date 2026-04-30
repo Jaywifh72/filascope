@@ -423,9 +423,10 @@ async function upsertVariants(
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
+      const code = (error as any)?.code || '';
       console.error(`  Error processing ${variant.title}:`, msg);
-      // Non-fatal: duplicates and non-critical errors don't fail the whole sync
-      if (msg.includes('23505') || msg.includes('duplicate') || msg.includes('unique')) {
+      // Non-fatal: duplicate key violations don't fail the whole sync
+      if (code === '23505' || msg.includes('duplicate key') || msg.includes('23505')) {
         console.log(`  Skipped duplicate: ${variant.title}`);
       } else {
         errors++;
