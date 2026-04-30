@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
 
   const errors: string[] = [];
   let productsCreated = 0;
+  let productsUpdated = 0;
   let productsSkipped = 0;
   let productsFailed = 0;
 
@@ -197,7 +198,7 @@ Deno.serve(async (req) => {
       success: productsFailed === 0,
       productsDiscovered: RECREUS_PRODUCT_SEED.length,
       productsCreated,
-      productsUpdated: 0,
+      productsUpdated,
       productsSkipped,
       productsFailed,
       productLines: productLineIds.size,
