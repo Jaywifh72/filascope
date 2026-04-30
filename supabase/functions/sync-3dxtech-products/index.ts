@@ -387,12 +387,39 @@ async function upsertVariants(
         if (error) throw error;
         updated++;
       } else {
-        const { error } = await supabase
+        // Check for existing row with NULL product_id that matches on the partial unique index columns
+        // (vendor, product_title, variant_price, color_family) WHERE product_id IS NULL
+        const { data: legacyRow } = await supabase
           .from('filaments')
-          .insert(filamentData);
+          .select('id')
+          .eq('vendor', VENDOR_NAME)
+          .eq('product_title', fullTitle)
+          .eq('variant_price', variant.price)
+          .eq('color_family', colorFamily)
+          .is('product_id', null)
+          .limit(1);
 
-        if (error) throw error;
-        created++;
+        if (legacyRow && legacyRow.length > 0) {
+          // Update the legacy row instead of inserting
+          const { error } = await supabase
+            .from('filaments')
+            .update({
+              ...filamentData,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', legacyRow[0].id);
+
+          if (error) throw error;
+          updated++;
+        } else {
+          // Insert new row
+          const { error } = await supabase
+            .from('filaments')
+            .insert(filamentData);
+
+          if (error) throw error;
+          created++;
+        }
       }
     } catch (error) {
       console.error(`  Error processing ${variant.title}:`, error);
