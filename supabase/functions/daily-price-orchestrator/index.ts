@@ -48,6 +48,8 @@ const OPENCLAW_SKILL_BRANDS = new Set<string>([
   'fiberlogy',          // filascope-fiberlogy-scraper
   'filaments-ca',       // filascope-filaments-ca-scraper
   'fillamentum',        // filascope-fillamentum-scraper
+  // --- Wired 2026-04-30 ---
+  'taulman3d',          // filascope-taulman3d-scraper (seed-based, Firecrawl fallback)
   'flashforge',         // filascope-flashforge-scraper
   'flsun',              // filascope-flsun-scraper
   'formfutura',         // filascope-formfutura-scraper
