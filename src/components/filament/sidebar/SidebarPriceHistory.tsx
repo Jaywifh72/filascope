@@ -22,9 +22,22 @@ export function SidebarPriceHistory({
 
   // Convert all USD price history values to the user's currency
   const convertedData = useMemo(() => {
+    const prices = priceData.prices || [];
+    if (prices.length === 0) {
+      return {
+        prices: [],
+        min: 0,
+        max: 0,
+        avg: 0,
+        currentPrice: 0,
+        minPoint: null,
+        maxPoint: null,
+      };
+    }
+
     const convert = (val: number) => convertPrice(val, 'USD');
 
-    const convertedPrices = priceData.prices.map(p => ({
+    const convertedPrices = prices.map(p => ({
       ...p,
       price: convert(p.price),
     }));
@@ -55,15 +68,16 @@ export function SidebarPriceHistory({
   // Determine which state to render
   const state = useMemo(() => {
     if (priceData.isLoading) return "loading" as const;
-    if (priceData.prices.length === 0) return "empty" as const;
-    if (priceData.prices.length < 3) return "early" as const;
+    if ((priceData.prices || []).length === 0) return "empty" as const;
+    if ((priceData.prices || []).length < 3) return "early" as const;
     return "sparkline" as const;
-  }, [priceData.isLoading, priceData.prices.length]);
+  }, [priceData.isLoading, priceData.prices]);
 
   // Get the earliest tracking date for "early" state
   const trackingStartDate = useMemo(() => {
-    if (priceData.prices.length === 0) return null;
-    const earliest = priceData.prices[0]?.date;
+    const prices = priceData.prices || [];
+    if (prices.length === 0) return null;
+    const earliest = prices[0]?.date;
     if (!earliest) return null;
     return new Date(earliest).toLocaleDateString(undefined, {
       month: "short",

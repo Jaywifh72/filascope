@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { withRetry } from "@/lib/retry";
@@ -17,6 +18,28 @@ export interface DetectedDeal {
   featured_image: string | null;
   deal_date: string;
   is_active: boolean;
+}
+
+export interface PricePoint {
+  date: string;
+  price: number;
+  source: string | null;
+  region: string | null;
+}
+
+export interface PriceHistoryResult {
+  prices: PricePoint[];
+  min: number;
+  max: number;
+  avg: number;
+  currentPrice: number;
+  minPoint: PricePoint | null;
+  maxPoint: PricePoint | null;
+  trendPercent: number | null;
+  isBestIn30Days: boolean;
+  isBestIn6Months: boolean;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 /**
@@ -46,11 +69,21 @@ export function useDetectedDeals() {
 
 /**
  * Hook to fetch price history for a specific filament.
- * Returns daily price snapshots for charting.
+ * Returns daily price snapshots with computed stats for charting.
+ *
+ * @param filamentId - The filament ID to fetch history for
+ * @param currentPrice - The current price (used for trend calculation)
+ * @param days - Number of days of history to fetch (default 90)
  */
-export function usePriceHistory(filamentId: string | undefined) {
-  return useQuery({
-    queryKey: ["price-history", filamentId],
+export function usePriceHistory(
+  filamentId: string | undefined,
+  currentPrice?: number | null,
+  days?: number
+): PriceHistoryResult {
+  const limit = days || 90;
+
+  const query = useQuery({
+    queryKey: ["price-history", filamentId, limit],
     queryFn: () =>
       withRetry(async () => {
         if (!filamentId) return [];
@@ -60,7 +93,7 @@ export function usePriceHistory(filamentId: string | undefined) {
           .select("price, recorded_at, source, region")
           .eq("filament_id", filamentId)
           .order("recorded_at", { ascending: true })
-          .limit(90); // Last 90 days
+          .limit(limit);
 
         if (error) throw error;
         return (
@@ -69,10 +102,82 @@ export function usePriceHistory(filamentId: string | undefined) {
             price: parseFloat(d.price),
             source: d.source,
             region: d.region,
-          }))
+          })) as PricePoint[]
         );
       }),
     enabled: !!filamentId,
     staleTime: 1000 * 60 * 60, // 1 hour cache
   });
+
+  // Compute derived stats from the raw price data
+  const computed = useMemo(() => {
+    const prices = query.data || [];
+
+    if (prices.length === 0) {
+      return {
+        prices: [] as PricePoint[],
+        min: 0,
+        max: 0,
+        avg: 0,
+        currentPrice: currentPrice ?? 0,
+        minPoint: null,
+        maxPoint: null,
+        trendPercent: null,
+        isBestIn30Days: false,
+        isBestIn6Months: false,
+      };
+    }
+
+    const priceValues = prices.map((p) => p.price);
+    const min = Math.min(...priceValues);
+    const max = Math.max(...priceValues);
+    const avg = priceValues.reduce((sum, p) => sum + p, 0) / priceValues.length;
+    const minIdx = priceValues.indexOf(min);
+    const maxIdx = priceValues.indexOf(max);
+
+    const effectiveCurrentPrice = currentPrice ?? priceValues[priceValues.length - 1];
+
+    // Trend: percentage change from first to current price
+    const firstPrice = priceValues[0];
+    const trendPercent =
+      firstPrice > 0
+        ? Math.round(((effectiveCurrentPrice - firstPrice) / firstPrice) * 10000) / 100
+        : null;
+
+    // Best price checks
+    const isBestIn30Days =
+      effectiveCurrentPrice <= min &&
+      prices.some(
+        (p) =>
+          new Date(p.date).getTime() >
+          Date.now() - 30 * 24 * 60 * 60 * 1000
+      );
+
+    const isBestIn6Months =
+      effectiveCurrentPrice <= min &&
+      prices.some(
+        (p) =>
+          new Date(p.date).getTime() >
+          Date.now() - 180 * 24 * 60 * 60 * 1000
+      );
+
+    return {
+      prices,
+      min,
+      max,
+      avg,
+      currentPrice: effectiveCurrentPrice,
+      minPoint: { ...prices[minIdx], y: prices[minIdx].price },
+      maxPoint: { ...prices[maxIdx], y: prices[maxIdx].price },
+      trendPercent,
+      isBestIn30Days,
+      isBestIn6Months,
+    };
+  }, [query.data, currentPrice]);
+
+  return {
+    ...computed,
+    isLoading: query.isLoading,
+    error: query.error,
+  };
 }
