@@ -27,6 +27,26 @@ import { RegionSelector } from "@/components/RegionSelector";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { formatDistanceToNow } from "date-fns";
 
+// Read live catalog stats from the hero section's localStorage cache
+const HERO_STATS_CACHE_KEY = "hero_stats_cache";
+function getLiveCatalogStats(): { filamentCount: string; brandCount: string } {
+  try {
+    const raw = localStorage.getItem(HERO_STATS_CACHE_KEY);
+    if (!raw) return { filamentCount: "21,000", brandCount: "57" };
+    const parsed = JSON.parse(raw);
+    // Cache TTL: 6 hours (generous for footer display)
+    if (Date.now() - parsed.timestamp > 6 * 60 * 60 * 1000) {
+      return { filamentCount: "21,000", brandCount: "57" };
+    }
+    return {
+      filamentCount: parsed.filamentCount ? Number(parsed.filamentCount).toLocaleString() : "21,000",
+      brandCount: parsed.brandCount ? String(parsed.brandCount) : "57",
+    };
+  } catch {
+    return { filamentCount: "21,000", brandCount: "57" };
+  }
+}
+
 function formatRatesAge(date: Date): string {
   const diffMs = Date.now() - date.getTime();
   if (diffMs < 60_000) return "just now";
@@ -219,8 +239,8 @@ export function SiteFooter() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-start gap-8 lg:gap-12 flex-wrap">
             {[
-              { icon: Package, stat: "21,000+", label: "Filaments Tracked" },
-              { icon: Building2, stat: "48+", label: "Brands Monitored" },
+              { icon: Package, stat: `${getLiveCatalogStats().filamentCount}+`, label: "Filaments Tracked" },
+              { icon: Building2, stat: `${getLiveCatalogStats().brandCount}+`, label: "Brands Monitored" },
               { icon: ShoppingCart, stat: "15+", label: "Retailers Connected" },
               { icon: RefreshCw, stat: "Daily", label: "Price Updates" },
               { icon: Users, stat: "10,000+", label: "Makers Trust Us" },

@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
+import { useDocumentHead } from "@/hooks/useDocumentHead";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
@@ -1006,6 +1007,26 @@ const Finder = () => {
   const unfilteredProductCount = catalogCounts?.productCount || 0;
   const unfilteredBrandCount = catalogCounts?.brandCount || 0;
 
+  // Live filament total for dynamic SEO title/meta
+  const liveVariantCount = catalogCounts?.variantCount || filamentCount || 0;
+  const liveBrandCount = unfilteredBrandCount || 0;
+  const formattedCount = liveVariantCount > 0 ? liveVariantCount.toLocaleString() : '21,000';
+  const formattedBrands = liveBrandCount > 0 ? String(liveBrandCount) : '57';
+
+  // Dynamic homepage document head with live DB totals
+  useDocumentHead({
+    title: `FilaScope — Compare ${formattedCount}+ 3D Printer Filaments | Specs, Prices & TD Values`,
+    description: `Compare ${formattedCount}+ 3D printer filaments from ${formattedBrands} brands. Live pricing from 15+ stores, HueForge TD values, printer compatibility & specs. The most comprehensive filament database online.`,
+    canonical: 'https://filascope.com/',
+    ogTitle: `FilaScope — Compare ${formattedCount}+ 3D Printer Filaments | Specs, Prices & TD Values`,
+    ogDescription: `Compare ${formattedCount}+ 3D printer filaments from ${formattedBrands} brands.`,
+    ogUrl: 'https://filascope.com/',
+    ogType: 'website',
+    ogSiteName: 'FilaScope',
+    twitterTitle: `FilaScope — Compare ${formattedCount}+ 3D Printer Filaments | Specs, Prices & TD Values`,
+    twitterDescription: `Compare ${formattedCount}+ 3D printer filaments from ${formattedBrands} brands.`,
+  });
+
   // Check if any filters are active (including search term)
   const hasActiveFilters = useMemo(() => {
     const hasColorSearch = searchTerm ? extractColorFromText(searchTerm) !== null : false;
@@ -1065,7 +1086,7 @@ const Finder = () => {
           "@context": "https://schema.org",
           "@type": "Dataset",
           "name": "FilaScope 3D Printer Filament Database",
-          "description": "Structured database of 21,000+ 3D printer filaments from 57 brands with material specifications, nozzle and bed temperatures, HueForge Transmission Distance values, real-time pricing from 15+ retailers, printer compatibility data, and FilaScore quality ratings.",
+          "description": `Structured database of ${formattedCount}+ 3D printer filaments from ${formattedBrands} brands with material specifications, nozzle and bed temperatures, HueForge Transmission Distance values, real-time pricing from 15+ retailers, printer compatibility data, and FilaScore quality ratings.`,
           "url": "https://filascope.com/filaments",
           "keywords": ["3D printer filament database","filament specifications","HueForge TD values","filament price comparison","PLA filament data","PETG filament data","3D printing materials"],
           "creator": {"@type": "Organization","name": "FilaScope","url": "https://filascope.com"},
@@ -1748,7 +1769,7 @@ const Finder = () => {
       <section className="max-w-4xl mx-auto px-4 py-10 text-center space-y-4">
         <h2 className="text-2xl font-bold text-foreground">What is FilaScope?</h2>
         <p className="text-muted-foreground text-base leading-relaxed">
-          FilaScope is a free 3D printer filament comparison platform that indexes 21,000+ filaments from 57 brands with real-time pricing from 15+ retailers worldwide. It features the largest public HueForge Transmission Distance (TD) database, detailed material specifications, printer compatibility data, and FilaScore quality ratings — helping makers find the perfect filament for any project.
+          FilaScope is a free 3D printer filament comparison platform that indexes {formattedCount}+ filaments from {formattedBrands} brands with real-time pricing from 15+ retailers worldwide. It features the largest public HueForge Transmission Distance (TD) database, detailed material specifications, printer compatibility data, and FilaScore quality ratings — helping makers find the perfect filament for any project.
         </p>
         <p className="text-muted-foreground text-base leading-relaxed">
           Whether you need the best PLA for beginners, the strongest PETG for functional parts, or a specific TD value for HueForge lithophane printing, FilaScope's data-driven approach compares filaments across 6 regional markets so you can make informed decisions with transparent, up-to-date pricing.
@@ -1769,7 +1790,7 @@ const Finder = () => {
           The Internet's Most Complete 3D Printer Filament Database
         </h2>
         <p className="text-[14px] leading-relaxed mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          FilaScope is the most powerful <strong>filament comparison tool</strong> on the web — letting you <strong>compare 3D printer filaments</strong> across 21,000+ products from 57 manufacturers and 15+ retailers worldwide. Every listing in our <strong>filament specs database</strong> includes nozzle temperature, bed temperature, density, tensile strength, and shore hardness — plus live <strong>filament prices</strong> in USD, CAD, EUR, GBP, and AUD. FilaScope also maintains the world's largest verified database of <strong>HueForge TD values</strong>, making it the go-to resource for lithophane and multicolor 3D printing projects.
+          FilaScope is the most powerful <strong>filament comparison tool</strong> on the web — letting you <strong>compare 3D printer filaments</strong> across {formattedCount}+ products from {formattedBrands} manufacturers and 15+ retailers worldwide. Every listing in our <strong>filament specs database</strong> includes nozzle temperature, bed temperature, density, tensile strength, and shore hardness — plus live <strong>filament prices</strong> in USD, CAD, EUR, GBP, and AUD. FilaScope also maintains the world's largest verified database of <strong>HueForge TD values</strong>, making it the go-to resource for lithophane and multicolor 3D printing projects.
         </p>
         <p className="text-[14px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
           Whether you're a beginner choosing your first PLA or an advanced maker sourcing carbon-fiber PETG, FilaScope's <strong>printer compatibility</strong> filters, real-time deal tracking, and side-by-side comparison tools help you find the right filament at the best price — every time.
@@ -1794,7 +1815,7 @@ const Finder = () => {
         }}>
           <header style={{ marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
             <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '10px', color: '#fff' }}>
-              FilaScope — Compare 21,000+ 3D Printer Filaments
+              FilaScope — Compare {formattedCount}+ 3D Printer Filaments
             </h1>
             <p style={{ fontSize: '16px', lineHeight: '1.6' }}>
               The most comprehensive filament database with real-time pricing, HueForge TD values, and printer compatibility data.
@@ -1806,7 +1827,7 @@ const Finder = () => {
               Why Use FilaScope?
             </h2>
             <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
-              <li style={{ marginBottom: '10px' }}>✓ <strong>21,000+ filaments</strong> from 57 brands</li>
+              <li style={{ marginBottom: '10px' }}>✓ <strong>{formattedCount}+ filaments</strong> from {formattedBrands} brands</li>
               <li style={{ marginBottom: '10px' }}>✓ <strong>Real-time pricing</strong> from 15+ retailers</li>
               <li style={{ marginBottom: '10px' }}>✓ <strong>HueForge TD values</strong> — largest public database</li>
               <li style={{ marginBottom: '10px' }}>✓ <strong>Printer compatibility</strong> — find what works with your printer</li>

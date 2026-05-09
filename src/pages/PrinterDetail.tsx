@@ -116,7 +116,7 @@ const PrinterDetail = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useCurrency();
   
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

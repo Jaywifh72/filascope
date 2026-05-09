@@ -139,6 +139,20 @@ function formatProductTitle(filamentLine: string, color: string): string {
   return `${cleaned} - ${color}`.trim();
 }
 
+/**
+ * Compute a hash from price + availability fields for change detection.
+ * Used as external_data_hash to detect when a product has changed on the source.
+ */
+function computeHash(price: number, available: boolean, variantAvailable: boolean): string {
+  const input = `${price}|${available}|${variantAvailable}`;
+  let hash = 5381;
+  for (let i = 0; i < input.length; i++) {
+    hash = ((hash << 5) + hash) + input.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -298,6 +312,7 @@ Deno.serve(async (req) => {
           tds_url: enrichment.tdsUrl || null,
           diameter_nominal_mm: 1.75,
           net_weight_g: 1000,
+          external_data_hash: computeHash(defaultPrice, true, true),
           auto_created: true,
           auto_updated: true,
           last_scraped_at: new Date().toISOString(),
@@ -332,14 +347,57 @@ Deno.serve(async (req) => {
           .select('id');
         if (insertError) {
           console.error(`[sync-esun-products] INSERT batch ${Math.floor(i / INSERT_BATCH) + 1} failed: ${insertError.message}`);
-          // Fall back to individual inserts
+          // Fall back to individual inserts with 409 composite-key fallback
           for (const row of batch) {
-            const { error: rowErr } = await supabase.from('filaments').insert(row).select('id');
-            if (rowErr) {
-              console.error(`[sync-esun-products] INSERT error for ${row.product_id}: ${rowErr.message}`);
+            try {
+              const { data: rowData, error: rowErr } = await supabase
+                .from('filaments')
+                .insert(row as Record<string, unknown>)
+                .select('id');
+              if (rowErr) {
+                if (rowErr.message.includes('409') || rowErr.code === '23505') {
+                  // Duplicate on product_id — try composite-key fallback
+                  const { data: existing } = await supabase
+                    .from('filaments')
+                    .select('id')
+                    .eq('vendor', row.vendor as string)
+                    .eq('product_title', row.product_title as string)
+                    .eq('variant_price', row.variant_price as number)
+                    .eq('color_family', row.color_family as string | null)
+                    .limit(1)
+                    .single();
+                  if (existing) {
+                    const { error: updateErr } = await supabase
+                      .from('filaments')
+                      .update({
+                        variant_price: row.variant_price,
+                        featured_image: row.featured_image,
+                        product_url: row.product_url,
+                        external_data_hash: computeHash(row.variant_price as number, true, true),
+                        auto_updated: true,
+                        last_scraped_at: new Date().toISOString(),
+                      })
+                      .eq('id', existing.id);
+                    if (updateErr) {
+                      console.error(`[sync-esun-products] UPDATE fallback error for ${row.product_id}: ${updateErr.message}`);
+                      stats.errors++;
+                    } else {
+                      stats.updated++;
+                    }
+                  } else {
+                    console.error(`[sync-esun-products] 409 but no composite-key match for ${row.product_id}`);
+                    stats.errors++;
+                  }
+                } else {
+                  console.error(`[sync-esun-products] INSERT error for ${row.product_id}: ${rowErr.message}`);
+                  stats.errors++;
+                }
+              } else {
+                stats.created++;
+              }
+            } catch (err) {
+              console.error(`[sync-esun-products] INSERT try/catch error for ${row.product_id}: ${err}`);
               stats.errors++;
-            } else {
-              stats.created++;
             }
           }
         } else {

@@ -12,6 +12,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Compute a hash of the external data fields to detect content changes
+function computeHash(variantPrice: number, variantAvailable: boolean): string {
+  const availability = variantAvailable ? 'in_stock' : 'out_of_stock';
+  const data = `${variantPrice}|${availability}|${variantAvailable}`;
+  // Simple deterministic hash using SubtleCrypto
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(16).padStart(8, '0');
+}
+
 interface SyncOptions {
   cleanSlate?: boolean;
   limit?: number;
@@ -143,6 +157,7 @@ Deno.serve(async (req) => {
           auto_updated: true,
           last_scraped_at: new Date().toISOString(),
           sync_status: 'synced',
+          external_data_hash: computeHash(defaultPrice, true),
         });
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
@@ -181,19 +196,103 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Step 3: Insert in batches (delete already cleared existing products)
+    // Step 3: Insert in batches with conflict handling for HTTP 409 (composite-key violations)
     const batchSize = 50;
     for (let i = 0; i < productsToInsert.length; i += batchSize) {
       const batch = productsToInsert.slice(i, i + batchSize);
-      const { error } = await supabase.from('filaments').insert(batch);
 
-      if (error) {
-        console.error(`[Eryone Sync] Batch insert error at ${i}:`, error.message);
-        result.errors.push(`Batch ${i}: ${error.message}`);
+      try {
+        const { error } = await supabase.from('filaments').insert(batch);
+
+        if (error) {
+          // Check if this is an HTTP 409 conflict from the partial unique index
+          // filaments_vendor_title_price_color_uniq: (vendor, product_title, variant_price, color_family)
+          if (error.status === 409) {
+            console.warn(`[Eryone Sync] 409 conflict on batch ${i} — falling back to individual upserts`);
+
+            for (const row of batch) {
+              try {
+                // Look up existing row by the unique 4-tuple
+                const { data: existingRows, error: selectErr } = await supabase
+                  .from('filaments')
+                  .select('id')
+                  .eq('vendor', row.vendor)
+                  .eq('product_title', row.product_title)
+                  .eq('variant_price', row.variant_price)
+                  .eq('color_family', row.color_family)
+                  .maybeSingle();
+
+                if (selectErr) {
+                  console.error(`[Eryone Sync] SELECT error for "${row.product_title}":`, selectErr.message);
+                  result.errors.push(`SELECT ${row.product_title}: ${selectErr.message}`);
+                  result.stats.productsFailed++;
+                  continue;
+                }
+
+                if (existingRows) {
+                  // Update the existing row with fresh data + new hash
+                  const { error: updateErr } = await supabase
+                    .from('filaments')
+                    .update({
+                      product_id: row.product_id,
+                      product_url: row.product_url,
+                      featured_image: row.featured_image,
+                      variant_available: row.variant_available,
+                      material: row.material,
+                      finish_type: row.finish_type,
+                      color_hex: row.color_hex,
+                      nozzle_temp_min_c: row.nozzle_temp_min_c,
+                      nozzle_temp_max_c: row.nozzle_temp_max_c,
+                      bed_temp_min_c: row.bed_temp_min_c,
+                      bed_temp_max_c: row.bed_temp_max_c,
+                      print_speed_max_mms: row.print_speed_max_mms,
+                      is_nozzle_abrasive: row.is_nozzle_abrasive,
+                      product_line_id: row.product_line_id,
+                      tds_url: row.tds_url,
+                      high_speed_capable: row.high_speed_capable,
+                      diameter_nominal_mm: row.diameter_nominal_mm,
+                      auto_updated: true,
+                      last_scraped_at: row.last_scraped_at,
+                      sync_status: row.sync_status,
+                      external_data_hash: computeHash(row.variant_price, row.variant_available),
+                    })
+                    .eq('id', existingRows.id);
+
+                  if (updateErr) {
+                    console.error(`[Eryone Sync] UPDATE error for "${row.product_title}":`, updateErr.message);
+                    result.errors.push(`UPDATE ${row.product_title}: ${updateErr.message}`);
+                    result.stats.productsFailed++;
+                  } else {
+                    result.stats.productsUpdated++;
+                  }
+                } else {
+                  // No existing row found for this 4-tuple — re-raise (shouldn't happen)
+                  console.error(`[Eryone Sync] 409 conflict but no existing row found for "${row.product_title}" — ${row.vendor} / ${row.variant_price} / ${row.color_family}`);
+                  result.errors.push(`Conflict without existing row: ${row.product_title}`);
+                  result.stats.productsFailed++;
+                }
+              } catch (rowErr) {
+                const errMsg = rowErr instanceof Error ? rowErr.message : String(rowErr);
+                console.error(`[Eryone Sync] Row-level error for "${row.product_title}":`, errMsg);
+                result.errors.push(`Row ${row.product_title}: ${errMsg}`);
+                result.stats.productsFailed++;
+              }
+            }
+          } else {
+            // Non-409 error — treat entire batch as failed
+            console.error(`[Eryone Sync] Batch insert error at ${i}:`, error.message);
+            result.errors.push(`Batch ${i}: ${error.message}`);
+            result.stats.productsFailed += batch.length;
+          }
+        } else {
+          result.stats.productsCreated += batch.length;
+          console.log(`[Eryone Sync] Inserted batch ${i}-${i + batch.length}`);
+        }
+      } catch (batchErr) {
+        const errMsg = batchErr instanceof Error ? batchErr.message : String(batchErr);
+        console.error(`[Eryone Sync] Batch ${i} exception:`, errMsg);
+        result.errors.push(`Batch ${i}: ${errMsg}`);
         result.stats.productsFailed += batch.length;
-      } else {
-        result.stats.productsCreated += batch.length;
-        console.log(`[Eryone Sync] Inserted batch ${i}-${i + batch.length}`);
       }
     }
 

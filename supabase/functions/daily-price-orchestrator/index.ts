@@ -68,6 +68,7 @@ const OPENCLAW_SKILL_BRANDS = new Set<string>([
   'paramount-3d',       // filascope-paramount-3d-scraper
   'printed-solid',      // filascope-printed-solid-scraper
   'proto-pasta',        // filascope-proto-pasta-scraper
+  'treed-filaments',    // filascope-treed-filaments-scraper
 ]);
 
 const SLUG_TO_FUNCTION: Record<string, string> = {

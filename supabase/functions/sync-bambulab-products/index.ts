@@ -2335,9 +2335,9 @@ Deno.serve(async (req) => {
           products_created: created,
           products_updated: _updated,
           products_failed: _errors,
-          regions_synced: ['US'],
+          regions_synced: ['CA'],
           regional_breakdown: {
-            US: {
+            CA: {
               updated: _updated,
               created: created,
               skipped: _skipped,
