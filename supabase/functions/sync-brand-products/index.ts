@@ -21,6 +21,7 @@ import {
   logFilterStats,
   extractDiameterFromText,
 } from '../_shared/variant-filters.ts';
+import { vetProduct } from '../_shared/product-vetter.ts';
 // Brand-specific filters and helpers for non-filament products
 import {
   isNonFilamentProduct as isAnycubicNonFilament,
@@ -584,6 +585,17 @@ Deno.serve(async (req) => {
         }
         if (validation.warnings.length > 0) {
           console.log(`[sync-brand-products] Validation warnings for "${product.title}":`, validation.warnings);
+        }
+
+        // Vet product — skip non-filament products (protection plans, accessories, etc.)
+        const vetResult = vetProduct(product.title, product.material, product.netWeightG);
+        if (!vetResult.pass) {
+          console.warn(`[sync-brand-products] Vetted out "${product.title}": ${vetResult.reason}`);
+          productResult.action = 'skipped';
+          productResult.reason = `Vetted: ${vetResult.reason}`;
+          summary.skipped++;
+          progress.productsProcessed = i + 1;
+          continue;
         }
 
         // Update progress
