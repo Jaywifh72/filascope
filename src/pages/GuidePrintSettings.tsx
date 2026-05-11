@@ -41,7 +41,7 @@ const GuidePrintSettings = () => {
         description="Complete 3D print settings guide: optimal layer height, print speed, nozzle temperature, bed temperature, and retraction settings for PLA, PETG, ABS, TPU, ASA, and Nylon."
         url="https://filascope.com/guides/print-settings"
         datePublished="2025-01-15"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
       />
 
       <div className="min-h-screen bg-background">

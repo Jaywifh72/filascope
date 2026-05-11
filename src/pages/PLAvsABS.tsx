@@ -111,7 +111,7 @@ export default function PLAvsABS() {
         headline="PLA vs ABS — Which 3D Printer Filament Is Right for You?"
         description="PLA vs ABS compared: strength, heat resistance, ease of printing, price & post-processing."
         datePublished="2026-02-28"
-        dateModified="2026-02-28"
+        dateModified="2026-05-11"
         url="/guides/pla-vs-abs"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'PLA vs ABS 3D Printing Filament Comparison' }}

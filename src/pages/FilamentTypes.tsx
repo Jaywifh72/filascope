@@ -124,7 +124,7 @@ export default function FilamentTypes() {
         headline="3D Printer Filament Types — Complete Guide to Every Material"
         description="A complete guide to all 3D printer filament types including PLA, PETG, ABS, ASA, TPU, Nylon, PC, and specialty materials with comparison table and use cases."
         datePublished="2026-01-01"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/filament-types"
       />
       <ItemListSchema

@@ -112,7 +112,7 @@ export default function HowToMeasureFilamentTD() {
         headline="How to Measure Filament Transmissivity Distance (TD) for HueForge"
         description="Step-by-step guide to measuring filament TD values for HueForge. Learn the test print method, light meter method, and how to submit TD values to the community."
         datePublished="2026-02-20"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/guides/how-to-measure-filament-td"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'HueForge Transmissivity Distance Measurement' }}

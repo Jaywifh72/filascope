@@ -71,7 +71,7 @@ export default function FilamentStorageGuide() {
         headline="How to Store 3D Printer Filament — Complete Guide"
         description="Complete guide to storing 3D printer filament. Proper humidity control, drying instructions for PLA, PETG, Nylon & more."
         datePublished="2026-02-19"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/filament-storage-guide"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: '3D Printer Filament Storage' }}

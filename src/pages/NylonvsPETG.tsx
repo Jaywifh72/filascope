@@ -112,7 +112,7 @@ export default function NylonvsPETG() {
         headline="Nylon vs PETG — Which 3D Printer Filament Is Right for You?"
         description="Nylon vs PETG compared: tensile strength, wear resistance, printability, moisture sensitivity & cost."
         datePublished="2026-02-28"
-        dateModified="2026-02-28"
+        dateModified="2026-05-11"
         url="/guides/nylon-vs-petg"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'Nylon vs PETG 3D Printing Filament Comparison' }}

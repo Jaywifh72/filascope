@@ -141,7 +141,7 @@ export default function BestWhiteFilaments() {
         headline="Best White Filaments for 3D Printing & HueForge — TD-Ranked"
         description="Compare white 3D printer filaments ranked by TD value, print quality & price. Find the perfect white PLA for HueForge lithophanes and general printing."
         datePublished="2025-06-01"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/best-white-filaments"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'White 3D Printer Filament for HueForge' }}

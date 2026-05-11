@@ -13,7 +13,7 @@ export default function Methodology() {
         headline="FilaScope Methodology — How We Rank & Compare Filaments"
         description="FilaScope Methodology - How we collect data, score products, track prices, and ensure data quality across our 3D printing filament and printer database."
         datePublished="2025-01-01"
-        dateModified="2026-02-28"
+        dateModified="2026-05-11"
         url="/methodology"
       />
       <LegalSection title="How We Collect Data">

@@ -383,7 +383,7 @@ export default function FilamentTemperatureChart() {
         headline="3D Printer Filament Temperature Chart — Complete Guide with Brand Defaults & Tg Values"
         description="Comprehensive 3D filament temperature chart with nozzle and bed temp settings, glass transition temperatures, brand-specific defaults, troubleshooting, and optimization tips for PLA, PETG, ABS, TPU, Nylon, ASA, PC and 20+ materials. Updated April 2026."
         datePublished="2026-03-20"
-        dateModified="2026-04-01"
+        dateModified="2026-05-11"
         url="/filament-temperature-chart"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: '3D Printer Filament Temperature Settings' }}
@@ -407,7 +407,7 @@ export default function FilamentTemperatureChart() {
           { '@type': 'PropertyValue', name: 'Print Speed', unitText: 'mm/s' },
           { '@type': 'PropertyValue', name: 'Glass Transition Temperature', unitText: '°C' },
         ]}
-        dateModified="2026-04-01"
+        dateModified="2026-05-11"
       />
       {/* ItemList schema */}
       <script

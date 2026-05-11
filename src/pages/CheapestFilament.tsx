@@ -131,7 +131,7 @@ export default function CheapestFilament() {
         headline="Cheapest 3D Printer Filament in 2026 — Budget Picks That Don't Sacrifice Quality"
         description="The cheapest 3D printer filament options in 2026, ranked by price with quality scores to help you find genuinely good budget filament."
         datePublished="2026-01-01"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/cheapest-filament"
       />
       <ItemListSchema

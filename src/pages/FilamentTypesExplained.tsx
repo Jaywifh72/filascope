@@ -73,7 +73,7 @@ export default function FilamentTypesExplained() {
         headline="3D Printer Filament Types Explained — Every Material Compared"
         description="Every 3D printer filament type explained: PLA, PETG, ABS, TPU, Nylon, ASA, PC & more. Properties, use cases, print difficulty & pricing compared."
         datePublished="2026-02-28"
-        dateModified="2026-02-28"
+        dateModified="2026-05-11"
         url="/guides/3d-printer-filament-types-explained"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: '3D Printer Filament Types' }}

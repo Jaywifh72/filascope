@@ -124,7 +124,7 @@ export default function HueForgeHub() {
         headline="HueForge Filament Hub — TD Database, Guides & Finder"
         description="Everything you need for HueForge printing: TD value database, filament finder, beginner TD guides, measurement tutorials, and white filament rankings."
         datePublished="2026-02-20"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/guides/hueforge-beginners-guide"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'HueForge 3D Printing' }}

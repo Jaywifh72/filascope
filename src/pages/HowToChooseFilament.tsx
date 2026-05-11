@@ -77,7 +77,7 @@ export default function HowToChooseFilament() {
         headline="How to Choose 3D Printer Filament — The Complete Guide"
         description="Learn how to choose the right 3D printer filament for your project. Compare PLA, PETG, ABS, TPU & more by strength, ease of printing, cost, and use case."
         datePublished="2026-02-28"
-        dateModified="2026-02-28"
+        dateModified="2026-05-11"
         url="/guides/how-to-choose-3d-printer-filament"
         articleType="Article"
         about={{ '@type': 'Thing', name: 'Choosing 3D Printer Filament' }}

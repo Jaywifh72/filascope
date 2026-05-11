@@ -75,7 +75,7 @@ export default function FilamentTemperatureGuide() {
         headline="3D Printer Filament Temperature Guide"
         description="Complete filament temperature settings chart for PLA, PETG, ABS, TPU, Nylon, ASA & more. Nozzle temp, bed temp, and print speed for every material type."
         datePublished="2026-02-19"
-        dateModified="2026-02-28"
+        dateModified="2026-05-11"
         url="/guides/filament-temperature-guide"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: '3D Printer Filament Temperature Settings' }}

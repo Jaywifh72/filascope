@@ -168,7 +168,7 @@ export default function BestFilamentsForHueForge() {
         headline="Best Filaments for HueForge in 2026 — TD-Ranked Picks"
         description="Find the best HueForge filament for lithophanes and color mixing. TD-ranked picks for PLA, silk, and translucent filaments. Compare TD values, prices & buy links."
         datePublished="2025-01-15"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/guides/best-filaments-for-hueforge"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'HueForge 3D Printing' }}

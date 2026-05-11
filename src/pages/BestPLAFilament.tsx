@@ -614,7 +614,7 @@ export default function BestPLAFilament() {
         headline="Best PLA Filament in 2026 — Top 12 Picks Ranked by Data from 21,000+ Filaments"
         description="The best PLA filaments in 2026 ranked by print quality, consistency & value. Data-driven picks from FilaScope's database of 21,000+ filaments across 57 brands."
         datePublished="2026-04-01"
-        dateModified="2026-04-01"
+        dateModified="2026-05-11"
         url="/guides/best-pla-filaments"
       />
       <BreadcrumbSchema items={breadcrumbs.map(b => ({ name: b.name, url: `https://filascope.com${b.url}` }))} />

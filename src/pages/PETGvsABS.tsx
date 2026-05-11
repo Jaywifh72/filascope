@@ -114,7 +114,7 @@ export default function PETGvsABS() {
         headline="PETG vs ABS — Which 3D Printer Filament Is Right for You?"
         description="PETG vs ABS compared: strength, heat resistance, print difficulty, price & fumes. Data-driven comparison from 21,000+ filaments on FilaScope."
         datePublished="2026-02-28"
-        dateModified="2026-02-28"
+        dateModified="2026-05-11"
         url="/guides/petg-vs-abs"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'PETG vs ABS 3D Printing Filament Comparison' }}

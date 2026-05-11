@@ -81,7 +81,7 @@ export default function FilamentPrinterCompatibility() {
         headline="3D Printer Filament Compatibility — Which Filaments Work With Your Printer?"
         description="Find out which filaments work with your 3D printer — a complete compatibility guide for Bambu Lab, Prusa, and Creality printers."
         datePublished="2026-01-15"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/3d-printer-compatibility"
       />
       <BreadcrumbSchema items={breadcrumbs.map(b => ({ name: b.name, url: `https://filascope.com${b.url}` }))} />

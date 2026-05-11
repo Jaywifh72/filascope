@@ -138,7 +138,7 @@ export default function BestWhiteFilamentsForHueForge() {
         headline="Best White Filaments for HueForge Lithophanes — TD-Ranked"
         description="Find the best white PLA filaments for HueForge lithophane printing. Compare TD values, translucency, and prices for the top white filaments in 2026."
         datePublished="2026-02-20"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/guides/best-white-filaments-for-hueforge"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'White Filament for HueForge Lithophanes' }}

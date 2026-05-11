@@ -93,7 +93,7 @@ export default function BestFilament() {
         headline="Best 3D Printer Filament in 2026 — Every Material Ranked"
         description="The best 3D printer filament in 2026 — ranked by FilaScore across PLA, PETG, ABS, TPU, and more."
         datePublished="2026-01-01"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/best-3d-printer-filament"
       />
       <BreadcrumbSchema items={breadcrumbs.map(b => ({ name: b.name, url: `https://filascope.com${b.url}` }))} />

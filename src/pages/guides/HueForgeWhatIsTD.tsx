@@ -70,7 +70,7 @@ export default function HueForgeWhatIsTD() {
         headline="What Is HueForge Transmissivity Distance (TD)? — Complete Beginner Guide"
         description="Learn what Transmissivity Distance (TD) means in HueForge, how it affects lithophane printing, how to measure TD, and how to find the right TD value for your project."
         datePublished="2026-02-20"
-        dateModified="2026-02-20"
+        dateModified="2026-05-11"
         url="/guides/what-is-hueforge-td"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'HueForge Transmissivity Distance' }}

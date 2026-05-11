@@ -112,7 +112,7 @@ export default function TPUvsPETG() {
         headline="TPU vs PETG — Which 3D Printer Filament Is Right for You?"
         description="TPU vs PETG compared: flexibility, strength, print difficulty, and use cases. Flexible vs rigid filament comparison."
         datePublished="2026-02-28"
-        dateModified="2026-02-28"
+        dateModified="2026-05-11"
         url="/guides/tpu-vs-petg"
         articleType="TechArticle"
         about={{ '@type': 'Thing', name: 'TPU vs PETG 3D Printing Filament Comparison' }}
