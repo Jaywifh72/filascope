@@ -123,6 +123,12 @@ const GUIDE_META: Record<string,{title:string;description:string}> = {
   "best-filament-for-bambu-lab-p1s":{title:"Best Filament for Bambu Lab P1S 2026",description:"Top filament picks for Bambu Lab P1S with AMS compatibility."},
   "silk-pla-comparison":{title:"Best Silk PLA Filaments 2026",description:"Top silk PLA filaments ranked by sheen quality."},
   "asa-vs-abs-outdoor-printing":{title:"ASA vs ABS for Outdoor 3D Prints",description:"ASA vs ABS for outdoor use: UV resistance, heat tolerance compared."},
+  "hueforge-td-complete-guide":{title:"HueForge TD Values: Complete Guide",description:"Everything about HueForge Transmissivity Distance: what TD means, ranges by material, and how to use TD for perfect lithophanes."},
+  "best-3d-printers-under-500":{title:"Best 3D Printers Under $500 (2026)",description:"Top budget 3D printers under $500 compared by speed, build volume, and material compatibility."},
+  "pla-vs-petg-vs-abs":{title:"PLA vs PETG vs ABS: Which Filament Should You Use?",description:"Data-driven comparison of PLA, PETG, and ABS: strength, heat resistance, printability, and pricing."},
+  "filament-drying-guide":{title:"Filament Drying Guide: How to Store & Dry 3D Printer Filament",description:"Complete filament drying guide: temperatures, times, storage solutions, and wet filament symptoms for all materials."},
+  "best-filament-for-bambu-lab-a1":{title:"Best Filament for Bambu Lab A1 (2026)",description:"Top filament picks for Bambu Lab A1 with AMS compatibility, pricing, and optimized settings."},
+  "weekly-filament-deals-2026":{title:"Weekly 3D Filament Deals & Discounts (May 2026)",description:"Best 3D printer filament deals this week. Compare prices across 15+ stores, find discounts on PLA, PETG, TPU & more. Updated daily."},
 };
 
 // ── Simple static pages (consolidated) ──
@@ -141,9 +147,9 @@ const STATIC_PG: Record<string,SP> = {
   "/wizard":{t:"Filament Wizard — Find Your Perfect 3D Filament | FilaScope",d:"Get personalized 3D printer filament recommendations.",c:"/wizard",h:"Filament Wizard",b:"Get personalized filament recommendations based on your project."},
   "/diagnose":{t:"3D Print Problem Diagnosis Tool | FilaScope",d:"Diagnose common 3D printing problems.",c:"/diagnose",h:"3D Print Problem Diagnosis",b:"Identify and fix common 3D printing problems."},
   "/accessories":{t:"3D Printer Accessories & Upgrades | FilaScope",d:"Browse essential 3D printer accessories and upgrades.",c:"/accessories",h:"3D Printer Accessories",b:"Browse and compare essential 3D printer accessories."},
-  "/brands/compare":{t:"Compare Filament Brands — Side-by-Side | FilaScope",d:"Compare 3D printing filament brands side-by-side.",c:"/brands/compare",h:"Compare Filament Brands",b:"Compare 3D printing filament brands across product variety, pricing, and ratings."},
-  "/materials/compare":{t:"Compare 3D Filaments Side by Side | FilaScope",d:"Compare 3D printer filaments side by side.",c:"/compare",h:"Compare 3D Printer Filaments",b:"Compare filaments side by side."},
-  "/hueforge-td-database":{t:"HueForge TD Values — Search 500+ Filaments Free",d:"Search HueForge Transmission Distance (TD) values for 500+ filaments from 49+ brands. Find the right TD for your lithophane project.",c:"/hueforge-td-database",h:"HueForge TD Value Database",b:"Browse transmission distance (TD) values for 500+ filaments.",jld:[{"@context":"https://schema.org","@type":"Dataset",name:"HueForge TD Value Database",description:"TD values for 500+ 3D printer filaments",url:`${BASE_URL}/hueforge-td-database`,creator:{"@type":"Organization",name:"FilaScope",url:BASE_URL}}]},
+  "/brands/compare":{t:"Compare Filament Brands — Side-by-Side | FilaScope",d:"Compare 3D printing filament brands side-by-side by product variety, pricing, FilaScore ratings & material coverage.",c:"/brands/compare",h:"Compare Filament Brands",b:"Compare 3D printing filament brands across product variety, pricing, and ratings."},
+  "/materials/compare":{t:"Compare 3D Filaments Side by Side | FilaScope",d:"Compare 3D printer filaments side by side by specs, price, material, TD value, and printer compatibility. Up to 4 filaments at once.",c:"/compare",h:"Compare 3D Printer Filaments",b:"Compare filaments side by side across specs, prices, and compatibility."},
+  "/hueforge-td-database":{t:"HueForge TD Values — Search 500+ Filaments | FilaScope",d:"Search HueForge Transmission Distance (TD) values for 500+ filaments from 49+ brands. Find the right TD for your lithophane project. The largest verified TD database.",c:"/hueforge-td-database",h:"HueForge TD Value Database",b:"Browse transmission distance (TD) values for 500+ filaments.",jld:[{"@context":"https://schema.org","@type":"Dataset",name:"HueForge TD Value Database",description:"TD values for 500+ 3D printer filaments",url:`${BASE_URL}/hueforge-td-database`,creator:{"@type":"Organization",name:"FilaScope",url:BASE_URL}}]},
   "/td-database":{t:"HueForge TD Value Database | FilaScope",d:"Search TD values for 500+ filaments.",c:"/hueforge-td-database",h:"HueForge TD Value Database",b:"Browse TD values for 500+ filaments."},
   "/hueforge-filaments":{t:"HueForge Filament Finder — TD-Ranked | FilaScope",d:"Find the best filaments for HueForge projects.",c:"/hueforge-filaments",h:"HueForge Filament Finder",b:"Find filaments for HueForge lithophane projects, ranked by TD value."},
   "/filament-database":{t:"3D Filament Database — Compare 1,080+ Products | FilaScope",d:"The most comprehensive 3D printer filament database.",c:"/filament-database",h:"3D Printer Filament Database",b:"Compare PLA, PETG, ABS & more across 48+ brands."},
@@ -157,6 +163,11 @@ const STATIC_PG: Record<string,SP> = {
   "/filament-temperature-chart":{t:"Filament Temperature Chart 2026 — All 28+ Materials",d:"Search nozzle & bed temps for 28+ 3D printing materials. PLA, PETG, ABS, TPU, Nylon, PC & more with enclosure requirements and optimal settings.",c:"/filament-temperature-chart",h:"3D Filament Temperature Chart",b:"Comprehensive temperature reference for all 3D printing materials. Nozzle and bed temperatures for 28+ filament types.",ot:"article"},
   "/guides/best-pla-filaments":{t:"Best PLA Filaments 2026 — Top Picks Ranked by Quality & Value | FilaScope",d:"The best PLA filaments in 2026 ranked by print quality, consistency & value. Compare Bambu Lab, Polymaker, eSUN & more with real specs and pricing.",c:"/guides/best-pla-filaments",h:"Best PLA Filaments 2026",b:"The best PLA filaments ranked by print quality, consistency, and value from our database of 22,000+ filaments.",ot:"article"},
   "/guides/best-petg-filaments":{t:"Best PETG Filaments 2026 — Top Picks for Strength & Durability | FilaScope",d:"The best PETG filaments ranked by strength, heat resistance & value. Compare Bambu Lab, Polymaker, Hatchbox & more.",c:"/guides/best-petg-filaments",h:"Best PETG Filaments 2026",b:"The best PETG filaments for functional parts, ranked by FilaScope's data-driven scoring.",ot:"article"},
+  "/guides/hueforge-td-complete-guide":{t:"HueForge TD Values: Complete Guide | FilaScope",d:"Everything about HueForge Transmissivity Distance: what TD means, ranges by material, and how to use TD for perfect lithophanes.",c:"/guides/hueforge-td-complete-guide",h:"HueForge TD Values: Complete Guide",b:"Master Transmissivity Distance (TD) for HueForge lithophanes with data from 500+ measured filaments.",ot:"article"},
+  "/guides/best-3d-printers-under-500":{t:"Best 3D Printers Under $500 (2026) | FilaScope",d:"Top budget 3D printers under $500 compared by speed, build volume, and material compatibility.",c:"/guides/best-3d-printers-under-500",h:"Best 3D Printers Under $500",b:"Data-driven comparison of the best 3D printers under $500 from our printer database.",ot:"article"},
+  "/guides/pla-vs-petg-vs-abs":{t:"PLA vs PETG vs ABS: Which Filament Should You Use? | FilaScope",d:"Data-driven comparison of PLA, PETG, and ABS: strength, heat resistance, printability, and pricing.",c:"/guides/pla-vs-petg-vs-abs",h:"PLA vs PETG vs ABS",b:"Head-to-head comparison of the three most popular 3D printing filaments with real database stats.",ot:"article"},
+  "/guides/filament-drying-guide":{t:"Filament Drying Guide: How to Store & Dry 3D Printer Filament | FilaScope",d:"Complete filament drying guide: temperatures, times, storage solutions, and wet filament symptoms for all materials.",c:"/guides/filament-drying-guide",h:"Filament Drying Guide",b:"Material-specific drying temperatures, storage solutions, and how to identify wet filament.",ot:"article"},
+  "/guides/best-filament-for-bambu-lab-a1":{t:"Best Filament for Bambu Lab A1 (2026) | FilaScope",d:"Top filament picks for Bambu Lab A1 with AMS compatibility, pricing, and optimized settings.",c:"/guides/best-filament-for-bambu-lab-a1",h:"Best Filament for Bambu Lab A1",b:"Filament recommendations for the Bambu Lab A1 with AMS Lite compatibility notes.",ot:"article"},
   "/guides/tpu-vs-petg":{t:"TPU vs PETG: Which Filament Should You Use?",d:"Compare TPU vs PETG head-to-head: flexibility, strength, print difficulty, temps & real-world use cases. Data from 22,000+ filaments.",c:"/guides/tpu-vs-petg",h:"TPU vs PETG — Flexible vs Rigid",b:"Complete comparison of TPU and PETG 3D printer filaments.",ot:"article"},
   "/guides/petg-vs-abs":{t:"PETG vs ABS — Which Should You Choose? | FilaScope",d:"PETG vs ABS compared: strength, heat resistance, ease of printing. Data-driven comparison.",c:"/guides/petg-vs-abs",h:"PETG vs ABS — Which Should You Choose?",b:"PETG vs ABS comparison with real data from 22,000+ filaments.",ot:"article"},
   "/guides/strongest-3d-printer-filament":{t:"Strongest 3D Printer Filaments 2026 — Ranked by Tensile Strength | FilaScope",d:"The strongest 3D printer filaments ranked by tensile strength, impact resistance & durability. From PEEK to carbon fiber nylon.",c:"/guides/strongest-3d-printer-filament",h:"Strongest 3D Printer Filaments 2026",b:"Strongest 3D printing materials ranked by mechanical properties from our filament database.",ot:"article"},
@@ -181,12 +192,12 @@ function staticPage(path: string): PageData | null {
 
 // ── Dynamic page handlers ──
 function homepage(): PageData {
-  return {type:"homepage",title:"Compare 24,000+ 3D Filaments — FilaScope (2026)",
+  return {type:"homepage",title:"Compare 24,000+ 3D Filaments — Prices & TD | FilaScope",
     description:"Compare 24,000+ 3D printer filaments from 49+ brands. Search by price, material, color, HueForge TD value & printer compatibility. Updated daily.",
     canonical:"/",ogType:"website",
     jsonLd:[{"@context":"https://schema.org","@type":"WebSite",name:"FilaScope",url:BASE_URL,description:"The most comprehensive 3D printer filament database.",potentialAction:{"@type":"SearchAction",target:{"@type":"EntryPoint",urlTemplate:`${BASE_URL}/?search={search_term_string}`},"query-input":"required name=search_term_string"}},{"@context":"https://schema.org","@type":"Organization",name:"FilaScope",url:BASE_URL,logo:`${BASE_URL}/og-image.png`}],
     breadcrumbs:[{name:"Home",url:"/"}],h1:"FilaScope — 3D Printer Filament Database",
-    bodyText:"Compare 3D printer filaments across 50+ brands."};}
+    bodyText:"Compare 3D printer filaments across 50+ brands."};
 }
 
 async function filamentListingPage(sb: SupabaseClient): Promise<PageData> {
@@ -196,7 +207,8 @@ async function filamentListingPage(sb: SupabaseClient): Promise<PageData> {
   const items = (top??[]) as any[];
   const links = items.map((f:any)=>({href:`${BASE_URL}/filament/${f.product_handle||f.id}`,text:f.display_name||f.product_title||"Filament"}));
   const crumbs = [{name:"Home",url:"/"},{name:"Filaments",url:"/filaments"}];
-  return {type:"listing",title:`Compare ${n}+ 3D Printer Filaments (2026)`,description:`Search ${n}+ filaments from 49+ brands. Filter by material, price, color & specs. Find PLA, PETG, ABS, TPU & more with live pricing.`,canonical:"/filaments",ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:"3D Printer Filament Database",bodyText:`Browse all ${n}+ filaments from 49+ brands.`,links};
+  const formattedN = n.toLocaleString();
+  return {type:"listing",title:`Compare ${formattedN}+ 3D Printer Filaments (2026) | FilaScope`,description:`Search ${formattedN}+ filaments from 49+ brands. Filter by material, price, color & specs. Find PLA, PETG, ABS, TPU & more with live pricing from 15+ stores.`,canonical:"/filaments",ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:"3D Printer Filament Database",bodyText:`Browse all ${formattedN}+ filaments from 49+ brands with real-time pricing and specs.`,links};
 }
 
 async function filamentCategoryPage(slug:string, sb:SupabaseClient, page=0): Promise<PageData> {
@@ -261,13 +273,13 @@ async function brandPage(slug:string,sb:SupabaseClient): Promise<PageData> {
   const bn=data.display_name||data.brand_name,cnt=data.product_count||0,can=`/brands/${data.brand_slug}`;
   let title=`${bn} 3D Filaments — ${cnt} Products | FilaScope`; if(title.length>60) title=`${bn} Filaments | FilaScope`;
   const crumbs=[{name:"Home",url:"/"},{name:"Brands",url:"/brands"},{name:bn,url:can}];
-  return {type:"brand",title,description:`Browse all ${cnt} ${bn} 3D printer filaments. Compare specs and prices on FilaScope.`,canonical:can,ogImage:buildOgImageUrl({type:"brand",title:`${bn} 3D Filaments`,subtitle:`${cnt} products`,image:data.logo_url||undefined}),ogType:"profile",jsonLd:[{"@context":"https://schema.org","@type":"Organization",name:bn,url:data.website_url||`${BASE_URL}${can}`,...(data.logo_url&&{logo:data.logo_url})},bcSchema(crumbs)],breadcrumbs:crumbs,h1:`${bn} 3D Filaments`,bodyText:data.description||`Browse ${cnt} ${bn} filament products.`};
+  return {type:"brand",title,description:`Browse all ${cnt} ${bn} 3D printer filaments. Compare specs, live pricing from 15+ stores, HueForge TD values, and printer compatibility on FilaScope.`,canonical:can,ogImage:buildOgImageUrl({type:"brand",title:`${bn} 3D Filaments`,subtitle:`${cnt} products`,image:data.logo_url||undefined}),ogType:"profile",jsonLd:[{"@context":"https://schema.org","@type":"Organization",name:bn,url:data.website_url||`${BASE_URL}${can}`,...(data.logo_url&&{logo:data.logo_url})},bcSchema(crumbs)],breadcrumbs:crumbs,h1:`${bn} 3D Filaments`,bodyText:data.description||`Browse ${cnt} ${bn} filament products with specs and pricing.`};
 }
 
 async function brandsListing(sb:SupabaseClient): Promise<PageData> {
   const {count}=await sb.from("automated_brands").select("id",{count:"exact",head:true}).eq("is_visible",true);
   const n=count||50; const crumbs=[{name:"Home",url:"/"},{name:"Brands",url:"/brands"}];
-  return {type:"listing",title:`3D Filament Brands — ${n}+ Brands | FilaScope`,description:`Compare ${n}+ 3D printer filament brands.`,canonical:"/brands",ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:"3D Filament Brands",bodyText:`Browse ${n} filament brands.`};
+  return {type:"listing",title:`3D Filament Brands — ${n}+ Brands | FilaScope`,description:`Compare ${n}+ 3D printer filament brands. Browse product catalogs, pricing ranges, and FilaScore rankings for PLA, PETG, TPU & more.`,canonical:"/brands",ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:"3D Filament Brands",bodyText:`Browse ${n} filament brands with product catalogs, pricing, and quality rankings.`};
 }
 
 async function printerPage(slug:string,sb:SupabaseClient): Promise<PageData> {
@@ -279,8 +291,12 @@ async function printerPage(slug:string,sb:SupabaseClient): Promise<PageData> {
   if(!data&&slug.match(/^[0-9a-f-]{36}$/i)){const r=await sb.from("printers").select(cols).eq("id",slug).limit(1).maybeSingle();data=r.data;}
   if(!data) return fallback(`/printers/${inputSlug||slug}`);
   let bn=""; if(data.brand_id){const{data:b}=await sb.from("printer_brands").select("brand").eq("id",data.brand_id).limit(1).maybeSingle();bn=b?.brand||"";}
-  const pn=data.display_name||data.model_name||"3D Printer",full=bn?`${bn} ${pn}`:pn,cs=normSlug(data.printer_id||data.id),can=`/printers/${cs}`;
-  let title=`${full} — Specs & Price | FilaScope`; if(title.length>60) title=`${full} | FilaScope`;
+  const rawPn=data.display_name||data.model_name||"3D Printer";
+  // Avoid duplicating brand name when display_name already starts with it
+  const pn=(bn&&rawPn.toLowerCase().startsWith(bn.toLowerCase()))?rawPn.slice(bn.length).replace(/^[\s-]+/,""):rawPn;
+  const full=bn?`${bn} ${pn}`:rawPn;
+  const cs=normSlug(data.printer_id||data.id),can=`/printers/${cs}`;
+  let title=`${full} — 3D Printer Specs & Price | FilaScope`; if(title.length>60) title=`${full} | FilaScope`;
   let desc=`${full}. Full specs, filament compatibility & prices.`; if(desc.length>160) desc=desc.slice(0,157)+"...";
   const ps:Record<string,unknown>={"@context":"https://schema.org","@type":"Product",name:full,description:desc,...(bn&&{brand:{"@type":"Brand",name:bn}}),sku:cs,category:"3D Printer",url:`${BASE_URL}${can}`};
   if(data.msrp_usd) ps.offers={"@type":"Offer",priceCurrency:"USD",price:data.msrp_usd.toFixed(2),availability:"https://schema.org/InStock",url:`${BASE_URL}${can}`};
@@ -291,13 +307,13 @@ async function printerPage(slug:string,sb:SupabaseClient): Promise<PageData> {
 async function printersListing(sb:SupabaseClient): Promise<PageData> {
   const {count}=await sb.from("printers").select("id",{count:"exact",head:true});
   const n=count||100;const crumbs=[{name:"Home",url:"/"},{name:"Printers",url:"/printers"}];
-  return {type:"listing",title:"3D Printer Database — Specs & Compatibility | FilaScope",description:`Compare ${n} 3D printers.`,canonical:"/printers",ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:"3D Printer Database",bodyText:`Compare ${n} 3D printers.`};
+  return {type:"listing",title:"3D Printer Database — Specs & Compatibility | FilaScope",description:`Compare ${n} 3D printers from 22+ brands. Filter by build volume, speed, enclosure, material compatibility & price. Find Bambu Lab, Creality, Prusa & more.`,canonical:"/printers",ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:"3D Printer Database",bodyText:`Compare ${n} 3D printers across 22+ brands by specs, price, and material compatibility.`};
 }
 
 async function dealsPage(sb:SupabaseClient): Promise<PageData> {
   const {count}=await sb.from("filaments").select("id",{count:"exact",head:true}).not("variant_compare_at_price","is",null).not("variant_price","is",null);
   const n=count||0;const crumbs=[{name:"Home",url:"/"},{name:"Deals",url:"/deals"}];
-  return {type:"deals",title:`3D Filament Deals — ${n} Offers | FilaScope`,description:`${n} active deals.`,canonical:"/deals",ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:"3D Printer Filament Deals",bodyText:`Browse ${n} active deals.`};
+  return {type:"deals",title:`3D Filament Deals — ${n} Offers | FilaScope`,description:`${n} active 3D filament deals with price drops. Track discounts on PLA, PETG, TPU & more across 15+ stores. Updated daily.`,canonical:"/deals",ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:"3D Printer Filament Deals",bodyText:`Browse ${n} active filament deals with real-time price tracking across 15+ stores.`};
 }
 
 function guidePage(slug:string): PageData {
@@ -312,7 +328,7 @@ async function materialPage(slug:string,sb:SupabaseClient): Promise<PageData> {
   const {count}=await sb.from("filaments").select("id",{count:"exact",head:true}).in("material",cfg.materials);
   const n=count??0; if(n<3) return fallback(`/materials/${slug}`);
   const can=`/materials/${slug}`;const crumbs=[{name:"Home",url:"/"},{name:"Materials",url:"/filaments"},{name:cfg.label,url:can}];
-  return {type:"material",title:`${cfg.label} Filament — ${n} Products | FilaScope`,description:`Browse ${n} ${cfg.label} 3D printer filaments.`,canonical:can,ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:`${cfg.label} Filament — ${n} Products`,bodyText:`Browse ${n} ${cfg.label} filaments.`};
+  return {type:"material",title:`${cfg.label} Filament — ${n} Products | FilaScope`,description:`Browse ${n} ${cfg.label} 3D printer filaments. Compare prices, specs, TD values, and printer compatibility across 49+ brands. Updated daily.`,canonical:can,ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:`${cfg.label} Filament — ${n} Products`,bodyText:`Browse ${n} ${cfg.label} filaments with live pricing and specs.`};
 }
 
 async function colorFamilyPage(slug:string,sb:SupabaseClient): Promise<PageData> {
@@ -320,7 +336,7 @@ async function colorFamilyPage(slug:string,sb:SupabaseClient): Promise<PageData>
   const {count}=await sb.from("filaments").select("id",{count:"exact",head:true}).in("color_family",cfg.families);
   const n=count??0; if(n<3) return fallback(`/colors/${slug}`);
   const can=`/colors/${slug}`;const crumbs=[{name:"Home",url:"/"},{name:"Color Finder",url:"/colors"},{name:`${cfg.label} Filaments`,url:can}];
-  return {type:"color",title:`${cfg.label} 3D Printer Filaments — ${n} Options | FilaScope`,description:`Browse ${n} ${cfg.label.toLowerCase()} 3D printer filaments.`,canonical:can,ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:`${cfg.label} 3D Printer Filaments`,bodyText:`Browse ${n} ${cfg.label.toLowerCase()} filaments.`};
+  return {type:"color",title:`${cfg.label} 3D Printer Filaments — ${n} Options | FilaScope`,description:`Browse ${n} ${cfg.label.toLowerCase()} 3D printer filaments from 49+ brands. Compare prices, hex codes, TD values & specs.`,canonical:can,ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:`${cfg.label} 3D Printer Filaments`,bodyText:`Browse ${n} ${cfg.label.toLowerCase()} filaments with pricing and color data.`};
 }
 
 async function brandMaterialPage(bs:string,ms:string,sb:SupabaseClient): Promise<PageData> {
@@ -331,7 +347,7 @@ async function brandMaterialPage(bs:string,ms:string,sb:SupabaseClient): Promise
   const {count}=await (sb as any).from("filaments").select("id",{count:"exact",head:true}).in("material",cfg.materials).ilike("vendor",bd.brand_name);
   const n=count??0; if(n<3) return fallback(`/brands/${bs}/${ms}`);
   const can=`/brands/${bs}/${ms}`;const crumbs=[{name:"Home",url:"/"},{name:"Brands",url:"/brands"},{name:bn,url:`/brands/${bs}`},{name:`${cfg.label} Filaments`,url:can}];
-  return {type:"brand-material",title:`${bn} ${cfg.label} Filaments | FilaScope`,description:`Browse ${n} ${bn} ${cfg.label} filaments.`,canonical:can,ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:`${bn} ${cfg.label} Filaments`,bodyText:`Browse ${n} ${bn} ${cfg.label} filaments.`};
+  return {type:"brand-material",title:`${bn} ${cfg.label} Filaments | FilaScope`,description:`Browse ${n} ${bn} ${cfg.label} filaments with live pricing, specs, and printer compatibility.`,canonical:can,ogType:"website",jsonLd:[bcSchema(crumbs)],breadcrumbs:crumbs,h1:`${bn} ${cfg.label} Filaments`,bodyText:`Browse ${n} ${bn} ${cfg.label} filaments with specs and live pricing.`};
 }
 
 function fallback(path:string): PageData {
@@ -423,6 +439,12 @@ const GUIDE_DATES: Record<string,{date:string;tl?:boolean;learn?:boolean}> = {
   "hueforge-color-selection":{date:"2026-02-20"},
   "best-filament-for-prusa-mk4":{date:"2026-02-20"},"best-filament-for-creality-k1":{date:"2026-02-20"},
   "best-filaments-for-hueforge-lithophanes":{date:"2026-02-20"},
+  "hueforge-td-complete-guide":{date:"2026-05-11"},
+  "best-3d-printers-under-500":{date:"2026-05-11"},
+  "pla-vs-petg-vs-abs":{date:"2026-05-11"},
+  "filament-drying-guide":{date:"2026-05-11"},
+  "best-filament-for-bambu-lab-a1":{date:"2026-05-11"},
+  "weekly-filament-deals-2026":{date:"2026-05-12",tl:true},
 };
 
 async function smFilaments(sb:SupabaseClient){const e:string[]=[];let o=0;const B=1000;let m=true;while(m){const{data,error}=await sb.from("filaments").select("product_handle,id,updated_at,last_scraped_at").not("product_handle","is",null).order("id").range(o,o+B-1);if(error||!data||!data.length){m=false;break;}for(const f of data){const bd=[f.last_scraped_at,f.updated_at].filter(Boolean).sort().pop();e.push(ue(`${BASE_URL}/filament/${f.product_handle||f.id}`,w3c(bd),"daily",0.8));}m=data.length>=B;o+=B;}return wrap(e);}
