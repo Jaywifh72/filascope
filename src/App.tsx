@@ -76,6 +76,7 @@ initializeGlobalErrorHandler();
 const Finder = lazy(() => import("./pages/Finder"));
 const Brands = lazy(() => import("./pages/Brands"));
 const Compare = lazy(() => import("./pages/Compare"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
 const MaterialCompare = lazy(() => import("./pages/MaterialCompare"));
 const Matrix = lazy(() => import("./pages/Matrix"));
 const Deals = lazy(() => import("./pages/Deals"));
@@ -183,6 +184,11 @@ const BuyingGuide = lazy(() => import("./pages/BuyingGuide"));
 const HueForgeWhatIsTD = lazy(() => import("./pages/guides/HueForgeWhatIsTD"));
 const BestWhiteFilamentsForHueForge = lazy(() => import("./pages/guides/BestWhiteFilamentsForHueForge"));
 const HowToMeasureFilamentTD = lazy(() => import("./pages/guides/HowToMeasureFilamentTD"));
+const HueForgeTDCompleteGuide = lazy(() => import("./pages/guides/HueForgeTDCompleteGuide"));
+const Best3DPrintersUnder500 = lazy(() => import("./pages/guides/Best3DPrintersUnder500"));
+const PLAvsPETGvsABSComparison = lazy(() => import("./pages/guides/PLAvsPETGvsABSComparison"));
+const FilamentDryingGuide = lazy(() => import("./pages/guides/FilamentDryingGuide"));
+const BestFilamentForBambuLabA1 = lazy(() => import("./pages/guides/BestFilamentForBambuLabA1"));
 const EmbedProduct = lazy(() => import("./pages/EmbedProduct"));
 const ResourcesProfiles = lazy(() => import("./pages/ResourcesProfiles"));
 const Install = lazy(() => import("./pages/Install"));
@@ -282,6 +288,7 @@ const App = () => (
                   <Route path="/" element={<Finder />} />
                   <Route path="/beta" element={<FinderV2 />} />
                   <Route path="/finder" element={<Finder />} />
+                  <Route path="/search" element={<SearchPage />} />
                   <Route path="/filaments" element={<FilamentCategoryPage />} />
                   <Route path="/filaments/:slug" element={<FilamentCategoryPage />} />
                   <Route path="/brands" element={<Brands />} />
@@ -305,6 +312,7 @@ const App = () => (
                   <Route path="/printers/under-300" element={<PrinterCategoryPage />} />
                   <Route path="/printers/under-500" element={<PrinterCategoryPage />} />
                   <Route path="/printers/under-1000" element={<PrinterCategoryPage />} />
+                  <Route path="/printers/delta" element={<PrinterCategoryPage />} />
                   <Route path="/printers/:id" element={<PrinterDetail />} />
                   <Route path="/printer-filaments/:id" element={<PrinterPage />} />
                   <Route path="/accessories" element={<Accessories />} />
@@ -394,6 +402,7 @@ const App = () => (
                   <Route path="/colors/:family" element={<ColorFamilyPage />} />
                   <Route path="/td-database" element={<TDDatabase />} />
                   <Route path="/hueforge-td-database" element={<HueForgeTDDatabase />} />
+                  <Route path="/hueforge-td" element={<Navigate to="/hueforge-td-database" replace />} />
                   <Route path="/hueforge-filament-substitute-finder" element={<HueForgeSubstituteFinder />} />
                   <Route path="/hueforge-layer-preview" element={<HueForgeLayerPreview />} />
                   <Route path="/hueforge-color-matcher" element={<HueForgeColorMatcher />} />
@@ -409,6 +418,11 @@ const App = () => (
                   <Route path="/guides/what-is-hueforge-td" element={<HueForgeWhatIsTD />} />
                   <Route path="/guides/best-white-filaments-for-hueforge" element={<BestWhiteFilamentsForHueForge />} />
                   <Route path="/guides/how-to-measure-filament-td" element={<HowToMeasureFilamentTD />} />
+                  <Route path="/guides/hueforge-td-complete-guide" element={<HueForgeTDCompleteGuide />} />
+                  <Route path="/guides/best-3d-printers-under-500" element={<Best3DPrintersUnder500 />} />
+                  <Route path="/guides/pla-vs-petg-vs-abs" element={<PLAvsPETGvsABSComparison />} />
+                  <Route path="/guides/filament-drying-guide" element={<FilamentDryingGuide />} />
+                  <Route path="/guides/best-filament-for-bambu-lab-a1" element={<BestFilamentForBambuLabA1 />} />
                   <Route path="/guides/pla-vs-petg" element={<PLAVsPETG />} />
                   <Route path="/guides/pla-vs-abs" element={<PLAvsABS />} />
                   <Route path="/guides/petg-vs-abs" element={<PETGvsABS />} />
@@ -449,14 +463,18 @@ const App = () => (
                   <Route path="/filament-temperature-chart" element={<FilamentTemperatureChart />} />
                   <Route path="/news" element={<News />} />
                   <Route path="/guides/filament-temperature-guide" element={<FilamentTemperatureGuide />} />
+                  <Route path="/guides/filament-storage-guide" element={<FilamentStorageGuide />} />
                   <Route path="/filament-temperature-guide" element={<Navigate to="/guides/filament-temperature-guide" replace />} />
-                  <Route path="/filament-storage-guide" element={<FilamentStorageGuide />} />
+                  <Route path="/filament-storage-guide" element={<Navigate to="/guides/filament-storage-guide" replace />} />
                   <Route path="/best-filament-for-ender-3" element={<Navigate to="/guides/best-filament-for-ender-3" replace />} />
                   <Route path="/best-filament-for-bambu-lab-a1" element={<Navigate to="/guides/best-filament-for-bambu-lab-a1" replace />} />
                   {/* Redirects: old guide slugs → canonical /guides/ pages */}
                   <Route path="/guides/best-filament-for-beginners-2025" element={<Navigate to="/guides/best-filaments-for-beginners" replace />} />
                   <Route path="/guides/beginners-guide" element={<Navigate to="/guides/best-filaments-for-beginners" replace />} />
                   <Route path="/guides/hueforge-filaments" element={<Navigate to="/guides/best-filaments-for-hueforge" replace />} />
+                  <Route path="/how-to-choose-filament" element={<Navigate to="/guides/how-to-choose-filament" replace />} />
+                  <Route path="/how-to-dry-filament" element={<Navigate to="/guides/how-to-dry-filament" replace />} />
+                  <Route path="/how-to-store-filament" element={<Navigate to="/guides/how-to-store-filament" replace />} />
                   {/* Clean comparison URL redirects */}
                   <Route path="/petg-vs-abs" element={<Navigate to="/materials/compare?a=petg&b=abs" replace />} />
                   <Route path="/pla-vs-abs" element={<Navigate to="/materials/compare?a=pla&b=abs" replace />} />

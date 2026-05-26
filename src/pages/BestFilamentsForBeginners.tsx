@@ -303,7 +303,7 @@ export default function BestFilamentsForBeginners() {
               </CardContent>
             </Card>
             <p className="text-xs text-muted-foreground mt-2">
-              See our <Link to="/filament-temperature-guide" className="text-primary hover:underline">complete filament temperature guide</Link> for all materials.
+              See our <Link to="/guides/filament-temperature-guide" className="text-primary hover:underline">complete filament temperature guide</Link> for all materials.
             </p>
           </section>
 
