@@ -826,3 +826,21 @@ jobs:
             -H "Authorization: Bearer ${OPENCLAW_HOOK_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD" || echo "⚠️ OpenClaw notification failed (non-blocking)"
+
+      # External dead-man switch. In-workflow alerts (above) can only fire when
+      # the workflow RUNS. If GitHub auto-disables this scheduled workflow (60-day
+      # inactivity) or it otherwise stops, nothing fires — which is exactly how the
+      # 2026-04 freeze went unnoticed. A healthchecks.io-style monitor alerts when
+      # the expected daily ping does NOT arrive. No-op if the secret is unset.
+      - name: Dead-man switch ping
+        if: always()
+        env:
+          HC_URL: ${{ secrets.HEALTHCHECK_SYNC_URL }}
+        run: |
+          if [ -z "$HC_URL" ]; then echo "HEALTHCHECK_SYNC_URL unset; skipping"; exit 0; fi
+          FAILED_COUNT="${{ steps.fetch-stats.outputs.failed_count }}"
+          if [ "${FAILED_COUNT:-0}" -gt 3 ]; then
+            curl -fsS -m 10 --retry 3 "${HC_URL}/fail" || true
+          else
+            curl -fsS -m 10 --retry 3 "$HC_URL" || true
+          fi

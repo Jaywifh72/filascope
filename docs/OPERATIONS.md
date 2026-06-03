@@ -35,14 +35,36 @@ Claude Code. Claude Code fixes on a branch → PR → human or Hermes merges.
 
 | Workflow / function | Schedule | Purpose | Dead-man switch |
 |---------------------|----------|---------|-----------------|
-| `sync-filaments.yml` | Daily 02:00/03:00 UTC, Sun full discovery | SpoolmanDB + brand scraping + enrichment | ☐ TODO |
-| `refresh-sitemaps.yml` | Sun 05:00 UTC | Regenerate + commit sitemaps, trigger IndexNow | ☐ TODO |
+| `sync-filaments.yml` | Daily 02:00/03:00 UTC, Sun full discovery | SpoolmanDB + brand scraping + enrichment | ✅ `HEALTHCHECK_SYNC_URL` |
+| `refresh-sitemaps.yml` | Sun 05:00 UTC | Regenerate + commit sitemaps, trigger IndexNow | ✅ `HEALTHCHECK_SITEMAPS_URL` |
 | `indexnow.yml` | On sitemap/page change + Mon 06:00 UTC | Submit URLs to IndexNow/Bing | ☐ TODO |
 | `deploy-pages.yml` | On push to `main` | Build + deploy to Cloudflare Pages | n/a (smoke test exists) |
 | `daily-price-orchestrator` (Supabase) | Daily | Tiered brand price sync (T1 daily / T2 3d / T3 weekly) | ☐ TODO |
 | `enrich-prices-post-sync` (Supabase) | Daily | MSRP backfill, regional pricing, anomaly flags | ☐ TODO |
 | `check-price-alerts` (Supabase) | Daily | Trigger user price-drop alerts | ☐ TODO |
 | `aggregate-news` + `curate-news` | Weekly | Refresh news feed (Claude-curated) | ☐ TODO |
+
+## Alerting setup (operator handoff)
+
+The detection already existed; it just wasn't wired to anyone. Two layers now route
+signal to a channel a human + Hermes actually watch. **Both no-op safely until the
+secrets below are set**, so deploying the code can't break anything.
+
+1. **Supabase health functions → `ALERT_WEBHOOK_URL`.** `weekly-health-check` and
+   `generate-daily-ops-log` now call `_shared/notify.ts`, firing on `critical_issues`,
+   failed brand syncs, `brands_synced == 0`, or high-priority opportunities. Set
+   `ALERT_WEBHOOK_URL` to a Slack/Discord/Hermes incoming webhook (accepts `{text}`).
+2. **GitHub Actions → external dead-man switch.** `sync-filaments` and
+   `refresh-sitemaps` ping a healthchecks.io-style monitor on success (`/fail` on
+   failure). The monitor alerts when the *expected ping never arrives* — the one
+   failure mode in-workflow alerts can't catch (see auto-disable risk below).
+   Create two checks and set `HEALTHCHECK_SYNC_URL` (daily) and
+   `HEALTHCHECK_SITEMAPS_URL` (weekly).
+
+**To do:** repoint the legacy `OPENCLAW_HOOK_URL` notifications (still present in
+the workflows) from the dead Gunther/OpenClaw agent to the Hermes channel, or retire
+them once `ALERT_WEBHOOK_URL` is proven. Remaining Layer-0 jobs (`indexnow`,
+`daily-price-orchestrator`, etc.) still need dead-man pings — Sprint 2 follow-up.
 
 ## Cadence / beats
 
@@ -55,6 +77,12 @@ Claude Code. Claude Code fixes on a branch → PR → human or Hermes merges.
 
 ## Known fragility
 
+- **GitHub auto-disables scheduled workflows after 60 days of repo inactivity.**
+  This is a prime suspect for the *total* freeze: if `sync-filaments.yml` /
+  `refresh-sitemaps.yml` were auto-disabled, they stop running and emit **no alert**
+  (the summary/notify steps never execute). **Check the Actions tab for a "This
+  workflow was disabled" banner and re-enable.** The external dead-man switches are
+  the defense — they alert on the *absence* of a run.
 - **Brand scrapers crash on constraint/upsert collisions.** April 2026 was
   dominated by break-fixes to `esun`, `duramic`, `3dxtech`, `recreus`, `anycubic`.
   Hardening these to be self-healing is Sprint 3.
@@ -79,8 +107,9 @@ must be *verified* automation, and missed runs must page someone.
   regenerate sitemaps + correct `llms.txt` counts (needs DB read for exact numbers).
 - **Sprint 1 (needs Supabase read):** confirm daily scrapes alive; diagnose fragile
   brand syncs; verify last deploy reached Cloudflare.
-- **Sprint 2 (keystone):** dead-man switches on every Layer-0 job; wire Sentry +
-  `weekly-health-check` + `generate-daily-ops-log` into one alert channel.
+- **Sprint 2 (keystone):** `_shared/notify.ts` + alert wiring for `weekly-health-check`
+  and `generate-daily-ops-log` ✅; dead-man pings on `sync-filaments` + `refresh-sitemaps` ✅.
+  Follow-up: set the secrets, repoint OpenClaw→Hermes, extend pings to remaining jobs.
 - **Sprint 3:** self-healing scrapers; monetization sweep (`rel="sponsored"`,
   Amazon Associates 180-day compliance, dead affiliate-link audit).
 </content>

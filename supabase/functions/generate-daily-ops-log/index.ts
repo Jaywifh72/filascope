@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { crypto } from 'https://deno.land/std@0.208.0/crypto/mod.ts';
+import { sendAlert } from '../_shared/notify.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -328,6 +329,31 @@ serve(async (req: Request) => {
     }
 
     console.log(`[daily-ops-log] ✅ Log saved for ${dateParam}`);
+
+    // Surface failures the same day instead of letting them accumulate silently.
+    // A run that records ZERO brand syncs is itself suspicious (the pipeline may
+    // not be running at all) and worth a warning.
+    const highPriorityOpps = opportunities.filter((o) => o.priority === 'high').length;
+    if (brandsFailed.length > 0 || brandsSynced === 0 || highPriorityOpps > 0) {
+      await sendAlert({
+        title: `Daily ops (${dateParam}): attention needed`,
+        severity: brandsFailed.length > 3 || brandsSynced === 0 ? 'critical' : 'warning',
+        body: buildSummary({
+          filamentsAddedCount,
+          imagesAdded,
+          tdAdded,
+          brandsSynced,
+          printersAdded: printersAddedFiltered.length,
+          opportunities: opportunities.length,
+        }),
+        fields: {
+          brands_synced: brandsSynced,
+          brands_failed: brandsFailed.length,
+          failed_brands: brandsFailed.map((b: any) => b.brand_slug).join(', ') || 'none',
+          high_priority_opportunities: highPriorityOpps,
+        },
+      });
+    }
 
     return new Response(
       JSON.stringify({
