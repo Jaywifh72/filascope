@@ -76,3 +76,13 @@ jobs:
             -H "Authorization: Bearer ${OPENCLAW_HOOK_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "{\"text\": \"$MSG\", \"mode\": \"next-heartbeat\"}" || echo "⚠️ OpenClaw notification failed (non-blocking)"
+
+      # External dead-man switch: a weekly monitor alerts if this ping never
+      # arrives (e.g. the scheduled workflow was auto-disabled). No-op if unset.
+      - name: Dead-man switch ping
+        if: success()
+        env:
+          HC_URL: ${{ secrets.HEALTHCHECK_SITEMAPS_URL }}
+        run: |
+          if [ -z "$HC_URL" ]; then echo "HEALTHCHECK_SITEMAPS_URL unset; skipping"; exit 0; fi
+          curl -fsS -m 10 --retry 3 "$HC_URL" || true

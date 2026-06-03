@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendAlert } from "../_shared/notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -195,6 +196,21 @@ serve(async (req: Request) => {
       tested: results.total_tested,
       criticalIssues: results.critical_issues.length,
     });
+
+    // Wire detection -> alerting. Previously these critical issues were written
+    // to admin_activity_log and never surfaced to anyone (the drift blind spot).
+    if (results.critical_issues.length > 0) {
+      await sendAlert({
+        title: "Weekly health check: critical issues",
+        severity: results.overall_pass_rate < 80 ? "critical" : "warning",
+        body: results.critical_issues.map((i) => `- ${i}`).join("\n"),
+        fields: {
+          pass_rate: `${results.overall_pass_rate}%`,
+          stale_prices: results.stale_prices_count,
+          brands_missing_stores: results.missing_stores_count,
+        },
+      });
+    }
 
     return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
