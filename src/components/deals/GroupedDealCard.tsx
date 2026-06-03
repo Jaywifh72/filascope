@@ -649,7 +649,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                 <a
                   href={primaryHref || '#'}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="nofollow sponsored noopener noreferrer"
                   onClick={hasLocalAlternative ? handleLocalStoreClick : handleCheckPrice}
                 >
                   {hasLocalAlternative
@@ -678,7 +678,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                 <a
                   href={secondaryHref || group.representativeDeal.product_url || '#'}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="nofollow sponsored noopener noreferrer"
                   onClick={handleCheckPrice}
                 >
                   {group.regionFlag} Also at {group.storeName}
