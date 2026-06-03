@@ -141,7 +141,7 @@ export function HardwareRecommendationCard({
             <a
               href={getAffiliateUrl?.(item.product_url, item.brand) || item.product_url}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow sponsored noopener noreferrer"
               className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
@@ -194,7 +194,7 @@ export function HardwareRecommendationCard({
               <a
                 href={getAffiliateUrl?.(item.product_url, item.brand) || item.product_url}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="nofollow sponsored noopener noreferrer"
                 className="flex-1"
                 onClick={(e) => e.stopPropagation()}
               >
