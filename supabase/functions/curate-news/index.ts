@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { chat, llmConfigured } from "../_shared/llm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,11 +26,9 @@ serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-
-    if (!anthropicApiKey) {
+    if (!llmConfigured()) {
       return new Response(
-        JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
+        JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -55,7 +54,7 @@ serve(async (req: Request) => {
 
     console.log(`Found ${existingUrls.length} existing articles from last 14 days`);
 
-    // 2. Build prompt for Claude
+    // 2. Build prompt for the LLM
     const today = new Date().toISOString().split("T")[0];
 
     const prompt = `Today's date is ${today}. You are a 3D printing news curator for FilaScope, a filament and 3D printer comparison platform.
@@ -91,33 +90,13 @@ Return a JSON array of articles. Each article must have:
 
 Return ONLY the JSON array, no markdown formatting or explanation.`;
 
-    // 3. Call Anthropic API (Claude)
-    console.log("Calling Anthropic API for news curation...");
-
-    const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4000,
-        system: "You are a 3D printing news curator. Always respond with valid JSON arrays only, no markdown formatting. Only recommend real articles that you are confident exist. Use accurate URLs.",
-        messages: [
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-
-    if (!anthropicResponse.ok) {
-      const errorText = await anthropicResponse.text();
-      throw new Error(`Anthropic API error: ${anthropicResponse.status} ${errorText}`);
-    }
-
-    const anthropicData = await anthropicResponse.json();
-    const rawContent = anthropicData.content?.[0]?.text ?? "[]";
+    // 3. Call the LLM (OpenAI)
+    console.log("Calling OpenAI for news curation...");
+    const rawContent = (await chat({
+      system: "You are a 3D printing news curator. Always respond with valid JSON arrays only, no markdown formatting. Only recommend real articles that you are confident exist. Use accurate URLs.",
+      user: prompt,
+      maxTokens: 4000,
+    })) || "[]";
 
     // 4. Parse and validate the response
     let articles: NewsArticle[];
@@ -125,7 +104,7 @@ Return ONLY the JSON array, no markdown formatting or explanation.`;
       const cleaned = rawContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       articles = JSON.parse(cleaned);
     } catch (parseError) {
-      console.error("Failed to parse Anthropic response:", rawContent);
+      console.error("Failed to parse LLM response:", rawContent);
       throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
     }
 

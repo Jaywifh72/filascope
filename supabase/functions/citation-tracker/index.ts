@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { chat, llmConfigured, MODEL_SMALL } from "../_shared/llm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,30 +72,17 @@ async function checkPerplexity(query: string, apiKey: string): Promise<CitationR
 }
 
 // Batch check: one API call checks ALL engines for a single query
-async function checkAllEngines(query: string, engines: string[], apiKey: string): Promise<CitationResult[]> {
+async function checkAllEngines(query: string, engines: string[]): Promise<CitationResult[]> {
   const engineList = engines.join(", ");
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 800,
+    let text: string;
+    try {
+      text = (await chat({ model: MODEL_SMALL, maxTokens: 800,
         system: `You evaluate whether filascope.com (a 3D printer filament comparison database with 16,000+ filaments, HueForge TD values, live pricing, and temperature data) would be cited by AI search engines for a given query. Consider each engine's tendencies: Perplexity cites niche tools heavily; ChatGPT favors well-known databases; Gemini weights Google-indexed authority; Copilot uses Bing index; Claude uses training data knowledge; Grok is broad but favors real-time data; DeepSeek favors technical databases. Return ONLY a JSON array with one object per engine: [{"engine":"name","cited":true/false,"confidence":"high/medium/low","reason":"brief"}]`,
-        messages: [{ role: "user", content: `Query: "${query}"\nEngines to evaluate: ${engineList}` }],
-      }),
-    });
-
-    if (!response.ok) {
-      return engines.map(e => ({ engine: e, query, cited: false, notes: `API error: ${response.status}` }));
+        user: `Query: "${query}"\nEngines to evaluate: ${engineList}` })) || "[]";
+    } catch (err) {
+      return engines.map(e => ({ engine: e, query, cited: false, notes: `API error: ${err}` }));
     }
-
-    const data = await response.json();
-    const text = data.content?.[0]?.text ?? "[]";
 
     try {
       const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
@@ -121,12 +109,12 @@ serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+    const llmReady = llmConfigured();
     const perplexityKey = Deno.env.get("PERPLEXITY_API_KEY");
 
-    if (!anthropicKey) {
+    if (!llmReady) {
       return new Response(
-        JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
+        JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -167,7 +155,7 @@ serve(async (req: Request) => {
         : selectedEngines;
 
       if (nonPerplexityEngines.length > 0) {
-        const batchResults = await checkAllEngines(query, nonPerplexityEngines, anthropicKey);
+        const batchResults = await checkAllEngines(query, nonPerplexityEngines);
         results.push(...batchResults);
       }
 
