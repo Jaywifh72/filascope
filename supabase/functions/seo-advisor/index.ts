@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { chat, llmConfigured } from "../_shared/llm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,11 +24,11 @@ serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    const llmReady = llmConfigured();
 
-    if (!anthropicApiKey) {
+    if (!llmReady) {
       return new Response(
-        JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
+        JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -283,33 +284,13 @@ Focus on actionable, specific recommendations based on ALL data provided (GSC + 
 
 Return ONLY the JSON array, no markdown formatting or explanation.`;
 
-    // 7. Call Anthropic API (Claude)
-    console.log("Calling Anthropic API for SEO analysis...");
-
-    const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4000,
-        system: "You are an expert SEO analyst for a 3D printer filament comparison website. Always respond with valid JSON arrays only, no markdown formatting.",
-        messages: [
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-
-    if (!anthropicResponse.ok) {
-      const errorText = await anthropicResponse.text();
-      throw new Error(`Anthropic API error: ${anthropicResponse.status} ${errorText}`);
-    }
-
-    const anthropicData = await anthropicResponse.json();
-    const rawContent = anthropicData.content?.[0]?.text ?? "[]";
+    // 7. Call the LLM (OpenAI)
+    console.log("Calling OpenAI for SEO analysis...");
+    const rawContent = (await chat({
+      system: "You are an expert SEO analyst for a 3D printer filament comparison website. Always respond with valid JSON arrays only, no markdown formatting.",
+      user: prompt,
+      maxTokens: 4000,
+    })) || "[]";
 
     // 8. Parse the response into structured actions
     let actions: SeoAction[];

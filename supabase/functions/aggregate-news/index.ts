@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { chat, llmConfigured, MODEL_SMALL } from "../_shared/llm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -196,13 +197,10 @@ async function fetchFeed(feed: FeedSource): Promise<RawArticle[]> {
 }
 
 // ---------------------------------------------------------------------------
-// Claude Scoring
+// LLM Scoring (OpenAI)
 // ---------------------------------------------------------------------------
 
-async function scoreArticlesWithClaude(
-  articles: RawArticle[],
-  anthropicApiKey: string,
-): Promise<ScoredArticle[]> {
+async function scoreArticles(articles: RawArticle[]): Promise<ScoredArticle[]> {
   const articlesForScoring = articles.map((a, i) => ({
     index: i,
     title: a.title,
@@ -210,25 +208,14 @@ async function scoreArticlesWithClaude(
     source_name: a.source_name,
   }));
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": anthropicApiKey,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4000,
-      temperature: 0.1,
-      system:
-        "You are a 3D printing news editor for FilaScope.com. Score and classify each article. " +
-        "Respond ONLY with a valid JSON array, no markdown formatting or explanation.",
-      messages: [
-        {
-          role: "user",
-          content:
-            `Score and classify each of these 3D printing articles. For each article return an object with:\n` +
+  const rawContent = (await chat({
+    model: MODEL_SMALL,
+    maxTokens: 4000,
+    system:
+      "You are a 3D printing news editor for FilaScope.com. Score and classify each article. " +
+      "Respond ONLY with a valid JSON array, no markdown formatting or explanation.",
+    user:
+      `Score and classify each of these 3D printing articles. For each article return an object with:\n` +
             `- index: number (the article's index from the input)\n` +
             `- relevance_score: number 1-100 (how relevant to 3D printing filament/printer enthusiasts)\n` +
             `- category: one of "filament", "printer", "software", "industry", "community"\n` +
@@ -236,20 +223,7 @@ async function scoreArticlesWithClaude(
             `- region_relevance: object with keys US, EU, UK, CA, AU each valued 0-100\n` +
             `- tags: string[] (max 5 descriptive tags)\n\n` +
             `Articles:\n${JSON.stringify(articlesForScoring, null, 2)}`,
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Anthropic API error: ${response.status} ${errorText}`,
-    );
-  }
-
-  const data = await response.json();
-  const rawContent = data.content?.[0]?.text ?? "[]";
+  })) || "[]";
 
   try {
     const cleaned = rawContent
@@ -259,7 +233,7 @@ async function scoreArticlesWithClaude(
     const scored: ScoredArticle[] = JSON.parse(cleaned);
     return scored;
   } catch (parseError) {
-    console.error("Failed to parse Claude scoring response:", rawContent);
+    console.error("Failed to parse LLM scoring response:", rawContent);
     throw new Error(`Failed to parse scoring response: ${parseError}`);
   }
 }
@@ -276,11 +250,9 @@ serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-
-    if (!anthropicApiKey) {
+    if (!llmConfigured()) {
       return new Response(
-        JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
+        JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -369,17 +341,14 @@ serve(async (req: Request) => {
       );
     }
 
-    // 3. Score new articles with Claude
-    console.log(`Scoring ${newArticles.length} articles with Claude...`);
+    // 3. Score new articles with the LLM
+    console.log(`Scoring ${newArticles.length} articles with the LLM...`);
 
     let scoredArticles: ScoredArticle[] = [];
     try {
-      scoredArticles = await scoreArticlesWithClaude(
-        newArticles,
-        anthropicApiKey,
-      );
+      scoredArticles = await scoreArticles(newArticles);
     } catch (scoreError) {
-      console.error("Claude scoring failed, using defaults:", scoreError);
+      console.error("LLM scoring failed, using defaults:", scoreError);
       // Fallback: assign default scores so we still insert articles
       scoredArticles = newArticles.map((_, i) => ({
         index: i,
