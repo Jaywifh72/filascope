@@ -276,7 +276,7 @@ export function StickyBuyBar({
                 <a
                   href={affiliateUrl || '#'}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="nofollow sponsored noopener noreferrer"
                   onClick={(e) => {
                     e.preventDefault();
                     handleBuyClick();
@@ -370,7 +370,7 @@ export function StickyBuyBar({
               <a
                 href={affiliateUrl || '#'}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="nofollow sponsored noopener noreferrer"
                 onClick={(e) => {
                   e.preventDefault();
                   handleBuyClick();
