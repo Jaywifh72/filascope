@@ -5,6 +5,17 @@ on:
     - cron: '0 5 * * 0'  # Weekly on Sundays at 5 AM UTC
   workflow_dispatch:
 
+# Default GITHUB_TOKEN is read-only; the commit/push and the IndexNow
+# workflow_dispatch below both need elevated scopes or they fail silently (403).
+permissions:
+  contents: write
+  actions: write
+
+# Never let two sitemap refreshes race to push to main.
+concurrency:
+  group: refresh-sitemaps
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -36,6 +47,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/sitemap-*.xml
           git commit -m "chore: refresh sitemaps ($(date +%Y-%m-%d))"
+          # main moves underneath us (other commits + auto-deploy); rebase before push.
+          git pull --rebase --autostash origin main
           git push
 
       - name: Trigger IndexNow submission
