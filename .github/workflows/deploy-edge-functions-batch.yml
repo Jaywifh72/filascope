@@ -32,7 +32,8 @@ jobs:
           for fn in ${{ github.event.inputs.function_names }}; do
             echo "::group::$fn"
             live=$(curl -s -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-              "https://api.supabase.com/v1/projects/$PROJECT_REF/functions/$fn" | jq -r '.verify_jwt // empty')
+              "https://api.supabase.com/v1/projects/$PROJECT_REF/functions/$fn" \
+              | jq -r 'if (type == "object" and has("verify_jwt")) then (.verify_jwt | tostring) else "" end')
             flag=""
             if [ "$live" = "false" ]; then
               flag="--no-verify-jwt"
