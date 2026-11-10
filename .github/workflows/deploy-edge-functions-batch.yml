@@ -31,9 +31,11 @@ jobs:
           failed=""
           for fn in ${{ github.event.inputs.function_names }}; do
             echo "::group::$fn"
-            live=$(curl -s -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-              "https://api.supabase.com/v1/projects/$PROJECT_REF/functions/$fn" \
-              | jq -r 'if (type == "object" and has("verify_jwt")) then (.verify_jwt | tostring) else "" end')
+            resp=$(curl -s -w '\n%{http_code}' -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              "https://api.supabase.com/v1/projects/$PROJECT_REF/functions/$fn")
+            code=$(echo "$resp" | tail -n1)
+            live=$(echo "$resp" | sed '$d' | jq -r 'if (type == "object" and has("verify_jwt")) then (.verify_jwt | tostring) else "" end' 2>/dev/null || true)
+            echo "lookup http=$code"
             flag=""
             if [ "$live" = "false" ]; then
               flag="--no-verify-jwt"
