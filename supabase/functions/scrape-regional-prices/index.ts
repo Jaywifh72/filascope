@@ -829,15 +829,17 @@ async function scrapeWithFirecrawl(
       formats: ['markdown', 'html'],
       onlyMainContent: false,
       waitFor,
+      maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
     };
     
     // Add geo-location if available
     if (location) {
       requestBody.location = location;
+      requestBody.proxy = 'basic'; // v2 defaults to 'auto' when location.country is set; v1 used 'basic'
       console.log(`[FIRECRAWL] Using location: ${JSON.stringify(location)}`);
     }
     
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,

@@ -750,13 +750,14 @@ async function findInParentDirectory(
     console.log(`Looking for products similar to slug: ${brokenSlug}`);
     
     // Try to fetch and scrape the parent directory page
-    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${firecrawlApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: parentUrl,
         formats: ["links"],
         onlyMainContent: false,
@@ -899,7 +900,7 @@ async function findViaWebSearch(
     const searchQuery = `${vendor} ${cleanedTitle} buy`;
     console.log(`Web search query: ${searchQuery}`);
     
-    const response = await fetch("https://api.firecrawl.dev/v1/search", {
+    const response = await fetch("https://api.firecrawl.dev/v2/search", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${firecrawlApiKey}`,
@@ -917,7 +918,7 @@ async function findViaWebSearch(
     }
     
     const data = await response.json();
-    const results = data.data || [];
+    const results = data.data?.web || []; // v2 search returns results under data.web; v1 returned them under data
     
     console.log(`Web search returned ${results.length} results`);
     

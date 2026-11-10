@@ -375,13 +375,14 @@ async function firecrawlScrapeEnhanced(url: string, apiKey: string, attempt: num
   
   console.log(`Scraping attempt ${attempt}/${maxAttempts} with ${waitTimes[attempt - 1]}ms wait time`);
   
-  const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+  const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
       url: url,
       formats: ['markdown', 'html'],
       onlyMainContent: true,
@@ -391,6 +392,7 @@ async function firecrawlScrapeEnhanced(url: string, apiKey: string, attempt: num
         country: 'US',
         languages: ['en-US', 'en']
       },
+      proxy: 'basic', // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       headers: {
         'Accept': 'text/html,application/xhtml+xml,application/xml',
         'Accept-Language': 'en-US,en;q=0.9',

@@ -15,13 +15,14 @@ async function scrapeImageFromUrl(url: string): Promise<string | null> {
   try {
     console.log(`Scraping image from: ${url}`);
     
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ['html'],
         onlyMainContent: false,

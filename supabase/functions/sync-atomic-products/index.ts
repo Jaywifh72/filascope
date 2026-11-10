@@ -136,13 +136,13 @@ async function scrapeCollectionProducts(
   // Fallback: Firecrawl scraping
   console.log(`[ATOMIC-SYNC] Falling back to Firecrawl for collection: ${collectionUrl}`);
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url: collectionUrl, formats: ['links'], waitFor: 3000 }),
+      body: JSON.stringify({ maxAge: 0, url: collectionUrl, formats: ['links'], waitFor: 3000 }),
     });
 
     if (!response.ok) {
@@ -188,13 +188,14 @@ async function scrapeProductPage(
   price: number | null;
 }> {
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: productUrl,
         formats: ['html'],
         onlyMainContent: false,

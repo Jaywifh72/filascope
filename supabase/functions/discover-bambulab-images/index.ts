@@ -100,13 +100,14 @@ serve(async (req) => {
     
     console.log(`Scraping ${productUrl} with Firecrawl...`);
     
-    const firecrawlResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const firecrawlResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${firecrawlApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: productUrl,
         formats: ["html", "markdown"],
         onlyMainContent: false,

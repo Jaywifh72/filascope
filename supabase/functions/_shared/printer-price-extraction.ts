@@ -867,18 +867,19 @@ async function extractPriceFromFirecrawlMarkdown(
 
     const locationParam = region ? REGION_TO_LOCATION[region] : undefined;
 
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ['markdown'],
         waitFor: 3000,
         onlyMainContent: true,
-        ...(locationParam && { location: locationParam }),
+        ...(locationParam && { location: locationParam, proxy: 'basic' }), // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       }),
       signal: controller.signal,
     });
@@ -1286,13 +1287,14 @@ async function fetchHtmlViaFirecrawl(url: string): Promise<string | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ['html'],
         waitFor: 3000,
@@ -1558,18 +1560,19 @@ async function extractEufyMakePrice(
 
     console.log(`[EufyMake] Scraping ${url} with region=${region}, location=${locationParam?.country}`);
 
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ['markdown'],
         waitFor: 5000,
         onlyMainContent: true,
-        ...(locationParam && { location: locationParam }),
+        ...(locationParam && { location: locationParam, proxy: 'basic' }), // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       }),
       signal: controller.signal,
     });
@@ -1701,18 +1704,19 @@ async function extractPrusaPrice(
     // Prusa uses Global-e for pricing which renders prices via JS after geo-detection.
     // We need: longer wait, full page content (not just main), and HTML format to find
     // price elements that may not appear in markdown.
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ['markdown', 'html'],
         waitFor: 8000,
         onlyMainContent: false, // Critical: price widget is outside "main content"
-        ...(locationParam && { location: locationParam }),
+        ...(locationParam && { location: locationParam, proxy: 'basic' }), // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       }),
       signal: controller.signal,
     });

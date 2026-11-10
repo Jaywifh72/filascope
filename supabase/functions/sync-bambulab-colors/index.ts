@@ -405,18 +405,20 @@ async function fetchRegionalPriceFromUrl(
   console.log(`[${region}] Scraping ${url} with geo-location: ${location.country}`);
 
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ['html', 'markdown'], // Request both for better extraction
         onlyMainContent: false,
         waitFor: 3000,
         location, // Geo-located proxy!
+        proxy: 'basic', // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       }),
     });
 

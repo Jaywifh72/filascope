@@ -1662,7 +1662,7 @@ async function scrapeFirecrawl(brand: BrandConfig, materialFilter?: string, limi
   try {
     // First, map the site to discover product URLs
     console.log(`[firecrawl] Mapping site: ${brand.base_url}`);
-    const mapResponse = await fetch('https://api.firecrawl.dev/v1/map', {
+    const mapResponse = await fetch('https://api.firecrawl.dev/v2/map', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
@@ -1684,7 +1684,9 @@ async function scrapeFirecrawl(brand: BrandConfig, materialFilter?: string, limi
     }
 
     const mapData = await mapResponse.json();
-    const productUrls = (mapData.links || []).filter((url: string) => 
+    // v2 map returns links as { url, title, description } objects; v1 returned strings
+    const mapLinks: string[] = (mapData.links || []).map((l: any) => typeof l === 'string' ? l : l?.url).filter(Boolean);
+    const productUrls = mapLinks.filter((url: string) => 
       url.includes('/products/') || url.includes('/product/') || url.includes('filament')
     ).slice(0, limit);
 
@@ -1695,13 +1697,14 @@ async function scrapeFirecrawl(brand: BrandConfig, materialFilter?: string, limi
       if (products.length >= limit) break;
       
       try {
-        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        const scrapeResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${firecrawlKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: productUrl,
             formats: ['markdown', 'html'],
             onlyMainContent: true,
@@ -1958,13 +1961,14 @@ async function scrapeNinjaTekFirecrawl(brand: BrandConfig, materialFilter?: stri
     if (products.length >= limit) break;
 
     try {
-      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${firecrawlKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url: catalogUrl,
           formats: ['html'],
           onlyMainContent: true,
@@ -1988,13 +1992,14 @@ async function scrapeNinjaTekFirecrawl(brand: BrandConfig, materialFilter?: stri
 
         // Scrape individual product page
         try {
-          const productResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          const productResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${firecrawlKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+              maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
               url: productUrl,
               formats: ['html', 'markdown'],
               onlyMainContent: true,
@@ -2057,13 +2062,14 @@ async function scrapeMatterHackers(brand: BrandConfig, materialFilter?: string, 
 
     try {
       // Scrape catalog page
-      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${firecrawlKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url: catalogUrl,
           formats: ['html'],
           onlyMainContent: true,

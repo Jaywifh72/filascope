@@ -26,10 +26,10 @@ export async function extractFirecrawlPrice(
     let response: Response | null = null;
     for (let attempt = 0; attempt <= 2; attempt++) {
       try {
-        response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        response = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url: productUrl, formats: ["markdown"], onlyMainContent: true, waitFor: waitForMs, location }),
+          body: JSON.stringify({ maxAge: 0, url: productUrl, formats: ["markdown"], onlyMainContent: true, waitFor: waitForMs, location, proxy: "basic" }),
         });
         if (response.ok) break;
         if (attempt < 2 && [408, 500, 502, 503].includes(response.status)) {
@@ -158,10 +158,10 @@ export async function extractFirecrawlPrice(
     // Secondary pass for ColorFabb: some templates hide stock markers outside main content.
     if (prices.length === 0 && stockStatus === "unknown" && isColorFabb) {
       try {
-        const fallbackResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const fallbackResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url: productUrl, formats: ["markdown"], onlyMainContent: false, waitFor: waitForMs, location }),
+          body: JSON.stringify({ maxAge: 0, url: productUrl, formats: ["markdown"], onlyMainContent: false, waitFor: waitForMs, location, proxy: "basic" }),
         });
 
         if (fallbackResponse.ok) {

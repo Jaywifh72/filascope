@@ -14,13 +14,14 @@ async function findTdsUrlOnPage(productUrl: string, firecrawlKey: string): Promi
   try {
     console.log(`Scraping ${productUrl} for TDS link...`);
     
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: productUrl,
         formats: ['html'],
         waitFor: 2000,

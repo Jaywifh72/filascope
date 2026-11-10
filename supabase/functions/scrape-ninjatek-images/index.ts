@@ -497,13 +497,14 @@ async function scrapeNinjaTekProduct(
     try {
       console.log(`[NINJATEK] 📡 Calling Firecrawl (attempt ${retries + 1}/${MAX_RETRIES + 1})...`);
       
-      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${firecrawlKey}`,
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url: productUrl,
           formats: ['markdown', 'html'],
           onlyMainContent: false, // Need full page for meta tags and structured data

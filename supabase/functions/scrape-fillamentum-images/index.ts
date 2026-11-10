@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import FirecrawlApp from "https://esm.sh/@mendable/firecrawl-js@1.8.1";
+import Firecrawl from "https://esm.sh/@mendable/firecrawl-js@4.52.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
+    const firecrawl = new Firecrawl({ apiKey: firecrawlApiKey });
     const results: { id: string; title: string; status: string; image?: string }[] = [];
     let updated = 0;
     let errors = 0;
@@ -103,12 +103,13 @@ Deno.serve(async (req) => {
 
       try {
         // Scrape the collection page
-        const scrapeResult = await firecrawl.scrapeUrl(collectionUrl, {
+        const scrapeResult = await firecrawl.scrape(collectionUrl, {
           formats: ["html"],
           waitFor: 3000,
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         });
 
-        if (!scrapeResult.success || !scrapeResult.html) {
+        if (!scrapeResult?.html) { // v2 SDK returns the document directly and throws on failure
           console.log(`Failed to scrape ${collectionUrl}`);
           for (const f of filamentsInGroup) {
             results.push({ id: f.id, title: f.product_title, status: "scrape_failed" });

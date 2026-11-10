@@ -205,13 +205,14 @@ async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<any> {
   // For GitHub releases, we want more content
   const isGitHub = url.includes('github.com');
   
-  const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+  const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
       url,
       formats: ['markdown', 'links'],
       onlyMainContent: !isGitHub, // Get full page for GitHub to capture all releases
@@ -539,7 +540,7 @@ Deno.serve(async (req) => {
     }
     
     // Also try a web search for software
-    const searchUrl = `https://api.firecrawl.dev/v1/search`;
+    const searchUrl = `https://api.firecrawl.dev/v2/search`;
     const searchResponse = await fetch(searchUrl, {
       method: 'POST',
       headers: {
@@ -554,7 +555,7 @@ Deno.serve(async (req) => {
     
     if (searchResponse.ok) {
       const searchData = await searchResponse.json();
-      const searchUrls = searchData.data?.map((r: any) => r.url).filter(Boolean) || [];
+      const searchUrls = searchData.data?.web?.map((r: any) => r.url).filter(Boolean) || []; // v2 search returns results under data.web; v1 returned them under data
       urlsToScrape = [...urlsToScrape, ...searchUrls];
     }
     

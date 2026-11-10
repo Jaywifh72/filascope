@@ -1211,13 +1211,14 @@ serve(async (req) => {
               // Fallback: Scrape the product page with Firecrawl
               console.log(`[ELEGOO-SYNC] 🔍 Falling back to Firecrawl scrape...`);
               
-              const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+              const scrapeResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${firecrawlApiKey}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                  maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
                   url: actualUrl,
                   formats: ['markdown', 'links'],
                   onlyMainContent: false,
@@ -1295,13 +1296,14 @@ serve(async (req) => {
             try {
               console.log(`[ELEGOO-SYNC] 🔬 Parsing TDS: ${tdsUrl}`);
               
-              const tdsResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+              const tdsResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${firecrawlApiKey}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                  maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
                   url: tdsUrl,
                   formats: ['markdown'],
                   onlyMainContent: false,

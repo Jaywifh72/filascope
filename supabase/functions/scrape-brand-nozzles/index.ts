@@ -3163,13 +3163,14 @@ async function scrapeShopifyNozzles(
   console.log(`\n🔄 Falling back to Firecrawl scraping...`);
   
   try {
-    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: collectionUrl,
         formats: ['markdown', 'links'],
         onlyMainContent: true,
@@ -3199,13 +3200,14 @@ async function scrapeShopifyNozzles(
       // For each product link, scrape details
       for (const productUrl of productLinks.slice(0, 20)) { // Limit to 20
         try {
-          const productResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          const productResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${firecrawlApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+              maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
               url: productUrl,
               formats: ['markdown'],
               onlyMainContent: true,

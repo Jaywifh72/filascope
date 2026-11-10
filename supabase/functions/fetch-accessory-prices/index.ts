@@ -277,13 +277,14 @@ Deno.serve(async (req) => {
 
         if (firecrawlApiKey) {
           // Try to scrape the price using Firecrawl
-          const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          const scrapeResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${firecrawlApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+              maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
               url: accessory.product_url,
               formats: ['markdown'],
               onlyMainContent: true,

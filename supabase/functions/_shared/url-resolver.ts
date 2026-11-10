@@ -217,7 +217,7 @@ export class UrlResolver {
     
     try {
       // Search for product using Firecrawl
-      const response = await fetch('https://api.firecrawl.dev/v1/search', {
+      const response = await fetch('https://api.firecrawl.dev/v2/search', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.firecrawlApiKey}`,
@@ -228,6 +228,7 @@ export class UrlResolver {
           limit: 5,
           scrapeOptions: {
             formats: ['markdown'],
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             onlyMainContent: true,
           },
         }),
@@ -239,7 +240,7 @@ export class UrlResolver {
       }
       
       const data = await response.json();
-      const results = data.data || [];
+      const results = data.data?.web || []; // v2 search returns results under data.web; v1 returned them under data
       
       if (results.length === 0) {
         return null;

@@ -149,13 +149,14 @@ async function scrapeProductImages(
   firecrawlApiKey: string
 ): Promise<string[]> {
   try {
-    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${firecrawlApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: productUrl,
         formats: ["html"],
         waitFor: 3000,
@@ -235,13 +236,14 @@ async function validateProductUrl(
   firecrawlApiKey: string
 ): Promise<{ isValid: boolean; correctUrl?: string; reason?: string }> {
   try {
-    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${firecrawlApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: currentUrl,
         formats: ["markdown"],
         waitFor: 2000,
@@ -319,7 +321,7 @@ async function searchForProductImage(
   try {
     const searchQuery = `${brand || ''} ${productName} product`;
     
-    const response = await fetch("https://api.firecrawl.dev/v1/search", {
+    const response = await fetch("https://api.firecrawl.dev/v2/search", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${firecrawlApiKey}`,
@@ -338,11 +340,13 @@ async function searchForProductImage(
 
     const result = await response.json();
     
-    if (!result.data || !Array.isArray(result.data)) {
+    // v2 search returns results under data.web; v1 returned them under data
+    const webResults = result.data?.web;
+    if (!webResults || !Array.isArray(webResults)) {
       return null;
     }
 
-    for (const item of result.data) {
+    for (const item of webResults) {
       if (item.url && (
         item.url.includes('.jpg') ||
         item.url.includes('.png') ||

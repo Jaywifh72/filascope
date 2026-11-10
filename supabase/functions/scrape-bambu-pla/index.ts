@@ -1815,6 +1815,8 @@ async function scrapeCollectionProductImages(
       onlyMainContent: false,
       waitFor: 5000,
       location: { country: 'US', languages: ['en'] },
+      proxy: 'basic', // v2 defaults to 'auto' when location.country is set; v1 used 'basic'
+      maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
     };
     
     const controller = new AbortController();
@@ -1822,7 +1824,7 @@ async function scrapeCollectionProductImages(
     
     let response: Response;
     try {
-      response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      response = await fetch('https://api.firecrawl.dev/v2/scrape', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${firecrawlKey}`,
@@ -2658,6 +2660,8 @@ async function scrapeWithFirecrawl(
         onlyMainContent: false,
         waitFor: 8000,  // Optimized from 15s - Shopify pages typically load variants within 5-8s
         location: location || { country: 'CA', languages: ['en'] },
+        proxy: 'basic', // v2 defaults to 'auto' when location.country is set; v1 used 'basic'
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
       };
       
       if (ctx) logDebug(ctx, 'FIRECRAWL', 'Request body', requestBody);
@@ -2668,7 +2672,7 @@ async function scrapeWithFirecrawl(
 
       let response: Response;
       try {
-        response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        response = await fetch('https://api.firecrawl.dev/v2/scrape', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${firecrawlKey}`,

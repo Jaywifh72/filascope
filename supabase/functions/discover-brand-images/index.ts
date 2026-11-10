@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import Firecrawl from 'https://esm.sh/@mendable/firecrawl-js@1.4.3';
+import Firecrawl from 'https://esm.sh/@mendable/firecrawl-js@4.52.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -332,8 +332,9 @@ Deno.serve(async (req) => {
         let html = '';
         
         if (firecrawl) {
-          const scrapeResult = await firecrawl.scrapeUrl(filament.product_url, { 
+          const scrapeResult = await firecrawl.scrape(filament.product_url, { 
             formats: ['html'],
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             waitFor: 2000,
           });
           if ('html' in scrapeResult && scrapeResult.html) {

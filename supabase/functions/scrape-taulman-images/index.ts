@@ -74,13 +74,14 @@ serve(async (req) => {
 
       try {
         // Use Firecrawl to scrape the page
-        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        const scrapeResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${firecrawlKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: filament.product_url,
             formats: ['html'],
             onlyMainContent: false,
