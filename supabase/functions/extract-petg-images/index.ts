@@ -206,13 +206,14 @@ serve(async (req) => {
       
       try {
         // Use Firecrawl to get the rendered page HTML
-        const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${FIRECRAWL_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: config.url,
             formats: ["html", "rawHtml"],
             waitFor: 3000, // Wait 3 seconds for JS to render

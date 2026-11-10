@@ -38,7 +38,7 @@ const BRAND_SLUG_MAP: Record<string, string> = {
 };
 
 const BASE_URL = 'https://3dfilamentprofiles.com/filaments';
-const FIRECRAWL_API = 'https://api.firecrawl.dev/v1/scrape';
+const FIRECRAWL_API = 'https://api.firecrawl.dev/v2/scrape';
 const RATE_LIMIT_MS = 2000;
 const TIME_LIMIT_MS = 120_000;
 
@@ -138,6 +138,7 @@ async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<{ succe
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
       url,
       formats: ['markdown'],
       onlyMainContent: true,

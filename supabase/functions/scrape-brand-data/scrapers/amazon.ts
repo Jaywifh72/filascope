@@ -108,13 +108,14 @@ export class AmazonScraper extends BaseScraper {
       
       this.log(`Scraping via Firecrawl: ${url}`);
 
-      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.firecrawlApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url,
           formats: ["markdown", "html"],
           onlyMainContent: true,
@@ -344,7 +345,7 @@ export class AmazonScraper extends BaseScraper {
         
         await this.respectGlobalRateLimit();
         
-        const response = await fetch("https://api.firecrawl.dev/v1/map", {
+        const response = await fetch("https://api.firecrawl.dev/v2/map", {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${this.firecrawlApiKey}`,
@@ -361,6 +362,8 @@ export class AmazonScraper extends BaseScraper {
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.links) {
+            // v2 map returns links as { url, title, description } objects; v1 returned strings
+            data.links = data.links.map((l: any) => typeof l === "string" ? l : l?.url).filter(Boolean);
             const asinPattern = /\/dp\/([A-Z0-9]{10})/gi;
             for (const link of data.links) {
               let match;
@@ -401,13 +404,14 @@ export class AmazonScraper extends BaseScraper {
       
       this.log(`Scraping store page for ASINs: ${storeUrl}`);
       
-      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.firecrawlApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url: storeUrl,
           formats: ["markdown", "html", "links"],
           onlyMainContent: false, // We want full page to get all product links

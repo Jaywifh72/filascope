@@ -12,7 +12,7 @@
  * - Multiple resolution detection
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import FirecrawlApp from "https://esm.sh/@mendable/firecrawl-js@1.8.0";
+import Firecrawl from "https://esm.sh/@mendable/firecrawl-js@4.52.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
+    const firecrawl = new Firecrawl({ apiKey: firecrawlApiKey });
     const results: Array<{ id: string; title: string; status: string; image?: string; source?: string }> = [];
 
     for (const filament of filaments || []) {
@@ -202,12 +202,17 @@ Deno.serve(async (req) => {
 
         console.log(`[MATTERHACKERS] 📦 Scraping: ${filament.product_title}`);
 
-        const scrapeResult = await firecrawl.scrapeUrl(filament.product_url, {
+        // v2 SDK returns the document directly and throws on failure (no success field)
+        const scrapeResult = await firecrawl.scrape(filament.product_url, {
           formats: ['html'],
           waitFor: 3000,
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
+        }).catch((e: unknown) => {
+          console.error(`[MATTERHACKERS] Firecrawl error:`, e);
+          return null;
         });
 
-        if (!scrapeResult.success) {
+        if (!scrapeResult) {
           console.log(`[MATTERHACKERS] ❌ Failed to scrape ${filament.product_title}`);
           results.push({ id: filament.id, title: filament.product_title, status: 'scrape failed' });
           continue;

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import FirecrawlApp from "https://esm.sh/@mendable/firecrawl-js@1.16.0";
+import Firecrawl from "https://esm.sh/@mendable/firecrawl-js@4.52.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,7 +82,7 @@ serve(async (req) => {
       });
     }
 
-    const firecrawl = new FirecrawlApp({ apiKey: firecrawlKey });
+    const firecrawl = new Firecrawl({ apiKey: firecrawlKey });
 
     for (const filament of filaments || []) {
       if (!filament.product_url) {
@@ -93,12 +93,13 @@ serve(async (req) => {
       try {
         console.log(`Scraping: ${filament.product_title} from ${filament.product_url}`);
 
-        const scrapeResult = await firecrawl.scrapeUrl(filament.product_url, {
+        const scrapeResult = await firecrawl.scrape(filament.product_url, {
           formats: ["html"],
           waitFor: 2000,
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         });
 
-        if (!scrapeResult.success || !scrapeResult.html) {
+        if (!scrapeResult?.html) { // v2 SDK returns the document directly and throws on failure
           results.push({ id: filament.id, title: filament.product_title, status: "scrape_failed" });
           continue;
         }

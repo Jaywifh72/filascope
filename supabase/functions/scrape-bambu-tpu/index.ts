@@ -130,13 +130,14 @@ async function fetchProductJson(slug: string, region: string = 'ca'): Promise<Pr
   if (apiKey) {
     try {
       console.log(`Using Firecrawl for: ${productUrl}`);
-      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url: productUrl,
           formats: ['html'],
           onlyMainContent: false,
@@ -144,6 +145,7 @@ async function fetchProductJson(slug: string, region: string = 'ca'): Promise<Pr
             country: region === 'ca' ? 'CA' : region === 'uk' ? 'GB' : region.toUpperCase(), 
             languages: ['en'] 
           },
+          proxy: 'basic', // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
         }),
       });
       
@@ -265,17 +267,19 @@ async function fetchWithFirecrawl(url: string): Promise<FirecrawlResult | null> 
   console.log(`Using Firecrawl for: ${url}`);
   
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ['markdown'],
         onlyMainContent: false,
         location: { country: 'CA', languages: ['en'] },
+        proxy: 'basic', // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       }),
     });
     

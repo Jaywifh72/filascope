@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js@1.10.0';
+import Firecrawl from 'https://esm.sh/@mendable/firecrawl-js@4.52.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -153,17 +153,22 @@ Deno.serve(async (req) => {
           throw new Error('FIRECRAWL_API_KEY not configured');
         }
 
-        const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
+        const firecrawl = new Firecrawl({ apiKey: firecrawlApiKey });
         let newModelsCount = 0;
         let modelsFound = 0;
 
         // Step 1: Scrape the models list page
         console.log('Scraping models list from:', scrapeConfig.model_list_url);
-        const modelsPageResult = await firecrawl.scrapeUrl(scrapeConfig.model_list_url, {
+        // v2 SDK returns the document directly and throws on failure (no success field)
+        const modelsPageResult = await firecrawl.scrape(scrapeConfig.model_list_url, {
           formats: ['markdown', 'html'],
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
+        }).catch((e: unknown) => {
+          console.error('Firecrawl scrape failed:', e);
+          return null;
         });
 
-        if (!modelsPageResult.success) {
+        if (!modelsPageResult) {
           throw new Error('Failed to scrape models list page');
         }
 
@@ -1128,11 +1133,16 @@ Deno.serve(async (req) => {
             console.log(`Scraping model details for: ${modelName} from ${modelUrl}`);
 
             // Scrape model page
-            const modelPageResult = await firecrawl.scrapeUrl(modelUrl, {
+            // v2 SDK returns the document directly and throws on failure (no success field)
+            const modelPageResult = await firecrawl.scrape(modelUrl, {
               formats: ['markdown', 'html'],
+              maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
+            }).catch((e: unknown) => {
+              console.error(`Firecrawl scrape failed for ${modelUrl}:`, e);
+              return null;
             });
 
-            if (!modelPageResult.success) {
+            if (!modelPageResult) {
               console.error(`Failed to scrape model page for ${modelName}`);
               
               // Log failed discovery attempt

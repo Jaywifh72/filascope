@@ -304,13 +304,14 @@ async function fetchTDSContent(tdsUrl: string, firecrawlApiKey: string): Promise
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
     
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: tdsUrl,
         formats: ['markdown'],
         onlyMainContent: false,
@@ -491,13 +492,14 @@ async function findTDSUrl(productUrl: string, firecrawlApiKey: string): Promise<
   console.log(`Searching for TDS on product page: ${productUrl}`);
   
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: productUrl,
         formats: ['html', 'links'],
         onlyMainContent: false,

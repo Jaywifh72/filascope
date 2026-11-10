@@ -188,17 +188,19 @@ async function extractViaFirecrawl(
   console.log(`[BAMBULAB] Firecrawl attempt: ${url} country=${country}`);
 
   try {
-    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ["rawHtml"],
         waitFor: 3000,
         location: { country, languages: [country === "DE" ? "de" : "en"] },
+        proxy: "basic", // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       }),
     });
 
@@ -234,10 +236,10 @@ async function extractViaFirecrawl(
 
       // Retry: Firecrawl often routes through a different exit node on second attempt
       try {
-        const retry = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const retry = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url, formats: ["rawHtml"], waitFor: 3000, location: { country, languages: [country === "DE" ? "de" : "en"] } }),
+          body: JSON.stringify({ maxAge: 0, url, formats: ["rawHtml"], waitFor: 3000, location: { country, languages: [country === "DE" ? "de" : "en"] }, proxy: "basic" }),
         });
         if (retry.ok) {
           const retryData = await retry.json();

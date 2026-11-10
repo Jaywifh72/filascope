@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.86.0'
-import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js@1.10.1'
+import Firecrawl from 'https://esm.sh/@mendable/firecrawl-js@4.52.0'
 
 // Helper function to validate if a string is a valid URL
 const isValidUrl = (urlString: string): boolean => {
@@ -117,15 +117,17 @@ async function scrapeVendorCollection(
   try {
     // Scrape the collection page
     const scrapeResult = await retryWithBackoff(
-      () => firecrawl.scrapeUrl(collectionUrl, {
+      () => firecrawl.scrape(collectionUrl, {
         formats: ['html'],
-        onlyMainContent: false
+        onlyMainContent: false,
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
       }),
       2,
       1000
-    ) as { success: boolean; html?: string }
+    ) as { html?: string }
     
-    if (!scrapeResult.success || !scrapeResult.html) {
+    // v2 SDK returns the document directly and throws on failure (no success field)
+    if (!scrapeResult?.html) {
       throw new Error(`Failed to scrape ${vendorName} collection page`)
     }
     
@@ -476,7 +478,7 @@ Deno.serve(async (req) => {
       console.error('FIRECRAWL_API_KEY not found')
       throw new Error('Firecrawl API key not configured')
     }
-    const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
+    const firecrawl = new Firecrawl({ apiKey: firecrawlApiKey })
 
     // Special handling for vendor collection pages
     const vendorCollections: Record<string, string> = {
@@ -586,9 +588,10 @@ Deno.serve(async (req) => {
         let scrapeResult
         try {
           scrapeResult = await retryWithBackoff(
-            () => firecrawl.scrapeUrl(filament.product_url, {
+            () => firecrawl.scrape(filament.product_url, {
               formats: ['html'],
-              onlyMainContent: false
+              onlyMainContent: false,
+              maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             }),
             2, // max 2 retries
             1000 // 1 second base delay
@@ -601,7 +604,7 @@ Deno.serve(async (req) => {
           continue
         }
 
-        if (!scrapeResult.success || !scrapeResult.html) {
+        if (!scrapeResult?.html) { // v2 SDK returns the document directly and throws on failure
           console.error(`Failed to scrape ${filament.product_url}`)
           record.status = 'error'
           result.errors.push(`${filament.product_title}: Scraping failed`)

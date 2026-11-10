@@ -302,13 +302,14 @@ async function extractColorCountFromWebsite(url: string, vendor: string, firecra
   try {
     console.log(`Scraping ${url} for color count...`);
     
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: url,
         formats: ['markdown', 'html'],
         onlyMainContent: true,

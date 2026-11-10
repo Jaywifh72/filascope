@@ -34,18 +34,20 @@ Deno.serve(async (req) => {
 
     console.log('Scraping URL:', formattedUrl);
 
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: formattedUrl,
         formats: options?.formats || ['markdown'],
         onlyMainContent: options?.onlyMainContent ?? true,
         waitFor: options?.waitFor,
         location: options?.location,
+        ...(options?.location && { proxy: 'basic' }), // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       }),
     });
 

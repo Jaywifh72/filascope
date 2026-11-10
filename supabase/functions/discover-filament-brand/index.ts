@@ -432,7 +432,7 @@ async function fetchCustomProducts(websiteUrl: string, brandName: string, firecr
   
   // Use Firecrawl to map the site
   try {
-    const mapResp = await fetch('https://api.firecrawl.dev/v1/map', {
+    const mapResp = await fetch('https://api.firecrawl.dev/v2/map', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlApiKey}`,
@@ -451,7 +451,9 @@ async function fetchCustomProducts(websiteUrl: string, brandName: string, firecr
     }
     
     const mapData = await mapResp.json();
-    const productUrls = (mapData.links || []).filter((url: string) => 
+    // v2 map returns links as { url, title, description } objects; v1 returned strings
+    const mapLinks: string[] = (mapData.links || []).map((l: any) => typeof l === 'string' ? l : l?.url).filter(Boolean);
+    const productUrls = mapLinks.filter((url: string) => 
       url.includes('product') || url.includes('filament')
     ).slice(0, 50);
     
@@ -460,13 +462,14 @@ async function fetchCustomProducts(websiteUrl: string, brandName: string, firecr
     // Scrape each product page
     for (const productUrl of productUrls) {
       try {
-        const scrapeResp = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        const scrapeResp = await fetch('https://api.firecrawl.dev/v2/scrape', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${firecrawlApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: productUrl,
             formats: ['markdown', 'html'],
             onlyMainContent: true,

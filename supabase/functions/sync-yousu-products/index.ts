@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
       
       try {
         // Use Firecrawl map to discover product URLs
-        const mapResponse = await fetch('https://api.firecrawl.dev/v1/map', {
+        const mapResponse = await fetch('https://api.firecrawl.dev/v2/map', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${firecrawlKey}`,
@@ -104,7 +104,9 @@ Deno.serve(async (req) => {
 
         if (mapResponse.ok) {
           const mapData = await mapResponse.json();
-          const productUrls = (mapData.links || []).filter((url: string) => 
+          // v2 map returns links as { url, title, description } objects; v1 returned strings
+          const mapLinks: string[] = (mapData.links || []).map((l: any) => typeof l === 'string' ? l : l?.url).filter(Boolean);
+          const productUrls = mapLinks.filter((url: string) => 
             url.includes('/products/') && 
             !url.includes('/collections/') &&
             !url.includes('resin') &&
@@ -119,13 +121,14 @@ Deno.serve(async (req) => {
             try {
               await new Promise(resolve => setTimeout(resolve, 1500)); // Rate limit
 
-              const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+              const scrapeResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${firecrawlKey}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                  maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
                   url: productUrl,
                   formats: ['markdown', 'html'],
                   onlyMainContent: true,

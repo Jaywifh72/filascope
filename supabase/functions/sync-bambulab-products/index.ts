@@ -950,13 +950,14 @@ async function discoverProductsFromCollection(firecrawlKey: string): Promise<Dis
   console.log(`[BambuLab] Discovering products from collection: ${collectionUrl}`);
   
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: collectionUrl,
         formats: ['links', 'markdown'],
         onlyMainContent: false,
@@ -1690,13 +1691,14 @@ function getDefaultColorForProduct(title: string): string | null {
 
 async function scrapeProductPage(url: string, firecrawlKey: string): Promise<ScrapedProduct | null> {
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url,
         formats: ['markdown', 'html'],
         onlyMainContent: false, // Need full page for __NEXT_DATA__

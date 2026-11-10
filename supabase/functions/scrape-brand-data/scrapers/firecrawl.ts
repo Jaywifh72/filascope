@@ -23,13 +23,14 @@ export class FirecrawlScraper extends BaseScraper {
     try {
       this.log(`Scraping via Firecrawl: ${url}`);
 
-      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.firecrawlApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url,
           formats: ["markdown", "html"],
           onlyMainContent: true,
@@ -145,7 +146,7 @@ export class FirecrawlScraper extends BaseScraper {
       let productUrls: string[] = [];
       
       // Step 1: Use Firecrawl Map API to discover all URLs on the shop
-      const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+      const mapResponse = await fetch("https://api.firecrawl.dev/v2/map", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.firecrawlApiKey}`,
@@ -171,6 +172,9 @@ export class FirecrawlScraper extends BaseScraper {
         this.logError(`Firecrawl Map failed: ${mapData.error || 'No links returned'}`);
         return [];
       }
+
+      // v2 map returns links as { url, title, description } objects; v1 returned strings
+      mapData.links = mapData.links.map((l: any) => typeof l === "string" ? l : l?.url).filter(Boolean);
 
       this.log(`Map discovered ${mapData.links.length} URLs`);
 
@@ -246,13 +250,14 @@ export class FirecrawlScraper extends BaseScraper {
       try {
         this.log(`Extracting products from: ${url}`);
         
-        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${this.firecrawlApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url,
             formats: ["html"],
             waitFor: 3000,
@@ -401,13 +406,14 @@ export class FirecrawlScraper extends BaseScraper {
       try {
         this.log(`Scraping page: ${pageUrl}`);
         
-        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${this.firecrawlApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: pageUrl,
             formats: ["markdown"],
             waitFor: 3000,
@@ -585,13 +591,14 @@ export class FirecrawlScraper extends BaseScraper {
     try {
       this.log(`Scraping TreeD Filaments from: ${baseUrl}`);
       
-      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      const scrapeResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.firecrawlApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url: baseUrl,
           formats: ["markdown", "html"],
           waitFor: 3000,
@@ -736,13 +743,14 @@ export class FirecrawlScraper extends BaseScraper {
       try {
         this.log(`Scraping Fusion Filaments page: ${pageUrl}`);
         
-        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${this.firecrawlApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: pageUrl,
             formats: ["markdown"],
             waitFor: 3000,
@@ -906,13 +914,14 @@ export class FirecrawlScraper extends BaseScraper {
       try {
         this.log(`[${i + 1}/${EXTRUDR_MATERIALS.length}] Scraping Extrudr material: ${slug}`);
         
-        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${this.firecrawlApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: productUrl,
             formats: ["markdown"],
             waitFor: 3000,
@@ -1139,13 +1148,14 @@ export class FirecrawlScraper extends BaseScraper {
       try {
         this.log(`Scraping Creality page: ${pageUrl}`);
         
-        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${this.firecrawlApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: pageUrl,
             formats: ["markdown"],
             waitFor: 3000,
@@ -1289,7 +1299,7 @@ export class FirecrawlScraper extends BaseScraper {
       this.log(`Mapping Spectrum Filaments URLs from: ${baseUrl}`);
       
       // Use Map API to discover product URLs
-      const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+      const mapResponse = await fetch("https://api.firecrawl.dev/v2/map", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.firecrawlApiKey}`,
@@ -1309,7 +1319,8 @@ export class FirecrawlScraper extends BaseScraper {
       }
 
       const mapData = await mapResponse.json();
-      const urls = mapData.links || [];
+      // v2 map returns links as { url, title, description } objects; v1 returned strings
+      const urls: string[] = (mapData.links || []).map((l: any) => typeof l === "string" ? l : l?.url).filter(Boolean);
       
       this.log(`Discovered ${urls.length} URLs`);
 
@@ -1333,13 +1344,14 @@ export class FirecrawlScraper extends BaseScraper {
       
       for (const productUrl of urlsToScrape) {
         try {
-          const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          const scrapeResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
             method: "POST",
             headers: {
               Authorization: `Bearer ${this.firecrawlApiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
+              maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
               url: productUrl,
               formats: ["markdown", "html"],
               onlyMainContent: true,
@@ -1989,13 +2001,14 @@ export class FirecrawlScraper extends BaseScraper {
       for (const categoryUrl of categoryPages) {
         this.log(`Scraping Gizmo Dorks category: ${categoryUrl}`);
         
-        const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${this.firecrawlApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
             url: categoryUrl,
             formats: ["markdown", "html"],
             onlyMainContent: true,
@@ -2026,13 +2039,14 @@ export class FirecrawlScraper extends BaseScraper {
             if (seenIds.has(productId) || !productId) continue;
             seenIds.add(productId);
             
-            const prodResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            const prodResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
               method: "POST",
               headers: {
                 Authorization: `Bearer ${this.firecrawlApiKey}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
+                maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
                 url: productUrl,
                 formats: ["markdown"],
                 onlyMainContent: true,
@@ -2133,13 +2147,14 @@ export class FirecrawlScraper extends BaseScraper {
       this.log(`Scraping IC3D collection: ${collectionUrl}`);
       
       // First, get the collection page to find all product links
-      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.firecrawlApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
           url: collectionUrl,
           formats: ["html"],
           waitFor: 3000,
@@ -2184,13 +2199,14 @@ export class FirecrawlScraper extends BaseScraper {
         try {
           const slug = productUrl.split('/shop/')[1]?.replace(/\/$/, '') || '';
           
-          const prodResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          const prodResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
             method: "POST",
             headers: {
               Authorization: `Bearer ${this.firecrawlApiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
+              maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
               url: productUrl,
               formats: ["markdown", "html"],
               onlyMainContent: true,

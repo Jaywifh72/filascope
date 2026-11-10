@@ -329,18 +329,20 @@ serve(async (req) => {
     const location = getFirecrawlLocation(currency);
     console.log(`Fetching with Firecrawl (location: ${location.country})`);
     
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: productUrl,
         formats: ['markdown'],
         onlyMainContent: true,
         waitFor: 3000,
         location: location,
+        proxy: 'basic', // v2 defaults proxy to 'auto' when location.country is set; v1 used 'basic'
       }),
     });
     

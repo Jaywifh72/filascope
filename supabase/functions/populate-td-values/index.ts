@@ -44,13 +44,14 @@ function extractTdFromText(text: string): number | null {
 
 async function scrapeForTd(productUrl: string, firecrawlKey: string): Promise<number | null> {
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: productUrl,
         formats: ['markdown'],
         onlyMainContent: true,

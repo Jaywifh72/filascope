@@ -295,13 +295,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const scrapeResponse = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${firecrawlKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        maxAge: 0, // v2 defaults to a 2-day cache; v1 always fetched fresh
         url: "https://www.3dxtech.com/pages/tech-data-sheets-safety-data-sheets",
         formats: ["html"],
         onlyMainContent: false,
